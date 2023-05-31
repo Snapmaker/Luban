@@ -6,11 +6,14 @@
 import EventEmitter from 'events';
 import { isUndefined, throttle } from 'lodash';
 import * as THREE from 'three';
+import { Vector3 } from 'three';
 
 import { SELECTEVENT } from '../../../constants';
+import log from '../../../lib/log';
 import { CLIPPING_LINE_COLOR } from '../../../models/ModelGroup';
 import TransformControls from './TransformControls';
 import TransformControls2D from './TransformControls2D';
+import Control, { Pointer } from './Control';
 
 const EPS = 0.000001;
 
@@ -55,9 +58,9 @@ class Controls extends EventEmitter {
     private prevState = null;
 
     // "target" is where the camera orbits around
-    private target = new THREE.Vector3();
+    private target = new Vector3();
 
-    private lastPosition = new THREE.Vector3();
+    private lastPosition = new Vector3();
 
     private lastQuaternion = new THREE.Quaternion();
 
@@ -99,8 +102,6 @@ class Controls extends EventEmitter {
 
     private shouldForbidSelect = false;
 
-    private modelGroup = null;
-
     private selectedGroup = null;
 
     // Set to true to zoom to cursor ,panning may have to be enabled
@@ -124,6 +125,11 @@ class Controls extends EventEmitter {
     private highLightOnMouseMove = throttle(() => {
         this.hoverLine();
     }, 300);
+
+    // controls
+    private controls: Control[] = [];
+    private modeControlMap: Map<string, Control> = new Map();
+    private mode: string = '';
 
     // TODO: Refactor this
     private sourceType: string;
@@ -167,6 +173,51 @@ class Controls extends EventEmitter {
 
         this.bindEventListeners();
         this.ray.params.Line.threshold = 0.5;
+    }
+
+    public getControl(mode: string): Control | null {
+        return this.modeControlMap.get(mode) || null;
+    }
+
+    private removeControl(mode: string, silent: boolean = false): Control | null {
+        const control = this.modeControlMap.get(mode);
+
+        if (control) {
+            this.modeControlMap.delete(mode);
+
+            const index = this.controls.indexOf(control);
+            this.controls.splice(index, 1);
+
+            return control;
+        } else {
+            if (!silent) {
+                log.warn(`Control with mode ${mode} not found.`);
+            }
+            return null;
+        }
+    }
+
+    public registerControl(mode: string, control: Control): void {
+        this.removeControl(mode, true);
+
+        // bind control
+        control.bind(this.domElement);
+
+        // Add mode -> control mapping
+        this.modeControlMap.set(mode, control);
+
+        this.controls.push(control);
+
+        // sort controls by priority
+        this.controls.sort((a, b) => a.getPriority() - b.getPriority());
+    }
+
+    public unregisterControl(mode: string): void {
+        this.removeControl(mode, false);
+    }
+
+    public setMode(mode: string): void {
+        this.mode = mode;
     }
 
     private initTransformControls() {
@@ -292,6 +343,7 @@ class Controls extends EventEmitter {
 
     // Normalize mouse / touch pointer and remap to view space
     // Ref: https://github.com/mrdoob/three.js/blob/master/examples/js/controls/TransformControls.js#L515
+    // https://github.com/mrdoob/three.js/blob/dev/examples/jsm/controls/TransformControls.js
     public getMouseCoord(event) {
         const rect = this.domElement.getBoundingClientRect();
         // TODO: The result is not correct, change all the clientX/clientY as offsetX/offsetY
@@ -301,6 +353,22 @@ class Controls extends EventEmitter {
         };
     }
 
+    // https://github.com/mrdoob/three.js/blob/dev/examples/jsm/controls/TransformControls.js
+    private getPointer(event: MouseEvent): Pointer {
+        if (this.domElement.ownerDocument.pointerLockElement) {
+            return new Pointer(0, 0, event.button);
+        } else {
+            const rect = this.domElement.getBoundingClientRect();
+
+            // convert x, y to range [-1, 1]
+            return new Pointer(
+                (event.clientX - rect.left) / rect.width * 2 - 1,
+                -(event.clientY - rect.top) / rect.height * 2 + 1,
+                event.button
+            );
+        }
+    }
+
     public onMouseDown = (event) => {
         this.isMouseDown = true;
         // Prevent the browser from scrolling.
@@ -308,6 +376,16 @@ class Controls extends EventEmitter {
         this.mouseDownPosition = this.getMouseCoord(event);
         if (this.state === STATE.ROTATE_PLACEMENT) {
             this.prevState = STATE.ROTATE_PLACEMENT;
+        }
+
+        // controls
+        for (const control of this.controls) {
+            if (!control.isActive(this.mode)) {
+                continue;
+            }
+
+            const pointer = this.getPointer(event);
+            if (control.onPointerDown(pointer)) return;
         }
 
         switch (event.button) {
@@ -809,21 +887,29 @@ class Controls extends EventEmitter {
     public startSupportMode() {
         this.state = STATE.SUPPORT;
         this.prevState = STATE.SUPPORT;
+
+        this.setMode('edit-support');
     }
 
     public stopSupportMode() {
         this.state = STATE.NONE;
         this.prevState = STATE.NONE;
+
+        this.setMode('');
     }
 
     public startMeshColoringMode() {
         this.state = STATE.MESH_COLORING;
         this.prevState = STATE.MESH_COLORING;
+
+        this.setMode('mesh-coloring');
     }
 
     public stopMeshColoringMode() {
         this.state = STATE.NONE;
         this.prevState = STATE.NONE;
+
+        this.setMode('');
     }
 
     private updateCamera(shouldUpdateTarget = false) {

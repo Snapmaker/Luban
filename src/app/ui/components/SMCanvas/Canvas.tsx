@@ -31,6 +31,7 @@ import ModelGroup from '../../../models/ModelGroup';
 import Detector from '../../../scene/three-extensions/Detector';
 import WebGLRendererWrapper from '../../../scene/three-extensions/WebGLRendererWrapper';
 import Controls, { EVENTS } from './Controls';
+import MeshColoringControl from '../../../scene/controls/MeshColoringControl';
 
 const ANIMATION_DURATION = 500;
 const DEFAULT_MODEL_POSITION = new Vector3(0, 0, 0);
@@ -45,6 +46,8 @@ let inputDOM2 = null; // translate has two input for X and Y axis
 interface CanvasProps {
     minScale?: number;
     maxScale?: number;
+
+    onSceneCreated?: (canvas: Canvas) => void;
 }
 
 class Canvas extends React.PureComponent<CanvasProps> {
@@ -112,6 +115,7 @@ class Canvas extends React.PureComponent<CanvasProps> {
     private node = React.createRef<HTMLDivElement>();
     private controls = null;
     private animationCount = 0;
+    private targetObject: Object3D | null = null;
 
     public constructor(props) {
         super(props);
@@ -175,6 +179,10 @@ class Canvas extends React.PureComponent<CanvasProps> {
         window.addEventListener('resize', this.resizeWindow, false);
 
         this.renderScene();
+
+        if (this.props.onSceneCreated) {
+            this.props.onSceneCreated(this);
+        }
     }
 
     // just for laser and cnc, dont set scale prop for 3dp
@@ -409,6 +417,10 @@ class Canvas extends React.PureComponent<CanvasProps> {
                 }
             }
         });
+    }
+
+    public getControlManager(): Controls {
+        return this.controls;
     }
 
     public setTransformMode(mode) {
@@ -790,6 +802,11 @@ class Canvas extends React.PureComponent<CanvasProps> {
     public startMeshColoringMode(): void {
         if (this.controls) {
             this.controls.startMeshColoringMode();
+
+            const control = this.controls.getControl('mesh-coloring') as MeshColoringControl;
+            if (control) {
+                control.setTargetObject(this.targetObject);
+            }
         }
     }
 
@@ -800,12 +817,14 @@ class Canvas extends React.PureComponent<CanvasProps> {
     }
 
     public attach(objects) {
+        this.targetObject = objects;
         if (this.controls) {
             this.controls.attach(objects);
         }
     }
 
     public detach() {
+        this.targetObject = null;
         if (this.controls) {
             this.controls.detach();
         }

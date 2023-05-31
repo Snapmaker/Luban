@@ -83,7 +83,6 @@ export class ViewPathRenderer {
         }
 
 
-        geometry.computeFaceNormals();
         geometry.computeVertexNormals();
 
         const materials = this._generateMaterial();

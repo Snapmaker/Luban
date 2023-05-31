@@ -39,6 +39,7 @@ import VisualizerPreviewControl from './VisualizerPreviewControl';
 import SceneContextMenu from './components/SceneContextMenu';
 import SceneShortcuts from './components/SceneShortcuts';
 import styles from './styles.styl';
+import MeshColoringControl from '../../../scene/controls/MeshColoringControl';
 
 const initQuaternion = new Quaternion();
 
@@ -363,6 +364,16 @@ class Visualizer extends PureComponent {
     //     ContextMenu.hide();
     // };
 
+    // canvas: Canvas
+    onSceneCreated = (canvas) => {
+        // const canvas = this.canvas.current;
+
+        const controlManager = canvas.getControlManager();
+        const meshColoringControl = new MeshColoringControl(this.camera);
+
+        controlManager.registerControl('mesh-coloring', meshColoringControl);
+    };
+
     componentDidMount() {
         this.props.clearOperationHistory();
 
@@ -556,6 +567,7 @@ class Visualizer extends PureComponent {
                 <div className={styles['canvas-container']}>
                     <Canvas
                         ref={this.canvas}
+                        onSceneCreated={this.onSceneCreated}
                         inProgress={inProgress}
                         size={size}
                         modelGroup={modelGroup}

@@ -379,7 +379,7 @@ const applyMeshColoringBrush = (raycastResult) => {
     };
 };
 
-const uploadModelsForSupport = (models, angle) => {
+const uploadModelsForSupport = (models: ThreeModel[], angle: number) => {
     return async (dispatch, getState) => {
         const { qualityDefinitions, activePresetIds } = getState().printing;
         const activeQualityDefinition = find(qualityDefinitions, {
@@ -406,7 +406,7 @@ const uploadModelsForSupport = (models, angle) => {
                         < 0
                     ) {
                         mesh.geometry = mesh.geometry.clone();
-                        const positions = mesh.geometry.getAttribute('position').array;
+                        const positions = mesh.geometry.getAttribute('position').array as number[];
 
                         for (let i = 0; i < positions.length; i += 9) {
                             const tempX = positions[i + 0];
@@ -421,7 +421,6 @@ const uploadModelsForSupport = (models, angle) => {
                             positions[i + 7] = tempY;
                             positions[i + 8] = tempZ;
                         }
-                        mesh.geometry.computeFaceNormals();
                         mesh.geometry.computeVertexNormals();
                     }
                     // Add byte_count attribute for STL binary exporter
@@ -465,7 +464,7 @@ const uploadModelsForSupport = (models, angle) => {
     };
 };
 
-const generateSupports = (models, angle) => {
+const generateSupports = (models: ThreeModel[], angle: number) => {
     return async (dispatch, getState) => {
         const { progressStatesManager } = getState().printing;
         const { size } = getState().machine;
