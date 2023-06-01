@@ -2,8 +2,9 @@ import React, { forwardRef, useImperativeHandle, useState } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import _ from 'lodash';
+
 import SvgIcon from '../components/SvgIcon';
-import styles from './index.styl';
+import styles from './styles.styl';
 import { library } from './lib/ext-shapes';
 import i18n from '../../lib/i18n';
 import Anchor from '../components/Anchor';
