@@ -34,6 +34,8 @@ import ThreeUtils from '../../scene/three-extensions/ThreeUtils';
 import { actions as operationHistoryActions } from '../operation-history';
 import baseActions from './actions-base';
 import { MeshHelper, LoadMeshFileOptions, MeshFileInfo, loadMeshFiles } from './actions-mesh';
+import scene from '../../scene/Scene';
+import MeshColoringControl from '../../scene/controls/MeshColoringControl';
 
 
 const renderScene = () => (dispatch) => {
@@ -328,18 +330,6 @@ const endMeshColoringMode = (shouldApplyChanges = false) => {
     };
 };
 
-const setMeshStackId = (mark: string) => {
-    return (dispatch) => {
-        if (![LEFT_EXTRUDER, RIGHT_EXTRUDER].includes(mark)) {
-            return;
-        }
-
-        dispatch(baseActions.updateState({
-            brushStackId: mark
-        }));
-    };
-};
-
 const _getMaterialPresetModel = (materialPresetModels: MaterialPresetModel[], presetId: string): MaterialPresetModel => {
     const index = materialPresetModels.findIndex((m) => m.definitionId === presetId);
     if (index >= 0) {
@@ -349,13 +339,50 @@ const _getMaterialPresetModel = (materialPresetModels: MaterialPresetModel[], pr
     }
 };
 
+const setMeshStackId = (brushStackId: string) => {
+    return (dispatch, getState) => {
+        if (![LEFT_EXTRUDER, RIGHT_EXTRUDER].includes(brushStackId)) {
+            return;
+        }
+
+        dispatch(baseActions.updateState({
+            brushStackId
+        }));
+
+        const {
+            materialDefinitions,
+            defaultMaterialId,
+            defaultMaterialIdRight
+        } = getState().printing;
+
+        const materialPresetId = brushStackId === LEFT_EXTRUDER ? defaultMaterialId : defaultMaterialIdRight;
+
+        const materialPresetModel = _getMaterialPresetModel(materialDefinitions, materialPresetId);
+        const colorString = materialPresetModel.settings.color.default_value as string;
+        const color = new Color(colorString);
+
+        let faceExtruderMark = 0;
+        if (brushStackId === LEFT_EXTRUDER) {
+            faceExtruderMark = BYTE_COUNT_LEFT_EXTRUDER;
+        } else if (brushStackId === RIGHT_EXTRUDER) {
+            faceExtruderMark = BYTE_COUNT_RIGHT_EXTRUDER;
+        }
+
+        // Update control data
+        const controlManager = scene.getControlManager();
+        const meshColoringControl = controlManager.getControl('mesh-coloring') as MeshColoringControl;
+
+        meshColoringControl.setBrushData(faceExtruderMark, color);
+    };
+};
+
 /**
  * Apply raycast result to mesh effect.
  */
 const applyMeshColoringBrush = (raycastResult) => {
     return (dispatch, getState) => {
+        const modelGroup = getState().printing.modelGroup as ModelGroup;
         const {
-            modelGroup,
             brushStackId,
 
             materialDefinitions,

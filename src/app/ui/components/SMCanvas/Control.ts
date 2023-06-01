@@ -26,7 +26,6 @@ export class Pointer {
 export default abstract class Control extends Object3D {
     protected priority: Priority = Priority.Low;
     protected camera: Camera;
-    private domElement: HTMLCanvasElement = null;
 
     public constructor(camera: Camera) {
         super();
@@ -39,27 +38,11 @@ export default abstract class Control extends Object3D {
         return this.priority;
     }
 
-    public bind(domElement: HTMLCanvasElement): void {
-        this.domElement = domElement;
-    }
-
-    // https://github.com/mrdoob/three.js/blob/dev/examples/jsm/controls/TransformControls.js
-    private getPointer(event: MouseEvent): Pointer {
-        if (this.domElement.ownerDocument.pointerLockElement) {
-            return new Pointer(0, 0, event.button);
-        } else {
-            const rect = this.domElement.getBoundingClientRect();
-
-            // convert x, y to range [-1, 1]
-            return new Pointer(
-                (event.clientX - rect.left) / rect.width * 2 - 1,
-                -(event.clientY - rect.top) / rect.height * 2 + 1,
-                event.button
-            );
-        }
-    }
-
     public abstract isActive(mode: string): boolean;
 
     public abstract onPointerDown(pointer: Pointer): boolean;
+
+    public abstract onPointerMove(pointer: Pointer): boolean;
+
+    public abstract onPointerUp(pointer: Pointer): boolean;
 }

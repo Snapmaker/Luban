@@ -305,6 +305,10 @@ class Canvas extends React.PureComponent<CanvasProps> {
         );
     }
 
+    public getCamera(): Camera {
+        return this.camera;
+    }
+
     public setupScene() {
         const width = this.getVisibleWidth();
         const height = this.getVisibleHeight();
