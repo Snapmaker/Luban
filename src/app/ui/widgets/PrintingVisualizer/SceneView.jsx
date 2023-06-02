@@ -88,7 +88,6 @@ class Visualizer extends PureComponent {
         setTransformMode: PropTypes.func.isRequired,
         moveBrush: PropTypes.func.isRequired,
         applySupportBrush: PropTypes.func.isRequired,
-        applyMeshColoringBrush: PropTypes.func.isRequired,
         autoRotateSelectedModel: PropTypes.func.isRequired,
         layFlatSelectedModel: PropTypes.func.isRequired,
         scaleToFitSelectedModel: PropTypes.func.isRequired,
@@ -345,8 +344,6 @@ class Visualizer extends PureComponent {
         applySupportBrush: (raycastResult) => {
             this.props.applySupportBrush(raycastResult);
         },
-
-        applyMeshColoringBrush: (raycastResult) => this.props.applyMeshColoringBrush(raycastResult),
     };
 
     constructor(props) {
@@ -715,7 +712,6 @@ const mapDispatchToProps = (dispatch) => ({
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
     moveBrush: (raycastResult) => dispatch(sceneActions.moveBrush(raycastResult)),
     applySupportBrush: (raycastResult) => dispatch(sceneActions.applySupportBrush(raycastResult)),
-    applyMeshColoringBrush: (raycastResult) => dispatch(sceneActions.applyMeshColoringBrush(raycastResult)),
     setRotationPlacementFace: (userData) => dispatch(printingActions.setRotationPlacementFace(userData)),
     displayModel: () => dispatch(printingActions.displayModel()),
     loadSimplifyModel: (modelID, modelOutputName, isCancelSimplify) => dispatch(printingActions.loadSimplifyModel({

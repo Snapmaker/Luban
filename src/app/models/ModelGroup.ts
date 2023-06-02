@@ -5,7 +5,6 @@ import {
     Box3,
     BufferAttribute,
     BufferGeometry,
-    Color,
     DynamicDrawUsage,
     Float32BufferAttribute,
     FrontSide,
@@ -55,8 +54,75 @@ import PrimeTowerModel from './PrimeTowerModel';
 import SvgModel from './SvgModel';
 import { ModelInfo, ModelTransformation } from './ThreeBaseModel';
 import ThreeGroup from './ThreeGroup';
-import ThreeModel, { BYTE_COUNT_COLOR_CLEAR_MASK, BYTE_COUNT_SUPPORT_CLEAR_MASK } from './ThreeModel';
+import ThreeModel, { BYTE_COUNT_SUPPORT_CLEAR_MASK } from './ThreeModel';
 import { ModelEvents } from './events';
+
+function getFacesInSphere(mesh: Mesh, faceIndex: number, brushPosition: Vector3, radius: number): number[] {
+    const targetFaces = [faceIndex];
+
+    const geometry = mesh.geometry as BufferGeometry;
+    const indices = geometry.index;
+    const normalAttribute = geometry.getAttribute('normal');
+    const bvh = geometry.boundsTree;
+    if (!bvh) {
+        log.warn('boundsTree was not built, ignored.');
+        return targetFaces;
+    }
+
+    const inverseMatrix = new Matrix4();
+    inverseMatrix.copy(mesh.matrixWorld).invert();
+
+    const sphere = new Sphere();
+    sphere.center.copy(brushPosition).applyMatrix4(inverseMatrix);
+    sphere.radius = radius;
+
+    let index: number;
+    const normal = new Vector3();
+    const point = new Vector3();
+
+    index = indices ? indices.getX(faceIndex * 3 + 0) : faceIndex * 3 + 0;
+    const initialNormal = new Vector3().fromBufferAttribute(normalAttribute, index);
+
+    bvh.shapecast({
+        intersectsBounds: (box) => {
+            const intersects = sphere.intersectsBox(box);
+            const { min, max } = box;
+            if (intersects) {
+                for (let x = 0; x <= 1; x++) {
+                    for (let y = 0; y <= 1; y++) {
+                        for (let z = 0; z <= 1; z++) {
+                            point.set(
+                                x === 0 ? min.x : max.x,
+                                y === 0 ? min.y : max.y,
+                                z === 0 ? min.z : max.z
+                            );
+                            if (!sphere.containsPoint(point)) {
+                                return INTERSECTED;
+                            }
+                        }
+                    }
+                }
+                return CONTAINED;
+            }
+            return NOT_INTERSECTED;
+        },
+        intersectsTriangle: (triangle: ExtendedTriangle, triangleIndex: number, contained: boolean) => {
+            if (contained || triangle.intersectsSphere(sphere)) {
+                index = indices ? indices.getX(triangleIndex * 3) : triangleIndex * 3;
+                normal.fromBufferAttribute(normalAttribute, index);
+
+                const dot = normal.dot(initialNormal);
+                if (dot >= 0) {
+                    targetFaces.push(triangleIndex);
+                }
+            }
+            return false;
+        }
+    });
+
+    return targetFaces;
+}
+
 
 
 const CUSTOM_EVENTS = {
@@ -2849,10 +2915,21 @@ class ModelGroup extends EventEmitter {
     }
 
     /**
+     * Get brush type.
+     */
+    public getBrushType(): BrushType {
+        return this.brushType;
+    }
+
+    /**
      * Set brush type.
      */
     public setBrushType(brushType: BrushType): void {
         this.brushType = brushType;
+    }
+
+    public getBrushOptions(): SmartFillBrushOptions {
+        return this.brushOptions;
     }
 
     /**
@@ -2861,6 +2938,10 @@ class ModelGroup extends EventEmitter {
     public setSmartFillBrushAngle(angle: number): void {
         const brushOptions: SmartFillBrushOptions = { angle };
         this.brushOptions = brushOptions;
+    }
+
+    public getBrushMesh(): Mesh {
+        return this.brushMesh;
     }
 
     /**
@@ -2935,275 +3016,6 @@ class ModelGroup extends EventEmitter {
 
         // Emit color changed
         this.modelAttributesChanged('color');
-    }
-
-    /**
-     * Apply brush, with extruder mark and corresponding color.
-     */
-    public applyMeshColoringBrush(raycastResult: Intersection[], faceExtruderMark: number, color: Color): void {
-        this.moveBrush(raycastResult);
-
-        const target = raycastResult.find((result) => result.object.userData.canSupport);
-        if (!target) {
-            return;
-        }
-
-        switch (this.brushType) {
-            case BrushType.SphereBrush: {
-                this.applyMeshColoringBrushSphereBrush(target, faceExtruderMark, color);
-                break;
-            }
-            case BrushType.SmartFillBrush: {
-                this.applyMeshColoringBrushSmartFill(target, faceExtruderMark, color);
-                break;
-            }
-            default:
-                break;
-        }
-    }
-
-    private getFacesInSphere(mesh: Mesh, faceIndex: number, radius: number): number[] {
-        const targetFaces = [faceIndex];
-
-        const geometry = mesh.geometry as BufferGeometry;
-        const indices = geometry.index;
-        const normalAttribute = geometry.getAttribute('normal');
-        const bvh = geometry.boundsTree;
-        if (!bvh) {
-            log.warn('boundsTree was not built, ignored.');
-            return targetFaces;
-        }
-
-        const inverseMatrix = new Matrix4();
-        inverseMatrix.copy(mesh.matrixWorld).invert();
-
-        const sphere = new Sphere();
-        sphere.center.copy(this.brushMesh.position).applyMatrix4(inverseMatrix);
-        sphere.radius = radius;
-
-        let index: number;
-        const normal = new Vector3();
-        const point = new Vector3();
-
-        index = indices ? indices.getX(faceIndex * 3 + 0) : faceIndex * 3 + 0;
-        const initialNormal = new Vector3().fromBufferAttribute(normalAttribute, index);
-
-        bvh.shapecast({
-            intersectsBounds: (box) => {
-                const intersects = sphere.intersectsBox(box);
-                const { min, max } = box;
-                if (intersects) {
-                    for (let x = 0; x <= 1; x++) {
-                        for (let y = 0; y <= 1; y++) {
-                            for (let z = 0; z <= 1; z++) {
-                                point.set(
-                                    x === 0 ? min.x : max.x,
-                                    y === 0 ? min.y : max.y,
-                                    z === 0 ? min.z : max.z
-                                );
-                                if (!sphere.containsPoint(point)) {
-                                    return INTERSECTED;
-                                }
-                            }
-                        }
-                    }
-                    return CONTAINED;
-                }
-                return NOT_INTERSECTED;
-            },
-            intersectsTriangle: (triangle: ExtendedTriangle, triangleIndex: number, contained: boolean) => {
-                if (contained || triangle.intersectsSphere(sphere)) {
-                    index = indices ? indices.getX(triangleIndex * 3) : triangleIndex * 3;
-                    normal.fromBufferAttribute(normalAttribute, index);
-
-                    const dot = normal.dot(initialNormal);
-                    if (dot >= 0) {
-                        targetFaces.push(triangleIndex);
-                    }
-                }
-                return false;
-            }
-        });
-
-        return targetFaces;
-    }
-
-    private getFacesConnectedSmoothly(mesh: Mesh, initialFaceIndices: number[], angle: number = 5): number[] {
-        const targetFaces = [...initialFaceIndices];
-
-        const geometry = mesh.geometry as BufferGeometry;
-        const indices = geometry.index;
-        const normalAttribute = geometry.getAttribute('normal');
-
-        const adjacentFaceGraph = geometry.adjcentFaceGraph;
-        if (!adjacentFaceGraph) {
-            log.warn('adjacent face graph was not built, ignored.');
-            return targetFaces;
-        }
-
-        let index: number;
-        const normal = new Vector3();
-        const currentNormal = new Vector3();
-
-        // traverse neighboring faces
-        const queue: number[] = [...initialFaceIndices];
-        const visited: Set<number> = new Set();
-
-        for (const faceIndex of queue) {
-            visited.add(faceIndex);
-        }
-
-        while (queue.length > 0) {
-            const faceIndex = queue.shift();
-
-            index = indices ? indices.getX(faceIndex * 3 + 0) : faceIndex * 3 + 0;
-            currentNormal.fromBufferAttribute(normalAttribute, index);
-
-            const neighborFaces = adjacentFaceGraph.getAdjacentFaces(faceIndex);
-            for (const nextFaceIndex of neighborFaces) {
-                if (!visited.has(nextFaceIndex)) {
-                    index = indices ? indices.getX(nextFaceIndex * 3 + 0) : nextFaceIndex * 3 + 0;
-                    normal.fromBufferAttribute(normalAttribute, index);
-
-                    const angleRad = normal.angleTo(currentNormal);
-                    const angleDegree = angleRad * (180 / Math.PI);
-
-                    if (angleDegree <= angle) {
-                        targetFaces.push(nextFaceIndex);
-                        visited.add(nextFaceIndex);
-                        queue.push(nextFaceIndex);
-                    }
-                }
-            }
-        }
-
-        return targetFaces;
-    }
-
-    private getFacesConnectedSmoothlyWithin(mesh: Mesh, initialFaceIndex: number, avaiableFaceIndices: number[], angle: number = 5): number[] {
-        const availableIndicesSet = new Set(avaiableFaceIndices);
-        const targetFaces = [initialFaceIndex];
-
-        const geometry = mesh.geometry as BufferGeometry;
-        const indices = geometry.index;
-        const normalAttribute = geometry.getAttribute('normal');
-
-        const adjacentFaceGraph = geometry.adjcentFaceGraph;
-        if (!adjacentFaceGraph) {
-            log.warn('adjacent face graph was not built, ignored.');
-            return targetFaces;
-        }
-
-        let index: number;
-        const normal = new Vector3();
-        const currentNormal = new Vector3();
-
-        // traverse neighboring faces
-        const queue: number[] = [initialFaceIndex];
-        const visited: Set<number> = new Set();
-
-        visited.add(initialFaceIndex);
-
-        while (queue.length > 0) {
-            const faceIndex = queue.shift();
-
-            index = indices ? indices.getX(faceIndex * 3 + 0) : faceIndex * 3 + 0;
-            currentNormal.fromBufferAttribute(normalAttribute, index);
-
-            const neighborFaces = adjacentFaceGraph.getAdjacentFaces(faceIndex);
-            for (const nextFaceIndex of neighborFaces) {
-                if (!availableIndicesSet.has(nextFaceIndex)) {
-                    continue;
-                }
-                if (!visited.has(nextFaceIndex)) {
-                    index = indices ? indices.getX(nextFaceIndex * 3 + 0) : nextFaceIndex * 3 + 0;
-                    normal.fromBufferAttribute(normalAttribute, index);
-
-                    const angleRad = normal.angleTo(currentNormal);
-                    const angleDegree = angleRad * (180 / Math.PI);
-
-                    if (angleDegree <= angle) {
-                        targetFaces.push(nextFaceIndex);
-                        visited.add(nextFaceIndex);
-                        queue.push(nextFaceIndex);
-                    }
-                }
-            }
-        }
-
-        return targetFaces;
-    }
-
-    private applyMeshColoringBrushSmartFill(intersection: Intersection, faceExtruderMark: number, color: Color): void {
-        const targetMesh = intersection.object as Mesh;
-        const geometry = targetMesh.geometry as BufferGeometry;
-
-        const targetFaceIndex = intersection.faceIndex;
-        if (targetFaceIndex < 0) {
-            return;
-        }
-
-        const angle = this.brushOptions.angle;
-
-        const indices = geometry.index;
-        const colorAttr = geometry.getAttribute('color');
-        const byteCountAttribute = geometry.getAttribute('byte_count');
-
-        const nearbyFaces = this.getFacesInSphere(targetMesh, targetFaceIndex, 0.2);
-        const targetFaces = this.getFacesConnectedSmoothly(targetMesh, nearbyFaces, angle);
-
-        // color target faces
-        let index: number;
-        for (const faceIndex of targetFaces) {
-            for (let k = 0; k < 3; k++) {
-                index = indices ? indices.getX(faceIndex * 3 + k) : faceIndex * 3 + k;
-
-                colorAttr.setXYZ(index, color.r, color.g, color.b);
-            }
-
-            if (byteCountAttribute) {
-                const byteCount = byteCountAttribute.getX(faceIndex);
-                byteCountAttribute.setX(faceIndex, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | faceExtruderMark);
-            }
-        }
-        colorAttr.needsUpdate = true;
-        byteCountAttribute.needsUpdate = true;
-    }
-
-    private applyMeshColoringBrushSphereBrush(intersection: Intersection, faceExtruderMark: number, color: Color): void {
-        const targetMesh = intersection.object as Mesh;
-        const geometry = targetMesh.geometry as BufferGeometry;
-
-        const targetFaceIndex = intersection.faceIndex;
-        if (targetFaceIndex < 0) {
-            return;
-        }
-
-        const angle = this.brushOptions.angle;
-
-        const radius = (this.brushMesh.geometry as SphereBufferGeometry).parameters.radius;
-        const nearbyFaces = this.getFacesInSphere(targetMesh, targetFaceIndex, radius);
-        const targetFaces = this.getFacesConnectedSmoothlyWithin(targetMesh, targetFaceIndex, nearbyFaces, angle);
-
-        const colorAttr = geometry.getAttribute('color');
-        const byteCountAttribute = geometry.getAttribute('byte_count');
-        const indices = geometry.index;
-
-        let index: number;
-        for (const faceIndex of targetFaces) {
-            for (let k = 0; k < 3; k++) {
-                index = indices ? indices.getX(faceIndex * 3 + k) : faceIndex * 3 + k;
-
-                colorAttr.setXYZ(index, color.r, color.g, color.b);
-            }
-
-            if (byteCountAttribute) {
-                const byteCount = byteCountAttribute.getX(faceIndex);
-                byteCountAttribute.setX(faceIndex, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | faceExtruderMark);
-            }
-        }
-        colorAttr.needsUpdate = true;
-        byteCountAttribute.needsUpdate = true;
     }
 
     public startEditSupportMode() {
@@ -3347,8 +3159,9 @@ class ModelGroup extends EventEmitter {
             return;
         }
 
+        const brushPosition = this.brushMesh.position;
         const radius = (this.brushMesh.geometry as SphereBufferGeometry).parameters.radius;
-        const nearbyFaces = this.getFacesInSphere(targetMesh, targetFaceIndex, radius);
+        const nearbyFaces = getFacesInSphere(targetMesh, targetFaceIndex, brushPosition, radius);
 
         const colorAttr = geometry.getAttribute('color');
         const byteCountAttribute = geometry.getAttribute('byte_count');

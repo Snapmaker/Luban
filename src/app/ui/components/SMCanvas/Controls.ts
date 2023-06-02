@@ -543,7 +543,6 @@ class Controls extends EventEmitter {
 
     public onDocumentMouseUp = (event) => {
         // controls
-        console.log('this.state =', this.state);
         let capturedByControl = false;
         if (this.state === STATE.NONE) {
             for (const control of this.controls) {
@@ -591,7 +590,6 @@ class Controls extends EventEmitter {
                 default:
                     break;
             }
-            console.log('previous =', this.prevState, this.state);
             this.state = this.prevState || STATE.NONE;
         } else {
             this.state = STATE.NONE;
