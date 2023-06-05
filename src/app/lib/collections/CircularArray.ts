@@ -28,8 +28,6 @@ export default class FixedCircularArray<T> {
         if (this.end === this.start) {
             this.isFull = true;
         }
-
-        console.log('array push', this.start, this.end, this.maxLength);
     }
 
     public get(index: number): T {

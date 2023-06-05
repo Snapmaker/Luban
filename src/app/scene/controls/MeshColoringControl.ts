@@ -218,7 +218,7 @@ export default class MeshColoringControl extends Control {
     private faceColor: Color | null = null;
 
     private shortcutHandler: ShortcutHandler;
-    private history = new History<ColorOperation>(5);
+    private history = new History<ColorOperation>(10);
 
     public constructor(camera: Camera, modelGroup: ModelGroup) {
         super(camera);
