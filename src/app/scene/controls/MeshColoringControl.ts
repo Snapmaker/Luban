@@ -1,3 +1,4 @@
+import { throttle } from 'lodash';
 import {
     BufferGeometry,
     Camera,
@@ -247,6 +248,9 @@ export default class MeshColoringControl extends Control {
                 [PREDEFINED_SHORTCUT_ACTIONS.REDO]: () => this.redo(),
             }
         };
+
+        // Add throttle to optimize performance on large geometry
+        this.highlightIntersections = throttle(this.highlightIntersections, 200, { trailing: true });
     }
 
     public setEnabled(enabled: boolean): void {
@@ -501,6 +505,8 @@ export default class MeshColoringControl extends Control {
 
         this.highlightedGeometry = geometry;
         this.highlightedFaces = targetFaces;
+
+        modelGroup.meshPositionChanged();
     }
 
     /**
