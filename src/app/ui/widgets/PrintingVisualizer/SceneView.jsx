@@ -15,7 +15,7 @@ import { logModelViewOperation } from '../../../lib/gaEvent';
 import i18n from '../../../lib/i18n';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import { ModelEvents } from '../../../models/events';
-import scene from '../../../scene/Scene';
+import scene, { SceneEvent } from '../../../scene/Scene';
 import ProgressBar from '../../components/ProgressBar';
 import Canvas from '../../components/SMCanvas';
 import { emitUpdateControlInputEvent } from '../../components/SMCanvas/TransformControls';
@@ -371,6 +371,10 @@ class Visualizer extends PureComponent {
 
         const meshColoringControl = new MeshColoringControl(canvas.getCamera(), modelGroup);
         controlManager.registerControl('mesh-coloring', meshColoringControl);
+
+        scene.on(SceneEvent.MeshChanged, () => {
+            canvas.renderScene();
+        });
     };
 
     componentDidMount() {

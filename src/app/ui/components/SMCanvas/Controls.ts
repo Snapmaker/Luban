@@ -219,6 +219,14 @@ class Controls extends EventEmitter {
 
     public setMode(mode: string): void {
         this.mode = mode;
+
+        for (const [controlMode, control] of this.modeControlMap.entries()) {
+            if (controlMode === mode) {
+                control.setEnabled(true);
+            } else {
+                control.setEnabled(false);
+            }
+        }
     }
 
     private initTransformControls() {
@@ -382,7 +390,7 @@ class Controls extends EventEmitter {
         // controls
         let capturedByControl = false;
         for (const control of this.controls) {
-            if (!control.isActive(this.mode)) {
+            if (!control.isEnabled()) {
                 continue;
             }
 
@@ -499,7 +507,7 @@ class Controls extends EventEmitter {
         // controls
         if (this.state === STATE.NONE) {
             for (const control of this.controls) {
-                if (!control.isActive(this.mode)) {
+                if (!control.isEnabled()) {
                     continue;
                 }
 
@@ -546,7 +554,7 @@ class Controls extends EventEmitter {
         let capturedByControl = false;
         if (this.state === STATE.NONE) {
             for (const control of this.controls) {
-                if (!control.isActive(this.mode)) {
+                if (!control.isEnabled()) {
                     continue;
                 }
 

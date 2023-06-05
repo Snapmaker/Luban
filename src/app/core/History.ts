@@ -9,13 +9,20 @@ class History<T> {
     }
 
     public push(data: T): void {
+        // trim items > index
+        this.fixedArray.trim(this.index);
+
+        // add new
         this.fixedArray.push(data);
 
         // points to newest index
-        this.index = this.fixedArray.getEnd() - 1;
-        if (this.index < 0) {
-            this.index += this.fixedArray.getMaxLength();
-        }
+        this.index = this.fixedArray.getLength();
+    }
+
+    public clear(): void {
+        this.fixedArray.clear();
+
+        this.index = 0;
     }
 
     public forward(): T | null {
@@ -23,15 +30,15 @@ class History<T> {
             return null;
         }
 
-        const index = this.index;
-
-        this.index = (this.index + 1) % this.fixedArray.getMaxLength();
-        if (this.index === this.fixedArray.getEnd()) {
-            this.index = index; // restore index
+        if (this.index === this.fixedArray.getLength()) {
             return null;
         }
 
-        return this.fixedArray.get(this.index);
+        const item = this.fixedArray.get(this.index);
+
+        this.index++;
+
+        return item;
     }
 
     public back(): T | null {
@@ -40,11 +47,12 @@ class History<T> {
         }
 
         // No moving back any more
-        if (this.index === this.fixedArray.getStart()) {
-            return this.fixedArray.get(this.index);
+        if (this.index === 0) {
+            return null;
         }
 
-        this.index = (this.index - 1 + this.fixedArray.getMaxLength()) % this.fixedArray.getMaxLength();
+        this.index--;
+
         return this.fixedArray.get(this.index);
     }
 }

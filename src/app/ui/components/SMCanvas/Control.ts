@@ -24,6 +24,7 @@ export class Pointer {
 }
 
 export default abstract class Control extends Object3D {
+    protected enabled: boolean = false;
     protected priority: Priority = Priority.Low;
     protected camera: Camera;
 
@@ -34,11 +35,17 @@ export default abstract class Control extends Object3D {
         this.camera = camera;
     }
 
+    public isEnabled(): boolean {
+        return this.enabled;
+    }
+
+    public setEnabled(enabled: boolean): void {
+        this.enabled = enabled;
+    }
+
     public getPriority(): Priority {
         return this.priority;
     }
-
-    public abstract isActive(mode: string): boolean;
 
     public abstract onPointerDown(pointer: Pointer): boolean;
 
