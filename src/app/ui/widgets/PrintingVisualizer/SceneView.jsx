@@ -375,6 +375,10 @@ class Visualizer extends PureComponent {
         scene.on(SceneEvent.MeshChanged, () => {
             canvas.renderScene();
         });
+
+        scene.on(SceneEvent.MeshPositionChanged, () => {
+            canvas.renderScene();
+        });
     };
 
     componentDidMount() {

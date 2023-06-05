@@ -1,3 +1,4 @@
+import { throttle } from 'lodash';
 import {
     BufferGeometry,
     Camera,
@@ -10,18 +11,18 @@ import {
     Raycaster,
     Sphere,
     SphereBufferGeometry,
-    Vector3,
+    Vector3
 } from 'three';
 import type { ExtendedTriangle } from 'three-mesh-bvh';
 import { CONTAINED, INTERSECTED, NOT_INTERSECTED } from 'three-mesh-bvh';
 
-import type { ShortcutHandler } from '../../lib/shortcut';
-import { ShortcutHandlerPriority, ShortcutManager, PREDEFINED_SHORTCUT_ACTIONS } from '../../lib/shortcut';
-import { BYTE_COUNT_COLOR_MASK, BYTE_COUNT_COLOR_CLEAR_MASK } from '../../models/ThreeModel';
-import log from '../../lib/log';
-import ModelGroup, { BrushType } from '../../models/ModelGroup';
-import Control, { Pointer } from '../../ui/components/SMCanvas/Control';
 import History from '../../core/History';
+import log from '../../lib/log';
+import type { ShortcutHandler } from '../../lib/shortcut';
+import { PREDEFINED_SHORTCUT_ACTIONS, ShortcutHandlerPriority, ShortcutManager } from '../../lib/shortcut';
+import ModelGroup, { BrushType } from '../../models/ModelGroup';
+import { BYTE_COUNT_COLOR_CLEAR_MASK, BYTE_COUNT_COLOR_MASK } from '../../models/ThreeModel';
+import Control, { Pointer } from '../../ui/components/SMCanvas/Control';
 
 
 function getFacesInSphere(mesh: Mesh, faceIndex: number, brushPosition: Vector3, radius: number): number[] {
@@ -195,15 +196,21 @@ function pickFacesConnectedSmoothly(avaiableFaceIndices: number[], mesh: Mesh, i
 
     return targetFaces;
 }
+
+interface FaceInfo {
+    index: number;
+    color: Color;
+    extruderMark: number;
+}
 interface ColorOperation {
     mesh: Mesh;
+    faces: FaceInfo[];
     faceIndices: number[];
     faceColor: Color;
     faceExtruderMark: number;
-    previousFaceColor: Color;
-    previousFaceExtruderMark: number;
 }
 
+const whiteColor = new Color(1, 1, 1);
 
 const _raycaster = new Raycaster();
 _raycaster.params.Line.threshold = 0.5;
@@ -216,6 +223,9 @@ export default class MeshColoringControl extends Control {
 
     private faceExtruderMark: number;
     private faceColor: Color | null = null;
+
+    private highlightedGeometry: BufferGeometry | null = null;
+    private highlightedFaces: FaceInfo[];
 
     private shortcutHandler: ShortcutHandler;
     private history = new History<ColorOperation>(10);
@@ -238,6 +248,9 @@ export default class MeshColoringControl extends Control {
                 [PREDEFINED_SHORTCUT_ACTIONS.REDO]: () => this.redo(),
             }
         };
+
+        // Add throttle to optimize performance on large geometry
+        this.highlightIntersections = throttle(this.highlightIntersections, 200, { trailing: true });
     }
 
     public setEnabled(enabled: boolean): void {
@@ -259,6 +272,31 @@ export default class MeshColoringControl extends Control {
     public setBrushData(faceExtruderMark: number, color: Color): void {
         this.faceExtruderMark = faceExtruderMark;
         this.faceColor = color;
+    }
+
+    public onPointerHover(pointer: Pointer): boolean {
+        if (!this.isEnabled()) {
+            return false;
+        }
+
+        _raycaster.setFromCamera(pointer, this.camera);
+        _raycaster.firstHitOnly = true;
+
+        const intersections = _raycaster.intersectObject(this.targetObject, true);
+        if (intersections.length) {
+            // highlight brush spreaded faces
+            this.highlightIntersections(intersections);
+
+            // move brush
+            const modelGroup = this.modelGroup;
+            modelGroup.moveBrush(intersections);
+            modelGroup.meshPositionChanged();
+            return true;
+        } else {
+            this.highlightIntersections([]);
+        }
+
+        return false;
     }
 
     public onPointerDown(pointer: Pointer): boolean {
@@ -322,10 +360,161 @@ export default class MeshColoringControl extends Control {
         }
     }
 
+    private mapFaceIndicesToFaceInfos(mesh: Mesh, faceIndices: number[]): FaceInfo[] {
+        const geometry = mesh.geometry as BufferGeometry;
+
+        const indices = geometry.index;
+        const colorAttribute = geometry.getAttribute('color');
+        const byteCountAttribute = geometry.getAttribute('byte_count');
+
+        const getFaceExtruderMark = (faceIndex: number) => {
+            const byteCount = byteCountAttribute.getX(faceIndex);
+            const extruderMark = byteCount & BYTE_COUNT_COLOR_MASK;
+            return extruderMark;
+        };
+        const getFaceColor = (faceIndex: number) => {
+            const index = indices ? indices.getX(faceIndex * 3) : faceIndex * 3;
+
+            return new Color(
+                colorAttribute.getX(index),
+                colorAttribute.getY(index),
+                colorAttribute.getZ(index),
+            );
+        };
+
+        return faceIndices.map((faceIndex) => {
+            return {
+                index: faceIndex,
+                color: getFaceColor(faceIndex),
+                extruderMark: getFaceExtruderMark(faceIndex),
+            };
+        });
+    }
+
+    private _setMeshFacesColor(geometry: BufferGeometry, faces: FaceInfo[], color: Color, faceExtruderMark: number = -1): void {
+        const indices = geometry.index;
+        const byteCountAttribute = geometry.getAttribute('byte_count');
+        const colorAttribute = geometry.getAttribute('color');
+
+        let index: number;
+        for (const faceInfo of faces) {
+            const faceIndex = faceInfo.index;
+
+            if (byteCountAttribute && faceExtruderMark !== -1) {
+                const byteCount = byteCountAttribute.getX(faceIndex);
+                byteCountAttribute.setX(faceIndex, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | faceExtruderMark);
+            }
+
+            for (let k = 0; k < 3; k++) {
+                index = indices ? indices.getX(faceIndex * 3 + k) : faceIndex * 3 + k;
+
+                colorAttribute.setXYZ(index, color.r, color.g, color.b);
+            }
+        }
+
+        if (faceExtruderMark !== -1) {
+            byteCountAttribute.needsUpdate = true;
+        }
+        colorAttribute.needsUpdate = true;
+    }
+
+    private _restoreMeshFaces(geometry: BufferGeometry, faces: FaceInfo[], { restoreByteCount = true }): void {
+        const indices = geometry.index;
+        const byteCountAttribute = geometry.getAttribute('byte_count');
+        const colorAttribute = geometry.getAttribute('color');
+
+        let index: number;
+        for (const faceInfo of faces) {
+            const faceIndex = faceInfo.index;
+
+            if (restoreByteCount) {
+                const byteCount = byteCountAttribute.getX(faceIndex);
+                byteCountAttribute.setX(faceIndex, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | faceInfo.extruderMark);
+            }
+
+            for (let k = 0; k < 3; k++) {
+                index = indices ? indices.getX(faceIndex * 3 + k) : faceIndex * 3 + k;
+
+                colorAttribute.setXYZ(index, faceInfo.color.r, faceInfo.color.g, faceInfo.color.b);
+            }
+        }
+
+        if (restoreByteCount) {
+            byteCountAttribute.needsUpdate = true;
+        }
+        colorAttribute.needsUpdate = true;
+    }
+
+    private clearHighlight(): void {
+        if (this.highlightedGeometry && this.highlightedFaces) {
+            this._restoreMeshFaces(this.highlightedGeometry, this.highlightedFaces, { restoreByteCount: false });
+            this.highlightedGeometry = null;
+            this.highlightedFaces = [];
+        }
+    }
+
+    private highlightIntersections(intersections: Intersection[]): void {
+        this.clearHighlight();
+
+        const intersection = intersections.find((result) => result.object.userData.canSupport);
+        if (!intersection) {
+            return;
+        }
+
+        const modelGroup = this.modelGroup;
+        const brushType = modelGroup.getBrushType();
+
+        // Get faces by strategy
+        let targetFaceIndices: number[] = [];
+        // Once pointer down, we clear all highlighted faces
+        if (!this.isPointerDown) {
+            switch (brushType) {
+                case BrushType.SphereBrush: {
+                    targetFaceIndices = this.getFacesAffectedBySphereBrush(intersection);
+                    break;
+                }
+                case BrushType.SmartFillBrush: {
+                    targetFaceIndices = this.getFacesAffectedBySmartFillBrush(intersection);
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+
+        if (!targetFaceIndices.length) {
+            return;
+        }
+
+        const targetMesh = intersection.object as Mesh;
+        const geometry = targetMesh.geometry as BufferGeometry;
+
+        const targetFaces = this.mapFaceIndicesToFaceInfos(targetMesh, targetFaceIndices);
+
+        const highlightColor = this.faceColor ? new Color(this.faceColor) : new Color('#F2FF6D');
+
+        // special handling of white color, use #ddd to make a distinguish
+        if (highlightColor.equals(whiteColor)) {
+            highlightColor.set(new Color('#ddd'));
+        } else {
+            // Use linear to sRGB to make highlight color lighter than original color
+            highlightColor.copyLinearToSRGB(highlightColor);
+        }
+
+        this._setMeshFacesColor(geometry, targetFaces, highlightColor);
+
+        this.highlightedGeometry = geometry;
+        this.highlightedFaces = targetFaces;
+
+        modelGroup.meshPositionChanged();
+    }
+
     /**
      * Apply brush, with extruder mark and corresponding color.
      */
     private colorIntersections(intersections: Intersection[]): void {
+        this.clearHighlight();
+
         const intersection = intersections.find((result) => result.object.userData.canSupport);
         if (!intersection) {
             return;
@@ -357,8 +546,6 @@ export default class MeshColoringControl extends Control {
         const targetMesh = intersection.object as Mesh;
         const geometry = targetMesh.geometry as BufferGeometry;
 
-        const indices = geometry.index;
-        const colorAttribute = geometry.getAttribute('color');
         const byteCountAttribute = geometry.getAttribute('byte_count');
 
         // filter faces to be changed
@@ -373,51 +560,18 @@ export default class MeshColoringControl extends Control {
             return;
         }
 
-        const getFaceExtruderMark = (faceIndex: number) => {
-            const byteCount = byteCountAttribute.getX(faceIndex);
-            const extruderMark = byteCount & BYTE_COUNT_COLOR_MASK;
-            return extruderMark;
-        };
-        const getFaceColor = (faceIndex: number) => {
-            const index = indices ? indices.getX(faceIndex * 3) : faceIndex * 3;
-
-            return new Color(
-                colorAttribute.getX(index),
-                colorAttribute.getY(index),
-                colorAttribute.getZ(index),
-            );
-        };
-
-        const currentExtruderMark = getFaceExtruderMark(targetFaceIndices[0]);
-        const currentFaceColor = getFaceColor(targetFaceIndices[0]);
+        const targetFaces = this.mapFaceIndicesToFaceInfos(targetMesh, targetFaceIndices);
 
         // actually change mesh
-        // const previousColor = new Color
-        let index: number;
-        for (const faceIndex of targetFaceIndices) {
-            if (byteCountAttribute) {
-                const byteCount = byteCountAttribute.getX(faceIndex);
-                byteCountAttribute.setX(faceIndex, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | this.faceExtruderMark);
-            }
-
-            for (let k = 0; k < 3; k++) {
-                index = indices ? indices.getX(faceIndex * 3 + k) : faceIndex * 3 + k;
-
-                colorAttribute.setXYZ(index, this.faceColor.r, this.faceColor.g, this.faceColor.b);
-            }
-        }
-
-        colorAttribute.needsUpdate = true;
-        byteCountAttribute.needsUpdate = true;
+        this._setMeshFacesColor(geometry, targetFaces, this.faceColor, this.faceExtruderMark);
 
         // add history
         this.history.push({
             mesh: targetMesh,
+            faces: targetFaces,
             faceIndices: targetFaceIndices,
             faceColor: this.faceColor,
             faceExtruderMark: this.faceExtruderMark,
-            previousFaceColor: currentFaceColor,
-            previousFaceExtruderMark: currentExtruderMark,
         });
     }
 
@@ -463,29 +617,6 @@ export default class MeshColoringControl extends Control {
         return targetFaces;
     }
 
-    private _changeMesh(geometry: BufferGeometry, faceIndices: number[], color: Color, faceExtruderMark: number): void {
-        const indices = geometry.index;
-        const byteCountAttribute = geometry.getAttribute('byte_count');
-        const colorAttribute = geometry.getAttribute('color');
-
-        let index: number;
-        for (const faceIndex of faceIndices) {
-            if (byteCountAttribute) {
-                const byteCount = byteCountAttribute.getX(faceIndex);
-                byteCountAttribute.setX(faceIndex, (byteCount & BYTE_COUNT_COLOR_CLEAR_MASK) | faceExtruderMark);
-            }
-
-            for (let k = 0; k < 3; k++) {
-                index = indices ? indices.getX(faceIndex * 3 + k) : faceIndex * 3 + k;
-
-                colorAttribute.setXYZ(index, color.r, color.g, color.b);
-            }
-        }
-
-        colorAttribute.needsUpdate = true;
-        byteCountAttribute.needsUpdate = true;
-    }
-
     private undo(): void {
         const colorOperation = this.history.back();
 
@@ -494,12 +625,10 @@ export default class MeshColoringControl extends Control {
         }
 
         const geometry = colorOperation.mesh.geometry as BufferGeometry;
-        this._changeMesh(
-            geometry,
-            colorOperation.faceIndices,
-            colorOperation.previousFaceColor,
-            colorOperation.previousFaceExtruderMark,
-        );
+
+        this._restoreMeshFaces(geometry, colorOperation.faces, {
+            restoreByteCount: true,
+        });
 
         this.modelGroup.meshChanged();
     }
@@ -512,9 +641,9 @@ export default class MeshColoringControl extends Control {
         }
 
         const geometry = colorOperation.mesh.geometry as BufferGeometry;
-        this._changeMesh(
+        this._setMeshFacesColor(
             geometry,
-            colorOperation.faceIndices,
+            colorOperation.faces,
             colorOperation.faceColor,
             colorOperation.faceExtruderMark,
         );

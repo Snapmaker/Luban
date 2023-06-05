@@ -2539,14 +2539,14 @@ class ModelGroup extends EventEmitter {
         }
         const brushGeometry = new SphereBufferGeometry(radius, 40, 40);
         const brushMaterial = new MeshStandardMaterial({
-            color: 0xEC407A,
+            color: 0x333333,
             roughness: 0.75,
             metalness: 0,
             transparent: true,
-            opacity: 0.5,
+            opacity: 0.4,
             premultipliedAlpha: true,
-            emissive: 0xEC407A,
-            emissiveIntensity: 0.5
+            emissive: 0x888888,
+            emissiveIntensity: 0.5,
         });
         this.brushMesh = new Mesh(brushGeometry, brushMaterial);
         this.brushMesh.name = 'Brush Mesh';

@@ -474,6 +474,17 @@ class Controls extends EventEmitter {
         this.pointer.x = coord.x;
         this.pointer.y = coord.y;
 
+        if (this.state === STATE.NONE) {
+            for (const control of this.controls) {
+                if (!control.isEnabled()) {
+                    continue;
+                }
+
+                const pointer = this.getPointer(event);
+                if (control.onPointerHover(pointer)) return;
+            }
+        }
+
         // model move with mouse no matter mousedown
         if (this.state === STATE.SUPPORT || this.mode === 'mesh-coloring') {
             this.ray.setFromCamera(coord, this.camera);
