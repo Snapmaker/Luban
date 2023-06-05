@@ -6,11 +6,14 @@
 import EventEmitter from 'events';
 import { isUndefined, throttle } from 'lodash';
 import * as THREE from 'three';
+import { Vector3 } from 'three';
 
 import { SELECTEVENT } from '../../../constants';
+import log from '../../../lib/log';
 import { CLIPPING_LINE_COLOR } from '../../../models/ModelGroup';
 import TransformControls from './TransformControls';
 import TransformControls2D from './TransformControls2D';
+import Control, { Pointer } from './Control';
 
 const EPS = 0.000001;
 
@@ -22,7 +25,6 @@ const STATE = {
     TRANSFORM: 3,
     SUPPORT: 4,
     ROTATE_PLACEMENT: 5,
-    MESH_COLORING: 6,
 };
 
 // Events sent by Controls
@@ -55,9 +57,9 @@ class Controls extends EventEmitter {
     private prevState = null;
 
     // "target" is where the camera orbits around
-    private target = new THREE.Vector3();
+    private target = new Vector3();
 
-    private lastPosition = new THREE.Vector3();
+    private lastPosition = new Vector3();
 
     private lastQuaternion = new THREE.Quaternion();
 
@@ -99,8 +101,6 @@ class Controls extends EventEmitter {
 
     private shouldForbidSelect = false;
 
-    private modelGroup = null;
-
     private selectedGroup = null;
 
     // Set to true to zoom to cursor ,panning may have to be enabled
@@ -124,6 +124,16 @@ class Controls extends EventEmitter {
     private highLightOnMouseMove = throttle(() => {
         this.hoverLine();
     }, 300);
+
+    // controls
+    /**
+     * mode:
+     *  - default mode: MSR
+     *  - custom mode: race between custom control and MSR
+     */
+    private mode: string = '';
+    private controls: Control[] = [];
+    private modeControlMap: Map<string, Control> = new Map();
 
     // TODO: Refactor this
     private sourceType: string;
@@ -167,6 +177,56 @@ class Controls extends EventEmitter {
 
         this.bindEventListeners();
         this.ray.params.Line.threshold = 0.5;
+    }
+
+    public getControl(mode: string): Control | null {
+        return this.modeControlMap.get(mode) || null;
+    }
+
+    private removeControl(mode: string, silent: boolean = false): Control | null {
+        const control = this.modeControlMap.get(mode);
+
+        if (control) {
+            this.modeControlMap.delete(mode);
+
+            const index = this.controls.indexOf(control);
+            this.controls.splice(index, 1);
+
+            return control;
+        } else {
+            if (!silent) {
+                log.warn(`Control with mode ${mode} not found.`);
+            }
+            return null;
+        }
+    }
+
+    public registerControl(mode: string, control: Control): void {
+        this.removeControl(mode, true);
+
+        // Add mode -> control mapping
+        this.modeControlMap.set(mode, control);
+
+        this.controls.push(control);
+
+        // sort controls by priority
+        this.controls.sort((a, b) => a.getPriority() - b.getPriority());
+    }
+
+    public unregisterControl(mode: string): void {
+        this.removeControl(mode, false);
+    }
+
+    public setMode(mode: string): void {
+        this.mode = mode;
+
+        for (const [controlMode, control] of this.modeControlMap.entries()) {
+            if (controlMode === mode) {
+                control.setEnabled(true);
+            } else {
+                control.setEnabled(false);
+            }
+        }
     }
 
     private initTransformControls() {
@@ -292,6 +352,7 @@ class Controls extends EventEmitter {
 
     // Normalize mouse / touch pointer and remap to view space
     // Ref: https://github.com/mrdoob/three.js/blob/master/examples/js/controls/TransformControls.js#L515
+    // https://github.com/mrdoob/three.js/blob/dev/examples/jsm/controls/TransformControls.js
     public getMouseCoord(event) {
         const rect = this.domElement.getBoundingClientRect();
         // TODO: The result is not correct, change all the clientX/clientY as offsetX/offsetY
@@ -299,6 +360,22 @@ class Controls extends EventEmitter {
             x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
             y: -((event.clientY - rect.top) / rect.height) * 2 + 1 // Y axis up is positive
         };
+    }
+
+    // https://github.com/mrdoob/three.js/blob/dev/examples/jsm/controls/TransformControls.js
+    private getPointer(event: MouseEvent): Pointer {
+        if (this.domElement.ownerDocument.pointerLockElement) {
+            return new Pointer(0, 0, event.button);
+        } else {
+            const rect = this.domElement.getBoundingClientRect();
+
+            // convert x, y to range [-1, 1]
+            return new Pointer(
+                (event.clientX - rect.left) / rect.width * 2 - 1,
+                -(event.clientY - rect.top) / rect.height * 2 + 1,
+                event.button
+            );
+        }
     }
 
     public onMouseDown = (event) => {
@@ -310,75 +387,80 @@ class Controls extends EventEmitter {
             this.prevState = STATE.ROTATE_PLACEMENT;
         }
 
-        switch (event.button) {
-            case THREE.MOUSE.LEFT: {
-                // Support
-                if (this.state === STATE.SUPPORT) {
-                    const coord = this.getMouseCoord(event);
-                    this.ray.setFromCamera(coord, this.camera);
-                    this.ray.firstHitOnly = true;
-                    const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
-                    if (res.length) {
-                        this.supportActions.applySupportBrush(res);
-                        break;
-                    }
-                }
+        // controls
+        let capturedByControl = false;
+        for (const control of this.controls) {
+            if (!control.isEnabled()) {
+                continue;
+            }
 
-                // Mesh coloring
-                if (this.state === STATE.MESH_COLORING) {
-                    const coord = this.getMouseCoord(event);
-                    this.ray.setFromCamera(coord, this.camera);
-                    this.ray.firstHitOnly = true;
-                    const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
-                    if (res.length) {
-                        this.supportActions.applyMeshColoringBrush(res);
-                        break;
-                    }
-                }
-
-                // Transform on selected object
-                if (this.selectedGroup && this.selectedGroup.children.length > 0) {
-                    const coord = this.getMouseCoord(event);
-                    // Call hover to update axis selected
-                    this.transformControl.onMouseHover(coord);
-                    if (this.transformControl.onMouseDown(coord)) {
-                        this.state = STATE.TRANSFORM;
-                        this.emit(EVENTS.BEFORE_TRANSFORM_OBJECT);
-                        this.isClickOnPeripheral = true;
-                        break;
-                    } else {
-                        !inputDOM && (inputDOM = document.getElementById('control-input'));
-                        !inputDOM2 && (inputDOM2 = document.getElementById('control-input-2'));
-                        inputDOM && (inputDOM.style.display = 'none');
-                        inputDOM2 && (inputDOM2.style.display = 'none');
-                    }
-                }
-
-                if (event.ctrlKey || event.metaKey || event.shiftKey) {
-                    this.state = STATE.PAN;
-                    this.panMoved = !event.ctrlKey;
-                    this.handleMouseDownPan(event);
-                } else {
-                    this.state = STATE.ROTATE;
-                    this.rotateMoved = false;
-                    this.handleMouseDownRotate(event);
-                }
+            const pointer = this.getPointer(event);
+            if (control.onPointerDown(pointer)) {
+                capturedByControl = true;
                 break;
             }
-            case THREE.MOUSE.MIDDLE:
-                this.state = STATE.DOLLY;
-                // TODO
-                // this.handleMouseDownDolly(event);
-                break;
-            case THREE.MOUSE.RIGHT:
-                this.state = STATE.PAN;
-                this.panMoved = false;
-                this.handleMouseDownPan(event);
-                break;
-            default:
-                break;
         }
-        if (this.state !== STATE.NONE) {
+
+        if (!capturedByControl) {
+            switch (event.button) {
+                case THREE.MOUSE.LEFT: {
+                    // Support
+                    if (this.state === STATE.SUPPORT) {
+                        const coord = this.getMouseCoord(event);
+                        this.ray.setFromCamera(coord, this.camera);
+                        this.ray.firstHitOnly = true;
+                        const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
+                        if (res.length) {
+                            this.supportActions.applySupportBrush(res);
+                            break;
+                        }
+                    }
+
+                    // Transform on selected object
+                    if (this.selectedGroup && this.selectedGroup.children.length > 0) {
+                        const coord = this.getMouseCoord(event);
+                        // Call hover to update axis selected
+                        this.transformControl.onMouseHover(coord);
+                        if (this.transformControl.onMouseDown(coord)) {
+                            this.state = STATE.TRANSFORM;
+                            this.emit(EVENTS.BEFORE_TRANSFORM_OBJECT);
+                            this.isClickOnPeripheral = true;
+                            break;
+                        } else {
+                            !inputDOM && (inputDOM = document.getElementById('control-input'));
+                            !inputDOM2 && (inputDOM2 = document.getElementById('control-input-2'));
+                            inputDOM && (inputDOM.style.display = 'none');
+                            inputDOM2 && (inputDOM2.style.display = 'none');
+                        }
+                    }
+
+                    if (event.ctrlKey || event.metaKey || event.shiftKey) {
+                        this.state = STATE.PAN;
+                        this.panMoved = !event.ctrlKey;
+                        this.handleMouseDownPan(event);
+                    } else {
+                        this.state = STATE.ROTATE;
+                        this.rotateMoved = false;
+                        this.handleMouseDownRotate(event);
+                    }
+                    break;
+                }
+                case THREE.MOUSE.MIDDLE:
+                    this.state = STATE.DOLLY;
+                    // TODO
+                    // this.handleMouseDownDolly(event);
+                    break;
+                case THREE.MOUSE.RIGHT:
+                    this.state = STATE.PAN;
+                    this.panMoved = false;
+                    this.handleMouseDownPan(event);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        if (this.mode || this.state !== STATE.NONE) {
             // Track events even when the mouse move outside of window
             document.addEventListener('mousemove', this.onDocumentMouseMove, { capture: true });
             document.addEventListener('mouseup', this.onDocumentMouseUp, { capture: true });
@@ -386,13 +468,14 @@ class Controls extends EventEmitter {
     };
 
     public onMouseMove = (event) => {
+        event.preventDefault();
+
         const coord = this.getMouseCoord(event);
         this.pointer.x = coord.x;
         this.pointer.y = coord.y;
 
-        event.preventDefault();
         // model move with mouse no matter mousedown
-        if (this.state === STATE.SUPPORT || this.state === STATE.MESH_COLORING) {
+        if (this.state === STATE.SUPPORT || this.mode === 'mesh-coloring') {
             this.ray.setFromCamera(coord, this.camera);
             this.ray.firstHitOnly = true;
             const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
@@ -420,6 +503,18 @@ class Controls extends EventEmitter {
 
     public onDocumentMouseMove = (event) => {
         event.preventDefault();
+
+        // controls
+        if (this.state === STATE.NONE) {
+            for (const control of this.controls) {
+                if (!control.isEnabled()) {
+                    continue;
+                }
+
+                const pointer = this.getPointer(event);
+                if (control.onPointerMove(pointer)) return;
+            }
+        }
 
         switch (this.state) {
             case STATE.ROTATE:
@@ -449,66 +544,69 @@ class Controls extends EventEmitter {
                     event.stopPropagation();
                 }
                 break;
-            case STATE.MESH_COLORING: {
-                if (this.isMouseDown) {
-                    const coord = this.getMouseCoord(event);
-                    this.ray.setFromCamera(coord, this.camera);
-                    this.ray.firstHitOnly = true;
-                    const res = this.ray.intersectObject(this.selectedGroup.children.length ? this.selectedGroup : this.selectableObjects, true);
-                    if (res.length) {
-                        this.supportActions.applyMeshColoringBrush(res);
-                    }
-                    this.emit(EVENTS.UPDATE);
-                    event.stopPropagation();
-                }
-                break;
-            }
             default:
                 break;
         }
     };
 
     public onDocumentMouseUp = (event) => {
-        switch (this.state) {
-            case STATE.PAN:
-                if (!this.panMoved) {
-                    if (this.prevState === STATE.ROTATE_PLACEMENT) {
-                        break;
-                    } else {
-                        // check if any model selected
-                        this.onClick(event, true);
-                        // Right click to open context menu
-                        // Note that the event is mouse up, not really contextmenu
-                        !this.isPrimeTower && this.emit(EVENTS.CONTEXT_MENU, event);
-                    }
-                } else {
-                    this.onPan();
+        // controls
+        let capturedByControl = false;
+        if (this.state === STATE.NONE) {
+            for (const control of this.controls) {
+                if (!control.isEnabled()) {
+                    continue;
                 }
-                break;
-            case STATE.TRANSFORM:
-                if (this.sourceType === '3D') {
-                    this.emit(EVENTS.AFTER_TRANSFORM_OBJECT);
+
+                const pointer = this.getPointer(event);
+                if (control.onPointerUp(pointer)) {
+                    capturedByControl = true;
+                    break;
                 }
-                this.transformControl.onMouseUp();
-                break;
-            case STATE.ROTATE_PLACEMENT:
-                this.prevState = STATE.ROTATE_PLACEMENT;
-                break;
-            case STATE.SUPPORT:
-                this.prevState = STATE.SUPPORT;
-                break;
-            case STATE.MESH_COLORING: {
-                this.prevState = STATE.MESH_COLORING;
-                break;
             }
-            default:
-                break;
         }
-        this.state = this.prevState || STATE.NONE;
+
+        if (!capturedByControl) {
+            switch (this.state) {
+                case STATE.PAN:
+                    if (!this.panMoved) {
+                        if (this.prevState === STATE.ROTATE_PLACEMENT) {
+                            break;
+                        } else {
+                            // check if any model selected
+                            this.onClick(event, true);
+                            // Right click to open context menu
+                            // Note that the event is mouse up, not really contextmenu
+                            !this.isPrimeTower && this.emit(EVENTS.CONTEXT_MENU, event);
+                        }
+                    } else {
+                        this.onPan();
+                    }
+                    break;
+                case STATE.TRANSFORM:
+                    if (this.sourceType === '3D') {
+                        this.emit(EVENTS.AFTER_TRANSFORM_OBJECT);
+                    }
+                    this.transformControl.onMouseUp();
+                    break;
+                case STATE.ROTATE_PLACEMENT:
+                    this.prevState = STATE.ROTATE_PLACEMENT;
+                    break;
+                case STATE.SUPPORT:
+                    this.prevState = STATE.SUPPORT;
+                    break;
+                default:
+                    break;
+            }
+            this.state = this.prevState || STATE.NONE;
+        } else {
+            this.state = STATE.NONE;
+        }
 
         document.removeEventListener('mousemove', this.onDocumentMouseMove, false);
         // mouse up needed no matter mousedowm on support mode
         document.removeEventListener('mouseup', this.onDocumentMouseUp, false);
+
         this.isMouseDown = false;
     };
 
@@ -653,7 +751,7 @@ class Controls extends EventEmitter {
     }
 
     private onMouseWheel = (event) => {
-        const stateListAllowWheel = [STATE.NONE, STATE.ROTATE_PLACEMENT, STATE.SUPPORT, STATE.MESH_COLORING];
+        const stateListAllowWheel = [STATE.NONE, STATE.ROTATE_PLACEMENT, STATE.SUPPORT];
         if (stateListAllowWheel.includes(this.state)) {
             event.preventDefault();
             event.stopPropagation();
@@ -809,21 +907,29 @@ class Controls extends EventEmitter {
     public startSupportMode() {
         this.state = STATE.SUPPORT;
         this.prevState = STATE.SUPPORT;
+
+        this.setMode('edit-support');
     }
 
     public stopSupportMode() {
         this.state = STATE.NONE;
         this.prevState = STATE.NONE;
+
+        this.setMode('');
     }
 
     public startMeshColoringMode() {
-        this.state = STATE.MESH_COLORING;
-        this.prevState = STATE.MESH_COLORING;
+        this.state = STATE.NONE;
+        this.prevState = STATE.NONE;
+
+        this.setMode('mesh-coloring');
     }
 
     public stopMeshColoringMode() {
         this.state = STATE.NONE;
         this.prevState = STATE.NONE;
+
+        this.setMode('');
     }
 
     private updateCamera(shouldUpdateTarget = false) {

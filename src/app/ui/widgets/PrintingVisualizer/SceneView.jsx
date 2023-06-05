@@ -15,7 +15,7 @@ import { logModelViewOperation } from '../../../lib/gaEvent';
 import i18n from '../../../lib/i18n';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import { ModelEvents } from '../../../models/events';
-import scene from '../../../scene/Scene';
+import scene, { SceneEvent } from '../../../scene/Scene';
 import ProgressBar from '../../components/ProgressBar';
 import Canvas from '../../components/SMCanvas';
 import { emitUpdateControlInputEvent } from '../../components/SMCanvas/TransformControls';
@@ -39,6 +39,7 @@ import VisualizerPreviewControl from './VisualizerPreviewControl';
 import SceneContextMenu from './components/SceneContextMenu';
 import SceneShortcuts from './components/SceneShortcuts';
 import styles from './styles.styl';
+import MeshColoringControl from '../../../scene/controls/MeshColoringControl';
 
 const initQuaternion = new Quaternion();
 
@@ -87,7 +88,6 @@ class Visualizer extends PureComponent {
         setTransformMode: PropTypes.func.isRequired,
         moveBrush: PropTypes.func.isRequired,
         applySupportBrush: PropTypes.func.isRequired,
-        applyMeshColoringBrush: PropTypes.func.isRequired,
         autoRotateSelectedModel: PropTypes.func.isRequired,
         layFlatSelectedModel: PropTypes.func.isRequired,
         scaleToFitSelectedModel: PropTypes.func.isRequired,
@@ -344,8 +344,6 @@ class Visualizer extends PureComponent {
         applySupportBrush: (raycastResult) => {
             this.props.applySupportBrush(raycastResult);
         },
-
-        applyMeshColoringBrush: (raycastResult) => this.props.applyMeshColoringBrush(raycastResult),
     };
 
     constructor(props) {
@@ -362,6 +360,22 @@ class Visualizer extends PureComponent {
     // hideContextMenu = () => {
     //     ContextMenu.hide();
     // };
+
+    // canvas: Canvas
+    onSceneCreated = (canvas) => {
+        const modelGroup = this.props.modelGroup;
+
+        // configure control manager
+        const controlManager = canvas.getControlManager();
+        scene.setControlManager(controlManager);
+
+        const meshColoringControl = new MeshColoringControl(canvas.getCamera(), modelGroup);
+        controlManager.registerControl('mesh-coloring', meshColoringControl);
+
+        scene.on(SceneEvent.MeshChanged, () => {
+            canvas.renderScene();
+        });
+    };
 
     componentDidMount() {
         this.props.clearOperationHistory();
@@ -556,6 +570,7 @@ class Visualizer extends PureComponent {
                 <div className={styles['canvas-container']}>
                     <Canvas
                         ref={this.canvas}
+                        onSceneCreated={this.onSceneCreated}
                         inProgress={inProgress}
                         size={size}
                         modelGroup={modelGroup}
@@ -701,7 +716,6 @@ const mapDispatchToProps = (dispatch) => ({
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value)),
     moveBrush: (raycastResult) => dispatch(sceneActions.moveBrush(raycastResult)),
     applySupportBrush: (raycastResult) => dispatch(sceneActions.applySupportBrush(raycastResult)),
-    applyMeshColoringBrush: (raycastResult) => dispatch(sceneActions.applyMeshColoringBrush(raycastResult)),
     setRotationPlacementFace: (userData) => dispatch(printingActions.setRotationPlacementFace(userData)),
     displayModel: () => dispatch(printingActions.displayModel()),
     loadSimplifyModel: (modelID, modelOutputName, isCancelSimplify) => dispatch(printingActions.loadSimplifyModel({

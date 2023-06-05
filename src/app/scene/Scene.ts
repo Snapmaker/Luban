@@ -4,6 +4,7 @@ import { ModelEvents } from '../models/events';
 
 // TODO: Move this object to app/scene directory
 import PrintableCube from '../ui/widgets/PrintingVisualizer/PrintableCube';
+import Controls from '../ui/components/SMCanvas/Controls';
 
 export enum SceneEvent {
     // model
@@ -23,6 +24,8 @@ export enum SceneEvent {
 class Scene extends EventEmitter {
     private modelGroup?: ModelGroup;
     private buildVolume?: PrintableCube;
+
+    private controlManager?: Controls = null;
 
     public constructor() {
         super();
@@ -82,6 +85,14 @@ class Scene extends EventEmitter {
     private onWorkRangeChanged = (): void => {
         this.emit(SceneEvent.BuildVolumeChanged);
     };
+
+    public getControlManager(): Controls | null {
+        return this.controlManager;
+    }
+
+    public setControlManager(controlManager: Controls): void {
+        this.controlManager = controlManager;
+    }
 }
 
 // scene singleton

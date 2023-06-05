@@ -18,25 +18,25 @@ export default class FixedCircularArray<T> {
     }
 
     public push(value: T): void {
+        if (this.isFull && this.end === this.start) {
+            this.start = (this.start + 1) % this.maxLength;
+        }
+
         this.data[this.end] = value;
         this.end = (this.end + 1) % this.maxLength;
 
         if (this.end === this.start) {
             this.isFull = true;
         }
-
-        if (this.isFull) {
-            this.start = (this.start + 1) % this.maxLength;
-        }
     }
 
     public get(index: number): T {
         if (index < 0 || index >= this.maxLength) {
-            throw new Error('Index out of bounds');
+            throw new Error(`Index out of bounds: ${index}`);
         }
 
-        if (!this.isFull && index >= this.end) {
-            throw new Error('Index out of bounds');
+        if (!this.isFull && index >= this.getLength()) {
+            throw new Error(`Index out of bounds: ${index}`);
         }
 
         return this.data[(this.start + index) % this.maxLength];
@@ -44,11 +44,11 @@ export default class FixedCircularArray<T> {
 
     public set(index: number, value: T): void {
         if (index < 0 || index >= this.maxLength) {
-            throw new Error('Index out of bounds');
+            throw new Error(`Index out of bounds: ${index}`);
         }
 
-        if (!this.isFull && index >= this.end) {
-            throw new Error('Index out of bounds');
+        if (!this.isFull && index >= this.getLength()) {
+            throw new Error(`Index out of bounds: ${index}`);
         }
 
         this.data[(this.start + index) % this.maxLength] = value;
@@ -60,6 +60,19 @@ export default class FixedCircularArray<T> {
 
     public getEnd(): number {
         return this.end;
+    }
+
+    public trim(index: number): void {
+        this.isFull = (index === this.maxLength);
+        this.end = (this.start + index) % this.maxLength;
+    }
+
+    public getLatestIndex(): number {
+        let index = this.getEnd() - 1;
+        if (index < 0) {
+            index += this.getMaxLength();
+        }
+        return index;
     }
 
     public clear() {
