@@ -47,6 +47,8 @@ export default abstract class Control extends Object3D {
         return this.priority;
     }
 
+    public abstract onPointerHover(pointer: Pointer): boolean;
+
     public abstract onPointerDown(pointer: Pointer): boolean;
 
     public abstract onPointerMove(pointer: Pointer): boolean;
