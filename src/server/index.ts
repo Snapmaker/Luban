@@ -7,7 +7,7 @@ import _ from 'lodash';
 import bcrypt from 'bcrypt-nodejs';
 import chalk from 'chalk';
 import webappengine from 'webappengine';
-import Jimp from 'jimp';
+// import Jimp from 'jimp';
 
 import createApplication from './app';
 import monitor from './services/monitor';
@@ -20,27 +20,10 @@ import DataStorage from './DataStorage';
 
 const log = logger('init');
 
-const EPS = 1e-6;
+// const EPS = 1e-6;
 
 const createServer = (options, callback) => {
     options = { ...options };
-    { // verbosity
-        const verbosity = options.verbosity;
-
-        // https://github.com/winstonjs/winston#logging-levels
-        if (verbosity === 1) {
-            _.set(settings, 'verbosity', verbosity);
-            logger.logger.level = 'verbose';
-        }
-        if (verbosity === 2) {
-            _.set(settings, 'verbosity', verbosity);
-            logger.logger.level = 'debug';
-        }
-        if (verbosity === 3) {
-            _.set(settings, 'verbosity', verbosity);
-            logger.logger.level = 'silly';
-        }
-    }
 
     const profile = path.resolve(settings.rcfile);
 
@@ -131,7 +114,7 @@ const createServer = (options, callback) => {
 
             dns.lookup(os.hostname(), { family: 4, all: true }, (err, addresses) => {
                 if (err) {
-                    log.error('Can\'t resolve host name:', err);
+                    log.error(`Can't resolve host name: ${err}`);
                     return;
                 }
 
