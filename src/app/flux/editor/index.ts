@@ -1,4 +1,4 @@
-import { includes } from 'lodash';
+import { includes, noop } from 'lodash';
 import { isInside } from 'overlap-area';
 import path from 'path';
 import * as THREE from 'three';
@@ -41,6 +41,7 @@ import RotateOperation2D from '../operation-history/RotateOperation2D';
 import ScaleOperation2D from '../operation-history/ScaleOperation2D';
 import VisibleOperation2D from '../operation-history/VisibleOperation2D';
 import { baseActions } from './actions-base';
+import OperationHistory from '../../core/OperationHistory';
 
 
 /* eslint-disable-next-line import/no-cycle */
@@ -115,7 +116,7 @@ function shouldProcessModel(selectedModel) {
 }
 
 // a wrapper function for recording scaled models states
-function recordScaleActionsToHistory(scaleActionsFn, elements, SVGActions, headType, machine, dispatch) {
+async function recordScaleActionsToHistory(scaleActionsFn, elements, SVGActions, headType, machine, dispatch) {
     if (typeof scaleActionsFn === 'function') {
         const tmpTransformationState = {};
         const operations = new CompoundOperation();
@@ -129,7 +130,7 @@ function recordScaleActionsToHistory(scaleActionsFn, elements, SVGActions, headT
 
         scaleActionsFn();
 
-        const promises = elements.map(element => {
+        const promises = elements.map(async (element) => {
             const svgModel = SVGActions.getSVGModelByElement(element);
             // record image element final state after image has been processed asynchrously,
             // other elements state can be recorded immediately
@@ -302,7 +303,7 @@ export const actions = {
                 );
             });
 
-            controller.on('taskProgress:cutModel', () => { });
+            controller.on('taskProgress:cutModel', noop);
 
             controller.on('taskProgress:processImage', taskResult => {
                 if (headType !== taskResult.headType) {
@@ -566,7 +567,7 @@ export const actions = {
             });
     },
 
-    checkIsOversizeImage: (headType, file, onError) => (dispatch, getState) => {
+    checkIsOversizeImage: (headType, file, onError) => async (dispatch, getState) => {
         const { materials, progressStatesManager, coordinateSize } = getState()[headType];
         const formData = new FormData();
         formData.append('image', file);
@@ -1285,7 +1286,7 @@ export const actions = {
         dispatch(baseActions.render(headType));
     },
 
-    undo: headType => (dispatch, getState) => {
+    undo: (headType) => (dispatch, getState) => {
         const { canUndo } = getState()[headType].history;
         if (canUndo) {
             dispatch(operationHistoryActions.undo(headType));
@@ -1294,7 +1295,7 @@ export const actions = {
         }
     },
 
-    redo: headType => (dispatch, getState) => {
+    redo: (headType) => (dispatch, getState) => {
         const { canRedo } = getState()[headType].history;
         if (canRedo) {
             dispatch(operationHistoryActions.redo(headType));
@@ -2225,7 +2226,7 @@ export const actions = {
                             throw new Error('geometry invalid');
                         }
                     },
-                    () => { }, // onprogress
+                    noop, // onprogress
                     err => {
                         onError && onError(err);
                         dispatch(
@@ -2356,17 +2357,22 @@ export const actions = {
         }
     },
     drawStart: (headType, elem) => (dispatch, getState) => {
-        const { contentGroup, history } = getState()[headType];
+        const { contentGroup } = getState()[headType];
 
-        if (history.history[history.index]?.operations[0] instanceof DrawStart) {
+        const history = getState()[headType].history as OperationHistory;
+
+        const latestOperation = history.get();
+        if (latestOperation && latestOperation.getItem(0) instanceof DrawStart) {
             return;
         }
+
         const operations = new CompoundOperation();
         const operation = new DrawStart({
             elemID: elem ? elem.getAttribute('id') : '',
             contentGroup
         });
         operations.push(operation);
+
         history.push(operations);
         dispatch(
             actions.updateState(headType, {
