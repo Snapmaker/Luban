@@ -19,6 +19,28 @@ class OperationHistory {
         this.canRedo = (this.index + 1 < this.operations.length);
     }
 
+    public get(index: number = this.index): CompoundOperation | null {
+        if (index < 0 || index > this.operations.length) {
+            return null;
+        }
+
+        return this.operations[index];
+    }
+
+    public push(compoundOperation: CompoundOperation) {
+        // Set length of array to trim operations beyond
+        this.operations[++this.index] = compoundOperation;
+        this.operations.length = this.index + 1;
+
+        // Keep the history less than or equal to the MAX_LENGTH
+        if (this.operations.length > MAX_CAPACITY) {
+            this.operations = this.operations.slice(-MAX_CAPACITY);
+            this.index = this.operations.length - 1;
+        }
+
+        this._updateUndoRedo();
+    }
+
     public clear() {
         this.operations = [];
         this.index = -1;
@@ -53,20 +75,6 @@ class OperationHistory {
         //     operation.redo();
         // }
         // compoundOperation.runRedoCallback();
-
-        this._updateUndoRedo();
-    }
-
-    public push(compoundOperation: CompoundOperation) {
-        // Set length of array to trim operations beyond
-        this.operations[++this.index] = compoundOperation;
-        this.operations.length = this.index + 1;
-
-        // Keep the history less than or equal to the MAX_LENGTH
-        if (this.operations.length > MAX_CAPACITY) {
-            this.operations = this.operations.slice(-MAX_CAPACITY);
-            this.index = this.operations.length - 1;
-        }
 
         this._updateUndoRedo();
     }
