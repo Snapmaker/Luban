@@ -73,7 +73,6 @@ class WebGLRendererWrapper {
         }
         try {
             this.renderer.forceContextLoss();
-            this.renderer.context = null;
             this.renderer.domElement = null;
             this.renderer.dispose();
             this.renderer = null;
