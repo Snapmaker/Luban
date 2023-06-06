@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 // import PropTypes from 'prop-types';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import classNames from 'classnames';
@@ -99,9 +99,6 @@ function GcodeLayout() {
 
 
 function VisualizerPreviewControl() {
-    const [showPreviewPanel, setShowPreviewPanel] = useState(true);
-    const [allShowTypes, setAllShowTypes] = useSetState({});
-    const [showOriginalModel, setShowOriginalModel] = useState(true);
     const gcodeLine = useSelector(state => state?.printing?.gcodeLine, shallowEqual);
     const displayedType = useSelector(state => state?.printing?.displayedType, shallowEqual);
     // TODO, change init
@@ -115,22 +112,27 @@ function VisualizerPreviewControl() {
     const materialDefinitions = useSelector(state => state?.printing?.materialDefinitions, shallowEqual);
     const defaultMaterialId = useSelector(state => state?.printing?.defaultMaterialId, shallowEqual);
     const defaultMaterialIdRight = useSelector(state => state?.printing?.defaultMaterialIdRight, shallowEqual);
+
     const leftExtrualMaterial = find(materialDefinitions, { definitionId: defaultMaterialId });
     const rightExtrualMaterial = find(materialDefinitions, { definitionId: defaultMaterialIdRight });
     const colorL = leftExtrualMaterial?.settings?.color?.default_value;
     const colorR = rightExtrualMaterial?.settings?.color?.default_value;
 
 
+    const [showPreviewPanel, setShowPreviewPanel] = useState(true);
+    const [allShowTypes, setAllShowTypes] = useSetState({});
+    const [showOriginalModel, setShowOriginalModel] = useState(true);
+
     const dispatch = useDispatch();
     const { showToggleBtn, renderToggleBtn } = useShowToggleBtn();
 
-    function togglePreviewOptionFactoryByTypeAndDirection(showType, direction) {
+    const togglePreviewOptionFactoryByTypeAndDirection = useCallback((showType, direction) => {
         return (event) => {
             allShowTypes[direction][showType] = event.target.checked;
             setAllShowTypes(allShowTypes);
             dispatch(printingActions.setGcodeVisibilityByTypeAndDirection(showType, direction, event.target.checked));
         };
-    }
+    }, [dispatch, allShowTypes, setAllShowTypes]);
 
     function toggleShowOriginalModel(event) {
         const show = event.target.checked;
@@ -162,12 +164,10 @@ function VisualizerPreviewControl() {
     }, [showOriginalModel]);
 
     useEffect(() => {
+        console.log('gcodeTypeInitialVisibility', gcodeTypeInitialVisibility);
         setAllShowTypes(gcodeTypeInitialVisibility);
-    }, [gcodeTypeInitialVisibility]);
+    }, [setAllShowTypes, gcodeTypeInitialVisibility]);
 
-    if (!gcodeLine) {
-        return null;
-    }
 
     // TODO
     const lineTypeStructureObjects = [
@@ -207,90 +207,102 @@ function VisualizerPreviewControl() {
             showType: 'UNKNOWN'
         },
     ];
-    const lineTypeExtruderObjects = [
-        {
-            fatherContent: i18n._('key-Printing/Preview-Tool0'),
-            fatherColor: colorL,
-            childrenObjects: [
-                {
-                    value: allShowTypes[LEFT_EXTRUDER]['WALL-INNER'],
-                    content: i18n._('key-Printing/Preview-Inner Wall'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('WALL-INNER', LEFT_EXTRUDER)
-                },
-                {
-                    value: allShowTypes[LEFT_EXTRUDER]['WALL-OUTER'],
-                    content: i18n._('key-Printing/Preview-Outer Wall'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('WALL-OUTER', LEFT_EXTRUDER)
-                },
-                {
-                    value: allShowTypes[LEFT_EXTRUDER].SKIN,
-                    content: i18n._('key-Printing/Preview-Skin'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('SKIN', LEFT_EXTRUDER)
-                },
-                {
-                    value: allShowTypes[LEFT_EXTRUDER].SUPPORT,
-                    content: i18n._('key-Printing/Preview-Helper'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('SUPPORT', LEFT_EXTRUDER)
-                },
-                {
-                    value: allShowTypes[LEFT_EXTRUDER].FILL,
-                    content: i18n._('key-Printing/Preview-Fill'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('FILL', LEFT_EXTRUDER)
-                },
-                {
-                    value: allShowTypes[LEFT_EXTRUDER].TRAVEL,
-                    content: i18n._('key-Printing/Preview-Travel'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('TRAVEL', LEFT_EXTRUDER)
-                },
-                {
-                    value: allShowTypes[LEFT_EXTRUDER].UNKNOWN,
-                    content: i18n._('key-Printing/Preview-Unknown'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('UNKNOWN', LEFT_EXTRUDER)
-                }
-            ]
-        },
-        {
-            fatherContent: i18n._('key-Printing/Preview-Tool1'),
-            fatherColor: colorR,
-            childrenObjects: [
-                {
-                    value: allShowTypes[RIGHT_EXTRUDER]['WALL-INNER'],
-                    content: i18n._('key-Printing/Preview-Inner Wall'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('WALL-INNER', RIGHT_EXTRUDER)
-                },
-                {
-                    value: allShowTypes[RIGHT_EXTRUDER]['WALL-OUTER'],
-                    content: i18n._('key-Printing/Preview-Outer Wall'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('WALL-OUTER', RIGHT_EXTRUDER)
-                },
-                {
-                    value: allShowTypes[RIGHT_EXTRUDER].SKIN,
-                    content: i18n._('key-Printing/Preview-Skin'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('SKIN', RIGHT_EXTRUDER)
-                },
-                {
-                    value: allShowTypes[RIGHT_EXTRUDER].SUPPORT,
-                    content: i18n._('key-Printing/Preview-Helper'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('SUPPORT', RIGHT_EXTRUDER)
-                },
-                {
-                    value: allShowTypes[RIGHT_EXTRUDER].FILL,
-                    content: i18n._('key-Printing/Preview-Fill'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('FILL', RIGHT_EXTRUDER)
-                },
-                {
-                    value: allShowTypes[RIGHT_EXTRUDER].TRAVEL,
-                    content: i18n._('key-Printing/Preview-Travel'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('TRAVEL', RIGHT_EXTRUDER)
-                },
-                {
-                    value: allShowTypes[RIGHT_EXTRUDER].UNKNOWN,
-                    content: i18n._('key-Printing/Preview-Unknown'),
-                    onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('UNKNOWN', RIGHT_EXTRUDER)
-                }
-            ]
+
+    const lineTypeExtruderObjects = useMemo(() => {
+        if (!allShowTypes[LEFT_EXTRUDER] || !allShowTypes[RIGHT_EXTRUDER]) {
+            return [];
         }
-    ];
+
+        return [
+            {
+                fatherContent: i18n._('key-Printing/Preview-Tool0'),
+                fatherColor: colorL,
+                childrenObjects: [
+                    {
+                        value: allShowTypes[LEFT_EXTRUDER]['WALL-INNER'],
+                        content: i18n._('key-Printing/Preview-Inner Wall'),
+                        onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('WALL-INNER', LEFT_EXTRUDER)
+                    },
+                    {
+                        value: allShowTypes[LEFT_EXTRUDER]['WALL-OUTER'],
+                        content: i18n._('key-Printing/Preview-Outer Wall'),
+                        onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('WALL-OUTER', LEFT_EXTRUDER)
+                    },
+                    {
+                        value: allShowTypes[LEFT_EXTRUDER].SKIN,
+                        content: i18n._('key-Printing/Preview-Skin'),
+                        onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('SKIN', LEFT_EXTRUDER)
+                    },
+                    {
+                        value: allShowTypes[LEFT_EXTRUDER].SUPPORT,
+                        content: i18n._('key-Printing/Preview-Helper'),
+                        onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('SUPPORT', LEFT_EXTRUDER)
+                    },
+                    {
+                        value: allShowTypes[LEFT_EXTRUDER].FILL,
+                        content: i18n._('key-Printing/Preview-Fill'),
+                        onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('FILL', LEFT_EXTRUDER)
+                    },
+                    {
+                        value: allShowTypes[LEFT_EXTRUDER].TRAVEL,
+                        content: i18n._('key-Printing/Preview-Travel'),
+                        onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('TRAVEL', LEFT_EXTRUDER)
+                    },
+                    {
+                        value: allShowTypes[LEFT_EXTRUDER].UNKNOWN,
+                        content: i18n._('key-Printing/Preview-Unknown'),
+                        onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('UNKNOWN', LEFT_EXTRUDER)
+                    }
+                ]
+            },
+            {
+                fatherContent: i18n._('key-Printing/Preview-Tool1'),
+                fatherColor: colorR,
+                childrenObjects: [
+                    {
+                        value: allShowTypes[RIGHT_EXTRUDER]['WALL-INNER'],
+                        content: i18n._('key-Printing/Preview-Inner Wall'),
+                        onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('WALL-INNER', RIGHT_EXTRUDER)
+                    },
+                    {
+                        value: allShowTypes[RIGHT_EXTRUDER]['WALL-OUTER'],
+                        content: i18n._('key-Printing/Preview-Outer Wall'),
+                        onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('WALL-OUTER', RIGHT_EXTRUDER)
+                    },
+                    {
+                        value: allShowTypes[RIGHT_EXTRUDER].SKIN,
+                        content: i18n._('key-Printing/Preview-Skin'),
+                        onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('SKIN', RIGHT_EXTRUDER)
+                    },
+                    {
+                        value: allShowTypes[RIGHT_EXTRUDER].SUPPORT,
+                        content: i18n._('key-Printing/Preview-Helper'),
+                        onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('SUPPORT', RIGHT_EXTRUDER)
+                    },
+                    {
+                        value: allShowTypes[RIGHT_EXTRUDER].FILL,
+                        content: i18n._('key-Printing/Preview-Fill'),
+                        onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('FILL', RIGHT_EXTRUDER)
+                    },
+                    {
+                        value: allShowTypes[RIGHT_EXTRUDER].TRAVEL,
+                        content: i18n._('key-Printing/Preview-Travel'),
+                        onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('TRAVEL', RIGHT_EXTRUDER)
+                    },
+                    {
+                        value: allShowTypes[RIGHT_EXTRUDER].UNKNOWN,
+                        content: i18n._('key-Printing/Preview-Unknown'),
+                        onChangeValue: togglePreviewOptionFactoryByTypeAndDirection('UNKNOWN', RIGHT_EXTRUDER)
+                    }
+                ]
+            }
+        ];
+    }, [allShowTypes, colorL, colorR, togglePreviewOptionFactoryByTypeAndDirection]);
+
+    if (!gcodeLine || !allShowTypes[LEFT_EXTRUDER]) {
+        return null;
+    }
+
     return (
         <React.Fragment>
             <div>
