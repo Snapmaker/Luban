@@ -515,14 +515,16 @@ class AppLayout extends React.PureComponent {
             await this.props.save(headType);
         },
         saveAll: async () => {
-            await this.actions.closeFile();
+            return this.actions.closeFile();
         },
         closeFile: async () => {
             const currentHeadType = getCurrentHeadType(this.props.history.location.pathname);
             const message = i18n._('key-Project/Save-Save the changes you made in the {{headType}} G-code Generator? Your changes will be lost if you don’t save them.', { headType: i18n._(HEAD_TYPE_ENV_NAME[currentHeadType]) });
             if (currentHeadType) {
-                await this.props.saveAndClose(currentHeadType, { message });
+                return this.props.saveAndClose(currentHeadType, { message });
             }
+
+            return false;
         },
         initFileOpen: async () => {
             const file = await UniApi.File.popFile();
@@ -626,8 +628,11 @@ class AppLayout extends React.PureComponent {
             });
             UniApi.Event.on('save-and-close', async () => {
                 logLubanQuit();
-                await this.actions.saveAll();
-                UniApi.Window.call('destroy');
+
+                const done = await this.actions.saveAll();
+                if (done) {
+                    UniApi.Window.call('destroy');
+                }
             });
             UniApi.Event.on('close-file', async () => {
                 await this.actions.closeFile();
@@ -639,8 +644,10 @@ class AppLayout extends React.PureComponent {
                 UniApi.Connection.navigateToWorkspace();
             });
             UniApi.Event.on('app-quit', async () => {
-                await this.actions.closeFile();
-                UniApi.APP.quit();
+                const done = await this.actions.closeFile();
+                if (done) {
+                    UniApi.APP.quit();
+                }
             });
             UniApi.Event.on('open-file-in-app', async () => {
                 // const pathname = this.props.currentModalPath || this.props.history?.location?.pathname;

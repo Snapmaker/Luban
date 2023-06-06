@@ -1,12 +1,11 @@
+import * as fs from 'fs-extra';
+import isElectron from 'is-electron';
 import util from 'util';
 import winston from 'winston';
-import isElectron from 'is-electron';
-import * as fs from 'fs-extra';
+
 import settings from '../config/settings';
 
 const FILE_MAX_SIZE = 1024 * 1024 * 10;
-
-const loggers = new Map();
 
 const getLogDir = () => {
     let logDir: string;
@@ -57,7 +56,7 @@ const VERBOSITY_MAX = 3; // -vvv
 const { combine, colorize, timestamp, printf } = winston.format;
 
 // https://github.com/winstonjs/winston/blob/master/README.md#creating-your-own-logger
-const createLogger = (filename: string) => {
+const createLogger = (filename: string): winston.Logger => {
     const logDir = getLogDir();
     if (!logDir) {
         return winston.createLogger({
@@ -102,6 +101,20 @@ const createLogger = (filename: string) => {
     }
 };
 
+const loggers = new Map<string, winston.Logger>();
+
+function getLogger(filename: string): winston.Logger {
+    if (loggers[filename]) {
+        return loggers[filename];
+    }
+
+    cleanLogFile(filename);
+
+    const logger = createLogger(filename);
+    loggers[filename] = logger;
+
+    return logger;
+}
 
 // https://github.com/winstonjs/winston/blob/master/README.md#logging-levels
 // npm logging levels are prioritized from 0 to 5 (highest to lowest):
@@ -117,19 +130,30 @@ const levels = [
 
 type Level = 'error' | 'warn' | 'info' | 'verbose' | 'debug' | 'silly';
 
-export default (namespace = '', filename = 'server') => {
-    namespace = String(namespace);
+type LoggerType = {
+    [key in Level]: (msg: string) => void;
+}
 
-    if (loggers[filename]) {
-        return loggers[filename];
+type NSLoggerType = LoggerType & {
+    logger: winston.Logger;
+};
+
+const nsLoggers = new Map<string, NSLoggerType>();
+
+export default (namespace: string = '', filename: string = 'server'): NSLoggerType => {
+    const logger = getLogger(filename);
+
+    const nsKey = `${filename}-${namespace}`;
+    if (nsLoggers[nsKey]) {
+        return nsLoggers[nsKey];
     }
 
-    cleanLogFile(filename);
+    const nsLogger = {
+        logger,
+    };
 
-    const logger = createLogger(filename);
-
-    const result = levels.reduce((acc, level) => {
-        acc[level] = (...args) => {
+    levels.forEach((level) => {
+        nsLogger[level] = (...args) => {
             if ((settings.verbosity >= VERBOSITY_MAX) && (level !== 'silly')) {
                 args = args.concat(getStackTrace()[2]);
             }
@@ -137,9 +161,9 @@ export default (namespace = '', filename = 'server') => {
                 ? logger[level](`${namespace} ${util.format(...args)}`)
                 : logger[level](util.format(...args));
         };
-        return acc;
-    }, {}) as { [key in Level]: (log: string) => void };
+    });
 
-    loggers[filename] = result;
-    return result;
+    nsLoggers[nsKey] = nsLogger as NSLoggerType;
+
+    return nsLogger as NSLoggerType;
 };

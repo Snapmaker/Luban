@@ -425,13 +425,13 @@ export const actions = {
         // save should return when no model in editor
         const modelGroup = getState()[headType].modelGroup;
         if (!modelGroup || !modelGroup.hasModelWhole()) {
-            return;
+            return true;
         }
 
         const state = getState().project[headType];
         const { openedFile, unSaved } = state;
         if (!unSaved) {
-            return;
+            return true;
         }
 
         // https://github.com/electron/electron/pull/4029 Should revers change after the electron version is upgraded
@@ -447,22 +447,23 @@ export const actions = {
                     i18n._('Don\'t Save')
                 ]
             });
+
             if (typeof result === 'boolean') {
                 if (!result) {
                     await dispatch(actions.clearSavedEnvironment(headType));
-                    return;
+                    return true;
                 } else {
                     await dispatch(actions.autoSaveEnvironment(headType));
                     await dispatch(actions.saveAsFile(headType));
-                    return;
+                    return true;
                 }
             } else {
                 const idxClicked = result && result.response;
                 if (idxClicked === 1) {
-                    return;
+                    return false;
                 } else if (idxClicked === 2) {
                     await dispatch(actions.clearSavedEnvironment(headType));
-                    return;
+                    return true;
                 }
             }
         }
@@ -470,7 +471,7 @@ export const actions = {
         if (!openedFile) {
             await dispatch(actions.autoSaveEnvironment(headType));
             await dispatch(actions.saveAsFile(headType));
-            return;
+            return true;
         }
 
         const { body: { targetFile } } = await api.env.packageEnv({ headType });
@@ -483,6 +484,8 @@ export const actions = {
             });
         });
         await dispatch(actions.clearSavedEnvironment(headType));
+
+        return true;
     },
 
     afterOpened: (headType) => (dispatch) => {
@@ -538,9 +541,12 @@ export const actions = {
             // End of Compatible with old project file
 
             const oldHeadType = getCurrentHeadType(history?.location?.pathname) || headType;
-            !isGuideTours && await dispatch(actions.save(oldHeadType, {
-                message: i18n._('key-Project/Save-Save the changes you made in the {{headType}} G-code Generator? Your changes will be lost if you don’t save them.', { headType: i18n._(HEAD_TYPE_ENV_NAME[oldHeadType]) })
-            }));
+            if (!isGuideTours) {
+                await dispatch(actions.save(oldHeadType, {
+                    message: i18n._('key-Project/Save-Save the changes you made in the {{headType}} G-code Generator? Your changes will be lost if you don’t save them.', { headType: i18n._(HEAD_TYPE_ENV_NAME[oldHeadType]) })
+                }));
+            }
+
             await dispatch(actions.closeProject(oldHeadType));
             content && dispatch(actions.updateState(headType, { findLastEnvironment: false, content, unSaved: false }));
             if (oldHeadType === headType && !unReload) {
@@ -582,9 +588,14 @@ export const actions = {
             history.push(to);
             return;
         }
-        await dispatch(actions.save(oldHeadType, {
+        const done = await dispatch(actions.save(oldHeadType, {
             message: i18n._('key-Project/Save-Save the changes you made in the {{headType}} G-code Generator? Your changes will be lost if you don’t save them.', { headType: i18n._(HEAD_TYPE_ENV_NAME[oldHeadType]) })
         }));
+        if (!done) {
+            // action cancelled
+            return;
+        }
+
         await dispatch(actions.closeProject(oldHeadType));
 
         for (const type of [HEAD_PRINTING, HEAD_CNC, HEAD_LASER]) {
@@ -655,7 +666,10 @@ export const actions = {
         const modState = getState()[headType];
 
         if (modState.modelGroup.hasModel()) {
-            await dispatch(actions.save(headType, opts));
+            const done = await dispatch(actions.save(headType, opts));
+            if (!done) {
+                return false;
+            }
             await dispatch(actions.updateState(headType, { openedFile: undefined }));
         }
 
@@ -668,6 +682,8 @@ export const actions = {
         modState.modelGroup.removeAllModels();
         modState.SVGActions && modState.SVGActions.svgContentGroup.removeAllElements();
         UniApi.Window.setOpenedFile();
+
+        return true;
     },
     closeProject: (headType) => (dispatch, getState) => {
         const modState = getState()[headType];
