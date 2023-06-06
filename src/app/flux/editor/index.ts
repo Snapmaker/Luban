@@ -1,58 +1,56 @@
-import * as THREE from 'three';
-import path from 'path';
-import { v4 as uuid } from 'uuid';
 import { includes } from 'lodash';
 import { isInside } from 'overlap-area';
+import path from 'path';
+import * as THREE from 'three';
+import { v4 as uuid } from 'uuid';
 
+import { isEqual, round, whetherTransformed } from '../../../shared/lib/utils';
+import api from '../../api';
+import {
+    COORDINATE_MODE_BOTTOM_CENTER,
+    COORDINATE_MODE_CENTER,
+    DATA_PREFIX,
+    DISPLAYED_TYPE_MODEL,
+    MAX_LASER_CNC_CANVAS_SCALE,
+    MIN_LASER_CNC_CANVAS_SCALE,
+    PAGE_EDITOR,
+    PAGE_PROCESS,
+    PROCESS_MODES_EXCEPT_VECTOR,
+    PROCESS_MODE_VECTOR,
+    SOURCE_TYPE
+} from '../../constants';
+import CompoundOperation from '../../core/CompoundOperation';
+import { controller } from '../../lib/controller';
 import log from '../../lib/log';
+import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
+import workerManager from '../../lib/manager/workerManager';
+import { DEFAULT_TEXT_CONFIG, checkParams, generateModelDefaultConfigs, isOverSizeModel, limitModelSizeByMachineSize } from '../../models/ModelInfoUtils';
+import SVGActionsFactory from '../../models/SVGActionsFactory';
+import SvgModel from '../../models/SvgModel';
+import { NS } from '../../ui/SVGEditor/lib/namespaces';
+import ModelLoader from '../../ui/widgets/PrintingVisualizer/ModelLoader';
+import AddOperation2D from '../operation-history/AddOperation2D';
+import DeleteOperation2D from '../operation-history/DeleteOperation2D';
+import DrawDelete from '../operation-history/DrawDelete';
+import DrawLine from '../operation-history/DrawLine';
+import DrawStart from '../operation-history/DrawStart';
+import DrawTransform from '../operation-history/DrawTransform';
+import DrawTransformComplete from '../operation-history/DrawTransformComplete';
+import MoveOperation2D from '../operation-history/MoveOperation2D';
+import RotateOperation2D from '../operation-history/RotateOperation2D';
+import ScaleOperation2D from '../operation-history/ScaleOperation2D';
+import VisibleOperation2D from '../operation-history/VisibleOperation2D';
+import { baseActions } from './actions-base';
+
+
+/* eslint-disable-next-line import/no-cycle */
+import { processActions } from './actions-process';
+/* eslint-disable-next-line import/no-cycle */
+import { actions as operationHistoryActions } from '../operation-history';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as projectActions } from '../project';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as appGlobalActions } from '../app-global';
-import api from '../../api';
-import { checkParams, DEFAULT_TEXT_CONFIG, generateModelDefaultConfigs, limitModelSizeByMachineSize, isOverSizeModel } from '../../models/ModelInfoUtils';
-
-import {
-    PROCESS_MODES_EXCEPT_VECTOR,
-    PROCESS_MODE_VECTOR,
-    PAGE_EDITOR,
-    PAGE_PROCESS,
-    SOURCE_TYPE,
-    DATA_PREFIX,
-    COORDINATE_MODE_CENTER,
-    COORDINATE_MODE_BOTTOM_CENTER,
-    DISPLAYED_TYPE_MODEL,
-    MIN_LASER_CNC_CANVAS_SCALE,
-    MAX_LASER_CNC_CANVAS_SCALE
-} from '../../constants';
-import { baseActions } from './actions-base';
-/* eslint-disable-next-line import/no-cycle */
-import { processActions } from './actions-process';
-
-import workerManager from '../../lib/manager/workerManager';
-
-import { controller } from '../../lib/controller';
-import { isEqual, round, whetherTransformed } from '../../../shared/lib/utils';
-
-import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
-import VisibleOperation2D from '../operation-history/VisibleOperation2D';
-import AddOperation2D from '../operation-history/AddOperation2D';
-import DeleteOperation2D from '../operation-history/DeleteOperation2D';
-/* eslint-disable-next-line import/no-cycle */
-import { actions as operationHistoryActions } from '../operation-history';
-import CompoundOperation from '../../core/CompoundOperation';
-import MoveOperation2D from '../operation-history/MoveOperation2D';
-import ScaleOperation2D from '../operation-history/ScaleOperation2D';
-import RotateOperation2D from '../operation-history/RotateOperation2D';
-import ModelLoader from '../../ui/widgets/PrintingVisualizer/ModelLoader';
-import SvgModel from '../../models/SvgModel';
-import SVGActionsFactory from '../../models/SVGActionsFactory';
-import { NS } from '../../ui/SVGEditor/lib/namespaces';
-import DrawDelete from '../operation-history/DrawDelete';
-import DrawLine from '../operation-history/DrawLine';
-import DrawTransform from '../operation-history/DrawTransform';
-import DrawTransformComplete from '../operation-history/DrawTransformComplete';
-import DrawStart from '../operation-history/DrawStart';
 
 const getSourceType = fileName => {
     let sourceType;
