@@ -164,7 +164,6 @@ function VisualizerPreviewControl() {
     }, [showOriginalModel]);
 
     useEffect(() => {
-        console.log('gcodeTypeInitialVisibility', gcodeTypeInitialVisibility);
         setAllShowTypes(gcodeTypeInitialVisibility);
     }, [setAllShowTypes, gcodeTypeInitialVisibility]);
 

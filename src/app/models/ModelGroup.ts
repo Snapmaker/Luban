@@ -1455,39 +1455,6 @@ class ModelGroup extends EventEmitter {
         });
     }
 
-    public updateModelsPositionBaseFirstModel(models: ThreeModel[]) {
-        if (models && models.length > 0) {
-            const firstModel = models[0];
-            const otherModels = models.filter((d) => d.meshObject !== firstModel.meshObject);
-            this.selectModelById(firstModel.modelID);
-            this.updateSelectedGroupTransformation({
-                positionX: firstModel.transformation.positionX,
-                positionY: firstModel.transformation.positionY,
-                positionZ: firstModel.originalPosition.z,
-            });
-            otherModels.forEach((model) => {
-                const newPosition = {
-                    positionX: model.originalPosition.x - firstModel.originalPosition.x + firstModel.transformation.positionX,
-                    positionY: model.originalPosition.y - firstModel.originalPosition.y + firstModel.transformation.positionY,
-                    positionZ: model.originalPosition.z
-                };
-                this.selectModelById(model.modelID);
-                this.updateSelectedGroupTransformation(newPosition);
-            });
-            this.unselectAllModels();
-            models.forEach((item) => {
-                this.addModelToSelectedGroup(item);
-            });
-
-            this.modelChanged();
-        }
-        const newPosition = this.selectedGroup?.position;
-        return {
-            positionX: newPosition.x,
-            positionY: newPosition.y
-        };
-    }
-
     public updateModelPositionByPosition(modelID: string, position: TSize) {
         if (modelID) {
             const model = this.models.find((d) => d.modelID === modelID);

@@ -103,7 +103,6 @@ const ObjectListView: React.FC = () => {
      * Update selected models assigned extruder.
      */
     const onUpdateSelectedModelsExtruder = useCallback(({ key, direction }) => {
-        log.info('onUpdateSelectedModelsExtruder', key, direction);
         if (key === 'combined') {
             dispatch(printingActions.updateSelectedModelsExtruder({
                 shell: direction,
