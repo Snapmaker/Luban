@@ -95,6 +95,11 @@ export default class AlignGroupOperation extends Operation<State> {
                 modelGroup.selectModelById(model.modelID);
                 modelGroup.updateSelectedGroupTransformation(transformation);
             });
+
+            modelGroup.unselectAllModels();
+            for (const model of targetModels) {
+                modelGroup.addModelToSelectedGroup(model);
+            }
         }
 
         // modelGroup.updateModelsPositionBaseFirstModel(this.target);
