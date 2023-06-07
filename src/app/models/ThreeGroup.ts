@@ -1,13 +1,14 @@
-import * as THREE from 'three';
-import { cloneDeep } from 'lodash';
 import { ConvexGeometry } from '@snapmaker/luban-platform';
+import { cloneDeep } from 'lodash';
+import * as THREE from 'three';
 
 import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils';
-import BaseModel, { ModelTransformation, ModelInfo, TSize } from './ThreeBaseModel';
-import type ModelGroup from './ModelGroup';
-import type ThreeModel from './ThreeModel';
-import ThreeUtils from '../scene/three-extensions/ThreeUtils';
 import { BOTH_EXTRUDER_MAP_NUMBER } from '../constants';
+import ThreeUtils from '../scene/three-extensions/ThreeUtils';
+import type ModelGroup from './ModelGroup';
+import BaseModel, { ModelInfo, ModelTransformation, TSize } from './ThreeBaseModel';
+import type ThreeModel from './ThreeModel';
+import { ModelEvents } from './events';
 
 type traverseCallback = (mesh: ThreeModel) => void;
 
@@ -21,6 +22,8 @@ export default class ThreeGroup extends BaseModel {
     private convexGeometry: THREE.Geometry;
 
     private mergedGeometry: THREE.BufferGeometry;
+
+    public isColored: boolean = false;
 
     public constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
         super(modelInfo, modelGroup);
@@ -52,13 +55,23 @@ export default class ThreeGroup extends BaseModel {
         this.meshObject.visible = value;
     }
 
+    private modelAttributesListener = (attribute: string) => {
+        if (attribute === 'isColored') {
+            this.updateGroupExtruder();
+        }
+    };
+
     public add(models: Array<(ThreeModel | ThreeGroup)>) {
         this.children = [...this.children, ...models];
 
+        // newly added children models
         models.forEach((model) => {
             ThreeUtils.setObjectParent(model.meshObject, this.meshObject);
             model.parent = this;
+
+            model.on(ModelEvents.ModelAttribtuesChanged, this.modelAttributesListener);
         });
+
         if (models.length === 1) {
             ThreeUtils.liftObjectOnlyChildMatrix(this.meshObject);
             this.meshObject.uniformScalingState = this.meshObject.children[0].uniformScalingState;
@@ -66,6 +79,7 @@ export default class ThreeGroup extends BaseModel {
             this.computeBoundingBox();
             this.meshObject.uniformScalingState = true;
         }
+
         this.onTransform();
         this.updateGroupExtruder();
     }
@@ -76,8 +90,9 @@ export default class ThreeGroup extends BaseModel {
         const models = [] as ThreeModel[];
         // this.meshObject.updateMatrixWorld();
         this.children.forEach((model) => {
+            model.off(ModelEvents.ModelAttribtuesChanged, this.modelAttributesListener);
+
             model.parent = undefined;
-            // model.meshObject.applyMatrix4(this.meshObject.matrixWorld);
             if (model instanceof ThreeGroup) {
                 const children = model.disassemble();
                 models.push(...children);
@@ -499,10 +514,18 @@ export default class ThreeGroup extends BaseModel {
         if (this.children.length === 0) {
             return;
         }
+
+        this.isColored = false;
         this.extruderConfig.shell = this.children[0].extruderConfig.shell;
         this.extruderConfig.infill = this.children[0].extruderConfig.infill;
 
         for (const childModel of this.children) {
+            // Update isColored
+            if (childModel.isColored) {
+                this.isColored = true;
+            }
+
+            // Update extruder config
             if (this.extruderConfig.shell !== childModel.extruderConfig.shell) {
                 this.extruderConfig.shell = BOTH_EXTRUDER_MAP_NUMBER;
             }
