@@ -51,6 +51,17 @@ export default class AlignGroupOperation extends Operation<State> {
         return this.newGroup;
     }
 
+    private getIdentityTransformation(): ModelTransformation {
+        return {
+            scaleX: 1,
+            scaleY: 1,
+            scaleZ: 1,
+            rotationX: 0,
+            rotationY: 0,
+            rotationZ: 0,
+        };
+    }
+
     public redo() {
         const modelGroup = this.modelGroup;
 
@@ -59,7 +70,35 @@ export default class AlignGroupOperation extends Operation<State> {
         modelGroup.unselectAllModels();
 
         // align models and group selected
-        modelGroup.updateModelsPositionBaseFirstModel(this.target as ThreeModel[]);
+        const targetModels = this.target;
+
+        if (targetModels.length > 0) {
+            const firstModel = targetModels[0];
+            const otherModels = targetModels.slice(1);
+
+            let transformation: ModelTransformation;
+
+            transformation = this.getIdentityTransformation();
+            transformation.positionX = firstModel.transformation.positionX;
+            transformation.positionY = firstModel.transformation.positionY;
+            transformation.positionZ = firstModel.originalPosition.z;
+
+            modelGroup.selectModelById(firstModel.modelID);
+            modelGroup.updateSelectedGroupTransformation(transformation);
+
+            otherModels.forEach((model) => {
+                transformation = this.getIdentityTransformation();
+                transformation.positionX = model.originalPosition.x - firstModel.originalPosition.x + firstModel.transformation.positionX;
+                transformation.positionY = model.originalPosition.y - firstModel.originalPosition.y + firstModel.transformation.positionY;
+                transformation.positionZ = model.originalPosition.z;
+
+                modelGroup.selectModelById(model.modelID);
+                modelGroup.updateSelectedGroupTransformation(transformation);
+            });
+        }
+
+        // modelGroup.updateModelsPositionBaseFirstModel(this.target);
+
         const { newGroup } = modelGroup.group();
 
         // save new group
