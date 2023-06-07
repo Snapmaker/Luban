@@ -1,6 +1,8 @@
 import isElectron from 'is-electron';
+import { noop } from 'lodash';
+
+import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../constants/machines';
 import UniApi from '../../lib/uni-api';
-import { HEAD_PRINTING, HEAD_CNC, HEAD_LASER } from '../../constants/machines';
 
 export default {
     id: 'file',
@@ -27,7 +29,7 @@ export default {
                     id: 'laser',
                     label: 'key-App/Menu-Laser',
                     enabled: true,
-                    click: () => {},
+                    click: noop,
                     submenu: [
                         {
                             id: 'laser-axis3',
@@ -59,7 +61,7 @@ export default {
                     id: 'cnc',
                     label: 'key-App/Menu-CNC',
                     enabled: true,
-                    click: () => {},
+                    click: noop,
                     submenu: [
                         {
                             id: 'cnc-axis3',
@@ -126,7 +128,7 @@ export default {
             id: 'get-started',
             label: 'key-App/Menu-Case Library',
             enabled: true,
-            click: () => {},
+            click: noop,
             submenu: []
         },
         { id: 'line-1', type: 'separator' },

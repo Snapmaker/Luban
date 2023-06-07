@@ -278,11 +278,8 @@ const setSupportBrushStatus = (status: 'add' | 'remove') => {
  */
 const startMeshColoringMode = () => {
     return async (dispatch, getState) => {
-        const {
-            modelGroup,
-
-            progressStatesManager,
-        } = getState().printing;
+        const modelGroup = getState().printing.modelGroup as ModelGroup;
+        const { progressStatesManager } = getState().printing;
 
         progressStatesManager.startProgress(PROCESS_STAGE.PRINTING_MESH_COLORING_PREPARE);
         dispatch(

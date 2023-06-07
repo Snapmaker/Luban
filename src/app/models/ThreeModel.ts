@@ -15,6 +15,7 @@ import BaseModel, { ModelInfo, TSize } from './ThreeBaseModel';
 import { machineStore } from '../store/local-storage';
 import type ModelGroup from './ModelGroup';
 import ClipperModel, { TClippingConfig } from './ClipperModel';
+import { ModelEvents } from './events';
 
 const OVERSTEPPED_COLOR = new THREE.Color(0xa80006);
 
@@ -55,7 +56,7 @@ class ThreeModel extends BaseModel {
     private processImageName: string;
 
     // mesh is colored by 'color' attribute
-    public isColored = false;
+    public isColored: boolean = false;
     private extruderColors: Color[] = [];
     // material color (used when isColored = false)
     private materialColor: THREE.Color = null;
@@ -353,6 +354,7 @@ class ThreeModel extends BaseModel {
 
     public ensureColorAttribute(): void {
         this.isColored = true;
+        this.emit(ModelEvents.ModelAttribtuesChanged, 'isColored');
 
         // Add color attribute
         let colorAttribute = this.meshObject.geometry.getAttribute('color');
@@ -434,6 +436,8 @@ class ThreeModel extends BaseModel {
 
         this.isColored = false;
         this.colorMesh();
+
+        this.emit(ModelEvents.ModelAttribtuesChanged, 'isColored');
     }
 
     public onTransform() {

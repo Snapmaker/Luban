@@ -2367,6 +2367,7 @@ class ModelGroup extends EventEmitter {
                     const index = model.parent.children.findIndex((subModel) => subModel.modelID === model.modelID);
                     model.parent.children.splice(index, 1);
                     this.models.push(model);
+
                     ThreeUtils.setObjectParent(model.meshObject, model.parent.meshObject.parent);
                     model.parent.computeBoundingBox();
                     model.parent.updateGroupExtruder();
@@ -2377,10 +2378,13 @@ class ModelGroup extends EventEmitter {
                 return this.models.indexOf(model);
             });
             const modelsToGroup = this._flattenGroups(selectedModelArray);
+
             const modelNameObj = this._createNewModelName(group);
             group.modelName = modelNameObj.name;
             group.baseName = modelNameObj.baseName;
+
             group.add(modelsToGroup);
+
             const insertIndex = Math.min(...indexesOfSelectedModels);
             this.models.splice(insertIndex, 0, group);
             this.models = this.getModels<Model3D>().filter((model) => selectedModelArray.indexOf(model) === -1);
@@ -2911,11 +2915,26 @@ class ModelGroup extends EventEmitter {
         return this.brushMesh;
     }
 
+    private getModelsForMeshColoring(): ThreeModel[] {
+        const selectedModels = this.getSelectedModelArray<Model3D>();
+
+        const models = [];
+        this.traverseModels(selectedModels, (model) => {
+            if (model instanceof ThreeModel) {
+                if (model.visible) {
+                    models.push(model);
+                }
+            }
+        });
+        return models;
+    }
+
     /**
      * Start mesh coloring.
      */
     public startMeshColoring(): void {
-        const models = this.getModelsAttachedSupport();
+        const models = this.getModelsForMeshColoring();
+
         for (const model of models) {
             // Save geometry
             if (!model.originalGeometry) {
@@ -2958,7 +2977,7 @@ class ModelGroup extends EventEmitter {
         // Remove brush mesh
         this.object.parent.remove(this.brushMesh);
 
-        const models = this.getModelsAttachedSupport();
+        const models = this.getModelsForMeshColoring();
         for (const model of models) {
             if (shouldApplyChanges) {
                 // TODO:
