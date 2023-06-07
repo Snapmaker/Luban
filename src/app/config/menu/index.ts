@@ -1,4 +1,5 @@
 import isElectron from 'is-electron';
+
 import fileMenu from './fileMenu';
 import editMenu from './editMenu';
 import settingsMenu from './settingsMenu';
