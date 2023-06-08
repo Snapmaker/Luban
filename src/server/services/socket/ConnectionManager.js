@@ -1,12 +1,9 @@
+import fs from 'fs';
 import net from 'net';
 import { SerialPort } from 'serialport';
-import fs from 'fs';
-import logger from '../../lib/logger';
-// import workerManager from '../task-manager/workerManager';
-import socketSerial from './socket-serial';
-import socketHttp from './socket-http';
-import socketTcp from './sacp/SACP-TCP';
-import socketSerialNew from './sacp/SACP-SERIAL';
+
+import { AUTO_STRING } from '../../../app/constants';
+import DataStorage from '../../DataStorage';
 import {
     CONNECTION_TYPE_SERIAL,
     CONNECTION_TYPE_WIFI,
@@ -23,9 +20,12 @@ import {
     STANDARD_CNC_TOOLHEAD_FOR_SM2,
     WORKFLOW_STATE_PAUSED
 } from '../../constants';
-import DataStorage from '../../DataStorage';
 import ScheduledTasks from '../../lib/ScheduledTasks';
-import { AUTO_STRING } from '../../../app/constants';
+import logger from '../../lib/logger';
+import socketSerialNew from './sacp/SACP-SERIAL';
+import socketTcp from './sacp/SACP-TCP';
+import socketHttp from './socket-http';
+import socketSerial from './socket-serial';
 
 const log = logger('lib:ConnectionManager');
 const ensureRange = (value, min, max) => {
