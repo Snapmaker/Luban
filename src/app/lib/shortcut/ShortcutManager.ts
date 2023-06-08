@@ -74,6 +74,7 @@ export class ShortcutManger {
     }
 
     private preprocess(handler: ShortcutHandler): void {
+        // Unify shortcut callback functions to ShortcutAction
         for (const actionName of Reflect.ownKeys(handler.shortcuts)) {
             const maybeShortcut = handler.shortcuts[actionName];
 
@@ -99,7 +100,7 @@ export class ShortcutManger {
             handler.shortcuts[actionName] = shortcutAction;
         }
 
-        // convert ShortcutAction to simple key -> callback mappings
+        // convert ShortcutAction to [key:event -> callback] mappings
         handler.eventCallbacks = {};
         for (const actionName of Reflect.ownKeys(handler.shortcuts)) {
             const shortcutAction = handler.shortcuts[actionName] as ShortcutAction;
