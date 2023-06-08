@@ -1,25 +1,17 @@
 import settings from '../config/settings';
 import SocketServer from '../lib/SocketManager';
-
-
 import urljoin from '../lib/urljoin';
 import * as api from './api';
-
+import * as meshHandlers from './channel-handlers/mesh';
 import configstore from './configstore';
 import monitor from './monitor';
 import connectionManager from './socket/ConnectionManager';
-
 import socketSerial from './socket/socket-serial';
 import socketSlice from './socket/socket-slice';
 import system from './socket/system';
 import TaskManager from './task-manager';
 
-import * as meshHandlers from './channel-handlers/mesh';
 
-export {
-    configstore,
-    monitor
-};
 const connectionEventsObject = {
     'connection:open': connectionManager.connectionOpen,
     'connection:close': connectionManager.connectionClose,
@@ -82,7 +74,6 @@ function startServices(server) {
     socketServer.registerEvent('machine:discover', connectionManager.refreshDevices);
     socketServer.registerEvent('subscribe:discover', connectionManager.subscribeDevices);
 
-    // socketServer.registerEvent('serialport:close', socketSerial.serialportClose);
     socketServer.registerEvent('command', socketSerial.command);
     socketServer.registerEvent('writeln', socketSerial.writeln);
     Object.entries(connectionEventsObject).forEach(([key, value]) => {
@@ -242,6 +233,11 @@ function registerApis(app) {
 }
 
 export {
+    configstore,
+    monitor
+};
+export {
     startServices,
     registerApis
 };
+

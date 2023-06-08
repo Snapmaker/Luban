@@ -107,7 +107,7 @@ class SocketServer extends EventEmitter {
         });
     };
 
-    public registerEvent(event, callback) {
+    public registerEvent(event: string, callback) {
         this.events.push([event, callback]);
     }
 
