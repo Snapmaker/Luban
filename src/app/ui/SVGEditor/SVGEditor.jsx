@@ -26,20 +26,20 @@ const SVGEditor = forwardRef((props, ref) => {
         return canvas.current.stopDraw(exitCompletely, nextMode);
     };
 
-    const moveElements = (config) => {
-        const selectedElements = props.elementActions.isSelectedAllVisible();
-        if (selectedElements) {
-            props.elementActions.moveElementsStart(selectedElements);
-            props.elementActions.moveElements(selectedElements, config);
-        }
-    };
-    const moveElementsFinish = () => {
-        const selectedElements = props.elementActions.isSelectedAllVisible();
-        selectedElements && props.elementActions.moveElementsFinish(selectedElements);
-    };
-
-
     useEffect(() => {
+        const moveElements = (config) => {
+            const selectedElements = props.elementActions.isSelectedAllVisible();
+            if (selectedElements) {
+                props.elementActions.moveElementsStart(selectedElements);
+                props.elementActions.moveElements(selectedElements, config);
+            }
+        };
+
+        const moveElementsFinish = () => {
+            const selectedElements = props.elementActions.isSelectedAllVisible();
+            selectedElements && props.elementActions.moveElementsFinish(selectedElements);
+        };
+
         const shortcutHandler = {
             title: 'SVGEditor',
             // TODO: unregister in case of component is destroyed
@@ -137,7 +137,16 @@ const SVGEditor = forwardRef((props, ref) => {
             }
         };
         ShortcutManager.register(shortcutHandler);
-    }, [props.editorActions, props.isActive]);
+
+        return () => {
+            ShortcutManager.unregister(shortcutHandler);
+        };
+    }, [
+        props.elementActions,
+        props.editorActions,
+        props.SVGCanvasMode,
+        props.isActive,
+    ]);
 
     const changeCanvasMode = (_mode, ext) => {
         props.editorActions.setMode(_mode, ext);
