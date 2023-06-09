@@ -1800,6 +1800,7 @@
     "key-Workspace/Connection-No ports available.": "Nessuna porta disponibile.",
     "key-Workspace/Connection-Nozzle Temp.": "Temp. ugello",
     "key-Workspace/Connection-OK": "OK",
+    "key-Workspace/Connection-Quick Swap Kit": "",
     "key-Workspace/Connection-Reason: The machine may be using an older version of firmware or may have other devices connected.": "La stampante potrebbe avere una vecchia versione del firmware o potrebbero esserci altre stampanti connesse. Per aggiornare il firmware vai su https://support.snapmaker.com/.",
     "key-Workspace/Connection-Refresh": "Aggiorna",
     "key-Workspace/Connection-Screen Authorization Needed": "Autorizzazione schermo necessaria",

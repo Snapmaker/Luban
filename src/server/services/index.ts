@@ -1,70 +1,22 @@
 import settings from '../config/settings';
 import SocketServer from '../lib/SocketManager';
-
-
 import urljoin from '../lib/urljoin';
 import * as api from './api';
-
+import * as meshHandlers from './channel-handlers/mesh';
 import configstore from './configstore';
+import { register as registerMachineHandlers } from './machine';
 import monitor from './monitor';
-import connectionManager from './socket/ConnectionManager';
-
+import { connectionManager } from './socket/ConnectionManager';
 import socketSerial from './socket/socket-serial';
 import socketSlice from './socket/socket-slice';
 import system from './socket/system';
 import TaskManager from './task-manager';
 
-import * as meshHandlers from './channel-handlers/mesh';
-
-export {
-    configstore,
-    monitor
-};
-const connectionEventsObject = {
-    'connection:open': connectionManager.connectionOpen,
-    'connection:close': connectionManager.connectionClose,
-    'connection:closeImproper': connectionManager.connectionCloseImproper,
-    'connection:startGcode': connectionManager.startGcode,
-    'connection:resumeGcode': connectionManager.resumeGcode,
-    'connection:pauseGcode': connectionManager.pauseGcode,
-    'connection:stopGcode': connectionManager.stopGcode,
-    'connection:headBeginWork': connectionManager.startGcodeAction,
-    'connection:executeGcode': connectionManager.executeGcode,
-    'connection:startHeartbeat': connectionManager.startHeartbeat,
-    'connection:getGcodeFile': connectionManager.getGcodeFile,
-    'connection:uploadFile': connectionManager.uploadFile,
-    'connection:updateNozzleTemperature': connectionManager.updateNozzleTemperature,
-    'connection:updateBedTemperature': connectionManager.updateBedTemperature,
-    'connection:updateZOffset': connectionManager.updateZOffset,
-    'connection:loadFilament': connectionManager.loadFilament,
-    'connection:unloadFilament': connectionManager.unloadFilament,
-    'connection:updateWorkSpeedFactor': connectionManager.updateWorkSpeedFactor,
-    // 'connection:getWorkSpeedFactor': connectionManager.getWorkSpeedFactor,
-    'connection:updateLaserPower': connectionManager.updateLaserPower,
-    'connection:switchLaserPower': connectionManager.switchLaserPower,
-    'connection:materialThickness': connectionManager.getLaserMaterialThickness,
-    'connection:setEnclosureLight': connectionManager.setEnclosureLight,
-    'connection:setEnclosureFan': connectionManager.setEnclosureFan,
-    'connection:setDoorDetection': connectionManager.setDoorDetection,
-    'connection:setFilterSwitch': connectionManager.setFilterSwitch,
-    'connection:setFilterWorkSpeed': connectionManager.setFilterWorkSpeed,
-    'connection:materialThickness_abort': connectionManager.abortLaserMaterialThickness,
-    'connection:goHome': connectionManager.goHome,
-    'connection:coordinateMove': connectionManager.coordinateMove,
-    'connection:setWorkOrigin': connectionManager.setWorkOrigin,
-    'connection:updateToolHeadSpeed': connectionManager.updateToolHeadSpeed, // CNC, FOR NOW
-    'connection:switchCNC': connectionManager.switchCNC, // CNC, FOR NOW
-    'connection:updateWorkNozzle': connectionManager.switchExtruder,
-    'connection:wifiStatusTest': connectionManager.wifiStatusTest
-};
 
 function startServices(server) {
     // Start socket server
     const socketServer = new SocketServer();
 
-    socketServer.on('connection', connectionManager.onConnection);
-
-    socketServer.on('disconnection', connectionManager.onDisconnection);
 
     // slice
     socketServer.registerEvent('slice', socketSlice.handleSlice);
@@ -78,16 +30,23 @@ function startServices(server) {
     // split model
     socketServer.registerChannel('mesh:split', meshHandlers.handleSplitMesh);
 
-    // communication: http & serial port
+    // ===============
+    // Machine Discover
+    // ===============
     socketServer.registerEvent('machine:discover', connectionManager.refreshDevices);
     socketServer.registerEvent('subscribe:discover', connectionManager.subscribeDevices);
 
-    // socketServer.registerEvent('serialport:close', socketSerial.serialportClose);
+    // ===============
+    // machine control: http & serial port
+    // ===============
+    // Register machine control handlers
+    registerMachineHandlers(socketServer);
+
+    socketServer.on('connection', connectionManager.onConnection);
+    socketServer.on('disconnection', connectionManager.onDisconnection);
+
     socketServer.registerEvent('command', socketSerial.command);
     socketServer.registerEvent('writeln', socketSerial.writeln);
-    Object.entries(connectionEventsObject).forEach(([key, value]) => {
-        socketServer.registerEvent(key, value);
-    });
 
     // task manager
     socketServer.registerEvent('taskCommit:generateToolPath', TaskManager.addGenerateToolPathTask);
@@ -242,6 +201,11 @@ function registerApis(app) {
 }
 
 export {
+    configstore,
+    monitor
+};
+export {
     startServices,
     registerApis
 };
+

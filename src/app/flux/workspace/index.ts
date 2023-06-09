@@ -464,6 +464,7 @@ export const actions = {
                     compareAndSet(data, currentState, 'enclosureOnline', enclosureOnline);
                     compareAndSet(data, currentState, 'rotateModuleOnline', rotateModuleOnline);
                 }
+
                 if (!isNil(doorSwitchCount)) {
                     compareAndSet(data, currentState, 'doorSwitchCount', doorSwitchCount);
                 }
@@ -492,6 +493,20 @@ export const actions = {
                     );
                     currentState.server.closeServer();
                 }
+            },
+
+            /**
+             * moduleList: [
+             *   { key: 1, moduleId: 14, status: true },
+             *   { key: 7, moduleId: 1500, status: true },
+             * ]
+             */
+            'machine:module-list': (options) => {
+                const moduleList = options.moduleList;
+
+                dispatch(actions.updateState({
+                    moduleList,
+                }));
             },
 
             // TODO: serialport emergencyStop goes there

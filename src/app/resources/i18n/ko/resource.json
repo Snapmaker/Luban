@@ -1800,6 +1800,7 @@
     "key-Workspace/Connection-No ports available.": "사용 가능한 포트가 없습니다.",
     "key-Workspace/Connection-Nozzle Temp.": "노즐 온도",
     "key-Workspace/Connection-OK": "확인",
+    "key-Workspace/Connection-Quick Swap Kit": "",
     "key-Workspace/Connection-Reason: The machine may be using an older version of firmware or may have other devices connected.": "",
     "key-Workspace/Connection-Refresh": "새로 고침",
     "key-Workspace/Connection-Screen Authorization Needed": "화면 인증 필요",

@@ -90,7 +90,7 @@ function getUnsupportedWidgets(machineIdentifier, toolHead) {
     if (machineIdentifier === MACHINE_SERIES.J1.identifier) {
         // G-code execution need firmware upgrades
         // Unsupported widgets: console, control, macro (v4.8)
-        return ['console', 'control', 'macro'];
+        return ['control', 'macro'];
     }
 
     if (machineIdentifier === MACHINE_SERIES.A400.identifier) {

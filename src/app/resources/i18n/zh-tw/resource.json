@@ -1800,6 +1800,7 @@
     "key-Workspace/Connection-No ports available.": "",
     "key-Workspace/Connection-Nozzle Temp.": "",
     "key-Workspace/Connection-OK": "",
+    "key-Workspace/Connection-Quick Swap Kit": "",
     "key-Workspace/Connection-Reason: The machine may be using an older version of firmware or may have other devices connected.": "機器可能使用了過舊版本的固件或已連接其他設備。升級固件的方法可以在 https://support.snapmaker.com 查詢。",
     "key-Workspace/Connection-Refresh": "",
     "key-Workspace/Connection-Screen Authorization Needed": "",

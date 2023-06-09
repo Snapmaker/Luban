@@ -57,11 +57,13 @@ class SerialPortClient {
         'workflow:state': [],
         'Marlin:state': [],
         'Marlin:settings': [],
-        'machine:settings': [],
         'transfer:hex': [],
         'move:status': [],
         'connection:headBeginWork': [],
         'manager:error': [],
+
+        // machine related
+        'machine:module-list': [],
 
         'slice:started': [],
         'slice:completed': [],
@@ -150,7 +152,6 @@ class SerialPortClient {
 
         Object.keys(this.callbacks).forEach((eventName) => {
             socketController.on(eventName, (options = {}) => {
-                // log.debug(`socket.on('${eventName}'):`, args);
                 log.debug(`socket.on('${eventName}'):`, options);
 
                 if (eventName === 'connection:open') {
@@ -203,6 +204,7 @@ class SerialPortClient {
                     // this.settings = { ...args[0] };
                     this.settings = options.settings;
                 }
+
                 this.callbacks[eventName].forEach((callback) => {
                     callback.apply(callback, [options]);
                 });

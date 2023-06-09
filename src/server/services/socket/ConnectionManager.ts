@@ -1,12 +1,9 @@
+import fs from 'fs';
 import net from 'net';
 import { SerialPort } from 'serialport';
-import fs from 'fs';
-import logger from '../../lib/logger';
-// import workerManager from '../task-manager/workerManager';
-import socketSerial from './socket-serial';
-import socketHttp from './socket-http';
-import socketTcp from './sacp/SACP-TCP';
-import socketSerialNew from './sacp/SACP-SERIAL';
+
+import { AUTO_STRING } from '../../../app/constants';
+import DataStorage from '../../DataStorage';
 import {
     CONNECTION_TYPE_SERIAL,
     CONNECTION_TYPE_WIFI,
@@ -21,11 +18,14 @@ import {
     SACP_PROTOCOL,
     SERIAL_PROTOCOL,
     STANDARD_CNC_TOOLHEAD_FOR_SM2,
-    WORKFLOW_STATE_PAUSED
+    WORKFLOW_STATE_PAUSED,
 } from '../../constants';
-import DataStorage from '../../DataStorage';
 import ScheduledTasks from '../../lib/ScheduledTasks';
-import { AUTO_STRING } from '../../../app/constants';
+import logger from '../../lib/logger';
+import socketSerialNew from './sacp/SACP-SERIAL';
+import socketTcp from './sacp/SACP-TCP';
+import socketHttp from './socket-http';
+import socketSerial from './socket-serial';
 
 const log = logger('lib:ConnectionManager');
 const ensureRange = (value, min, max) => {
@@ -37,26 +37,26 @@ let timer = null;
  * A singleton to manage devices connection.
  */
 class ConnectionManager {
-    socket = null;
+    private socket = null;
 
-    connectionType = CONNECTION_TYPE_WIFI;
+    private connectionType = CONNECTION_TYPE_WIFI;
 
-    protocol = '';
+    private protocol = '';
 
-    scheduledTasksHandle;
+    private scheduledTasksHandle;
 
-    onConnection = (socket) => {
+    public onConnection = (socket) => {
         socketHttp.onConnection(socket);
         this.scheduledTasksHandle = new ScheduledTasks(socket);
     };
 
-    onDisconnection = (socket) => {
+    public onDisconnection = (socket) => {
         socketHttp.onDisconnection(socket);
         socketSerial.onDisconnection(socket);
         this.scheduledTasksHandle.cancelTasks();
     };
 
-    refreshDevices = (socket, options) => {
+    public refreshDevices = (socket, options) => {
         const { connectionType } = options;
         if (connectionType === CONNECTION_TYPE_WIFI) {
             socketHttp.refreshDevices(socket);
@@ -65,7 +65,7 @@ class ConnectionManager {
         }
     };
 
-    subscribeDevices = (socket, bool) => {
+    public subscribeDevices = (socket, bool) => {
         if (bool) {
             socketHttp.onSubscribe(socket);
             socketSerial.onSubscribe(socket);
@@ -75,7 +75,7 @@ class ConnectionManager {
         }
     };
 
-    connectionOpen = async (socket, options) => {
+    public connectionOpen = async (socket, options) => {
         const { connectionType, sacp, addByUser, address } = options;
         this.connectionType = connectionType;
         if (connectionType === CONNECTION_TYPE_WIFI) {
@@ -118,11 +118,11 @@ class ConnectionManager {
         log.debug(`connectionOpen connectionType=${connectionType} this.socket=${this.socket}`);
     };
 
-    connectionClose = (socket, options) => {
+    public connectionClose = (socket, options) => {
         this.socket && this.socket.connectionClose(socket, options);
     };
 
-    connectionCloseImproper = () => {
+    public connectionCloseImproper = () => {
         if (this.protocol === SACP_PROTOCOL) {
             this.socket && this.socket.connectionCloseImproper();
         } else {
@@ -132,7 +132,7 @@ class ConnectionManager {
         }
     };
 
-    inspectProtocol = async (address, connectionType = CONNECTION_TYPE_WIFI, options, callback) => {
+    private inspectProtocol = async (address, connectionType = CONNECTION_TYPE_WIFI, options, callback) => {
         if (connectionType === CONNECTION_TYPE_WIFI) {
             // Inspect if we can connect to the printer via SACP (8888) or HTTP (8080)
             const [resSACP, resHTTP] = await Promise.allSettled([
@@ -190,7 +190,7 @@ class ConnectionManager {
         return '';
     };
 
-    tryConnect = (host, port) => {
+    private tryConnect = async (host, port) => {
         return new Promise((resolve) => {
             const tcpSocket = net.createConnection({
                 host,
@@ -220,12 +220,12 @@ class ConnectionManager {
      * @param {*} options
      * Only for toolhead printing action (laser/cnc/3dp)
      */
-    startGcodeAction = async (socket, options) => {
+    public startGcodeAction = async (socket, options) => {
         log.info('gcode action begin');
         this.socket.startGcode(options);
     };
 
-    startGcode = async (socket, options) => {
+    public startGcode = async (socket, options) => {
         const {
             headType, isRotate, toolHead, isLaserPrintAutoMode, materialThickness, laserFocalLength, renderName, eventName, materialThicknessSource
         } = options;
@@ -388,7 +388,7 @@ class ConnectionManager {
         }
     };
 
-    recoveryCncPosition = (pauseStatus, gcodeFile, sizeZ) => {
+    public recoveryCncPosition = (pauseStatus, gcodeFile, sizeZ) => {
         let code = '';
         const pos = pauseStatus.pos;
         const gcodeFilePath = `${DataStorage.tmpDir}/${gcodeFile.uploadName}`;
@@ -413,7 +413,7 @@ G1 Z${pos.z}
         });
     };
 
-    resumeGcode = (socket, options, callback) => {
+    public resumeGcode = (socket, options, callback) => {
         if (this.protocol === SACP_PROTOCOL || this.connectionType === CONNECTION_TYPE_WIFI) {
             this.socket.resumeGcode({ ...options, connectionType: this.connectionType }, callback);
         } else {
@@ -476,7 +476,7 @@ M3`;
         }
     };
 
-    pauseGcode = (socket, options) => {
+    public pauseGcode = (socket, options) => {
         if (this.protocol === SACP_PROTOCOL || this.connectionType === CONNECTION_TYPE_WIFI) {
             this.socket.pauseGcode(options);
         } else {
@@ -488,7 +488,7 @@ M3`;
         }
     };
 
-    stopGcode = (socket, options) => {
+    public stopGcode = (socket, options) => {
         if (this.connectionType === CONNECTION_TYPE_WIFI) {
             this.socket.stopGcode(options);
             socket && socket.emit(options.eventName, {});
@@ -509,7 +509,7 @@ M3`;
     };
 
     // when using executeGcode, the cmd param is always 'gcode'
-    executeGcode = (socket, options, callback) => {
+    public executeGcode = (socket, options, callback) => {
         const { gcode, context, cmd = 'gcode' } = options;
         log.info(`executeGcode: ${gcode}, ${this.protocol}`);
         if (this.protocol === SACP_PROTOCOL || this.connectionType === CONNECTION_TYPE_WIFI) {
@@ -522,14 +522,14 @@ M3`;
         }
     };
 
-    switchExtruder = (socket, options) => {
+    public switchExtruder = (socket, options) => {
         if (this.protocol === SACP_PROTOCOL) {
             const { extruderIndex } = options;
             this.socket.switchExtruder(extruderIndex);
         }
     };
 
-    updateNozzleTemperature = (socket, options) => {
+    public updateNozzleTemperature = (socket, options) => {
         if (this.protocol === SACP_PROTOCOL) {
             const { extruderIndex, nozzleTemperatureValue } = options;
             this.socket.updateNozzleTemperature(extruderIndex, nozzleTemperatureValue);
@@ -545,7 +545,7 @@ M3`;
         }
     };
 
-    updateBedTemperature = (socket, options) => {
+    public updateBedTemperature = (socket, options) => {
         if (this.protocol === SACP_PROTOCOL) {
             const { /* zoneIndex, */heatedBedTemperatureValue } = options;
             this.socket.updateBedTemperature(0, heatedBedTemperatureValue);
@@ -562,7 +562,7 @@ M3`;
         }
     };
 
-    loadFilament = (socket, options) => {
+    public loadFilament = (socket, options) => {
         const { eventName } = options;
         if (this.protocol === SACP_PROTOCOL || this.connectionType === CONNECTION_TYPE_WIFI) {
             const { extruderIndex } = options;
@@ -575,7 +575,7 @@ M3`;
         }
     };
 
-    unloadFilament = (socket, options) => {
+    public unloadFilament = (socket, options) => {
         const { eventName } = options;
         if (this.protocol === SACP_PROTOCOL) {
             const { extruderIndex } = options;
@@ -590,7 +590,7 @@ M3`;
         }
     };
 
-    updateWorkSpeedFactor = (socket, options) => {
+    public updateWorkSpeedFactor = (socket, options) => {
         if (this.protocol === SACP_PROTOCOL) {
             const { toolHead, workSpeedValue, extruderIndex } = options;
             this.socket.updateWorkSpeed(toolHead, workSpeedValue, extruderIndex);
@@ -612,8 +612,7 @@ M3`;
     //     }
     // }
 
-
-    updateLaserPower = (socket, options) => {
+    public updateLaserPower = (socket, options) => {
         if (this.protocol === SACP_PROTOCOL) {
             const { laserPower } = options;
             log.info(`updateLaserPower set laser power:[${laserPower}]`);
@@ -648,7 +647,7 @@ M3`;
         }
     };
 
-    switchLaserPower = (socket, options) => {
+    public switchLaserPower = (socket, options) => {
         const { isSM2, laserPower, laserPowerOpen } = options;
         if (this.protocol === SACP_PROTOCOL) {
             if (laserPowerOpen) {
@@ -678,7 +677,7 @@ M3`;
         }
     };
 
-    setEnclosureLight = (socket, options) => {
+    public setEnclosureLight = (socket, options) => {
         if (this.connectionType === CONNECTION_TYPE_WIFI || this.protocol === SACP_PROTOCOL) {
             this.socket.setEnclosureLight(options);
         } else {
@@ -691,7 +690,7 @@ M3`;
         }
     };
 
-    setEnclosureFan = (socket, options) => {
+    public setEnclosureFan = (socket, options) => {
         if (this.connectionType === CONNECTION_TYPE_WIFI || this.protocol === SACP_PROTOCOL) {
             this.socket.setEnclosureFan(options);
         } else {
@@ -704,7 +703,7 @@ M3`;
         }
     };
 
-    setFilterSwitch = (socket, options) => {
+    public setFilterSwitch = (socket, options) => {
         if (this.connectionType === CONNECTION_TYPE_WIFI || this.protocol === SACP_PROTOCOL) {
             this.socket.setFilterSwitch(options);
         } else {
@@ -716,7 +715,7 @@ M3`;
         }
     };
 
-    setFilterWorkSpeed = (socket, options) => {
+    public setFilterWorkSpeed = (socket, options) => {
         if (this.connectionType === CONNECTION_TYPE_WIFI || this.protocol === SACP_PROTOCOL) {
             this.socket.setFilterWorkSpeed(options);
         } else {
@@ -729,25 +728,25 @@ M3`;
     };
 
     // only for Wifi
-    setDoorDetection = (socket, options) => {
+    public setDoorDetection = (socket, options) => {
         if (this.connectionType === CONNECTION_TYPE_WIFI || this.protocol === SACP_PROTOCOL) {
             this.socket.setDoorDetection(options);
         }
     };
 
-    startHeartbeat = (socket, options) => {
+    public startHeartbeat = (socket, options) => {
         this.socket.startHeartbeat(options);
     };
 
-    getGcodeFile = (socket, options) => {
+    public getGcodeFile = (socket, options) => {
         this.socket.getGcodeFile(options);
     };
 
-    uploadFile = (socket, options) => {
+    public uploadFile = (socket, options) => {
         this.socket.uploadFile(options);
     };
 
-    updateZOffset = (socket, options) => {
+    public updateZOffset = (socket, options) => {
         if (this.protocol === SACP_PROTOCOL) {
             const { extruderIndex, zOffset } = options;
             this.socket.updateNozzleOffset(extruderIndex, 2, zOffset);
@@ -756,37 +755,37 @@ M3`;
         }
     };
 
-    getLaserMaterialThickness = (socket, options) => {
+    public getLaserMaterialThickness = (socket, options) => {
         this.socket.getLaserMaterialThickness(options);
     };
 
-    abortLaserMaterialThickness = (socket, options) => {
+    public abortLaserMaterialThickness = (socket, options) => {
         this.socket.abortLaserMaterialThickness(options);
     };
 
     // camera capture related, currently for socket-tcp
-    takePhoto = (params, callback) => {
+    public takePhoto = (params, callback) => {
         this.socket.takePhoto(params, callback);
     };
 
-    getCameraCalibration = (callback) => {
+    public getCameraCalibration = (callback) => {
         this.socket.getCameraCalibration(callback);
     };
 
-    getPhoto = (callback) => {
+    public getPhoto = (callback) => {
         this.socket.getPhoto(callback);
     };
 
-    getCalibrationPhoto = (callback) => {
+    public getCalibrationPhoto = (callback) => {
         this.socket.getCalibrationPhoto(callback);
     };
 
-    setMatrix = (params, callback) => {
+    public setMatrix = (params, callback) => {
         this.socket.setMatrix(params, callback);
     };
     // only for Wifi
 
-    goHome = (socket, options, callback) => {
+    public goHome = (socket, options, callback) => {
         const { headType } = options;
         if (this.protocol === SACP_PROTOCOL) {
             this.socket.goHome();
@@ -807,7 +806,7 @@ M3`;
         }
     };
 
-    coordinateMove = (socket, options, callback) => {
+    public coordinateMove = (socket, options, callback) => {
         const { moveOrders, gcode, jogSpeed, headType } = options;
         // const { moveOrders, gcode, context, cmd, jogSpeed, headType } = options;
         if (this.protocol === SACP_PROTOCOL) {
@@ -817,7 +816,7 @@ M3`;
         }
     };
 
-    setWorkOrigin = (socket, options, callback) => {
+    public setWorkOrigin = (socket, options, callback) => {
         const { xPosition, yPosition, zPosition, bPosition } = options;
         if (this.protocol === SACP_PROTOCOL) {
             this.socket.setWorkOrigin({ xPosition, yPosition, zPosition, bPosition });
@@ -826,14 +825,14 @@ M3`;
         }
     };
 
-    updateToolHeadSpeed = (socket, options) => {
+    public updateToolHeadSpeed = (socket, options) => {
         if (this.protocol === SACP_PROTOCOL) {
             const { speed } = options;
             this.socket.updateToolHeadSpeed(speed);
         }
     };
 
-    switchCNC = async (socket, options, callback) => {
+    public switchCNC = async (socket, options, callback) => {
         const { headStatus, speed, toolHead } = options;
         if (this.protocol === SACP_PROTOCOL) {
             if (toolHead === STANDARD_CNC_TOOLHEAD_FOR_SM2) {
@@ -851,7 +850,7 @@ M3`;
         }
     };
 
-    wifiStatusTest = (socket, options) => {
+    public wifiStatusTest = (socket, options) => {
         if (this.connectionType === CONNECTION_TYPE_WIFI) {
             socketHttp.wifiStatusTest(options);
         }
@@ -860,4 +859,8 @@ M3`;
 
 const connectionManager = new ConnectionManager();
 
-export default connectionManager;
+export {
+    connectionManager,
+};
+
+// export default connectionManager;

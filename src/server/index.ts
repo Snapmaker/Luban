@@ -1,21 +1,20 @@
 /* eslint no-unused-vars: 0 */
-import dns from 'dns';
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
-import _ from 'lodash';
 import bcrypt from 'bcrypt-nodejs';
 import chalk from 'chalk';
+import dns from 'dns';
+import fs from 'fs';
+import _ from 'lodash';
+import os from 'os';
+import path from 'path';
 import webappengine from 'webappengine';
-// import Jimp from 'jimp';
 
-import createApplication from './app';
-import monitor from './services/monitor';
-import config from './services/configstore';
-import logger from './lib/logger';
-import settings from './config/settings';
-import { startServices } from './services';
 import DataStorage from './DataStorage';
+import createApplication from './app';
+import settings from './config/settings';
+import logger from './lib/logger';
+import { startServices } from './services';
+import config from './services/configstore';
+import monitor from './services/monitor';
 
 
 const log = logger('init');

@@ -88,6 +88,7 @@ const NetworkConnection: React.FC = () => {
     // machine state
     const {
         workflowStatus,
+        moduleList,
         moduleStatusList,
         airPurifier,
         heatedBedTemperature,
@@ -475,9 +476,20 @@ const NetworkConnection: React.FC = () => {
                 }
             }
         });
+
+        for (const moduleInfo of moduleList) {
+            if (moduleInfo.moduleId === 519) {
+                newModuleStatusList.push({
+                    moduleName: i18n._('key-Workspace/Connection-Quick Swap Kit'),
+                    status: moduleInfo.status,
+                });
+            }
+        }
+
         return newModuleStatusList;
     }, [
         isConnected,
+        moduleList,
         moduleStatusList,
         heatedBedTemperature,
         headType,

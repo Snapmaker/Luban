@@ -153,7 +153,6 @@ const handleSplitMesh = async (actions, options: SplitMeshOptions) => {
         const endTime = +new Date();
         log.info(`Split mesh ${options.uploadName} takes ${(endTime - startTime)} ms`);
     } catch (e) {
-        // TODO
         log.error(e);
         actions.next({
             type: 'error',

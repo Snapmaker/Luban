@@ -1800,6 +1800,7 @@
     "key-Workspace/Connection-No ports available.": "利用できるポートがありません。",
     "key-Workspace/Connection-Nozzle Temp.": "ノズル温度",
     "key-Workspace/Connection-OK": "OK",
+    "key-Workspace/Connection-Quick Swap Kit": "",
     "key-Workspace/Connection-Reason: The machine may be using an older version of firmware or may have other devices connected.": "接続に失敗しました。 他の設備と接続されています。",
     "key-Workspace/Connection-Refresh": "リフレッシュ",
     "key-Workspace/Connection-Screen Authorization Needed": "画面認証が必要です",

@@ -240,6 +240,7 @@ const createApplication = () => {
 
     // register http service api
     registerApis(app);
+
     // Also see "src/app/app.js"
     app.use((req, res) => {
         if (req.method === 'OPTIONS') {

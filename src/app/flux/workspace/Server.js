@@ -81,9 +81,13 @@ export class Server extends events.EventEmitter {
                     dispatch(connectActions.setServerAddress(this.address));
                     dispatch(connectActions.setServerName(this.name));
                     dispatch(connectActions.setServerToken(this.token));
+
+                    // Start heartbeat
+                    // delay 1000ms to make sure machine state is correct
                     setTimeout(() => {
                         controller.emitEvent(CONNECTION_HEARTBEAT);
                     }, 1000);
+
                     callback && callback({ msg, text });
                 } else {
                     dispatch(workspaceActions.resetMachineState(CONNECTION_TYPE_SERIAL));

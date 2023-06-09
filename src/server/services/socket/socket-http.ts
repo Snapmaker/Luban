@@ -160,14 +160,10 @@ class SocketHttp {
                 if (res?.body?.token) {
                     this.token = res.body.token;
                 }
-                if (err) {
-                    log.debug(`err="${err}"`);
-                } else {
-                    clearInterval(intervalHandle);
-                    intervalHandle = setInterval(this.getEnclosureStatus, 1000);
-                }
+
                 const result = _getResult(err, res);
                 if (err) {
+                    log.debug(`err="${err}"`);
                     this.socket && this.socket.emit('connection:open', result);
                     return;
                 }
@@ -216,6 +212,14 @@ class SocketHttp {
                         this.socket && this.socket.emit('connection:open', result);
                     }
                 }
+
+
+                // Get module info
+                this.getModuleList();
+
+                // Get enclosure status (every 1000ms)
+                clearInterval(intervalHandle);
+                intervalHandle = setInterval(this.getEnclosureStatus, 1000);
             });
     };
 
@@ -239,9 +243,88 @@ class SocketHttp {
         clearInterval(intervalHandle);
     };
 
+    public startHeartbeat = () => {
+        this.stopHeartBeat();
+
+        waitConfirm = true;
+        this.heartBeatWorker = workerManager.heartBeat([{
+            host: this.host,
+            token: this.token
+        }], (result: any) => {
+            if (result.status === 'offline') {
+                log.info(`[wifi connection offline]: msg=${result.msg}`);
+                clearInterval(intervalHandle);
+                this.socket && this.socket.emit('connection:close');
+                return;
+            }
+            const { data, code } = _getResult(null, result.res);
+            // No Content
+            if (Object.keys(data).length === 0 || code === 204) {
+                return;
+            }
+            const state = {
+                ...data,
+                ...this.state,
+                gcodePrintingInfo: this.getGcodePrintingInfo(data),
+                isHomed: data?.homed,
+                status: data.status.toLowerCase(),
+                airPurifier: !isNil(data.airPurifierSwitch),
+                pos: {
+                    x: data.x,
+                    y: data.y,
+                    z: data.z,
+                    b: data.b,
+                    isFourAxis: !isNil(data.b)
+                },
+                originOffset: {
+                    x: data.offsetX,
+                    y: data.offsetY,
+                    z: data.offsetZ,
+                }
+            };
+            if (waitConfirm) {
+                waitConfirm = false;
+
+                this.socket && this.socket.emit('connection:connected', {
+                    state,
+                    err: state?.err,
+                    type: CONNECTION_TYPE_WIFI
+                });
+            } else {
+                // this.socket && this.socket.emit('sender:status', {
+                //     data: this.getGcodePrintingInfo(state)
+                // });
+                this.socket && this.socket.emit('Marlin:state', {
+                    state,
+                    type: CONNECTION_TYPE_WIFI
+                });
+            }
+        });
+    };
+
     private stopHeartBeat = () => {
         this.heartBeatWorker && this.heartBeatWorker.terminate();
         this.heartBeatWorker = null;
+    };
+
+    /**
+     * Get module list.
+     */
+    public getModuleList = () => {
+        log.info('Get Module List...');
+
+        request
+            .get(`${this.host}/api/v1/module_list?token=${this.token}`)
+            .timeout(1000)
+            .end((err, res) => {
+                const result = _getResult(err, res);
+                const data = result?.data;
+                if (!err) {
+                    this.socket && this.socket.emit('machine:module-list', {
+                        moduleList: data.moduleList,
+                    });
+                }
+            });
     };
 
     public startGcode = (options: EventOptions) => {
@@ -374,64 +457,6 @@ class SocketHttp {
             printStatus
         };
     }
-
-    public startHeartbeat = () => {
-        this.stopHeartBeat();
-        waitConfirm = true;
-        this.heartBeatWorker = workerManager.heartBeat([{
-            host: this.host,
-            token: this.token
-        }], (result: any) => {
-            if (result.status === 'offline') {
-                log.info(`[wifi connection offline]: msg=${result.msg}`);
-                clearInterval(intervalHandle);
-                this.socket && this.socket.emit('connection:close');
-                return;
-            }
-            const { data, code } = _getResult(null, result.res);
-            // No Content
-            if (Object.keys(data).length === 0 || code === 204) {
-                return;
-            }
-            const state = {
-                ...data,
-                ...this.state,
-                gcodePrintingInfo: this.getGcodePrintingInfo(data),
-                isHomed: data?.homed,
-                status: data.status.toLowerCase(),
-                airPurifier: !isNil(data.airPurifierSwitch),
-                pos: {
-                    x: data.x,
-                    y: data.y,
-                    z: data.z,
-                    b: data.b,
-                    isFourAxis: !isNil(data.b)
-                },
-                originOffset: {
-                    x: data.offsetX,
-                    y: data.offsetY,
-                    z: data.offsetZ,
-                }
-            };
-            if (waitConfirm) {
-                waitConfirm = false;
-
-                this.socket && this.socket.emit('connection:connected', {
-                    state,
-                    err: state?.err,
-                    type: CONNECTION_TYPE_WIFI
-                });
-            } else {
-                // this.socket && this.socket.emit('sender:status', {
-                //     data: this.getGcodePrintingInfo(state)
-                // });
-                this.socket && this.socket.emit('Marlin:state', {
-                    state,
-                    type: CONNECTION_TYPE_WIFI
-                });
-            }
-        });
-    };
 
     public uploadGcodeFile = (gcodeFilePath: string, type: string, renderName: string, callback) => {
         log.info('Preparing for a print job...');
