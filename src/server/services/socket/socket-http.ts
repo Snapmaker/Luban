@@ -377,6 +377,7 @@ class SocketHttp {
 
     public startHeartbeat = () => {
         this.stopHeartBeat();
+
         waitConfirm = true;
         this.heartBeatWorker = workerManager.heartBeat([{
             host: this.host,

@@ -1,5 +1,5 @@
 import SocketServer from '../../lib/SocketManager';
-import connectionManager from '../socket/ConnectionManager';
+import { connectionManager } from '../socket/ConnectionManager';
 
 
 function register(socketServer: SocketServer): void {

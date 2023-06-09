@@ -6,7 +6,7 @@ import * as meshHandlers from './channel-handlers/mesh';
 import configstore from './configstore';
 import { register as registerMachineHandlers } from './machine';
 import monitor from './monitor';
-import connectionManager from './socket/ConnectionManager';
+import { connectionManager } from './socket/ConnectionManager';
 import socketSerial from './socket/socket-serial';
 import socketSlice from './socket/socket-slice';
 import system from './socket/system';
@@ -30,16 +30,15 @@ function startServices(server) {
     // split model
     socketServer.registerChannel('mesh:split', meshHandlers.handleSplitMesh);
 
-    // ===
+    // ===============
     // Machine Discover
-    // ===
+    // ===============
     socketServer.registerEvent('machine:discover', connectionManager.refreshDevices);
     socketServer.registerEvent('subscribe:discover', connectionManager.subscribeDevices);
 
-    // ===
+    // ===============
     // machine control: http & serial port
-    // ===
-
+    // ===============
     // Register machine control handlers
     registerMachineHandlers(socketServer);
 
