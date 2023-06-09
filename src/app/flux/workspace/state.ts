@@ -161,6 +161,8 @@ export const initialState: WorkspaceState = {
     activeTool: null,
     activeMachineToolOptions: null,
 
+    moduleList: [],
+
     //
     // Machine State
     //

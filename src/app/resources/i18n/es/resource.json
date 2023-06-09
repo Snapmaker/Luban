@@ -1800,6 +1800,7 @@
     "key-Workspace/Connection-No ports available.": "No hay puertos disponibles.",
     "key-Workspace/Connection-Nozzle Temp.": "Temperatura de boquilla",
     "key-Workspace/Connection-OK": "Aceptar",
+    "key-Workspace/Connection-Quick Swap Kit": "",
     "key-Workspace/Connection-Reason: The machine may be using an older version of firmware or may have other devices connected.": "",
     "key-Workspace/Connection-Refresh": "Actualizar",
     "key-Workspace/Connection-Screen Authorization Needed": "Se necesita autorización de la pantalla",

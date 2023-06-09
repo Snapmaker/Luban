@@ -1800,6 +1800,7 @@
     "key-Workspace/Connection-No ports available.": "Keine Anschlüsse verfügbar.",
     "key-Workspace/Connection-Nozzle Temp.": "Düsen-Temp.",
     "key-Workspace/Connection-OK": "OK",
+    "key-Workspace/Connection-Quick Swap Kit": "",
     "key-Workspace/Connection-Reason: The machine may be using an older version of firmware or may have other devices connected.": "Verbindung fehlgeschlagen. Das Gerät wurde mit einem anderen Gerät verbunden.",
     "key-Workspace/Connection-Refresh": "Aktualisieren",
     "key-Workspace/Connection-Screen Authorization Needed": "Bildschirm-Genehmigung erforderlich",

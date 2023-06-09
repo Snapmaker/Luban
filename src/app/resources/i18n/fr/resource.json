@@ -1800,6 +1800,7 @@
     "key-Workspace/Connection-No ports available.": "Aucun port disponible.",
     "key-Workspace/Connection-Nozzle Temp.": "Température de la buse",
     "key-Workspace/Connection-OK": "OK",
+    "key-Workspace/Connection-Quick Swap Kit": "",
     "key-Workspace/Connection-Reason: The machine may be using an older version of firmware or may have other devices connected.": "",
     "key-Workspace/Connection-Refresh": "Rafraîchir",
     "key-Workspace/Connection-Screen Authorization Needed": "Autorisation d'écran requise",
