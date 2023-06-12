@@ -119,7 +119,8 @@ class SocketHttp {
 
     private getLaserMaterialThicknessReq = null;
 
-    public onConnection = () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public onConnection = (socket: SocketServer) => {
         this.stopHeartBeat();
     };
 
