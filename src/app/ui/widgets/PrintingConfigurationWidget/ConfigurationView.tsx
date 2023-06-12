@@ -116,7 +116,8 @@ const ConfigurationView: React.FC<{}> = () => {
         }
     }, [
         selectedStackId, qualityDefinitionModels,
-        materialPreset, materialPresetRight,
+        materialPreset?.materialType,
+        materialPresetRight?.materialType,
         extruderLDefinition?.settings.machine_nozzle_size.default_value,
         extruderRDefinition?.settings.machine_nozzle_size.default_value,
     ]);
