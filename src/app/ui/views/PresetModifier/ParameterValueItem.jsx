@@ -209,6 +209,7 @@ function SettingItem(
                         options={opts}
                         value={definitionCategory.toLowerCase()}
                         onChange={(option) => {
+                            onChangePresetSettings('material_type', option.value);
                             onChangeMaterialType(option.label);
                         }}
                         disabled={isProfile}
