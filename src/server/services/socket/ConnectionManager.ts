@@ -59,9 +59,9 @@ class ConnectionManager {
     public refreshDevices = (socket, options) => {
         const { connectionType } = options;
         if (connectionType === CONNECTION_TYPE_WIFI) {
-            socketHttp.refreshDevices(socket);
+            socketHttp.refreshDevices();
         } else if (connectionType === CONNECTION_TYPE_SERIAL) {
-            socketSerial.serialportList(socket);
+            socketSerial.serialportList();
         }
     };
 
@@ -103,17 +103,17 @@ class ConnectionManager {
 
             this.socket.connectionOpen(socket, options);
         } else {
-            await this.inspectProtocol('', CONNECTION_TYPE_SERIAL, options, (protocol) => {
-                if (protocol === SACP_PROTOCOL) {
-                    this.socket = socketSerialNew;
-                    this.protocol = SACP_PROTOCOL;
-                    this.socket.connectionOpen(socket, options);
-                } else {
-                    this.socket = socketSerial;
-                    this.protocol = '';
-                    this.socket.serialportOpen(socket, options);
-                }
-            });
+            const protocol = await this.inspectProtocol('', CONNECTION_TYPE_SERIAL, options);
+
+            if (protocol === SACP_PROTOCOL) {
+                this.socket = socketSerialNew;
+                this.protocol = SACP_PROTOCOL;
+                this.socket.connectionOpen(socket, options);
+            } else {
+                this.socket = socketSerial;
+                this.protocol = '';
+                this.socket.serialportOpen(socket, options);
+            }
         }
         log.debug(`connectionOpen connectionType=${connectionType} this.socket=${this.socket}`);
     };
@@ -132,16 +132,16 @@ class ConnectionManager {
         }
     };
 
-    private inspectProtocol = async (address, connectionType = CONNECTION_TYPE_WIFI, options, callback) => {
+    private inspectProtocol = async (address, connectionType = CONNECTION_TYPE_WIFI, options = { port: '' }) => {
         if (connectionType === CONNECTION_TYPE_WIFI) {
             // Inspect if we can connect to the printer via SACP (8888) or HTTP (8080)
             const [resSACP, resHTTP] = await Promise.allSettled([
                 this.tryConnect(address, PORT_SCREEN_SACP),
                 this.tryConnect(address, PORT_SCREEN_HTTP),
             ]);
-            if (resHTTP.value) {
+            if (resHTTP.status === 'fulfilled' && resHTTP.value) {
                 return 'HTTP';
-            } else if (resSACP.value) {
+            } else if (resSACP.status === 'fulfilled' && resSACP.value) {
                 return SACP_PROTOCOL;
             }
         } else if (connectionType === CONNECTION_TYPE_SERIAL) {
@@ -152,6 +152,7 @@ class ConnectionManager {
                 baudRate: 115200,
                 autoOpen: false
             });
+
             if (timer) clearTimeout(timer);
             timer = setTimeout(() => {
                 if (!hasData) {
@@ -159,33 +160,38 @@ class ConnectionManager {
                     trySerialConnect?.close();
                 }
             }, 1000);
-            trySerialConnect.on('data', (data) => {
-                hasData = true;
-                const machineData = data.toString();
-                if (data[0].toString(16) === 'aa' && data[1].toString(16) === '55') {
-                    protocol = SACP_PROTOCOL;
-                    trySerialConnect?.close();
-                }
-                if (machineData.match(/SACP/g)) {
-                    protocol = SACP_PROTOCOL;
-                    trySerialConnect?.close();
-                }
-                if (machineData.match(/ok/g)) {
-                    trySerialConnect?.close();
-                }
-                return '';
+
+            await new Promise((resolve) => {
+                trySerialConnect.on('data', (data) => {
+                    hasData = true;
+                    const machineData = data.toString();
+                    if (data[0].toString(16) === 'aa' && data[1].toString(16) === '55') {
+                        protocol = SACP_PROTOCOL;
+                        trySerialConnect?.close();
+                    }
+                    if (machineData.match(/SACP/g)) {
+                        protocol = SACP_PROTOCOL;
+                        trySerialConnect?.close();
+                    }
+                    if (machineData.match(/ok/g)) {
+                        trySerialConnect?.close();
+                    }
+                });
+                trySerialConnect.on('close', () => {
+                    resolve(true);
+                    // callback && callback(protocol);
+                });
+                // // TODO: return a promise and throw error
+                trySerialConnect.on('error', (err) => {
+                    log.error(`error = ${err}`);
+                });
+                trySerialConnect.once('open', () => {
+                    trySerialConnect.write('M1006\r\n');
+                });
+                trySerialConnect.open();
             });
-            trySerialConnect.on('close', () => {
-                callback && callback(protocol);
-            });
-            // // TODO: return a promise and throw error
-            trySerialConnect.on('error', (err) => {
-                log.error({ err });
-            });
-            trySerialConnect.once('open', () => {
-                trySerialConnect.write('M1006\r\n');
-            });
-            trySerialConnect.open();
+
+            return protocol;
         }
         return '';
     };
@@ -270,11 +276,11 @@ class ConnectionManager {
                             const promise = new Promise((resolve) => {
                                 if (materialThickness === -1) {
                                     this.socket.executeGcode({ gcode: 'G0 Z0 F1500;' }, () => {
-                                        resolve();
+                                        resolve(true);
                                     });
                                 } else {
                                     this.socket.executeGcode({ gcode: `G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;` }, () => {
-                                        resolve();
+                                        resolve(true);
                                     });
                                 }
                             });
@@ -283,11 +289,11 @@ class ConnectionManager {
                             const promise = new Promise((resolve) => {
                                 if (isLaserPrintAutoMode) {
                                     this.socket.executeGcode({ gcode: `G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;` }, () => {
-                                        resolve();
+                                        resolve(true);
                                     });
                                 } else {
                                     this.socket.executeGcode({ gcode: 'G0 Z0 F1500;' }, () => {
-                                        resolve();
+                                        resolve(true);
                                     });
                                 }
                             });
@@ -304,7 +310,7 @@ class ConnectionManager {
 
                             const promise = new Promise((resolve) => {
                                 this.socket.executeGcode({ gcode: `G53;\nG0 X${x} Y${y};\nG54;\nG92 X${x} Y${y};` }, () => {
-                                    resolve();
+                                    resolve(true);
                                 });
                             });
                             promises.push(promise);
@@ -313,7 +319,7 @@ class ConnectionManager {
                         // Rotary Module origin
                         const promise = new Promise((resolve) => {
                             this.executeGcode(this.socket, { gcode: 'G0 X0 Y0 B0 F1500;\nG0 Z0 F1500;' }, () => {
-                                resolve();
+                                resolve(true);
                             });
                         });
                         promises.push(promise);
@@ -322,7 +328,7 @@ class ConnectionManager {
                     // Laser works on G54
                     const promise = new Promise((resolve) => {
                         this.executeGcode(this.socket, { gcode: 'G54;' }, () => {
-                            resolve();
+                            resolve(true);
                         });
                     });
                     promises.push(promise);
@@ -509,7 +515,7 @@ M3`;
     };
 
     // when using executeGcode, the cmd param is always 'gcode'
-    public executeGcode = (socket, options, callback) => {
+    public executeGcode = (socket, options, callback = null) => {
         const { gcode, context, cmd = 'gcode' } = options;
         log.info(`executeGcode: ${gcode}, ${this.protocol}`);
         if (this.protocol === SACP_PROTOCOL || this.connectionType === CONNECTION_TYPE_WIFI) {
