@@ -960,6 +960,7 @@
     "key-App/Settings/MachineSettings-Laser": "Лазер",
     "key-App/Settings/MachineSettings-Laser Toolhead": "Лазерний модуль",
     "key-App/Settings/MachineSettings-Machine": "Пристрій",
+    "key-App/Settings/MachineSettings-Modules": "",
     "key-App/Settings/MachineSettings-Single Extruder Toolhead": "Одинарний екструдер",
     "key-App/Settings/MachineSettings-Standard CNC": "Стандартний",
     "key-App/Settings/Model Examination": "Перевірка моделі",

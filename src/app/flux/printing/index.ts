@@ -1,4 +1,9 @@
-import { applyParameterModifications, computeAdjacentFaces, PrintMode, resolveParameterValues } from '@snapmaker/luban-platform';
+import {
+    applyParameterModifications,
+    computeAdjacentFaces,
+    PrintMode,
+    resolveParameterValues,
+} from '@snapmaker/luban-platform';
 import { cloneDeep, filter, find, includes, isNil, noop } from 'lodash';
 import path from 'path';
 import { Transfer } from 'threads';
@@ -64,8 +69,8 @@ import {
     ScaleToFitWithRotateOperation3D
 } from '../../scene/operations';
 import scene from '../../scene/Scene';
-import { machineStore } from '../../store/local-storage';
 import ThreeUtils from '../../scene/three-extensions/ThreeUtils';
+import { machineStore } from '../../store/local-storage';
 import { pickAvailableQualityPresetModels } from '../../ui/utils/profileManager';
 import ModelLoader from '../../ui/widgets/PrintingVisualizer/ModelLoader';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
@@ -701,6 +706,8 @@ export const actions = {
      *  - adhesion parameters (reducing edit area)
      */
     updateBoundingBox: () => (dispatch, getState) => {
+        const modules = getState().machine.modules as string[];
+
         const {
             modelGroup,
             printMode,
@@ -743,6 +750,27 @@ export const actions = {
             }
         }
 
+        // Check work range offsets from machine modules
+        for (const machineModuleOptions of activeMachine.metadata?.modules || []) {
+            const identifier = machineModuleOptions.identifier;
+            if (modules.indexOf(identifier) >= 0) {
+                if (machineModuleOptions?.workRangeOffset) {
+                    workRange.min.x += machineModuleOptions.workRangeOffset[0];
+                    workRange.min.y += machineModuleOptions.workRangeOffset[1];
+                    workRange.min.z += machineModuleOptions.workRangeOffset[2];
+                    workRange.max.x += machineModuleOptions.workRangeOffset[0];
+                    workRange.max.y += machineModuleOptions.workRangeOffset[1];
+                    workRange.max.z += machineModuleOptions.workRangeOffset[2];
+                }
+            }
+        }
+
+        // validate work range in case it goes off zero
+        workRange.min.x = Math.max(workRange.min.x, 0);
+        workRange.min.y = Math.max(workRange.min.y, 0);
+        workRange.min.z = Math.max(workRange.min.z, 0);
+
+        // Get border from adhesion
         const adhesionType = activeQualityDefinition?.settings?.adhesion_type?.default_value;
 
         let border = 0;

@@ -1,11 +1,12 @@
 import { Machine, MachineType } from '@snapmaker/luban-platform';
 
+import { quickSwapKitModule } from './snapmaker-2-modules';
 import {
-    printToolHead,
-    highPower10WLaserToolHead,
     dualExtrusionPrintToolHead,
-    standardLaserToolHead,
+    highPower10WLaserToolHead,
+    printToolHead,
     standardCNCToolHead,
+    standardLaserToolHead,
 } from './snapmaker-2-toolheads';
 
 /*
@@ -59,6 +60,13 @@ export const machine: Machine = {
                 identifier: standardCNCToolHead.identifier,
                 configPath: 'cnc/a350_standard',
             },
+        ],
+
+        modules: [
+            {
+                identifier: quickSwapKitModule.identifier,
+                workRangeOffset: [0, -15, 0],
+            }
         ],
 
         slicerVersion: 0,

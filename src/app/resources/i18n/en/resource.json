@@ -960,6 +960,7 @@
     "key-App/Settings/MachineSettings-Laser": "Laser",
     "key-App/Settings/MachineSettings-Laser Toolhead": "Laser Module",
     "key-App/Settings/MachineSettings-Machine": "Machine",
+    "key-App/Settings/MachineSettings-Modules": "Modules",
     "key-App/Settings/MachineSettings-Single Extruder Toolhead": "Single Extrusion",
     "key-App/Settings/MachineSettings-Standard CNC": "Standard",
     "key-App/Settings/Model Examination": "Model Examination",

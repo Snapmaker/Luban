@@ -41,21 +41,20 @@ const INITIAL_STATE = {
     series: MACHINE_SERIES.ORIGINAL.identifier,
     toolHead: {
         printingToolhead:
-        MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
+            MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
         laserToolhead:
-        MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value,
+            MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value,
         cncToolhead:
-        MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value
+            MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value
     },
+    modules: [],
 
     /**
      * Active machine object.
      */
     activeMachine: null,
 
-    // currentMachine: INITIAL_MACHINE_SERIES_WITH_HEADTOOL,
     size: MACHINE_SERIES.ORIGINAL.metadata.size,
-    // endregion
 
     // Serial port
 
@@ -198,7 +197,8 @@ export const actions = {
         // Machine
         const {
             series = INITIAL_STATE.series,
-            toolHead = INITIAL_STATE.toolHead
+            toolHead = INITIAL_STATE.toolHead,
+            modules = INITIAL_STATE.modules,
         } = machineStore.get('machine') || {};
 
         let machine = findMachineByName(series);
@@ -226,7 +226,8 @@ export const actions = {
             baseActions.updateState({
                 series: series,
                 size: machine.metadata.size,
-                toolHead: toolHead,
+                toolHead,
+                modules,
                 activeMachine: machine,
             })
         );
@@ -269,11 +270,11 @@ export const actions = {
     updateMachineState: (state) => (dispatch) => {
         const { series, headType } = state;
         headType
-        && dispatch(
-            baseActions.updateState({
-                headType: headType
-            })
-        );
+            && dispatch(
+                baseActions.updateState({
+                    headType: headType
+                })
+            );
 
         series && dispatch(actions.updateMachineSeries(series));
     },
@@ -380,6 +381,20 @@ export const actions = {
                 dispatch(baseActions.updateState({ toolHead }));
             }
         }
+    },
+
+    setMachineModules: (machineModules) => {
+        return (dispatch) => {
+            if (machineModules.length > 0) {
+                machineStore.set('machine.modules', machineModules);
+            } else {
+                machineStore.unset('machine.modules');
+            }
+
+            dispatch(baseActions.updateState({
+                modules: machineModules,
+            }));
+        };
     },
 
     updateMachineSize: (size) => (dispatch) => {
