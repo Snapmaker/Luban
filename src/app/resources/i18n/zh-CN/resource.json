@@ -960,6 +960,7 @@
     "key-App/Settings/MachineSettings-Laser": "激光加工",
     "key-App/Settings/MachineSettings-Laser Toolhead": "激光模组",
     "key-App/Settings/MachineSettings-Machine": "机器",
+    "key-App/Settings/MachineSettings-Modules": "模块",
     "key-App/Settings/MachineSettings-Single Extruder Toolhead": "单喷头",
     "key-App/Settings/MachineSettings-Standard CNC": "标准",
     "key-App/Settings/Model Examination": "模型检测",
