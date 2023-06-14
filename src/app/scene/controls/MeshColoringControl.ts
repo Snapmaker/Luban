@@ -258,11 +258,12 @@ export default class MeshColoringControl extends Control {
 
         if (enabled) {
             ShortcutManager.register(this.shortcutHandler);
-
-            this.history.clear();
         } else {
             ShortcutManager.unregister(this.shortcutHandler);
         }
+
+        this.clearHighlight();
+        this.history.clear();
     }
 
     public setTargetObject(object: Object3D): void {
@@ -423,6 +424,10 @@ export default class MeshColoringControl extends Control {
         const byteCountAttribute = geometry.getAttribute('byte_count');
         const colorAttribute = geometry.getAttribute('color');
 
+        if (!byteCountAttribute || !colorAttribute) {
+            return;
+        }
+
         let index: number;
         for (const faceInfo of faces) {
             const faceIndex = faceInfo.index;
@@ -445,7 +450,7 @@ export default class MeshColoringControl extends Control {
         colorAttribute.needsUpdate = true;
     }
 
-    private clearHighlight(): void {
+    public clearHighlight(): void {
         if (this.highlightedGeometry && this.highlightedFaces) {
             this._restoreMeshFaces(this.highlightedGeometry, this.highlightedFaces, { restoreByteCount: false });
             this.highlightedGeometry = null;
