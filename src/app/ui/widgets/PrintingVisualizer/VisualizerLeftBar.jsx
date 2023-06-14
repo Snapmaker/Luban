@@ -31,6 +31,7 @@ import ModelScaleOverlay from '../../views/model-operation-overlay/ModelScaleOve
 import SupportOverlay from '../../views/model-operation-overlay/SupportOverlay';
 /* eslint-disable-next-line import/no-cycle */
 import TranslateOverlay from '../../views/model-operation-overlay/TranslateOverlay';
+import ThreeModel from '../../../models/ThreeModel';
 
 export const CancelButton = ({ onClick }) => {
     return (
@@ -203,6 +204,7 @@ function VisualizerLeftBar(
 
     const hasVisableModels = models.some(model => model.visible && !(model instanceof PrimeTowerModel));
     const hasAnyVisableModels = models.some(model => model.visible);
+    const isSingleMeshSelected = selectedModelArray.length === 1 && selectedModelArray[0] instanceof ThreeModel;
 
     // const hasModels = modelGroup.getModels().some(model => !(model instanceof PrimeTowerModel));
 
@@ -221,7 +223,7 @@ function VisualizerLeftBar(
     const supportDisabled = showRotationAnalyzeModal || !hasVisableModels || isPrimeTowerSelected || pageModeDisabled;
 
     const meshColoringDisplay = isDual;
-    const meshColoringDisabled = showRotationAnalyzeModal || !hasVisableModels || isPrimeTowerSelected || pageModeDisabled;
+    const meshColoringDisabled = showRotationAnalyzeModal || !hasVisableModels || isPrimeTowerSelected || pageModeDisabled || !isSingleMeshSelected;
 
     return (
         <div className={styles['visualizer-left-bar']}>

@@ -78,8 +78,8 @@ const MeshColoringOverlay: React.FC<MeshColoringOverlayProps> = ({ onClose }) =>
 
     // Select left by default
     useEffect(() => {
-        selectLeftExtruder();
-    }, [selectLeftExtruder]);
+        selectRightExtruder();
+    }, [selectRightExtruder]);
 
     // brush color
     const leftMaterialPresetModel = useMaterialPresetModel(LEFT_EXTRUDER);
