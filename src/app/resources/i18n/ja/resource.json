@@ -1495,6 +1495,7 @@
     "key-Printing/3DP-Scale to fit successfully.": "フィットするように拡大縮小する成功",
     "key-Printing/3DP-scale to fit failed.": "フィットするように拡大縮小する失敗",
     "key-Printing/Beginner Guide-Object List Introduction": "",
+    "key-Printing/Common-Failed to rename. Please enter a new name.": "",
     "key-Printing/ContextMenu-Assign model to left extruder": "",
     "key-Printing/ContextMenu-Assign model to right extruder": "",
     "key-Printing/ContextMenu-Auto Arrange": "モデルの自動レイアウト",

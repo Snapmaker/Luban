@@ -1495,6 +1495,7 @@
     "key-Printing/3DP-Scale to fit successfully.": "自适应缩放成功",
     "key-Printing/3DP-scale to fit failed.": "自适应缩放失败",
     "key-Printing/Beginner Guide-Object List Introduction": "选择对象，为选择的对象分配喷嘴。",
+    "key-Printing/Common-Failed to rename. Please enter a new name.": "",
     "key-Printing/ContextMenu-Assign model to left extruder": "分配到左喷嘴",
     "key-Printing/ContextMenu-Assign model to right extruder": "分配到右喷嘴",
     "key-Printing/ContextMenu-Auto Arrange": "自动排列",

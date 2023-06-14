@@ -4,7 +4,15 @@ import classNames from 'classnames';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { findMachineByName, findMachineModule, getMachineOptions, getMachineSupportedToolOptions, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, } from '../../../../constants/machines';
+import {
+    findMachineByName,
+    findMachineModule,
+    getMachineOptions,
+    getMachineSupportedToolOptions,
+    HEAD_CNC,
+    HEAD_LASER,
+    HEAD_PRINTING,
+} from '../../../../constants/machines';
 import { RootState } from '../../../../flux/index.def';
 import { actions as machineActions } from '../../../../flux/machine';
 import { actions as projectActions } from '../../../../flux/project';

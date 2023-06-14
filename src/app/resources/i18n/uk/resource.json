@@ -1495,6 +1495,7 @@
     "key-Printing/3DP-Scale to fit successfully.": "Модель масштабовано так, щоб вона вмішалась в робочу область.",
     "key-Printing/3DP-scale to fit failed.": "Збій автомасштабування.",
     "key-Printing/Beginner Guide-Object List Introduction": "Виберіть об’єкти та призначте екструдер для них.",
+    "key-Printing/Common-Failed to rename. Please enter a new name.": "",
     "key-Printing/ContextMenu-Assign model to left extruder": "Призначте модель(і) лівому екструдеру",
     "key-Printing/ContextMenu-Assign model to right extruder": "Призначте модель(і) правому екструдеру",
     "key-Printing/ContextMenu-Auto Arrange": "Автовпорядкування",

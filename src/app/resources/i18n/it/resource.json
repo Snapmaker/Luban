@@ -1495,6 +1495,7 @@
     "key-Printing/3DP-Scale to fit successfully.": "Scale to fit successfully.",
     "key-Printing/3DP-scale to fit failed.": "Scale to fit failed.",
     "key-Printing/Beginner Guide-Object List Introduction": "Select objects, assign extruder for selected objects.",
+    "key-Printing/Common-Failed to rename. Please enter a new name.": "",
     "key-Printing/ContextMenu-Assign model to left extruder": "Assegna il modello/i all'estrusore sinistro",
     "key-Printing/ContextMenu-Assign model to right extruder": "Assegna il modello/i all'estrusore destro",
     "key-Printing/ContextMenu-Auto Arrange": "Disposizione automatica",
