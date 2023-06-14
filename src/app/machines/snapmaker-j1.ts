@@ -22,7 +22,7 @@ export const printToolHead: ToolHead = {
 
 export const machine: Machine = {
     identifier: 'Snapmaker J1',
-    fullName: 'Snapmaker J1',
+    fullName: 'Snapmaker J1/J1s',
     img: '/resources/images/machine/snapmaker_j1.png',
 
     machineType: MachineType.Printer,
