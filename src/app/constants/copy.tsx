@@ -1,7 +1,7 @@
 import React from 'react';
 import { Trans } from 'react-i18next';
 
-export const testTrans = (
+export const testTrans: React.ReactNode = (
     <div>
         <Trans i18nKey="key-Workspace/LaserStartJob-3axis_start_job_prompt">
             Under the Auto Mode, the machine will run auto focus according to the material thickness you input, and start the job.<br />
