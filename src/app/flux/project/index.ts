@@ -1,6 +1,6 @@
-/* eslint-disable import/no-cycle */
 import { find, keys, some } from 'lodash';
 import cloneDeep from 'lodash/cloneDeep';
+
 import pkg from '../../../package.json';
 import api from '../../api';
 import {
@@ -20,7 +20,6 @@ import {
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 } from '../../constants/machines';
 import { checkIsGCodeFile, checkIsSnapmakerProjectFile } from '../../lib/check-name';
 import { logModuleVisit } from '../../lib/gaEvent';
-
 import i18n from '../../lib/i18n';
 import { PROCESS_STAGE } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
@@ -29,11 +28,14 @@ import UniApi from '../../lib/uni-api';
 import { UniformToolpathConfig } from '../../lib/uniform-toolpath-config';
 import { getCurrentHeadType } from '../../lib/url-utils';
 import { machineStore } from '../../store/local-storage';
-import { actions as appGlobalActions } from '../app-global';
 import { actions as editorActions } from '../editor';
-import { actions as operationHistoryActions } from '../operation-history';
 import { actions as printingActions } from '../printing';
 import { actions as workspaceActions } from '../workspace';
+
+/* eslint-disable-next-line import/no-cycle */
+import { actions as appGlobalActions } from '../app-global';
+/* eslint-disable-next-line import/no-cycle */
+import { actions as operationHistoryActions } from '../operation-history';
 
 const INITIAL_STATE = {
     [HEAD_PRINTING]: {
@@ -138,6 +140,8 @@ export const actions = {
 
             envObj.models.push(modelGroup.primeTower.getSerializableConfig());
         }
+
+        console.log('auto save environment');
         for (let key = 0; key < models.length; key++) {
             const model = models[key];
             envObj.models.push(model.getSerializableConfig());
