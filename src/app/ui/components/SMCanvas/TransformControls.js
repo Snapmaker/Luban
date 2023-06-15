@@ -91,7 +91,7 @@ const GRAY2 = 0x2a2c2e;
 class TransformControls extends Object3D {
     camera = null;
 
-    object = new Group();
+    object = null; // new Group();
 
     _mode = null;
 
@@ -893,6 +893,7 @@ class TransformControls extends Object3D {
 
     tooglePeripheralVisible() {
         const res = this.hasHideModel();
+
         this.translatePeripheral.visible = (this.mode === 'translate' && !res);
         this.rotatePeripheral.visible = (this.mode === 'rotate' && !res && !this.isPrimeTower);
         this.scalePeripheral.visible = (this.mode === 'scale' && !res);
