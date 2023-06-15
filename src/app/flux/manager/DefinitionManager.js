@@ -167,7 +167,7 @@ class DefinitionManager {
             // Make sure nozzle size is taken from definition itself
             const changedArray = [
                 ...this.changedArray,
-                ['machine_nozzle_size', definition.settings.machine_nozzle_size.default_value],
+                // ['machine_nozzle_size', definition.settings.machine_nozzle_size.default_value],
             ];
             resolveParameterValues(definition, changedArray, options);
         }
