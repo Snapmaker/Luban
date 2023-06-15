@@ -77,7 +77,7 @@ import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcod
 import type { RootState } from '../index.def';
 import definitionManager from '../manager/DefinitionManager';
 import baseActions from './actions-base';
-import { checkMeshes, LoadMeshFileOptions, loadMeshFiles, MeshFileInfo, MeshHelper } from './actions-mesh';
+import { LoadMeshFileOptions, loadMeshFiles, MeshFileInfo, MeshHelper } from './actions-mesh';
 import sceneActions from './actions-scene';
 
 // eslint-disable-next-line import/no-cycle
@@ -4149,7 +4149,7 @@ export const actions = {
         dispatch(actions.destroyGcodeLine());
         // await Promise.allSettled(promises);
 
-        const checkResultMap = await checkMeshes(meshFileInfos);
+        const checkResultMap = await MeshHelper.checkMeshes(meshFileInfos);
 
         const newModels = modelGroup.models.filter(model => {
             return !models.includes(model) && model;
@@ -4562,7 +4562,7 @@ export const actions = {
                 path.extname(`${DATA_PREFIX}/${simplifyModel.originalName}`)
             );
             const sourceSimplifyName = `${basenameWithoutExt}.stl`;
-            uploadResult = await MeshHelper.uploadMesh(mesh, sourceSimplifyName, 'stl');
+            uploadResult = await MeshHelper.uploadMesh(mesh, sourceSimplifyName);
             mesh.applyMatrix4(simplifyModel.meshObject.parent.matrix);
             await dispatch(actions.updateState({
                 simplifyOriginModelInfo: {

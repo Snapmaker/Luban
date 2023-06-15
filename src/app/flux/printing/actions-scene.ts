@@ -38,6 +38,8 @@ import { MeshHelper, LoadMeshFileOptions, MeshFileInfo, loadMeshFiles } from './
 import scene from '../../scene/Scene';
 import MeshColoringControl from '../../scene/controls/MeshColoringControl';
 
+/* eslint-disable-next-line import/no-cycle */
+import { actions as projectActions } from '../project';
 
 const renderScene = () => (dispatch) => {
     dispatch(
@@ -388,6 +390,8 @@ const endMeshColoringMode = (shouldApplyChanges = false) => {
         }
 
         dispatch(renderScene());
+
+        dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
     };
 };
 

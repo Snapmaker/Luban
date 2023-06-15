@@ -36,6 +36,8 @@ import { actions as workspaceActions } from '../workspace';
 import { actions as appGlobalActions } from '../app-global';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as operationHistoryActions } from '../operation-history';
+import { synchronizeMeshFile } from '../printing/actions-mesh';
+import ThreeModel from '../../models/ThreeModel';
 
 const INITIAL_STATE = {
     [HEAD_PRINTING]: {
@@ -141,9 +143,12 @@ export const actions = {
             envObj.models.push(modelGroup.primeTower.getSerializableConfig());
         }
 
-        console.log('auto save environment');
-        for (let key = 0; key < models.length; key++) {
-            const model = models[key];
+        // Save models
+        for (const model of models) {
+            if (model instanceof ThreeModel) {
+                await dispatch(synchronizeMeshFile(model));
+            }
+
             envObj.models.push(model.getSerializableConfig());
         }
 
@@ -415,7 +420,6 @@ export const actions = {
                     savedModalType: type,
                     savedModalFilePath: filePath
                 }));
-                dispatch(actions.afterSaved());
                 if (newOpenedFile) {
                     dispatch(actions.setOpenedFileWithType(headType, newOpenedFile));
                 }
@@ -483,8 +487,7 @@ export const actions = {
         const tmpFile = `/Tmp/${targetFile}`;
         await new Promise((resolve) => {
             UniApi.File.save(openedFile.path, tmpFile, async () => {
-                await dispatch(actions.afterSaved());
-                resolve();
+                resolve(true);
             });
         });
         await dispatch(actions.clearSavedEnvironment(headType));
@@ -497,11 +500,6 @@ export const actions = {
             dispatch(printingActions.applyProfileToAllModels());
         }
         dispatch(actions.autoSaveEnvironment(headType));
-    },
-
-    // Note: add progress bar when saving project file
-    afterSaved: () => () => {
-
     },
 
     openProject: (file, history, unReload = false, isGuideTours = false) => async (dispatch) => {

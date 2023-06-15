@@ -1,5 +1,11 @@
 import path from 'path';
-import * as THREE from 'three';
+import {
+    BufferAttribute,
+    BufferGeometry,
+    DoubleSide,
+    Mesh,
+    MeshPhongMaterial,
+} from 'three';
 
 import api from '../../api';
 import { DATA_PREFIX } from '../../constants';
@@ -24,26 +30,41 @@ export declare interface MeshFileInfo {
     baseName?: string;
 }
 
+interface UploadMeshOptions {
+    fileType?: string;
+    uploadName?: string;
+}
+
 /**
  * Upload Mesh object.
  */
-const uploadMesh = async (mesh, fileName, fileType = 'stl') => {
+const uploadMesh = async (mesh: Mesh, fileName: string, options?: UploadMeshOptions) => {
+    const fileType = options?.fileType || 'stl';
+
+    const formData = new FormData();
+
+    // file
     const stl = new ModelExporter().parse(mesh, fileType, true);
     const blob = new Blob([stl], { type: 'text/plain' });
     const fileOfBlob = new File([blob], fileName);
-
-    const formData = new FormData();
     formData.append('file', fileOfBlob);
+
+    // uploadName
+    if (options?.uploadName) {
+        formData.append('uploadName', options.uploadName);
+    }
+
     const uploadResult = await api.uploadFile(formData, HEAD_PRINTING);
     return uploadResult;
 };
+
 
 /**
  * Check integrity of meshes.
  *
  * Note that this function is not an action actually.
  */
-export const checkMeshes = async (meshInfos: MeshFileInfo[]) => {
+const checkMeshes = async (meshInfos: MeshFileInfo[]) => {
     const checkResultMap = new Map();
 
     for (const meshInfo of meshInfos) {
@@ -83,6 +104,29 @@ export const checkMeshes = async (meshInfos: MeshFileInfo[]) => {
     }
 
     return checkResultMap;
+};
+
+export const MeshHelper = {
+    uploadMesh,
+    checkMeshes,
+};
+
+/**
+ * Synchronize mesh changes to file (Upload mesh).
+ */
+const synchronizeMeshFile = (model: ThreeModel) => {
+    return async () => {
+        // Upload mesh object with uploadName (unchanged)
+        await MeshHelper.uploadMesh(
+            model.meshObject,
+            model.baseName,
+            {
+                uploadName: model.uploadName,
+            }
+        );
+
+        return true;
+    };
 };
 
 const createLoadModelWorker = (uploadPath, onMessage) => {
@@ -194,10 +238,10 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
                     switch (type) {
                         case 'LOAD_MODEL_POSITIONS': {
                             const { positions, originalPosition, byteCount } = data;
-                            const bufferGeometry = new THREE.BufferGeometry();
-                            const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
-                            const material = new THREE.MeshPhongMaterial({
-                                side: THREE.DoubleSide,
+                            const bufferGeometry = new BufferGeometry();
+                            const modelPositionAttribute = new BufferAttribute(positions, 3);
+                            const material = new MeshPhongMaterial({
+                                side: DoubleSide,
                                 color: 0xa0a0a0,
                                 specular: 0xb0b0b0,
                                 shininess: 0
@@ -206,7 +250,7 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
                             bufferGeometry.setAttribute('position', modelPositionAttribute);
 
                             if (byteCount) {
-                                bufferGeometry.setAttribute('byte_count', new THREE.BufferAttribute(byteCount, 1));
+                                bufferGeometry.setAttribute('byte_count', new BufferAttribute(byteCount, 1));
                             }
 
                             bufferGeometry.computeVertexNormals();
@@ -266,8 +310,8 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
                         case 'LOAD_MODEL_CONVEX': {
                             let { positions } = data;
 
-                            const convexGeometry = new THREE.BufferGeometry();
-                            const positionAttribute = new THREE.BufferAttribute(
+                            const convexGeometry = new BufferGeometry();
+                            const positionAttribute = new BufferAttribute(
                                 positions,
                                 3
                             );
@@ -328,8 +372,8 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
     };
 };
 
-export const MeshHelper = {
-    uploadMesh,
+export {
+    synchronizeMeshFile,
 };
 
 export default {
