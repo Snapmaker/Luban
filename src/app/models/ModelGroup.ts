@@ -1653,11 +1653,11 @@ class ModelGroup extends EventEmitter {
         // after update transformation
         this.selectedGroup.shouldUpdateBoundingbox = true;
 
-        this.meshPositionChanged();
-
         this.prepareSelectedGroup();
         this.calaClippingMap();
         recovery();
+
+        this.meshPositionChanged();
 
         this.plateAdhesion.visible = true;
         if (selectedModelArray.length === 0) {
