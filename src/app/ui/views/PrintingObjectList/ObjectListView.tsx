@@ -45,7 +45,7 @@ const ObjectListView: React.FC = () => {
     const supportExtruderConfig = useSelector((state: RootState) => state.printing.supportExtruderConfig, shallowEqual);
 
     const actions = {
-        onClickModelNameBox(targetModel, event) {
+        onClickModelNameBox(targetModel, event = null) {
             if (leftBarOverlayVisible) {
                 return;
             }
@@ -63,20 +63,22 @@ const ObjectListView: React.FC = () => {
                 dispatch(sceneActions.showModels(targetModel));
             }
         },
-        updateMaterialColor(definition, direction) {
-            const color = definition?.settings?.color?.default_value;
-            switch (direction) {
-                case LEFT_EXTRUDER:
-                    setLeftMaterialColor(color);
-                    break;
-                case RIGHT_EXTRUDER:
-                    setRightMaterialColor(color);
-                    break;
-                default:
-                    break;
-            }
-        },
+
     };
+
+    const updateMaterialColor = useCallback((definition, direction: string) => {
+        const color = definition?.settings?.color?.default_value;
+        switch (direction) {
+            case LEFT_EXTRUDER:
+                setLeftMaterialColor(color);
+                break;
+            case RIGHT_EXTRUDER:
+                setRightMaterialColor(color);
+                break;
+            default:
+                break;
+        }
+    }, []);
 
     const allModels = (models) && models.filter(model => !model.supportTag);
     // const prevProps = usePrevious({
@@ -84,20 +86,18 @@ const ObjectListView: React.FC = () => {
     // });
     useEffect(() => {
         const leftDefinition = find(materialDefinitions, { definitionId: defaultMaterialId });
-        const rightDefinition = find(materialDefinitions, { definitionId: defaultMaterialIdRight });
-        actions.updateMaterialColor(leftDefinition, LEFT_EXTRUDER);
-        actions.updateMaterialColor(rightDefinition, RIGHT_EXTRUDER);
-    }, [materialDefinitions]);
-
-    useEffect(() => {
-        const leftDefinition = find(materialDefinitions, { definitionId: defaultMaterialId });
-        actions.updateMaterialColor(leftDefinition, LEFT_EXTRUDER);
-    }, [defaultMaterialId]);
+        updateMaterialColor(leftDefinition, LEFT_EXTRUDER);
+    }, [materialDefinitions, defaultMaterialId, updateMaterialColor]);
 
     useEffect(() => {
         const rightDefinition = find(materialDefinitions, { definitionId: defaultMaterialIdRight });
-        actions.updateMaterialColor(rightDefinition, RIGHT_EXTRUDER);
-    }, [defaultMaterialIdRight]);
+        updateMaterialColor(rightDefinition, RIGHT_EXTRUDER);
+    }, [materialDefinitions, defaultMaterialIdRight, updateMaterialColor]);
+
+    const onSetSelectedModelsColored = useCallback((isColored: boolean) => {
+        const shouldApplyChanges = !!isColored;
+        dispatch(sceneActions.endMeshColoringMode(shouldApplyChanges));
+    }, [dispatch]);
 
     /**
      * Update selected models assigned extruder.
@@ -224,6 +224,7 @@ const ObjectListView: React.FC = () => {
                                 leftMaterialColor={leftMaterialColor}
                                 rightMaterialColor={rightMaterialColor}
                                 updateSelectedModelsExtruder={onUpdateSelectedModelsExtruder}
+                                setSelectedModelsColored={onSetSelectedModelsColored}
                             />
                         );
                     })

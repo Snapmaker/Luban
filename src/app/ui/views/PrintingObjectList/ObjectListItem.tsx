@@ -1,5 +1,6 @@
 import classNames from 'classnames';
-import React, { useMemo, useState } from 'react';
+import { noop } from 'lodash';
+import React, { useCallback, useMemo, useState } from 'react';
 import { BOTH_EXTRUDER_MAP_NUMBER } from '../../../constants';
 
 import i18n from '../../../lib/i18n';
@@ -94,17 +95,6 @@ export const renderExtruderIcon = (extrudersUsed: string[], colorsUsed: string[]
     );
 };
 
-const renderBrushIcon = () => {
-    return (
-        <SvgIcon
-            name="ToolbarColorBrush"
-            size={24}
-            type={['static']}
-            color="#545659"
-        />
-    );
-};
-
 interface ObjectListItemProps {
     depth?: number;
     disabled: boolean;
@@ -117,9 +107,10 @@ interface ObjectListItemProps {
     // model specific
     model: ThreeModel;
     isSelected: boolean;
-    onSelect: (model: ThreeModel, event) => void;
+    onSelect: (model: ThreeModel, event?: object) => void;
     onToggleVisible: (model: ThreeModel) => void;
     updateSelectedModelsExtruder: ({ key, direction }) => void;
+    setSelectedModelsColored: (isColored: boolean) => void;
 }
 
 const ObjectListItem: React.FC<ObjectListItemProps> = (
@@ -134,6 +125,7 @@ const ObjectListItem: React.FC<ObjectListItemProps> = (
         leftMaterialColor = whiteHex,
         rightMaterialColor = whiteHex,
         updateSelectedModelsExtruder,
+        setSelectedModelsColored,
     }
 ) => {
     const [tipVisible, setTipVisible] = useState(false);
@@ -155,6 +147,27 @@ const ObjectListItem: React.FC<ObjectListItemProps> = (
 
     const suffixLength = 7;
     const { prefixName, suffixName } = normalizeNameDisplay(model.modelName, suffixLength);
+
+    const renderBrushIcon = useCallback(({ onClick = noop }) => {
+        return (
+            <div className={classNames('height-24', styles['brush-icon'])}>
+                <SvgIcon
+                    name="ToolbarColorBrush"
+                    size={24}
+                    type={['static']}
+                    color="#545659"
+                />
+                <div className={classNames('display-none', styles['hover-tip'])}>
+                    <SvgIcon
+                        name="Cancel"
+                        size={12}
+                        type={['static']}
+                        onClick={onClick}
+                    />
+                </div>
+            </div>
+        );
+    }, []);
 
     const getModelExtruderOverlayMenu = () => {
         return getModelExtruderOverlay({
@@ -236,7 +249,12 @@ const ObjectListItem: React.FC<ObjectListItemProps> = (
                     </Anchor>
                     <div className="sm-flex">
                         {
-                            isModelColored && renderBrushIcon()
+                            isModelColored && renderBrushIcon({
+                                onClick: () => {
+                                    onSelect(model);
+                                    setSelectedModelsColored(false);
+                                }
+                            })
                         }
                         {
                             !isModelColored && (
