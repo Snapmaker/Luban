@@ -1,6 +1,6 @@
-/* eslint-disable import/no-cycle */
 import { find, keys, some } from 'lodash';
 import cloneDeep from 'lodash/cloneDeep';
+
 import pkg from '../../../package.json';
 import api from '../../api';
 import {
@@ -20,7 +20,6 @@ import {
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 } from '../../constants/machines';
 import { checkIsGCodeFile, checkIsSnapmakerProjectFile } from '../../lib/check-name';
 import { logModuleVisit } from '../../lib/gaEvent';
-
 import i18n from '../../lib/i18n';
 import { PROCESS_STAGE } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
@@ -29,11 +28,16 @@ import UniApi from '../../lib/uni-api';
 import { UniformToolpathConfig } from '../../lib/uniform-toolpath-config';
 import { getCurrentHeadType } from '../../lib/url-utils';
 import { machineStore } from '../../store/local-storage';
-import { actions as appGlobalActions } from '../app-global';
 import { actions as editorActions } from '../editor';
-import { actions as operationHistoryActions } from '../operation-history';
 import { actions as printingActions } from '../printing';
 import { actions as workspaceActions } from '../workspace';
+
+/* eslint-disable-next-line import/no-cycle */
+import { actions as appGlobalActions } from '../app-global';
+/* eslint-disable-next-line import/no-cycle */
+import { actions as operationHistoryActions } from '../operation-history';
+import { synchronizeMeshFile } from '../printing/actions-mesh';
+import ThreeModel from '../../models/ThreeModel';
 
 const INITIAL_STATE = {
     [HEAD_PRINTING]: {
@@ -138,8 +142,13 @@ export const actions = {
 
             envObj.models.push(modelGroup.primeTower.getSerializableConfig());
         }
-        for (let key = 0; key < models.length; key++) {
-            const model = models[key];
+
+        // Save models
+        for (const model of models) {
+            if (model instanceof ThreeModel) {
+                await dispatch(synchronizeMeshFile(model));
+            }
+
             envObj.models.push(model.getSerializableConfig());
         }
 
@@ -411,7 +420,6 @@ export const actions = {
                     savedModalType: type,
                     savedModalFilePath: filePath
                 }));
-                dispatch(actions.afterSaved());
                 if (newOpenedFile) {
                     dispatch(actions.setOpenedFileWithType(headType, newOpenedFile));
                 }
@@ -479,8 +487,7 @@ export const actions = {
         const tmpFile = `/Tmp/${targetFile}`;
         await new Promise((resolve) => {
             UniApi.File.save(openedFile.path, tmpFile, async () => {
-                await dispatch(actions.afterSaved());
-                resolve();
+                resolve(true);
             });
         });
         await dispatch(actions.clearSavedEnvironment(headType));
@@ -493,11 +500,6 @@ export const actions = {
             dispatch(printingActions.applyProfileToAllModels());
         }
         dispatch(actions.autoSaveEnvironment(headType));
-    },
-
-    // Note: add progress bar when saving project file
-    afterSaved: () => () => {
-
     },
 
     openProject: (file, history, unReload = false, isGuideTours = false) => async (dispatch) => {

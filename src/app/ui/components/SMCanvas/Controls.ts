@@ -615,7 +615,7 @@ class Controls extends EventEmitter {
         }
 
         document.removeEventListener('mousemove', this.onDocumentMouseMove, false);
-        // mouse up needed no matter mousedowm on support mode
+        // mouse up needed no matter mousedown on support mode
         document.removeEventListener('mouseup', this.onDocumentMouseUp, false);
 
         this.isMouseDown = false;

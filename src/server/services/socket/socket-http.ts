@@ -322,7 +322,7 @@ class SocketHttp {
                 const data = result?.data;
                 if (!err) {
                     this.socket && this.socket.emit('machine:module-list', {
-                        moduleList: data.moduleList,
+                        moduleList: data.moduleList || [],
                     });
                 }
             });
