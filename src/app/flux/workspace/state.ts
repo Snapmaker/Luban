@@ -205,6 +205,7 @@ export const initialState: WorkspaceState = {
 
     laserCamera: false,
     laserFocalLength: null,
+    laserIsLocked: false,
 
     // modules status
     moduleStatusList: {},

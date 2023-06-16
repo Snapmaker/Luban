@@ -30,12 +30,20 @@ export declare type MachineToolHeadOptions = {
     goHomeOnConnection?: boolean;
 };
 
+export declare type MachineModuleOptions = {
+    identifier: string;
+
+    workRangeOffset?: number[];
+};
+
 
 export declare type MachineMetadata = {
     // Work range in default print mode
     size: { x: number; y: number; z: number };
 
     toolHeads: MachineToolHeadOptions[];
+
+    modules?: MachineModuleOptions[],
 
     printModes?: MachinePrintMode[];
 

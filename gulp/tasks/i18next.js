@@ -201,7 +201,7 @@ export function i18nextApp() {
     const sources = [
         'src/app/**/*.js',
         'src/app/**/*.jsx',
-        // 'src/app/**/*.ts',
+        'src/app/**/*.ts',
         'src/app/**/*.tsx',
         'packages/luban-print-settings/resources/*/*.json',
     ];

@@ -10,6 +10,7 @@ import {
     MACHINE_EXTRUDER_X,
     MACHINE_EXTRUDER_Y,
     DATA_PREFIX,
+    BOTH_EXTRUDER_MAP_NUMBER,
     RIGHT_EXTRUDER
 } from '../../constants';
 import CompoundOperation from '../../core/CompoundOperation';
@@ -37,6 +38,8 @@ import { MeshHelper, LoadMeshFileOptions, MeshFileInfo, loadMeshFiles } from './
 import scene from '../../scene/Scene';
 import MeshColoringControl from '../../scene/controls/MeshColoringControl';
 
+/* eslint-disable-next-line import/no-cycle */
+import { actions as projectActions } from '../project';
 
 const renderScene = () => (dispatch) => {
     dispatch(
@@ -109,112 +112,167 @@ const getModelShellMaterialPresetModel = (model) => {
     };
 };
 
-const applyPrintSettingsToModels = () => (dispatch, getState) => {
-    const {
-        extruderLDefinition,
-        extruderRDefinition,
+const applyPrintSettingsToModels = () => {
+    return (dispatch, getState) => {
+        const {
+            extruderLDefinition,
+            extruderRDefinition,
 
-        materialDefinitions,
-        defaultMaterialId,
-        defaultMaterialIdRight,
+            materialDefinitions,
+            defaultMaterialId,
+            defaultMaterialIdRight,
 
-        qualityDefinitions,
-        activePresetIds,
-        modelGroup,
-    } = getState().printing;
+            qualityDefinitions,
+            activePresetIds,
+            modelGroup,
+        } = getState().printing;
 
-    const leftPresetModel = find(qualityDefinitions, {
-        definitionId: activePresetIds[LEFT_EXTRUDER],
-    });
-    const rightPresetModel = find(qualityDefinitions, {
-        definitionId: activePresetIds[RIGHT_EXTRUDER],
-    });
-
-    const helperExtruderConfig = modelGroup.getHelpersExtruderConfig();
-
-    // update global settings
-    const adhesionPresetModel = helperExtruderConfig.adhesion === '0' ? leftPresetModel : rightPresetModel;
-    if (adhesionPresetModel) {
-        const qualitySetting = adhesionPresetModel.settings;
-        modelGroup.updatePlateAdhesion({
-            adhesionType: qualitySetting.adhesion_type.default_value,
-            skirtLineCount: qualitySetting?.skirt_line_count?.default_value,
-            brimLineCount: qualitySetting?.brim_line_count?.default_value,
-            brimWidth: qualitySetting?.brim_width?.default_value,
-            skirtBrimLineWidth: qualitySetting?.skirt_brim_line_width?.default_value,
-            raftMargin: qualitySetting?.raft_margin?.default_value,
-            skirtGap: qualitySetting?.skirt_gap?.default_value,
-            brimGap: qualitySetting?.brim_gap?.default_value
+        const leftPresetModel = find(qualityDefinitions, {
+            definitionId: activePresetIds[LEFT_EXTRUDER],
         });
-    }
+        const rightPresetModel = find(qualityDefinitions, {
+            definitionId: activePresetIds[RIGHT_EXTRUDER],
+        });
 
-    // update parameters for each model
-    if (leftPresetModel || rightPresetModel) {
-        const globalSettings = leftPresetModel.settings;
+        const helperExtruderConfig = modelGroup.getHelpersExtruderConfig();
 
-        const leftMaterialPresetModel = materialDefinitions.find((d) => d.definitionId === defaultMaterialId);
-        const rightMaterialPresetModel = materialDefinitions.find((d) => d.definitionId === defaultMaterialIdRight);
-
-        modelGroup.getThreeModels().forEach((model) => {
-            let lineWidth: number = extruderLDefinition.settings.machine_nozzle_size.default_value;
-
-            // Set extruder color
-            const colors = [];
-            if (leftMaterialPresetModel) {
-                colors.push(leftMaterialPresetModel.settings.color.default_value);
-            }
-            if (rightMaterialPresetModel) {
-                colors.push(rightMaterialPresetModel.settings.color.default_value);
-            }
-
-            model.setExtruderColors(colors);
-
-            // Set shell color
-            const shellStackId = getModelShellStackId(model);
-
-            lineWidth = shellStackId === LEFT_EXTRUDER
-                ? extruderLDefinition.settings.machine_nozzle_size.default_value
-                : extruderRDefinition.settings.machine_nozzle_size.default_value;
-
-            const materialPresetModel = dispatch(getModelShellMaterialPresetModel(model));
-            const materialSettings = materialPresetModel.settings;
-
-            // update material color
-            model.updateMaterialColor(materialSettings.color.default_value);
-
-
-            const layerHeight = globalSettings.layer_height.default_value;
-            const bottomThickness = globalSettings.bottom_thickness.default_value;
-            const bottomLayers = Math.ceil(Math.round(bottomThickness / layerHeight));
-            const topThickness = globalSettings.top_thickness.default_value;
-            const topLayers = Math.ceil(Math.round(topThickness / layerHeight));
-
-            model.updateClipperConfig({
-                lineWidth,
-                wallThickness: globalSettings.wall_thickness.default_value,
-                topLayers,
-                bottomLayers,
-                layerHeight,
-                infillSparseDensity: globalSettings.infill_sparse_density.default_value,
-                infillPattern: globalSettings.infill_pattern.default_value,
-                magicSpiralize: globalSettings.magic_spiralize.default_value,
+        // update global settings
+        const adhesionPresetModel = helperExtruderConfig.adhesion === '0' ? leftPresetModel : rightPresetModel;
+        if (adhesionPresetModel) {
+            const qualitySetting = adhesionPresetModel.settings;
+            modelGroup.updatePlateAdhesion({
+                adhesionType: qualitySetting.adhesion_type.default_value,
+                skirtLineCount: qualitySetting?.skirt_line_count?.default_value,
+                brimLineCount: qualitySetting?.brim_line_count?.default_value,
+                brimWidth: qualitySetting?.brim_width?.default_value,
+                skirtBrimLineWidth: qualitySetting?.skirt_brim_line_width?.default_value,
+                raftMargin: qualitySetting?.raft_margin?.default_value,
+                skirtGap: qualitySetting?.skirt_gap?.default_value,
+                brimGap: qualitySetting?.brim_gap?.default_value
             });
-        });
-    }
+        }
 
-    if (leftPresetModel) {
-        sceneLogic.onPresetParameterChanged(LEFT_EXTRUDER, leftPresetModel);
-    }
-    if (rightPresetModel) {
-        sceneLogic.onPresetParameterChanged(RIGHT_EXTRUDER, rightPresetModel);
-    }
+        // update parameters for each model
+        if (leftPresetModel || rightPresetModel) {
+            const globalSettings = leftPresetModel.settings;
 
-    // TODO: ?
-    // const models = modelGroup.getModels();
-    // modelGroup.models = models.concat();
+            const leftMaterialPresetModel = materialDefinitions.find((d) => d.definitionId === defaultMaterialId);
+            const rightMaterialPresetModel = materialDefinitions.find((d) => d.definitionId === defaultMaterialIdRight);
 
-    dispatch(checkModelOverstep());
-    dispatch(renderScene());
+            modelGroup.getThreeModels().forEach((model) => {
+                let lineWidth: number = extruderLDefinition.settings.machine_nozzle_size.default_value;
+
+                // Set extruder color
+                const colors = [];
+                if (leftMaterialPresetModel) {
+                    colors.push(leftMaterialPresetModel.settings.color.default_value);
+                }
+                if (rightMaterialPresetModel) {
+                    colors.push(rightMaterialPresetModel.settings.color.default_value);
+                }
+
+                model.setExtruderColors(colors);
+
+                // Set shell color
+                const shellStackId = getModelShellStackId(model);
+
+                lineWidth = shellStackId === LEFT_EXTRUDER
+                    ? extruderLDefinition.settings.machine_nozzle_size.default_value
+                    : extruderRDefinition.settings.machine_nozzle_size.default_value;
+
+                const materialPresetModel = dispatch(getModelShellMaterialPresetModel(model));
+                const materialSettings = materialPresetModel.settings;
+
+                // update material color
+                model.updateMaterialColor(materialSettings.color.default_value);
+
+
+                const layerHeight = globalSettings.layer_height.default_value;
+                const bottomThickness = globalSettings.bottom_thickness.default_value;
+                const bottomLayers = Math.ceil(Math.round(bottomThickness / layerHeight));
+                const topThickness = globalSettings.top_thickness.default_value;
+                const topLayers = Math.ceil(Math.round(topThickness / layerHeight));
+
+                model.updateClipperConfig({
+                    lineWidth,
+                    wallThickness: globalSettings.wall_thickness.default_value,
+                    topLayers,
+                    bottomLayers,
+                    layerHeight,
+                    infillSparseDensity: globalSettings.infill_sparse_density.default_value,
+                    infillPattern: globalSettings.infill_pattern.default_value,
+                    magicSpiralize: globalSettings.magic_spiralize.default_value,
+                });
+            });
+        }
+
+        if (leftPresetModel) {
+            sceneLogic.onPresetParameterChanged(LEFT_EXTRUDER, leftPresetModel);
+        }
+        if (rightPresetModel) {
+            sceneLogic.onPresetParameterChanged(RIGHT_EXTRUDER, rightPresetModel);
+        }
+
+        // TODO: ?
+        // const models = modelGroup.getModels();
+        // modelGroup.models = models.concat();
+
+        dispatch(checkModelOverstep());
+        dispatch(renderScene());
+    };
+};
+
+const updateSelectedModelsExtruderConfig = (extruderConfig) => {
+    return (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+
+        const models = Object.assign([], getState().printing.modelGroup.models);
+
+        for (const model of modelGroup.selectedModelArray) {
+            let modelItem = null;
+            modelGroup.traverseModels(models, item => {
+                if (model.modelID === item.modelID) {
+                    modelItem = item;
+                }
+            });
+
+            if (modelItem) {
+                modelItem.extruderConfig = {
+                    ...modelItem.extruderConfig,
+                    ...extruderConfig,
+                };
+
+                if (modelItem.children) {
+                    modelItem.children.forEach((item) => {
+                        if (extruderConfig.shell && extruderConfig.shell !== BOTH_EXTRUDER_MAP_NUMBER) {
+                            item.extruderConfig = {
+                                ...item.extruderConfig,
+                                shell: extruderConfig.shell,
+                            };
+                        }
+                        if (extruderConfig.infill && extruderConfig.infill !== BOTH_EXTRUDER_MAP_NUMBER) {
+                            item.extruderConfig = {
+                                ...item.extruderConfig,
+                                infill: extruderConfig.infill,
+                            };
+                        }
+                    });
+                }
+                if (
+                    modelItem.parent
+                    && modelItem.parent instanceof ThreeGroup
+                ) {
+                    modelItem.parent.updateGroupExtruder();
+                }
+            }
+        }
+
+        // dispatch(actions.updateBoundingBox());
+        dispatch(applyPrintSettingsToModels());
+        dispatch(renderScene());
+        modelGroup.models = [...models];
+        modelGroup.modelAttributesChanged('extruderConfig');
+    };
 };
 
 
@@ -292,8 +350,11 @@ const startMeshColoringMode = () => {
         // Use setTimeout to display progress
         const p = new Promise((resolve) => {
             setTimeout(() => {
+                dispatch(updateSelectedModelsExtruderConfig({ infill: '0', shell: '0' }));
+
                 modelGroup.startMeshColoring();
-                resolve(undefined);
+
+                resolve(true);
             }, 50);
         });
         await p;
@@ -315,8 +376,13 @@ const startMeshColoringMode = () => {
 const endMeshColoringMode = (shouldApplyChanges = false) => {
     return (dispatch, getState) => {
         dispatch(setTransformMode(''));
-        const modelGroup = getState().printing.modelGroup as ModelGroup;
 
+        // control cleanup
+        // const controlManager = scene.getControlManager();
+        // const meshColoringControl = controlManager.getControl('mesh-coloring') as MeshColoringControl;
+        // meshColoringControl.clearHighlight();
+
+        const modelGroup = getState().printing.modelGroup as ModelGroup;
         if (shouldApplyChanges) {
             modelGroup.finishMeshColoring();
         } else {
@@ -324,6 +390,8 @@ const endMeshColoringMode = (shouldApplyChanges = false) => {
         }
 
         dispatch(renderScene());
+
+        dispatch(projectActions.autoSaveEnvironment(HEAD_PRINTING));
     };
 };
 

@@ -1,9 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import { Checkbox } from 'antd';
+import type { CheckboxValueType } from 'antd/es/checkbox/Group';
+import classNames from 'classnames';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getMachineOptions, getMachineSupportedToolOptions, HEAD_CNC, HEAD_LASER, HEAD_PRINTING, } from '../../../../constants/machines';
+
+import {
+    findMachineByName,
+    findMachineModule,
+    getMachineOptions,
+    getMachineSupportedToolOptions,
+    HEAD_CNC,
+    HEAD_LASER,
+    HEAD_PRINTING,
+} from '../../../../constants/machines';
+import { RootState } from '../../../../flux/index.def';
 import { actions as machineActions } from '../../../../flux/machine';
-import { actions as workspaceActions } from '../../../../flux/workspace';
 import { actions as projectActions } from '../../../../flux/project';
+import { actions as workspaceActions } from '../../../../flux/workspace';
 import i18n from '../../../../lib/i18n';
 import UniApi from '../../../../lib/uni-api';
 import { getCurrentHeadType } from '../../../../lib/url-utils';
@@ -12,21 +25,23 @@ import SvgIcon from '../../../components/SvgIcon';
 import styles from '../form.styl';
 
 
-function MachineSettings() {
-    const dispatch = useDispatch();
-    const series = useSelector(state => state?.machine?.series);
-    const toolHead = useSelector(state => state?.machine?.toolHead);
-    const size = useSelector(state => state?.machine?.size);
-    const enclosureDoorDetection = useSelector(state => state?.machine?.enclosureDoorDetection);
-    const zAxisModule = useSelector(state => state?.machine?.zAxisModule);
-    const connectionTimeout = useSelector(state => state?.machine?.connectionTimeout);
+const MachineSettings: React.FC = () => {
+    const series = useSelector((state: RootState) => state.machine?.series);
+    const toolHead = useSelector((state: RootState) => state.machine?.toolHead);
+    const modules = useSelector((state: RootState) => state.machine.modules) as string[];
+
+    const size = useSelector((state: RootState) => state.machine?.size);
+    const enclosureDoorDetection = useSelector((state: RootState) => state.machine?.enclosureDoorDetection);
+    const zAxisModule = useSelector((state: RootState) => state.machine?.zAxisModule);
+    const connectionTimeout = useSelector((state: RootState) => state.machine?.connectionTimeout);
 
     const [state, setState] = useState({
         series: '',
         size: [0, 0, 0],
         enclosureDoorDetection: false,
         zAxisModule: null,
-        connectionTimeout: 3000
+        connectionTimeout: 3000,
+        modules: modules,
     });
 
     // machine options
@@ -74,6 +89,38 @@ function MachineSettings() {
         }
     }, [state.series]);
 
+    // machine modules options
+    const [machineModuleOptions, setMachineModuleOptions] = useState([]);
+
+    useEffect(() => {
+        const machine = findMachineByName(state.series);
+
+        if (machine && machine.metadata?.modules) {
+            const options = [];
+
+            for (const moduleOptions of machine.metadata.modules) {
+                const machineModule = findMachineModule(moduleOptions.identifier);
+
+                if (machineModule) {
+                    options.push({
+                        value: moduleOptions.identifier,
+                        label: machineModule.name,
+                    });
+                }
+            }
+
+            setMachineModuleOptions(options);
+        }
+    }, [state.series]);
+
+    const onCheckMachineModule = useCallback((checkedValues: CheckboxValueType[]) => {
+        setState((previousState) => {
+            return Object.assign({}, previousState, { modules: checkedValues });
+        });
+    }, []);
+
+    const dispatch = useDispatch();
+
     const actions = {
         // Machine Model
         onChangeMachineSeries: (option) => {
@@ -105,33 +152,6 @@ function MachineSettings() {
                 connectionTimeout: option.value
             });
         },
-        // Save & Cancel
-        onCancel: () => {
-            setState({
-                series: series,
-                size: size,
-                enclosureDoorDetection: enclosureDoorDetection,
-                zAxisModule: zAxisModule,
-                connectionTimeout: connectionTimeout
-            });
-        },
-        onSave: async () => {
-            dispatch(workspaceActions.connect.setConnectionTimeout(state.connectionTimeout));
-            dispatch(machineActions.updateMachineSeries(state.series));
-            dispatch(machineActions.updateMachineSize(state.size));
-            dispatch(machineActions.setEnclosureState(state.enclosureDoorDetection));
-            dispatch(machineActions.setZAxisModuleState(state.zAxisModule));
-            dispatch(machineActions.updateMachineToolHead({
-                printingToolhead: printingToolHeadSelected,
-                laserToolhead: laserToolHeadSelected,
-                cncToolhead: cncToolHeadSelected
-            }, state.series));
-            const headType = getCurrentHeadType(window.location.href);
-            if (headType) {
-                await dispatch(projectActions.clearSavedEnvironment(headType));
-            }
-            window.location.href = '/';
-        },
         handleToolheadChange: (option, type) => {
             switch (type) {
                 case 'printing':
@@ -155,23 +175,10 @@ function MachineSettings() {
             connectionTimeout: connectionTimeout,
             size: size,
             enclosureDoorDetection: enclosureDoorDetection,
-            zAxisModule: zAxisModule
+            zAxisModule: zAxisModule,
+            modules,
         });
-        dispatch(machineActions.getEnclosureState());
-        dispatch(machineActions.getZAxisModuleState());
-    }, [dispatch, series, connectionTimeout, size, enclosureDoorDetection, zAxisModule]);
-
-    useEffect(() => {
-        function cleanup() {
-            UniApi.Event.off('appbar-menu:settings.save', actions.onSave);
-            UniApi.Event.off('appbar-menu:settings.cancel', actions.onCancel);
-        }
-
-        cleanup();
-        UniApi.Event.on('appbar-menu:settings.save', actions.onSave);
-        UniApi.Event.on('appbar-menu:settings.cancel', actions.onCancel);
-        return cleanup;
-    }, [actions.onSave, actions.onCancel]);
+    }, [series, size, enclosureDoorDetection, zAxisModule, connectionTimeout, modules]);
 
     useEffect(() => {
         setState({
@@ -179,9 +186,59 @@ function MachineSettings() {
             connectionTimeout: connectionTimeout,
             size: size,
             enclosureDoorDetection: enclosureDoorDetection,
-            zAxisModule: zAxisModule
+            zAxisModule: zAxisModule,
+            modules,
         });
-    }, [series, size, enclosureDoorDetection, zAxisModule, connectionTimeout]);
+        dispatch(machineActions.getEnclosureState());
+        dispatch(machineActions.getZAxisModuleState());
+    }, [
+        dispatch,
+        series, connectionTimeout, size, enclosureDoorDetection, zAxisModule, modules,
+    ]);
+
+
+    // Save changes
+    const onSave = useCallback(async () => {
+        dispatch(workspaceActions.connect.setConnectionTimeout(state.connectionTimeout));
+        dispatch(machineActions.updateMachineSeries(state.series));
+        dispatch(machineActions.updateMachineSize(state.size));
+        dispatch(machineActions.setEnclosureState(state.enclosureDoorDetection));
+        dispatch(machineActions.setZAxisModuleState(state.zAxisModule));
+        dispatch(machineActions.updateMachineToolHead({
+            printingToolhead: printingToolHeadSelected,
+            laserToolhead: laserToolHeadSelected,
+            cncToolhead: cncToolHeadSelected
+        }, state.series));
+        dispatch(machineActions.setMachineModules(state.modules));
+
+        // save and redirect
+        const headType = getCurrentHeadType(window.location.href);
+        if (headType) {
+            await dispatch(projectActions.clearSavedEnvironment(headType));
+        }
+        window.location.href = '/';
+    }, [dispatch, state, printingToolHeadSelected, laserToolHeadSelected, cncToolHeadSelected]);
+
+    const onCancel = useCallback(() => {
+        setState({
+            series: series,
+            size: size,
+            enclosureDoorDetection: enclosureDoorDetection,
+            zAxisModule: zAxisModule,
+            connectionTimeout: connectionTimeout,
+            modules,
+        });
+    }, [series, size, enclosureDoorDetection, zAxisModule, connectionTimeout, modules]);
+
+    useEffect(() => {
+        UniApi.Event.on('appbar-menu:settings.save', onSave);
+        UniApi.Event.on('appbar-menu:settings.cancel', onCancel);
+
+        return () => {
+            UniApi.Event.off('appbar-menu:settings.save', onSave);
+            UniApi.Event.off('appbar-menu:settings.cancel', onCancel);
+        };
+    }, [onSave, onCancel]);
 
     return (
         <div className={styles['form-container']}>
@@ -271,8 +328,34 @@ function MachineSettings() {
                     )
                 }
             </div>
+
+            {
+                machineModuleOptions.length > 0 && (
+                    <div className="border-bottom-normal padding-bottom-4 margin-top-32">
+                        <SvgIcon
+                            name="TitleSetting"
+                            type={['static']}
+                        />
+                        <span className="margin-left-4">{i18n._('key-App/Settings/MachineSettings-Modules')}</span>
+                    </div>
+                )
+            }
+
+            {
+                machineModuleOptions.length > 0 && (
+                    <div className={classNames(styles['head-detail'], 'margin-top-8')}>
+                        <div className="margin-bottom-16">
+                            <Checkbox.Group
+                                options={machineModuleOptions}
+                                onChange={onCheckMachineModule}
+                                defaultValue={state.modules}
+                            />
+                        </div>
+                    </div>
+                )
+            }
         </div>
     );
-}
+};
 
 export default MachineSettings;

@@ -1,13 +1,34 @@
 // @import "../styles.styl"
 
 .object-list-view {
-
     .object-tree {
         max-height: 220px;
         overflow: auto;
     }
 
     .extruder-icon {
+        justify-content: center;
+        align-items: center;
+        align-content: center;
+        display: flex;
+
+        .hover-tip {
+            width: 0;
+            height: 10px;
+            transition: width .2s;
+            overflow: hidden;
+            position: relative;
+            left: -2px;
+            display: inline-block;
+        }
+
+        &:hover .hover-tip {
+            width: 10px;
+            line-height: 10px;
+        }
+    }
+
+    .brush-icon {
         justify-content: center;
         align-items: center;
         align-content: center;

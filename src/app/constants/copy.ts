@@ -1,6 +1,8 @@
+import { noop } from 'lodash';
+
 // mock function i18n to force variables to be counted as i18n words
 const i18n = {
-    _: () => { }
+    _: noop,
 };
 
 // preset label

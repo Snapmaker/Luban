@@ -151,6 +151,7 @@ class SocketTCP extends SocketBASE {
                                 if (module.moduleId === 14) {
                                     this.sacpClient.getLaserToolHeadInfo(module.key).then(({ laserToolHeadInfo }) => {
                                         this.laserFocalLength = laserToolHeadInfo.laserFocalLength;
+
                                         log.debug(`laserToolHeadInfo.laserFocalLength, ${laserToolHeadInfo.laserFocalLength}`);
                                         this.socket && this.socket.emit('Marlin:state', {
                                             state: {
@@ -177,6 +178,13 @@ class SocketTCP extends SocketBASE {
                                             type: CONNECTION_TYPE_WIFI
                                         });
                                     });
+
+                                    this.sacpClient.getLaserLockStatus(module.key)
+                                        .then(({ laserLockStatus }) => {
+                                            this.socket && this.socket.emit('machine:laser-status', {
+                                                isLocked: laserLockStatus.lockStatus,
+                                            });
+                                        });
                                 }
                             });
 

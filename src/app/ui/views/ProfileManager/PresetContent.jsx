@@ -122,7 +122,7 @@ function PresetContent(
     };
 
     const onChangeMaterialType = (newCategoryName) => {
-        definitionForManager.i18nCategory = newCategoryName;
+        // definitionForManager.i18nCategory = newCategoryName;
         dispatch(printingActions.updateDefinitionCategoryName(managerType, definitionForManager, newCategoryName));
     };
 

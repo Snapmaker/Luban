@@ -1653,11 +1653,11 @@ class ModelGroup extends EventEmitter {
         // after update transformation
         this.selectedGroup.shouldUpdateBoundingbox = true;
 
-        this.meshPositionChanged();
-
         this.prepareSelectedGroup();
         this.calaClippingMap();
         recovery();
+
+        this.meshPositionChanged();
 
         this.plateAdhesion.visible = true;
         if (selectedModelArray.length === 0) {
@@ -2915,7 +2915,7 @@ class ModelGroup extends EventEmitter {
         return this.brushMesh;
     }
 
-    private getModelsForMeshColoring(): ThreeModel[] {
+    public getModelsForMeshColoring(): ThreeModel[] {
         const selectedModels = this.getSelectedModelArray<Model3D>();
 
         const models = [];
@@ -2978,6 +2978,7 @@ class ModelGroup extends EventEmitter {
         this.object.parent.remove(this.brushMesh);
 
         const models = this.getModelsForMeshColoring();
+
         for (const model of models) {
             if (shouldApplyChanges) {
                 // TODO:

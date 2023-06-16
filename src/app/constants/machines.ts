@@ -1,4 +1,4 @@
-import type { Machine, MachineToolHeadOptions, ToolHead } from '@snapmaker/luban-platform';
+import type { Machine, MachineModule, MachineToolHeadOptions, ToolHead } from '@snapmaker/luban-platform';
 
 import i18n from '../lib/i18n';
 import {
@@ -27,6 +27,7 @@ import {
     laserToolHeadOriginal,
     printToolHeadOriginal
 } from '../machines/snapmaker-original-toolheads';
+import { quickSwapKitModule } from '../machines/snapmaker-2-modules';
 
 
 export const SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL = 'singleExtruderToolheadForOriginal';
@@ -354,6 +355,20 @@ export function getMachineToolOptions(series: string, toolIdentifier: string): M
     }
 
     return toolHeadOptions;
+}
+
+export function findMachineModule(identifier: string): MachineModule | null {
+    const availableModules = [
+        quickSwapKitModule,
+    ];
+
+    for (const module of availableModules) {
+        if (module.identifier === identifier) {
+            return module;
+        }
+    }
+
+    return null;
 }
 
 export const SACP_TYPE_SERIES_MAP = {

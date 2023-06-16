@@ -509,6 +509,19 @@ export const actions = {
                 }));
             },
 
+            /**
+             * @param options: {
+             *     isLocked?: boolean;
+             * }
+             */
+            'machine:laser-status': (options) => {
+                const isLocked = options?.isLocked || false;
+
+                dispatch(baseActions.updateState({
+                    laserIsLocked: isLocked,
+                }));
+            },
+
             // TODO: serialport emergencyStop goes there
             'serialport:emergencyStop': (options) => {
                 log.warn('REFACTOR serialport:emergencyStop');

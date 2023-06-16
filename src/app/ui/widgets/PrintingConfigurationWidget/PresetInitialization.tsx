@@ -59,6 +59,7 @@ const PresetInitialization: React.FC = () => {
         }
     }, [dispatch, defaultMaterialIdRight, materialDefinitions]);
 
+
     // Check if quality preset is valid, otherwise choose another quality preset
     useEffect(() => {
         if (qualityDefinitionModels.length > 0) {
@@ -85,7 +86,10 @@ const PresetInitialization: React.FC = () => {
             }
         }
     }, [
-        qualityDefinitionModels, activePresetIds[LEFT_EXTRUDER], materialPreset, setQualityPreset,
+        qualityDefinitionModels,
+        activePresetIds[LEFT_EXTRUDER],
+        materialPreset?.materialType,
+        setQualityPreset,
         extruderLDefinition?.settings.machine_nozzle_size.default_value,
     ]);
 
@@ -113,7 +117,10 @@ const PresetInitialization: React.FC = () => {
             }
         }
     }, [
-        qualityDefinitionModels, activePresetIds[RIGHT_EXTRUDER], defaultMaterialIdRight, setQualityPreset,
+        qualityDefinitionModels,
+        activePresetIds[RIGHT_EXTRUDER],
+        materialPresetRight?.materialType,
+        setQualityPreset,
         extruderRDefinition?.settings.machine_nozzle_size.default_value,
     ]);
 

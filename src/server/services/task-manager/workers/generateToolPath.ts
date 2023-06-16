@@ -5,7 +5,10 @@ import { generateRandomPathName } from '../../../../shared/lib/random-utils';
 import { SOURCE_TYPE_RASTER, TOOLPATH_TYPE_VECTOR } from '../../../constants';
 import { editorProcess } from '../../../lib/editor/process';
 import slice from '../../../slicer/call-engine';
+import logger from '../../../lib/logger';
 import sendMessage from '../utils/sendMessage';
+
+const log = logger('worker:generateToolPath');
 
 const generateLaserToolPathFromEngine = async (allTasks, onProgress) => {
     // const allResultPromise = [];
@@ -78,6 +81,8 @@ const generateToolPath = async (allTasks) => {
     // Fix: Too frequent communication leads to socket reconnection
     const onProgress = throttle(num => {
         allTasks.length === 1 && sendMessage({ status: 'progress', value: num });
+
+        log.info(`Generating toolpath... progress: ${num}`);
     }, 300);
 
     try {

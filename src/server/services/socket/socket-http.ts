@@ -119,7 +119,8 @@ class SocketHttp {
 
     private getLaserMaterialThicknessReq = null;
 
-    public onConnection = () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public onConnection = (socket: SocketServer) => {
         this.stopHeartBeat();
     };
 
@@ -321,7 +322,7 @@ class SocketHttp {
                 const data = result?.data;
                 if (!err) {
                     this.socket && this.socket.emit('machine:module-list', {
-                        moduleList: data.moduleList,
+                        moduleList: data.moduleList || [],
                     });
                 }
             });

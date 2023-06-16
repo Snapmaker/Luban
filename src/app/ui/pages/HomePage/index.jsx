@@ -16,7 +16,7 @@ import styles from './styles.styl';
 import Begin from './Begin';
 import CaseLibrary from './CaseLibrary';
 import MoreInfo from './MoreInfo';
-import SettingGuideModal from './SettingGuideModal';
+import StarterGuideModal from './StarterGuideModal';
 import MainToolBar from '../../layouts/MainToolBar';
 
 const HomePage = (props) => { // Todo, what's the props ?
@@ -66,7 +66,7 @@ const HomePage = (props) => { // Todo, what's the props ?
             {!modalShow && (props?.isPopup || printingModal || laserModal || cncModal)}
             {
                 modalShow && (
-                    <SettingGuideModal
+                    <StarterGuideModal
                         handleModalShow={setModalShow}
                         initLanguage={i18next.language}
                     />
