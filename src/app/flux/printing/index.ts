@@ -1755,10 +1755,16 @@ export const actions = {
                 })
             );
             return newPresetModel;
-        } else {
-            const newPresetModel = new PresetModel(
-                createdDefinitionModel,
+        } else if (type === PRINTING_MANAGER_TYPE_MATERIAL) {
+            const newPresetModel = new MaterialPresetModel(createdDefinitionModel);
+            dispatch(
+                actions.updateState({
+                    [definitionsKey]: [...state[definitionsKey], newPresetModel]
+                })
             );
+            return newPresetModel;
+        } else {
+            const newPresetModel = new PresetModel(createdDefinitionModel);
             dispatch(
                 actions.updateState({
                     [definitionsKey]: [...state[definitionsKey], newPresetModel]
