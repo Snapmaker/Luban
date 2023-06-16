@@ -737,8 +737,9 @@ export default class Business extends Dispatcher {
 
     public async ExtruderMovement(key: number, movementType: number, lengthIn: number, speedIn: number, lengthOut: number, speedOut: number) {
         const info = new ExtruderMovement(key, movementType, lengthIn, speedIn, lengthOut, speedOut);
+        this.log.info(`Extruder Move: type = ${movementType}, in: ${lengthIn} speed: ${speedIn}, out: ${lengthOut} speed: ${speedOut}`);
         return this.send(0x10, 0x09, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
-            console.log('extruderMovementResult', response);
+            this.log.info('Extruder Move: done', response);
             return { response, packet };
         });
     }
