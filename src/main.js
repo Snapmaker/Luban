@@ -672,4 +672,3 @@ protocol.registerSchemesAsPrivileged([{ scheme: 'luban', privileges: { standard:
  * when ready
  */
 app.whenReady().then(showMainWindow);
-

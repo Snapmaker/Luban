@@ -341,12 +341,14 @@ export const actions = {
                     const toolPath = toolPathGroup._getToolPath(taskResult.taskId);
 
                     if (toolPath) {
+                        log.debug('Render tool path');
                         progressStatesManager.startNextStep();
                         taskResult.filenames = toolPathTaskResult.filenames.find(d => d.taskId === taskResult.taskId)?.filenames;
                         workerManager.toolpathRenderer(taskResult, payload => {
                             const { status, value } = payload;
                             switch (status) {
                                 case 'succeed': {
+                                    log.info('Render tool path, succeed.');
                                     const { shouldGenerateGcodeCounter } = getState()[headType];
                                     const toolpath = toolPathGroup._getToolPath(taskResult.taskId);
                                     if (toolpath) {
@@ -364,6 +366,7 @@ export const actions = {
                                     break;
                                 }
                                 case 'data': {
+                                    log.info('Render tool path, received data.');
                                     const { taskResult: newTaskResult, index, renderResult } = value;
                                     const toolpath = toolPathGroup._getToolPath(newTaskResult.taskId);
 
@@ -374,6 +377,7 @@ export const actions = {
                                 }
                                 case 'progress': {
                                     const { progress } = value;
+                                    log.info(`Render tool path, progress ${progress}`);
                                     if (progress < 0.1) {
                                         progressStatesManager.startNextStep();
                                         dispatch(
@@ -392,6 +396,7 @@ export const actions = {
                                     break;
                                 }
                                 case 'err': {
+                                    log.info('Render tool path, error');
                                     dispatch(
                                         baseActions.updateState(headType, {
                                             stage: STEP_STAGE.CNC_LASER_GENERATE_TOOLPATH_FAILED,
