@@ -23,6 +23,9 @@ import {
     SetLaserPower,
     WifiConnectionInfo
 } from 'snapmaker-sacp-sdk/models';
+import {
+    Serializable
+} from 'snapmaker-sacp-sdk/types';
 import { Dispatcher, RequestData, Response, ResponseCallback, ResponseData } from 'snapmaker-sacp-sdk';
 import {
     readFloat,
@@ -37,11 +40,26 @@ import {
     writeInt8,
     writeUint16,
     writeUint32,
-    writeUint8
+    writeUint8,
+    readBool,
 } from 'snapmaker-sacp-sdk/helper';
 import { PeerId } from 'snapmaker-sacp-sdk/communication/Header';
 import { MoveDirection } from 'snapmaker-sacp-sdk/models/MovementInstruction';
+
 import DataStorage from '../../../DataStorage';
+
+class LaserLockStatus implements Serializable {
+    public lockStatus: boolean;
+
+    public toBuffer(): Buffer {
+        throw new Error('Method not implemented.');
+    }
+
+    public fromBuffer(buffer: Buffer) {
+        this.lockStatus = readBool(buffer, 0);
+    }
+}
+
 
 export enum CoordinateType {
     MACHINE, WORKSPACE
@@ -408,6 +426,23 @@ export default class Business extends Dispatcher {
             }
             return { response, laserToolHeadInfo };
         });
+    }
+
+    public async getLaserLockStatus(key: number) {
+        // const writeBuffer = Buffer.alloc(2, 0);
+        // writeUint8(writeBuffer, 0, key);
+        // writeBool(writeBuffer, 1, 1);
+        // const { response } = await this.send(0x12, 0x07, PeerId.CONTROLLER, writeBuffer);
+        const buffer = Buffer.alloc(1, 0);
+        writeUint8(buffer, 0, key);
+        return this.send(0x12, 0x0a, PeerId.CONTROLLER, buffer)
+            .then(({ response }) => {
+                const laserLockStatus = new LaserLockStatus();
+                if (response.result === 0) {
+                    laserLockStatus.fromBuffer(response.data);
+                }
+                return { response, laserLockStatus };
+            });
     }
 
     // ----------

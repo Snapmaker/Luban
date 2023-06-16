@@ -64,6 +64,7 @@ class SerialPortClient {
 
         // machine related
         'machine:module-list': [],
+        'machine:laser-status': [],
 
         'slice:started': [],
         'slice:completed': [],
