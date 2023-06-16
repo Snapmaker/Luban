@@ -330,7 +330,7 @@ const StarterGuideModal: React.FC<StarterGuideModalProps> = (props) => {
                                             src={machine.img}
                                             alt={machine.fullName}
                                         />
-                                        <div className="heading-3 margin-bottom-8">{i18n._(machine.label)}</div>
+                                        <div className="heading-3 margin-bottom-8">{i18n._(machine.fullName)}</div>
                                         <div>
                                             <span className="main-text-normal margin-right-4">{i18n._('key-HomePage/Begin-Work Area')}:</span>
                                             <span className="main-text-normal">

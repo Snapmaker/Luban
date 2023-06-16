@@ -267,8 +267,8 @@ const updateSelectedModelsExtruderConfig = (extruderConfig) => {
             }
         }
 
-        // dispatch(actions.updateBoundingBox());
         dispatch(applyPrintSettingsToModels());
+        // dispatch(actions.updateBoundingBox());
         dispatch(renderScene());
         modelGroup.models = [...models];
         modelGroup.modelAttributesChanged('extruderConfig');

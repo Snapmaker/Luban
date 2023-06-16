@@ -73,6 +73,5 @@ export const machine: Machine = {
     // other attributes
     series: 'Snapmaker',
     seriesLabel: 'key-Luban/Machine/MachineSeries-Original',
-    seriesLabelWithoutI18n: 'Snapmaker J1',
-    label: 'Snapmaker J1',
+    label: 'Snapmaker J1/J1s',
 };

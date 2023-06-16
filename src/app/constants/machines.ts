@@ -171,7 +171,7 @@ export function getMachineOptions() {
     for (const machine of machines) {
         const option = {
             value: machine.identifier, // unique key
-            label: machine.label, // for i18n name display
+            label: machine.fullName, // for i18n name display
             machine: machine, // reference of machine for further data fetch
         };
         options.push(option);

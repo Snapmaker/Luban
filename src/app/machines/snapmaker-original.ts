@@ -51,6 +51,5 @@ export const machine: Machine = {
 
     series: 'Snapmaker Original',
     seriesLabel: 'key-Luban/Machine/MachineSeries-Original',
-    seriesLabelWithoutI18n: 'Original',
     label: 'key-Luban/Machine/MachineSeries-Snapmaker Original',
 };

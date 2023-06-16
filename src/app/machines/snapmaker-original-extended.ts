@@ -54,6 +54,5 @@ export const machine: Machine = {
 
     series: 'Snapmaker Original',
     seriesLabel: 'key-Workspace/MachineSetting-Z-Axis Extension Module',
-    seriesLabelWithoutI18n: 'Original with Z-axis Extension Module',
     label: 'key-Luban/Machine/MachineSeries-Snapmaker Original with Z-axis Extension Module',
 };
