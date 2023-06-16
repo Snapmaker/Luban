@@ -562,6 +562,9 @@ export const actions = {
 
         // Create material on demand
         await dispatch(actions.ensurePresetModels());
+
+        dispatch(actions.applyProfileToAllModels());
+        dispatch(actions.updateBoundingBox());
     },
 
     /**
@@ -2013,6 +2016,7 @@ export const actions = {
         dispatch(actions.updateSavedPresetIds(PRINTING_MANAGER_TYPE_QUALITY, presetId, stackId));
         dispatch(actions.validateActiveQualityPreset(stackId));
         dispatch(actions.applyProfileToAllModels());
+        dispatch(actions.updateBoundingBox());
     },
 
     /**
