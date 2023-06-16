@@ -66,6 +66,5 @@ export declare type Machine = {
     // legacy attributes:
     series?: string;
     seriesLabel?: string;
-    seriesLabelWithoutI18n?: string;
     label?: string;
 };
