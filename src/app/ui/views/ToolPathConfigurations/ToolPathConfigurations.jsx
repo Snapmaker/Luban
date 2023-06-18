@@ -22,7 +22,7 @@ import { toHump } from '../../../../shared/lib/utils';
 import LaserParameters from './laser/LaserParameters';
 import { editorStore } from '../../../store/local-storage';
 
-function getDefaultDefinition(headType, laserToolHead, modelMode, toolDefinitions) {
+function getDefaultDefinition(headType, laserToolHead, modelMode, toolDefinitions = []) {
     let res;
     const lastDefinitionId = editorStore.get(`${headType}LastDefinitionId`);
     if (headType === HEAD_LASER) {
