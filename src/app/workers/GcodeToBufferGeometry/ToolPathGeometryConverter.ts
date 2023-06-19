@@ -1,17 +1,20 @@
 import noop from 'lodash/noop';
 import * as THREE from 'three';
+import { Transfer } from 'threads';
+
 import { Vector2 } from '../../../shared/lib/math/Vector2';
 import { DATA_PREFIX } from '../../constants';
 
-const { Transfer } = require('threads');
 
-class ToolpathToBufferGeometry {
-    parse(filename, onProgress = noop) {
+class ToolPathGeometryConverter {
+    private toolPath;
+
+    public async parse(filename: string, onProgress = noop) {
         const filePath = `${DATA_PREFIX}/${filename}`;
         return new Promise((resolve, reject) => {
             try {
                 new THREE.FileLoader().load(filePath, data => {
-                    const toolPath = JSON.parse(data);
+                    const toolPath = JSON.parse(data as string);
                     this.toolPath = toolPath;
                     const renderResult = this.render(onProgress);
                     resolve(renderResult);
@@ -22,7 +25,21 @@ class ToolpathToBufferGeometry {
         });
     }
 
-    render(onProgress = noop) {
+    public async parseAsync(filename: string, onProgress = null, onComplete = null) {
+        const filePath = `${DATA_PREFIX}/${filename}`;
+
+        const data = await new Promise((resolve) => {
+            new THREE.FileLoader().load(filePath, response => resolve(response));
+        });
+
+        const toolPath = JSON.parse(data as string);
+        this.toolPath = toolPath;
+        const renderResult = this.render(onProgress);
+
+        onComplete && onComplete(renderResult);
+    }
+
+    private render(onProgress = noop) {
         const { headType, movementMode, data, isRotate, positionX, positionY, rotationB, isSelected } = this.toolPath;
 
         // now only support cnc&laser
@@ -52,7 +69,7 @@ class ToolpathToBufferGeometry {
         };
     }
 
-    parseToLine(data, isRotate, onProgress) {
+    private parseToLine(data, isRotate, onProgress) {
         const positions = [];
         const gCodes = [];
 
@@ -137,7 +154,7 @@ class ToolpathToBufferGeometry {
         };
     }
 
-    parseToPoints(data, onProgress) {
+    private parseToPoints(data, onProgress) {
         const positions = [];
         const gCodes = [];
         let state = {
@@ -186,7 +203,7 @@ class ToolpathToBufferGeometry {
         };
     }
 
-    calculateXYZ(state) {
+    private calculateXYZ(state) {
         const { headType, isRotate = false, diameter } = this.toolPath;
         let z = state.Z;
         if (isRotate && headType === 'laser') {
@@ -207,4 +224,4 @@ class ToolpathToBufferGeometry {
     }
 }
 
-export default ToolpathToBufferGeometry;
+export default ToolPathGeometryConverter;

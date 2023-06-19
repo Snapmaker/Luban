@@ -87,7 +87,13 @@ const generateToolPath = async (allTasks) => {
 
     try {
         const ret = await generateLaserToolPathFromEngine(allTasks, onProgress);
-        return sendMessage({ status: 'complete', value: ret });
+
+        // Let onProgress throttle finish
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        sendMessage({ status: 'complete', value: ret });
+
+        return true;
     } catch (err) {
         return sendMessage({ status: 'fail', value: err });
     }

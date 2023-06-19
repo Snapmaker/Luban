@@ -22,7 +22,7 @@ import {
 import CompoundOperation from '../../core/CompoundOperation';
 import { controller } from '../../lib/controller';
 import log from '../../lib/log';
-import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
+import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
 import { DEFAULT_TEXT_CONFIG, checkParams, generateModelDefaultConfigs, isOverSizeModel, limitModelSizeByMachineSize } from '../../models/ModelInfoUtils';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
@@ -42,6 +42,7 @@ import ScaleOperation2D from '../operation-history/ScaleOperation2D';
 import VisibleOperation2D from '../operation-history/VisibleOperation2D';
 import { baseActions } from './actions-base';
 import OperationHistory from '../../core/OperationHistory';
+import ToolPath from '../../toolpaths/ToolPath';
 
 
 /* eslint-disable-next-line import/no-cycle */
@@ -318,100 +319,124 @@ export const actions = {
             });
 
             // task completed
-            controller.on('taskCompleted:processImage', taskResult => {
+            controller.on('taskCompleted:processImage', (taskResult) => {
                 if (headType !== taskResult.headType) {
                     return;
                 }
                 dispatch(actions.onReceiveProcessImageTaskResult(headType, taskResult));
             });
 
-            controller.on('taskCompleted:generateToolPath', toolPathTaskResult => {
-                const { toolPathGroup, progressStatesManager } = getState()[headType];
+            controller.on('taskCompleted:generateToolPath', async (toolPathTaskResult) => {
+                const { toolPathGroup } = getState()[headType];
+                const progressStatesManager = getState()[headType].progressStatesManager as ProgressStatesManager;
+
+                // Failure
                 if (headType !== toolPathTaskResult.headType || toolPathTaskResult.taskStatus === 'failed') {
                     dispatch(
                         baseActions.updateState(headType, {
                             stage: STEP_STAGE.CNC_LASER_GENERATE_TOOLPATH_FAILED,
-                            progress: 1
+                            progress: 1,
                         })
                     );
                     progressStatesManager.finishProgress(false);
                     return;
                 }
-                toolPathTaskResult.data.forEach(taskResult => {
+
+                // Start progress
+                dispatch(
+                    actions.updateState(headType, {
+                        stage: STEP_STAGE.CNC_LASER_RENDER_TOOLPATH,
+                        progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_RENDER_TOOLPATH, 0),
+                    })
+                );
+
+                log.info('Start rendering tool path...');
+
+                const toolPathRenderPromises = [];
+
+                toolPathTaskResult.data.forEach((taskResult) => {
                     const toolPath = toolPathGroup._getToolPath(taskResult.taskId);
 
-                    if (toolPath) {
-                        log.debug('Render tool path');
-                        progressStatesManager.startNextStep();
-                        taskResult.filenames = toolPathTaskResult.filenames.find(d => d.taskId === taskResult.taskId)?.filenames;
-                        workerManager.toolpathRenderer(taskResult, payload => {
-                            const { status, value } = payload;
-                            switch (status) {
-                                case 'succeed': {
-                                    log.info('Render tool path, succeed.');
-                                    const { shouldGenerateGcodeCounter } = getState()[headType];
-                                    const toolpath = toolPathGroup._getToolPath(taskResult.taskId);
-                                    if (toolpath) {
-                                        toolpath.onGenerateToolpathFinail();
-                                    }
-                                    if (toolPathGroup && toolPathGroup._getCheckAndSuccessToolPaths()) {
-                                        toolPathGroup.addSelectedToolpathColor();
-                                        dispatch(
-                                            baseActions.updateState(headType, {
-                                                shouldGenerateGcodeCounter: shouldGenerateGcodeCounter + 1
-                                            })
-                                        );
-                                    }
-                                    progressStatesManager.startNextStep();
-                                    break;
-                                }
-                                case 'data': {
-                                    log.info('Render tool path, received data.');
-                                    const { taskResult: newTaskResult, index, renderResult } = value;
-                                    const toolpath = toolPathGroup._getToolPath(newTaskResult.taskId);
+                    // update stage for generate tool path
+                    progressStatesManager.startNextStep();
 
-                                    if (toolpath) {
-                                        toolpath.onGenerateToolpathModel(newTaskResult.data[index], newTaskResult.filenames[index], renderResult);
-                                    }
-                                    break;
-                                }
-                                case 'progress': {
-                                    const { progress } = value;
-                                    log.info(`Render tool path, progress ${progress}`);
-                                    if (progress < 0.1) {
+                    if (toolPath) {
+                        taskResult.filenames = toolPathTaskResult.filenames.find(d => d.taskId === taskResult.taskId)?.filenames;
+                        // progressStatesManager.startNextStep();
+                        const promise = new Promise<boolean>((resolve) => {
+                            workerManager.toolpathRenderer(taskResult, (payload) => {
+                                const { status, value } = payload;
+
+                                switch (status) {
+                                    case 'succeed': {
+                                        log.info('Rendering tool path... succeed.');
+                                        const { shouldGenerateGcodeCounter } = getState()[headType];
+
+                                        const toolpath = toolPathGroup._getToolPath(taskResult.taskId) as ToolPath;
+                                        if (toolpath) {
+                                            toolpath.onGenerateToolpathFinail();
+                                        }
+
+                                        if (toolPathGroup && toolPathGroup._getCheckAndSuccessToolPaths()) {
+                                            toolPathGroup.addSelectedToolpathColor();
+                                            dispatch(
+                                                baseActions.updateState(headType, {
+                                                    shouldGenerateGcodeCounter: shouldGenerateGcodeCounter + 1
+                                                })
+                                            );
+                                        }
+
+                                        // update stage for render tool path
                                         progressStatesManager.startNextStep();
+
+                                        resolve(true);
+                                        break;
+                                    }
+                                    case 'data': {
+                                        log.info('Rendering tool path... data.');
+                                        const { taskResult: newTaskResult, index, renderResult } = value;
+                                        const toolpath = toolPathGroup._getToolPath(newTaskResult.taskId);
+
+                                        if (toolpath) {
+                                            toolpath.onGenerateToolpathModel(newTaskResult.data[index], newTaskResult.filenames[index], renderResult);
+                                        }
+                                        break;
+                                    }
+                                    case 'progress': {
+                                        const { progress } = value;
                                         dispatch(
                                             actions.updateState(headType, {
                                                 stage: STEP_STAGE.CNC_LASER_RENDER_TOOLPATH,
                                                 progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_RENDER_TOOLPATH, progress)
                                             })
                                         );
-                                    } else {
+                                        break;
+                                    }
+                                    case 'err': {
+                                        log.info('Rendering tool path... failed.');
+                                        progressStatesManager.finishProgress(false);
                                         dispatch(
-                                            actions.updateState(headType, {
-                                                progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_RENDER_TOOLPATH, progress)
+                                            baseActions.updateState(headType, {
+                                                stage: STEP_STAGE.CNC_LASER_GENERATE_TOOLPATH_FAILED,
+                                                progress: 1,
                                             })
                                         );
+                                        resolve(false);
+                                        break;
                                     }
-                                    break;
+                                    default:
+                                        log.warn('Rendering tool path... unknown status.');
+                                        break;
                                 }
-                                case 'err': {
-                                    log.info('Render tool path, error');
-                                    dispatch(
-                                        baseActions.updateState(headType, {
-                                            stage: STEP_STAGE.CNC_LASER_GENERATE_TOOLPATH_FAILED,
-                                            progress: 1
-                                        })
-                                    );
-                                    progressStatesManager.finishProgress(false);
-                                    break;
-                                }
-                                default:
-                                    break;
-                            }
+                            });
                         });
+
+                        // await promise;
+                        toolPathRenderPromises.push(promise);
                     }
                 });
+
+                await Promise.allSettled(toolPathRenderPromises);
             });
 
             controller.on('taskCompleted:generateGcode', taskResult => {

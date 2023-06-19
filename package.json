@@ -222,7 +222,7 @@
     "superagent-use": "0.1.0",
     "svgpath": "^2.5.0",
     "tar": "6.1.11",
-    "threads": "^1.7.0",
+    "threads": "1.7.0",
     "three": "0.124.0",
     "three-mesh-bvh": "0.5.14",
     "uuid": "8.3.2",

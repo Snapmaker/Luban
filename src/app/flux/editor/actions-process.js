@@ -66,7 +66,7 @@ export const processActions = {
         if (visibleToolPathsLength > 0) {
             progressStatesManager.startProgress(
                 PROCESS_STAGE.CNC_LASER_GENERATE_TOOLPATH_AND_PREVIEW,
-                [visibleToolPathsLength, visibleToolPathsLength, 1] // generate gcode consider as one task
+                [visibleToolPathsLength, visibleToolPathsLength, 1], // generate gcode consider as one task
             );
         }
         toolPathGroup.toolPaths.forEach(toolPath => {
