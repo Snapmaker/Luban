@@ -45,8 +45,8 @@ class WorkerManager extends EventEmitter {
             this.pool = Pool(
                 async () => spawn(new ThreadsWorker('./Pool.worker.js')),
                 {
-                    concurrency: 1,
-                    size: 2,
+                    concurrency: 2,
+                    size: 1,
                 },
             ) as unknown as Pool<Thread>;
         }
