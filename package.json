@@ -272,7 +272,7 @@
     "coveralls": "3.0.14",
     "cross-env": "5.2.1",
     "css-loader": "5.2.7",
-    "electron": "^20.3.12",
+    "electron": "^21.4.4",
     "electron-builder": "23.6.0",
     "electron-notarize": "0.2.1",
     "electron-rebuild": "3.2.9",
