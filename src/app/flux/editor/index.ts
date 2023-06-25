@@ -1422,9 +1422,13 @@ export const actions = {
      * Create model from element.
      */
     createModelFromElement: (headType, element) => async (dispatch, getState) => {
+        console.log('element', element);
+        const cloneElem = element.cloneNode(true);
         const { SVGActions, toolPathGroup } = getState()[headType];
 
         const newSVGModel = await SVGActions.createModelFromElement(element);
+        newSVGModel.svgPath = cloneElem;
+        console.log('element', element);
         if (newSVGModel) {
             newSVGModel.refresh();
             const operation = new AddOperation2D({

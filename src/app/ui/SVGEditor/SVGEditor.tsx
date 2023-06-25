@@ -1,5 +1,6 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
+import { v4 as uuid } from 'uuid';
 
 import { PREDEFINED_SHORTCUT_ACTIONS, ShortcutHandlerPriority, ShortcutManager } from '../../lib/shortcut';
 import styles from './styles.styl';
@@ -7,6 +8,9 @@ import { SVG_EVENT_CONTEXTMENU } from './constants';
 import SVGCanvas from './SVGCanvas';
 import SVGLeftBar from './SVGLeftBar';
 import { Materials } from '../../constants/coordinate';
+import api from '../../api';
+import { createSVGElement, setAttributes } from './element-utils';
+import canvg from './lib/canvg';
 
 
 export type SVGEditorHandle = {
@@ -269,6 +273,211 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         props.editorActions.onDrawTransformComplete(...args);
     };
 
+
+    const canvasToImage = async (canvas1) => {
+        document.body.appendChild(canvas1);
+        const dataUrl = canvas1.toDataURL('image/png');
+        const p = fetch(dataUrl).then(async response => response.blob());
+        const b = await p; // (canvas1);
+        const f = new File([b], 'test.png');
+        const downloadImage = (data) => {
+            const link = document.createElement('a');
+            link.download = 'canvas_image.png';
+            link.href = URL.createObjectURL(data);
+            link.click();
+            URL.revokeObjectURL(link.href);
+        };
+        downloadImage(b);
+        return f;
+    };
+    const svgToCanvas = async (svgTag, width, height) => {
+        console.log(svgTag);
+        const canvas1 = document.createElement('canvas');
+        const ctx1 = canvas1.getContext('2d');
+        canvas1.style.width = `${width}px`;
+        canvas1.style.height = `${height}px`;
+        canvas1.id = uuid();
+        canvas1.style.backgroundColor = 'transparent';
+        ctx1.fillStyle = 'transparent';
+
+
+        // const v = Canvg.fromString(ctx1, svgTag);
+        // await v.isReady();
+        // console.log(v);
+        // await v.render();
+        // document.body.appendChild(canvas1);
+        // return canvas1;
+        return new Promise((resolve) => {
+            canvg(canvas1, svgTag, {
+                ignoreAnimation: true,
+                ignoreMouse: true,
+                renderCallback() {
+                    console.log('v2 ok');
+                    document.body.appendChild(canvas1);
+                    resolve(canvas1);
+                }
+            });
+        });
+    };
+    const handleClipPath = async (svgs, imgs, viewboxX, viewboxY, viewWidth, viewHeight) => {
+        // const svgContentGroup = canvas.current.svgContentGroup;
+        // const elem = svgContentGroup.addSVGElement({
+        //     element: 'clipPath',
+        //     curStyles: true,
+        // });
+        const elem = createSVGElement({
+            element: 'clipPath',
+            attr: {
+                id: `${uuid()}`
+            }
+        });
+        console.log(elem);
+        svgs.forEach(svg => elem.append(svg.svgPath));
+        imgs.forEach(img => img.elem.setAttribute('clip-path', `url(#${elem.id})`));
+        // create new Image
+        const clipPathClone = elem.cloneNode(true);
+        const imgsClones = imgs.map(img => img.elem.cloneNode(true));
+        const clipPathSvgContent = new XMLSerializer().serializeToString(clipPathClone);
+        const imgsSvgContent = imgsClones
+            .map(imgsClone => new XMLSerializer().serializeToString(imgsClone))
+            .map((v, index) => v.replace(/href="(.*?)"/, `href="${imgs[index].resource.originalFile.path}"`))
+            .reduce((pre, curr) => pre + curr, '');
+
+        const widthRatio = imgs[0].sourceWidth / imgs[0].width;
+        const heightRatio = imgs[0].sourceHeight / imgs[0].height;
+        const svgTag = `<svg xmlns="http://www.w3.org/2000/svg" width="${viewWidth * widthRatio}" height="${viewHeight * heightRatio}" viewBox="${viewboxX} ${viewboxY} ${viewWidth} ${viewHeight}">${clipPathSvgContent + imgsSvgContent}</svg>`;
+        const canvas1 = await svgToCanvas(svgTag, viewWidth, viewHeight);
+        const img = await canvasToImage(canvas1);
+        props.onChangeFile({ target: { files: [img] } });
+        // console.log(svgTag);
+        // const canvas1 = document.createElement('canvas');
+        // canvas1.style.width = `${viewWidth}px`;
+        // canvas1.style.height = `${viewHeight}px`;
+        // canvas1.id = 'test';
+        // const ctx1 = canvas1.getContext('2d');
+        // canvas1.style.backgroundColor = 'transparent';
+        // ctx1.fillStyle = 'transparent';
+        // const v = Canvg.fromString(ctx1, svgTag);
+        // await v.render();
+        // document.body.appendChild(canvas1);
+        // const dataUrl = canvas1.toDataURL('image/png');
+        // const p = fetch(dataUrl).then(response => response.blob());
+        // const b = await p; // (canvas1);
+        // const f = new File([b], 'test.png');
+        // props.onChangeFile({ target: { files: [f] } });
+        // const downloadImage = (data) => {
+        //     const link = document.createElement('a');
+        //     link.download = 'canvas_image.png';
+        //     link.href = URL.createObjectURL(data);
+        //     link.click();
+        //     URL.revokeObjectURL(link.href);
+        // };
+        // downloadImage(b);
+        // console.log(f);
+
+        return svgTag;
+    };
+    const handleMask = async (svgs, imgs) => {
+        // const svgContentGroup = canvas.current.svgContentGroup;
+        const maskElem = createSVGElement({
+            element: 'mask',
+            attr: {
+                id: `${uuid()}`
+            }
+        });
+        const rect = createSVGElement({
+            element: 'rect',
+            attr: {
+                width: '100%',
+                height: '100%',
+                fill: 'white',
+                'fill-opacity': 1,
+            }
+        });
+        maskElem.append(rect);
+        svgs.forEach(svg => {
+            const svgShapeTag = svg.svgPath || svg.elem;
+            svgShapeTag.setAttribute('fill', 'black');
+            svgShapeTag.setAttribute('fill-opacity', '1');
+            maskElem.append(svgShapeTag);
+        });
+        imgs.forEach(img => img.elem.setAttribute('mask', `url(#${maskElem.id})`));
+        const maxminXY = imgs.reduce((pre, curr) => {
+            const leftTopX = curr.elem.getAttribute('x') - 0;
+            const leftTopY = curr.elem.getAttribute('y') - 0;
+            const rightBottomX = leftTopX + curr.width;
+            const rightBottomY = leftTopY + curr.height;
+            return {
+                max: {
+                    x: Math.max(pre.max.x, leftTopX, rightBottomX),
+                    y: Math.max(pre.max.y, leftTopY, rightBottomY)
+                },
+                min: {
+                    x: Math.min(pre.min.x, leftTopX, rightBottomX),
+                    y: Math.min(pre.min.y, leftTopY, rightBottomY)
+                }
+            };
+        }, { max: { x: -Infinity, y: -Infinity }, min: { x: Infinity, y: Infinity } });
+        setAttributes(rect, { 'x': maxminXY.min.x, 'y': maxminXY.min.y });
+        const viewboxX = maxminXY.min.x;
+        const viewboxY = maxminXY.min.y;
+        const viewWidth = maxminXY.max.x - maxminXY.min.x;
+        const viewHeight = maxminXY.max.y - maxminXY.min.y;
+        const maskClone = maskElem.cloneNode(true);
+        const imgsClones = imgs.map(img => img.elem.cloneNode(true));
+        const maskSvgContent = new XMLSerializer().serializeToString(maskClone);
+        const imgsSvgContent = imgsClones
+            .map(imgsClone => new XMLSerializer().serializeToString(imgsClone))
+            .map((v, index) => v.replace(/href="(.*?)"/, `href="${imgs[index].resource.originalFile.path}"`))
+            .reduce((pre, curr) => pre + curr, '');
+
+
+        const widthRatio = imgs[0].sourceWidth / imgs[0].width;
+        const heightRatio = imgs[0].sourceHeight / imgs[0].height;
+        const svgTag = `<svg xmlns="http://www.w3.org/2000/svg" width="${viewWidth * widthRatio}" height="${viewHeight * heightRatio}" viewBox="${viewboxX} ${viewboxY} ${viewWidth} ${viewHeight}">${maskSvgContent + imgsSvgContent}</svg>`;
+        const canvas1 = await svgToCanvas(svgTag, viewWidth, viewHeight);
+        const img = await canvasToImage(canvas1);
+        props.onChangeFile({ target: { files: [img] } });
+        return svgTag;
+    };
+    const onClipper = async (imgs, svgs) => {
+        console.log(svgs);
+        const maxminXY = svgs.reduce((pre, curr) => {
+            const leftTopX = curr.elem.getAttribute('x') - 0;
+            const leftTopY = curr.elem.getAttribute('y') - 0;
+            const rightBottomX = leftTopX + curr.width;
+            const rightBottomY = leftTopY + curr.height;
+            return {
+                max: {
+                    x: Math.max(pre.max.x, leftTopX, rightBottomX),
+                    y: Math.max(pre.max.y, leftTopY, rightBottomY)
+                },
+                min: {
+                    x: Math.min(pre.min.x, leftTopX, rightBottomX),
+                    y: Math.min(pre.min.y, leftTopY, rightBottomY)
+                }
+            };
+        }, { max: { x: -Infinity, y: -Infinity }, min: { x: Infinity, y: Infinity } });
+        const viewboxX = maxminXY.min.x;
+        const viewboxY = maxminXY.min.y;
+        const viewWidth = maxminXY.max.x - maxminXY.min.x;
+        const viewHeight = maxminXY.max.y - maxminXY.min.y;
+
+        const clipSvgTag = await handleClipPath(svgs, imgs, viewboxX, viewboxY, viewWidth, viewHeight);
+        console.log(clipSvgTag);
+
+        const blob = new Blob([clipSvgTag], { type: 'image/svg+xml' });
+        const file = new File([blob], `${'modelID'}.svg`);
+        const formData = new FormData();
+        formData.append('image', file);
+        const res = await api.uploadImage(formData);
+        console.log(res);
+    };
+    const onClipperSvg = async (imgs, svgs) => {
+        const maskSvgTag = await handleMask(svgs, imgs);
+        console.log('maskSvgTag', maskSvgTag);
+    };
+
     return (
         <React.Fragment>
             <div className={styles['laser-table']} style={{ position: 'relative' }}>
@@ -318,6 +527,8 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
                         setMode={changeCanvasMode}
                         onChangeFile={props.onChangeFile}
                         onClickToUpload={props.onClickToUpload}
+                        onClipper={onClipper}
+                        onClipperSvg={onClipperSvg}
                         fileInput={props.fileInput}
                         allowedFiles={props.allowedFiles}
                         editable={props.editable}

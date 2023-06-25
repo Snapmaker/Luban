@@ -113,7 +113,9 @@ class SVGParser {
 
     async parseFile(filePath) {
         const node = await this.readFile(filePath);
+        console.log('node', node);
         const result = await this.parseObject(node);
+        console.log('result', result);
         const newUploadName = await this.generateString(result.parsedNode, filePath);
         result.uploadName = path.basename(newUploadName);
         return result;
@@ -162,8 +164,10 @@ class SVGParser {
             xform: [1, 0, 0, 1, 0, 0]
         };
         const parsedNode = cloneDeep(node);
+        console.log('parsedNode', parsedNode);
         const root = await this.parseNode(element, parsedNode[element], parsedNode, initialAttributes);
         const newSvg = root.parsedSvg;
+        console.log('parsedNode', newSvg);
         const gArray = this.dragTextPathToParent(newSvg);
         if (newSvg.g && Array.isArray(newSvg.g)) {
             newSvg.g = newSvg.g.concat(gArray);
