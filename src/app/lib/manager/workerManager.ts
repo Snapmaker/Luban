@@ -43,7 +43,7 @@ class WorkerManager extends EventEmitter {
     public getPool() {
         if (!this.pool) {
             this.pool = Pool(
-                async () => spawn(new ThreadsWorker('./Pool.worker.js')),
+                async () => spawn(new ThreadsWorker('./worker/Pool.worker.js')),
                 {
                     concurrency: 2,
                     size: 1,
@@ -158,7 +158,6 @@ class WorkerManager extends EventEmitter {
     }
 
     private exec<T>(method: string, data: unknown, onMessage?: (payload: T) => void, onComplete?: () => void) {
-        console.log('pool exec(), queue task');
         let task = this.getPool().queue(async (worker) => {
             return new Promise<void>((resolve) => {
                 const subscribe = worker[method](data).subscribe({
@@ -171,7 +170,6 @@ class WorkerManager extends EventEmitter {
                         task = null;
                         subscribe.unsubscribe();
                         onComplete && onComplete();
-                        console.log('pool exec(), task done');
                         resolve();
                     }
                 });

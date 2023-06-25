@@ -11,7 +11,8 @@ export default {
         // app
         app: {
             routes: [
-                '' // empty path
+                '', // empty path
+                '/worker',
             ],
             path: path.resolve(__dirname, '..', '..', 'app'),
             maxAge: maxAge

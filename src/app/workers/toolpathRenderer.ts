@@ -11,8 +11,6 @@ type ToolpathRendererData = {
 };
 
 const toolpathRenderer = (taskResult: ToolpathRendererData) => {
-    console.log('Worker: Tool Path Render');
-
     return new Observable((observer) => {
         if (isEmpty(taskResult.data)) {
             observer.next({
@@ -66,8 +64,6 @@ const toolpathRenderer = (taskResult: ToolpathRendererData) => {
                                 }
                             });
                             observer.complete();
-
-                            console.log('Worker: Done');
                         }
                     },
                 );

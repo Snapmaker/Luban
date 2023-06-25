@@ -12,7 +12,9 @@ export default {
         app: {
             routes: [ // with trailing slash
                 urljoin(publicPath, '/'),
-                '/' // fallback
+                urljoin(publicPath, '/worker'),
+                '/', // fallback
+                '/worker',
             ],
             path: path.resolve(__dirname, '..', '..', 'app'),
             maxAge: maxAge

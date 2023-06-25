@@ -24,11 +24,12 @@ const devServer = {
     proxy: {
         '/api': `http://localhost:${SERVER_PORT}`,
         '/data': `http://localhost:${SERVER_PORT}`,
+        '/worker': `http://localhost:${SERVER_PORT}`,
         '/resources': `http://localhost:${SERVER_PORT}`,
         '/socket.io': {
             target: `ws://localhost:${SERVER_PORT}`,
             ws: true
-        }
+        },
     },
     devMiddleware: {
         index: true,
@@ -129,6 +130,7 @@ module.exports = {
                 exclude: /node_modules/,
                 loader: 'worker-loader',
                 options: {
+                    publicPath: '/worker/',
                     filename: '[name].js',
                 },
             },

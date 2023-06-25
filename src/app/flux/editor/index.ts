@@ -393,7 +393,6 @@ export const actions = {
                                         break;
                                     }
                                     case 'data': {
-                                        log.info('Rendering tool path... data.');
                                         const { taskResult: newTaskResult, index, renderResult } = value;
                                         const toolpath = toolPathGroup._getToolPath(newTaskResult.taskId);
 
