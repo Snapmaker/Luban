@@ -54,7 +54,7 @@ module.exports = {
         path: path.resolve(__dirname, 'dist/Luban/src/app'),
         chunkFilename: `[name].[chunkhash].bundle.js?_=${timestamp}`,
         filename: `[name].[chunkhash].bundle.js?_=${timestamp}`,
-        publicPath: publicPath
+        publicPath: publicPath,
     },
     optimization: {
         minimize: true,

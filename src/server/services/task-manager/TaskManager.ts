@@ -67,6 +67,8 @@ class TaskManager {
     }
 
     private onComplete(task: Task, res: unknown) {
+        log.info(`Task ${task.taskType} completed.`);
+
         if (task.taskType === TASK_TYPE_GENERATE_TOOLPATH) {
             task.filenames = res as string;
         } else if (task.taskType === TASK_TYPE_GENERATE_GCODE) {
@@ -101,7 +103,7 @@ class TaskManager {
     }
 
     private onFail(task: Task, res: string) {
-        log.error(res);
+        log.warn(`Task ${task.taskType} failed. err msg = ${res}`);
 
         if (task.taskStatus !== TASK_STATUS_DEPRECATED) {
             task.taskStatus = TASK_STATUS_FAILED;

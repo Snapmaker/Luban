@@ -220,11 +220,19 @@ class ProgressStatesManager {
         return this.progress;
     }
 
+    public getStage(): number {
+        return this.stage;
+    }
+
     public startNextStep() {
-        if (this.counts && this.counts[this.stage] && this.counts[this.stage] - 1 > 0) {
-            this.counts[this.stage] -= 1;
-        } else {
-            this.stage += 1;
+        if (this.counts && this.counts[this.stage]) {
+            if (this.counts[this.stage] - 1 >= 0) {
+                this.counts[this.stage] -= 1;
+            }
+
+            if (this.counts[this.stage] === 0) {
+                this.stage += 1;
+            }
         }
     }
 

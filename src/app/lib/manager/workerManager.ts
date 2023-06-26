@@ -1,10 +1,11 @@
-import { spawn, Worker as ThreadsWorker, Pool, Thread } from 'threads';
-import './Pool.worker';
-import './clipperPool.worker';
 import EventEmitter from 'events';
 import { isUndefined } from 'lodash';
-import CalculateSectionPoints, { IMessage as TCalculateSectionPointsMessage } from './ClippingPoolManager.worker';
+import { Pool, Thread, Worker as ThreadsWorker, spawn } from 'threads';
+
 import { machineStore } from '../../store/local-storage';
+import CalculateSectionPoints, { IMessage as TCalculateSectionPointsMessage } from './ClippingPoolManager.worker';
+import './Pool.worker';
+import './clipperPool.worker';
 
 type TListener = [string, (res: unknown) => void]
 
@@ -39,11 +40,23 @@ class WorkerManager extends EventEmitter {
         this.clipperWorkerEnable = bool;
     }
 
-    public getPool() {
+    public initPool(): void {
         if (!this.pool) {
-            this.pool = Pool(async () => spawn(new ThreadsWorker('./Pool.worker.js'), {
-                timeout: 20000
-            }), 2) as unknown as Pool<Thread>;
+            this.pool = Pool(
+                async () => spawn(new ThreadsWorker('./worker/Pool.worker.js')),
+                {
+                    size: 2,
+                },
+            ) as unknown as Pool<Thread>;
+        }
+    }
+
+    public getPool(): Pool<Thread> {
+        if (!this.pool) {
+            this.initPool();
+            this.loadModel('', (data) => {
+                console.log('data', data);
+            });
         }
 
         return this.pool;
@@ -153,19 +166,19 @@ class WorkerManager extends EventEmitter {
     }
 
     private exec<T>(method: string, data: unknown, onMessage?: (payload: T) => void, onComplete?: () => void) {
-        let task = this.getPool().queue(async (eachPool) => {
+        let task = this.getPool().queue(async (worker) => {
             return new Promise<void>((resolve) => {
-                const subscribe = eachPool[method](data).subscribe({
+                const subscribe = worker[method](data).subscribe({
                     next: (payload: T) => {
                         if (onMessage) {
                             onMessage(payload);
                         }
                     },
                     complete() {
-                        resolve();
                         task = null;
                         subscribe.unsubscribe();
                         onComplete && onComplete();
+                        resolve();
                     }
                 });
             });

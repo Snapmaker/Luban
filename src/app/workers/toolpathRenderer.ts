@@ -1,6 +1,7 @@
 import isEmpty from 'lodash/isEmpty';
-import { Observable, forkJoin } from 'rxjs';
-import ToolpathToBufferGeometry from './GcodeToBufferGeometry/ToolpathToBufferGeometry';
+import { Observable } from 'rxjs';
+
+import ToolPathGeometryConverter from './GcodeToBufferGeometry/ToolPathGeometryConverter';
 
 type ToolpathRendererData = {
     data: object;
@@ -8,67 +9,73 @@ type ToolpathRendererData = {
     taskId: string;
     headType: string;
 };
+
 const toolpathRenderer = (taskResult: ToolpathRendererData) => {
-    return new Observable(subscriber => {
+    return new Observable((observer) => {
         if (isEmpty(taskResult.data)) {
-            subscriber.next({
+            observer.next({
                 status: 'err',
                 value: 'Data is empty'
             });
-            subscriber.complete();
+            observer.complete();
             return;
         }
+
         const { headType } = taskResult;
-        const allPromises = {};
+
         try {
-            for (let i = 0; i < taskResult.data.length; i++) {
+            const taskTotal = taskResult.data.length;
+            let taskCompleted = 0;
+            for (let i = 0; i < taskTotal; i++) {
                 const filename = taskResult.filenames[i];
-                allPromises[i] = new ToolpathToBufferGeometry().parse(filename, (progress: number) => {
-                    subscriber.next({
-                        status: 'progress',
-                        headType: headType,
-                        value: {
-                            progress: progress / taskResult.data.length + i / taskResult.data.length
+
+                console.log(`Generate geometry from tool path, ${filename}`);
+                const converter = new ToolPathGeometryConverter();
+
+                converter.parseAsync(
+                    filename,
+                    (progress: number) => {
+                        observer.next({
+                            status: 'progress',
+                            headType: headType,
+                            value: {
+                                progress: (i + progress) / taskTotal,
+                            }
+                        });
+                    },
+                    (renderResult) => {
+                        observer.next({
+                            status: 'data',
+                            headType: headType,
+                            value: {
+                                taskResult: taskResult,
+                                index: i,
+                                renderResult: renderResult,
+                            }
+                        });
+
+                        taskCompleted++;
+                        if (taskCompleted === taskTotal) {
+                            observer.next({
+                                status: 'succeed',
+                                headType: headType,
+                                value: {
+                                    taskResult: taskResult,
+                                }
+                            });
+                            observer.complete();
                         }
-                    });
-                });
+                    },
+                );
             }
         } catch (err) {
-            subscriber.next({
+            observer.next({
                 status: 'err',
                 headType: headType,
-                value: err
+                value: err,
             });
-            subscriber.complete();
+            observer.complete();
         }
-
-        forkJoin(allPromises).subscribe({
-            next: result => {
-                Object.entries(result).forEach(([index, renderResult]) => {
-                    const data = {
-                        status: 'data',
-                        headType: headType,
-                        value: {
-                            taskResult: taskResult,
-                            index: index,
-                            renderResult: renderResult
-                        }
-                    };
-                    subscriber.next(data);
-                });
-            },
-            complete: () => {
-                const data = {
-                    status: 'succeed',
-                    headType: headType,
-                    value: {
-                        taskResult: taskResult
-                    }
-                };
-                subscriber.next(data);
-                subscriber.complete();
-            }
-        });
     });
 };
 

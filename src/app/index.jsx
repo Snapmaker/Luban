@@ -18,6 +18,7 @@ import reduxStore from './store';
 import { machineStore } from './store/local-storage';
 import './styles/app.styl';
 import './styles/vendor.styl';
+import workerManager from './lib/manager/workerManager';
 import App from './ui/App';
 
 series([
@@ -49,7 +50,11 @@ series([
                 }
                 next();
             });
-    }
+    },
+    (next) => {
+        workerManager.initPool();
+        next();
+    },
 ], () => {
     log.info(`Launching App ${settings.name}@${settings.version}...`);
 

@@ -49,10 +49,11 @@ function getBrowserWindowOptions() {
         show: false,
         useContentSize: true,
         title: `${pkg.name} ${pkg.version}`,
-        // https://www.electronjs.org/docs/latest/breaking-changes#default-changed-enableremotemodule-defaults-to-false
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
+            // remote module is default false
+            // https://www.electronjs.org/docs/latest/breaking-changes#default-changed-enableremotemodule-defaults-to-false
             enableRemoteModule: true,
             nodeIntegrationInWorker: true
         }
@@ -230,23 +231,16 @@ const startToBegin = (data) => {
     updateHandle();
 
     loadUrl = `http://${address}:${port}`;
-    const filter = {
-        urls: [
-            // 'http://*/',
-            'http://*/resources/images/*',
-            'http://*/app.css',
-            'http://*/polyfill.*.*',
-            'http://*/vendor.*.*',
-            'http://*/app.*.*',
-            'http://*/*/*.worker.js',
-        ]
-    };
+
+    // register file protocol
     protocol.registerFileProtocol(
         'luban',
         (request, callback) => {
+            console.log('file protocol URL:', request.url);
             const { pathname } = url.parse(request.url);
             const p = pathname === '/' ? 'index.html' : pathname.substr(1);
-            callback(fs.createReadStream(path.normalize(`${__dirname}/app/${p}`)));
+            const filePath = path.normalize(`${__dirname}/app/${p}`);
+            callback(fs.createReadStream(filePath));
         },
         (error) => {
             if (error) {
@@ -263,6 +257,15 @@ const startToBegin = (data) => {
     // https://github.com/electron/electron/issues/21675
     // If needed, resolve CORS. https://stackoverflow.com/questions/51254618/how-do-you-handle-cors-in-an-electron-app
 
+    const filter = {
+        urls: [
+            'http://*/resources/images/*',
+            'http://*/app.css',
+            'http://*/polyfill.*.*',
+            'http://*/vendor.*.*',
+            'http://*/app.*.*',
+        ]
+    };
     session.defaultSession.webRequest.onBeforeRequest(
         filter,
         (request, callback) => {
