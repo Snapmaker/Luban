@@ -44,7 +44,7 @@ export const EVENTS = {
 let inputDOM = null;
 let inputDOM2 = null; // translate has two input for X and Y axis
 
-class Controls extends EventEmitter {
+class ControlManager extends EventEmitter {
     private camera = null;
 
     private group = null;
@@ -1046,4 +1046,4 @@ class Controls extends EventEmitter {
     }
 }
 
-export default Controls;
+export default ControlManager;

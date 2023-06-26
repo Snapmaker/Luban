@@ -524,7 +524,7 @@ class AppLayout extends React.PureComponent {
                 return this.props.saveAndClose(currentHeadType, { message });
             }
 
-            return false;
+            return true;
         },
         initFileOpen: async () => {
             const file = await UniApi.File.popFile();

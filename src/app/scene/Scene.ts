@@ -4,7 +4,7 @@ import { ModelEvents } from '../models/events';
 
 // TODO: Move this object to app/scene directory
 import PrintableCube from '../ui/widgets/PrintingVisualizer/PrintableCube';
-import Controls from '../ui/components/SMCanvas/Controls';
+import ControlManager from '../ui/components/SMCanvas/ControlManager';
 
 export enum SceneEvent {
     // model
@@ -25,7 +25,7 @@ class Scene extends EventEmitter {
     private modelGroup?: ModelGroup;
     private buildVolume?: PrintableCube;
 
-    private controlManager?: Controls = null;
+    private controlManager?: ControlManager = null;
 
     public constructor() {
         super();
@@ -86,11 +86,11 @@ class Scene extends EventEmitter {
         this.emit(SceneEvent.BuildVolumeChanged);
     };
 
-    public getControlManager(): Controls | null {
+    public getControlManager(): ControlManager | null {
         return this.controlManager;
     }
 
-    public setControlManager(controlManager: Controls): void {
+    public setControlManager(controlManager: ControlManager): void {
         this.controlManager = controlManager;
     }
 }

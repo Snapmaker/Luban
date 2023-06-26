@@ -51,7 +51,7 @@ const initQuaternion = new Quaternion();
  *  2. Change this component to functional component
  */
 class Visualizer extends PureComponent {
-    static propTypes = {
+    public static propTypes = {
         series: PropTypes.string.isRequired,
         size: PropTypes.object.isRequired,
         stage: PropTypes.number.isRequired,
@@ -113,13 +113,13 @@ class Visualizer extends PureComponent {
         resetPrintConfigurations: PropTypes.func.isRequired,
     };
 
-    printableArea = null;
+    public printableArea = null;
 
-    contextMenuRef2 = React.createRef();
+    public contextMenuRef2 = React.createRef();
 
-    canvas = React.createRef();
+    public canvas = React.createRef();
 
-    actions = {
+    public actions = {
         // canvas
         zoomIn: () => {
             this.canvas.current.zoomIn();
@@ -271,7 +271,7 @@ class Visualizer extends PureComponent {
     /**
      * 1) Check if any model go out of bounds, toast to notify user.
      */
-    checkModelsOutOfHeatedBedBounds = () => {
+    public checkModelsOutOfHeatedBedBounds = () => {
         // toast.dismiss();
 
         const modelGroup = this.props.modelGroup;
@@ -326,18 +326,18 @@ class Visualizer extends PureComponent {
         }
     };
 
-    onAddModel = (model) => {
+    public onAddModel = (model) => {
         this.props.recordAddOperation(model);
 
         this.checkModelsOutOfHeatedBedBounds();
     };
 
-    onMeshPositionChanged = () => {
+    public onMeshPositionChanged = () => {
         this.checkModelsOutOfHeatedBedBounds();
     };
 
     // all support related actions used in VisualizerModelTransformation & canvas.controls & contextmenu
-    supportActions = {
+    public supportActions = {
         moveBrush: (raycastResult) => {
             this.props.moveBrush(raycastResult);
         },
@@ -346,7 +346,7 @@ class Visualizer extends PureComponent {
         },
     };
 
-    constructor(props) {
+    public constructor(props) {
         super(props);
         const size = props.size;
         const stopArea = props.stopArea;
@@ -362,7 +362,7 @@ class Visualizer extends PureComponent {
     // };
 
     // canvas: Canvas
-    onSceneCreated = (canvas) => {
+    public onSceneCreated = (canvas) => {
         const modelGroup = this.props.modelGroup;
 
         // configure control manager
@@ -381,7 +381,7 @@ class Visualizer extends PureComponent {
         });
     };
 
-    componentDidMount() {
+    public componentDidMount() {
         this.props.clearOperationHistory();
 
         this.canvas.current.resizeWindow();
@@ -407,7 +407,7 @@ class Visualizer extends PureComponent {
         this.props.modelGroup.on(ModelEvents.MeshPositionChanged, this.onMeshPositionChanged);
     }
 
-    componentDidUpdate(prevProps) {
+    public componentDidUpdate(prevProps) {
         const {
             size, stopArea, transformMode, selectedModelArray, renderingTimestamp, modelGroup, stage,
             promptTasks
@@ -523,46 +523,46 @@ class Visualizer extends PureComponent {
         this.canvas.current.renderScene();
     }
 
-    componentWillUnmount() {
+    public componentWillUnmount() {
         this.props.clearOperationHistory();
         this.props.modelGroup.off(ModelEvents.AddModel, this.onAddModel);
         this.props.modelGroup.off(ModelEvents.MeshPositionChanged, this.onMeshPositionChanged);
         window.removeEventListener('fit-view-in', this.actions.fitViewIn, false);
     }
 
-    getNotice() {
+    public getNotice() {
         const { stage } = this.props;
         return this.props.progressStatesManager.getNotice(stage);
     }
 
-    showContextMenu = (event) => {
+    public showContextMenu = (event) => {
         if (!this.props.leftBarOverlayVisible) {
             this.contextMenuRef2.current.show(event);
         }
     };
 
-    handleCancelSimplify = () => {
+    public handleCancelSimplify = () => {
         const { selectedModelArray, simplifyOriginModelInfo: { sourceSimplifyName } } = this.props;
         this.props.loadSimplifyModel(selectedModelArray[0].modelID, sourceSimplifyName, true);
         this.props.resetSimplifyOriginModelInfo();
         this.props.setPageMode(PageMode.Default);
     };
 
-    handleApplySimplify = () => {
+    public handleApplySimplify = () => {
         this.props.recordSimplifyModel();
         this.props.resetSimplifyOriginModelInfo();
         this.props.setPageMode(PageMode.Default);
     };
 
-    handleUpdateSimplifyConfig = (type, percent) => {
+    public handleUpdateSimplifyConfig = (type, percent) => {
         this.props.modelSimplify(type, percent);
     };
 
-    checkoutModelsLocation = () => {
+    public checkoutModelsLocation = () => {
         // this.canvas.current.checkoutModelsLocation();
     };
 
-    render() {
+    public render() {
         const { size, selectedModelArray, modelGroup, gcodeLineGroup, inProgress, displayedType, transformMode } = this.props; // transformMode
 
         const notice = this.getNotice();
