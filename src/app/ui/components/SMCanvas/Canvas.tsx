@@ -30,7 +30,7 @@ import log from '../../../lib/log';
 import ModelGroup from '../../../models/ModelGroup';
 import Detector from '../../../scene/three-extensions/Detector';
 import WebGLRendererWrapper from '../../../scene/three-extensions/WebGLRendererWrapper';
-import Controls, { EVENTS } from './Controls';
+import ControlManager, { EVENTS } from './ControlManager';
 import MeshColoringControl from '../../../scene/controls/MeshColoringControl';
 
 const ANIMATION_DURATION = 500;
@@ -361,7 +361,7 @@ class Canvas extends React.PureComponent<CanvasProps> {
         this.initialTarget = this.props.cameraInitialTarget;
 
         const sourceType = this.props.transformSourceType === '2D' ? '2D' : '3D';
-        this.controls = new Controls(
+        this.controls = new ControlManager(
             sourceType,
             this.props.displayedType,
             this.camera,
@@ -423,7 +423,7 @@ class Canvas extends React.PureComponent<CanvasProps> {
         });
     }
 
-    public getControlManager(): Controls {
+    public getControlManager(): ControlManager {
         return this.controls;
     }
 
