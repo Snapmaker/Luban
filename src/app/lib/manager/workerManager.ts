@@ -40,15 +40,23 @@ class WorkerManager extends EventEmitter {
         this.clipperWorkerEnable = bool;
     }
 
-    public getPool() {
+    public initPool(): void {
         if (!this.pool) {
             this.pool = Pool(
                 async () => spawn(new ThreadsWorker('./worker/Pool.worker.js')),
                 {
-                    concurrency: 2,
-                    size: 1,
+                    size: 2,
                 },
             ) as unknown as Pool<Thread>;
+        }
+    }
+
+    public getPool(): Pool<Thread> {
+        if (!this.pool) {
+            this.initPool();
+            this.loadModel('', (data) => {
+                console.log('data', data);
+            });
         }
 
         return this.pool;
