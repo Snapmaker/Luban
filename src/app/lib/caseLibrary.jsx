@@ -125,9 +125,11 @@ export const getCaseList = (series, toolHead) => {
             caseListFourAxis = caseListFourAxis.concat(CaseConfigA350LaserFourAxis);
             break;
 
-        case MACHINE_SERIES.J1.identifier:
+        case MACHINE_SERIES.J1.identifier: {
             caseList.push(CaseConfigGimbal);
+            caseList.push(CaseConfigPenHolder);
             break;
+        }
         default:
             break;
     }
