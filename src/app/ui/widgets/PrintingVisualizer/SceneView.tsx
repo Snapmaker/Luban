@@ -367,7 +367,6 @@ class Visualizer extends PureComponent {
 
         // configure control manager
         const controlManager = canvas.getControlManager();
-        console.log('controlManager =', controlManager);
         scene.setControlManager(controlManager);
 
         const meshColoringControl = new MeshColoringControl(canvas.getCamera(), modelGroup);
