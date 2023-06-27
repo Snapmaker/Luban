@@ -5,6 +5,7 @@ import { machine as SnapmakerA250Machine } from './snapmaker-a250';
 import { machine as SnapmakerA350Machine } from './snapmaker-a350';
 import { machine as SnapmakerArtisanMachine } from './snapmaker-artisan';
 import { machine as SnapmakerJ1Machine } from './snapmaker-j1';
+import { machine as SnapamkerRayMachine } from './snapmaker-ray';
 
 
 export {
@@ -15,4 +16,5 @@ export {
     SnapmakerA350Machine,
     SnapmakerArtisanMachine,
     SnapmakerJ1Machine,
+    SnapamkerRayMachine,
 };

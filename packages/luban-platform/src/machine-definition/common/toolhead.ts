@@ -21,6 +21,6 @@ export declare type ToolHead = {
     metadata: ToolHeadMetadata;
 
     // legacy
-    value: string;
+    value?: string;
     pathname?: string;
 };

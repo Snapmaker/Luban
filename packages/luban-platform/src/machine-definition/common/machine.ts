@@ -4,8 +4,9 @@ import { PrintMode } from './print-base';
  * 3D Printer or multi-function printer.
  */
 export enum MachineType {
-    Printer = '3D Printer',
     MultiFuncionPrinter = 'Multi-function 3D Printer',
+    Printer = '3D Printer',
+    Laser = 'Laser',
 }
 
 interface WorkRange {
@@ -51,7 +52,15 @@ export declare type MachineMetadata = {
     slicerVersion: number;
 };
 
+export declare type LaserMachineMetadata = {
+    size: { x: number; y: number; z: number };
+    toolHeads: MachineToolHeadOptions[];
+}
 
+
+/**
+ * Machine Definition.
+ */
 export declare type Machine = {
     identifier: string; // unique identifier
 
@@ -61,7 +70,7 @@ export declare type Machine = {
     // local path to machine image
     img: string;
 
-    metadata: MachineMetadata;
+    metadata: MachineMetadata | LaserMachineMetadata;
 
     // legacy attributes:
     series?: string;
