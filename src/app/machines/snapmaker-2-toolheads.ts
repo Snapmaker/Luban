@@ -24,8 +24,6 @@ export const printToolHead: ToolHead = {
 
         numberOfExtruders: 1,
     },
-
-    value: SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
 };
 
 
@@ -47,8 +45,6 @@ export const dualExtrusionPrintToolHead: ToolHead = {
 
         numberOfExtruders: 2,
     },
-
-    value: DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
 };
 
 /**
@@ -63,8 +59,6 @@ export const standardLaserToolHead: ToolHead = {
     metadata: {
         headType: ToolHeadType.Laser,
     },
-
-    value: LEVEL_ONE_POWER_LASER_FOR_SM2,
 };
 
 /**
@@ -81,8 +75,6 @@ export const highPower10WLaserToolHead: ToolHead = {
     metadata: {
         headType: ToolHeadType.Laser,
     },
-
-    value: LEVEL_TWO_POWER_LASER_FOR_SM2,
 };
 
 /**
@@ -97,8 +89,6 @@ export const standardCNCToolHead: ToolHead = {
     metadata: {
         headType: ToolHeadType.CNC,
     },
-
-    value: STANDARD_CNC_TOOLHEAD_FOR_SM2,
 };
 
 /**
@@ -115,6 +105,4 @@ export const highPower200WCNCToolHead: ToolHead = {
     metadata: {
         headType: ToolHeadType.CNC,
     },
-
-    value: LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
 };

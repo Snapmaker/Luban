@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import { MachineType } from '@snapmaker/luban-platform';
 import { find, includes, remove } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
@@ -6,6 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { HEAD_PRINTING, LEFT, RIGHT } from '../../../constants';
 import {
+    findMachineByName,
     getMachineOptions,
     getMachineSupportedToolOptions,
     isDualExtruder,
@@ -296,6 +298,14 @@ const MachineSettings = forwardRef(({
         //     setSelectedToolName(SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2);
         // }
     };
+
+    const selectedMachine = useMemo(() => {
+        return findMachineByName(selectedMachineSeries);
+    }, [selectedMachineSeries]);
+
+    const is3DPrinter = selectedMachine.machineType === MachineType.Printer;
+    const isMultiFunctionMachine = selectedMachine.machineType === MachineType.MultiFuncionPrinter;
+
     const switchToolHead = (option) => {
         setSelectedToolName(option.value);
         setActiveNozzle(LEFT);
@@ -451,7 +461,7 @@ const MachineSettings = forwardRef(({
                     )
                 }
                 {
-                    headType === HEAD_PRINTING && (
+                    headType === HEAD_PRINTING && (is3DPrinter || isMultiFunctionMachine) && (
                         <div className="margin-top-32">
                             <div>{i18n._('key-settings/Nozzle Diameter')} (mm)</div>
                             {/* Nozzle Diameter */}

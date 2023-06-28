@@ -21,7 +21,6 @@ export const printToolHeadOriginal: ToolHead = {
         numberOfExtruders: 1,
     },
 
-    value: SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
     pathname: 'single',
 };
 
@@ -37,7 +36,6 @@ export const laserToolHeadOriginal: ToolHead = {
         headType: ToolHeadType.Laser,
     },
 
-    value: LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
     pathname: '200mw',
 };
 
@@ -53,7 +51,6 @@ export const laser1600mWToolHeadOriginal: ToolHead = {
         headType: ToolHeadType.Laser,
     },
 
-    value: LEVEL_TWO_POWER_LASER_FOR_ORIGINAL,
     pathname: '1600mw',
 };
 
@@ -68,6 +65,4 @@ export const cncToolHeadOriginal: ToolHead = {
     metadata: {
         headType: ToolHeadType.CNC,
     },
-
-    value: STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
 };

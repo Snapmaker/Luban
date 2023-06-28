@@ -1,7 +1,8 @@
-import type { Machine, MachineModule, MachineToolHeadOptions, ToolHead } from '@snapmaker/luban-platform';
+import type { Machine, MachineModule, MachineToolHeadOptions, ToolHead, ToolHeadType } from '@snapmaker/luban-platform';
 
 import i18n from '../lib/i18n';
 import {
+    SnapamkerRayMachine,
     SnapmakerA150Machine,
     SnapmakerA250Machine,
     SnapmakerA350Machine,
@@ -28,6 +29,7 @@ import {
     printToolHeadOriginal
 } from '../machines/snapmaker-original-toolheads';
 import { quickSwapKitModule } from '../machines/snapmaker-2-modules';
+import { laserModule20W, laserModule40W } from '../machines/snapmaker-ray';
 
 
 export const SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL = 'singleExtruderToolheadForOriginal';
@@ -49,10 +51,6 @@ export const A400_HEADT_BED_FOR_SM2 = 'a400HeatBedForSM2';
 
 export const SNAPMAKER_J1_HEATED_BED = 'SnapmakerJ1:HeatedBed';
 export const SNAPMAKER_J1_LINEAR_MODULE = 'SnapmakerJ1:LinearModule';
-
-// Machine Types
-export const MACHINE_TYPE_3D_PRINTER = '3D Printer';
-export const MACHINE_TYPE_MULTI_FUNCTION_PRINTER = 'Multi-function 3D Printer';
 
 
 export const DEFAULT_MACHINE_ORIGINAL = 'Original';
@@ -85,6 +83,8 @@ export const MACHINE_TOOL_HEADS = {
     [STANDARD_CNC_TOOLHEAD_FOR_SM2]: standardCNCToolHeadSM2,
     [highPower200WCNCToolHeadSM2.identifier]: highPower200WCNCToolHeadSM2,
     [printToolHeadJ1.identifier]: printToolHeadJ1,
+    [laserModule20W.identifier]: laserModule20W,
+    [laserModule40W.identifier]: laserModule40W,
 };
 
 // Module IDs
@@ -133,8 +133,18 @@ export const MODULEID_TOOLHEAD_MAP = {
 };
 
 export function findMachineByName(name: string): Machine | null {
-    for (const key of Object.keys(MACHINE_SERIES)) {
-        const machine = MACHINE_SERIES[key];
+    const availableMachines = [
+        SnapmakerOriginalMachine,
+        SnapmakerOriginalExtendedMachine,
+        SnapmakerA150Machine,
+        SnapmakerA250Machine,
+        SnapmakerA350Machine,
+        SnapmakerArtisanMachine,
+        SnapmakerJ1Machine,
+        SnapamkerRayMachine,
+    ];
+
+    for (const machine of availableMachines) {
         if (machine.identifier === name) {
             return machine;
         }
@@ -149,8 +159,9 @@ function getMachineList() {
         MACHINE_SERIES.A150.identifier,
         MACHINE_SERIES.A250.identifier,
         MACHINE_SERIES.A350.identifier,
-        MACHINE_SERIES.A400.identifier,
-        MACHINE_SERIES.J1.identifier,
+        SnapmakerArtisanMachine.identifier,
+        SnapmakerJ1Machine.identifier,
+        SnapamkerRayMachine.identifier,
     ];
 
     const machines = [];
@@ -163,8 +174,13 @@ function getMachineList() {
     return machines;
 }
 
+type MachineOption = {
+    value: string;
+    label: string;
+    machine: Machine;
+}
 
-export function getMachineOptions() {
+export function getMachineOptions(): MachineOption[] {
     const machines = getMachineList();
 
     const options = [];
@@ -190,23 +206,21 @@ export function findToolHead(identifier: string): ToolHead | null {
     return null;
 }
 
-export function getMachineSupportedTools(machineSeries: string, headType = undefined): ToolHead[] {
-    const machine: Machine | null = findMachineByName(machineSeries);
+export function getMachineSupportedTools(machineIdentifier: string, headType: ToolHeadType | null = null): ToolHead[] {
+    const machine: Machine | null = findMachineByName(machineIdentifier);
     if (!machine) {
         return [];
     }
 
     const toolHeads: ToolHead[] = [];
     for (const toolHeadOptions of machine.metadata.toolHeads) {
-        for (const key of Object.keys(MACHINE_TOOL_HEADS)) {
-            const toolHead = MACHINE_TOOL_HEADS[key];
-            if (headType && toolHead.metadata?.headType !== headType) {
+        const tool = findToolHead(toolHeadOptions.identifier);
+        if (tool) {
+            if (headType && tool.metadata?.headType !== headType) {
                 continue;
             }
-            if (toolHead.identifier === toolHeadOptions.identifier) {
-                toolHeads.push(toolHead);
-                break;
-            }
+
+            toolHeads.push(tool);
         }
     }
 
@@ -219,13 +233,13 @@ declare interface ToolOption {
     tool: ToolHead;
 }
 
-export function getMachineSupportedToolOptions(machineSeries, headType = undefined): ToolOption[] {
+export function getMachineSupportedToolOptions(machineSeries: string, headType = undefined): ToolOption[] {
     const toolHeads = getMachineSupportedTools(machineSeries, headType);
 
     const options = [];
     for (const toolHead of toolHeads) {
         const option = {
-            value: toolHead.value,
+            value: toolHead.identifier,
             label: i18n._(toolHead.label),
             tool: toolHead,
         };

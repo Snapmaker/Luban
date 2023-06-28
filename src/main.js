@@ -291,7 +291,7 @@ const startToBegin = (data) => {
         // TODO: move to server
         DataStorage.init();
     } catch (err) {
-        console.error('Error: ', err);
+        console.error(`Initialize data storage error: ${err}`);
     }
 };
 
