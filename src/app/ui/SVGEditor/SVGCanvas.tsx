@@ -986,6 +986,7 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
                     if (dx === 0 && dy === 0) {
                         break;
                     }
+                    console.log(x, y);
                     this.svgContentGroup.drawGroup.onMouseMove(event, [x, y], [dx, dy]);
                 }
                 // TODO select with drawing box

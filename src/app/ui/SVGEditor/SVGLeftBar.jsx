@@ -9,6 +9,7 @@ import styles from './styles.styl';
 import { library } from './lib/ext-shapes';
 import i18n from '../../lib/i18n';
 import Anchor from '../components/Anchor';
+import { PROCESS_MODE_GREYSCALE, PROCESS_MODE_VECTOR } from '../../constants';
 
 const SVGLeftBar = forwardRef((props, ref) => {
     const selectedModelArray = useSelector(state => state[props.headType]?.modelGroup?.selectedModelArray);
@@ -80,8 +81,8 @@ const SVGLeftBar = forwardRef((props, ref) => {
         onClip(type = 'clip') {
             console.log('selectedModelArray', selectedModelArray);
             console.log(type);
-            const svg = selectedModelArray.filter(v => v.sourceType === 'svg');
-            const imgs = selectedModelArray.filter(v => v.sourceType !== 'svg');
+            const svg = selectedModelArray.filter(v => v.sourceType === 'svg' && v.mode === PROCESS_MODE_VECTOR);
+            const imgs = selectedModelArray.filter(v => v.sourceType !== 'svg' || v.mode === PROCESS_MODE_GREYSCALE);
             console.log(imgs, svg);
             if (type === 'clip') {
                 props.onClipper(imgs, svg);

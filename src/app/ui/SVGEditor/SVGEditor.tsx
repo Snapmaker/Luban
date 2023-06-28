@@ -2,15 +2,21 @@ import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } f
 import PropTypes from 'prop-types';
 import { v4 as uuid } from 'uuid';
 
+// import Canvg from 'canvg';
+import { useDispatch, useSelector } from 'react-redux';
 import { PREDEFINED_SHORTCUT_ACTIONS, ShortcutHandlerPriority, ShortcutManager } from '../../lib/shortcut';
 import styles from './styles.styl';
 import { SVG_EVENT_CONTEXTMENU } from './constants';
 import SVGCanvas from './SVGCanvas';
 import SVGLeftBar from './SVGLeftBar';
 import { Materials } from '../../constants/coordinate';
-import api from '../../api';
 import { createSVGElement, setAttributes } from './element-utils';
 import canvg from './lib/canvg';
+import { actions as editorActions } from '../../flux/editor';
+import i18n from '../../lib/i18n';
+import modal from '../../lib/modal';
+import { HEAD_LASER, PROCESS_MODE_GREYSCALE } from '../../constants';
+import { flattenNestedGroups } from './lib/FlattenNestedGroups';
 
 
 export type SVGEditorHandle = {
@@ -81,8 +87,10 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
     const leftBarRef = useRef(null);
     const extRef = useRef(props.SVGCanvasExt);
     extRef.current = props.SVGCanvasExt;
+    const dispatch = useDispatch();
 
     const [menuDisabledCount, setMenuDisabledCount] = useState(props.menuDisabledCount);
+    const selectedModelArray = useSelector(state => state[props.headType]?.modelGroup?.selectedModelArray);
     useEffect(() => {
         setMenuDisabledCount(props.menuDisabledCount);
     }, [props.menuDisabledCount]);
@@ -273,7 +281,46 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         props.editorActions.onDrawTransformComplete(...args);
     };
 
+    const parseTransform = (transformAttr) => {
+        const transformValues = [];
+        const regex = /(\w+)\(([^)]+)\)/g;
+        let match = regex.exec(transformAttr);
 
+        while (match !== null) {
+            const transformType = match[1];
+            const transformParams = match[2].split(/[\s,]+/).map(parseFloat);
+
+            transformValues.push({
+                type: transformType,
+                params: transformParams
+            });
+            // next
+            match = regex.exec(transformAttr);
+        }
+
+        return transformValues;
+    };
+    const isShapeSvg = (svg) => {
+        console.log('isShapeSvg', svg, svg.tagName);
+        if (!svg || !svg.tagName) return false;
+        switch (svg.tagName) {
+            case 'rect':
+            case 'circle':
+            case 'line':
+            case 'polyline':
+            case 'polygon':
+            case 'path':
+            case 'text':
+            case 'image':
+            case 'ellipse':
+                // case 'g':
+                // case 'use':
+                // case 'foreignObject':
+                return true;
+            default:
+                return false;
+        }
+    };
     const canvasToImage = async (canvas1) => {
         document.body.appendChild(canvas1);
         const dataUrl = canvas1.toDataURL('image/png');
@@ -319,66 +366,196 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
             });
         });
     };
-    const handleClipPath = async (svgs, imgs, viewboxX, viewboxY, viewWidth, viewHeight) => {
-        // const svgContentGroup = canvas.current.svgContentGroup;
-        // const elem = svgContentGroup.addSVGElement({
-        //     element: 'clipPath',
-        //     curStyles: true,
-        // });
+    const calculateElemsBoundingbox = (elems) => {
+        // calculate viewbox value (boundingbox)
+        const maxminXY = elems.reduce((pre, curr) => {
+            const leftTopX = curr.elem.getAttribute('x') - 0;
+            const leftTopY = curr.elem.getAttribute('y') - 0;
+            const rightBottomX = leftTopX + curr.width;
+            const rightBottomY = leftTopY + curr.height;
+            return {
+                max: {
+                    x: Math.max(pre.max.x, leftTopX, rightBottomX),
+                    y: Math.max(pre.max.y, leftTopY, rightBottomY)
+                },
+                min: {
+                    x: Math.min(pre.min.x, leftTopX, rightBottomX),
+                    y: Math.min(pre.min.y, leftTopY, rightBottomY)
+                }
+            };
+        }, { max: { x: -Infinity, y: -Infinity }, min: { x: Infinity, y: Infinity } });
+        const viewboxX = maxminXY.min.x;
+        const viewboxY = maxminXY.min.y;
+        const viewWidth = maxminXY.max.x - maxminXY.min.x;
+        const viewHeight = maxminXY.max.y - maxminXY.min.y;
+        return { viewboxX, viewboxY, viewWidth, viewHeight };
+    };
+    const rotatePath = (elem, angle) => {
+        if (!isShapeSvg(elem)) return;
+        // Helper function for creating a rotation transformation matrix
+        function createRotationMatrix(cx, cy, radianAngle) {
+            const cos = Math.cos(radianAngle);
+            const sin = Math.sin(radianAngle);
+            const matrix = elem.ownerSVGElement.createSVGMatrix();
+            matrix.a = cos;
+            matrix.b = sin;
+            matrix.c = -sin;
+            matrix.d = cos;
+            matrix.e = (1 - cos) * cx + sin * cy;
+            matrix.f = -sin * cx + (1 - cos) * cy;
+            return matrix;
+        }
+
+        // Get the current transformation matrix of the path element
+        const currentMatrix = elem.transform && elem.transform.baseVal.consolidate().matrix;
+
+        // Calculate the center coordinates of the path element
+        const bbox = elem.getBBox();
+        const centerX = bbox.x + bbox.width / 2;
+        const centerY = bbox.y + bbox.height / 2;
+
+        // Create a rotation transformation matrix
+        const rotationMatrix = createRotationMatrix(centerX, centerY, angle * Math.PI / 180);
+
+        // Multiply the rotation transformation matrix with the current transformation matrix
+        const newMatrix = currentMatrix.multiply(rotationMatrix);
+
+        // Apply the new transformation matrix to the path element's transform attribute
+        elem.transform.baseVal.initialize(elem.ownerSVGElement.createSVGTransformFromMatrix(newMatrix));
+    };
+    const createSvg = (svgString, svg, viewWidth, viewHeight) => {
+        const parser = new DOMParser();
+        const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
+        const svgElement = svgDoc.documentElement;
+        flattenNestedGroups(svgElement);
+        const [originalViewX, originalViewY, originalViewWidth, originalViewHeight] = svgElement.getAttribute('viewBox').split(' ').map(parseFloat);
+        viewWidth = viewWidth || originalViewWidth;
+        viewHeight = viewHeight || originalViewHeight;
+
+        console.log('', new XMLSerializer().serializeToString(svgElement));
+        const attributes = {};
+        const scaleWidth = svg.elem.getAttribute('width') ? svg.elem.getAttribute('width') / originalViewWidth : viewWidth / originalViewWidth;
+        const scaleHeight = svg.elem.getAttribute('width') ? svg.elem.getAttribute('width') / originalViewWidth : viewHeight / originalViewHeight;
+        const x = parseFloat(svg.elem.getAttribute('x'));
+        const y = parseFloat(svg.elem.getAttribute('y'));
+        const svgTransforms = parseTransform(svg.elem.getAttribute('transform'));
+        const svgRotate = svgTransforms.find(attr => attr.type === 'rotate');
+
+        const children = Array.from(svgElement.children);
+        document.body.appendChild(svgElement);
+        const combineTranslate = (translateValue = 0, originalViewBoxValue = 0, svgScaleValue = 1, currXorYValue = 0) => {
+            return (translateValue - originalViewBoxValue) * svgScaleValue + currXorYValue;
+        };
+        for (let i = 0; i < children.length; i++) {
+            const curr = children[i];
+            const transformAttrs = parseTransform(curr.getAttribute('transform'));
+            // TODO: handle have multi same transforms like "translate(10, 10) rotate(45) translate(20, 20)"
+            const translate = transformAttrs.find(attr => attr.type === 'translate');
+            const scale = transformAttrs.find(attr => attr.type === 'scale');
+            const rotate = transformAttrs.find(attr => attr.type === 'rotate');
+            const skewX = transformAttrs.find(attr => attr.type === 'skewX');
+            const skewY = transformAttrs.find(attr => attr.type === 'skewY');
+
+            // caculate tag finally transform
+            const currX = combineTranslate(translate && translate.params[0], originalViewX, scaleWidth, x);
+            const currY = combineTranslate(translate && translate.params[1], originalViewY, scaleHeight, y);
+            const currScaleWidth = scale ? scale.params[0] * scaleWidth : scaleWidth;
+            const currScaleHeight = scale ? scale.params[1] * scaleWidth : scaleHeight;
+            const currRotate = rotate && rotate.params[0] || 0;
+            const currSkewX = skewX && skewX.params[0] || 0;
+            const currSkewY = skewY && skewY.params[0] || 0;
+            attributes.transform = `translate(${currX} ${currY}) scale(${currScaleWidth} ${currScaleHeight}) rotate(${currRotate}) skewX(${currSkewX}) skewY(${currSkewY})`;
+            setAttributes(curr, attributes);
+
+            // apply image(from luban fontend canvas) rotate to tag
+            // Because they are different coordinate systems, the rotate value on the tag cannot be directly added.
+            const rootRotateValue = currScaleWidth > 0 && currScaleHeight > 0 ? (svgRotate.params[0] || 0) : -(svgRotate.params[0] || 0);
+            rotatePath(curr, rootRotateValue);
+        }
+        document.body.removeChild(svgElement);
+        return children;
+    };
+    const getSvgString = async (svg, viewWidth, viewHeight) => {
+        // if (svg.svgPath) return [svg.svgPath];
+        const url = svg.resource.originalFile.path;
+        return fetch(`http://localhost:8080${url}`)
+            .then(async response => response.text())
+            .then(svgString => {
+                console.log('svgString=====================', svgString);
+                return createSvg(svgString, svg, viewWidth, viewHeight);
+            })
+            .catch(error => {
+                // 处理错误
+                console.error('Error:', error);
+            });
+    };
+    const createSvgStr = (wrapperElem, othersElem, imgsSvgModel, viewboxX, viewboxY, viewWidth, viewHeight) => {
+        const wrapperClone = wrapperElem.cloneNode(true);
+        const imgsClones = imgsSvgModel.map(img => img.elem.cloneNode(true));
+        const wrapperSvgContent = new XMLSerializer().serializeToString(wrapperClone);
+        const imgsSvgContent = imgsClones
+            .map(imgsClone => new XMLSerializer().serializeToString(imgsClone))
+            .map((v, index) => v.replace(/href="(.*?)"/, `href="${imgsSvgModel[index].resource.originalFile.path}"`))
+            .reduce((pre, curr) => pre + curr, '');
+        const otherSvgsContent = othersElem.map(el => new XMLSerializer().serializeToString(el)).reduce((pre, curr) => pre + curr, '');
+        const widthRatio = imgsSvgModel[0].sourceWidth / imgsSvgModel[0].width;
+        const heightRatio = imgsSvgModel[0].sourceHeight / imgsSvgModel[0].height;
+        const svgTag = `<svg xmlns="http://www.w3.org/2000/svg" width="${viewWidth * widthRatio}" height="${viewHeight * heightRatio}" viewBox="${viewboxX} ${viewboxY} ${viewWidth} ${viewHeight}">${wrapperSvgContent + imgsSvgContent + otherSvgsContent}</svg>`;
+        return svgTag;
+    };
+    const handleClipPath = async (svgs, imgs) => {
+        const { viewboxX, viewboxY, viewWidth, viewHeight } = calculateElemsBoundingbox(svgs);
         const elem = createSVGElement({
             element: 'clipPath',
             attr: {
                 id: `${uuid()}`
             }
         });
+        const othersElem = [];
         console.log(elem);
-        svgs.forEach(svg => elem.append(svg.svgPath));
-        imgs.forEach(img => img.elem.setAttribute('clip-path', `url(#${elem.id})`));
+        // svgs.forEach(svg => elem.append(svg.svgPath));
+        for (let i = 0; i < svgs.length; i++) {
+            const svgShapeTags = await getSvgString(svgs[i], viewWidth, viewHeight);
+            svgShapeTags.forEach(svgShapeTag => {
+                !svgShapeTag.hasAttribute('fill') && svgShapeTag.setAttribute('fill', 'black');
+                !svgShapeTag.hasAttribute('fill-opacity') && svgShapeTag.setAttribute('fill-opacity', '0');
+                if (isShapeSvg(svgShapeTag)) {
+                    elem.append(svgShapeTag);
+                } else {
+                    othersElem.push(svgShapeTag);
+                }
+            });
+            // elem.append(...svgShapeTags);
+        }
+        imgs.forEach(img => {
+            img.elem.removeAttribute('mask');
+            img.elem.setAttribute('clip-path', `url(#${elem.id})`);
+        });
         // create new Image
-        const clipPathClone = elem.cloneNode(true);
-        const imgsClones = imgs.map(img => img.elem.cloneNode(true));
-        const clipPathSvgContent = new XMLSerializer().serializeToString(clipPathClone);
-        const imgsSvgContent = imgsClones
-            .map(imgsClone => new XMLSerializer().serializeToString(imgsClone))
-            .map((v, index) => v.replace(/href="(.*?)"/, `href="${imgs[index].resource.originalFile.path}"`))
-            .reduce((pre, curr) => pre + curr, '');
+        const svgTag = createSvgStr(elem, othersElem, imgs, viewboxX, viewboxY, viewWidth, viewHeight);
 
-        const widthRatio = imgs[0].sourceWidth / imgs[0].width;
-        const heightRatio = imgs[0].sourceHeight / imgs[0].height;
-        const svgTag = `<svg xmlns="http://www.w3.org/2000/svg" width="${viewWidth * widthRatio}" height="${viewHeight * heightRatio}" viewBox="${viewboxX} ${viewboxY} ${viewWidth} ${viewHeight}">${clipPathSvgContent + imgsSvgContent}</svg>`;
-        const canvas1 = await svgToCanvas(svgTag, viewWidth, viewHeight);
-        const img = await canvasToImage(canvas1);
-        props.onChangeFile({ target: { files: [img] } });
-        // console.log(svgTag);
-        // const canvas1 = document.createElement('canvas');
-        // canvas1.style.width = `${viewWidth}px`;
-        // canvas1.style.height = `${viewHeight}px`;
-        // canvas1.id = 'test';
-        // const ctx1 = canvas1.getContext('2d');
-        // canvas1.style.backgroundColor = 'transparent';
-        // ctx1.fillStyle = 'transparent';
-        // const v = Canvg.fromString(ctx1, svgTag);
-        // await v.render();
-        // document.body.appendChild(canvas1);
-        // const dataUrl = canvas1.toDataURL('image/png');
-        // const p = fetch(dataUrl).then(response => response.blob());
-        // const b = await p; // (canvas1);
-        // const f = new File([b], 'test.png');
-        // props.onChangeFile({ target: { files: [f] } });
-        // const downloadImage = (data) => {
-        //     const link = document.createElement('a');
-        //     link.download = 'canvas_image.png';
-        //     link.href = URL.createObjectURL(data);
-        //     link.click();
-        //     URL.revokeObjectURL(link.href);
-        // };
-        // downloadImage(b);
-        // console.log(f);
+        // const canvas1 = await svgToCanvas(svgTag, viewWidth, viewHeight);
+        // const img = await canvasToImage(canvas1);
+        // await props.onChangeFile({ target: { files: [img] } });
+        console.log(selectedModelArray);
 
+
+        const mode = PROCESS_MODE_GREYSCALE;
+        const blob = new Blob([svgTag], { type: 'image/svg+xml' });
+        const file = new File([blob], `${elem.id}.svg`);
+        dispatch(editorActions.uploadImage(HEAD_LASER, file, mode, () => {
+            modal({
+                cancelTitle: i18n._('key-Laser/Page-Close'),
+                title: i18n._('key-Laser/Page-Import Error'),
+                body: i18n._('Failed to import this object. \nPlease select a supported file format.')
+            });
+        }));
         return svgTag;
     };
     const handleMask = async (svgs, imgs) => {
-        // const svgContentGroup = canvas.current.svgContentGroup;
+        const { viewboxX, viewboxY, viewWidth, viewHeight } = calculateElemsBoundingbox(imgs);
+
+        // create svg
         const maskElem = createSVGElement({
             element: 'mask',
             attr: {
@@ -394,87 +571,63 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
                 'fill-opacity': 1,
             }
         });
+        const othersElem = [];
+        setAttributes(rect, { 'x': viewboxX, 'y': viewboxY });
         maskElem.append(rect);
-        svgs.forEach(svg => {
-            const svgShapeTag = svg.svgPath || svg.elem;
-            svgShapeTag.setAttribute('fill', 'black');
-            svgShapeTag.setAttribute('fill-opacity', '1');
-            maskElem.append(svgShapeTag);
-        });
-        imgs.forEach(img => img.elem.setAttribute('mask', `url(#${maskElem.id})`));
-        const maxminXY = imgs.reduce((pre, curr) => {
-            const leftTopX = curr.elem.getAttribute('x') - 0;
-            const leftTopY = curr.elem.getAttribute('y') - 0;
-            const rightBottomX = leftTopX + curr.width;
-            const rightBottomY = leftTopY + curr.height;
-            return {
-                max: {
-                    x: Math.max(pre.max.x, leftTopX, rightBottomX),
-                    y: Math.max(pre.max.y, leftTopY, rightBottomY)
-                },
-                min: {
-                    x: Math.min(pre.min.x, leftTopX, rightBottomX),
-                    y: Math.min(pre.min.y, leftTopY, rightBottomY)
+        for (let i = 0; i < svgs.length; i++) {
+            const svgShapeTags = await getSvgString(svgs[i], viewWidth, viewHeight);
+            console.log('svgShapeTags', svgShapeTags);
+            svgShapeTags.forEach(svgShapeTag => {
+                console.log('svgShapeTag', svgShapeTag);
+                // !svgShapeTag.hasAttribute('fill') &&
+                svgShapeTag.setAttribute('fill', 'black');
+                !svgShapeTag.hasAttribute('fill-opacity') && svgShapeTag.setAttribute('fill-opacity', '1');
+                if (isShapeSvg(svgShapeTag)) {
+                    maskElem.append(svgShapeTag);
+                } else {
+                    othersElem.push(svgShapeTag);
                 }
-            };
-        }, { max: { x: -Infinity, y: -Infinity }, min: { x: Infinity, y: Infinity } });
-        setAttributes(rect, { 'x': maxminXY.min.x, 'y': maxminXY.min.y });
-        const viewboxX = maxminXY.min.x;
-        const viewboxY = maxminXY.min.y;
-        const viewWidth = maxminXY.max.x - maxminXY.min.x;
-        const viewHeight = maxminXY.max.y - maxminXY.min.y;
-        const maskClone = maskElem.cloneNode(true);
-        const imgsClones = imgs.map(img => img.elem.cloneNode(true));
-        const maskSvgContent = new XMLSerializer().serializeToString(maskClone);
-        const imgsSvgContent = imgsClones
-            .map(imgsClone => new XMLSerializer().serializeToString(imgsClone))
-            .map((v, index) => v.replace(/href="(.*?)"/, `href="${imgs[index].resource.originalFile.path}"`))
-            .reduce((pre, curr) => pre + curr, '');
+            });
+        }
+        imgs.forEach(img => {
+            img.elem.removeAttribute('clip-path');
+            img.elem.setAttribute('mask', `url(#${maskElem.id})`);
+        });
 
+        const svgTag = createSvgStr(maskElem, othersElem, imgs, viewboxX, viewboxY, viewWidth, viewHeight);
+        // const canvas1 = await svgToCanvas(svgTag, viewWidth, viewHeight);
+        // const img = await canvasToImage(canvas1);
+        // props.onChangeFile({ target: { files: [img] } });
+        console.log(canvasToImage, svgToCanvas);
 
-        const widthRatio = imgs[0].sourceWidth / imgs[0].width;
-        const heightRatio = imgs[0].sourceHeight / imgs[0].height;
-        const svgTag = `<svg xmlns="http://www.w3.org/2000/svg" width="${viewWidth * widthRatio}" height="${viewHeight * heightRatio}" viewBox="${viewboxX} ${viewboxY} ${viewWidth} ${viewHeight}">${maskSvgContent + imgsSvgContent}</svg>`;
-        const canvas1 = await svgToCanvas(svgTag, viewWidth, viewHeight);
-        const img = await canvasToImage(canvas1);
-        props.onChangeFile({ target: { files: [img] } });
+        const mode = PROCESS_MODE_GREYSCALE;
+        const blob = new Blob([svgTag], { type: 'image/svg+xml' });
+        const file = new File([blob], `${maskElem.id}.svg`);
+        dispatch(editorActions.uploadImage(HEAD_LASER, file, mode, () => {
+            modal({
+                cancelTitle: i18n._('key-Laser/Page-Close'),
+                title: i18n._('key-Laser/Page-Import Error'),
+                body: i18n._('Failed to import this object. \nPlease select a supported file format.')
+            });
+        }));
         return svgTag;
     };
+    const handleProcessedMask = async (imgs, svgs) => {
+        const { viewboxX, viewboxY, viewWidth, viewHeight } = calculateElemsBoundingbox(imgs);
+        console.log(viewboxX, viewboxY, viewWidth, viewHeight, svgs);
+        // TODO: handleProcessedMask
+    };
     const onClipper = async (imgs, svgs) => {
-        console.log(svgs);
-        const maxminXY = svgs.reduce((pre, curr) => {
-            const leftTopX = curr.elem.getAttribute('x') - 0;
-            const leftTopY = curr.elem.getAttribute('y') - 0;
-            const rightBottomX = leftTopX + curr.width;
-            const rightBottomY = leftTopY + curr.height;
-            return {
-                max: {
-                    x: Math.max(pre.max.x, leftTopX, rightBottomX),
-                    y: Math.max(pre.max.y, leftTopY, rightBottomY)
-                },
-                min: {
-                    x: Math.min(pre.min.x, leftTopX, rightBottomX),
-                    y: Math.min(pre.min.y, leftTopY, rightBottomY)
-                }
-            };
-        }, { max: { x: -Infinity, y: -Infinity }, min: { x: Infinity, y: Infinity } });
-        const viewboxX = maxminXY.min.x;
-        const viewboxY = maxminXY.min.y;
-        const viewWidth = maxminXY.max.x - maxminXY.min.x;
-        const viewHeight = maxminXY.max.y - maxminXY.min.y;
-
-        const clipSvgTag = await handleClipPath(svgs, imgs, viewboxX, viewboxY, viewWidth, viewHeight);
+        const clipSvgTag = await handleClipPath(svgs, imgs);
         console.log(clipSvgTag);
-
-        const blob = new Blob([clipSvgTag], { type: 'image/svg+xml' });
-        const file = new File([blob], `${'modelID'}.svg`);
-        const formData = new FormData();
-        formData.append('image', file);
-        const res = await api.uploadImage(formData);
-        console.log(res);
     };
     const onClipperSvg = async (imgs, svgs) => {
-        const maskSvgTag = await handleMask(svgs, imgs);
+        let maskSvgTag;
+        if (imgs.some(img => img.sourceType === 'svg' && img.mode === PROCESS_MODE_GREYSCALE)) {
+            maskSvgTag = await handleProcessedMask(svgs, imgs);
+        } else {
+            maskSvgTag = await handleMask(svgs, imgs);
+        }
         console.log('maskSvgTag', maskSvgTag);
     };
 
