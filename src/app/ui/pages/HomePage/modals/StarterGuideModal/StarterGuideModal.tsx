@@ -1,3 +1,5 @@
+import type { Machine } from '@snapmaker/luban-platform';
+import { MachineType } from '@snapmaker/luban-platform';
 import { Checkbox } from 'antd';
 import type { CheckboxValueType } from 'antd/es/checkbox/Group';
 import classNames from 'classnames';
@@ -13,57 +15,22 @@ import {
     HEAD_PRINTING,
     LEVEL_ONE_POWER_LASER_FOR_SM2,
     MACHINE_TOOL_HEADS,
-    MACHINE_TYPE_MULTI_FUNCTION_PRINTER,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     STANDARD_CNC_TOOLHEAD_FOR_SM2,
     findMachineModule,
     getMachineOptions,
     getMachineSupportedToolOptions,
-} from '../../../constants/machines';
-import { actions as machineActions } from '../../../flux/machine';
-import i18n from '../../../lib/i18n';
-import { machineStore } from '../../../store/local-storage';
-import { Button } from '../../components/Buttons';
-import Modal from '../../components/Modal';
-import Select from '../../components/Select';
-import SvgIcon from '../../components/SvgIcon';
+} from '../../../../../constants/machines';
+import { actions as machineActions } from '../../../../../flux/machine';
+import i18n from '../../../../../lib/i18n';
+import { machineStore } from '../../../../../store/local-storage';
+import { Button } from '../../../../components/Buttons';
+import Modal from '../../../../components/Modal';
+import Select from '../../../../components/Select';
+import SvgIcon from '../../../../components/SvgIcon';
+import { languageOptions, languages } from './constants';
 import styles from './styles.styl';
 
-
-// TODO: Refactor this.
-const languageOptions = [
-    {
-        value: 'de',
-        label: 'Deutsch'
-    }, {
-        value: 'en',
-        label: 'English'
-    }, {
-        value: 'es',
-        label: 'Español'
-    }, {
-        value: 'fr',
-        label: 'Français'
-    }, {
-        value: 'it',
-        label: 'Italiano'
-    }, {
-        value: 'ru',
-        label: 'Русский'
-    }, {
-        value: 'uk',
-        label: 'Українська'
-    }, {
-        value: 'ko',
-        label: '한국어'
-    }, {
-        value: 'ja',
-        label: '日本語'
-    }, {
-        value: 'zh-CN',
-        label: '中文 (简体)'
-    }
-];
 
 interface StarterGuideLanguageStepProps {
     lang: string;
@@ -106,32 +73,46 @@ const StarterGuideLanguageStep: React.FC<StarterGuideLanguageStepProps> = (props
     );
 };
 
+type StarterGuideStepType = 'lang' | 'machine'
+
 interface StarterGuideModalProps {
     handleModalShow: (show: boolean) => void;
     initLanguage: string;
 }
 
-type StarterGuideStepType = 'lang' | 'machine'
-
+/**
+ * Starter guide modal.
+ *
+ * 1. Select language
+ * 2. Select machine & tool
+ */
 const StarterGuideModal: React.FC<StarterGuideModalProps> = (props) => {
     // step controls which setting view to be shown
     const [settingStep, setSettingStep] = useState<StarterGuideStepType>('lang');
 
     // language
-    const languageArr = ['de', 'en', 'es', 'fr', 'it', 'ru', 'uk', 'ko', 'ja', 'zh-CN'];
-    const [lang, setLang] = useState(includes(languageArr, i18next.language) ? i18next.language : 'en');
+    const [lang, setLang] = useState('en');
+
+    useEffect(() => {
+        if (includes(languages, i18next.language)) {
+            setLang(i18next.language);
+        } else {
+            setLang('en');
+        }
+    }, []);
 
     // machine options
     const machineOptions = useMemo(() => getMachineOptions(), []);
     const [machineIndex, setMachineIndex] = useState(0);
-    const [machine, setMachine] = useState(null);
     const [modules, setModules] = useState([]);
 
-    useEffect(() => {
+    // temperary machine selected
+    const machine = useMemo<Machine | null>(() => {
         const machineOption = machineOptions[machineIndex];
-
         if (machineOption) {
-            setMachine(machineOption.machine);
+            return machineOption.machine;
+        } else {
+            return null;
         }
     }, [machineOptions, machineIndex]);
 
@@ -144,6 +125,10 @@ const StarterGuideModal: React.FC<StarterGuideModalProps> = (props) => {
             setMachineIndex(newMachineIndex);
         }
     }, [machineOptions, machineIndex]);
+
+    const isMultiFunctionMachine = machine && machine.machineType === MachineType.MultiFuncionPrinter;
+    const is3DPrinter = machine && machine.machineType === MachineType.Printer;
+    const isLaserMachine = machine && machine.machineType === MachineType.Laser;
 
 
     // machine tools
@@ -292,7 +277,7 @@ const StarterGuideModal: React.FC<StarterGuideModalProps> = (props) => {
     const machineSize = machine?.metadata.size;
 
     return (
-        <Modal size="sm" onClose={handleCancel} className={styles.settingModal}>
+        <Modal size="sm" onClose={handleCancel} className={styles['setting-modal']}>
             <Modal.Header>
                 {i18n._('key-HomePage/Begin-Configuration Wizard')}
             </Modal.Header>
@@ -347,23 +332,27 @@ const StarterGuideModal: React.FC<StarterGuideModalProps> = (props) => {
                                 </div>
                                 <div className={classNames(styles['machine-info'], 'margin-left-16')}>
                                     <div className={styles['head-detail']}>
-                                        <div className={classNames(styles['tool-select'], 'margin-bottom-16')}>
-                                            <span className="main-text-normal margin-right-16">{i18n._('key-App/Settings/MachineSettings-3D Print Toolhead')}</span>
-                                            <Select
-                                                value={printingToolHeadSelected}
-                                                options={printingToolHeadOptions.map(item => {
-                                                    return {
-                                                        value: item.value,
-                                                        label: i18n._(item.label)
-                                                    };
-                                                })}
-                                                onChange={e => handleToolheadChange(e, 'printing')}
-                                                size="large"
-                                                disabled={printingToolHeadOptions.length <= 1}
-                                            />
-                                        </div>
                                         {
-                                            machine.machineType === MACHINE_TYPE_MULTI_FUNCTION_PRINTER && (
+                                            (is3DPrinter || isMultiFunctionMachine) && (
+                                                <div className={classNames(styles['tool-select'], 'margin-bottom-16')}>
+                                                    <span className="main-text-normal margin-right-16">{i18n._('key-App/Settings/MachineSettings-3D Print Toolhead')}</span>
+                                                    <Select
+                                                        value={printingToolHeadSelected}
+                                                        options={printingToolHeadOptions.map(item => {
+                                                            return {
+                                                                value: item.value,
+                                                                label: i18n._(item.label)
+                                                            };
+                                                        })}
+                                                        onChange={e => handleToolheadChange(e, 'printing')}
+                                                        size="large"
+                                                        disabled={printingToolHeadOptions.length <= 1}
+                                                    />
+                                                </div>
+                                            )
+                                        }
+                                        {
+                                            (isLaserMachine || isMultiFunctionMachine) && (
                                                 <div className={classNames(styles['tool-select'], 'margin-bottom-16')}>
                                                     <span className="main-text-normal margin-right-16">{i18n._('key-App/Settings/MachineSettings-Laser Toolhead')}</span>
                                                     <Select
@@ -383,7 +372,7 @@ const StarterGuideModal: React.FC<StarterGuideModalProps> = (props) => {
                                             )
                                         }
                                         {
-                                            machine.machineType === MACHINE_TYPE_MULTI_FUNCTION_PRINTER && (
+                                            isMultiFunctionMachine && (
                                                 <div className={classNames(styles['tool-select'], 'margin-bottom-16')}>
                                                     <span className="main-text-normal margin-right-16">{i18n._('key-App/Settings/MachineSettings-CNC Toolhead')}</span>
                                                     <Select

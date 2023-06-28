@@ -52,11 +52,6 @@ export const A400_HEADT_BED_FOR_SM2 = 'a400HeatBedForSM2';
 export const SNAPMAKER_J1_HEATED_BED = 'SnapmakerJ1:HeatedBed';
 export const SNAPMAKER_J1_LINEAR_MODULE = 'SnapmakerJ1:LinearModule';
 
-// Machine Types
-export const MACHINE_TYPE_3D_PRINTER = '3D Printer';
-export const MACHINE_TYPE_LASER = 'Laser';
-export const MACHINE_TYPE_MULTI_FUNCTION_PRINTER = 'Multi-function 3D Printer';
-
 
 export const DEFAULT_MACHINE_ORIGINAL = 'Original';
 export const DEFAULT_MACHINE_ORIGINAL_LONG_Z_AXIS = 'Original Long Z-axis';
@@ -179,8 +174,13 @@ function getMachineList() {
     return machines;
 }
 
+type MachineOption = {
+    value: string;
+    label: string;
+    machine: Machine;
+}
 
-export function getMachineOptions() {
+export function getMachineOptions(): MachineOption[] {
     const machines = getMachineList();
 
     const options = [];
@@ -239,7 +239,7 @@ export function getMachineSupportedToolOptions(machineSeries: string, headType =
     const options = [];
     for (const toolHead of toolHeads) {
         const option = {
-            value: toolHead.value,
+            value: toolHead.identifier,
             label: i18n._(toolHead.label),
             tool: toolHead,
         };

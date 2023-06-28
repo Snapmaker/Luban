@@ -9,10 +9,10 @@ import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
 import MainToolBar from '../../layouts/MainToolBar';
 import { logPageView, useRenderRecoveryModal } from '../../utils';
-import StartProject from './StartProject';
 import CaseLibrary from './CaseLibrary';
 import MoreInfo from './MoreInfo';
-import StarterGuideModal from './StarterGuideModal';
+import StartProject from './StartProject';
+import StarterGuideModal from './modals/StarterGuideModal';
 import styles from './styles.styl';
 
 

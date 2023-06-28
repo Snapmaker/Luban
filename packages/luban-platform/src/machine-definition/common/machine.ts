@@ -44,7 +44,7 @@ export declare type MachineMetadata = {
 
     toolHeads: MachineToolHeadOptions[];
 
-    modules?: MachineModuleOptions[],
+    modules?: MachineModuleOptions[];
 
     printModes?: MachinePrintMode[];
 
@@ -54,7 +54,10 @@ export declare type MachineMetadata = {
 
 export declare type LaserMachineMetadata = {
     size: { x: number; y: number; z: number };
+
     toolHeads: MachineToolHeadOptions[];
+
+    modules?: MachineModuleOptions[];
 }
 
 

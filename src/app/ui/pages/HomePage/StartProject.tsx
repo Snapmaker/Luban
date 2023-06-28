@@ -1,26 +1,24 @@
-import React, { useMemo, useState } from 'react';
-import classNames from 'classnames';
-import { useHistory, useLocation } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { cloneDeep, reverse, slice } from 'lodash';
 import { Machine, MachineType } from '@snapmaker/luban-platform';
+import classNames from 'classnames';
+import { cloneDeep, reverse, slice } from 'lodash';
+import React, { useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useHistory, useLocation } from 'react-router-dom';
 
-import { renderPopup } from '../../utils';
-import { Button } from '../../components/Buttons';
-import Anchor from '../../components/Anchor';
-import styles from './styles.styl';
-import i18n from '../../../lib/i18n';
-import { actions as projectActions } from '../../../flux/project';
-import Workspace from '../Workspace';
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, MAX_RECENT_FILES_LENGTH } from '../../../constants';
-import { MACHINE_TYPE_MULTI_FUNCTION_PRINTER } from '../../../constants/machines';
-import UniApi from '../../../lib/uni-api';
-
-import print3DEntryIcon from './images/icon_3d_120x120.svg';
-import laserEntryIcon from './images/icon_laser_120x120.svg';
-import cncEntryIcon from './images/icon_cnc_120x120.svg';
-import workspaceEntryIcon from './images/icon_workspace_120x120.svg';
 import { RootState } from '../../../flux/index.def';
+import { actions as projectActions } from '../../../flux/project';
+import i18n from '../../../lib/i18n';
+import UniApi from '../../../lib/uni-api';
+import Anchor from '../../components/Anchor';
+import { Button } from '../../components/Buttons';
+import { renderPopup } from '../../utils';
+import Workspace from '../Workspace';
+import print3DEntryIcon from './images/icon_3d_120x120.svg';
+import cncEntryIcon from './images/icon_cnc_120x120.svg';
+import laserEntryIcon from './images/icon_laser_120x120.svg';
+import workspaceEntryIcon from './images/icon_workspace_120x120.svg';
+import styles from './styles.styl';
 
 
 const StartProject: React.FC = () => {
@@ -68,7 +66,7 @@ const StartProject: React.FC = () => {
         UniApi.Event.emit('appbar-menu:new-file', { headType, isRotate });
     };
 
-    const isMultiFunctionMachine = activeMachine && activeMachine.machineType === MACHINE_TYPE_MULTI_FUNCTION_PRINTER;
+    const isMultiFunctionMachine = activeMachine && activeMachine.machineType === MachineType.MultiFuncionPrinter;
     const is3DPrinter = activeMachine && activeMachine.machineType === MachineType.Printer;
     const isLaserMachine = activeMachine && activeMachine.machineType === MachineType.Laser;
 
