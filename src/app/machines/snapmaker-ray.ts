@@ -4,7 +4,7 @@ export const laserModule20W: ToolHead = {
     identifier: '20W Laser Module',
 
     label: '20W',
-    image: '/resources/images/machine/snapmaker_j1_dual_extruders.png',
+    image: '/resources/images/machine/coming_soon.png',
 
     metadata: {
         headType: ToolHeadType.Laser,
@@ -17,7 +17,7 @@ export const laserModule40W: ToolHead = {
     identifier: '40W Laser Module',
 
     label: '40W',
-    image: '/resources/images/machine/snapmaker_j1_dual_extruders.png',
+    image: '/resources/images/machine/coming_soon.png',
 
     metadata: {
         headType: ToolHeadType.Laser,
@@ -33,10 +33,10 @@ export const machine: Machine = {
     fullName: 'Snapmaker Ray',
     machineType: MachineType.Laser,
 
-    img: '/resources/images/machine/size-2.0-A350.jpg',
+    img: '/resources/images/machine/coming_soon.png',
 
     metadata: {
-        size: { x: 200, y: 200, z: 10 },
+        size: { x: 400, y: 600, z: 30 },
 
         toolHeads: [
             {
