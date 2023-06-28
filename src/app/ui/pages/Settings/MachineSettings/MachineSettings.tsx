@@ -1,7 +1,7 @@
 import { Checkbox } from 'antd';
 import type { CheckboxValueType } from 'antd/es/checkbox/Group';
 import classNames from 'classnames';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import {
@@ -45,7 +45,11 @@ const MachineSettings: React.FC = () => {
     });
 
     // machine options
-    const machineOptions = getMachineOptions();
+    const machineOptions = useMemo(() => getMachineOptions(), []);
+
+    const machine = useMemo(() => {
+        return findMachineByName(state.series);
+    }, [state.series]);
 
     // tool head options
     const [printingToolHeadOptions, setPrintingToolHeadOptions] = useState([]);
@@ -93,8 +97,6 @@ const MachineSettings: React.FC = () => {
     const [machineModuleOptions, setMachineModuleOptions] = useState([]);
 
     useEffect(() => {
-        const machine = findMachineByName(state.series);
-
         if (machine && machine.metadata?.modules) {
             const options = [];
 
@@ -111,7 +113,7 @@ const MachineSettings: React.FC = () => {
 
             setMachineModuleOptions(options);
         }
-    }, [state.series]);
+    }, [machine]);
 
     const onCheckMachineModule = useCallback((checkedValues: CheckboxValueType[]) => {
         setState((previousState) => {
@@ -124,12 +126,11 @@ const MachineSettings: React.FC = () => {
     const actions = {
         // Machine Model
         onChangeMachineSeries: (option) => {
-            const machine = option.machine;
             setState({
                 ...state,
                 series: option.value,
                 // size for display, and on save/cancel it is also used for work volume construct
-                size: machine.metadata.size,
+                size: option.machine.metadata.size,
             });
         },
         // Enclosure
