@@ -7,6 +7,7 @@
  * https://github.com/canvg/canvg
  *
  */
+
 import "./rgbcolor.min.js";
 import "./stackblur.min.js";
 const canvgv2 = { RGBColor, StackBlur, canvgv2: {} };
@@ -3664,9 +3665,9 @@ const canvgv2 = { RGBColor, StackBlur, canvgv2: {} };
                         //
                         // ctx.beginPath();
                         // if (i % 2)
-                        // 	ctx.strokeStyle = 'red';
+                        //   ctx.strokeStyle = 'red';
                         // else
-                        // 	ctx.strokeStyle = 'green';
+                        //   ctx.strokeStyle = 'green';
                         // ctx.moveTo(p0.x, p0.y);
                         // ctx.lineTo(p1.x, p1.y);
                         // ctx.stroke();
@@ -4800,7 +4801,7 @@ const canvgv2 = { RGBColor, StackBlur, canvgv2: {} };
                                 this.img.complete === undefined ||
                                 this.img.complete
                             ) {
-                                setTimeout(() => ctx.drawImage(this.img, 0, 0));
+                                ctx.drawImage(this.img, 0, 0);
                             }
                         }
                     }
@@ -5472,6 +5473,7 @@ const canvgv2 = { RGBColor, StackBlur, canvgv2: {} };
 
             svg.loadXmlDoc = function (ctx, dom) {
                 svg.init(ctx);
+
                 var mapXY = function (p) {
                     var e = ctx.canvas;
                     while (e) {

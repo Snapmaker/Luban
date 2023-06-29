@@ -12,9 +12,9 @@ import SVGLeftBar from './SVGLeftBar';
 import { Materials } from '../../constants/coordinate';
 import { createSVGElement, setAttributes } from './element-utils';
 import canvg from './lib/canvg';
-import { actions as editorActions } from '../../flux/editor';
-import i18n from '../../lib/i18n';
-import modal from '../../lib/modal';
+// import { actions as editorActions } from '../../flux/editor';
+// import i18n from '../../lib/i18n';
+// import modal from '../../lib/modal';
 import { HEAD_LASER, PROCESS_MODE_GREYSCALE } from '../../constants';
 import { flattenNestedGroups } from './lib/FlattenNestedGroups';
 
@@ -369,20 +369,50 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
     const calculateElemsBoundingbox = (elems) => {
         // calculate viewbox value (boundingbox)
         const maxminXY = elems.reduce((pre, curr) => {
-            const leftTopX = curr.elem.getAttribute('x') - 0;
-            const leftTopY = curr.elem.getAttribute('y') - 0;
-            const rightBottomX = leftTopX + curr.width;
-            const rightBottomY = leftTopY + curr.height;
+            const rotationAngleRad = curr.angle * (Math.PI / 180) || 0;
+            const bbox = curr.elem.getBBox();
+            const centerX = bbox.x + bbox.width / 2;
+            const centerY = bbox.y + bbox.height / 2;
+
+            // 计算旋转后的四个顶点坐标
+            const topLeftX = centerX + (bbox.x - centerX) * Math.cos(rotationAngleRad) - (bbox.y - centerY) * Math.sin(rotationAngleRad);
+            const topLeftY = centerY + (bbox.x - centerX) * Math.sin(rotationAngleRad) + (bbox.y - centerY) * Math.cos(rotationAngleRad);
+            console.log(centerX, (bbox.x - centerX), Math.cos(rotationAngleRad), (bbox.y - centerY), Math.sin(rotationAngleRad));
+            const topRightX = centerX + (bbox.x + bbox.width - centerX) * Math.cos(rotationAngleRad) - (bbox.y - centerY) * Math.sin(rotationAngleRad);
+            const topRightY = centerY + (bbox.x + bbox.width - centerX) * Math.sin(rotationAngleRad) + (bbox.y - centerY) * Math.cos(rotationAngleRad);
+
+            const bottomLeftX = centerX + (bbox.x - centerX) * Math.cos(rotationAngleRad) - (bbox.y + bbox.height - centerY) * Math.sin(rotationAngleRad);
+            const bottomLeftY = centerY + (bbox.x - centerX) * Math.sin(rotationAngleRad) + (bbox.y + bbox.height - centerY) * Math.cos(rotationAngleRad);
+
+            const bottomRightX = centerX + (bbox.x + bbox.width - centerX) * Math.cos(rotationAngleRad) - (bbox.y + bbox.height - centerY) * Math.sin(rotationAngleRad);
+            const bottomRightY = centerY + (bbox.x + bbox.width - centerX) * Math.sin(rotationAngleRad) + (bbox.y + bbox.height - centerY) * Math.cos(rotationAngleRad);
+            const minX = Math.min(topLeftX, topRightX, bottomLeftX, bottomRightX);
+            const minY = Math.min(topLeftY, topRightY, bottomLeftY, bottomRightY);
+            const maxX = Math.max(topLeftX, topRightX, bottomLeftX, bottomRightX);
+            const maxY = Math.max(topLeftY, topRightY, bottomLeftY, bottomRightY);
+            // const newWidth = maxX - minX;
+            // const newHeight = maxY - minY;
+            console.log('bbox', bbox, topLeftX, topRightX, bottomLeftX, bottomRightX, topLeftY, topRightY, bottomLeftY, bottomRightY, minX, minY, maxX, maxY);
             return {
-                max: {
-                    x: Math.max(pre.max.x, leftTopX, rightBottomX),
-                    y: Math.max(pre.max.y, leftTopY, rightBottomY)
-                },
-                min: {
-                    x: Math.min(pre.min.x, leftTopX, rightBottomX),
-                    y: Math.min(pre.min.y, leftTopY, rightBottomY)
-                }
+                max: { x: maxX, y: maxY },
+                min: { x: minX, y: minY }
             };
+            // const leftTopX = parseFloat(curr.elem.getAttribute('x')) ;
+            // const leftTopY = parseFloat(curr.elem.getAttribute('y')) ;
+            // const rightBottomX = leftTopX + curr.width;
+            // const rightBottomY = leftTopY + curr.height;
+            // console.log('bounding box', curr.elem.getBBox());
+            // console.log('bounding box', leftTopX, leftTopY, rightBottomX, rightBottomY);
+            // return {
+            //     max: {
+            //         x: Math.max(pre.max.x, leftTopX, rightBottomX),
+            //         y: Math.max(pre.max.y, leftTopY, rightBottomY)
+            //     },
+            //     min: {
+            //         x: Math.min(pre.min.x, leftTopX, rightBottomX),
+            //         y: Math.min(pre.min.y, leftTopY, rightBottomY)
+            //     }
+            // };
         }, { max: { x: -Infinity, y: -Infinity }, min: { x: Infinity, y: Infinity } });
         const viewboxX = maxminXY.min.x;
         const viewboxY = maxminXY.min.y;
@@ -434,10 +464,10 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
 
         console.log('', new XMLSerializer().serializeToString(svgElement));
         const attributes = {};
-        const scaleWidth = svg.elem.getAttribute('width') ? svg.elem.getAttribute('width') / originalViewWidth : viewWidth / originalViewWidth;
-        const scaleHeight = svg.elem.getAttribute('width') ? svg.elem.getAttribute('width') / originalViewWidth : viewHeight / originalViewHeight;
-        const x = parseFloat(svg.elem.getAttribute('x'));
-        const y = parseFloat(svg.elem.getAttribute('y'));
+        const scaleWidth = svg.elem.getAttribute('width') ? svg.elem.getAttribute('width') * 935 / 240 / originalViewWidth : viewWidth / originalViewWidth;
+        const scaleHeight = svg.elem.getAttribute('width') ? svg.elem.getAttribute('width') * 935 / 240 / originalViewWidth : viewHeight / originalViewHeight;
+        const x = parseFloat(svg.elem.getAttribute('x')) * 935 / 240;
+        const y = parseFloat(svg.elem.getAttribute('y')) * 935 / 240;
         const svgTransforms = parseTransform(svg.elem.getAttribute('transform'));
         const svgRotate = svgTransforms.find(attr => attr.type === 'rotate');
 
@@ -490,21 +520,30 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
             });
     };
     const createSvgStr = (wrapperElem, othersElem, imgsSvgModel, viewboxX, viewboxY, viewWidth, viewHeight) => {
+        const widthRatio = imgsSvgModel[0].sourceWidth / imgsSvgModel[0].width;
+        const heightRatio = imgsSvgModel[0].sourceHeight / imgsSvgModel[0].height;
+        const scaleAttr = (elem, attr, scale) => elem.setAttribute(attr, elem.getAttribute(attr) * scale);
         const wrapperClone = wrapperElem.cloneNode(true);
         const imgsClones = imgsSvgModel.map(img => img.elem.cloneNode(true));
+        imgsClones.forEach(imgElem => { scaleAttr(imgElem, 'width', widthRatio); scaleAttr(imgElem, 'height', heightRatio); scaleAttr(imgElem, 'x', widthRatio); scaleAttr(imgElem, 'y', heightRatio); });
         const wrapperSvgContent = new XMLSerializer().serializeToString(wrapperClone);
         const imgsSvgContent = imgsClones
             .map(imgsClone => new XMLSerializer().serializeToString(imgsClone))
             .map((v, index) => v.replace(/href="(.*?)"/, `href="${imgsSvgModel[index].resource.originalFile.path}"`))
             .reduce((pre, curr) => pre + curr, '');
         const otherSvgsContent = othersElem.map(el => new XMLSerializer().serializeToString(el)).reduce((pre, curr) => pre + curr, '');
-        const widthRatio = imgsSvgModel[0].sourceWidth / imgsSvgModel[0].width;
-        const heightRatio = imgsSvgModel[0].sourceHeight / imgsSvgModel[0].height;
-        const svgTag = `<svg xmlns="http://www.w3.org/2000/svg" width="${viewWidth * widthRatio}" height="${viewHeight * heightRatio}" viewBox="${viewboxX} ${viewboxY} ${viewWidth} ${viewHeight}">${wrapperSvgContent + imgsSvgContent + otherSvgsContent}</svg>`;
+        const svgTag = `<svg xmlns="http://www.w3.org/2000/svg" width="${viewWidth}" height="${viewHeight}" viewBox="${viewboxX} ${viewboxY} ${viewWidth} ${viewHeight}">${wrapperSvgContent + imgsSvgContent + otherSvgsContent}</svg>`;
         return svgTag;
     };
     const handleClipPath = async (svgs, imgs) => {
-        const { viewboxX, viewboxY, viewWidth, viewHeight } = calculateElemsBoundingbox(svgs);
+        let { viewboxX, viewboxY, viewWidth, viewHeight } = calculateElemsBoundingbox(svgs);
+        const widthRatio = imgs[0].sourceWidth / imgs[0].width;
+        const heightRatio = imgs[0].sourceHeight / imgs[0].height;
+        viewboxX *= widthRatio;
+        viewboxY *= heightRatio;
+        viewWidth *= widthRatio;
+        viewHeight *= heightRatio;
+
         const elem = createSVGElement({
             element: 'clipPath',
             attr: {
@@ -534,26 +573,32 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         // create new Image
         const svgTag = createSvgStr(elem, othersElem, imgs, viewboxX, viewboxY, viewWidth, viewHeight);
 
-        // const canvas1 = await svgToCanvas(svgTag, viewWidth, viewHeight);
-        // const img = await canvasToImage(canvas1);
-        // await props.onChangeFile({ target: { files: [img] } });
+        const canvas1 = await svgToCanvas(svgTag, viewWidth, viewHeight);
+        const img = await canvasToImage(canvas1);
+        await props.onChangeFile({ target: { files: [img] } });
         console.log(selectedModelArray);
 
 
-        const mode = PROCESS_MODE_GREYSCALE;
-        const blob = new Blob([svgTag], { type: 'image/svg+xml' });
-        const file = new File([blob], `${elem.id}.svg`);
-        dispatch(editorActions.uploadImage(HEAD_LASER, file, mode, () => {
-            modal({
-                cancelTitle: i18n._('key-Laser/Page-Close'),
-                title: i18n._('key-Laser/Page-Import Error'),
-                body: i18n._('Failed to import this object. \nPlease select a supported file format.')
-            });
-        }));
+        // const mode = PROCESS_MODE_GREYSCALE;
+        // const blob = new Blob([svgTag], { type: 'image/svg+xml' });
+        // const file = new File([blob], `${elem.id}.svg`);
+        // dispatch(editorActions.uploadImage(HEAD_LASER, file, mode, () => {
+        //     modal({
+        //         cancelTitle: i18n._('key-Laser/Page-Close'),
+        //         title: i18n._('key-Laser/Page-Import Error'),
+        //         body: i18n._('Failed to import this object. \nPlease select a supported file format.')
+        //     });
+        // }));
         return svgTag;
     };
     const handleMask = async (svgs, imgs) => {
-        const { viewboxX, viewboxY, viewWidth, viewHeight } = calculateElemsBoundingbox(imgs);
+        let { viewboxX, viewboxY, viewWidth, viewHeight } = calculateElemsBoundingbox(imgs);
+        const widthRatio = imgs[0].sourceWidth / imgs[0].width;
+        const heightRatio = imgs[0].sourceHeight / imgs[0].height;
+        viewboxX *= widthRatio;
+        viewboxY *= heightRatio;
+        viewWidth *= widthRatio;
+        viewHeight *= heightRatio;
 
         // create svg
         const maskElem = createSVGElement({
@@ -595,26 +640,26 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         });
 
         const svgTag = createSvgStr(maskElem, othersElem, imgs, viewboxX, viewboxY, viewWidth, viewHeight);
-        // const canvas1 = await svgToCanvas(svgTag, viewWidth, viewHeight);
-        // const img = await canvasToImage(canvas1);
-        // props.onChangeFile({ target: { files: [img] } });
+        const canvas1 = await svgToCanvas(svgTag, viewWidth, viewHeight);
+        const img = await canvasToImage(canvas1);
+        props.onChangeFile({ target: { files: [img] } });
         console.log(canvasToImage, svgToCanvas);
 
-        const mode = PROCESS_MODE_GREYSCALE;
-        const blob = new Blob([svgTag], { type: 'image/svg+xml' });
-        const file = new File([blob], `${maskElem.id}.svg`);
-        dispatch(editorActions.uploadImage(HEAD_LASER, file, mode, () => {
-            modal({
-                cancelTitle: i18n._('key-Laser/Page-Close'),
-                title: i18n._('key-Laser/Page-Import Error'),
-                body: i18n._('Failed to import this object. \nPlease select a supported file format.')
-            });
-        }));
+        // const mode = PROCESS_MODE_GREYSCALE;
+        // const blob = new Blob([svgTag], { type: 'image/svg+xml' });
+        // const file = new File([blob], `${maskElem.id}.svg`);
+        // dispatch(editorActions.uploadImage(HEAD_LASER, file, mode, () => {
+        //     modal({
+        //         cancelTitle: i18n._('key-Laser/Page-Close'),
+        //         title: i18n._('key-Laser/Page-Import Error'),
+        //         body: i18n._('Failed to import this object. \nPlease select a supported file format.')
+        //     });
+        // }));
         return svgTag;
     };
     const handleProcessedMask = async (imgs, svgs) => {
         const { viewboxX, viewboxY, viewWidth, viewHeight } = calculateElemsBoundingbox(imgs);
-        console.log(viewboxX, viewboxY, viewWidth, viewHeight, svgs);
+        console.log(HEAD_LASER, dispatch, viewboxX, viewboxY, viewWidth, viewHeight, svgs);
         // TODO: handleProcessedMask
     };
     const onClipper = async (imgs, svgs) => {
