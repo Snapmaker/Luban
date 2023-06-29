@@ -366,7 +366,6 @@ export const processActions = {
      * Commit Generate G-code Task.
      *
      * @param headType
-     * @param thumbnail G-code thumbnail should be included in G-code header.
      * @returns {Function}
      */
     commitGenerateGcode: headType => (dispatch, getState) => {
