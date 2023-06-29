@@ -12,7 +12,8 @@ import {
 import { NumberInput as Input } from '../../components/Input';
 import Select from '../../components/Select';
 
-function JobType({ headType, jobTypeState, setJobTypeState }) {
+function JobType(props) {
+    const { headType, jobTypeState, setJobTypeState } = props;
     const { size, series } = useSelector(state => state.machine);
     const { inProgress, useBackground } = useSelector(state => state[headType]);
     // const [isUseLockingBlock, setIsUseLockingBlock] = useState(useLockingBlock);
@@ -183,7 +184,8 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                                     min={2}
                                     onChange={(value) => {
                                         actions.setCoordinateModeAndCoordinateSize(
-                                            coordinateMode, {
+                                            coordinateMode,
+                                            {
                                                 x: value,
                                                 y: coordinateSize.y
                                             }
@@ -201,7 +203,8 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                                     min={10}
                                     onChange={(value) => {
                                         actions.setCoordinateModeAndCoordinateSize(
-                                            coordinateMode, {
+                                            coordinateMode,
+                                            {
                                                 x: coordinateSize.x,
                                                 y: value
                                             }
@@ -299,7 +302,8 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                                 min={10}
                                 onChange={(value) => {
                                     actions.setJobTypeState(
-                                        COORDINATE_MODE_BOTTOM_CENTER, {
+                                        COORDINATE_MODE_BOTTOM_CENTER,
+                                        {
                                             x: diameter * Math.PI,
                                             y: value
                                         },
@@ -318,7 +322,8 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                                 min={2}
                                 onChange={(value) => {
                                     actions.setJobTypeState(
-                                        COORDINATE_MODE_BOTTOM_CENTER, {
+                                        COORDINATE_MODE_BOTTOM_CENTER,
+                                        {
                                             x: value * Math.PI,
                                             y: length
                                         },
@@ -369,7 +374,8 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                                         {
                                             label: i18n._('key-CncLaser/JobSetup-Center'),
                                             value: 'center'
-                                        }]}
+                                        }
+                                    ]}
                                     isGroup={false}
                                     value="center"
                                     disabled
@@ -382,6 +388,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
         </React.Fragment>
     );
 }
+
 JobType.propTypes = {
     headType: PropTypes.string.isRequired,
     jobTypeState: PropTypes.object.isRequired,

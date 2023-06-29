@@ -6,6 +6,7 @@ import JobType from '../../widgets/JobType';
 import { actions as editorActions } from '../../../flux/editor';
 import { HEAD_CNC } from '../../../constants';
 
+// TODO: Refactor this component
 function renderJobTypeModal(
     headType, dispatch, showJobType,
     setShowJobType, jobTypeState, setJobTypeState,
@@ -68,6 +69,7 @@ function renderJobTypeModal(
         }
     });
 }
+
 renderJobTypeModal.propTypes = {
     headType: PropTypes.string.isRequired,
     showJobType: PropTypes.bool.isRequired,

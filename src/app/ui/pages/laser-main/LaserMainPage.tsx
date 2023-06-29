@@ -1,4 +1,3 @@
-import { message } from 'antd';
 import path from 'path';
 import PropTypes from 'prop-types';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -26,6 +25,7 @@ import renderRightView from '../CncLaserShared/RightView';
 import HomePage from '../HomePage';
 import Workspace from '../Workspace';
 import StarterGuide from './StarterGuide';
+import ProjectOversizeMessage from './modals/ProjectOversizeMessage';
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 const pageHeadType = HEAD_LASER;
@@ -46,14 +46,12 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
     const [showHomePage, setShowHomePage] = useState(false);
     const [showWorkspace, setShowWorkspace] = useState(false);
     const [showJobType, setShowJobType] = useState(true);
-    const [enabledIntro, setEnabledIntro] = useState(null);
     const coordinateMode = useSelector(state => state[HEAD_LASER]?.coordinateMode, shallowEqual);
     const coordinateSize = useSelector(state => state[HEAD_LASER]?.coordinateSize, shallowEqual);
     const toolPaths = useSelector(state => state[HEAD_LASER]?.toolPathGroup?.getToolPaths(), shallowEqual);
     const materials = useSelector(state => state[HEAD_LASER]?.materials, shallowEqual);
     const series = useSelector((state: RootState) => state.machine.series, shallowEqual);
     const page = useSelector(state => state[HEAD_LASER]?.page, shallowEqual);
-    const projectFileOversize = useSelector(state => state[HEAD_LASER]?.projectFileOversize, shallowEqual);
     const [isRotate, setIsRotate] = useState(materials?.isRotate);
     const [jobTypeState, setJobTypeState] = useSetState({
         coordinateMode,
@@ -89,21 +87,26 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
         setShowJobType(!!location?.state?.shouldShowJobType);
     }, [location?.state?.shouldShowJobType]);
 
+    // Starter Guide
+    const [showStarterGuide, setShowStarterGuide] = useState(false);
     useEffect(() => {
         if (location?.state?.shouldShowGuideTours) {
-            setEnabledIntro(true);
+            setShowStarterGuide(true);
         } else if (!location?.state?.shouldShowGuideTours && typeof (location?.state?.shouldShowGuideTours) === 'boolean') {
-            setEnabledIntro(false);
-        } else {
-            setEnabledIntro(null);
+            setShowStarterGuide(false);
         }
     }, [location?.state?.shouldShowGuideTours]);
 
     useEffect(() => {
-        if (typeof (enabledIntro) === 'boolean' && !enabledIntro) {
+        if (typeof (showStarterGuide) === 'boolean' && !showStarterGuide) {
             machineStore.set(isRotate ? 'guideTours.guideTourslaser4Axis' : 'guideTours.guideTourslaser', true); // mock   ---> true
         }
-    }, [enabledIntro]);
+    }, [showStarterGuide, isRotate]);
+
+    // close starter guide
+    const onStarterGuideClose = useCallback(() => {
+        setShowStarterGuide(false);
+    }, []);
 
     const {
         setBackgroundModal,
@@ -226,9 +229,6 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
         });
     }
 
-    const handleExit = useCallback(() => {
-        setEnabledIntro(false);
-    }, []);
 
     return (
         <div>
@@ -249,12 +249,12 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
                         widgetId="laserVisualizer"
                     />
                     {
-                        enabledIntro && (
+                        showStarterGuide && (
                             <StarterGuide
                                 machineIdentifer={series}
                                 isRotate={isRotate}
                                 toolPaths={toolPaths}
-                                onClose={handleExit}
+                                onClose={onStarterGuideClose}
                             />
                         )
                     }
@@ -264,18 +264,7 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
                     toolPathGroup={toolPathGroup}
                 />
             </ProjectLayout>
-            {
-                projectFileOversize && message.info({
-                    content: <span>{i18n._('key-Laser/Page-Project file oversize')}</span>,
-                    duration: 5,
-                    onClose: () => (
-                        dispatch(editorActions.updateState(pageHeadType, {
-                            projectFileOversize: false
-                        }))
-                    ),
-                    key: pageHeadType
-                })
-            }
+            <ProjectOversizeMessage />
             {warningRemovingModels}
             {jobTypeModal}
             {setBackgroundModal}
