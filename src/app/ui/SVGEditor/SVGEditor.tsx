@@ -347,20 +347,11 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         canvas1.style.backgroundColor = 'transparent';
         ctx1.fillStyle = 'transparent';
 
-
-        // const v = Canvg.fromString(ctx1, svgTag);
-        // await v.isReady();
-        // console.log(v);
-        // await v.render();
-        // document.body.appendChild(canvas1);
-        // return canvas1;
         return new Promise((resolve) => {
             canvg(canvas1, svgTag, {
                 ignoreAnimation: true,
                 ignoreMouse: true,
                 renderCallback() {
-                    console.log('v2 ok');
-                    document.body.appendChild(canvas1);
                     resolve(canvas1);
                 }
             });
@@ -377,7 +368,7 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
             // 计算旋转后的四个顶点坐标
             const topLeftX = centerX + (bbox.x - centerX) * Math.cos(rotationAngleRad) - (bbox.y - centerY) * Math.sin(rotationAngleRad);
             const topLeftY = centerY + (bbox.x - centerX) * Math.sin(rotationAngleRad) + (bbox.y - centerY) * Math.cos(rotationAngleRad);
-            console.log(centerX, (bbox.x - centerX), Math.cos(rotationAngleRad), (bbox.y - centerY), Math.sin(rotationAngleRad));
+
             const topRightX = centerX + (bbox.x + bbox.width - centerX) * Math.cos(rotationAngleRad) - (bbox.y - centerY) * Math.sin(rotationAngleRad);
             const topRightY = centerY + (bbox.x + bbox.width - centerX) * Math.sin(rotationAngleRad) + (bbox.y - centerY) * Math.cos(rotationAngleRad);
 
@@ -386,10 +377,10 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
 
             const bottomRightX = centerX + (bbox.x + bbox.width - centerX) * Math.cos(rotationAngleRad) - (bbox.y + bbox.height - centerY) * Math.sin(rotationAngleRad);
             const bottomRightY = centerY + (bbox.x + bbox.width - centerX) * Math.sin(rotationAngleRad) + (bbox.y + bbox.height - centerY) * Math.cos(rotationAngleRad);
-            const minX = Math.min(topLeftX, topRightX, bottomLeftX, bottomRightX);
-            const minY = Math.min(topLeftY, topRightY, bottomLeftY, bottomRightY);
-            const maxX = Math.max(topLeftX, topRightX, bottomLeftX, bottomRightX);
-            const maxY = Math.max(topLeftY, topRightY, bottomLeftY, bottomRightY);
+            const minX = Math.min(pre.min.x, topLeftX, topRightX, bottomLeftX, bottomRightX);
+            const minY = Math.min(pre.min.y, topLeftY, topRightY, bottomLeftY, bottomRightY);
+            const maxX = Math.max(pre.max.x, topLeftX, topRightX, bottomLeftX, bottomRightX);
+            const maxY = Math.max(pre.max.y, topLeftY, topRightY, bottomLeftY, bottomRightY);
             // const newWidth = maxX - minX;
             // const newHeight = maxY - minY;
             console.log('bbox', bbox, topLeftX, topRightX, bottomLeftX, bottomRightX, topLeftY, topRightY, bottomLeftY, bottomRightY, minX, minY, maxX, maxY);
@@ -519,20 +510,60 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
                 console.error('Error:', error);
             });
     };
-    const createSvgStr = (wrapperElem, othersElem, imgsSvgModel, viewboxX, viewboxY, viewWidth, viewHeight) => {
+    const createSvgStr = (wrapperElem, othersElem, imgsSvgModel, viewboxX, viewboxY, viewWidth, viewHeight, gElem) => {
         const widthRatio = imgsSvgModel[0].sourceWidth / imgsSvgModel[0].width;
         const heightRatio = imgsSvgModel[0].sourceHeight / imgsSvgModel[0].height;
-        const scaleAttr = (elem, attr, scale) => elem.setAttribute(attr, elem.getAttribute(attr) * scale);
+
         const wrapperClone = wrapperElem.cloneNode(true);
-        const imgsClones = imgsSvgModel.map(img => img.elem.cloneNode(true));
-        imgsClones.forEach(imgElem => { scaleAttr(imgElem, 'width', widthRatio); scaleAttr(imgElem, 'height', heightRatio); scaleAttr(imgElem, 'x', widthRatio); scaleAttr(imgElem, 'y', heightRatio); });
+        const imgsClones = [];
+        imgsSvgModel
+            .forEach(img => {
+                const cloneImgElem = img.elem.cloneNode(true);
+                imgsClones.push(cloneImgElem);
+
+                // img's position(left-top) and dimensions, before the img scale
+                const originalX = parseFloat(cloneImgElem.getAttribute('x'));
+                const originalY = parseFloat(cloneImgElem.getAttribute('y'));
+                const originalWidth = parseFloat(cloneImgElem.getAttribute('width'));
+                const originalHeight = parseFloat(cloneImgElem.getAttribute('height'));
+                const originalTransform = cloneImgElem.getAttribute('transform');
+
+                // img's position(left-top) and dimensions and center position, before the img scale
+                const transformedX = originalX * widthRatio;
+                const transformedY = originalY * heightRatio;
+                const transformedWidth = originalWidth * widthRatio;
+                const transformedHeight = originalHeight * heightRatio;
+                const transformXCenter = transformedX + transformedWidth / 2;
+                const transformYCenter = transformedY + transformedHeight / 2;
+
+                // scale image for keeping img dimensions of pixel.
+                cloneImgElem.setAttribute('x', transformedX);
+                cloneImgElem.setAttribute('y', transformedY);
+                cloneImgElem.setAttribute('width', transformedWidth);
+                cloneImgElem.setAttribute('height', transformedHeight);
+
+                // because we will scale img for keeping img dimensions of pixel.
+                // so we need to handle img rotate after img scaled.
+                // here we remove rotate first and add a rotate, which center is the center after img scale
+                cloneImgElem.setAttribute('transform', `${originalTransform.replace(/rotate\((.*?)\)/ig, '')} rotate(${img.angle}, ${transformXCenter} ${transformYCenter})`);
+            });
+
         const wrapperSvgContent = new XMLSerializer().serializeToString(wrapperClone);
         const imgsSvgContent = imgsClones
             .map(imgsClone => new XMLSerializer().serializeToString(imgsClone))
             .map((v, index) => v.replace(/href="(.*?)"/, `href="${imgsSvgModel[index].resource.originalFile.path}"`))
             .reduce((pre, curr) => pre + curr, '');
         const otherSvgsContent = othersElem.map(el => new XMLSerializer().serializeToString(el)).reduce((pre, curr) => pre + curr, '');
-        const svgTag = `<svg xmlns="http://www.w3.org/2000/svg" width="${viewWidth}" height="${viewHeight}" viewBox="${viewboxX} ${viewboxY} ${viewWidth} ${viewHeight}">${wrapperSvgContent + imgsSvgContent + otherSvgsContent}</svg>`;
+
+        let gSvgContent = '';
+        if (gElem) {
+            gSvgContent = new XMLSerializer().serializeToString(gElem);
+        }
+
+        const svgTag = `<svg xmlns="http://www.w3.org/2000/svg" width="${viewWidth}" height="${viewHeight}" viewBox="${viewboxX} ${viewboxY} ${viewWidth} ${viewHeight}">
+            ${wrapperSvgContent + gSvgContent + imgsSvgContent + otherSvgsContent}
+            </svg>
+            `;
         return svgTag;
     };
     const handleClipPath = async (svgs, imgs) => {
@@ -550,6 +581,12 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
                 id: `${uuid()}`
             }
         });
+        const gElem = createSVGElement({
+            element: 'g',
+            attr: {
+                id: `${uuid()}`
+            }
+        });
         const othersElem = [];
         console.log(elem);
         // svgs.forEach(svg => elem.append(svg.svgPath));
@@ -560,6 +597,8 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
                 !svgShapeTag.hasAttribute('fill-opacity') && svgShapeTag.setAttribute('fill-opacity', '0');
                 if (isShapeSvg(svgShapeTag)) {
                     elem.append(svgShapeTag);
+                    svgShapeTag.setAttribute('fill-opacity', '1');
+                    gElem.append(svgShapeTag.cloneNode(true));
                 } else {
                     othersElem.push(svgShapeTag);
                 }
@@ -571,7 +610,7 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
             img.elem.setAttribute('clip-path', `url(#${elem.id})`);
         });
         // create new Image
-        const svgTag = createSvgStr(elem, othersElem, imgs, viewboxX, viewboxY, viewWidth, viewHeight);
+        const svgTag = createSvgStr(elem, othersElem, imgs, viewboxX, viewboxY, viewWidth, viewHeight, gElem);
 
         const canvas1 = await svgToCanvas(svgTag, viewWidth, viewHeight);
         const img = await canvasToImage(canvas1);
@@ -657,22 +696,13 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         // }));
         return svgTag;
     };
-    const handleProcessedMask = async (imgs, svgs) => {
-        const { viewboxX, viewboxY, viewWidth, viewHeight } = calculateElemsBoundingbox(imgs);
-        console.log(HEAD_LASER, dispatch, viewboxX, viewboxY, viewWidth, viewHeight, svgs);
-        // TODO: handleProcessedMask
-    };
     const onClipper = async (imgs, svgs) => {
         const clipSvgTag = await handleClipPath(svgs, imgs);
         console.log(clipSvgTag);
     };
     const onClipperSvg = async (imgs, svgs) => {
-        let maskSvgTag;
-        if (imgs.some(img => img.sourceType === 'svg' && img.mode === PROCESS_MODE_GREYSCALE)) {
-            maskSvgTag = await handleProcessedMask(svgs, imgs);
-        } else {
-            maskSvgTag = await handleMask(svgs, imgs);
-        }
+        const maskSvgTag = await handleMask(svgs, imgs);
+        console.log(HEAD_LASER, PROCESS_MODE_GREYSCALE, dispatch);
         console.log('maskSvgTag', maskSvgTag);
     };
 
