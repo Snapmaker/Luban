@@ -38,7 +38,7 @@ const INITIAL_STATE = {
         fixtureLength: 20,
         x: 0,
         y: 0,
-        z: 0
+        z: 0,
     },
 
     page: PAGE_EDITOR,

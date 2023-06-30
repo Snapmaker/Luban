@@ -16,6 +16,7 @@ import Dropzone from '../../components/Dropzone';
 import ProjectLayout from '../../layouts/ProjectLayout';
 import { logPageView, renderModal, renderPopup, useUnsavedTitle } from '../../utils';
 import Thumbnail from '../../widgets/CncLaserShared/Thumbnail';
+import { JobTypeState } from '../../widgets/JobType/JobTypeState';
 import StackedModel from '../../widgets/LaserStackedModel';
 import LaserVisualizer from '../../widgets/LaserVisualizer';
 import renderJobTypeModal from '../CncLaserShared/JobTypeModal';
@@ -53,7 +54,7 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
     const series = useSelector((state: RootState) => state.machine.series, shallowEqual);
     const page = useSelector(state => state[HEAD_LASER]?.page, shallowEqual);
     const [isRotate, setIsRotate] = useState(materials?.isRotate);
-    const [jobTypeState, setJobTypeState] = useSetState({
+    const [jobTypeState, setJobTypeState] = useSetState<JobTypeState>({
         coordinateMode,
         coordinateSize,
         materials
