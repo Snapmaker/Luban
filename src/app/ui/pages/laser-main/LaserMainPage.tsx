@@ -1,5 +1,4 @@
 import path from 'path';
-import PropTypes from 'prop-types';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { withRouter } from 'react-router-dom';
@@ -27,6 +26,7 @@ import HomePage from '../HomePage';
 import Workspace from '../Workspace';
 import StarterGuide from './StarterGuide';
 import ProjectOversizeMessage from './modals/ProjectOversizeMessage';
+import JobSetupModal from './modals/JobSetupModal';
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 const pageHeadType = HEAD_LASER;
@@ -267,18 +267,25 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
             </ProjectLayout>
             <ProjectOversizeMessage />
             {warningRemovingModels}
-            {jobTypeModal}
+            {
+                false && jobTypeModal
+            }
+            {/* Job Setup: Workpiece & Origin */}
+            {
+                showJobType && (
+                    <JobSetupModal
+                        onClose={() => {
+                            setShowJobType(false);
+                        }}
+                    />
+                )
+            }
             {setBackgroundModal}
             {renderHomepage()}
             {renderWorkspace()}
             {renderStackedModelModal()}
         </div>
     );
-};
-
-LaserMainPage.propTypes = {
-    // history: PropTypes.object
-    location: PropTypes.object
 };
 
 export default withRouter(LaserMainPage);

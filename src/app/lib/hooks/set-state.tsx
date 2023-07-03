@@ -1,11 +1,10 @@
 import { useState, useCallback } from 'react';
 
 
-
 function useSetState<S>(initial: S) {
     const [state, saveState] = useState<S>(initial);
 
-    const setState = useCallback((newState) => {
+    const updateState = useCallback((newState: S) => {
         if (typeof newState === 'function') {
             saveState(prev => ({ ...prev, ...newState(prev) }));
         } else {
@@ -13,7 +12,7 @@ function useSetState<S>(initial: S) {
         }
     }, []);
 
-    return [state, setState];
+    return [state, updateState];
 }
 
 export default useSetState;

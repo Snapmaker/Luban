@@ -32,7 +32,6 @@ import ConsoleWidget from '../widgets/Console';
 
 import EnclosureWidget from '../widgets/Enclosure';
 
-import JobType from '../widgets/JobType';
 import LaserParamsWidget from '../widgets/LaserParams';
 import LaserSetBackground from '../widgets/LaserSetBackground';
 import LaserTestFocusWidget from '../widgets/LaserTestFocus';
@@ -61,7 +60,6 @@ const allWidgets = {
     'laser-set-background': LaserSetBackground,
     'laser-test-focus': LaserTestFocusWidget,
     'cnc-path': CNCPathWidget,
-    'job-type': JobType,
     'machine-setting': MachineSettingWidget,
     'working-progress': WorkingProgress
 };

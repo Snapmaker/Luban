@@ -1967,6 +1967,8 @@ export const actions = {
     },
 
     updateMaterials: (headType, newMaterials) => (dispatch, getState) => {
+        console.log('updateMaterials =', newMaterials);
+
         const { materials, modelGroup, toolPathGroup } = getState()[headType];
         const allMaterials = {
             ...materials,

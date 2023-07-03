@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+
 import { renderModal } from '../../utils';
 import i18n from '../../../lib/i18n';
 import JobType from '../../widgets/JobType';
@@ -18,7 +19,6 @@ function renderJobTypeModal(
         renderBody() {
             return (
                 <JobType
-                    isWidget={false}
                     headType={headType}
                     jobTypeState={jobTypeState}
                     setJobTypeState={setJobTypeState}
