@@ -23,6 +23,7 @@ import {
 import { actions as editorActions } from '../editor';
 import { actions as machineActions } from '../machine';
 import definitionManager from '../manager/DefinitionManager';
+import { OriginType, RectangleWorkpieceReference } from '../../constants/coordinate';
 
 // eslint-disable-next-line import/no-cycle
 const ACTION_CHANGE_TOOL_PARAMS = 'cnc/ACTION_CHANGE_TOOL_PARAMS';
@@ -39,6 +40,11 @@ const INITIAL_STATE = {
         x: 0,
         y: 0,
         z: 0,
+    },
+    origin: {
+        type: OriginType.Workpiece,
+        reference: RectangleWorkpieceReference.Center,
+        referenceMetadata: {},
     },
 
     page: PAGE_EDITOR,

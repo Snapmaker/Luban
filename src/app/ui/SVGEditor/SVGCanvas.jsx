@@ -85,6 +85,7 @@ class SVGCanvas extends PureComponent {
         size: PropTypes.object,
         coordinateMode: PropTypes.object.isRequired,
         coordinateSize: PropTypes.object.isRequired,
+        origin: PropTypes.object.isRequired,
 
         onCreateElement: PropTypes.func.isRequired,
         onSelectElements: PropTypes.func.isRequired,
@@ -211,8 +212,12 @@ class SVGCanvas extends PureComponent {
         }
         if (nextProps.coordinateMode !== this.props.coordinateMode
             || nextProps.coordinateSize.x !== this.props.coordinateSize.x
-            || nextProps.coordinateSize.y !== this.props.coordinateSize.y) {
-            this.printableArea.updateCoordinateMode(nextProps.coordinateMode, nextProps.coordinateSize);
+            || nextProps.coordinateSize.y !== this.props.coordinateSize.y
+            || nextProps.origin !== this.props.origin) {
+            console.log('origin =', nextProps.origin);
+
+            const printableArea = this.printableArea;
+            printableArea.updateCoordinateMode(nextProps.origin, nextProps.coordinateMode, nextProps.coordinateSize);
 
             // const { coordinateSize, coordinateMode } = this.props;
             const coorDelta = {

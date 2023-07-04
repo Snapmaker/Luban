@@ -38,8 +38,7 @@ export const processActions = {
         // start generate toolpath
         const toolPathPromiseArray = [];
         toolPathGroup.toolPaths.forEach(toolPath => {
-            const { materials } = getState()[headType];
-            toolPathPromiseArray.push(toolPathGroup.commitToolPathPromise(toolPath?.id, { materials }));
+            toolPathPromiseArray.push(toolPathGroup.commitToolPathPromise(toolPath?.id));
         });
 
         Promise.all(toolPathPromiseArray).then((taskArray) => {

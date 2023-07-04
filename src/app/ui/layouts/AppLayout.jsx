@@ -815,8 +815,8 @@ class AppLayout extends React.PureComponent {
                                 headType,
                                 COORDINATE_MODE_BOTTOM_CENTER,
                                 {
-                                    x: materials.diameter * Math.PI,
-                                    y: materials.length
+                                    x: 40 * Math.PI,
+                                    y: 75,
                                 },
                                 !SVGActions.svgContentGroup
                             );

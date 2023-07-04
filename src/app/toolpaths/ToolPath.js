@@ -278,7 +278,14 @@ class ToolPath {
     getSelectModelsAndToolPathInfo() {
         const modelInfos = this._getModelTaskInfos();
 
+        // FIXME
+        // diameter is required by LunarTPP
+        this.materials.diameter = this.materials.diameter || 0;
+
+        console.log('getSelectModelsAndToolPathInfo, materials', this.materials);
+
         for (let i = 0; i < modelInfos.length; i++) {
+            console.log('getSelectModelsAndToolPathInfo, modelInfo', modelInfos[i].transformation);
             modelInfos[i] = {
                 ...modelInfos[i],
                 type: this.type,

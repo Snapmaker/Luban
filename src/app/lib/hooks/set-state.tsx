@@ -1,10 +1,11 @@
 import { useState, useCallback } from 'react';
 
+type UpdateStateAction<S> = (newState: S) => void;
 
-function useSetState<S>(initial: S) {
+function useSetState<S>(initial: S): [S, UpdateStateAction<object>] {
     const [state, saveState] = useState<S>(initial);
 
-    const updateState = useCallback((newState: S) => {
+    const updateState = useCallback((newState: object) => {
         if (typeof newState === 'function') {
             saveState(prev => ({ ...prev, ...newState(prev) }));
         } else {
