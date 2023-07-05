@@ -10,6 +10,7 @@
 
 import "./rgbcolor.min.js";
 import "./stackblur.min.js";
+import jQuery from 'jquery';
 const canvgv2 = { RGBColor, StackBlur, canvgv2: {} };
 (function (global, factory) {
     typeof exports === "object" && typeof module !== "undefined"
@@ -148,32 +149,77 @@ const canvgv2 = { RGBColor, StackBlur, canvgv2: {} };
         {
             // see https://developer.mozilla.org/en-US/docs/Web/API/Element.matches
             if (typeof Element == "undefined");
-            else if (typeof Element.prototype.matches != "undefined") {
+            else if (typeof Element.prototype.matches != "undefined" ) {
                 matchesSelector = function (node, selector) {
-                    return node.matches(selector);
+                    if(node.nodeType !== 1 ||  typeof node.matches !== 'function'){
+                        const styleClasses = node.getAttribute && node.getAttribute('class');
+
+                        if (!styleClasses || styleClasses === '') {
+                            return false;
+                        }
+
+                        return styleClasses.split(' ').some(styleClass => `.${styleClass}` === selector);
+                    }
+                    return  node.matches(selector);
                 };
             } else if (
                 typeof Element.prototype.webkitMatchesSelector != "undefined"
             ) {
                 matchesSelector = function (node, selector) {
+                    if(node.nodeType !== 1 ||  typeof node.webkitMatchesSelector !== 'function'){
+                        const styleClasses = node.getAttribute && node.getAttribute('class');
+
+                        if (!styleClasses || styleClasses === '') {
+                            return false;
+                        }
+
+                        return styleClasses.split(' ').some(styleClass => `.${styleClass}` === selector);
+                    }
                     return node.webkitMatchesSelector(selector);
                 };
             } else if (
                 typeof Element.prototype.mozMatchesSelector != "undefined"
             ) {
                 matchesSelector = function (node, selector) {
+                    if(node.nodeType !== 1 ||  typeof node.mozMatchesSelector !== 'function'){
+                        const styleClasses = node.getAttribute && node.getAttribute('class');
+
+                        if (!styleClasses || styleClasses === '') {
+                            return false;
+                        }
+
+                        return styleClasses.split(' ').some(styleClass => `.${styleClass}` === selector);
+                    }
                     return node.mozMatchesSelector(selector);
                 };
             } else if (
                 typeof Element.prototype.msMatchesSelector != "undefined"
             ) {
                 matchesSelector = function (node, selector) {
+                    if(node.nodeType !== 1 ||  typeof node.msMatchesSelector !== 'function'){
+                        const styleClasses = node.getAttribute && node.getAttribute('class');
+
+                        if (!styleClasses || styleClasses === '') {
+                            return false;
+                        }
+
+                        return styleClasses.split(' ').some(styleClass => `.${styleClass}` === selector);
+                    }
                     return node.msMatchesSelector(selector);
                 };
             } else if (
                 typeof Element.prototype.oMatchesSelector != "undefined"
             ) {
                 matchesSelector = function (node, selector) {
+                    if(node.nodeType !== 1 ||  typeof node.oMatchesSelector !== 'function'){
+                        const styleClasses = node.getAttribute && node.getAttribute('class');
+
+                        if (!styleClasses || styleClasses === '') {
+                            return false;
+                        }
+
+                        return styleClasses.split(' ').some(styleClass => `.${styleClass}` === selector);
+                    }
                     return node.oMatchesSelector(selector);
                 };
             } else {
@@ -5032,8 +5078,10 @@ const canvgv2 = { RGBColor, StackBlur, canvgv2: {} };
                     // render as temp svg
                     var x = this.attribute("x").toPixels("x");
                     var y = this.attribute("y").toPixels("y");
-                    var width = this.attribute("width").toPixels("x");
-                    var height = this.attribute("height").toPixels("y");
+                    // var width = this.attribute("width").toPixels("x") || this.style("width").toPixels("x")
+                    // var height = this.attribute("height").toPixels("y") || this.style("height").toPixels("y")
+                    var width = this.attribute("width").toPixels("x")
+                    var height = this.attribute("height").toPixels("y")
 
                     if (width == 0 && height == 0) {
                         var bb = new svg.BoundingBox();
@@ -5067,6 +5115,8 @@ const canvgv2 = { RGBColor, StackBlur, canvgv2: {} };
                             { nodeName: "includeOpacity", value: "true" },
                         ],
                     });
+                    console.log(maskCtx, x + width,  y + height)
+                    window.document.body.appendChild(maskCtx.canvas)
                     cm.apply(maskCtx, 0, 0, x + width, y + height);
 
                     var c = createCanvas(x + width, y + height);
@@ -5079,6 +5129,7 @@ const canvgv2 = { RGBColor, StackBlur, canvgv2: {} };
                         "no-repeat"
                     );
                     tempCtx.fillRect(0, 0, x + width, y + height);
+                    window.document.body.appendChild(tempCtx.canvas)
 
                     ctx.fillStyle = tempCtx.createPattern(c, "no-repeat");
                     ctx.fillRect(0, 0, x + width, y + height);
@@ -5346,44 +5397,44 @@ const canvgv2 = { RGBColor, StackBlur, canvgv2: {} };
 
                 var includeOpacity =
                     this.attribute("includeOpacity").hasValue();
-                this.apply = function (ctx, x, y, width, height) {
-                    // assuming x==0 && y==0 for now
-                    var srcData = ctx.getImageData(0, 0, width, height);
-                    for (var y = 0; y < height; y++) {
-                        for (var x = 0; x < width; x++) {
-                            var r = imGet(srcData.data, x, y, width, height, 0);
-                            var g = imGet(srcData.data, x, y, width, height, 1);
-                            var b = imGet(srcData.data, x, y, width, height, 2);
-                            var a = imGet(srcData.data, x, y, width, height, 3);
-                            var nr =
-                                m(0, r) + m(1, g) + m(2, b) + m(3, a) + m(4, 1);
-                            var ng =
-                                m(5, r) + m(6, g) + m(7, b) + m(8, a) + m(9, 1);
-                            var nb =
-                                m(10, r) +
-                                m(11, g) +
-                                m(12, b) +
-                                m(13, a) +
-                                m(14, 1);
-                            var na =
-                                m(15, r) +
-                                m(16, g) +
-                                m(17, b) +
-                                m(18, a) +
-                                m(19, 1);
+                const convertColorData = (ctx, x, y, width, height) => {
+                    var srcData = ctx.getImageData(x, y, width, height);
+                    for (var py = 0; py < height; py++) {
+                        for (var px = 0; px < width; px++) {
+                            var r = imGet(srcData.data, px, py, width, height, 0);
+                            var g = imGet(srcData.data, px, py, width, height, 1);
+                            var b = imGet(srcData.data, px, py, width, height, 2);
+                            var a = imGet(srcData.data, px, py, width, height, 3);
+                            var nr = m(0, r) + m(1, g) + m(2, b) + m(3, a) + m(4, 1);
+                            var ng = m(5, r) + m(6, g) + m(7, b) + m(8, a) + m(9, 1);
+                            var nb = m(10, r) + m(11, g) + m(12, b) + m(13, a) + m(14, 1);
+                            var na = m(15, r) + m(16, g) + m(17, b) + m(18, a) + m(19, 1);
                             if (includeOpacity) {
                                 nr = ng = nb = 0;
                                 na *= a / 255;
                             }
-                            imSet(srcData.data, x, y, width, height, 0, nr);
-                            imSet(srcData.data, x, y, width, height, 1, ng);
-                            imSet(srcData.data, x, y, width, height, 2, nb);
-                            imSet(srcData.data, x, y, width, height, 3, na);
+                            imSet(srcData.data, px, py, width, height, 0, nr);
+                            imSet(srcData.data, px, py, width, height, 1, ng);
+                            imSet(srcData.data, px, py, width, height, 2, nb);
+                            imSet(srcData.data, px, py, width, height, 3, na);
                         }
                     }
-                    ctx.clearRect(0, 0, width, height);
-                    ctx.putImageData(srcData, 0, 0);
+                    ctx.clearRect(x, y, width, height);
+                    ctx.putImageData(srcData, x, y);
                 };
+
+                const chunkSize = 10000; // 每个小块的大小
+
+                this.apply = function (ctx, x, y, width, height) {
+                    for (var cy = y; cy < height; cy += chunkSize) {
+                        for (var cx = x; cx < width; cx += chunkSize) {
+                            var chunkWidth = Math.min(chunkSize, width - cx);
+                            var chunkHeight = Math.min(chunkSize, height - cy);
+                            convertColorData(ctx, cx, cy, chunkWidth, chunkHeight);
+                        }
+                    }
+                };
+
             };
             svg.Element.feColorMatrix.prototype = new svg.Element.ElementBase();
 

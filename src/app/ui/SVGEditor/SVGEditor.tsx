@@ -4,6 +4,7 @@ import { v4 as uuid } from 'uuid';
 
 // import Canvg from 'canvg';
 import { useDispatch, useSelector } from 'react-redux';
+import { Canvg } from 'canvg';
 import { PREDEFINED_SHORTCUT_ACTIONS, ShortcutHandlerPriority, ShortcutManager } from '../../lib/shortcut';
 import styles from './styles.styl';
 import { SVG_EVENT_CONTEXTMENU } from './constants';
@@ -11,10 +12,10 @@ import SVGCanvas from './SVGCanvas';
 import SVGLeftBar from './SVGLeftBar';
 import { Materials } from '../../constants/coordinate';
 import { createSVGElement, setAttributes } from './element-utils';
-import canvg from './lib/canvg';
-// import { actions as editorActions } from '../../flux/editor';
-// import i18n from '../../lib/i18n';
-// import modal from '../../lib/modal';
+// import canvg from './lib/canvg';
+import { actions as editorActions } from '../../flux/editor';
+import i18n from '../../lib/i18n';
+import modal from '../../lib/modal';
 import { HEAD_LASER, PROCESS_MODE_GREYSCALE } from '../../constants';
 import { flattenNestedGroups } from './lib/FlattenNestedGroups';
 
@@ -281,27 +282,110 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         props.editorActions.onDrawTransformComplete(...args);
     };
 
+    // Helper function to multiply two 2D matrices
+    const multiplyMatrix = (matrix1, matrix2) => {
+        const a = matrix1[0] * matrix2[0] + matrix1[2] * matrix2[1];
+        const b = matrix1[1] * matrix2[0] + matrix1[3] * matrix2[1];
+        const c = matrix1[0] * matrix2[2] + matrix1[2] * matrix2[3];
+        const d = matrix1[1] * matrix2[2] + matrix1[3] * matrix2[3];
+        const e = matrix1[0] * matrix2[4] + matrix1[2] * matrix2[5] + matrix1[4];
+        const f = matrix1[1] * matrix2[4] + matrix1[3] * matrix2[5] + matrix1[5];
+
+        return [a, b, c, d, e, f];
+    };
+    // Helper function to decompose a 2D transformation matrix
+    const decomposeMatrix = (matrix) => {
+        const [a, b, c, d, e, f] = matrix;
+        let scaleX = Math.sign(a) * Math.sqrt(a * a + b * b);
+        let scaleY = Math.sign(d) * Math.sqrt(c * c + d * d);
+        const skewX = Math.atan2(-b, a);
+        const skewY = Math.atan2(c, d);
+        const angle = Math.atan2(-b, a) * (180 / Math.PI);
+
+        if (Math.abs(angle) > 90) {
+            scaleX = -scaleX;
+            scaleY = -scaleY;
+        }
+
+        const translateX = e;
+        const translateY = f;
+
+        return {
+            translateX,
+            translateY,
+            scaleX,
+            scaleY,
+            skewX,
+            skewY,
+            angle,
+        };
+    };
     const parseTransform = (transformAttr) => {
         const transformValues = [];
         const regex = /(\w+)\(([^)]+)\)/g;
         let match = regex.exec(transformAttr);
 
+        let matrix = [1, 0, 0, 1, 0, 0]; // Identity matrix
+
         while (match !== null) {
             const transformType = match[1];
             const transformParams = match[2].split(/[\s,]+/).map(parseFloat);
 
-            transformValues.push({
-                type: transformType,
-                params: transformParams
-            });
-            // next
+            if (transformType === 'matrix' && transformParams.length === 6) {
+                matrix = multiplyMatrix(matrix, transformParams);
+            } else {
+                transformValues.push({
+                    type: transformType,
+                    params: transformParams
+                });
+            }
+
             match = regex.exec(transformAttr);
+        }
+
+        // Convert the matrix back to individual transform attributes
+        const { translateX, translateY, scaleX, scaleY, skewX, skewY, angle } = decomposeMatrix(matrix);
+
+        if (translateX !== 0 || translateY !== 0) {
+            transformValues.push({
+                type: 'translate',
+                params: [translateX, translateY]
+            });
+        }
+
+        if (scaleX !== 1 || scaleY !== 1) {
+            transformValues.push({
+                type: 'scale',
+                params: [scaleX, scaleY]
+            });
+        }
+
+        if (skewX !== 0) {
+            transformValues.push({
+                type: 'skewX',
+                params: [skewX]
+            });
+        }
+
+        if (skewY !== 0) {
+            transformValues.push({
+                type: 'skewY',
+                params: [skewY]
+            });
+        }
+
+        if (angle !== 0) {
+            transformValues.push({
+                type: 'rotate',
+                params: [angle]
+            });
         }
 
         return transformValues;
     };
+
+
     const isShapeSvg = (svg) => {
-        console.log('isShapeSvg', svg, svg.tagName);
         if (!svg || !svg.tagName) return false;
         switch (svg.tagName) {
             case 'rect':
@@ -321,24 +405,16 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
                 return false;
         }
     };
-    const canvasToImage = async (canvas1) => {
-        document.body.appendChild(canvas1);
-        const dataUrl = canvas1.toDataURL('image/png');
+    const canvasToImage = async (canvasElm) => {
+        document.body.appendChild(canvasElm);
+        const dataUrl = canvasElm.toDataURL('image/png');
         const p = fetch(dataUrl).then(async response => response.blob());
-        const b = await p; // (canvas1);
-        const f = new File([b], 'test.png');
-        const downloadImage = (data) => {
-            const link = document.createElement('a');
-            link.download = 'canvas_image.png';
-            link.href = URL.createObjectURL(data);
-            link.click();
-            URL.revokeObjectURL(link.href);
-        };
-        downloadImage(b);
+        const b = await p; // (canvasElm);
+        const f = new File([b], `${canvasElm.id}.png`);
+        document.body.removeChild(canvasElm);
         return f;
     };
     const svgToCanvas = async (svgTag, width, height) => {
-        console.log(svgTag);
         const canvas1 = document.createElement('canvas');
         const ctx1 = canvas1.getContext('2d');
         canvas1.style.width = `${width}px`;
@@ -347,15 +423,18 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         canvas1.style.backgroundColor = 'transparent';
         ctx1.fillStyle = 'transparent';
 
-        return new Promise((resolve) => {
-            canvg(canvas1, svgTag, {
-                ignoreAnimation: true,
-                ignoreMouse: true,
-                renderCallback() {
-                    resolve(canvas1);
-                }
-            });
-        });
+        const v = await Canvg.fromString(ctx1, svgTag);
+        await v.render();
+        return canvas1;
+        // return new Promise((resolve) => {
+        //     canvg(canvas1, svgTag, {
+        //         ignoreAnimation: true,
+        //         ignoreMouse: true,
+        //         renderCallback() {
+        //             resolve(canvas1);
+        //         },
+        //     });
+        // });
     };
     const calculateElemsBoundingbox = (elems) => {
         // calculate viewbox value (boundingbox)
@@ -412,7 +491,7 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         return { viewboxX, viewboxY, viewWidth, viewHeight };
     };
     const rotatePath = (elem, angle) => {
-        if (!isShapeSvg(elem)) return;
+        // if (!isShapeSvg(elem)) return;
         // Helper function for creating a rotation transformation matrix
         function createRotationMatrix(cx, cy, radianAngle) {
             const cos = Math.cos(radianAngle);
@@ -428,8 +507,12 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         }
 
         // Get the current transformation matrix of the path element
-        const currentMatrix = elem.transform && elem.transform.baseVal.consolidate().matrix;
-
+        let currentMatrix;
+        if (elem.transform && elem.transform.baseVal.consolidate()) {
+            currentMatrix = elem.transform && elem.transform.baseVal.consolidate().matrix;
+        } else {
+            currentMatrix = createSVGElement({ element: 'svg', attr: {} }).createSVGMatrix();
+        }
         // Calculate the center coordinates of the path element
         const bbox = elem.getBBox();
         const centerX = bbox.x + bbox.width / 2;
@@ -444,29 +527,51 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         // Apply the new transformation matrix to the path element's transform attribute
         elem.transform.baseVal.initialize(elem.ownerSVGElement.createSVGTransformFromMatrix(newMatrix));
     };
-    const createSvg = (svgString, svg, viewWidth, viewHeight) => {
+    const createSvg = (svgString, svg, viewboxX, viewboxY, viewWidth, viewHeight, widthRatio, heightRatio) => {
+        const x = parseFloat(svg.elem.getAttribute('x')) * widthRatio;
+        const y = parseFloat(svg.elem.getAttribute('y')) * heightRatio;
+        const svgTransforms = parseTransform(svg.elem.getAttribute('transform'));
+        const svgRotate = svgTransforms.find(attr => attr.type === 'rotate');
+
         const parser = new DOMParser();
         const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
         const svgElement = svgDoc.documentElement;
+        document.body.appendChild(svgElement);
+
+        // create svg
+        const g = createSVGElement({
+            element: 'g',
+            attr: {
+                id: `${uuid()}`,
+                transform: ''
+                // transform: `rotate(${svgRotate.params[0] || 0})`
+                // width: viewWidth,
+                // height: viewHeight
+            }
+        });
+        let children = Array.from(svgElement.children);
+        children.forEach(v => g.appendChild(v));
+        svgElement.appendChild(g);
+        // const rootRotateValue = currScaleWidth > 0 && currScaleHeight > 0 ? (svgRotate.params[0] || 0) : -(svgRotate.params[0] || 0);
+
+        console.log('svgElement', new XMLSerializer().serializeToString(svgElement));
+        rotatePath(g, svgRotate.params[0] || 0);
+        console.log('rotatePath', new XMLSerializer().serializeToString(svgElement));
+        // eslint-disable-next-line
+        // debugger;
         flattenNestedGroups(svgElement);
         const [originalViewX, originalViewY, originalViewWidth, originalViewHeight] = svgElement.getAttribute('viewBox').split(' ').map(parseFloat);
         viewWidth = viewWidth || originalViewWidth;
         viewHeight = viewHeight || originalViewHeight;
 
-        console.log('', new XMLSerializer().serializeToString(svgElement));
+        console.log('flattenNestedGroups', new XMLSerializer().serializeToString(svgElement), rotatePath);
         const attributes = {};
-        const scaleWidth = svg.elem.getAttribute('width') ? svg.elem.getAttribute('width') * 935 / 240 / originalViewWidth : viewWidth / originalViewWidth;
-        const scaleHeight = svg.elem.getAttribute('width') ? svg.elem.getAttribute('width') * 935 / 240 / originalViewWidth : viewHeight / originalViewHeight;
-        const x = parseFloat(svg.elem.getAttribute('x')) * 935 / 240;
-        const y = parseFloat(svg.elem.getAttribute('y')) * 935 / 240;
-        const svgTransforms = parseTransform(svg.elem.getAttribute('transform'));
-        const svgRotate = svgTransforms.find(attr => attr.type === 'rotate');
+        const scaleWidth = svg.elem.getAttribute('width') ? svg.elem.getAttribute('width') * widthRatio / originalViewWidth : viewWidth / originalViewWidth;
+        const scaleHeight = svg.elem.getAttribute('height') ? svg.elem.getAttribute('height') * heightRatio / originalViewHeight : viewHeight / originalViewHeight;
 
-        const children = Array.from(svgElement.children);
-        document.body.appendChild(svgElement);
-        const combineTranslate = (translateValue = 0, originalViewBoxValue = 0, svgScaleValue = 1, currXorYValue = 0) => {
-            return (translateValue - originalViewBoxValue) * svgScaleValue + currXorYValue;
-        };
+
+        children = Array.from(svgElement.children);
+        const combineTranslate = (translateValue = 0, originalViewBoxValue = 0, svgScaleValue = 1, currXorYValue = 0) => (translateValue - originalViewBoxValue) * svgScaleValue + currXorYValue;
         for (let i = 0; i < children.length; i++) {
             const curr = children[i];
             const transformAttrs = parseTransform(curr.getAttribute('transform'));
@@ -476,34 +581,34 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
             const rotate = transformAttrs.find(attr => attr.type === 'rotate');
             const skewX = transformAttrs.find(attr => attr.type === 'skewX');
             const skewY = transformAttrs.find(attr => attr.type === 'skewY');
+            console.log('rotate', scale);
 
             // caculate tag finally transform
             const currX = combineTranslate(translate && translate.params[0], originalViewX, scaleWidth, x);
             const currY = combineTranslate(translate && translate.params[1], originalViewY, scaleHeight, y);
             const currScaleWidth = scale ? scale.params[0] * scaleWidth : scaleWidth;
-            const currScaleHeight = scale ? scale.params[1] * scaleWidth : scaleHeight;
+            const currScaleHeight = scale ? scale.params[1] * scaleHeight : scaleHeight;
             const currRotate = rotate && rotate.params[0] || 0;
             const currSkewX = skewX && skewX.params[0] || 0;
             const currSkewY = skewY && skewY.params[0] || 0;
-            attributes.transform = `translate(${currX} ${currY}) scale(${currScaleWidth} ${currScaleHeight}) rotate(${currRotate}) skewX(${currSkewX}) skewY(${currSkewY})`;
+            attributes.transform = `translate(${currX - viewboxX} ${currY - viewboxY}) scale(${currScaleWidth} ${currScaleHeight}) rotate(${currRotate}) skewX(${currSkewX}) skewY(${currSkewY})`;
             setAttributes(curr, attributes);
 
             // apply image(from luban fontend canvas) rotate to tag
             // Because they are different coordinate systems, the rotate value on the tag cannot be directly added.
-            const rootRotateValue = currScaleWidth > 0 && currScaleHeight > 0 ? (svgRotate.params[0] || 0) : -(svgRotate.params[0] || 0);
-            rotatePath(curr, rootRotateValue);
+            // const rootRotateValue = currScaleWidth > 0 && currScaleHeight > 0 ? (svgRotate.params[0] || 0) : -(svgRotate.params[0] || 0);
+            // rotatePath(curr, rootRotateValue);
         }
         document.body.removeChild(svgElement);
         return children;
     };
-    const getSvgString = async (svg, viewWidth, viewHeight) => {
+    const getSvgString = async (svg, viewboxX, viewboxY, viewWidth, viewHeight, widthRatio, heightRatio) => {
         // if (svg.svgPath) return [svg.svgPath];
         const url = svg.resource.originalFile.path;
         return fetch(`http://localhost:8080${url}`)
             .then(async response => response.text())
             .then(svgString => {
-                console.log('svgString=====================', svgString);
-                return createSvg(svgString, svg, viewWidth, viewHeight);
+                return createSvg(svgString, svg, viewboxX, viewboxY, viewWidth, viewHeight, widthRatio, heightRatio);
             })
             .catch(error => {
                 // 处理错误
@@ -537,15 +642,15 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
                 const transformYCenter = transformedY + transformedHeight / 2;
 
                 // scale image for keeping img dimensions of pixel.
-                cloneImgElem.setAttribute('x', transformedX);
-                cloneImgElem.setAttribute('y', transformedY);
+                cloneImgElem.setAttribute('x', transformedX - viewboxX);
+                cloneImgElem.setAttribute('y', transformedY - viewboxY);
                 cloneImgElem.setAttribute('width', transformedWidth);
                 cloneImgElem.setAttribute('height', transformedHeight);
 
                 // because we will scale img for keeping img dimensions of pixel.
                 // so we need to handle img rotate after img scaled.
                 // here we remove rotate first and add a rotate, which center is the center after img scale
-                cloneImgElem.setAttribute('transform', `${originalTransform.replace(/rotate\((.*?)\)/ig, '')} rotate(${img.angle}, ${transformXCenter} ${transformYCenter})`);
+                cloneImgElem.setAttribute('transform', `${originalTransform.replace(/rotate\((.*?)\)/ig, '')} rotate(${img.angle}, ${transformXCenter - viewboxX} ${transformYCenter - viewboxY})`);
             });
 
         const wrapperSvgContent = new XMLSerializer().serializeToString(wrapperClone);
@@ -560,7 +665,7 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
             gSvgContent = new XMLSerializer().serializeToString(gElem);
         }
 
-        const svgTag = `<svg xmlns="http://www.w3.org/2000/svg" width="${viewWidth}" height="${viewHeight}" viewBox="${viewboxX} ${viewboxY} ${viewWidth} ${viewHeight}">
+        const svgTag = `<svg xmlns="http://www.w3.org/2000/svg" width="${viewWidth}" height="${viewHeight}" viewBox="${0} ${0} ${viewWidth} ${viewHeight}">
             ${wrapperSvgContent + gSvgContent + imgsSvgContent + otherSvgsContent}
             </svg>
             `;
@@ -591,7 +696,7 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         console.log(elem);
         // svgs.forEach(svg => elem.append(svg.svgPath));
         for (let i = 0; i < svgs.length; i++) {
-            const svgShapeTags = await getSvgString(svgs[i], viewWidth, viewHeight);
+            const svgShapeTags = await getSvgString(svgs[i], viewboxX, viewboxY, viewWidth, viewHeight, widthRatio, heightRatio);
             svgShapeTags.forEach(svgShapeTag => {
                 !svgShapeTag.hasAttribute('fill') && svgShapeTag.setAttribute('fill', 'black');
                 !svgShapeTag.hasAttribute('fill-opacity') && svgShapeTag.setAttribute('fill-opacity', '0');
@@ -628,6 +733,7 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         //         body: i18n._('Failed to import this object. \nPlease select a supported file format.')
         //     });
         // }));
+        console.log(PROCESS_MODE_GREYSCALE, HEAD_LASER, modal, dispatch, editorActions, i18n);
         return svgTag;
     };
     const handleMask = async (svgs, imgs) => {
@@ -643,7 +749,9 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         const maskElem = createSVGElement({
             element: 'mask',
             attr: {
-                id: `${uuid()}`
+                id: `${uuid()}`,
+                // width: viewWidth,
+                // height: viewHeight
             }
         });
         const rect = createSVGElement({
@@ -656,13 +764,11 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
             }
         });
         const othersElem = [];
-        setAttributes(rect, { 'x': viewboxX, 'y': viewboxY });
+        setAttributes(rect, { 'x': 0, 'y': 0 });
         maskElem.append(rect);
         for (let i = 0; i < svgs.length; i++) {
-            const svgShapeTags = await getSvgString(svgs[i], viewWidth, viewHeight);
-            console.log('svgShapeTags', svgShapeTags);
+            const svgShapeTags = await getSvgString(svgs[i], viewboxX, viewboxY, viewWidth, viewHeight, widthRatio, heightRatio);
             svgShapeTags.forEach(svgShapeTag => {
-                console.log('svgShapeTag', svgShapeTag);
                 // !svgShapeTag.hasAttribute('fill') &&
                 svgShapeTag.setAttribute('fill', 'black');
                 !svgShapeTag.hasAttribute('fill-opacity') && svgShapeTag.setAttribute('fill-opacity', '1');
