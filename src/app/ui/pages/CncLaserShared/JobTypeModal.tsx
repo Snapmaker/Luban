@@ -1,11 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+
 import { renderModal } from '../../utils';
 import i18n from '../../../lib/i18n';
 import JobType from '../../widgets/JobType';
 import { actions as editorActions } from '../../../flux/editor';
 import { HEAD_CNC } from '../../../constants';
 
+// TODO: Refactor this component
 function renderJobTypeModal(
     headType, dispatch, showJobType,
     setShowJobType, jobTypeState, setJobTypeState,
@@ -17,7 +19,6 @@ function renderJobTypeModal(
         renderBody() {
             return (
                 <JobType
-                    isWidget={false}
                     headType={headType}
                     jobTypeState={jobTypeState}
                     setJobTypeState={setJobTypeState}
@@ -68,6 +69,7 @@ function renderJobTypeModal(
         }
     });
 }
+
 renderJobTypeModal.propTypes = {
     headType: PropTypes.string.isRequired,
     showJobType: PropTypes.bool.isRequired,

@@ -9,11 +9,11 @@ import {
     DISPLAYED_TYPE_MODEL,
     HEAD_LASER,
     // MACHINE_TOOL_HEADS,
-    PAGE_EDITOR } from '../../constants';
+    PAGE_EDITOR
+} from '../../constants';
 import ModelGroup from '../../models/ModelGroup';
 import OperationHistory from '../../core/OperationHistory';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
-
 import {
     ACTION_UPDATE_CONFIG,
     ACTION_UPDATE_STATE
@@ -27,6 +27,7 @@ import { timestamp } from '../../../shared/lib/random-utils';
 import { STEP_STAGE, getProgressStateManagerInstance } from '../../lib/manager/ProgressManager';
 import { logToolBarOperation } from '../../lib/gaEvent';
 import { getMachineSeriesWithToolhead } from '../../constants/machines';
+import { WorkpieceShape, OriginType, RectangleWorkpieceReference } from '../../constants/coordinate';
 
 const initModelGroup = new ModelGroup('laser');
 const operationHistory = new OperationHistory();
@@ -109,6 +110,11 @@ const INITIAL_STATE = {
     // coordinateMode
     coordinateMode: COORDINATE_MODE_CENTER,
     coordinateSize: { x: 0, y: 0 },
+    origin: {
+        type: OriginType.Workpiece,
+        reference: RectangleWorkpieceReference.Center,
+        referenceMetadata: {},
+    },
 
     // check to remove models
     removingModelsWarning: false,
@@ -157,20 +163,44 @@ export const actions = {
 
         // Set machine size into coordinate default size
         const { size } = getState().machine;
-        const { coordinateSize, materials, useBackground } = getState().laser;
-        const { isRotate } = materials;
-        if (isRotate) {
-            const newCoordinateSize = {
-                x: materials.diameter * Math.PI,
-                y: materials.length
-            };
-            dispatch(editorActions.changeCoordinateMode(HEAD_LASER, COORDINATE_MODE_BOTTOM_CENTER, newCoordinateSize));
-        } else {
-            if (size && coordinateSize.x === 0 && coordinateSize.y === 0) {
+        const { materials, useBackground } = getState().laser;
+        const { isRotate } = materials; // Get default material from flux state
+        if (!isRotate) {
+            if (size/* && coordinateSize.x === 0 && coordinateSize.y === 0*/) {
                 dispatch(editorActions.updateState(HEAD_LASER, {
                     coordinateSize: size
                 }));
+
+                dispatch(editorActions.setWorkpiece(
+                    HEAD_LASER,
+                    WorkpieceShape.Rectangle,
+                    {
+                        x: size.x,
+                        y: size.y,
+                    }
+                ));
+
+                const newCoordinateSize = {
+                    x: size.x,
+                    y: size.y,
+                };
+                dispatch(editorActions.changeCoordinateMode(HEAD_LASER, COORDINATE_MODE_CENTER, newCoordinateSize));
             }
+        } else {
+            dispatch(editorActions.setWorkpiece(
+                HEAD_LASER,
+                WorkpieceShape.Cylinder,
+                {
+                    diameter: 40,
+                    length: 75,
+                }
+            ));
+
+            const newCoordinateSize = {
+                x: 40 * Math.PI,
+                y: 75,
+            };
+            dispatch(editorActions.changeCoordinateMode(HEAD_LASER, COORDINATE_MODE_BOTTOM_CENTER, newCoordinateSize));
         }
         if (useBackground) {
             dispatch(actions.removeBackgroundImage());

@@ -21,9 +21,9 @@ import { ToastContainer } from './components/Toast';
 import AppLayout from './layouts/AppLayout';
 import Cnc from './pages/Cnc';
 import HomePage from './pages/HomePage';
-import Laser from './pages/Laser';
 import Settings from './pages/Settings';
 import Workspace from './pages/Workspace';
+import { LaserMainPage } from './pages/laser-main';
 import { PrintMainPage } from './pages/print-main';
 
 
@@ -165,7 +165,7 @@ class App extends React.PureComponent<AppProps, AppState> {
                         <Route path="/" exact component={HomePage} />
                         <Route path="/workspace" component={Workspace} />
                         <Route path="/printing" component={PrintMainPage} />
-                        <Route path="/laser" component={Laser} />
+                        <Route path="/laser" component={LaserMainPage} />
                         <Route path="/cnc" component={Cnc} />
                         <Route path="/settings" component={Settings} />
                         <Route component={HomePage} />

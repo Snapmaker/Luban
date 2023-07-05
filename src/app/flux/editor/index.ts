@@ -17,9 +17,10 @@ import {
     PAGE_PROCESS,
     PROCESS_MODES_EXCEPT_VECTOR,
     PROCESS_MODE_VECTOR,
-    SOURCE_TYPE
+    SOURCE_TYPE,
 } from '../../constants';
 import CompoundOperation from '../../core/CompoundOperation';
+import OperationHistory from '../../core/OperationHistory';
 import { controller } from '../../lib/controller';
 import log from '../../lib/log';
 import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
@@ -27,6 +28,7 @@ import workerManager from '../../lib/manager/workerManager';
 import { DEFAULT_TEXT_CONFIG, checkParams, generateModelDefaultConfigs, isOverSizeModel, limitModelSizeByMachineSize } from '../../models/ModelInfoUtils';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
 import SvgModel from '../../models/SvgModel';
+import ToolPath from '../../toolpaths/ToolPath';
 import { NS } from '../../ui/SVGEditor/lib/namespaces';
 import ModelLoader from '../../ui/widgets/PrintingVisualizer/ModelLoader';
 import AddOperation2D from '../operation-history/AddOperation2D';
@@ -41,8 +43,6 @@ import RotateOperation2D from '../operation-history/RotateOperation2D';
 import ScaleOperation2D from '../operation-history/ScaleOperation2D';
 import VisibleOperation2D from '../operation-history/VisibleOperation2D';
 import { baseActions } from './actions-base';
-import OperationHistory from '../../core/OperationHistory';
-import ToolPath from '../../toolpaths/ToolPath';
 
 
 /* eslint-disable-next-line import/no-cycle */
@@ -52,7 +52,14 @@ import { actions as operationHistoryActions } from '../operation-history';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as projectActions } from '../project';
 /* eslint-disable-next-line import/no-cycle */
+import { CylinderWorkpieceSize, Materials, Origin, RectangleWorkpieceSize, WorkpieceShape } from '../../constants/coordinate';
+import ModelGroup from '../../models/ModelGroup';
+import ToolPathGroup from '../../toolpaths/ToolPathGroup';
 import { actions as appGlobalActions } from '../app-global';
+
+
+declare type HeadType = 'laser' | 'cnc';
+// declare type HeadType = 'a' | 'b';
 
 const getSourceType = fileName => {
     let sourceType;
@@ -1977,8 +1984,8 @@ export const actions = {
             allMaterials.x = round(allMaterials.diameter * Math.PI, 2);
             allMaterials.y = allMaterials.length;
         } else {
-            allMaterials.x = 0;
-            allMaterials.y = 0;
+            // allMaterials.x = 0;
+            // allMaterials.y = 0;
         }
         modelGroup.setMaterials(allMaterials);
 
@@ -1997,6 +2004,46 @@ export const actions = {
         if (materials.isRotate !== allMaterials.isRotate) {
             dispatch(actions.processSelectedModel(headType));
         }
+    },
+
+    updateWorkpieceObject: (headType: HeadType) => {
+        return (dispatch, getState) => {
+            const modelGroup = getState()[headType].modelGroup as ModelGroup;
+            const toolPathGroup = getState()[headType].toolPathGroup as ToolPathGroup;
+
+            const materials = getState()[headType].materials as Materials;
+            // const origin = getState()[headType].origin as Origin;
+
+            const allMaterials = {
+                ...materials,
+            };
+
+            if (materials.isRotate) {
+                materials.x = round(materials.diameter * Math.PI, 2);
+                materials.y = materials.length;
+            } else {
+                // allMaterials.x = 0;
+                // allMaterials.y = 0;
+            }
+            modelGroup.setMaterials(materials);
+
+            toolPathGroup.updateMaterials(materials);
+            toolPathGroup.showSimulationObject(false);
+
+            // Update again in case x and y are re-calculated
+            dispatch(
+                baseActions.updateState(headType, {
+                    materials: {
+                        ...materials
+                    },
+                    showSimulation: false,
+                })
+            );
+
+            if (materials.isRotate !== allMaterials.isRotate) {
+                dispatch(actions.processSelectedModel(headType));
+            }
+        };
     },
 
     /**
@@ -2036,6 +2083,7 @@ export const actions = {
         const oldCoordinateMode = getState()[headType].coordinateMode;
         coordinateMode = coordinateMode ?? oldCoordinateMode;
         const { size } = getState().machine;
+
         coordinateSize = coordinateSize ?? {
             x: size.x,
             y: size.y,
@@ -2044,7 +2092,7 @@ export const actions = {
             // move all elements
             const coorDelta = {
                 dx: 0,
-                dy: 0
+                dy: 0,
             };
             if (oldCoordinateMode.value !== COORDINATE_MODE_BOTTOM_CENTER.value) {
                 coorDelta.dx -= (coordinateSize.x / 2) * oldCoordinateMode.setting.sizeMultiplyFactor.x;
@@ -2069,9 +2117,35 @@ export const actions = {
         dispatch(
             actions.updateState(headType, {
                 coordinateMode,
-                coordinateSize
+                coordinateSize,
             })
         );
+    },
+
+    /**
+     * Configure workpiece.
+     */
+    setWorkpiece: (headType: HeadType, shape: WorkpieceShape, size: RectangleWorkpieceSize | CylinderWorkpieceSize) => {
+        return (dispatch) => {
+            dispatch(actions.updateState(headType, {
+                materials: {
+                    isRotate: shape === WorkpieceShape.Cylinder,
+                    diameter: (size as CylinderWorkpieceSize).diameter,
+                    length: (size as CylinderWorkpieceSize).length,
+                    x: (size as RectangleWorkpieceSize).x,
+                    y: (size as RectangleWorkpieceSize).y,
+                    z: (size as RectangleWorkpieceSize).z,
+                }
+            }));
+        };
+    },
+
+    setOrigin: (headType: HeadType, origin: Origin) => {
+        return (dispatch) => {
+            dispatch(actions.updateState(headType, {
+                origin,
+            }));
+        };
     },
 
     scaleCanvasToFit: headType => (dispatch, getState) => {

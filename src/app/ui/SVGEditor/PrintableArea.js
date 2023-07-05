@@ -4,6 +4,7 @@ import {
     EPSILON, HEAD_CNC
 } from '../../constants';
 import { isEqual } from '../../../shared/lib/utils';
+import { OriginType } from '../../constants/coordinate';
 
 class PrintableArea {
     constructor(svgFactory) {
@@ -22,6 +23,9 @@ class PrintableArea {
         };
         this.coordinateMode = svgFactory.coordinateMode;
         this.coordinateSize = (svgFactory.coordinateSize && svgFactory.coordinateSize.x > 0) ? svgFactory.coordinateSize : this.size;
+        this.origin = {
+            type: OriginType.Workpiece,
+        };
         this._setCoordinateMode(this.coordinateMode, this.coordinateSize);
 
         this.scale = svgFactory.scale;
@@ -72,10 +76,13 @@ class PrintableArea {
         }
     }
 
-    updateCoordinateMode(coordinateMode, coordinateSize) {
+    updateCoordinateMode(origin, coordinateMode, coordinateSize) {
         while (this.printableAreaGroup.firstChild) {
             this.printableAreaGroup.removeChild(this.printableAreaGroup.lastChild);
         }
+
+        this.origin = origin;
+
         this.coordinateSize = coordinateSize;
         this._setCoordinateMode(coordinateMode);
         this._setCoordinateAxes();
@@ -99,6 +106,10 @@ class PrintableArea {
     }
 
     _setGridLine() {
+        if (this.origin && this.origin.type === OriginType.Object) {
+            return;
+        }
+
         const { x, y } = this.size;
         const { x: cx, y: cy } = this.coordinateSize;
         const xMin = x - cx / 2 + this.coorDelta.x;
@@ -487,6 +498,10 @@ class PrintableArea {
         if (this.materials.isRotate) {
             return;
         }
+        if (this.origin && this.origin.type === OriginType.Object) {
+            return;
+        }
+
         const { x, y } = this.size;
         let origin = null;
         if (this.materials.headType === HEAD_CNC && this.materials.useLockingBlock) {

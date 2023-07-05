@@ -62,7 +62,7 @@ const StartProject: React.FC = () => {
         setBeginSelected(type);
     };
 
-    const handleNewFile = async (isRotate, headType) => {
+    const handleNewFile = async (isRotate: boolean, headType) => {
         UniApi.Event.emit('appbar-menu:new-file', { headType, isRotate });
     };
 

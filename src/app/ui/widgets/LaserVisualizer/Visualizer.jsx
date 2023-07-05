@@ -49,6 +49,7 @@ class Visualizer extends Component {
 
         coordinateMode: PropTypes.object.isRequired,
         coordinateSize: PropTypes.object.isRequired,
+        origin: PropTypes.object.isRequired,
         size: PropTypes.object.isRequired,
         scale: PropTypes.number.isRequired,
         target: PropTypes.object,
@@ -488,6 +489,7 @@ class Visualizer extends Component {
                         target={this.props.target}
                         coordinateMode={this.props.coordinateMode}
                         coordinateSize={this.props.coordinateSize}
+                        origin={this.props.origin}
                         updateTarget={this.props.updateTarget}
                         updateScale={this.props.updateScale}
                         SVGActions={this.props.SVGActions}
@@ -700,8 +702,12 @@ const mapStateToProps = (state, ownProps) => {
     const { size, series } = state.machine;
     const { currentModalPath, menuDisabledCount } = state.appbarMenu;
     const { background, progressStatesManager } = state.laser;
-    const { SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType,
-        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress, coordinateMode, coordinateSize, enableShortcut, isOverSize, SVGCanvasMode, SVGCanvasExt } = state.laser;
+    const {
+        SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType,
+        isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress,
+        coordinateMode, coordinateSize, origin,
+        enableShortcut, isOverSize, SVGCanvasMode, SVGCanvasExt,
+    } = state.laser;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedToolPathModelArray = modelGroup.getSelectedToolPathModels();
 
@@ -720,6 +726,7 @@ const mapStateToProps = (state, ownProps) => {
         series,
         coordinateMode,
         coordinateSize,
+        origin,
         materials,
         hasModel: modelGroup.hasModel(),
         selectedModelID,

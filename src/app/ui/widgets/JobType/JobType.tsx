@@ -1,22 +1,34 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import PropTypes from 'prop-types';
-// import classNames from 'classnames';
+
+import {
+    COORDINATE_MODE_BOTTOM_CENTER,
+    COORDINATE_MODE_BOTTOM_LEFT,
+    COORDINATE_MODE_BOTTOM_RIGHT,
+    COORDINATE_MODE_CENTER,
+    COORDINATE_MODE_TOP_LEFT,
+    COORDINATE_MODE_TOP_RIGHT,
+    HEAD_CNC,
+    HEAD_LASER,
+} from '../../../constants';
+import { RootState } from '../../../flux/index.def';
 import i18n from '../../../lib/i18n';
 import { toFixed } from '../../../lib/numeric-utils';
-// import styles from './styles.styl';
-import {
-    COORDINATE_MODE_CENTER, COORDINATE_MODE_BOTTOM_LEFT, COORDINATE_MODE_BOTTOM_RIGHT, COORDINATE_MODE_TOP_LEFT,
-    COORDINATE_MODE_TOP_RIGHT, COORDINATE_MODE_BOTTOM_CENTER, HEAD_LASER, HEAD_CNC
-} from '../../../constants';
 import { NumberInput as Input } from '../../components/Input';
 import Select from '../../components/Select';
+import { JobTypeState } from './JobTypeState';
 
-function JobType({ headType, jobTypeState, setJobTypeState }) {
-    const { size, series } = useSelector(state => state.machine);
+
+interface JobTypeProps {
+    headType: string;
+    jobTypeState: JobTypeState;
+    setJobTypeState: (jobTypeState: JobTypeState) => void;
+}
+
+const JobType: React.FC<JobTypeProps> = (props) => {
+    const { headType, jobTypeState, setJobTypeState } = props;
+    const { size, series } = useSelector((state: RootState) => state.machine);
     const { inProgress, useBackground } = useSelector(state => state[headType]);
-    // const [isUseLockingBlock, setIsUseLockingBlock] = useState(useLockingBlock);
-    // const [lockingBlockPosition, setLockingBlockPosition] = useState(position);
     const isArtisan = series === 'A400';
 
     const coordinateModeList = [
@@ -174,7 +186,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                         />
                         <div className="margin-left-16 sm-flex-width">
                             <div className="sm-flex height-32 position-re">
-                                <span className="width-88 margin-right-8">{i18n._('key-CncLaser/JobSetup-Width (X)')}</span>
+                                <span className="width-120 margin-right-8">{i18n._('key-CncLaser/JobSetup-Width (X)')}</span>
                                 <Input
                                     suffix="mm"
                                     disabled={inProgress || settingSizeDisabled}
@@ -183,7 +195,8 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                                     min={2}
                                     onChange={(value) => {
                                         actions.setCoordinateModeAndCoordinateSize(
-                                            coordinateMode, {
+                                            coordinateMode,
+                                            {
                                                 x: value,
                                                 y: coordinateSize.y
                                             }
@@ -192,7 +205,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                                 />
                             </div>
                             <div className="sm-flex height-32 position-re margin-top-16">
-                                <span className="width-88 margin-right-8">{i18n._('key-CncLaser/JobSetup-Height (Y)')}</span>
+                                <span className="width-120 margin-right-8">{i18n._('key-CncLaser/JobSetup-Height (Y)')}</span>
                                 <Input
                                     suffix="mm"
                                     disabled={inProgress || settingSizeDisabled}
@@ -201,7 +214,8 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                                     min={10}
                                     onChange={(value) => {
                                         actions.setCoordinateModeAndCoordinateSize(
-                                            coordinateMode, {
+                                            coordinateMode,
+                                            {
                                                 x: coordinateSize.x,
                                                 y: value
                                             }
@@ -229,7 +243,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                             {/* sm-flex-width sm-flex height-32 */}
                             {isArtisan && headType === HEAD_CNC && (
                                 <div className="margin-bottom-16 sm-flex height-32">
-                                    <span className="width-88 margin-right-8 text-overflow-ellipsis">{i18n._('key-CncLaser/JobSetup-Use Locking block')}</span>
+                                    <span className="width-120 margin-right-8 text-overflow-ellipsis">{i18n._('key-CncLaser/JobSetup-Use Locking block')}</span>
                                     <Select
                                         size="120px"
                                         clearable={false}
@@ -241,7 +255,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                             )}
                             {!(headType === HEAD_CNC && useLockingBlock) && (
                                 <div className="height-32 sm-flex">
-                                    <span className="width-88 margin-right-8 text-overflow-ellipsis">{i18n._('key-CncLaser/JobSetup-Origin Position')}</span>
+                                    <span className="width-120 margin-right-8 text-overflow-ellipsis">{i18n._('key-CncLaser/JobSetup-Origin Position')}</span>
                                     <Select
                                         backspaceRemoves={false}
                                         size="120px"
@@ -257,7 +271,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                             )}
                             {headType === HEAD_CNC && useLockingBlock && (
                                 <div className="height-32 sm-flex">
-                                    <span className="width-88 margin-right-8 text-overflow-ellipsis">{i18n._('key-CncLaser/JobSetup-Locking block position')}</span>
+                                    <span className="width-120 margin-right-8 text-overflow-ellipsis">{i18n._('key-CncLaser/JobSetup-Locking block position')}</span>
                                     <Select
                                         size="120px"
                                         clearable={false}
@@ -290,7 +304,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                     </div>
                     <div className="margin-top-16">
                         <div className="sm-flex height-32 position-re">
-                            <span className="width-88 margin-right-8">{i18n._('key-CncLaser/JobSetup-Length (L)')}</span>
+                            <span className="width-120 margin-right-8">{i18n._('key-CncLaser/JobSetup-Length (L)')}</span>
                             <Input
                                 suffix="mm"
                                 disabled={inProgress || settingSizeDisabled}
@@ -299,7 +313,8 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                                 min={10}
                                 onChange={(value) => {
                                     actions.setJobTypeState(
-                                        COORDINATE_MODE_BOTTOM_CENTER, {
+                                        COORDINATE_MODE_BOTTOM_CENTER,
+                                        {
                                             x: diameter * Math.PI,
                                             y: value
                                         },
@@ -309,7 +324,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                             />
                         </div>
                         <div className="sm-flex height-32 position-re margin-top-8">
-                            <span className="width-88 margin-right-8">{i18n._('key-CncLaser/JobSetup-Diameter (D)')}</span>
+                            <span className="width-120 margin-right-8">{i18n._('key-CncLaser/JobSetup-Diameter (D)')}</span>
                             <Input
                                 suffix="mm"
                                 disabled={inProgress || settingSizeDisabled}
@@ -318,7 +333,8 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                                 min={2}
                                 onChange={(value) => {
                                     actions.setJobTypeState(
-                                        COORDINATE_MODE_BOTTOM_CENTER, {
+                                        COORDINATE_MODE_BOTTOM_CENTER,
+                                        {
                                             x: value * Math.PI,
                                             y: length
                                         },
@@ -344,7 +360,7 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                             alt="3 Axis"
                         />
                         <div className="margin-left-16 sm-flex-width sm-flex height-32">
-                            <span className="width-88 margin-right-8">{i18n._('key-CncLaser/JobSetup-Origin Position')}</span>
+                            <span className="width-120 margin-right-8">{i18n._('key-CncLaser/JobSetup-Origin Position')}</span>
                             {headType === HEAD_LASER && (
                                 <Select
                                     backspaceRemoves={false}
@@ -369,7 +385,8 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
                                         {
                                             label: i18n._('key-CncLaser/JobSetup-Center'),
                                             value: 'center'
-                                        }]}
+                                        }
+                                    ]}
                                     isGroup={false}
                                     value="center"
                                     disabled
@@ -381,11 +398,6 @@ function JobType({ headType, jobTypeState, setJobTypeState }) {
             )}
         </React.Fragment>
     );
-}
-JobType.propTypes = {
-    headType: PropTypes.string.isRequired,
-    jobTypeState: PropTypes.object.isRequired,
-    setJobTypeState: PropTypes.func.isRequired
 };
 
 export default JobType;

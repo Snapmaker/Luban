@@ -103,7 +103,8 @@ class TaskManager {
     }
 
     private onFail(task: Task, res: string) {
-        log.warn(`Task ${task.taskType} failed. err msg = ${res}`);
+        log.warn(`Task ${task.taskType} failed. err msg:`);
+        log.warn(res);
 
         if (task.taskStatus !== TASK_STATUS_DEPRECATED) {
             task.taskStatus = TASK_STATUS_FAILED;

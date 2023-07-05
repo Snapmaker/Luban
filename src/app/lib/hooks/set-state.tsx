@@ -1,8 +1,11 @@
 import { useState, useCallback } from 'react';
 
-function useSetState(initial = {}) {
-    const [state, saveState] = useState(initial);
-    const setState = useCallback((newState) => {
+type UpdateStateAction<S> = (newState: S) => void;
+
+function useSetState<S>(initial: S): [S, UpdateStateAction<object>] {
+    const [state, saveState] = useState<S>(initial);
+
+    const updateState = useCallback((newState: object) => {
         if (typeof newState === 'function') {
             saveState(prev => ({ ...prev, ...newState(prev) }));
         } else {
@@ -10,6 +13,7 @@ function useSetState(initial = {}) {
         }
     }, []);
 
-    return [state, setState];
+    return [state, updateState];
 }
+
 export default useSetState;

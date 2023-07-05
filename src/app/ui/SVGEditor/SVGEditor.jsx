@@ -224,6 +224,7 @@ const SVGEditor = forwardRef((props, ref) => {
                             updateTarget={props.updateTarget}
                             coordinateMode={props.coordinateMode}
                             coordinateSize={props.coordinateSize}
+                            origin={props.origin}
                             ref={canvas}
                             onCreateElement={props.onCreateElement}
                             onSelectElements={props.onSelectElements}
@@ -275,6 +276,7 @@ SVGEditor.propTypes = {
     target: PropTypes.object,
     coordinateMode: PropTypes.object.isRequired,
     coordinateSize: PropTypes.object.isRequired,
+    origin: PropTypes.object.isRequired,
     editable: PropTypes.bool,
     menuDisabledCount: PropTypes.number,
     SVGCanvasMode: PropTypes.string.isRequired,
