@@ -296,19 +296,57 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
     // Helper function to decompose a 2D transformation matrix
     const decomposeMatrix = (matrix) => {
         const [a, b, c, d, e, f] = matrix;
-        let scaleX = Math.sign(a) * Math.sqrt(a * a + b * b);
-        let scaleY = Math.sign(d) * Math.sqrt(c * c + d * d);
-        const skewX = Math.atan2(-b, a);
-        const skewY = Math.atan2(c, d);
-        const angle = Math.atan2(-b, a) * (180 / Math.PI);
-
-        if (Math.abs(angle) > 90) {
-            scaleX = -scaleX;
-            scaleY = -scaleY;
-        }
 
         const translateX = e;
         const translateY = f;
+        let scaleX = Math.sign(a) * Math.sqrt(a * a + b * b);
+        let scaleY = Math.sign(d) * Math.sqrt(c * c + d * d);
+        let skewX = Math.atan2(-b, a);
+        let skewY = Math.atan2(c, d);
+        let angle = Math.atan2(-b, a) * (180 / Math.PI);
+
+        function radToDeg(radia) {
+            // Radian to degree.
+            return (180 * radia) / Math.PI;
+        }
+        const Delta = a * d - b * c;
+        // Apply the QR-like decomposition.
+        // https://frederic-wang.fr/decomposition-of-2d-transform-matrices.html
+        if (a !== 0 || b !== 0) {
+            const r = Math.sqrt(a * a + b * b);
+            angle = radToDeg(b > 0 ? Math.acos(a / r) : -Math.acos(a / r));
+            //   newScale(r, Delta / r)
+            //   s = 'scale(' + sx + (sx == sy ? '' : ',' + sy) + ') '
+            scaleX = r;
+            scaleY = Delta / r;
+            //   newSkewX(Math.atan((a * c + b * d) / (r * r)))
+            skewX = radToDeg(Math.atan((a * c + b * d) / (r * r)));
+        } else if (c !== 0 || d !== 0) {
+            const s = Math.sqrt(c * c + d * d);
+            //   newRotate(Math.PI / 2 - (d > 0 ? Math.acos(-c / s) : -Math.acos(c / s)))
+            angle = radToDeg(Math.PI / 2 - (d > 0 ? Math.acos(-c / s) : -Math.acos(c / s)));
+            //   newScale(Delta / s, s)
+            scaleX = Delta / s;
+            scaleY = s;
+            //   newSkewY(Math.atan((a * c + b * d) / (s * s)))
+            skewY = radToDeg(Math.atan((a * c + b * d) / (s * s)));
+        } else {
+            // a = b = c = d = 0
+            scaleX = 0;
+            scaleY = 0;
+        }
+        console.log(translateX, translateY, scaleX, scaleY, skewX, skewY, angle);
+        // let scaleX = Math.sign(a) * Math.sqrt(a * a + b * b);
+        // let scaleY = Math.sign(d) * Math.sqrt(c * c + d * d);
+        // const skewX = Math.atan2(-b, a);
+        // const skewY = Math.atan2(c, d);
+        // const angle = Math.atan2(-b, a) * (180 / Math.PI);
+
+        // // fix over 90deg scaleX/Y
+        // if (Math.abs(angle) > 90) {
+        //     scaleX = -scaleX;
+        //     scaleY = -scaleY;
+        // }
 
         return {
             translateX,
@@ -581,14 +619,14 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
             const rotate = transformAttrs.find(attr => attr.type === 'rotate');
             const skewX = transformAttrs.find(attr => attr.type === 'skewX');
             const skewY = transformAttrs.find(attr => attr.type === 'skewY');
-            console.log('rotate', scale);
+            console.log('rotate', scale, viewboxX, viewboxY);
 
             // caculate tag finally transform
             const currX = combineTranslate(translate && translate.params[0], originalViewX, scaleWidth, x);
             const currY = combineTranslate(translate && translate.params[1], originalViewY, scaleHeight, y);
             const currScaleWidth = scale ? scale.params[0] * scaleWidth : scaleWidth;
             const currScaleHeight = scale ? scale.params[1] * scaleHeight : scaleHeight;
-            const currRotate = rotate && rotate.params[0] || 0;
+            const currRotate = rotate && ((currScaleWidth < 0 || currScaleHeight < 0) ? -rotate.params[0] : rotate.params[0]) || 0;
             const currSkewX = skewX && skewX.params[0] || 0;
             const currSkewY = skewY && skewY.params[0] || 0;
             attributes.transform = `translate(${currX - viewboxX} ${currY - viewboxY}) scale(${currScaleWidth} ${currScaleHeight}) rotate(${currRotate}) skewX(${currSkewX}) skewY(${currSkewY})`;
