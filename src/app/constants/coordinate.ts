@@ -57,6 +57,8 @@ export type Workpiece = {
 export enum OriginType {
     Workpiece,
     Object,
+
+    CNCLockingBlock,
 }
 
 export enum RectangleWorkpieceReference {

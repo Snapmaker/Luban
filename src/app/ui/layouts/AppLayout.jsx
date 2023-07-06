@@ -805,7 +805,9 @@ class AppLayout extends React.PureComponent {
                     if (!isRotate) {
                         const { materials } = this.props.store?.[headType];
                         await this.props.changeCoordinateMode(headType, COORDINATE_MODE_CENTER);
-                        if (materials.isRotate !== isRotate) {
+
+                        // Update materials
+                        if (materials.isRotate) {
                             await this.props.updateMaterials(headType, { isRotate });
                         }
                     } else {

@@ -19,7 +19,7 @@ import { PREDEFINED_SHORTCUT_ACTIONS, ShortcutHandlerPriority, ShortcutManager }
 import UniApi from '../lib/uni-api';
 import { ToastContainer } from './components/Toast';
 import AppLayout from './layouts/AppLayout';
-import Cnc from './pages/Cnc';
+import { CNCMainPage } from './pages/cnc-main';
 import HomePage from './pages/HomePage';
 import Settings from './pages/Settings';
 import Workspace from './pages/Workspace';
@@ -166,7 +166,7 @@ class App extends React.PureComponent<AppProps, AppState> {
                         <Route path="/workspace" component={Workspace} />
                         <Route path="/printing" component={PrintMainPage} />
                         <Route path="/laser" component={LaserMainPage} />
-                        <Route path="/cnc" component={Cnc} />
+                        <Route path="/cnc" component={CNCMainPage} />
                         <Route path="/settings" component={Settings} />
                         <Route component={HomePage} />
                     </Switch>
