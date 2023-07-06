@@ -9,7 +9,6 @@ import { actions as cncActions } from '../../../flux/cnc';
 import { actions as editorActions } from '../../../flux/editor';
 import { actions as machineActions } from '../../../flux/machine';
 import { actions as projectActions } from '../../../flux/project';
-import useSetState from '../../../lib/hooks/set-state';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
 import { getUploadModeByFilename } from '../../../lib/units';
@@ -24,7 +23,6 @@ import ProjectLayout from '../../layouts/ProjectLayout';
 import { logPageView, renderModal, renderPopup, useUnsavedTitle } from '../../utils';
 import CNCVisualizer from '../../widgets/CNCVisualizer';
 import Thumbnail from '../../widgets/CncLaserShared/Thumbnail';
-import renderJobTypeModal from '../CncLaserShared/JobTypeModal';
 import useRenderMainToolBar from '../CncLaserShared/MainToolBar';
 import useRenderRemoveModelsWarning from '../CncLaserShared/RemoveAllModelsWarning';
 import renderRightView from '../CncLaserShared/RightView';
@@ -123,20 +121,11 @@ const Cnc: React.FC<CNCMainPageProps> = ({ location }) => {
     const [showJobType, setShowJobType] = useState(true);
     const [enabledIntro, setEnabledIntro] = useState(null);
     const initIndex = 0;
+
     const toolPaths = useSelector(state => state[HEAD_CNC]?.toolPathGroup?.getToolPaths(), shallowEqual);
     const toolPathGroup = useSelector(state => state[HEAD_CNC]?.toolPathGroup, shallowEqual);
-    const coordinateMode = useSelector(state => state[HEAD_CNC]?.coordinateMode, shallowEqual);
-    const coordinateSize = useSelector(state => state[HEAD_CNC]?.coordinateSize, shallowEqual);
-    const useLockingBlock = useSelector(state => state[HEAD_CNC]?.useLockingBlock, shallowEqual);
-    const lockingBlockPosition = useSelector(state => state[HEAD_CNC]?.lockingBlockPosition, shallowEqual);
     const materials = useSelector(state => state[HEAD_CNC]?.materials, shallowEqual);
-    const [jobTypeState, setJobTypeState] = useSetState({
-        coordinateMode,
-        coordinateSize,
-        materials,
-        useLockingBlock,
-        lockingBlockPosition
-    });
+
     const projectFileOversize = useSelector(state => state[HEAD_CNC]?.projectFileOversize, shallowEqual);
     const [isRotate, setIsRotate] = useState(materials?.isRotate);
     const dispatch = useDispatch();
@@ -152,16 +141,6 @@ const Cnc: React.FC<CNCMainPageProps> = ({ location }) => {
             isRotate: materials?.isRotate
         });
     }, []);
-
-    useEffect(() => {
-        setJobTypeState({
-            coordinateMode,
-            coordinateSize,
-            materials,
-            useLockingBlock,
-            lockingBlockPosition
-        });
-    }, [coordinateMode, coordinateSize, materials, useLockingBlock, lockingBlockPosition]);
 
     useEffect(() => {
         setIsRotate(!!location?.state?.isRotate);
@@ -208,19 +187,7 @@ const Cnc: React.FC<CNCMainPageProps> = ({ location }) => {
             key: 'homepage'
         });
     };
-    const jobTypeModal = renderJobTypeModal(
-        HEAD_CNC,
-        dispatch,
-        showJobType,
-        setShowJobType,
-        jobTypeState,
-        setJobTypeState,
-        coordinateMode,
-        coordinateSize,
-        materials,
-        useLockingBlock,
-        lockingBlockPosition
-    );
+
     const warningModal = useRenderWarning();
     const removeModelsWarningModal = useRenderRemoveModelsWarning({ headType: HEAD_CNC });
     const listActions = {
@@ -453,9 +420,6 @@ const Cnc: React.FC<CNCMainPageProps> = ({ location }) => {
             })}
             {warningModal}
             {removeModelsWarningModal}
-            {
-                false && jobTypeModal
-            }
             {/* Job Setup: Workpiece & Origin */
                 showJobType && (
                     <JobSetupModal
