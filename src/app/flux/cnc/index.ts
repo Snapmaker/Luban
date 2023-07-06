@@ -1,49 +1,59 @@
-/* eslint-disable import/no-cycle */
-import * as THREE from 'three';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, noop } from 'lodash';
+
+import { timestamp } from '../../../shared/lib/random-utils';
 import {
     COORDINATE_MODE_BOTTOM_CENTER,
-    COORDINATE_MODE_BOTTOM_LEFT,
     COORDINATE_MODE_CENTER,
-    DATA_PREFIX,
     DISPLAYED_TYPE_MODEL,
-    HEAD_LASER,
-    // MACHINE_TOOL_HEADS,
-    PAGE_EDITOR
+    HEAD_CNC,
+    PAGE_EDITOR,
 } from '../../constants';
-import ModelGroup from '../../models/ModelGroup';
+import { OriginType, RectangleWorkpieceReference } from '../../constants/coordinate';
+import { getMachineToolHeadConfigPath } from '../../constants/machines';
 import OperationHistory from '../../core/OperationHistory';
+import i18n from '../../lib/i18n';
+import { STEP_STAGE, getProgressStateManagerInstance } from '../../lib/manager/ProgressManager';
+import ModelGroup from '../../models/ModelGroup';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
+import ToolPathGroup from '../../toolpaths/ToolPathGroup';
 import {
     ACTION_UPDATE_CONFIG,
-    ACTION_UPDATE_STATE
+    ACTION_UPDATE_STATE,
+    ACTION_UPDATE_TRANSFORMATION
 } from '../actionType';
 import { actions as editorActions } from '../editor';
 import { actions as machineActions } from '../machine';
-import ToolPathGroup from '../../toolpaths/ToolPathGroup';
 import definitionManager from '../manager/DefinitionManager';
-import i18n from '../../lib/i18n';
-import { timestamp } from '../../../shared/lib/random-utils';
-import { STEP_STAGE, getProgressStateManagerInstance } from '../../lib/manager/ProgressManager';
-import { logToolBarOperation } from '../../lib/gaEvent';
-import { getMachineSeriesWithToolhead } from '../../constants/machines';
-import { WorkpieceShape, OriginType, RectangleWorkpieceReference } from '../../constants/coordinate';
 
-const initModelGroup = new ModelGroup('laser');
+// eslint-disable-next-line import/no-cycle
+const ACTION_CHANGE_TOOL_PARAMS = 'cnc/ACTION_CHANGE_TOOL_PARAMS';
+
+const initModelGroup = new ModelGroup('cnc');
 const operationHistory = new OperationHistory();
+
+const initialOrigin: Origin = {
+    type: OriginType.Workpiece,
+    reference: RectangleWorkpieceReference.Center,
+    referenceMetadata: {},
+};
+
 const INITIAL_STATE = {
-
-    page: PAGE_EDITOR,
-
     materials: {
         isRotate: false,
-        diameter: 40,
-        length: 75,
+        diameter: 35,
+        length: 70,
         fixtureLength: 20,
         x: 0,
         y: 0,
-        z: 0
+        z: 0,
     },
+
+    // Coordinate
+    coordinateMode: COORDINATE_MODE_CENTER,
+    coordinateSize: { x: 0, y: 0 },
+    origin: initialOrigin,
+
+    page: PAGE_EDITOR,
 
     stage: STEP_STAGE.EMPTY,
     progress: 0,
@@ -52,6 +62,13 @@ const INITIAL_STATE = {
     target: null,
 
     modelGroup: initModelGroup,
+
+    displayedType: DISPLAYED_TYPE_MODEL,
+    toolPathGroup: new ToolPathGroup(initModelGroup, 'cnc'),
+    showToolPath: false,
+    showSimulation: false,
+    simulationNeedToPreview: true,
+
     SVGActions: new SVGActionsFactory(initModelGroup),
     SVGCanvasMode: 'select',
     SVGCanvasExt: {
@@ -59,11 +76,6 @@ const INITIAL_STATE = {
         showExtShape: false,
         elem: null
     },
-
-    displayedType: DISPLAYED_TYPE_MODEL,
-    toolPathGroup: new ToolPathGroup(initModelGroup, 'laser'),
-    showToolPath: false,
-    showSimulation: false,
 
     isGcodeGenerating: false,
     isChangedAfterGcodeGenerating: true,
@@ -73,14 +85,16 @@ const INITIAL_STATE = {
     selectedModelID: null,
     selectedModelVisible: true,
     sourceType: '',
-    mode: '',
+    mode: '', // bw, greyscale, vector
 
-    printOrder: 1,
     transformation: {},
     transformationUpdateTime: new Date().getTime(),
 
-    gcodeConfig: {},
     config: {},
+
+    toolDefinitions: [],
+    activeToolListDefinition: null,
+    showCncToolManager: false,
 
     history: operationHistory,
     targetTmpState: {},
@@ -94,11 +108,9 @@ const INITIAL_STATE = {
     isAnyModelOverstepped: false,
 
     // boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()), // bbox of selected model
-    background: {
-        enabled: false,
-        group: new THREE.Group()
-    },
-    useBackground: false,
+
+    // stl visualizer state
+    stlVisualizer: { show: false },
 
     previewFailed: false,
     autoPreviewEnabled: false,
@@ -107,18 +119,9 @@ const INITIAL_STATE = {
     // rendering
     renderingTimestamp: 0,
 
-    // coordinateMode
-    coordinateMode: COORDINATE_MODE_CENTER,
-    coordinateSize: { x: 0, y: 0 },
-    origin: {
-        type: OriginType.Workpiece,
-        reference: RectangleWorkpieceReference.Center,
-        referenceMetadata: {},
-    },
-
     // check to remove models
     removingModelsWarning: false,
-    removingModelsWarningCallback: () => { },
+    removingModelsWarningCallback: noop,
     emptyToolPaths: [],
 
     // check not to duplicated create event
@@ -129,33 +132,29 @@ const INITIAL_STATE = {
     // ProgressStatesManager
     progressStatesManager: getProgressStateManagerInstance(),
 
-    showImportStackedModelModal: false,
-    cutModelInfo: {
-        isProcessing: false,
-        uploadName: '',
-        originalName: '',
-        modelInitSize: { x: 0, y: 0, z: 0 },
-        initScale: 1,
-        svgInfo: [],
-        stlInfo: {}
-    },
-
     enableShortcut: true,
-    projectFileOversize: false
+    promptTasks: [],
+    projectFileOversize: false,
+    useLockingBlock: false,
+    lockingBlockPosition: 'A'
 };
-
-const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';
 
 export const actions = {
     // TODO: init should be  re-called
     init: () => async (dispatch, getState) => {
-        dispatch(editorActions._init(HEAD_LASER));
-        const { toolHead, series } = getState().machine;
-        await dispatch(machineActions.updateMachineToolHead(toolHead, series, HEAD_LASER));
-        // const { currentMachine } = getState().machine;
-        const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
-        await definitionManager.init(HEAD_LASER, currentMachine.configPathname[HEAD_LASER]);
-        dispatch(editorActions.updateState(HEAD_LASER, {
+        dispatch(editorActions._init(HEAD_CNC));
+
+        const { activeMachine, toolHead, series } = getState().machine;
+
+        await dispatch(machineActions.updateMachineToolHead(toolHead, series, HEAD_CNC));
+
+        // init definition manager
+        const configPath = getMachineToolHeadConfigPath(activeMachine, toolHead.cncToolhead);
+        await definitionManager.init(HEAD_CNC, configPath);
+        // const currentMachine = getMachineSeriesWithToolhead(series, toolHead);
+        // await definitionManager.init(HEAD_CNC, currentMachine.configPathname[HEAD_CNC]);
+
+        dispatch(editorActions.updateState(HEAD_CNC, {
             toolDefinitions: await definitionManager.getConfigDefinitions(),
             activeToolListDefinition: definitionManager?.activeDefinition,
             defaultDefinitions: definitionManager?.defaultDefinitions
@@ -163,124 +162,34 @@ export const actions = {
 
         // Set machine size into coordinate default size
         const { size } = getState().machine;
-        const { materials, useBackground } = getState().laser;
-        const { isRotate } = materials; // Get default material from flux state
-        if (!isRotate) {
-            if (size/* && coordinateSize.x === 0 && coordinateSize.y === 0*/) {
-                dispatch(editorActions.updateState(HEAD_LASER, {
+        const { coordinateSize, materials } = getState().cnc;
+        const { isRotate } = materials;
+        if (isRotate) {
+            const newCoordinateSize = {
+                x: materials.diameter * Math.PI,
+                y: materials.length
+            };
+            dispatch(editorActions.changeCoordinateMode(HEAD_CNC, COORDINATE_MODE_BOTTOM_CENTER, newCoordinateSize));
+        } else {
+            if (size && coordinateSize.x === 0 && coordinateSize.y === 0) {
+                dispatch(editorActions.updateState(HEAD_CNC, {
                     coordinateSize: size
                 }));
-
-                dispatch(editorActions.setWorkpiece(
-                    HEAD_LASER,
-                    WorkpieceShape.Rectangle,
-                    {
-                        x: size.x,
-                        y: size.y,
-                    }
-                ));
-
-                const newCoordinateSize = {
-                    x: size.x,
-                    y: size.y,
-                };
-                dispatch(editorActions.changeCoordinateMode(HEAD_LASER, COORDINATE_MODE_CENTER, newCoordinateSize));
             }
-        } else {
-            dispatch(editorActions.setWorkpiece(
-                HEAD_LASER,
-                WorkpieceShape.Cylinder,
-                {
-                    diameter: 40,
-                    length: 75,
-                }
-            ));
-
-            const newCoordinateSize = {
-                x: 40 * Math.PI,
-                y: 75,
-            };
-            dispatch(editorActions.changeCoordinateMode(HEAD_LASER, COORDINATE_MODE_BOTTOM_CENTER, newCoordinateSize));
         }
-        if (useBackground) {
-            dispatch(actions.removeBackgroundImage());
-        }
-    },
-
-    setBackgroundEnabled: (enabled) => {
-        return {
-            type: ACTION_SET_BACKGROUND_ENABLED,
-            enabled
-        };
-    },
-
-    setBackgroundImage: (filename, width, height, dx, dy) => (dispatch, getState) => {
-        const state = getState().laser;
-        dispatch(editorActions.changeCoordinateMode(HEAD_LASER, COORDINATE_MODE_BOTTOM_LEFT));
-        const { SVGActions } = state;
-        const coordinateMode = COORDINATE_MODE_BOTTOM_LEFT; // const { coordinateMode } = state;
-
-        SVGActions.addImageBackgroundToSVG({
-            modelID: 'image-background',
-            uploadName: filename,
-            transformation: {
-                width: width,
-                height: height,
-                positionX: (dx + width / 2) * coordinateMode.setting.sizeMultiplyFactor.x,
-                positionY: (dy + height / 2) * coordinateMode.setting.sizeMultiplyFactor.y
-            }
-        });
-
-        const imgPath = /^blob:/.test(filename) ? filename : `${DATA_PREFIX}/${filename}`;
-        const texture = new THREE.TextureLoader().load(imgPath, () => {
-            dispatch(editorActions.render('laser'));
-        });
-        const material = new THREE.MeshBasicMaterial({
-            color: 0xffffff,
-            transparent: true,
-            opacity: 1,
-            map: texture
-        });
-        const geometry = new THREE.PlaneGeometry(width, height);
-        const mesh = new THREE.Mesh(geometry, material);
-        const x = dx + width / 2;
-        const y = dy + height / 2;
-
-        mesh.position.set(x, y, -0.5);
-        const { group } = state.background;
-        group.remove(...group.children);
-        group.add(mesh);
-        logToolBarOperation(HEAD_LASER, 'camera_capture_add_backgroup');
-        dispatch(actions.setBackgroundEnabled(true));
-        dispatch(editorActions.updateState(HEAD_LASER, {
-            useBackground: true
+        dispatch(editorActions.updateState(HEAD_CNC, {
+            useLockingBlock: false,
+            lockingBlockPosition: 'A'
         }));
-        dispatch(editorActions.render('laser'));
     },
-
-    removeBackgroundImage: () => (dispatch, getState) => {
-        const state = getState().laser;
-        dispatch(editorActions.clearBackgroundImage('laser'));
-
-        const { group } = state.background;
-        group.remove(...group.children);
-        logToolBarOperation(HEAD_LASER, 'camera_capture_remove_backgroup');
-        dispatch(actions.setBackgroundEnabled(false));
-        dispatch(editorActions.updateState(HEAD_LASER, {
-            useBackground: false
-        }));
-        dispatch(editorActions.render('laser'));
-    },
-
-    // Definitions
     updateToolListDefinition: (activeToolList) => async (dispatch, getState) => {
-        const { toolDefinitions } = getState().laser;
+        const { toolDefinitions } = getState().cnc;
 
         await definitionManager.updateDefinition(activeToolList);
         const isReplacedDefinition = (d) => d.definitionId === activeToolList.definitionId;
         const defintionIndex = toolDefinitions.findIndex(isReplacedDefinition);
         toolDefinitions.splice(defintionIndex, 1, activeToolList);
-        dispatch(editorActions.updateState('laser', {
+        dispatch(editorActions.updateState('cnc', {
             toolDefinitions: [...toolDefinitions]
         }));
 
@@ -288,10 +197,10 @@ export const actions = {
     },
     updateToolDefinitionName: (isCategorySelected, definitionId, oldName, newName) => async (dispatch, getState) => {
         let definitionsWithSameCategory;
-        const { toolDefinitions } = getState().laser;
+        const { toolDefinitions } = getState().cnc;
         const activeDefinition = toolDefinitions.find(d => d.definitionId === definitionId);
         if (!newName || newName.trim().length === 0) {
-            return Promise.reject(i18n._('key-Laser/common-Failed to rename. Please enter a new name.'));
+            return Promise.reject(i18n._('key-Cnc/common-Failed to rename. Please enter a new name.'));
         }
         if (isCategorySelected) {
             const duplicated = toolDefinitions.find(d => d.category === newName);
@@ -323,14 +232,14 @@ export const actions = {
             toolDefinitions.splice(index, 1, activeDefinition);
         }
 
-        dispatch(editorActions.updateState('laser', {
+        dispatch(editorActions.updateState('cnc', {
             toolDefinitions: [...toolDefinitions]
         }));
 
         return null;
     },
     duplicateToolCategoryDefinition: (activeToolList, isCreate, oldCategory) => async (dispatch, getState) => {
-        const state = getState().laser;
+        const state = getState().cnc;
         const toolDefinitions = cloneDeep(state.toolDefinitions);
         let newCategoryName = activeToolList.category;
         const allDupliateDefinitions = [];
@@ -340,7 +249,7 @@ export const actions = {
         }
         const definitionsWithSameCategory = isCreate ? [{
             ...activeToolList,
-            name: i18n._('key-default_category-Default Material'),
+            name: i18n._('key-default_category-Default Tool'),
             settings: toolDefinitions[0]?.settings
         }]
             : state.toolDefinitions.filter(d => d.category === oldCategory);
@@ -355,57 +264,66 @@ export const actions = {
                 allDupliateDefinitions.push(createdDefinition);
             }
         }
-        dispatch(editorActions.updateState('laser', {
+        dispatch(editorActions.updateState('cnc', {
             toolDefinitions: [...toolDefinitions, ...allDupliateDefinitions]
         }));
         return allDupliateDefinitions[0];
     },
 
     removeToolCategoryDefinition: (category) => async (dispatch, getState) => {
-        const state = getState().laser;
+        const state = getState().cnc;
         const toolDefinitions = state.toolDefinitions;
         const definitionsWithSameCategory = toolDefinitions.filter(d => d.category === category);
         for (let i = 0; i < definitionsWithSameCategory.length; i++) {
             await definitionManager.removeDefinition(definitionsWithSameCategory[i]);
         }
-
         const newToolDefinitions = toolDefinitions.filter(d => d.category !== category);
-        dispatch(editorActions.updateState('laser', {
+        dispatch(editorActions.updateState('cnc', {
             toolDefinitions: [...newToolDefinitions]
         }));
         return newToolDefinitions;
     },
     removeToolListDefinition: (activeToolList) => async (dispatch, getState) => {
-        const state = getState().laser;
+        const state = getState().cnc;
         await definitionManager.removeDefinition(activeToolList);
         const newToolDefinitions = state.toolDefinitions;
         const isReplacedDefinition = (d) => d.definitionId === activeToolList.definitionId;
         const index = newToolDefinitions.findIndex(isReplacedDefinition);
         newToolDefinitions.splice(index, 1);
-        dispatch(editorActions.updateState('laser', {
+        dispatch(editorActions.updateState('cnc', {
             toolDefinitions: [...newToolDefinitions]
         }));
         return newToolDefinitions;
     },
     getDefaultDefinition: (definitionId) => (dispatch, getState) => {
-        const { defaultDefinitions } = getState().laser;
+        const { defaultDefinitions } = getState().cnc;
         const def = defaultDefinitions.find(d => d.definitionId === definitionId);
         return def?.settings;
     },
     resetDefinitionById: (definitionId) => (dispatch, getState) => {
-        const { defaultDefinitions } = getState().laser;
+        const { defaultDefinitions } = getState().cnc;
         const defaultDefinition = defaultDefinitions.find(d => d.definitionId === definitionId);
         dispatch(actions.updateToolListDefinition(defaultDefinition));
         return defaultDefinition;
+    },
+    updateStlVisualizer: (obj) => (dispatch, getState) => {
+        const { stlVisualizer } = getState().cnc;
+        dispatch(editorActions.updateState('cnc', { stlVisualizer: { ...stlVisualizer, ...obj } }));
     }
 };
 
 export default function reducer(state = INITIAL_STATE, action) {
     const { headType, type } = action;
-    if (headType === 'laser') {
+    if (headType === 'cnc') {
         switch (type) {
             case ACTION_UPDATE_STATE: {
                 return Object.assign({}, state, { ...action.state });
+            }
+            case ACTION_UPDATE_TRANSFORMATION: {
+                return Object.assign({}, state, {
+                    transformation: { ...state.transformation, ...action.transformation },
+                    transformationUpdateTime: +new Date()
+                });
             }
             case ACTION_UPDATE_CONFIG: {
                 return Object.assign({}, state, {
@@ -417,12 +335,9 @@ export default function reducer(state = INITIAL_STATE, action) {
         }
     } else {
         switch (type) {
-            case ACTION_SET_BACKGROUND_ENABLED: {
+            case ACTION_CHANGE_TOOL_PARAMS: {
                 return Object.assign({}, state, {
-                    background: {
-                        ...state.background,
-                        enabled: action.enabled
-                    }
+                    toolParams: { ...state.toolParams, ...action.toolParams }
                 });
             }
             default:

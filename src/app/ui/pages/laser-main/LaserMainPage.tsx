@@ -7,7 +7,6 @@ import { HEAD_LASER, PROCESS_MODE_GREYSCALE, PROCESS_MODE_VECTOR } from '../../.
 import { actions as editorActions } from '../../../flux/editor';
 import { RootState } from '../../../flux/index.def';
 import { actions as laserActions } from '../../../flux/laser';
-import useSetState from '../../../lib/hooks/set-state';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
 import { machineStore } from '../../../store/local-storage';
@@ -15,10 +14,8 @@ import Dropzone from '../../components/Dropzone';
 import ProjectLayout from '../../layouts/ProjectLayout';
 import { logPageView, renderModal, renderPopup, useUnsavedTitle } from '../../utils';
 import Thumbnail from '../../widgets/CncLaserShared/Thumbnail';
-import { JobTypeState } from '../../widgets/JobType/JobTypeState';
 import StackedModel from '../../widgets/LaserStackedModel';
 import LaserVisualizer from '../../widgets/LaserVisualizer';
-import renderJobTypeModal from '../CncLaserShared/JobTypeModal';
 import useRenderMainToolBar from '../CncLaserShared/MainToolBar';
 import useRenderRemoveModelsWarning from '../CncLaserShared/RemoveAllModelsWarning';
 import renderRightView from '../CncLaserShared/RightView';
@@ -42,24 +39,22 @@ interface LaserMainPageProps {
 const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
     const widgets = useSelector((state: RootState) => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
     const showImportStackedModelModal = useSelector(state => state[pageHeadType].showImportStackedModelModal, shallowEqual);
+
+    // state
     const [stackedModelModalDsiabled, setStackedModelModalDsiabled] = useState(false);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [showHomePage, setShowHomePage] = useState(false);
     const [showWorkspace, setShowWorkspace] = useState(false);
     const [showJobType, setShowJobType] = useState(true);
-    const coordinateMode = useSelector(state => state[HEAD_LASER]?.coordinateMode, shallowEqual);
-    const coordinateSize = useSelector(state => state[HEAD_LASER]?.coordinateSize, shallowEqual);
+    const [isRotate, setIsRotate] = useState(materials?.isRotate);
+
     const toolPaths = useSelector(state => state[HEAD_LASER]?.toolPathGroup?.getToolPaths(), shallowEqual);
     const materials = useSelector(state => state[HEAD_LASER]?.materials, shallowEqual);
     const series = useSelector((state: RootState) => state.machine.series, shallowEqual);
     const page = useSelector(state => state[HEAD_LASER]?.page, shallowEqual);
-    const [isRotate, setIsRotate] = useState(materials?.isRotate);
-    const [jobTypeState, setJobTypeState] = useSetState<JobTypeState>({
-        coordinateMode,
-        coordinateSize,
-        materials
-    });
+
     const dispatch = useDispatch();
+
     const thumbnail = useRef();
     const toolPathGroup = useSelector(state => state[HEAD_LASER]?.toolPathGroup, shallowEqual);
     useUnsavedTitle(pageHeadType);
@@ -68,17 +63,8 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
         dispatch(laserActions.init());
         logPageView({
             pathname: '/laser',
-            isRotate
         });
     }, []);
-
-    useEffect(() => {
-        setJobTypeState({
-            coordinateMode,
-            coordinateSize,
-            materials
-        });
-    }, [coordinateMode, coordinateSize, materials]);
 
     useEffect(() => {
         setIsRotate(!!location?.state?.isRotate);
@@ -131,17 +117,7 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
             component: HomePage
         });
     };
-    const jobTypeModal = renderJobTypeModal(
-        HEAD_LASER,
-        dispatch,
-        showJobType,
-        setShowJobType,
-        jobTypeState,
-        setJobTypeState,
-        coordinateMode,
-        coordinateSize,
-        materials,
-    );
+
     const warningRemovingModels = useRenderRemoveModelsWarning({ headType: HEAD_LASER });
     const listActions = {
         onDragStart: () => {
@@ -230,7 +206,6 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
         });
     }
 
-
     return (
         <div>
             <ProjectLayout
@@ -246,9 +221,7 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
                     onDropAccepted={actions.onDropAccepted}
                     onDropRejected={actions.onDropRejected}
                 >
-                    <LaserVisualizer
-                        widgetId="laserVisualizer"
-                    />
+                    <LaserVisualizer />
                     {
                         showStarterGuide && (
                             <StarterGuide
@@ -267,9 +240,6 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
             </ProjectLayout>
             <ProjectOversizeMessage />
             {warningRemovingModels}
-            {
-                false && jobTypeModal
-            }
             {/* Job Setup: Workpiece & Origin */}
             {
                 showJobType && (

@@ -1,47 +1,46 @@
-import React, { useState, useEffect, useRef } from 'react';
-
-import { shallowEqual, useSelector, useDispatch } from 'react-redux';
-import PropTypes from 'prop-types';
-import { useHistory, withRouter } from 'react-router-dom';
-import { Trans } from 'react-i18next';
 import { message } from 'antd';
-import Steps from '../components/Steps';
-import i18n from '../../lib/i18n';
-import modal from '../../lib/modal';
-import Dropzone from '../components/Dropzone';
-import SvgIcon from '../components/SvgIcon';
-import Space from '../components/Space';
-import { renderModal, renderPopup, logPageView, useUnsavedTitle } from '../utils';
-import Checkbox from '../components/Checkbox';
-import { Button } from '../components/Buttons';
-import { getUploadModeByFilename } from '../../lib/units';
-import CNCVisualizer from '../widgets/CNCVisualizer';
-import ProjectLayout from '../layouts/ProjectLayout';
+import React, { useEffect, useRef, useState } from 'react';
+import { Trans } from 'react-i18next';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+import { useHistory, withRouter } from 'react-router-dom';
 
-import { actions as projectActions } from '../../flux/project';
-import { actions as cncActions } from '../../flux/cnc';
-import { actions as editorActions } from '../../flux/editor';
-
-import { actions as machineActions } from '../../flux/machine';
-
+import { HEAD_CNC } from '../../../constants';
+import { actions as cncActions } from '../../../flux/cnc';
+import { actions as editorActions } from '../../../flux/editor';
+import { actions as machineActions } from '../../../flux/machine';
+import { actions as projectActions } from '../../../flux/project';
+import useSetState from '../../../lib/hooks/set-state';
+import i18n from '../../../lib/i18n';
+import modal from '../../../lib/modal';
+import { getUploadModeByFilename } from '../../../lib/units';
+import { machineStore } from '../../../store/local-storage';
+import { Button } from '../../components/Buttons';
+import Checkbox from '../../components/Checkbox';
+import Dropzone from '../../components/Dropzone';
+import Space from '../../components/Space';
+import Steps from '../../components/Steps';
+import SvgIcon from '../../components/SvgIcon';
+import ProjectLayout from '../../layouts/ProjectLayout';
+import { logPageView, renderModal, renderPopup, useUnsavedTitle } from '../../utils';
+import CNCVisualizer from '../../widgets/CNCVisualizer';
+import Thumbnail from '../../widgets/CncLaserShared/Thumbnail';
+import renderJobTypeModal from '../CncLaserShared/JobTypeModal';
+import useRenderMainToolBar from '../CncLaserShared/MainToolBar';
+import useRenderRemoveModelsWarning from '../CncLaserShared/RemoveAllModelsWarning';
+import renderRightView from '../CncLaserShared/RightView';
+import HomePage from '../HomePage';
+import Workspace from '../Workspace';
 import {
-    HEAD_CNC
-} from '../../constants';
-
-import useRenderMainToolBar from './CncLaserShared/MainToolBar';
-import useRenderRemoveModelsWarning from './CncLaserShared/RemoveAllModelsWarning';
-import renderJobTypeModal from './CncLaserShared/JobTypeModal';
-import renderRightView from './CncLaserShared/RightView';
-
-import HomePage from './HomePage';
-import Workspace from './Workspace';
-import { machineStore } from '../../store/local-storage';
-import Thumbnail from '../widgets/CncLaserShared/Thumbnail';
-import { laserCncIntroStepOne, laserCncIntroStepTwo, laserCncIntroStepFive, laserCncIntroStepSix, cnc4AxisStepOne } from './introContent';
-import useSetState from '../../lib/hooks/set-state';
+    cnc4AxisStepOne,
+    laserCncIntroStepFive,
+    laserCncIntroStepOne,
+    laserCncIntroStepSix,
+    laserCncIntroStepTwo,
+} from '../introContent';
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf, .stl, .3mf, .amf';
 const pageHeadType = HEAD_CNC;
+
 function useRenderWarning() {
     const [showWarning, setShowWarning] = useState(false);
     const dispatch = useDispatch();
@@ -107,7 +106,15 @@ function useRenderWarning() {
     });
 }
 
-function Cnc({ location }) {
+interface CNCMainPageProps {
+    location: {
+        state: {
+            shouldShowGuideTours?: boolean;
+        };
+    };
+}
+
+const Cnc: React.FC<CNCMainPageProps> = ({ location }) => {
     const widgets = useSelector(state => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [showHomePage, setShowHomePage] = useState(false);
@@ -349,7 +356,7 @@ function Cnc({ location }) {
                 tooltipClass: 'cnc-draw-intro',
                 position: 'right'
             }, {
-            // element: '.laser-intro-edit-panel',
+                // element: '.laser-intro-edit-panel',
                 element: '.widget-list-intro',
                 title: `${i18n._('key-Cnc/Page-Edit Panel')} (4/8)`,
                 intro: laserCncIntroStepTwo(i18n._('key-Cnc/Page-The Edit panel shows the property related to object. When an object is selected, Luban displays this panel where you can transform the object, switch the Processing Mode, or enter the Process Panel.')),
@@ -451,10 +458,6 @@ function Cnc({ location }) {
             {renderWorkspace()}
         </div>
     );
-}
-Cnc.propTypes = {
-    // ...withRouter,
-    // shouldShowJobType: PropTypes.bool,
-    location: PropTypes.object
 };
+
 export default withRouter(Cnc);
