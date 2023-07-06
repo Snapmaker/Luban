@@ -2006,6 +2006,12 @@ export const actions = {
         }
     },
 
+    /**
+     * Configure Workpiece.
+     *
+     * - Update modelGroup & toolPathGroup
+     * - Update Canvas (watched by SMCanvas)
+     */
     updateWorkpieceObject: (headType: HeadType) => {
         return (dispatch, getState) => {
             const modelGroup = getState()[headType].modelGroup as ModelGroup;

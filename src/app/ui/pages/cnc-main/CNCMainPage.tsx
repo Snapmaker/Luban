@@ -37,6 +37,7 @@ import {
     laserCncIntroStepSix,
     laserCncIntroStepTwo,
 } from '../introContent';
+import JobSetupModal from './modals/JobSetupModal';
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf, .stl, .3mf, .amf';
 const pageHeadType = HEAD_CNC;
@@ -57,7 +58,7 @@ function useRenderWarning() {
             <div style={{ width: '432px' }}>
                 <SvgIcon
                     color="#FFA940"
-                    type="static"
+                    type={['static']}
                     className="display-block width-72 margin-auto"
                     name="WarningTipsWarning"
                     size="72"
@@ -452,7 +453,16 @@ const Cnc: React.FC<CNCMainPageProps> = ({ location }) => {
             })}
             {warningModal}
             {removeModelsWarningModal}
-            {jobTypeModal}
+            {
+                false && jobTypeModal
+            }
+            {/* Job Setup: Workpiece & Origin */
+                showJobType && (
+                    <JobSetupModal
+                        onClose={() => setShowJobType(false)}
+                    />
+                )
+            }
             {renderStlModal()}
             {renderHomepage()}
             {renderWorkspace()}

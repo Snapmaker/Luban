@@ -1,5 +1,5 @@
 import { Machine } from '@snapmaker/luban-platform';
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo } from 'react';
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
 import {
@@ -9,7 +9,7 @@ import {
     COORDINATE_MODE_CENTER,
     COORDINATE_MODE_TOP_LEFT,
     COORDINATE_MODE_TOP_RIGHT,
-    HEAD_LASER,
+    HEAD_CNC,
 } from '../../../../constants';
 import {
     CylinderWorkpieceSize,
@@ -40,11 +40,11 @@ function getOriginTypeOptions(workpieceShape: WorkpieceShape): OriginTypeOption[
         return [
             {
                 value: OriginType.Workpiece,
-                label: i18n._('key-Term/Workpiece'),
+                label: i18n._('key-Printing/LeftBar/Support-No'),
             },
             {
-                value: OriginType.Object,
-                label: i18n._('key-Term/Object'),
+                value: OriginType.CNCLockingBlock,
+                label: i18n._('key-Printing/LeftBar/Support-Yes'),
             },
         ];
     } else {
@@ -57,7 +57,17 @@ function getOriginTypeOptions(workpieceShape: WorkpieceShape): OriginTypeOption[
     }
 }
 
-function getOriginReferenceOptions(workpieceShape: WorkpieceShape, originType: OriginType = OriginType.Workpiece) {
+function getLockingBlockPositionOptions() {
+    return [{
+        label: i18n._('key-CncLaser/JobSetup-Locking block position A'),
+        value: 'A'
+    }, {
+        label: i18n._('key-CncLaser/JobSetup-Locking block position B'),
+        value: 'B'
+    }];
+}
+
+function getOriginReferenceOptions(workpieceShape: WorkpieceShape, originType: OriginType) {
     if (workpieceShape === WorkpieceShape.Rectangle) {
         if (originType === OriginType.Workpiece) {
             return [
@@ -115,6 +125,14 @@ function getOriginReferenceOptions(workpieceShape: WorkpieceShape, originType: O
                     mode: COORDINATE_MODE_TOP_RIGHT
                 }
             ];
+        } else if (originType === OriginType.CNCLockingBlock) {
+            return [
+                {
+                    label: i18n._(COORDINATE_MODE_BOTTOM_LEFT.label),
+                    value: COORDINATE_MODE_BOTTOM_LEFT.value,
+                    mode: COORDINATE_MODE_BOTTOM_LEFT,
+                }
+            ];
         }
     } else if (workpieceShape === WorkpieceShape.Cylinder) {
         return [
@@ -136,10 +154,10 @@ export type JobSetupViewHandle = {
 const JobSetupView = forwardRef<JobSetupViewHandle, {}>((_, ref) => {
     const activeMachine = useSelector((state: RootState) => state.machine.activeMachine) as Machine;
 
-    const materials = useSelector((state: RootState) => state[HEAD_LASER]?.materials, shallowEqual) as Materials;
-    const origin = useSelector((state: RootState) => state[HEAD_LASER].origin, shallowEqual) as Origin;
+    const materials = useSelector((state: RootState) => state[HEAD_CNC]?.materials, shallowEqual) as Materials;
+    const origin = useSelector((state: RootState) => state[HEAD_CNC].origin, shallowEqual) as Origin;
 
-    const { inProgress, useBackground } = useSelector((state: RootState) => state[HEAD_LASER]);
+    const { inProgress, useBackground } = useSelector((state: RootState) => state[HEAD_CNC]);
 
     // workpiece
     const [workpiece, updateWorkpiece] = useSetState<Workpiece>({
@@ -231,8 +249,8 @@ const JobSetupView = forwardRef<JobSetupViewHandle, {}>((_, ref) => {
     }, [updateSelectedOrigin, origin]);
 
     const originReferenceOptions = useMemo(() => {
-        return getOriginReferenceOptions(workpiece.shape);
-    }, [workpiece.shape]);
+        return getOriginReferenceOptions(workpiece.shape, selectedOrigin.type);
+    }, [workpiece.shape, selectedOrigin.type]);
 
     const onChangeOriginReference = useCallback((option) => {
         setOriginReference(option.mode.value);
@@ -250,6 +268,46 @@ const JobSetupView = forwardRef<JobSetupViewHandle, {}>((_, ref) => {
         originReferenceOptions, selectedOrigin.reference,
     ]);
 
+    // Locking Block (Artisan Only, L Bracket)
+    const initialLockingBlockPosition = useSelector((state: RootState) => state[HEAD_CNC].lockingBlockPosition);
+    const [lockingBlockPosition, setLockingBlockPosition] = useState(initialLockingBlockPosition);
+
+    const lockingBlockPositionOptions = useMemo(() => {
+        return getLockingBlockPositionOptions();
+    }, []);
+
+    useEffect(() => {
+        if (selectedOrigin.type !== OriginType.CNCLockingBlock) {
+            // setLockingBlockPosition('A');
+            const coordinateSize = {
+                x: 400,
+                y: 400,
+            };
+            setWorkpieceSize(coordinateSize);
+        } else {
+            // Note: Artisan Only
+            const workpieceSize = {
+                x: lockingBlockPosition === 'A' ? 375 : 290,
+                y: lockingBlockPosition === 'A' ? 395 : 305,
+            };
+            setWorkpieceSize(workpieceSize);
+        }
+    }, [selectedOrigin.type, setWorkpieceSize, lockingBlockPosition]);
+
+    const onChangeLockingBlockPosition = useCallback((option) => {
+        setLockingBlockPosition(option.value);
+
+        // Note: Artisan Only
+        const workpieceSize = {
+            x: option.value === 'A' ? 375 : 290,
+            y: option.value === 'A' ? 395 : 305,
+        };
+        setWorkpieceSize(workpieceSize);
+    }, [setWorkpieceSize]);
+
+    const imgLockingBlockPosition = `/resources/images/cnc-laser/lock-block-${lockingBlockPosition?.toLowerCase()}.png`;
+
+    // Maximum
     const maxX = activeMachine?.metadata.size.x || 0;
     const maxY = activeMachine?.metadata.size.y || 0;
 
@@ -269,25 +327,21 @@ const JobSetupView = forwardRef<JobSetupViewHandle, {}>((_, ref) => {
         return {
             onChange: () => {
                 dispatch(editorActions.setWorkpiece(
-                    HEAD_LASER,
+                    HEAD_CNC,
                     workpiece.shape,
                     workpiece.size,
                 ));
 
-                dispatch(editorActions.updateWorkpieceObject(HEAD_LASER));
+                dispatch(editorActions.updateWorkpieceObject(HEAD_CNC));
 
-
-                dispatch(editorActions.setOrigin(
-                    HEAD_LASER,
-                    selectedOrigin,
-                ));
-
-                const targetOption = originReferenceOptions.find(option => option.value === selectedOrigin.reference);
+                dispatch(editorActions.setOrigin(HEAD_CNC, selectedOrigin));
 
                 // TODO
+                // Call change coordinate mode to move elements accordingly
+                const targetOption = originReferenceOptions.find(option => option.value === selectedOrigin.reference);
                 if (workpiece.shape === WorkpieceShape.Rectangle) {
                     dispatch(editorActions.changeCoordinateMode(
-                        HEAD_LASER,
+                        HEAD_CNC,
                         targetOption.mode,
                         {
                             x: (workpiece.size as RectangleWorkpieceSize).x,
@@ -297,7 +351,7 @@ const JobSetupView = forwardRef<JobSetupViewHandle, {}>((_, ref) => {
                     ));
                 } else if (workpiece.shape === WorkpieceShape.Cylinder) {
                     dispatch(editorActions.changeCoordinateMode(
-                        HEAD_LASER,
+                        HEAD_CNC,
                         targetOption.mode,
                         {
                             x: (workpiece.size as CylinderWorkpieceSize).diameter * Math.PI,
@@ -306,7 +360,13 @@ const JobSetupView = forwardRef<JobSetupViewHandle, {}>((_, ref) => {
                     ));
                 }
 
-                dispatch(editorActions.scaleCanvasToFit(HEAD_LASER));
+                // locking block position
+                dispatch(editorActions.updateState(HEAD_CNC, {
+                    useLockingBlock: selectedOrigin.type === OriginType.CNCLockingBlock,
+                    lockingBlockPosition: lockingBlockPosition,
+                }));
+
+                dispatch(editorActions.scaleCanvasToFit(HEAD_CNC));
             },
         };
     }, [
@@ -317,6 +377,7 @@ const JobSetupView = forwardRef<JobSetupViewHandle, {}>((_, ref) => {
         workpiece.size,
 
         selectedOrigin,
+        lockingBlockPosition,
     ]);
 
     return (
@@ -441,13 +502,14 @@ const JobSetupView = forwardRef<JobSetupViewHandle, {}>((_, ref) => {
                                     width: '100px',
                                     height: '100px'
                                 }}
-                                src={imgOF3axisCoordinateMode}
+                                src={selectedOrigin.type === OriginType.CNCLockingBlock ? imgLockingBlockPosition : imgOF3axisCoordinateMode}
                                 role="presentation"
                                 alt="3 Axis"
                             />
                             <div className="margin-left-16">
+                                {/* CNC locking block */}
                                 <div className="height-32 sm-flex">
-                                    <span className="width-144 margin-right-8 text-overflow-ellipsis">{i18n._('key-CncLaser/JobSetup-Origin Mode')}</span>
+                                    <span className="width-144 margin-right-8 text-overflow-ellipsis">{i18n._('key-CncLaser/JobSetup-Use Locking block')}</span>
                                     <Select
                                         backspaceRemoves={false}
                                         size="120px"
@@ -460,20 +522,38 @@ const JobSetupView = forwardRef<JobSetupViewHandle, {}>((_, ref) => {
                                         disabled={inProgress || settingSizeDisabled}
                                     />
                                 </div>
-                                <div className="height-32 margin-top-16 sm-flex">
-                                    <span className="width-144 margin-right-8 text-overflow-ellipsis">{i18n._('key-CncLaser/JobSetup-Origin Position')}</span>
-                                    <Select
-                                        backspaceRemoves={false}
-                                        size="120px"
-                                        clearable={false}
-                                        options={originReferenceOptions}
-                                        isGroup={false}
-                                        placeholder={i18n._('key-CncLaser/JobSetup-Choose font')}
-                                        value={selectedOrigin.reference}
-                                        onChange={onChangeOriginReference}
-                                        disabled={inProgress || settingSizeDisabled}
-                                    />
-                                </div>
+                                {
+                                    selectedOrigin.type === OriginType.Workpiece && (
+                                        <div className="height-32 margin-top-16 sm-flex">
+                                            <span className="width-144 margin-right-8 text-overflow-ellipsis">{i18n._('key-CncLaser/JobSetup-Origin Position')}</span>
+                                            <Select
+                                                backspaceRemoves={false}
+                                                size="120px"
+                                                clearable={false}
+                                                options={originReferenceOptions}
+                                                isGroup={false}
+                                                placeholder={i18n._('key-CncLaser/JobSetup-Choose font')}
+                                                value={selectedOrigin.reference}
+                                                onChange={onChangeOriginReference}
+                                                disabled={inProgress || settingSizeDisabled}
+                                            />
+                                        </div>
+                                    )
+                                }
+                                {
+                                    selectedOrigin.type === OriginType.CNCLockingBlock && (
+                                        <div className="height-32 margin-top-16 sm-flex">
+                                            <span className="width-144 margin-right-8 text-overflow-ellipsis">{i18n._('key-CncLaser/JobSetup-Locking block position')}</span>
+                                            <Select
+                                                size="120px"
+                                                clearable={false}
+                                                options={lockingBlockPositionOptions}
+                                                value={lockingBlockPosition}
+                                                onChange={onChangeLockingBlockPosition}
+                                            />
+                                        </div>
+                                    )
+                                }
                             </div>
                         </div>
                     )

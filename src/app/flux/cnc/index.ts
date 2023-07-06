@@ -8,7 +8,12 @@ import {
     HEAD_CNC,
     PAGE_EDITOR,
 } from '../../constants';
-import { OriginType, RectangleWorkpieceReference } from '../../constants/coordinate';
+import {
+    OriginType,
+    Origin,
+    RectangleWorkpieceReference,
+    WorkpieceShape,
+} from '../../constants/coordinate';
 import { getMachineToolHeadConfigPath } from '../../constants/machines';
 import OperationHistory from '../../core/OperationHistory';
 import i18n from '../../lib/i18n';
@@ -52,6 +57,8 @@ const INITIAL_STATE = {
     coordinateMode: COORDINATE_MODE_CENTER,
     coordinateSize: { x: 0, y: 0 },
     origin: initialOrigin,
+    useLockingBlock: false,
+    lockingBlockPosition: 'A',
 
     page: PAGE_EDITOR,
 
@@ -135,8 +142,6 @@ const INITIAL_STATE = {
     enableShortcut: true,
     promptTasks: [],
     projectFileOversize: false,
-    useLockingBlock: false,
-    lockingBlockPosition: 'A'
 };
 
 export const actions = {
@@ -162,20 +167,35 @@ export const actions = {
 
         // Set machine size into coordinate default size
         const { size } = getState().machine;
-        const { coordinateSize, materials } = getState().cnc;
+        const { materials } = getState().cnc;
         const { isRotate } = materials;
-        if (isRotate) {
+        if (!isRotate) {
+            if (size/* && coordinateSize.x === 0 && coordinateSize.y === 0*/) {
+                dispatch(editorActions.updateState(HEAD_CNC, {
+                    coordinateSize: size
+                }));
+
+                dispatch(editorActions.setWorkpiece(
+                    HEAD_CNC,
+                    WorkpieceShape.Rectangle,
+                    {
+                        x: size.x,
+                        y: size.y,
+                    }
+                ));
+
+                const newCoordinateSize = {
+                    x: size.x,
+                    y: size.y,
+                };
+                dispatch(editorActions.changeCoordinateMode(HEAD_CNC, COORDINATE_MODE_CENTER, newCoordinateSize));
+            }
+        } else {
             const newCoordinateSize = {
                 x: materials.diameter * Math.PI,
                 y: materials.length
             };
             dispatch(editorActions.changeCoordinateMode(HEAD_CNC, COORDINATE_MODE_BOTTOM_CENTER, newCoordinateSize));
-        } else {
-            if (size && coordinateSize.x === 0 && coordinateSize.y === 0) {
-                dispatch(editorActions.updateState(HEAD_CNC, {
-                    coordinateSize: size
-                }));
-            }
         }
         dispatch(editorActions.updateState(HEAD_CNC, {
             useLockingBlock: false,

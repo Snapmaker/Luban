@@ -22,8 +22,8 @@ import renderRightView from '../CncLaserShared/RightView';
 import HomePage from '../HomePage';
 import Workspace from '../Workspace';
 import StarterGuide from './StarterGuide';
-import ProjectOversizeMessage from './modals/ProjectOversizeMessage';
 import JobSetupModal from './modals/JobSetupModal';
+import ProjectOversizeMessage from './modals/ProjectOversizeMessage';
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 const pageHeadType = HEAD_LASER;
@@ -40,6 +40,13 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
     const widgets = useSelector((state: RootState) => state?.widget[pageHeadType]?.default?.widgets, shallowEqual);
     const showImportStackedModelModal = useSelector(state => state[pageHeadType].showImportStackedModelModal, shallowEqual);
 
+    const toolPaths = useSelector(state => state[HEAD_LASER]?.toolPathGroup?.getToolPaths(), shallowEqual);
+    const toolPathGroup = useSelector(state => state[HEAD_LASER]?.toolPathGroup, shallowEqual);
+    useUnsavedTitle(pageHeadType);
+    const series = useSelector((state: RootState) => state.machine.series, shallowEqual);
+    const page = useSelector(state => state[HEAD_LASER]?.page, shallowEqual);
+    const materials = useSelector(state => state[HEAD_LASER]?.materials, shallowEqual);
+
     // state
     const [stackedModelModalDsiabled, setStackedModelModalDsiabled] = useState(false);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
@@ -48,16 +55,10 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
     const [showJobType, setShowJobType] = useState(true);
     const [isRotate, setIsRotate] = useState(materials?.isRotate);
 
-    const toolPaths = useSelector(state => state[HEAD_LASER]?.toolPathGroup?.getToolPaths(), shallowEqual);
-    const materials = useSelector(state => state[HEAD_LASER]?.materials, shallowEqual);
-    const series = useSelector((state: RootState) => state.machine.series, shallowEqual);
-    const page = useSelector(state => state[HEAD_LASER]?.page, shallowEqual);
 
     const dispatch = useDispatch();
 
     const thumbnail = useRef();
-    const toolPathGroup = useSelector(state => state[HEAD_LASER]?.toolPathGroup, shallowEqual);
-    useUnsavedTitle(pageHeadType);
 
     useEffect(() => {
         dispatch(laserActions.init());
@@ -240,13 +241,10 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
             </ProjectLayout>
             <ProjectOversizeMessage />
             {warningRemovingModels}
-            {/* Job Setup: Workpiece & Origin */}
-            {
+            {/* Job Setup: Workpiece & Origin */
                 showJobType && (
                     <JobSetupModal
-                        onClose={() => {
-                            setShowJobType(false);
-                        }}
+                        onClose={() => setShowJobType(false)}
                     />
                 )
             }

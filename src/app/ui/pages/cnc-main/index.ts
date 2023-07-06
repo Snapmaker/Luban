@@ -1,4 +1,4 @@
-import CNCMainPage from './Cnc';
+import CNCMainPage from './CNCMainPage';
 
 export {
     CNCMainPage,
