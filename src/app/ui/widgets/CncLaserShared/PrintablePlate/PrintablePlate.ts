@@ -1,13 +1,21 @@
-import { MeshBasicMaterial, Object3D, Group, Mesh, PlaneGeometry, DoubleSide, ShapeGeometry, Math as ThreeMath } from 'three';
 import each from 'lodash/each';
+import {
+    DoubleSide,
+    Group,
+    Mesh,
+    MeshBasicMaterial,
+    Object3D,
+    PlaneGeometry,
+    ShapeGeometry,
+    Math as ThreeMath
+} from 'three';
 
-import TextSprite from '../../../../scene/three-extensions/TextSprite';
 import TargetPoint from '../../../../scene/three-extensions/TargetPoint';
-
-import GridLine from './GridLine';
-import { COORDINATE_MODE_CENTER, DEFAULT_LUBAN_HOST, HEAD_CNC } from '../../../../constants';
+import TextSprite from '../../../../scene/three-extensions/TextSprite';
+import { COORDINATE_MODE_CENTER, DEFAULT_LUBAN_HOST } from '../../../../constants';
+import { Materials, Origin, OriginType, RectangleWorkpieceReference } from '../../../../constants/coordinate';
 import SVGLoader from '../../../../scene/three-extensions/SVGLoader';
-import { Materials } from '../../../../constants/coordinate';
+import GridLine from './GridLine';
 
 const METRIC_GRID_SPACING = 10; // 10 mm
 const METRIC_GRID_BIG_SPACING = 50;
@@ -19,12 +27,13 @@ class PrintablePlate extends Object3D {
     private coordinateSystem: Group = null;
     private size: { x: number; y: number };
     private materials: Materials;
+    private origin: Origin;
     private coordinateMode;
     private coorDelta: { dx: number; dy: number };
 
     private targetPoint = null;
 
-    public constructor(size, materials, coordinateMode) {
+    public constructor(size, materials, origin, coordinateMode) {
         super();
 
         this.type = 'PrintPlane';
@@ -37,6 +46,12 @@ class PrintablePlate extends Object3D {
         this.materials = {
             ...materials
         };
+        this.origin = origin || {
+            type: OriginType.Workpiece,
+            reference: RectangleWorkpieceReference.Center,
+            referenceMetadata: {},
+        };
+
         if (materials && materials.isRotate) {
             return;
         }
@@ -52,10 +67,14 @@ class PrintablePlate extends Object3D {
         this._setup();
     }
 
-    public updateSize(series, size = this.size, materials = this.materials) {
+    public updateSize(series, size = this.size, materials = this.materials, origin: Origin = null) {
         // this.series = series;
         this.size = size;
         this.materials = materials;
+        if (origin) {
+            this.origin = origin;
+        }
+
         this.remove(...this.children);
         this._setup();
     }
@@ -146,43 +165,45 @@ class PrintablePlate extends Object3D {
         this.targetPoint.visible = true;
         this.add(this.targetPoint);
 
-        if (this.materials.isRotate || !(this.materials.headType === HEAD_CNC && this.materials.useLockingBlock)) return;
+        console.log('plate, origin =', this.origin);
 
-        new SVGLoader().load(`${DEFAULT_LUBAN_HOST}/resources/images/cnc/locking-block-red.svg`, (data) => {
-            const paths = data.paths;
+        if (this.origin.type === OriginType.CNCLockingBlock) {
+            new SVGLoader().load(`${DEFAULT_LUBAN_HOST}/resources/images/cnc/locking-block-red.svg`, (data) => {
+                const paths = data.paths;
 
-            const svgGroup = new Group();
+                const svgGroup = new Group();
 
-            for (let i = 0; i < paths.length; i++) {
-                const path = paths[i];
+                for (let i = 0; i < paths.length; i++) {
+                    const path = paths[i];
 
-                const material = new MeshBasicMaterial({
-                    color: path.color,
-                    side: DoubleSide,
-                    depthWrite: false,
-                });
+                    const material = new MeshBasicMaterial({
+                        color: path.color,
+                        side: DoubleSide,
+                        depthWrite: false,
+                    });
 
-                const pathShape = SVGLoader.createShapes(path);
+                    const pathShape = SVGLoader.createShapes(path);
 
-                for (let j = 0; j < pathShape.length; j++) {
-                    const shape = pathShape[j];
+                    for (let j = 0; j < pathShape.length; j++) {
+                        const shape = pathShape[j];
 
-                    const geometry = new ShapeGeometry(shape);
-                    const mesh = new Mesh(geometry, material);
-                    mesh.scale.set(0.7, 0.7, 0.7);
-                    svgGroup.add(mesh);
+                        const geometry = new ShapeGeometry(shape);
+                        const mesh = new Mesh(geometry, material);
+                        mesh.scale.set(0.7, 0.7, 0.7);
+                        svgGroup.add(mesh);
+                    }
                 }
-            }
-            svgGroup.position.set(10, -8.5, 0.01);
-            svgGroup.rotateZ(ThreeMath.degToRad(90));
-            this.add(svgGroup);
-        });
+                svgGroup.position.set(10, -8.5, 0.01);
+                svgGroup.rotateZ(ThreeMath.degToRad(90));
+                this.add(svgGroup);
+            });
+        }
         // this._setMaterialsRect();
     }
 
     public _setMaterialsRect() {
         // eslint-disable-next-line no-unused-vars
-        const { x = 0, y = 0, fixtureLength = 0 } = this.materials;
+        const { x = 0, y = 0, fixtureLength = 20 } = this.materials;
 
         if (!x && !y) {
             return;

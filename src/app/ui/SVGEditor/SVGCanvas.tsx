@@ -2,9 +2,10 @@ import jQuery from 'jquery';
 import { throttle } from 'lodash';
 import includes from 'lodash/includes';
 import PropTypes from 'prop-types';
-import React, { PureComponent } from 'react';
+import React from 'react';
 
 import { DATA_PREFIX } from '../../constants';
+import { Origin } from '../../constants/coordinate';
 import SvgModel from '../../models/SvgModel';
 import PrintableArea from './PrintableArea';
 import SVGSelector from './SVGSelector';
@@ -73,7 +74,11 @@ const CURRENTDRAWING_INIT = {
     selectedTarget: null
 };
 
-class SVGCanvas extends PureComponent {
+interface SVGCanvasProps {
+    origin: Origin;
+}
+
+class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
     public static propTypes = {
         className: PropTypes.string,
         size: PropTypes.object,
@@ -1531,7 +1536,12 @@ class SVGCanvas extends PureComponent {
             viewBox: `0 0 ${viewBoxWidth} ${viewBoxHeight}`
         });
 
-        this.printableArea.updateScale({ size: size, materials: materials, scale: this.scale });
+        this.printableArea.updateScale({
+            size: size,
+            materials: materials,
+            origin: this.props.origin,
+            scale: this.scale,
+        });
         this.svgContentGroup.updateScale(this.scale);
         this.svgSelector.updateScale(this.scale);
     };

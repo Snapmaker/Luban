@@ -424,8 +424,8 @@ class Visualizer extends React.Component<VisualizerProps> {
     public constructor(props) {
         super(props);
 
-        const { size, materials, coordinateMode } = props;
-        this.printableArea = new PrintablePlate(size, materials, coordinateMode);
+        const { coordinateSize, materials, origin, coordinateMode } = props;
+        this.printableArea = new PrintablePlate(coordinateSize, materials, origin, coordinateMode);
         this.state = {
             limitPicModalShow: false,
             file: null,
@@ -446,8 +446,8 @@ class Visualizer extends React.Component<VisualizerProps> {
         const { renderingTimestamp, isOverSize } = nextProps;
 
         if (!isEqual(nextProps.size, this.props.size)) {
-            const { size, materials } = nextProps;
-            this.printableArea.updateSize(this.props.series, size, materials);
+            const { size, materials, origin } = nextProps;
+            this.printableArea.updateSize(this.props.series, size, materials, origin);
             this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(size.z, VISUALIZER_CAMERA_HEIGHT)), new THREE.Vector3());
             this.actions.autoFocus();
         }
@@ -483,13 +483,14 @@ class Visualizer extends React.Component<VisualizerProps> {
         }
 
         if (nextProps.coordinateMode !== this.props.coordinateMode || !isEqual(nextProps.materials, this.props.materials)) {
-            const { size, materials, coordinateMode } = nextProps;
-            this.printableArea = new PrintablePlate(size, materials, coordinateMode);
+            const { coordinateSize, materials, origin, coordinateMode } = nextProps;
+            this.printableArea = new PrintablePlate(coordinateSize, materials, origin, coordinateMode);
             this.actions.autoFocus();
         }
 
         if (nextProps.coordinateSize !== this.props.coordinateSize) {
-            this.printableArea = new PrintablePlate(nextProps.coordinateSize, nextProps.materials, nextProps.coordinateMode);
+            const { coordinateSize, materials, origin, coordinateMode } = nextProps;
+            this.printableArea = new PrintablePlate(coordinateSize, materials, origin, coordinateMode);
             this.actions.autoFocus();
         }
         if (isOverSize !== this.props.isOverSize) {
@@ -620,7 +621,6 @@ class Visualizer extends React.Component<VisualizerProps> {
                         fileInput={this.fileInput}
                         allowedFiles=".svg, .png, .jpg, .jpeg, .bmp, .dxf, .stl, .amf, .3mf"
                         headType={HEAD_CNC}
-                        useLockingBlock={this.props.useLockingBlock}
                     />
                 </div>
                 <div
@@ -820,7 +820,6 @@ const mapStateToProps = (state, ownProps) => {
         coordinateMode,
         coordinateSize,
         origin,
-        useLockingBlock,
     } = state.cnc;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModelID = modelGroup.getSelectedModel().modelID;
@@ -828,7 +827,6 @@ const mapStateToProps = (state, ownProps) => {
     const multipleMaterials = {
         ...materials,
         headType: HEAD_CNC,
-        useLockingBlock
     };
 
     return {
@@ -848,7 +846,6 @@ const mapStateToProps = (state, ownProps) => {
         coordinateMode,
         coordinateSize,
         origin,
-        useLockingBlock,
         // model,
         modelGroup,
         SVGActions,

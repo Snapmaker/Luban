@@ -370,8 +370,8 @@ class Visualizer extends Component {
         const { renderingTimestamp, isOverSize } = nextProps;
 
         if (!isEqual(nextProps.size, this.props.size)) {
-            const { size, materials } = nextProps;
-            this.printableArea.updateSize(this.props.series, size, materials);
+            const { size, materials, origin } = nextProps;
+            this.printableArea.updateSize(this.props.series, size, materials, origin);
             this.canvas.current.setCamera(new THREE.Vector3(0, 0, VISUALIZER_CAMERA_HEIGHT), new THREE.Vector3());
             this.actions.autoFocus();
         }

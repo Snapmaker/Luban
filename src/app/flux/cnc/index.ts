@@ -57,7 +57,6 @@ const INITIAL_STATE = {
     coordinateMode: COORDINATE_MODE_CENTER,
     coordinateSize: { x: 0, y: 0 },
     origin: initialOrigin,
-    useLockingBlock: false,
     lockingBlockPosition: 'A',
 
     page: PAGE_EDITOR,
@@ -191,14 +190,22 @@ export const actions = {
                 dispatch(editorActions.changeCoordinateMode(HEAD_CNC, COORDINATE_MODE_CENTER, newCoordinateSize));
             }
         } else {
+            dispatch(editorActions.setWorkpiece(
+                HEAD_CNC,
+                WorkpieceShape.Cylinder,
+                {
+                    diameter: 35,
+                    length: 70,
+                }
+            ));
+
             const newCoordinateSize = {
-                x: materials.diameter * Math.PI,
-                y: materials.length
+                x: 35 * Math.PI,
+                y: 70,
             };
             dispatch(editorActions.changeCoordinateMode(HEAD_CNC, COORDINATE_MODE_BOTTOM_CENTER, newCoordinateSize));
         }
         dispatch(editorActions.updateState(HEAD_CNC, {
-            useLockingBlock: false,
             lockingBlockPosition: 'A'
         }));
     },

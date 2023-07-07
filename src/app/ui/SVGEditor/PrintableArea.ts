@@ -1,20 +1,25 @@
 import { v4 as uuid } from 'uuid';
-import { createSVGElement } from './element-utils';
-import {
-    EPSILON, HEAD_CNC
-} from '../../constants';
+
 import { isEqual } from '../../../shared/lib/utils';
-import { Materials, OriginType } from '../../constants/coordinate';
+import { EPSILON } from '../../constants';
+import { Materials, Origin, OriginType, RectangleWorkpieceReference } from '../../constants/coordinate';
+import { createSVGElement } from './element-utils';
 
 class PrintableArea {
     private id: string;
     private svgFactory;
+    private printableAreaGroup: Element;
+
     private size: {
         x: number;
         y: number;
     };
 
     private materials: Materials;
+    private origin: Origin;
+    private coordinateMode;
+    private coorDelta: { dx: number; dy: number } = { dx: 0, dy: 0 };
+    private scale: number = 1;
 
     public constructor(svgFactory) {
         this.id = uuid();
@@ -34,6 +39,8 @@ class PrintableArea {
         this.coordinateSize = (svgFactory.coordinateSize && svgFactory.coordinateSize.x > 0) ? svgFactory.coordinateSize : this.size;
         this.origin = {
             type: OriginType.Workpiece,
+            reference: RectangleWorkpieceReference.Center,
+            referenceMetadata: {},
         };
         this._setCoordinateMode(this.coordinateMode, this.coordinateSize);
 
@@ -53,7 +60,7 @@ class PrintableArea {
     }
 
     public updateScale(state) {
-        const { size, materials, scale } = state;
+        const { size, materials, scale, origin } = state;
         if (Math.abs(this.scale - scale) > EPSILON) {
             this.scale = scale;
             for (const child of this.printableAreaGroup.childNodes) {
@@ -70,8 +77,10 @@ class PrintableArea {
         const materialsChange = materials && (
             !isEqual(this.materials.x, materials.x)
             || !isEqual(this.materials.y, materials.y)
-            || !isEqual(this.materials.useLockingBlock, materials.useLockingBlock)
+            || !isEqual(this.origin.type, origin.type)
+            || (this.origin.reference !== origin.reference)
         );
+
         if (sizeChange || materialsChange) {
             this.size = {
                 ...size
@@ -79,6 +88,10 @@ class PrintableArea {
             this.materials = {
                 ...materials
             };
+
+            this.origin = Object.assign({}, origin);
+
+            // Re-create coordinate sytem
             while (this.printableAreaGroup.firstChild) {
                 this.printableAreaGroup.removeChild(this.printableAreaGroup.lastChild);
             }
@@ -516,9 +529,11 @@ class PrintableArea {
         }
 
         const { x, y } = this.size;
-        let origin = null;
-        if (this.materials.headType === HEAD_CNC && this.materials.useLockingBlock) {
-            origin = createSVGElement({
+        let originElement = null;
+        // console.log('createOrigin, origin =', this.origin);
+
+        if (this.origin.type === OriginType.CNCLockingBlock) {
+            originElement = createSVGElement({
                 element: 'image',
                 attr: {
                     x: x - (2.5 * this.scale),
@@ -531,7 +546,7 @@ class PrintableArea {
                 }
             });
         } else {
-            origin = createSVGElement({
+            originElement = createSVGElement({
                 element: 'circle',
                 attr: {
                     cx: x,
@@ -540,16 +555,17 @@ class PrintableArea {
                     fill: '#FF5759',
                     stroke: '#FF5759',
                     'stroke-width': 1 / this.scale,
-                    opacity: (this.materials.headType === HEAD_CNC && this.materials.useLockingBlock) ? 0 : 1,
+                    opacity: 1,
                     'fill-opacity': 1
                 }
             });
         }
-        this.printableAreaGroup.append(origin);
+        this.printableAreaGroup.append(originElement);
     }
 
     public _setMaterialsRect() {
-        const { isRotate, x = 0, y = 0, fixtureLength = 0 } = this.materials;
+        const { isRotate, x = 0, y = 0, fixtureLength = 20 } = this.materials;
+        console.warn('fixtureLength', fixtureLength);
         if (!isRotate) {
             return;
         }
