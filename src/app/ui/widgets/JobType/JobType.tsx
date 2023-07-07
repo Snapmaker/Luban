@@ -16,8 +16,16 @@ import i18n from '../../../lib/i18n';
 import { toFixed } from '../../../lib/numeric-utils';
 import { NumberInput as Input } from '../../components/Input';
 import Select from '../../components/Select';
-import { JobTypeState } from './JobTypeState';
 
+
+interface JobTypeState {
+    coordinateMode: CoordinateMode;
+    coordinateSize: CoordinateSize;
+    materials: Materials;
+
+    useLockingBlock: boolean; // TODO: Refactor this
+    lockingBlockPosition: 'A' | 'B';
+}
 
 interface JobTypeProps {
     headType: string;

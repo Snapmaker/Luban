@@ -95,7 +95,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                 >
                     <div className="align-l width-168">
                         <SvgIcon
-                            type="static"
+                            type={['static']}
                             disabled={showStlModal}
                             name="MainToolbarAddBackground"
                         />
@@ -113,7 +113,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                 >
                     <div className="align-l width-168">
                         <SvgIcon
-                            type="static"
+                            type={['static']}
                             disabled={!showStlModal}
                             name="MainToolbarRemoverBackground"
                         />

@@ -24,12 +24,3 @@ type Materials = {
     y: number;
     z: number;
 }
-
-export interface JobTypeState {
-    coordinateMode: CoordinateMode;
-    coordinateSize: CoordinateSize;
-    materials: Materials;
-
-    useLockingBlock: boolean; // TODO: Refactor this
-    lockingBlockPosition: 'A' | 'B';
-}

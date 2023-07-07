@@ -21,6 +21,7 @@ import { baseActions } from './actions-base';
 import { actions as operationHistoryActions } from '../operation-history';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as projectActions } from '../project';
+import { Origin, OriginType } from '../../constants/coordinate';
 
 let toastId;
 export const processActions = {
@@ -367,37 +368,47 @@ export const processActions = {
      * @param headType
      * @returns {Function}
      */
-    commitGenerateGcode: headType => (dispatch, getState) => {
-        const { toolPathGroup, progressStatesManager, coordinateMode, useLockingBlock, lockingBlockPosition, materials: { isRotate } } = getState()[headType];
-        const { size, toolHead } = getState().machine;
-        const activeMachine: Machine = getState().machine.activeMachine;
+    commitGenerateGcode: (headType) => {
+        return (dispatch, getState) => {
+            const {
+                toolPathGroup,
+                progressStatesManager,
+                coordinateMode,
+                lockingBlockPosition,
+            } = getState()[headType];
 
-        const currentToolHead = headType === HEAD_CNC ? toolHead.cncToolhead : toolHead.laserToolhead;
-        const toolPaths = toolPathGroup.getCommitGenerateGcodeInfos();
-        if (!toolPaths || toolPaths.length === 0) {
-            return;
-        }
+            const { size, toolHead } = getState().machine;
+            const activeMachine: Machine = getState().machine.activeMachine;
 
-        toolPaths[0].thumbnail = toolPathGroup.thumbnail;
+            const origin: Origin = getState()[headType].origin;
 
-        dispatch(baseActions.updateState(headType, { isGcodeGenerating: true }));
-        dispatch(
-            baseActions.updateState(headType, {
-                stage: STEP_STAGE.CNC_LASER_GENERATING_GCODE,
-                progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_GENERATING_GCODE, 0.1)
-            })
-        );
-        controller.commitGcodeTask({
-            taskId: uuid(),
-            headType: headType,
-            data: {
-                toolPaths,
-                size,
-                toolHead: currentToolHead,
-                origin: (!isRotate && useLockingBlock) ? `position${lockingBlockPosition}` : coordinateMode.value,
-                series: activeMachine?.identifier,
+            const currentToolHead = headType === HEAD_CNC ? toolHead.cncToolhead : toolHead.laserToolhead;
+            const toolPaths = toolPathGroup.getCommitGenerateGcodeInfos();
+            if (!toolPaths || toolPaths.length === 0) {
+                return;
             }
-        });
+
+            toolPaths[0].thumbnail = toolPathGroup.thumbnail;
+
+            dispatch(baseActions.updateState(headType, { isGcodeGenerating: true }));
+            dispatch(
+                baseActions.updateState(headType, {
+                    stage: STEP_STAGE.CNC_LASER_GENERATING_GCODE,
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_GENERATING_GCODE, 0.1)
+                })
+            );
+            controller.commitGcodeTask({
+                taskId: uuid(),
+                headType: headType,
+                data: {
+                    toolPaths,
+                    size,
+                    toolHead: currentToolHead,
+                    origin: (origin.type === OriginType.CNCLockingBlock ? `position${lockingBlockPosition}` : coordinateMode.value),
+                    series: activeMachine?.identifier,
+                }
+            });
+        };
     },
 
     onGenerateGcode: (headType, taskResult) => async (dispatch, getState) => {

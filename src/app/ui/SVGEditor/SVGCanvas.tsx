@@ -1,32 +1,26 @@
-import includes from 'lodash/includes';
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import jQuery from 'jquery';
 import { throttle } from 'lodash';
+import includes from 'lodash/includes';
+import PropTypes from 'prop-types';
+import React, { PureComponent } from 'react';
 
-import { NS } from './lib/namespaces';
-import {
-    cleanupAttributes,
-    setAttributes,
-    getBBox
-} from './element-utils';
-import {
-    transformPoint,
-    getTransformList
-    // getRotationAngle, hasMatrixTransform
-} from './element-transform';
-import { recalculateDimensions } from './element-recalculate';
-import sanitize from './lib/sanitize';
+import { DATA_PREFIX } from '../../constants';
+import SvgModel from '../../models/SvgModel';
 import PrintableArea from './PrintableArea';
-import {
-    DATA_PREFIX
-} from '../../constants';
-import SVGContentGroup from './svg-content/SVGContentGroup';
-import { library } from './lib/ext-shapes';
+import SVGSelector from './SVGSelector';
 import TextAction from './TextActions';
 import { DEFAULT_FILL_COLOR, DEFAULT_SCALE, SCALE_RATE, SVG_EVENT_CONTEXTMENU, SVG_EVENT_MODE } from './constants';
-import SVGSelector from './SVGSelector';
-import SvgModel from '../../models/SvgModel';
+import { recalculateDimensions } from './element-recalculate';
+import { getTransformList, transformPoint } from './element-transform';
+import {
+    cleanupAttributes,
+    getBBox,
+    setAttributes,
+} from './element-utils';
+import { library } from './lib/ext-shapes';
+import { NS } from './lib/namespaces';
+import sanitize from './lib/sanitize';
+import SVGContentGroup from './svg-content/SVGContentGroup';
 
 const STEP_COUNT = 10;
 const THRESHOLD_DIST = 0.8;
@@ -80,7 +74,7 @@ const CURRENTDRAWING_INIT = {
 };
 
 class SVGCanvas extends PureComponent {
-    static propTypes = {
+    public static propTypes = {
         className: PropTypes.string,
         size: PropTypes.object,
         coordinateMode: PropTypes.object.isRequired,
@@ -134,27 +128,27 @@ class SVGCanvas extends PureComponent {
         ext: PropTypes.object
     };
 
-    updateTime = 0;
+    public updateTime = 0;
 
     // scale = DEFAULT_SCALE;
 
-    target = null;
+    public target = null;
 
-    offsetX = 0;
+    public offsetX = 0;
 
-    offsetY = 0;
+    public offsetY = 0;
 
-    printableArea = null;
+    public printableArea = null;
 
-    node = React.createRef();
+    public node = React.createRef();
 
-    input = React.createRef();
+    public input = React.createRef();
 
-    mode = 'select';
+    public mode = 'select';
 
-    extShape = null;
+    public extShape = null;
 
-    currentProperties = {
+    public currentProperties = {
         // fill: '#00B7E9',
         fill: DEFAULT_FILL_COLOR,
         stroke: '#000000',
@@ -163,21 +157,21 @@ class SVGCanvas extends PureComponent {
     };
 
     // drawing variables
-    currentDrawing = {};
+    public currentDrawing = {};
 
     // selectedElements = [];
 
-    counter = 0;
+    public counter = 0;
 
-    callbacks = {};
+    public callbacks = {};
 
-    svgSelector = null;
+    public svgSelector = null;
 
-    editingElem = null;
+    public editingElem = null;
 
-    preSelectionGroup = null;
+    public preSelectionGroup = null;
 
-    componentDidMount() {
+    public componentDidMount() {
         this.setupSVGContainer();
         this.setupSVGBackground();
         this.setupSVGContent();
@@ -190,7 +184,7 @@ class SVGCanvas extends PureComponent {
         window.addEventListener('resize', this.onResize, false);
     }
 
-    componentWillReceiveProps(nextProps) {
+    public componentWillReceiveProps(nextProps) {
         if (nextProps.scale !== this.lastScale) {
             // Updates from outsider
             this.lastScale = nextProps.scale;
@@ -240,7 +234,7 @@ class SVGCanvas extends PureComponent {
         }
     }
 
-    componentWillUnmount() {
+    public componentWillUnmount() {
         this.svgContainer.removeEventListener('mousedown', this.onMouseDown, false);
         this.svgContainer.removeEventListener('mousemove', this.onMouseMove, false);
         this.svgContainer.removeEventListener('wheel', this.onMouseWheel, false);
@@ -250,11 +244,11 @@ class SVGCanvas extends PureComponent {
         window.removeEventListener('dblclick', this.onDblClick, false);
     }
 
-    get scale() {
+    public get scale() {
         return (this.lastScale || this.props.scale) * DEFAULT_SCALE / ZOOM_RATE;
     }
 
-    set scale(val) {
+    public set scale(val) {
         this.lastScale = val / DEFAULT_SCALE * ZOOM_RATE;
         // Notify scale updates, this method should be named `onScaleUpdated`
         if (this.props.minScale && this.lastScale < this.props.minScale) {
@@ -266,14 +260,14 @@ class SVGCanvas extends PureComponent {
         this.props.updateScale(this.lastScale);
     }
 
-    setupTextActions() {
+    public setupTextActions() {
         this.textActions = new TextAction(
             this.svgContentGroup, this.scale, jQuery, this.props.SVGActions
         );
         this.textActions.setInputElem(this.input.current);
     }
 
-    setupSVGContainer() {
+    public setupSVGContainer() {
         this.svgContainer = document.createElementNS(NS.SVG, 'svg');
         setAttributes(this.svgContainer, {
             width: this.props.size.x * 2,
@@ -288,7 +282,7 @@ class SVGCanvas extends PureComponent {
         this.node.current.append(this.svgContainer);
     }
 
-    setupSVGBackground() {
+    public setupSVGBackground() {
         this.svgBackground = document.createElementNS(NS.SVG, 'svg');
 
         setAttributes(this.svgBackground, {
@@ -319,7 +313,7 @@ class SVGCanvas extends PureComponent {
         this.svgContainer.append(this.svgBackground);
     }
 
-    setupSVGContent() {
+    public setupSVGContent() {
         // const width = jQuery(this.container).width();
         // const height = jQuery(this.container).height();
 
@@ -369,16 +363,16 @@ class SVGCanvas extends PureComponent {
         this.svgContentGroup.onChangeMode = (mode, ext) => {
             this.setMode(mode, ext);
         };
-        this.svgContentGroup.onExitModelEditing = (exitCompletely) => {
+        this.svgContentGroup.onExitModelEditing = async (exitCompletely) => {
             return this.stopDraw(exitCompletely);
         };
     }
 
-    setupSVGSelector() {
+    public setupSVGSelector() {
         this.svgSelector = new SVGSelector(this.svgContent, this.scale);
     }
 
-    setupMouseEvents() {
+    public setupMouseEvents() {
         this.svgContainer.addEventListener('mousedown', this.onMouseDown, false);
         this.svgContainer.addEventListener('mousemove', this.onMouseMove, false);
         this.svgContainer.addEventListener('wheel', this.onMouseWheel, false);
@@ -401,11 +395,11 @@ class SVGCanvas extends PureComponent {
         window.addEventListener('dblclick', this.onDblClick, false);
     }
 
-    setupKeyEvents() {
+    public setupKeyEvents() {
         window.addEventListener('keyup', this.onKeyUp, false);
     }
 
-    setupPrintableArea() {
+    public setupPrintableArea() {
         const getRoot = () => this.svgBackground;
 
         this.printableArea = new PrintableArea({
@@ -416,13 +410,13 @@ class SVGCanvas extends PureComponent {
         });
     }
 
-    setMode(mode, extShape) {
+    public setMode(mode, extShape) {
         if (mode !== this.props.mode || extShape !== this.props.ext) {
             this.props.setMode(mode, extShape);
         }
     }
 
-    updateMode(mode, extShape) {
+    public updateMode(mode, extShape) {
         if (mode === 'select') {
             jQuery(this.svgContainer).css('cursor', 'auto');
         } else if (mode === 'draw') {
@@ -465,13 +459,13 @@ class SVGCanvas extends PureComponent {
         this.trigger(SVG_EVENT_MODE, mode);
     }
 
-    setSelectedAttribute(attr, newValue) {
+    public setSelectedAttribute(attr, newValue) {
         for (const element of this.svgContentGroup.selectedElements) {
             element.setAttribute(attr, newValue);
         }
     }
 
-    getMouseTarget = (event, x, y) => {
+    public getMouseTarget = (event, x, y) => {
         let target = event.target;
         if (target === this.svgContainer) {
             return this.svgContainer;
@@ -502,7 +496,7 @@ class SVGCanvas extends PureComponent {
         return target;
     };
 
-    isCanMove(mouseTarget, x, y) {
+    public isCanMove(mouseTarget, x, y) {
         if (this.mode !== 'select' || this.editingElem) {
             return false;
         }
@@ -516,7 +510,7 @@ class SVGCanvas extends PureComponent {
             || this.props.elementActions.isPointInSelectArea(x - this.props.size.x, this.props.size.y - y);
     }
 
-    onMouseDown = (event) => {
+    public onMouseDown = (event) => {
         // event.preventDefault();
 
         const rightClick = event.button === 2;
@@ -825,7 +819,7 @@ class SVGCanvas extends PureComponent {
         }
     };
 
-    onMouseMove = (event) => {
+    public onMouseMove = (event) => {
         const draw = this.currentDrawing;
         const matrix = this.svgContentGroup.getScreenCTM().inverse();
         const pt = transformPoint({ x: event.pageX, y: event.pageY }, matrix);
@@ -1135,7 +1129,7 @@ class SVGCanvas extends PureComponent {
         }
     };
 
-    calculateSelectedModel = throttle(() => {
+    public calculateSelectedModel = throttle(() => {
         const selectedTarget = this.currentDrawing.selectedTarget;
         if (!selectedTarget) {
             const { selectorBbox, onlyContainSelect } = this.svgSelector.getBBox();
@@ -1147,7 +1141,7 @@ class SVGCanvas extends PureComponent {
         }
     }, 300);
 
-    onMouseUp = (event) => {
+    public onMouseUp = (event) => {
         if (this.mode === 'select' && event.which === 1 && !this.editingElem) {
             this.svgSelector.setVisible(false);
         }
@@ -1320,7 +1314,7 @@ class SVGCanvas extends PureComponent {
         }
     };
 
-    onKeyUp = (event) => {
+    public onKeyUp = (event) => {
         switch (event.key) {
             case 'ArrowUp':
             case 'ArrowDown':
@@ -1335,7 +1329,7 @@ class SVGCanvas extends PureComponent {
         }
     };
 
-    onDblClick = (evt) => {
+    public onDblClick = (evt) => {
         const matrix = this.svgContentGroup.getScreenCTM().inverse();
         const { x, y } = transformPoint({ x: evt.pageX, y: evt.pageY }, matrix);
 
@@ -1359,7 +1353,7 @@ class SVGCanvas extends PureComponent {
         }
     };
 
-    onMouseWheel = (event) => {
+    public onMouseWheel = (event) => {
         event.preventDefault();
         if (event.deltaY < 0) {
             this.scale /= SCALE_RATE;
@@ -1370,24 +1364,26 @@ class SVGCanvas extends PureComponent {
         }
     };
 
-    onContextmenu = (event) => {
+    public onContextmenu = (event) => {
         event.preventDefault();
 
         this.trigger(SVG_EVENT_CONTEXTMENU, event);
     };
 
-    onResize = () => {
+    public onResize = () => {
         this.updateCanvas();
     };
 
-    getId() {
+    public getId() {
         return `id${this.counter}`;
     }
 
-    getNextId() {
+    public getNextId() {
+        this.counter++;
+        return `id${this.counter}`;
     }
 
-    getBsplinePoint(t) {
+    public getBsplinePoint(t) {
         const { startX, startY, endX, endY, controlPointX1, controlPointY1, controlPointX2, controlPointY2 } = this.currentDrawing;
         const spline = { x: 0, y: 0 };
         const p0 = { x: controlPointX2, y: controlPointY2 };
@@ -1424,20 +1420,20 @@ class SVGCanvas extends PureComponent {
         };
     }
 
-    autoFocus = () => {
+    public autoFocus = () => {
         this.scale = DEFAULT_SCALE;
         this.offsetX = 0;
         this.offsetY = 0;
         this.updateCanvas();
     };
 
-    startDraw = () => {
+    public startDraw = () => {
         this.setMode('draw', this.editingElem ? {
             elem: this.editingElem
         } : {});
     };
 
-    stopDraw = (exitCompletely, nextMode) => {
+    public stopDraw = async (exitCompletely, nextMode) => {
         return new Promise((resolve) => {
             if (this.mode === 'select') {
                 if (!this.editingElem) {
@@ -1485,17 +1481,17 @@ class SVGCanvas extends PureComponent {
         });
     };
 
-    zoomIn = () => {
+    public zoomIn = () => {
         this.scale = this.scale * 4 / 3;
         this.updateCanvas();
     };
 
-    zoomOut = () => {
+    public zoomOut = () => {
         this.scale = this.scale * 3 / 4;
         this.updateCanvas();
     };
 
-    updateCanvas = (size, materials) => {
+    public updateCanvas = (size, materials) => {
         size = size || this.props.size;
         materials = materials || this.props.materials;
 
@@ -1542,7 +1538,7 @@ class SVGCanvas extends PureComponent {
 
 
     // TODO: need refactor and be moved out to a separate module
-    smoothPolylineIntoPath(element) {
+    public smoothPolylineIntoPath(element) {
         let i = 0;
         const points = element.points;
         const N = points.numberOfItems;
@@ -1602,7 +1598,7 @@ class SVGCanvas extends PureComponent {
     }
 
     // TODO: need refactor and be moved out to a separate module
-    smoothControlPoints(ct1, ct2, pt) {
+    public smoothControlPoints(ct1, ct2, pt) {
         // each point must not be the origin
         const x1 = ct1.x - pt.x;
         const y1 = ct1.y - pt.y;
@@ -1662,14 +1658,14 @@ class SVGCanvas extends PureComponent {
      *
      * @param {Array} elements
      */
-    addToSelection(elements) {
+    public addToSelection(elements) {
         this.props.onSelectElements(elements);
     }
 
     /**
      * Clear selection of elements.
      */
-    clearSelection() {
+    public clearSelection() {
         this.props.onClearSelection();
     }
 
@@ -1678,12 +1674,12 @@ class SVGCanvas extends PureComponent {
      *
      * @param {Array} elements
      */
-    selectOnly(elements) {
+    public selectOnly(elements) {
         this.clearSelection();
         this.addToSelection(elements);
     }
 
-    loadImageFile(file) {
+    public loadImageFile(file) {
         const { width, height, uploadName } = file;
         const uploadPath = `${DATA_PREFIX}/${uploadName}`;
         this.svgContentGroup.addSVGElement({
@@ -1699,7 +1695,7 @@ class SVGCanvas extends PureComponent {
         });
     }
 
-    loadSVGString(xmlString) {
+    public loadSVGString(xmlString) {
         // create new document (text2xml)
         const parser = new DOMParser();
         parser.async = false;
@@ -1755,7 +1751,7 @@ class SVGCanvas extends PureComponent {
         this.onResize(); // update canvas
     }
 
-    identifyGroup() {
+    public identifyGroup() {
         const len = this.svgContent.childNodes.length;
 
         let elementCount = 0;
@@ -1792,14 +1788,14 @@ class SVGCanvas extends PureComponent {
         }
     }
 
-    on(event, callback) {
+    public on(event, callback) {
         if (this.callbacks[event] === undefined) {
             this.callbacks[event] = [];
         }
         this.callbacks[event].push(callback);
     }
 
-    off(event, callback) {
+    public off(event, callback) {
         if (this.callbacks[event] === undefined) {
             return;
         }
@@ -1810,7 +1806,7 @@ class SVGCanvas extends PureComponent {
         }
     }
 
-    trigger(event, ...args) {
+    public trigger(event, ...args) {
         const callbacks = this.callbacks[event];
         if (callbacks && callbacks.length > 0) {
             for (const cb of callbacks) {
@@ -1819,7 +1815,7 @@ class SVGCanvas extends PureComponent {
         }
     }
 
-    render() {
+    public render() {
         const { className = '' } = this.props;
 
         return (

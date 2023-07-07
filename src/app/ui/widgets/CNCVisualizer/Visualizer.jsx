@@ -496,6 +496,7 @@ class Visualizer extends Component {
                         target={this.props.target}
                         coordinateMode={this.props.coordinateMode}
                         coordinateSize={this.props.coordinateSize}
+                        origin={this.props.origin}
                         updateTarget={this.props.updateTarget}
                         updateScale={this.props.updateScale}
                         SVGActions={this.props.SVGActions}
@@ -707,8 +708,17 @@ const mapStateToProps = (state, ownProps) => {
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
     const { size, series } = state.machine;
     const { currentModalPath, menuDisabledCount } = state.appbarMenu;
-    const { page, materials, modelGroup, toolPathGroup, displayedType, hasModel, isChangedAfterGcodeGenerating,
-        renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, showSimulation, progressStatesManager, enableShortcut, isOverSize, SVGCanvasMode, SVGCanvasExt, promptTasks, useLockingBlock } = state.cnc;
+    const {
+        page, materials, modelGroup, toolPathGroup, displayedType, hasModel, isChangedAfterGcodeGenerating,
+        renderingTimestamp, stage, progress, SVGActions, scale, target,
+        showSimulation, progressStatesManager, enableShortcut, isOverSize, SVGCanvasMode, SVGCanvasExt,
+        promptTasks,
+        // coordinate
+        coordinateMode,
+        coordinateSize,
+        origin,
+        useLockingBlock,
+    } = state.cnc;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModelID = modelGroup.getSelectedModel().modelID;
     const selectedToolPathModels = modelGroup.getSelectedToolPathModels();
@@ -734,6 +744,8 @@ const mapStateToProps = (state, ownProps) => {
         size,
         coordinateMode,
         coordinateSize,
+        origin,
+        useLockingBlock,
         // model,
         modelGroup,
         SVGActions,
@@ -751,7 +763,6 @@ const mapStateToProps = (state, ownProps) => {
         SVGCanvasMode,
         SVGCanvasExt,
         promptTasks,
-        useLockingBlock
     };
 };
 

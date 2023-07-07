@@ -58,7 +58,11 @@ class PrintableArea {
             }
         }
         const sizeChange = size && (!isEqual(this.size.x, size.x) || !isEqual(this.size.y, size.y));
-        const materialsChange = materials && (!isEqual(this.materials.x, materials.x) || !isEqual(this.materials.y, materials.y) || !isEqual(this.materials.useLockingBlock, materials.useLockingBlock));
+        const materialsChange = materials && (
+            !isEqual(this.materials.x, materials.x)
+            || !isEqual(this.materials.y, materials.y)
+            || !isEqual(this.materials.useLockingBlock, materials.useLockingBlock)
+        );
         if (sizeChange || materialsChange) {
             this.size = {
                 ...size

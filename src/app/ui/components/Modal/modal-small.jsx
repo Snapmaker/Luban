@@ -79,7 +79,7 @@ class ModalSmallHOC extends PureComponent {
                                 name={img}
                                 size={72}
                                 color={iconColor}
-                                type="static"
+                                type={['static']}
                             />
                         )}
                         {isImage && (<img src={img} alt="......" />)}
