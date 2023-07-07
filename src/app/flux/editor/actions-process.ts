@@ -1,6 +1,6 @@
+import { Machine } from '@snapmaker/luban-platform';
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
-import { baseActions } from './actions-base';
 
 import { timestamp } from '../../../shared/lib/random-utils';
 import api from '../../api';
@@ -15,7 +15,7 @@ import { toast } from '../../ui/components/Toast';
 import { makeSceneToast } from '../../ui/views/toasts/SceneToast';
 import definitionManager from '../manager/DefinitionManager';
 import DeleteToolPathOperation from '../operation-history/DeleteToolPathOperation';
-
+import { baseActions } from './actions-base';
 
 /* eslint-disable-next-line import/no-cycle */
 import { actions as operationHistoryActions } from '../operation-history';
@@ -369,7 +369,9 @@ export const processActions = {
      */
     commitGenerateGcode: headType => (dispatch, getState) => {
         const { toolPathGroup, progressStatesManager, coordinateMode, useLockingBlock, lockingBlockPosition, materials: { isRotate } } = getState()[headType];
-        const { size, toolHead, series } = getState().machine;
+        const { size, toolHead } = getState().machine;
+        const activeMachine: Machine = getState().machine.activeMachine;
+
         const currentToolHead = headType === HEAD_CNC ? toolHead.cncToolhead : toolHead.laserToolhead;
         const toolPaths = toolPathGroup.getCommitGenerateGcodeInfos();
         if (!toolPaths || toolPaths.length === 0) {
@@ -393,7 +395,7 @@ export const processActions = {
                 size,
                 toolHead: currentToolHead,
                 origin: (!isRotate && useLockingBlock) ? `position${lockingBlockPosition}` : coordinateMode.value,
-                series
+                series: activeMachine?.identifier,
             }
         });
     },
