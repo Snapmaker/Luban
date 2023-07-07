@@ -13,7 +13,6 @@ import { humanReadableTime } from '../../../lib/time-utils';
 import ProgressBar from '../../components/ProgressBar';
 import Space from '../../components/Space';
 import ContextMenu from '../../components/ContextMenu';
-
 import Canvas from '../../components/SMCanvas';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import VisualizerBottomLeft from '../CncLaserShared/VisualizerBottomLeft';
@@ -45,12 +44,13 @@ class Visualizer extends Component {
         page: PropTypes.string.isRequired,
         stage: PropTypes.number.isRequired,
         progress: PropTypes.number.isRequired,
-        materials: PropTypes.object,
 
+        materials: PropTypes.object,
         coordinateMode: PropTypes.object.isRequired,
         coordinateSize: PropTypes.object.isRequired,
         origin: PropTypes.object.isRequired,
         size: PropTypes.object.isRequired,
+
         scale: PropTypes.number.isRequired,
         target: PropTypes.object,
         menuDisabledCount: PropTypes.number,

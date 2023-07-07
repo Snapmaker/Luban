@@ -7,16 +7,29 @@ import TargetPoint from '../../../../scene/three-extensions/TargetPoint';
 import GridLine from './GridLine';
 import { COORDINATE_MODE_CENTER, DEFAULT_LUBAN_HOST, HEAD_CNC } from '../../../../constants';
 import SVGLoader from '../../../../scene/three-extensions/SVGLoader';
+import { Materials } from '../../../../constants/coordinate';
 
 const METRIC_GRID_SPACING = 10; // 10 mm
 const METRIC_GRID_BIG_SPACING = 50;
 
 
 class PrintablePlate extends Object3D {
-    constructor(size, materials, coordinateMode) {
+    private isPrintPlane: boolean = true;
+
+    private coordinateSystem: Group = null;
+    private size: { x: number; y: number };
+    private materials: Materials;
+    private coordinateMode;
+    private coorDelta: { dx: number; dy: number };
+
+    private targetPoint = null;
+
+    public constructor(size, materials, coordinateMode) {
         super();
-        this.isPrintPlane = true;
+
         this.type = 'PrintPlane';
+        this.isPrintPlane = true;
+
         this.targetPoint = null;
         // this.coordinateVisible = true;
         this.coordinateSystem = null;
@@ -39,15 +52,15 @@ class PrintablePlate extends Object3D {
         this._setup();
     }
 
-    updateSize(series, size = this.size, materials = this.materials) {
-        this.series = series;
+    public updateSize(series, size = this.size, materials = this.materials) {
+        // this.series = series;
         this.size = size;
         this.materials = materials;
         this.remove(...this.children);
         this._setup();
     }
 
-    _setup() {
+    public _setup() {
         // Metric
         const gridSpacing = METRIC_GRID_SPACING;
 
@@ -134,6 +147,7 @@ class PrintablePlate extends Object3D {
         this.add(this.targetPoint);
 
         if (this.materials.isRotate || !(this.materials.headType === HEAD_CNC && this.materials.useLockingBlock)) return;
+
         new SVGLoader().load(`${DEFAULT_LUBAN_HOST}/resources/images/cnc/locking-block-red.svg`, (data) => {
             const paths = data.paths;
 
@@ -166,7 +180,7 @@ class PrintablePlate extends Object3D {
         // this._setMaterialsRect();
     }
 
-    _setMaterialsRect() {
+    public _setMaterialsRect() {
         // eslint-disable-next-line no-unused-vars
         const { x = 0, y = 0, fixtureLength = 0 } = this.materials;
 
@@ -186,7 +200,7 @@ class PrintablePlate extends Object3D {
         this.add(nonEditableAreaMesh);
     }
 
-    changeCoordinateVisibility(value) {
+    public changeCoordinateVisibility(value) {
         // this.coordinateVisible = value;
         this.coordinateSystem && (this.coordinateSystem.visible = value);
     }

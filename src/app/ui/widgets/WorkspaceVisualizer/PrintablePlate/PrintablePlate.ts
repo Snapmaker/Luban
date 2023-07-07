@@ -1,23 +1,35 @@
-import { MeshBasicMaterial, Object3D, Group, Mesh, PlaneGeometry, DoubleSide } from 'three';
-import each from 'lodash/each';
 import colornames from 'colornames';
+import each from 'lodash/each';
+import { DoubleSide, Group, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry } from 'three';
 
-import { RED, GREEN } from '../../../../constants/colors';
-import TextSprite from '../../../../scene/three-extensions/TextSprite';
-import TargetPoint from '../../../../scene/three-extensions/TargetPoint';
-
-import GridLine from './GridLine';
-import CoordinateAxes from './CoordinateAxes';
 import { COORDINATE_MODE_CENTER } from '../../../../constants';
+import { GREEN, RED } from '../../../../constants/colors';
+import TargetPoint from '../../../../scene/three-extensions/TargetPoint';
+import TextSprite from '../../../../scene/three-extensions/TextSprite';
+import CoordinateAxes from './CoordinateAxes';
+import GridLine from './GridLine';
+import { Materials } from '../../../../constants/coordinate';
 
 const METRIC_GRID_SPACING = 10; // 10 mm
 
 
 class PrintablePlate extends Object3D {
-    constructor(size, materials, coordinateMode) {
+    private isPrintPlane: boolean = true;
+
+    private coordinateSystem: Group = null;
+    private size: { x: number; y: number };
+    private materials: Materials;
+    private coordinateMode;
+    private coorDelta: { dx: number; dy: number };
+
+    private targetPoint = null;
+
+    public constructor(size, materials, coordinateMode) {
         super();
-        this.isPrintPlane = true;
+
         this.type = 'PrintPlane';
+        this.isPrintPlane = true;
+
         this.targetPoint = null;
         // this.coordinateVisible = true;
         this.coordinateSystem = null;
@@ -37,15 +49,15 @@ class PrintablePlate extends Object3D {
         this._setup();
     }
 
-    updateSize(series, size = this.size, materials = this.materials) {
-        this.series = series;
+    public updateSize(series, size = this.size, materials = this.materials) {
+        // this.series = series;
         this.size = size;
         this.materials = materials;
         this.remove(...this.children);
         this._setup();
     }
 
-    _setup() {
+    public _setup() {
         // Metric
         const gridSpacing = METRIC_GRID_SPACING;
 
@@ -138,7 +150,7 @@ class PrintablePlate extends Object3D {
         // this._setMaterialsRect();
     }
 
-    _setMaterialsRect() {
+    public _setMaterialsRect() {
         // eslint-disable-next-line no-unused-vars
         const { x = 0, y = 0, fixtureLength = 0 } = this.materials;
 
@@ -158,7 +170,7 @@ class PrintablePlate extends Object3D {
         this.add(nonEditableAreaMesh);
     }
 
-    changeCoordinateVisibility(value) {
+    public changeCoordinateVisibility(value) {
         // this.coordinateVisible = value;
         this.coordinateSystem && (this.coordinateSystem.visible = value);
     }

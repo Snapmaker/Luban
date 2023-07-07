@@ -16,7 +16,7 @@ type CoordinateSize = {
     y: number;
 }
 
-type Materials = {
+export type Materials = {
     isRotate: boolean;
     diameter: number;
     length: number;

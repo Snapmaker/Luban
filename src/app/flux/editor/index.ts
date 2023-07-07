@@ -1861,7 +1861,8 @@ export const actions = {
     /**
      * Rotate elements finish.
      */
-    rotateElementsFinish: (headType, elements) => (dispatch, getState) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    rotateElementsFinish: (headType, elements, options = {}) => (dispatch, getState) => {
         const { SVGActions } = getState()[headType];
         const { machine } = getState();
 
@@ -2386,24 +2387,26 @@ export const actions = {
             })
         );
     },
-    drawDelete: headType => (dispatch, getState) => {
-        const { contentGroup, history } = getState()[headType];
+    drawDelete: (headType) => {
+        return (dispatch, getState) => {
+            const { contentGroup, history } = getState()[headType];
 
-        const deletedLineEles = contentGroup.drawGroup.onDelete();
-        if (deletedLineEles.length > 0) {
-            const operations = new CompoundOperation();
-            const operation = new DrawDelete({
-                target: deletedLineEles,
-                drawGroup: contentGroup.drawGroup
-            });
-            operations.push(operation);
-            history.push(operations);
-            dispatch(
-                actions.updateState(headType, {
-                    history
-                })
-            );
-        }
+            const deletedLineEles = contentGroup.drawGroup.onDelete();
+            if (deletedLineEles.length > 0) {
+                const operations = new CompoundOperation();
+                const operation = new DrawDelete({
+                    target: deletedLineEles,
+                    drawGroup: contentGroup.drawGroup
+                });
+                operations.push(operation);
+                history.push(operations);
+                dispatch(
+                    actions.updateState(headType, {
+                        history
+                    })
+                );
+            }
+        };
     },
     drawTransform: (headType, before, after) => (dispatch, getState) => {
         const { contentGroup, history } = getState()[headType];

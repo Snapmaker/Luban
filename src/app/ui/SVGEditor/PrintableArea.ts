@@ -4,10 +4,19 @@ import {
     EPSILON, HEAD_CNC
 } from '../../constants';
 import { isEqual } from '../../../shared/lib/utils';
-import { OriginType } from '../../constants/coordinate';
+import { Materials, OriginType } from '../../constants/coordinate';
 
 class PrintableArea {
-    constructor(svgFactory) {
+    private id: string;
+    private svgFactory;
+    private size: {
+        x: number;
+        y: number;
+    };
+
+    private materials: Materials;
+
+    public constructor(svgFactory) {
         this.id = uuid();
         this.svgFactory = svgFactory;
         this.size = {
@@ -43,7 +52,7 @@ class PrintableArea {
         this._setOriginPoint();
     }
 
-    updateScale(state) {
+    public updateScale(state) {
         const { size, materials, scale } = state;
         if (Math.abs(this.scale - scale) > EPSILON) {
             this.scale = scale;
@@ -80,7 +89,7 @@ class PrintableArea {
         }
     }
 
-    updateCoordinateMode(origin, coordinateMode, coordinateSize) {
+    public updateCoordinateMode(origin, coordinateMode, coordinateSize) {
         while (this.printableAreaGroup.firstChild) {
             this.printableAreaGroup.removeChild(this.printableAreaGroup.lastChild);
         }
@@ -95,11 +104,11 @@ class PrintableArea {
         this._setOriginPoint();
     }
 
-    _removeAll() {
-
+    public _removeAll() {
+        // do nothing
     }
 
-    _setCoordinateMode(coordinateMode) {
+    public _setCoordinateMode(coordinateMode) {
         this.coordinateMode = coordinateMode;
         this.coorDelta = {
             x: 0,
@@ -109,7 +118,7 @@ class PrintableArea {
         this.coorDelta.y -= this.coordinateSize.y / 2 * coordinateMode.setting.sizeMultiplyFactor.y;
     }
 
-    _setGridLine() {
+    public _setGridLine() {
         if (this.origin && this.origin.type === OriginType.Object) {
             return;
         }
@@ -427,7 +436,7 @@ class PrintableArea {
         this.printableAreaGroup.append(line4);
     }
 
-    _setBorder(x1, y1, x2, y2, color, dashed) {
+    public _setBorder(x1, y1, x2, y2, color, dashed) {
         const line = createSVGElement({
             element: 'line',
             attr: {
@@ -446,7 +455,7 @@ class PrintableArea {
         this.printableAreaGroup.append(line);
     }
 
-    _axisLabel() {
+    public _axisLabel() {
         const label = createSVGElement({
             element: 'text',
             attr: {
@@ -466,7 +475,7 @@ class PrintableArea {
         this.printableAreaGroup.append(label);
     }
 
-    _setCoordinateAxes() {
+    public _setCoordinateAxes() {
         const { x, y } = this.size;
         const { x: cx, y: cy } = this.coordinateSize;
         const xMin = x - cx / 2 + this.coorDelta.x;
@@ -498,7 +507,7 @@ class PrintableArea {
     // _setLockingBlock() {
     //     if ()
     // }
-    _setOriginPoint() {
+    public _setOriginPoint() {
         if (this.materials.isRotate) {
             return;
         }
@@ -539,7 +548,7 @@ class PrintableArea {
         this.printableAreaGroup.append(origin);
     }
 
-    _setMaterialsRect() {
+    public _setMaterialsRect() {
         const { isRotate, x = 0, y = 0, fixtureLength = 0 } = this.materials;
         if (!isRotate) {
             return;
