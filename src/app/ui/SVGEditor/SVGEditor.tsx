@@ -299,11 +299,7 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
 
         const translateX = e;
         const translateY = f;
-        let scaleX = Math.sign(a) * Math.sqrt(a * a + b * b);
-        let scaleY = Math.sign(d) * Math.sqrt(c * c + d * d);
-        let skewX = Math.atan2(-b, a);
-        let skewY = Math.atan2(c, d);
-        let angle = Math.atan2(-b, a) * (180 / Math.PI);
+        let scaleX, scaleY, skewX, skewY, angle;
 
         function radToDeg(radia) {
             // Radian to degree.
@@ -315,20 +311,14 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         if (a !== 0 || b !== 0) {
             const r = Math.sqrt(a * a + b * b);
             angle = radToDeg(b > 0 ? Math.acos(a / r) : -Math.acos(a / r));
-            //   newScale(r, Delta / r)
-            //   s = 'scale(' + sx + (sx == sy ? '' : ',' + sy) + ') '
             scaleX = r;
             scaleY = Delta / r;
-            //   newSkewX(Math.atan((a * c + b * d) / (r * r)))
             skewX = radToDeg(Math.atan((a * c + b * d) / (r * r)));
         } else if (c !== 0 || d !== 0) {
             const s = Math.sqrt(c * c + d * d);
-            //   newRotate(Math.PI / 2 - (d > 0 ? Math.acos(-c / s) : -Math.acos(c / s)))
             angle = radToDeg(Math.PI / 2 - (d > 0 ? Math.acos(-c / s) : -Math.acos(c / s)));
-            //   newScale(Delta / s, s)
             scaleX = Delta / s;
             scaleY = s;
-            //   newSkewY(Math.atan((a * c + b * d) / (s * s)))
             skewY = radToDeg(Math.atan((a * c + b * d) / (s * s)));
         } else {
             // a = b = c = d = 0
@@ -336,17 +326,6 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
             scaleY = 0;
         }
         console.log(translateX, translateY, scaleX, scaleY, skewX, skewY, angle);
-        // let scaleX = Math.sign(a) * Math.sqrt(a * a + b * b);
-        // let scaleY = Math.sign(d) * Math.sqrt(c * c + d * d);
-        // const skewX = Math.atan2(-b, a);
-        // const skewY = Math.atan2(c, d);
-        // const angle = Math.atan2(-b, a) * (180 / Math.PI);
-
-        // // fix over 90deg scaleX/Y
-        // if (Math.abs(angle) > 90) {
-        //     scaleX = -scaleX;
-        //     scaleY = -scaleY;
-        // }
 
         return {
             translateX,
@@ -498,35 +477,25 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
             const minY = Math.min(pre.min.y, topLeftY, topRightY, bottomLeftY, bottomRightY);
             const maxX = Math.max(pre.max.x, topLeftX, topRightX, bottomLeftX, bottomRightX);
             const maxY = Math.max(pre.max.y, topLeftY, topRightY, bottomLeftY, bottomRightY);
-            // const newWidth = maxX - minX;
-            // const newHeight = maxY - minY;
-            console.log('bbox', bbox, topLeftX, topRightX, bottomLeftX, bottomRightX, topLeftY, topRightY, bottomLeftY, bottomRightY, minX, minY, maxX, maxY);
             return {
                 max: { x: maxX, y: maxY },
                 min: { x: minX, y: minY }
             };
-            // const leftTopX = parseFloat(curr.elem.getAttribute('x')) ;
-            // const leftTopY = parseFloat(curr.elem.getAttribute('y')) ;
-            // const rightBottomX = leftTopX + curr.width;
-            // const rightBottomY = leftTopY + curr.height;
-            // console.log('bounding box', curr.elem.getBBox());
-            // console.log('bounding box', leftTopX, leftTopY, rightBottomX, rightBottomY);
-            // return {
-            //     max: {
-            //         x: Math.max(pre.max.x, leftTopX, rightBottomX),
-            //         y: Math.max(pre.max.y, leftTopY, rightBottomY)
-            //     },
-            //     min: {
-            //         x: Math.min(pre.min.x, leftTopX, rightBottomX),
-            //         y: Math.min(pre.min.y, leftTopY, rightBottomY)
-            //     }
-            // };
         }, { max: { x: -Infinity, y: -Infinity }, min: { x: Infinity, y: Infinity } });
         const viewboxX = maxminXY.min.x;
         const viewboxY = maxminXY.min.y;
         const viewWidth = maxminXY.max.x - maxminXY.min.x;
         const viewHeight = maxminXY.max.y - maxminXY.min.y;
         return { viewboxX, viewboxY, viewWidth, viewHeight };
+    };
+    const getScale = (elem, type, ratio, viewValue, originalViewValue) => {
+        if (elem.getAttribute(type)) {
+            return elem.getAttribute(type) * ratio / originalViewValue;
+        } else if (typeof elem.getBBox === 'function') {
+            return elem.getBBox()[type] * ratio / originalViewValue;
+        } else {
+            return viewValue / originalViewValue;
+        }
     };
     const rotatePath = (elem, angle) => {
         // if (!isShapeSvg(elem)) return;
@@ -566,8 +535,8 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         elem.transform.baseVal.initialize(elem.ownerSVGElement.createSVGTransformFromMatrix(newMatrix));
     };
     const createSvg = (svgString, svg, viewboxX, viewboxY, viewWidth, viewHeight, widthRatio, heightRatio) => {
-        const x = parseFloat(svg.elem.getAttribute('x')) * widthRatio;
-        const y = parseFloat(svg.elem.getAttribute('y')) * heightRatio;
+        const x = parseFloat(svg.elem.getAttribute('x') || svg.elem.getBBox() && svg.elem.getBBox().x || 0) * widthRatio;
+        const y = parseFloat(svg.elem.getAttribute('y') || svg.elem.getBBox() && svg.elem.getBBox().y || 0) * heightRatio;
         const svgTransforms = parseTransform(svg.elem.getAttribute('transform'));
         const svgRotate = svgTransforms.find(attr => attr.type === 'rotate');
 
@@ -604,12 +573,14 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
 
         console.log('flattenNestedGroups', new XMLSerializer().serializeToString(svgElement), rotatePath);
         const attributes = {};
-        const scaleWidth = svg.elem.getAttribute('width') ? svg.elem.getAttribute('width') * widthRatio / originalViewWidth : viewWidth / originalViewWidth;
-        const scaleHeight = svg.elem.getAttribute('height') ? svg.elem.getAttribute('height') * heightRatio / originalViewHeight : viewHeight / originalViewHeight;
+        // const scaleWidth = svg.elem.getAttribute('width') ? svg.elem.getAttribute('width') * widthRatio / originalViewWidth : viewWidth / originalViewWidth;
+        // const scaleHeight = svg.elem.getAttribute('height') ? svg.elem.getAttribute('height') * heightRatio / originalViewHeight : viewHeight / originalViewHeight;
+        const scaleWidth = getScale(svg.elem, 'width', widthRatio, viewWidth, originalViewWidth);
+        const scaleHeight = getScale(svg.elem, 'height', heightRatio, viewHeight, originalViewHeight);
 
 
         children = Array.from(svgElement.children);
-        const combineTranslate = (translateValue = 0, originalViewBoxValue = 0, svgScaleValue = 1, currXorYValue = 0) => (translateValue - originalViewBoxValue) * svgScaleValue + currXorYValue;
+        const combineTranslate = (translateValue = 0, originalViewBoxValue = 0, svgScaleValue = 1, currXorYValue = 0) => (translateValue - originalViewBoxValue) * svgScaleValue + currXorYValue + 0;
         for (let i = 0; i < children.length; i++) {
             const curr = children[i];
             const transformAttrs = parseTransform(curr.getAttribute('transform'));
@@ -619,7 +590,7 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
             const rotate = transformAttrs.find(attr => attr.type === 'rotate');
             const skewX = transformAttrs.find(attr => attr.type === 'skewX');
             const skewY = transformAttrs.find(attr => attr.type === 'skewY');
-            console.log('rotate', scale, viewboxX, viewboxY);
+            console.log('rotate', getScale, scale, viewboxX, viewboxY, translate, originalViewX, originalViewY, scaleWidth, scaleHeight, x, y);
 
             // caculate tag finally transform
             const currX = combineTranslate(translate && translate.params[0], originalViewX, scaleWidth, x);
@@ -689,6 +660,15 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
                 // so we need to handle img rotate after img scaled.
                 // here we remove rotate first and add a rotate, which center is the center after img scale
                 cloneImgElem.setAttribute('transform', `${originalTransform.replace(/rotate\((.*?)\)/ig, '')} rotate(${img.angle}, ${transformXCenter - viewboxX} ${transformYCenter - viewboxY})`);
+
+                // counteract rotate of image (beacuse the <mask> or <clipPath> will transform base it's host)
+                if (img.angle === 0) return;
+                const wrapperChildren = Array.from(wrapperClone.children);
+                wrapperChildren.forEach((wrapperChildElem, index) => {
+                    // the firt child of mask elem is a rect as mask layer(a different color background for show specify svg graph)
+                    if (wrapperClone.tagName === 'mask' && index === 0 && wrapperChildElem.tagName === 'rect') return;
+                    wrapperChildElem.setAttribute('transform', `rotate(${-img.angle}, ${transformXCenter - viewboxX} ${transformYCenter - viewboxY}) ${wrapperChildElem.getAttribute('transform') || ''}`);
+                });
             });
 
         const wrapperSvgContent = new XMLSerializer().serializeToString(wrapperClone);
