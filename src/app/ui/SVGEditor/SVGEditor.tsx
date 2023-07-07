@@ -458,6 +458,8 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         const maxminXY = elems.reduce((pre, curr) => {
             const rotationAngleRad = curr.angle * (Math.PI / 180) || 0;
             const bbox = curr.elem.getBBox();
+            const currMaxX = bbox.x + bbox.width;
+            const currMaxY = bbox.y + bbox.height;
             const centerX = bbox.x + bbox.width / 2;
             const centerY = bbox.y + bbox.height / 2;
 
@@ -465,14 +467,14 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
             const topLeftX = centerX + (bbox.x - centerX) * Math.cos(rotationAngleRad) - (bbox.y - centerY) * Math.sin(rotationAngleRad);
             const topLeftY = centerY + (bbox.x - centerX) * Math.sin(rotationAngleRad) + (bbox.y - centerY) * Math.cos(rotationAngleRad);
 
-            const topRightX = centerX + (bbox.x + bbox.width - centerX) * Math.cos(rotationAngleRad) - (bbox.y - centerY) * Math.sin(rotationAngleRad);
-            const topRightY = centerY + (bbox.x + bbox.width - centerX) * Math.sin(rotationAngleRad) + (bbox.y - centerY) * Math.cos(rotationAngleRad);
+            const topRightX = centerX + (currMaxX - centerX) * Math.cos(rotationAngleRad) - (bbox.y - centerY) * Math.sin(rotationAngleRad);
+            const topRightY = centerY + (currMaxX - centerX) * Math.sin(rotationAngleRad) + (bbox.y - centerY) * Math.cos(rotationAngleRad);
 
-            const bottomLeftX = centerX + (bbox.x - centerX) * Math.cos(rotationAngleRad) - (bbox.y + bbox.height - centerY) * Math.sin(rotationAngleRad);
-            const bottomLeftY = centerY + (bbox.x - centerX) * Math.sin(rotationAngleRad) + (bbox.y + bbox.height - centerY) * Math.cos(rotationAngleRad);
+            const bottomLeftX = centerX + (bbox.x - centerX) * Math.cos(rotationAngleRad) - (currMaxY - centerY) * Math.sin(rotationAngleRad);
+            const bottomLeftY = centerY + (bbox.x - centerX) * Math.sin(rotationAngleRad) + (currMaxY - centerY) * Math.cos(rotationAngleRad);
 
-            const bottomRightX = centerX + (bbox.x + bbox.width - centerX) * Math.cos(rotationAngleRad) - (bbox.y + bbox.height - centerY) * Math.sin(rotationAngleRad);
-            const bottomRightY = centerY + (bbox.x + bbox.width - centerX) * Math.sin(rotationAngleRad) + (bbox.y + bbox.height - centerY) * Math.cos(rotationAngleRad);
+            const bottomRightX = centerX + (currMaxX - centerX) * Math.cos(rotationAngleRad) - (currMaxY - centerY) * Math.sin(rotationAngleRad);
+            const bottomRightY = centerY + (currMaxX - centerX) * Math.sin(rotationAngleRad) + (currMaxY - centerY) * Math.cos(rotationAngleRad);
             const minX = Math.min(pre.min.x, topLeftX, topRightX, bottomLeftX, bottomRightX);
             const minY = Math.min(pre.min.y, topLeftY, topRightY, bottomLeftY, bottomRightY);
             const maxX = Math.max(pre.max.x, topLeftX, topRightX, bottomLeftX, bottomRightX);
@@ -574,13 +576,17 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         console.log('flattenNestedGroups', new XMLSerializer().serializeToString(svgElement), rotatePath);
         const attributes = {};
         // const scaleWidth = svg.elem.getAttribute('width') ? svg.elem.getAttribute('width') * widthRatio / originalViewWidth : viewWidth / originalViewWidth;
-        // const scaleHeight = svg.elem.getAttribute('height') ? svg.elem.getAttribute('height') * heightRatio / originalViewHeight : viewHeight / originalViewHeight;
+        // const scaleHeight = svg.elem.getAttribute('height')
+        //      ? svg.elem.getAttribute('height') * heightRatio / originalViewHeight
+        //      : viewHeight / originalViewHeight;
         const scaleWidth = getScale(svg.elem, 'width', widthRatio, viewWidth, originalViewWidth);
         const scaleHeight = getScale(svg.elem, 'height', heightRatio, viewHeight, originalViewHeight);
 
 
         children = Array.from(svgElement.children);
-        const combineTranslate = (translateValue = 0, originalViewBoxValue = 0, svgScaleValue = 1, currXorYValue = 0) => (translateValue - originalViewBoxValue) * svgScaleValue + currXorYValue + 0;
+        const combineTranslate = (translateValue = 0, originalViewBoxValue = 0, svgScaleValue = 1, currXorYValue = 0) => {
+            return (translateValue - originalViewBoxValue) * svgScaleValue + currXorYValue + 0;
+        };
         for (let i = 0; i < children.length; i++) {
             const curr = children[i];
             const transformAttrs = parseTransform(curr.getAttribute('transform'));
@@ -614,7 +620,7 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
     const getSvgString = async (svg, viewboxX, viewboxY, viewWidth, viewHeight, widthRatio, heightRatio) => {
         // if (svg.svgPath) return [svg.svgPath];
         const url = svg.resource.originalFile.path;
-        return fetch(`http://localhost:8080${url}`)
+        return fetch(`${url}`)
             .then(async response => response.text())
             .then(svgString => {
                 return createSvg(svgString, svg, viewboxX, viewboxY, viewWidth, viewHeight, widthRatio, heightRatio);
