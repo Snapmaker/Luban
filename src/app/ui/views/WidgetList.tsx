@@ -10,7 +10,16 @@ import { actions as widgetActions } from '../../flux/widget';
 // import { renderWidget } from '../utils';
 import styles from './widgets.styl';
 
-function WidgetList(props) {
+interface WidgetListProps {
+    tab: string;
+    container: string;
+    className: string;
+    children: Array<React.ReactNode>;
+    onDragStart: () => void;
+    onDragEnd: () => void;
+}
+
+const WidgetList: React.FC<WidgetListProps> = (props) => {
     const { children, className = '', onDragStart, onDragEnd, tab, container } = props;
 
     const dispatch = useDispatch();
@@ -35,14 +44,15 @@ function WidgetList(props) {
                 ghostClass: 'sortable-ghost', // Class name for the drop placeholder
                 dataIdAttr: 'data-widget-id',
                 onStart: onDragStart,
-                onEnd: onDragEnd
+                onEnd: onDragEnd,
             }}
             onChange={actions.updateTabContainer}
         >
             {children}
         </Sortable>
     );
-}
+};
+
 WidgetList.propTypes = {
     tab: PropTypes.string.isRequired,
     container: PropTypes.string.isRequired,

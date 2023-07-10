@@ -2,7 +2,7 @@ import type { Machine, MachineModule, MachineToolHeadOptions, ToolHead, ToolHead
 
 import i18n from '../lib/i18n';
 import {
-    SnapamkerRayMachine,
+    SnapmakerRayMachine,
     SnapmakerA150Machine,
     SnapmakerA250Machine,
     SnapmakerA350Machine,
@@ -141,7 +141,7 @@ export function findMachineByName(name: string): Machine | null {
         SnapmakerA350Machine,
         SnapmakerArtisanMachine,
         SnapmakerJ1Machine,
-        SnapamkerRayMachine,
+        SnapmakerRayMachine,
     ];
 
     for (const machine of availableMachines) {
@@ -161,7 +161,7 @@ function getMachineList() {
         MACHINE_SERIES.A350.identifier,
         SnapmakerArtisanMachine.identifier,
         SnapmakerJ1Machine.identifier,
-        SnapamkerRayMachine.identifier,
+        SnapmakerRayMachine.identifier,
     ];
 
     const machines = [];

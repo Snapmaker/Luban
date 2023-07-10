@@ -1,7 +1,7 @@
 import { Machine, MachineType } from '@snapmaker/luban-platform';
 import classNames from 'classnames';
 import { cloneDeep, reverse, slice } from 'lodash';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory, useLocation } from 'react-router-dom';
 
@@ -10,10 +10,12 @@ import { RootState } from '../../../flux/index.def';
 import { actions as projectActions } from '../../../flux/project';
 import i18n from '../../../lib/i18n';
 import UniApi from '../../../lib/uni-api';
+import { SnapmakerRayMachine } from '../../../machines';
 import Anchor from '../../components/Anchor';
 import { Button } from '../../components/Buttons';
 import { renderPopup } from '../../utils';
 import Workspace from '../Workspace';
+import { LaserWorkspaceRay } from '../laser-workspace-ray';
 import print3DEntryIcon from './images/icon_3d_120x120.svg';
 import cncEntryIcon from './images/icon_cnc_120x120.svg';
 import laserEntryIcon from './images/icon_laser_120x120.svg';
@@ -37,13 +39,24 @@ const StartProject: React.FC = () => {
     const [beginSelected, setBeginSelected] = useState('start-project');
 
     // method
-    function renderWorkspace() {
+    const renderWorkspace = useCallback(() => {
+        if (!showWorkspace) {
+            return null;
+        }
+
         const onClose = () => setShowWorkspace(false);
-        return showWorkspace && renderPopup({
+
+        let component = Workspace;
+        if (activeMachine?.identifier === SnapmakerRayMachine.identifier) {
+            component = LaserWorkspaceRay;
+        }
+        console.log('mah =', activeMachine?.identifier);
+
+        return renderPopup({
             onClose,
-            component: Workspace
+            component,
         });
-    }
+    }, [showWorkspace, activeMachine?.identifier]);
 
     function handleSwitchToWorkspace(pathname) {
         const oldPathname = location?.pathname;

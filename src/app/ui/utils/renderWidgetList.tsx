@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import React from 'react';
 
 import Widget from '../layouts/Widget';
-import WidgetList from '../views/widget-list';
+import WidgetList from '../views/WidgetList';
 
 const getWidgetByName = (name, allWidgets) => {
     const foundWidget = allWidgets[name];
@@ -13,7 +13,15 @@ const getWidgetByName = (name, allWidgets) => {
 };
 
 
-export default function renderWidgetList(tab, container, widgetIds, Widgets, listActions, widgetProps, controlActions = null) {
+export default function renderWidgetList(
+    tab: string,
+    container: string,
+    widgetIds: string[],
+    Widgets,
+    listActions,
+    widgetProps,
+    controlActions = null,
+): React.ReactNode {
     return (
         <div
             className={classNames(
@@ -30,11 +38,11 @@ export default function renderWidgetList(tab, container, widgetIds, Widgets, lis
                 container={container}
                 className="widget-list-intro"
                 {...listActions}
-                // widgets={Widgets}
-                // toggleToDefault={this.actions.toggleToDefault}
-                // onDragStart={this.widgetEventHandler.onDragStart}
-                // onDragEnd={this.widgetEventHandler.onDragEnd}
-                // updateTabContainer={this.props.updateTabContainer}
+            // widgets={Widgets}
+            // toggleToDefault={this.actions.toggleToDefault}
+            // onDragStart={this.widgetEventHandler.onDragStart}
+            // onDragEnd={this.widgetEventHandler.onDragEnd}
+            // updateTabContainer={this.props.updateTabContainer}
             >
                 {
                     widgetIds.map(widgetId => (

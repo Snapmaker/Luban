@@ -1,17 +1,25 @@
-import React, { useEffect, useRef } from 'react';
-// import Sortable from 'react-sortablejs';
-import { throttle, includes } from 'lodash';
-import PropTypes from 'prop-types';
-import i18next from 'i18next';
 import classNames from 'classnames';
+import i18next from 'i18next';
+import { includes, throttle } from 'lodash';
+import PropTypes from 'prop-types';
 import pubsub from 'pubsub-js';
-import styles from './styles/workspace.styl';
-import { longLang } from '../../constants';
+import React, { useEffect, useRef } from 'react';
 
-function WorkspaceLayout({ renderLeftView, renderRightView, renderMainToolBar, children }) {
-    const primaryContainer = useRef();
-    const visualizerContainer = useRef();
-    const secondaryContainer = useRef();
+import { longLang } from '../../constants';
+import styles from './styles/workspace.styl';
+
+
+interface WorkspaceLayoutProps {
+    renderLeftView: () => React.ReactNode;
+    renderRightView: () => React.ReactNode;
+    renderMainToolBar: () => React.ReactNode;
+    children: Array<React.ReactNode>;
+}
+
+const WorkspaceLayout: React.FC<WorkspaceLayoutProps> = ({ renderLeftView, renderRightView, renderMainToolBar, children }) => {
+    const primaryContainer = useRef<HTMLDivElement>();
+    const visualizerContainer = useRef<HTMLDivElement>();
+    const secondaryContainer = useRef<HTMLDivElement>();
 
     const resizeWindow = () => {
         if (visualizerContainer.current) {
@@ -87,7 +95,8 @@ function WorkspaceLayout({ renderLeftView, renderRightView, renderMainToolBar, c
         </div>
 
     );
-}
+};
+
 WorkspaceLayout.propTypes = {
     children: PropTypes.array,
     renderLeftView: PropTypes.func,

@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 import { HashRouter, Route, Switch } from 'react-router-dom';
+import { Machine } from '@snapmaker/luban-platform';
 
 import { actions as appGlobalActions } from '../flux/app-global';
 import { actions as cncActions } from '../flux/cnc';
@@ -25,6 +26,8 @@ import Settings from './pages/Settings';
 import Workspace from './pages/Workspace';
 import { LaserMainPage } from './pages/laser-main';
 import { PrintMainPage } from './pages/print-main';
+import { SnapmakerRayMachine } from '../machines';
+import { LaserWorkspaceRay } from './pages/laser-workspace-ray';
 
 
 // Register Canvas2dZoom with tag name '', it will defaults to <canvas2d-zoom>
@@ -33,6 +36,7 @@ Canvas2dZoom.register('');
 
 interface AppProps {
     enableShortcut: boolean;
+    activeMachine: Machine | null;
 }
 
 interface AppState {
@@ -158,12 +162,16 @@ class App extends React.PureComponent<AppProps, AppState> {
             return <h1>Something went wrong. Please reload the app</h1>;
         }
 
+        const workspaceComponent = this.props.activeMachine?.identifier === SnapmakerRayMachine.identifier
+            ? LaserWorkspaceRay
+            : Workspace;
+
         return (
             <HashRouter ref={this.router}>
                 <AppLayout>
                     <Switch>
                         <Route path="/" exact component={HomePage} />
-                        <Route path="/workspace" component={Workspace} />
+                        <Route path="/workspace" component={workspaceComponent} />
                         <Route path="/printing" component={PrintMainPage} />
                         <Route path="/laser" component={LaserMainPage} />
                         <Route path="/cnc" component={CNCMainPage} />
@@ -189,11 +197,16 @@ class App extends React.PureComponent<AppProps, AppState> {
 
 const mapStateToProps = (state) => {
     const machineInfo = state.machine;
+
+    const activeMachine = state.machine.activeMachine;
+
     const { menuDisabledCount } = state.appbarMenu;
     let enableShortcut = state[window.location.hash.slice(2)]?.enableShortcut;
     enableShortcut = (typeof enableShortcut === 'undefined' ? true : enableShortcut);
     const { shouldCheckForUpdate } = machineInfo;
+
     return {
+        activeMachine,
         enableShortcut,
         menuDisabledCount,
         shouldCheckForUpdate

@@ -25,7 +25,7 @@ import CNCVisualizer from '../../widgets/CNCVisualizer';
 import Thumbnail from '../../widgets/CncLaserShared/Thumbnail';
 import useRenderMainToolBar from '../CncLaserShared/MainToolBar';
 import useRenderRemoveModelsWarning from '../CncLaserShared/RemoveAllModelsWarning';
-import renderRightView from '../CncLaserShared/RightView';
+import RenderProjectRightView from '../CncLaserShared/ProjectRightView';
 import HomePage from '../HomePage';
 import Workspace from '../Workspace';
 import {
@@ -378,7 +378,7 @@ const Cnc: React.FC<CNCMainPageProps> = ({ location }) => {
             <ProjectLayout
                 renderMainToolBar={renderMainToolBar}
                 renderRightView={
-                    () => renderRightView({ headType: HEAD_CNC, dispatch, page, widgets, listActions })
+                    () => RenderProjectRightView({ headType: HEAD_CNC, dispatch, page, widgets, listActions })
                 }
             >
                 <Dropzone

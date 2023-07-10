@@ -1,30 +1,49 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useSelector, useDispatch, shallowEqual } from 'react-redux';
-import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { noop } from 'lodash';
-import { actions as workspaceActions } from '../../../flux/workspace';
+import PropTypes from 'prop-types';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+
+import {
+    DISPLAYED_TYPE_TOOLPATH,
+    PAGE_EDITOR,
+    PAGE_PROCESS,
+} from '../../../constants';
 import { actions as editorActions } from '../../../flux/editor';
 import { actions as projectActions } from '../../../flux/project';
-import {
-    DISPLAYED_TYPE_TOOLPATH, PAGE_EDITOR, PAGE_PROCESS
-} from '../../../constants';
-
+import { actions as workspaceActions } from '../../../flux/workspace';
+import { logGcodeExport } from '../../../lib/gaEvent';
+import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
+import UniApi from '../../../lib/uni-api';
+import { SnapmakerRayMachine } from '../../../machines';
 import { Button } from '../../components/Buttons';
 import Dropdown from '../../components/Dropdown';
 import Menu from '../../components/Menu';
-import { renderPopup } from '../../utils';
-import styles from './styles.styl';
-import Workspace from '../../pages/Workspace';
-import i18n from '../../../lib/i18n';
-import UniApi from '../../../lib/uni-api';
-import Thumbnail from '../CncLaserShared/Thumbnail';
 import SvgIcon from '../../components/SvgIcon';
-import { logGcodeExport } from '../../../lib/gaEvent';
+import Workspace from '../../pages/Workspace';
+import { LaserWorkspaceRay } from '../../pages/laser-workspace-ray';
+import { renderPopup } from '../../utils';
+import Thumbnail from '../CncLaserShared/Thumbnail';
+import styles from './styles.styl';
+import { RootState } from '../../../flux/index.def';
 
-const Output = ({ headType }) => {
-    const displayedType = useSelector(state => state[headType]?.displayedType);
+export type LoadGcodeOptions = {
+    renderImmediately?: boolean;
+};
+
+interface OutputViewProps {
+    headType: 'laser' | 'cnc';
+
+    loadGcodeOptions?: LoadGcodeOptions;
+}
+
+const Output: React.FC<OutputViewProps> = (props) => {
+    const { headType, loadGcodeOptions } = props;
+
+    const activeMachine = useSelector((state: RootState) => state.machine.activeMachine);
+
+    const displayedType = useSelector((state: RootState) => state[headType]?.displayedType);
     const gcodeFile = useSelector(state => state[headType]?.gcodeFile);
     const needToPreview = useSelector(state => state[headType]?.needToPreview);
     const page = useSelector(state => state[headType]?.page);
@@ -32,11 +51,12 @@ const Output = ({ headType }) => {
     const shouldGenerateGcodeCounter = useSelector(state => state[headType]?.shouldGenerateGcodeCounter);
     const hasModel = useSelector(state => state[headType]?.modelGroup.hasModel(), shallowEqual);
     const toolPathGroup = useSelector(state => state[headType]?.toolPathGroup);
-    const workflowState = useSelector(state => state.machine?.workflowState);
+    const workflowState = useSelector((state: RootState) => state.machine?.workflowState);
     const isGcodeGenerating = useSelector(state => state[headType]?.isGcodeGenerating);
     const materials = useSelector(state => state[headType]?.materials);
-    const series = useSelector(state => state?.machine?.series, shallowEqual);
+    const series = useSelector((state: RootState) => state.machine?.series, shallowEqual);
 
+    // states
     const [showWorkspace, setShowWorkspace] = useState(false);
     const [showExportOptions, setShowExportOptions] = useState(false);
 
@@ -57,15 +77,7 @@ const Output = ({ headType }) => {
         onGenerateThumbnail: () => {
             dispatch(editorActions.setThumbnail(headType, thumbnail?.current?.getThumbnail(series)));
         },
-        onLoadGcode: async () => {
-            if (gcodeFile === null) {
-                return;
-            }
-            await dispatch(workspaceActions.renderGcodeFile(gcodeFile));
-            logGcodeExport(headType, 'workspace', materials.isRotate);
-            setShowWorkspace(true);
-            window.scrollTo(0, 0);
-        },
+
         onExport: () => {
             if (gcodeFile === null) {
                 return;
@@ -104,12 +116,32 @@ const Output = ({ headType }) => {
         }
     };
 
+    const onLoadGcodeToWorkspace = useCallback(async () => {
+        if (gcodeFile === null) {
+            return;
+        }
+
+        logGcodeExport(headType, 'workspace', materials.isRotate);
+
+        // workspace render G-code
+        await dispatch(workspaceActions.renderGcodeFile(gcodeFile, true, loadGcodeOptions?.renderImmediately || false));
+
+        // open workspace
+        setShowWorkspace(true);
+        window.scrollTo(0, 0);
+    }, [
+        gcodeFile,
+        materials.isRotate,
+        loadGcodeOptions?.renderImmediately,
+    ]);
+
     useEffect(() => {
         UniApi.Event.on('appbar-menu:cnc-laser.export-gcode', actions.onExport);
         return () => {
             UniApi.Event.off('appbar-menu:cnc-laser.export-gcode', actions.onExport);
         };
     }, [gcodeFile]);
+
     useEffect(() => {
         if (previewFailed) {
             modal({
@@ -124,13 +156,23 @@ const Output = ({ headType }) => {
     }, [shouldGenerateGcodeCounter]);
 
 
-    function renderWorkspace() {
+    const renderWorkspace = useCallback(() => {
+        if (!showWorkspace) {
+            return null;
+        }
+
         const onClose = () => setShowWorkspace(false);
+
+        let component = Workspace;
+        if (activeMachine?.identifier === SnapmakerRayMachine.identifier) {
+            component = LaserWorkspaceRay;
+        }
+
         return showWorkspace && renderPopup({
             onClose,
-            component: Workspace
+            component,
         });
-    }
+    }, [showWorkspace, activeMachine?.identifier]);
 
     const shouldRenderToolPaths = toolPathGroup.toolPaths.every(toolPath => {
         return !toolPath.visible || !toolPath.hasVisibleModels();
@@ -142,8 +184,8 @@ const Output = ({ headType }) => {
     const menu = (
         <Menu>
             <Menu.Item
-                onClick={actions.onLoadGcode}
                 disabled={shouldRenderToolPaths || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                onClick={onLoadGcodeToWorkspace}
             >
                 <div className={classNames('align-c', 'padding-vertical-4')}>
                     {i18n._('key-CncLaser/G-codeAction-Load G-code to Workspace')}
@@ -236,7 +278,6 @@ const Output = ({ headType }) => {
                         </Dropdown>
                     </div>
                 )}
-
             </div>
             <Thumbnail
                 ref={thumbnail}

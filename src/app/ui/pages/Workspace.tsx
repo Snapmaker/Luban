@@ -6,6 +6,7 @@ import PropTypes from 'prop-types';
 import React, { useEffect, useRef, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router-dom';
+
 import { CNC_GCODE_SUFFIX, LASER_GCODE_SUFFIX, PRINTING_GCODE_SUFFIX, WORKFLOW_STATE_IDLE } from '../../constants';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, MACHINE_SERIES } from '../../constants/machines';
 import { actions as widgetActions } from '../../flux/widget';
@@ -21,7 +22,6 @@ import MainToolBar from '../layouts/MainToolBar';
 
 import styles from '../layouts/styles/workspace.styl';
 import WorkspaceLayout from '../layouts/WorkspaceLayout';
-
 import { logPageView, renderWidgetList } from '../utils';
 import CNCPathWidget from '../widgets/CNCPath';
 import ConnectionWidget from '../widgets/Connection';
@@ -98,7 +98,7 @@ function getUnsupportedWidgets(machineIdentifier, toolHead) {
     return [];
 }
 
-function Workspace({ isPopup, onClose, style, className }) {
+const Workspace = ({ isPopup, onClose, style, className }) => {
     const history = useHistory();
     const dispatch = useDispatch();
 
@@ -318,7 +318,7 @@ function Workspace({ isPopup, onClose, style, className }) {
             </WorkspaceLayout>
         </div>
     );
-}
+};
 
 Workspace.propTypes = {
     onClose: PropTypes.func,
