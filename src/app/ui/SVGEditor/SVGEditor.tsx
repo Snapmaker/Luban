@@ -1,14 +1,78 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
-
 import { PREDEFINED_SHORTCUT_ACTIONS, ShortcutHandlerPriority, ShortcutManager } from '../../lib/shortcut';
 import styles from './styles.styl';
 import { SVG_EVENT_CONTEXTMENU } from './constants';
 import SVGCanvas from './SVGCanvas';
 import SVGLeftBar from './SVGLeftBar';
+import { Materials } from '../../constants/coordinate';
 
-const SVGEditor = forwardRef((props, ref) => {
+
+export type SVGEditorHandle = {
+    zoomIn: () => void;
+    zoomOut: () => void;
+    autoFocus: () => void;
+}
+
+type SVGEditorProps = {
+    isActive: boolean;
+
+    size: object;
+    materials: Materials;
+
+    SVGActions: object;
+    scale: number;
+    minScale: number;
+    maxScale: number;
+    target: object;
+    coordinateMode: object;
+    coordinateSize: object;
+    origin: object;
+    editable: boolean;
+
+    menuDisabledCount: number;
+    SVGCanvasMode: string;
+    SVGCanvasExt: object;
+
+    updateScale: () => void;
+    updateTarget: () => void;
+
+    initContentGroup: () => void;
+    onCreateElement: (element) => void;
+    onSelectElements: (elements) => void;
+    onClearSelection: () => void;
+    onMoveSelectedElementsByKey: () => void;
+    createText: (text) => void;
+    updateTextTransformationAfterEdit: (element, transformation) => void;
+    getSelectedElementsUniformScalingState: () => void;
+
+    elementActions: {
+        moveElementsStart: (elements, options?) => void;
+        moveElements: (elements, options) => void;
+        moveElementsFinish: (elements, options) => void;
+        resizeElementsStart: (elements, options) => void;
+        resizeElements: (elements, options) => void;
+        resizeElementsFinish: (elements, options) => void;
+        rotateElementsStart: (elements, options) => void;
+        rotateElements: (elements, options) => void;
+        rotateElementsFinish: (elements, options) => void;
+        moveElementsOnKeyDown: (elements, options) => void;
+        isPointInSelectArea: (elements, options) => void;
+        getMouseTargetByCoordinate: (elements, options) => void;
+        isSelectedAllVisible: (elements, options) => void;
+    };
+
+    showContextMenu: (event) => void;
+
+    editorActions: {
+        undo: () => void;
+        redo: () => void;
+        selectAll: () => void;
+    }
+};
+
+const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
     const canvas = useRef(null);
     const leftBarRef = useRef(null);
     const extRef = useRef(props.SVGCanvasExt);
@@ -191,7 +255,9 @@ const SVGEditor = forwardRef((props, ref) => {
     };
 
     useImperativeHandle(ref, () => ({
-        zoomIn, zoomOut, autoFocus
+        zoomIn,
+        zoomOut,
+        autoFocus,
     }));
 
     const onStartDraw = () => {
@@ -268,7 +334,6 @@ const SVGEditor = forwardRef((props, ref) => {
 SVGEditor.propTypes = {
     isActive: PropTypes.bool,
     size: PropTypes.object.isRequired,
-    materials: PropTypes.object.isRequired,
     SVGActions: PropTypes.object.isRequired,
     scale: PropTypes.number.isRequired,
     minScale: PropTypes.number,
@@ -298,21 +363,6 @@ SVGEditor.propTypes = {
     updateTextTransformationAfterEdit: PropTypes.func.isRequired,
     getSelectedElementsUniformScalingState: PropTypes.func.isRequired,
 
-    elementActions: PropTypes.shape({
-        moveElementsStart: PropTypes.func.isRequired,
-        moveElements: PropTypes.func.isRequired,
-        moveElementsFinish: PropTypes.func.isRequired,
-        resizeElementsStart: PropTypes.func.isRequired,
-        resizeElements: PropTypes.func.isRequired,
-        resizeElementsFinish: PropTypes.func.isRequired,
-        rotateElementsStart: PropTypes.func.isRequired,
-        rotateElements: PropTypes.func.isRequired,
-        rotateElementsFinish: PropTypes.func.isRequired,
-        moveElementsOnKeyDown: PropTypes.func.isRequired,
-        isPointInSelectArea: PropTypes.func.isRequired,
-        getMouseTargetByCoordinate: PropTypes.func.isRequired,
-        isSelectedAllVisible: PropTypes.func.isRequired
-    }).isRequired,
     editorActions: PropTypes.object.isRequired,
 
     createText: PropTypes.func.isRequired,

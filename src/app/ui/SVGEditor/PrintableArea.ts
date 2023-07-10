@@ -1,13 +1,27 @@
 import { v4 as uuid } from 'uuid';
-import { createSVGElement } from './element-utils';
-import {
-    EPSILON, HEAD_CNC
-} from '../../constants';
+
 import { isEqual } from '../../../shared/lib/utils';
-import { OriginType } from '../../constants/coordinate';
+import { EPSILON } from '../../constants';
+import { Materials, Origin, OriginType, RectangleWorkpieceReference } from '../../constants/coordinate';
+import { createSVGElement } from './element-utils';
 
 class PrintableArea {
-    constructor(svgFactory) {
+    private id: string;
+    private svgFactory;
+    private printableAreaGroup: Element;
+
+    private size: {
+        x: number;
+        y: number;
+    };
+
+    private materials: Materials;
+    private origin: Origin;
+    private coordinateMode;
+    private coorDelta: { dx: number; dy: number } = { dx: 0, dy: 0 };
+    private scale: number = 1;
+
+    public constructor(svgFactory) {
         this.id = uuid();
         this.svgFactory = svgFactory;
         this.size = {
@@ -25,6 +39,8 @@ class PrintableArea {
         this.coordinateSize = (svgFactory.coordinateSize && svgFactory.coordinateSize.x > 0) ? svgFactory.coordinateSize : this.size;
         this.origin = {
             type: OriginType.Workpiece,
+            reference: RectangleWorkpieceReference.Center,
+            referenceMetadata: {},
         };
         this._setCoordinateMode(this.coordinateMode, this.coordinateSize);
 
@@ -43,8 +59,8 @@ class PrintableArea {
         this._setOriginPoint();
     }
 
-    updateScale(state) {
-        const { size, materials, scale } = state;
+    public updateScale(state) {
+        const { size, materials, scale, origin } = state;
         if (Math.abs(this.scale - scale) > EPSILON) {
             this.scale = scale;
             for (const child of this.printableAreaGroup.childNodes) {
@@ -58,7 +74,13 @@ class PrintableArea {
             }
         }
         const sizeChange = size && (!isEqual(this.size.x, size.x) || !isEqual(this.size.y, size.y));
-        const materialsChange = materials && (!isEqual(this.materials.x, materials.x) || !isEqual(this.materials.y, materials.y) || !isEqual(this.materials.useLockingBlock, materials.useLockingBlock));
+        const materialsChange = materials && (
+            !isEqual(this.materials.x, materials.x)
+            || !isEqual(this.materials.y, materials.y)
+            || !isEqual(this.origin.type, origin.type)
+            || (this.origin.reference !== origin.reference)
+        );
+
         if (sizeChange || materialsChange) {
             this.size = {
                 ...size
@@ -66,6 +88,10 @@ class PrintableArea {
             this.materials = {
                 ...materials
             };
+
+            this.origin = Object.assign({}, origin);
+
+            // Re-create coordinate sytem
             while (this.printableAreaGroup.firstChild) {
                 this.printableAreaGroup.removeChild(this.printableAreaGroup.lastChild);
             }
@@ -76,7 +102,7 @@ class PrintableArea {
         }
     }
 
-    updateCoordinateMode(origin, coordinateMode, coordinateSize) {
+    public updateCoordinateMode(origin, coordinateMode, coordinateSize) {
         while (this.printableAreaGroup.firstChild) {
             this.printableAreaGroup.removeChild(this.printableAreaGroup.lastChild);
         }
@@ -91,11 +117,11 @@ class PrintableArea {
         this._setOriginPoint();
     }
 
-    _removeAll() {
-
+    public _removeAll() {
+        // do nothing
     }
 
-    _setCoordinateMode(coordinateMode) {
+    public _setCoordinateMode(coordinateMode) {
         this.coordinateMode = coordinateMode;
         this.coorDelta = {
             x: 0,
@@ -105,7 +131,7 @@ class PrintableArea {
         this.coorDelta.y -= this.coordinateSize.y / 2 * coordinateMode.setting.sizeMultiplyFactor.y;
     }
 
-    _setGridLine() {
+    public _setGridLine() {
         if (this.origin && this.origin.type === OriginType.Object) {
             return;
         }
@@ -423,7 +449,7 @@ class PrintableArea {
         this.printableAreaGroup.append(line4);
     }
 
-    _setBorder(x1, y1, x2, y2, color, dashed) {
+    public _setBorder(x1, y1, x2, y2, color, dashed) {
         const line = createSVGElement({
             element: 'line',
             attr: {
@@ -442,7 +468,7 @@ class PrintableArea {
         this.printableAreaGroup.append(line);
     }
 
-    _axisLabel() {
+    public _axisLabel() {
         const label = createSVGElement({
             element: 'text',
             attr: {
@@ -462,7 +488,7 @@ class PrintableArea {
         this.printableAreaGroup.append(label);
     }
 
-    _setCoordinateAxes() {
+    public _setCoordinateAxes() {
         const { x, y } = this.size;
         const { x: cx, y: cy } = this.coordinateSize;
         const xMin = x - cx / 2 + this.coorDelta.x;
@@ -494,7 +520,7 @@ class PrintableArea {
     // _setLockingBlock() {
     //     if ()
     // }
-    _setOriginPoint() {
+    public _setOriginPoint() {
         if (this.materials.isRotate) {
             return;
         }
@@ -503,9 +529,11 @@ class PrintableArea {
         }
 
         const { x, y } = this.size;
-        let origin = null;
-        if (this.materials.headType === HEAD_CNC && this.materials.useLockingBlock) {
-            origin = createSVGElement({
+        let originElement = null;
+        // console.log('createOrigin, origin =', this.origin);
+
+        if (this.origin.type === OriginType.CNCLockingBlock) {
+            originElement = createSVGElement({
                 element: 'image',
                 attr: {
                     x: x - (2.5 * this.scale),
@@ -518,7 +546,7 @@ class PrintableArea {
                 }
             });
         } else {
-            origin = createSVGElement({
+            originElement = createSVGElement({
                 element: 'circle',
                 attr: {
                     cx: x,
@@ -527,16 +555,17 @@ class PrintableArea {
                     fill: '#FF5759',
                     stroke: '#FF5759',
                     'stroke-width': 1 / this.scale,
-                    opacity: (this.materials.headType === HEAD_CNC && this.materials.useLockingBlock) ? 0 : 1,
+                    opacity: 1,
                     'fill-opacity': 1
                 }
             });
         }
-        this.printableAreaGroup.append(origin);
+        this.printableAreaGroup.append(originElement);
     }
 
-    _setMaterialsRect() {
-        const { isRotate, x = 0, y = 0, fixtureLength = 0 } = this.materials;
+    public _setMaterialsRect() {
+        const { isRotate, x = 0, y = 0, fixtureLength = 20 } = this.materials;
+        console.warn('fixtureLength', fixtureLength);
         if (!isRotate) {
             return;
         }

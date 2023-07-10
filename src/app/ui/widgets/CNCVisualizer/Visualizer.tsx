@@ -1,6 +1,6 @@
 import noop from 'lodash/noop';
 import isEqual from 'lodash/isEqual';
-import React, { Component } from 'react';
+import React from 'react';
 import * as THREE from 'three';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
@@ -37,9 +37,108 @@ import UniApi from '../../../lib/uni-api';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 
 import { repairModelPopup } from '../../views/repair-model/repair-model-popup';
+import ModelGroup from '../../../models/ModelGroup';
 
-class Visualizer extends Component {
-    static propTypes = {
+
+interface VisualizerProps {
+    series: string;
+    pathname: string;
+    page: string;
+
+    materials: object;
+    stage: number;
+    progress: number;
+    showSimulation: boolean;
+
+    coordinateMode: object;
+    coordinateSize: object;
+    size: object;
+    scale: number;
+    target: object;
+
+    menuDisabledCount: number;
+    // model: PropTypes.object,
+    // selectedModelID: PropTypes.string,
+    isChangedAfterGcodeGenerating: boolean;
+    selectedModelArray: object[];
+    selectedToolPathModels: object[],
+    modelGroup: ModelGroup;
+    SVGActions: object;
+    toolPathGroup: object;
+    displayedType: string;
+    promptTasks: object[];
+
+    renderingTimestamp: number;
+    enableShortcut: boolean;
+    isOverSize: boolean;
+    SVGCanvasMode: string;
+    SVGCanvasExt: object;
+    // func
+    selectAllElements: () => void;
+    cut: () => void;
+    copy: () => void;
+    paste: () => void;
+    clearOperationHistory: () => void;
+    undo: () => void;
+    redo: () => void;
+    initContentGroup: () => void;
+    updateTarget: () => void;
+    updateScale: () => void;
+    scaleCanvasToFit: () => void;
+
+    getEstimatedTime: () => number;
+    // getSelectedModel: PropTypes.func.isRequired,
+    bringSelectedModelToFront: () => void;
+    sendSelectedModelToBack: () => void;
+    arrangeAllModels2D: () => void;
+    insertDefaultTextVector: () => void;
+
+    onSetSelectedModelPosition: () => void;
+    onFlipSelectedModel: () => void;
+    selectModelInProcess: () => void;
+    removeSelectedModelsByCallback: () => void;
+    duplicateSelectedModel: () => void;
+    // onModelTransform: PropTypes.func.isRequired,
+    // onModelAfterTransform: PropTypes.func.isRequired,
+
+    // editor actions
+    onCreateElement: (element) => void;
+    onSelectElements: (elements) => void;
+    onClearSelection: () => void;
+    onMoveSelectedElementsByKey: () => void;
+    createText: (text) => void;
+    updateTextTransformationAfterEdit: (element, transformation) => void;
+    getSelectedElementsUniformScalingState: () => void;
+    checkIsOversizeImage: (file, onFailure) => void;
+    uploadImage: (file, mode, onFailure, isLimit?, fileInfo?) => void;
+    switchToPage: (page) => void;
+    updatePromptDamageModel: () => void;
+    repairSelectedModels: () => void;
+
+    progressStatesManager: object;
+
+    elementActions: {
+        moveElementsStart: (elements, options) => void;
+        moveElements: (elements, options) => void;
+        moveElementsFinish: (elements, options) => void;
+        resizeElementsStart: (elements, options) => void;
+        resizeElements: (elements, options) => void;
+        resizeElementsFinish: (elements, options) => void;
+        rotateElementsStart: (elements, options) => void;
+        rotateElements: (elements, options) => void;
+        rotateElementsFinish: (elements, options) => void;
+        moveElementsOnKeyDown: (elements, options) => void;
+        isPointInSelectArea: (elements, options) => void;
+        getMouseTargetByCoordinate: (elements, options) => void;
+        isSelectedAllVisible: (elements, options) => void;
+    };
+
+    onDrawLine: (line, closedLoop) => void;
+    onDrawDelete: () => void;
+}
+
+class Visualizer extends React.Component<VisualizerProps> {
+    public static propTypes = {
         ...withRouter.propTypes,
         series: PropTypes.string.isRequired,
         pathname: PropTypes.string,
@@ -132,21 +231,25 @@ class Visualizer extends Component {
         })
     };
 
-    contextMenuRef = React.createRef();
+    private contextMenuRef = React.createRef();
 
-    visualizerRef = React.createRef();
+    private visualizerRef = React.createRef();
 
-    printableArea = null;
+    private printableArea = null;
 
-    svgCanvas = React.createRef();
+    private svgCanvas = React.createRef();
 
-    canvas = React.createRef();
+    private canvas = React.createRef();
 
-    fileInput = React.createRef();
+    private fileInput = React.createRef();
 
-    fileInfo = React.createRef();
+    private fileInfo = React.createRef();
 
-    actions = {
+    private state = {
+        file: null,
+    };
+
+    private actions = {
         undo: () => {
             this.props.undo();
         },
@@ -199,7 +302,7 @@ class Visualizer extends Component {
                 });
             }
         },
-        onClickLimitImage: (isLimit) => {
+        onClickLimitImage: (isLimit: boolean) => {
             this.props.uploadImage(this.state.file, this.state.uploadMode, () => {
                 modal({
                     cancelTitle: i18n._('key-Laser/Edit/ContextMenu-Close'),
@@ -295,8 +398,8 @@ class Visualizer extends Component {
         onDrawLine: (line, closedLoop) => {
             this.props.onDrawLine(line, closedLoop);
         },
-        onDrawDelete: (lines) => {
-            this.props.onDrawDelete(lines);
+        onDrawDelete: () => {
+            this.props.onDrawDelete();
         },
         onDrawTransform: ({ before, after }) => {
             this.props.onDrawTransform(before, after);
@@ -318,11 +421,11 @@ class Visualizer extends Component {
         }
     };
 
-    constructor(props) {
+    public constructor(props) {
         super(props);
 
-        const { size, materials, coordinateMode } = props;
-        this.printableArea = new PrintablePlate(size, materials, coordinateMode);
+        const { coordinateSize, materials, origin, coordinateMode } = props;
+        this.printableArea = new PrintablePlate(coordinateSize, materials, origin, coordinateMode);
         this.state = {
             limitPicModalShow: false,
             file: null,
@@ -330,7 +433,7 @@ class Visualizer extends Component {
         };
     }
 
-    componentDidMount() {
+    public componentDidMount() {
         this.canvas.current.resizeWindow();
         // Set the origin to not occlude the model
         this.canvas.current.renderer.setSortObjects(false);
@@ -339,12 +442,12 @@ class Visualizer extends Component {
         UniApi.Event.on('appbar-menu:cnc.import', this.actions.importFile);
     }
 
-    componentWillReceiveProps(nextProps) {
+    public componentWillReceiveProps(nextProps) {
         const { renderingTimestamp, isOverSize } = nextProps;
 
         if (!isEqual(nextProps.size, this.props.size)) {
-            const { size, materials } = nextProps;
-            this.printableArea.updateSize(this.props.series, size, materials);
+            const { size, materials, origin } = nextProps;
+            this.printableArea.updateSize(this.props.series, size, materials, origin);
             this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(size.z, VISUALIZER_CAMERA_HEIGHT)), new THREE.Vector3());
             this.actions.autoFocus();
         }
@@ -380,13 +483,14 @@ class Visualizer extends Component {
         }
 
         if (nextProps.coordinateMode !== this.props.coordinateMode || !isEqual(nextProps.materials, this.props.materials)) {
-            const { size, materials, coordinateMode } = nextProps;
-            this.printableArea = new PrintablePlate(size, materials, coordinateMode);
+            const { coordinateSize, materials, origin, coordinateMode } = nextProps;
+            this.printableArea = new PrintablePlate(coordinateSize, materials, origin, coordinateMode);
             this.actions.autoFocus();
         }
 
         if (nextProps.coordinateSize !== this.props.coordinateSize) {
-            this.printableArea = new PrintablePlate(nextProps.coordinateSize, nextProps.materials, nextProps.coordinateMode);
+            const { coordinateSize, materials, origin, coordinateMode } = nextProps;
+            this.printableArea = new PrintablePlate(coordinateSize, materials, origin, coordinateMode);
             this.actions.autoFocus();
         }
         if (isOverSize !== this.props.isOverSize) {
@@ -419,17 +523,17 @@ class Visualizer extends Component {
         this.printableArea.changeCoordinateVisibility(!nextProps.showSimulation);
     }
 
-    componentWillUnmount() {
+    public componentWillUnmount() {
         this.props.clearOperationHistory();
         UniApi.Event.off('appbar-menu:cnc.import', this.actions.importFile);
     }
 
-    getNotice() {
+    public getNotice() {
         const { stage } = this.props;
         return this.props.progressStatesManager.getNotice(stage);
     }
 
-    showContextMenu = (event) => {
+    public showContextMenu = (event) => {
         const model = this.props.SVGActions.getSVGModelByElement(event.target);
         if (this.props.modelGroup.selectedModelArray.length > 1 && this.props.modelGroup.selectedModelArray.includes(model)) {
             return;
@@ -441,21 +545,21 @@ class Visualizer extends Component {
         this.contextMenuRef.current.show(event);
     };
 
-    addControllerEvents() {
+    public addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
             controller.on(eventName, callback);
         });
     }
 
-    removeControllerEvents() {
+    public removeControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
             controller.off(eventName, callback);
         });
     }
 
-    render() {
+    public render() {
         const isOnlySelectedOneModel = (this.props.selectedModelArray && this.props.selectedModelArray.length === 1);
 
         const estimatedTime = this.props.displayedType === DISPLAYED_TYPE_TOOLPATH && !this.props.isChangedAfterGcodeGenerating ? this.props.getEstimatedTime('selected') : '';
@@ -496,6 +600,7 @@ class Visualizer extends Component {
                         target={this.props.target}
                         coordinateMode={this.props.coordinateMode}
                         coordinateSize={this.props.coordinateSize}
+                        origin={this.props.origin}
                         updateTarget={this.props.updateTarget}
                         updateScale={this.props.updateScale}
                         SVGActions={this.props.SVGActions}
@@ -516,7 +621,6 @@ class Visualizer extends Component {
                         fileInput={this.fileInput}
                         allowedFiles=".svg, .png, .jpg, .jpeg, .bmp, .dxf, .stl, .amf, .3mf"
                         headType={HEAD_CNC}
-                        useLockingBlock={this.props.useLockingBlock}
                     />
                 </div>
                 <div
@@ -707,15 +811,22 @@ const mapStateToProps = (state, ownProps) => {
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
     const { size, series } = state.machine;
     const { currentModalPath, menuDisabledCount } = state.appbarMenu;
-    const { page, materials, modelGroup, toolPathGroup, displayedType, hasModel, isChangedAfterGcodeGenerating,
-        renderingTimestamp, stage, progress, SVGActions, scale, target, coordinateMode, coordinateSize, showSimulation, progressStatesManager, enableShortcut, isOverSize, SVGCanvasMode, SVGCanvasExt, promptTasks, useLockingBlock } = state.cnc;
+    const {
+        page, materials, modelGroup, toolPathGroup, displayedType, hasModel, isChangedAfterGcodeGenerating,
+        renderingTimestamp, stage, progress, SVGActions, scale, target,
+        showSimulation, progressStatesManager, enableShortcut, isOverSize, SVGCanvasMode, SVGCanvasExt,
+        promptTasks,
+        // coordinate
+        coordinateMode,
+        coordinateSize,
+        origin,
+    } = state.cnc;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModelID = modelGroup.getSelectedModel().modelID;
     const selectedToolPathModels = modelGroup.getSelectedToolPathModels();
     const multipleMaterials = {
         ...materials,
         headType: HEAD_CNC,
-        useLockingBlock
     };
 
     return {
@@ -734,6 +845,7 @@ const mapStateToProps = (state, ownProps) => {
         size,
         coordinateMode,
         coordinateSize,
+        origin,
         // model,
         modelGroup,
         SVGActions,
@@ -751,7 +863,6 @@ const mapStateToProps = (state, ownProps) => {
         SVGCanvasMode,
         SVGCanvasExt,
         promptTasks,
-        useLockingBlock
     };
 };
 
@@ -793,7 +904,7 @@ const mapDispatchToProps = (dispatch) => {
         checkIsOversizeImage: (file, onFailure) => dispatch(editorActions.checkIsOversizeImage('cnc', file, onFailure)),
 
         onDrawLine: (line, closedLoop) => dispatch(editorActions.drawLine('cnc', line, closedLoop)),
-        onDrawDelete: (lines) => dispatch(editorActions.drawDelete('cnc', lines)),
+        onDrawDelete: () => dispatch(editorActions.drawDelete('cnc')),
         onDrawTransform: (before, after) => dispatch(editorActions.drawTransform('cnc', before, after)),
         onDrawTransformComplete: (elem, before, after) => dispatch(editorActions.drawTransformComplete('cnc', elem, before, after)),
         onDrawStart: (elem) => dispatch(editorActions.drawStart('cnc', elem)),

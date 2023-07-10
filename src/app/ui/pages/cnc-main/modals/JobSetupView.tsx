@@ -362,7 +362,6 @@ const JobSetupView = forwardRef<JobSetupViewHandle, {}>((_, ref) => {
 
                 // locking block position
                 dispatch(editorActions.updateState(HEAD_CNC, {
-                    useLockingBlock: selectedOrigin.type === OriginType.CNCLockingBlock,
                     lockingBlockPosition: lockingBlockPosition,
                 }));
 
