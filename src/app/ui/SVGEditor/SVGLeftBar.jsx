@@ -60,6 +60,14 @@ const SVGLeftBar = forwardRef((props, ref) => {
             });
             props.setMode('ext', selectedShape);
         },
+        createExt: async (ext) => {
+            await actions.exitDraw('ext');
+            setExtShape({
+                showExtShape: false,
+                extShape: ext ?? extShape
+            });
+            props.createExt(ext);
+        },
 
         hideLeftBarOverlay: () => {
             setExtShape({
@@ -255,12 +263,13 @@ const SVGLeftBar = forwardRef((props, ref) => {
                 {
                     extShape.showExtShape && mode === 'ext' && (
                         <div
-                            className="position-absolute width-272 margin-left-72 margin-top-268 border-default-grey-1 border-radius-8 background-color-white"
+                            style={{ 'height': 'calc(100vh - 26px - 68px - 16px - 248px - 16px - 16px)' }}
+                            className="position-absolute overflow-hidden width-432 margin-left-72 margin-top-16 margin-bottom-16 height-528 border-default-grey-1 border-radius-8 background-color-white"
                         >
-                            <div className="border-bottom-normal padding-vertical-8 padding-horizontal-16 height-40">
+                            <div className="border-bottom-normal padding-horizontal-16 height-40">
                                 {i18n._('key-Laser/LeftBar-Insert Draw')}
                             </div>
-                            <div>
+                            <div className="overflow-y-auto border-radius-8" style={{ height: 'calc(100% - 40px)' }}>
                                 <div className="sm-flex">
                                     <div
                                         className={classNames(styles['center-ext'])}
@@ -280,8 +289,9 @@ const SVGLeftBar = forwardRef((props, ref) => {
                                                             styles['btn-center-ext'],
                                                             { [styles.selected]: extShape === key })
                                                     }
-                                                    onClick={() => actions.setMode('ext', key)}
+                                                    onClick={() => actions.createExt(key)}
                                                 />
+                                                // actions.setMode('ext', key)
                                             );
                                         })}
                                     </div>
@@ -308,7 +318,8 @@ SVGLeftBar.propTypes = {
     editable: PropTypes.bool,
     headType: PropTypes.string,
     onStartDraw: PropTypes.func.isRequired,
-    onStopDraw: PropTypes.func.isRequired
+    onStopDraw: PropTypes.func.isRequired,
+    createExt: PropTypes.func.isRequired,
 };
 
 
