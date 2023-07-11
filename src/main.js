@@ -135,27 +135,34 @@ function updateHandle() {
     autoUpdater.on('checking-for-update', () => {
         sendUpdateMessage(message.checking);
     });
+
     // Emitted when there is an available update. The update is downloaded automatically if autoDownload is true.
     autoUpdater.on('update-available', async (downloadInfo) => {
         sendUpdateMessage(message.updateAva);
-        if (!downloadInfo.releaseNotes && process.platform !== 'linux') {
-            // for aliyuncs
-            const changelogUrl = `https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.com/download/luban/Snapmaker-Luban-${downloadInfo.version}.changelog.md`;
-            const result = await fetch(changelogUrl, {
-                mode: 'cors',
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'text/markdown'
-                }
-            })
-                .then((response) => {
-                    response.headers['access-control-allow-origin'] = { value: '*' };
-                    return response.text();
-                });
 
-            downloadInfo.releaseChangeLog = result;
-            downloadInfo.releaseName = `v${downloadInfo.version}`;
+        // Get chinese version of release note for zh-CN locale
+        if (app.getLocale() === 'zh-CN') {
+            if (!downloadInfo.releaseNotes && process.platform !== 'linux') {
+                // for aliyuncs
+                const changelogUrl = `https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.com/download/luban/Snapmaker-Luban-${downloadInfo.version}.changelog.md`;
+                const result = await fetch(changelogUrl,
+                    {
+                        mode: 'cors',
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'text/markdown'
+                        }
+                    })
+                    .then((response) => {
+                        response.headers['access-control-allow-origin'] = { value: '*' };
+                        return response.text();
+                    });
+
+                downloadInfo.releaseChangeLog = result;
+                downloadInfo.releaseName = `v${downloadInfo.version}`;
+            }
         }
+
         mainWindow.webContents.send('update-available', { ...downloadInfo, prevVersion: app.getVersion() });
     });
     // Emitted when there is no available update.

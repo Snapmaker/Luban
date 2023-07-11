@@ -4149,7 +4149,8 @@ export const actions = {
         };
 
 
-        const { promptTasks } = await loadMeshFiles(meshFileInfos, modelGroup, loadMeshFileOptions);
+        const loadMeshResult = await loadMeshFiles(meshFileInfos, modelGroup, loadMeshFileOptions);
+        const { promptTasks } = loadMeshResult;
 
         // on mesh file loaded, update state
         const modelState = modelGroup.getState();
@@ -4232,30 +4233,16 @@ export const actions = {
         dispatch(actions.applyProfileToAllModels());
         modelGroup.models = modelGroup.models.concat();
 
-        if (meshFileInfos.length === 1 && newModels.length === 0) {
-            /*
-            if (!(meshFileInfos[0]?.children?.length)) {
-                progressStatesManager.finishProgress(false);
-                dispatch(
-                    actions.updateState({
-                        modelGroup,
-                        stage: STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE,
-                        progress: 0,
-                        promptTasks
-                    })
-                );
-            }
-            */
-        } else {
-            dispatch(
-                actions.updateState({
-                    modelGroup,
-                    stage: STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE,
-                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1),
-                    promptTasks
-                })
-            );
-        }
+        // Done, update progress and prompt tasks
+        dispatch(
+            actions.updateState({
+                modelGroup,
+                stage: STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1),
+                promptTasks,
+            })
+        );
+
         workerManager.continueClipper();
     },
     recordAddOperation: model => (dispatch, getState) => {
