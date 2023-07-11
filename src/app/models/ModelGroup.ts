@@ -2548,28 +2548,36 @@ class ModelGroup extends EventEmitter {
             const clone = bufferGeometry.clone();
             clone.applyMatrix4(model.meshObject.matrixWorld.clone());
 
-            const positions = clone.getAttribute('position').array;
-            const normals = clone.getAttribute('normal').array;
+            const indices = clone.index;
+            const positions = clone.getAttribute('position');
+            const normals = clone.getAttribute('normal');
+
+            const count = positions.count;
+            const faceCount = Math.round(count / 3);
 
             // this will cause main thread stucked for a long time
-            const supportFaceMarks = new Array(positions.length / 9).fill(NONE);
-            // const downFaces = new Array(supportFaceMarks.length).fill(false);
-            const normalVectors = new Array(supportFaceMarks.length).fill(false);
+            const supportFaceMarks = new Array(faceCount).fill(NONE);
             // calculate faces
             const zDown = new Vector3(0, 0, -1);
-            for (let i = 0, index = 0; i < normals.length; i += 9, index++) {
-                const normal = new Vector3(normals[i], normals[i + 1], normals[i + 2]);
-                normalVectors[index] = normal;
+            console.log('computeSupportArea, indices =', indices);
 
+            const normal = new Vector3();
+            for (let faceIndex = 0; faceIndex < faceCount; faceIndex++) {
+                const index = indices ? indices.getX(faceIndex * 3 + 0) : faceIndex * 3 + 0;
+                const index0 = indices ? indices.getX(faceIndex * 3 + 0) : faceIndex * 3 + 0;
+                const index1 = indices ? indices.getX(faceIndex * 3 + 1) : faceIndex * 3 + 1;
+                const index2 = indices ? indices.getX(faceIndex * 3 + 2) : faceIndex * 3 + 2;
+
+                // const normal = new Vector3(normals[i], normals[i + 1], normals[i + 2]);
+                normal.fromBufferAttribute(normals, index);
                 const angleN = normal.angleTo(zDown) / Math.PI * 180;
-                // make sure marks added to downward faces
-                // if (angleN < 90) {
-                //     downFaces[index] = true;
-                // }
-                const averageZOfFace = (positions[i + 2] + positions[i + 5] + positions[i + 8]) / 3;
+
+                // const averageZOfFace = (positions[i + 2] + positions[i + 5] + positions[i + 8]) / 3;
+                const averageZOfFace = (positions.getZ(index0) + positions.getZ(index1) + positions.getZ(index2)) / 3;
+
                 // prevent to add marks to the faces attached to XOY plane
                 if ((90 - angleN) > (angle + EPSILON) && averageZOfFace > 0.01) {
-                    supportFaceMarks[index] = FACE;
+                    supportFaceMarks[faceIndex] = FACE;
                 }
             }
             model.supportFaceMarks = supportFaceMarks;
@@ -3015,9 +3023,11 @@ class ModelGroup extends EventEmitter {
 
             // mark is editing support
             model.isEditingSupport = true;
+
+            const count = model.meshObject.geometry.getAttribute('position').count;
+            const faceCount = Math.round(count / 3);
+
             if (!model.supportFaceMarks || model.supportFaceMarks.length === 0) {
-                const count = model.meshObject.geometry.getAttribute('position').count;
-                const faceCount = Math.round(count / 3);
                 model.supportFaceMarks = new Array(faceCount).fill(0);
             }
 
@@ -3025,42 +3035,79 @@ class ModelGroup extends EventEmitter {
             const bufferGeometry = model.meshObject.geometry;
             const clone = bufferGeometry.clone();
             clone.applyMatrix4(model.meshObject.matrixWorld.clone());
-            const normals = clone.getAttribute('normal').array;
-            const positions = clone.getAttribute('position').array;
+
+            const indices = clone.index;
+            const normals = clone.getAttribute('normal');
+            const positions = clone.getAttribute('position');
 
             const zUp = new Vector3(0, 0, 1);
-            for (let i = 0, j = 0; i < normals.length; i += 9, j++) {
-                const normal = new Vector3(normals[i], normals[i + 1], normals[i + 2]);
+            const normal = new Vector3();
+
+            for (let faceIndex = 0; faceIndex < faceCount; faceIndex++) {
+                // for (let i = 0, j = 0; i < normals.length; i += 9, j++) {
+                const index = indices ? indices.getX(faceIndex * 3 + 0) : faceIndex * 3 + 0;
+
+                const index0 = indices ? indices.getX(faceIndex * 3 + 0) : faceIndex * 3 + 0;
+                const index1 = indices ? indices.getX(faceIndex * 3 + 1) : faceIndex * 3 + 1;
+                const index2 = indices ? indices.getX(faceIndex * 3 + 2) : faceIndex * 3 + 2;
+
+                normal.fromBufferAttribute(normals, index);
+                // const normal = new Vector3(normals[i], normals[i + 1], normals[i + 2]);
                 const angleN = normal.angleTo(zUp) / Math.PI * 180;
-                const averageZOfFace = (positions[i + 2] + positions[i + 5] + positions[i + 8]) / 3;
+                // const averageZOfFace = (positions[i + 2] + positions[i + 5] + positions[i + 8]) / 3;
+                const averageZOfFace = (positions.getZ(index0) + positions.getZ(index1) + positions.getZ(index2)) / 3;
+
                 // prevent to add marks to the faces attached to XOY plane
                 if (angleN > (90 + EPSILON) && averageZOfFace > 0.01) {
-                    model.supportFaceMarks[j] = model.supportFaceMarks[j] || AVAIL;
+                    model.supportFaceMarks[faceIndex] = model.supportFaceMarks[faceIndex] || AVAIL;
                 }
             }
 
-            const colors = [];
-            model.supportFaceMarks.forEach((mark) => {
-                switch (mark) {
-                    case NONE:
-                        colors.push(...SUPPORT_UNAVAIL_AREA_COLOR, ...SUPPORT_UNAVAIL_AREA_COLOR, ...SUPPORT_UNAVAIL_AREA_COLOR);
-                        break;
-                    case FACE:
-                        colors.push(...SUPPORT_ADD_AREA_COLOR, ...SUPPORT_ADD_AREA_COLOR, ...SUPPORT_ADD_AREA_COLOR);
-                        break;
-                    case AVAIL:
-                        colors.push(...SUPPORT_AVAIL_AREA_COLOR, ...SUPPORT_AVAIL_AREA_COLOR, ...SUPPORT_AVAIL_AREA_COLOR);
-                        break;
-                    default:
-                        break;
+            const colors = new Float32BufferAttribute(count * 3, 3);
+
+            let index: number;
+            for (let faceIndex = 0; faceIndex < faceCount; faceIndex++) {
+                const mark = model.supportFaceMarks[faceIndex];
+
+                for (let k = 0; k < 3; k++) {
+                    index = indices ? indices.getX(faceIndex * 3 + k) : faceIndex * 3 + k;
+
+                    switch (mark) {
+                        case NONE:
+                            colors.setXYZ(
+                                index,
+                                SUPPORT_UNAVAIL_AREA_COLOR[0],
+                                SUPPORT_UNAVAIL_AREA_COLOR[1],
+                                SUPPORT_UNAVAIL_AREA_COLOR[2],
+                            );
+                            break;
+                        case FACE:
+                            colors.setXYZ(
+                                index,
+                                SUPPORT_ADD_AREA_COLOR[0],
+                                SUPPORT_ADD_AREA_COLOR[1],
+                                SUPPORT_ADD_AREA_COLOR[2],
+                            );
+                            break;
+                        case AVAIL:
+                            colors.setXYZ(
+                                index,
+                                SUPPORT_AVAIL_AREA_COLOR[0],
+                                SUPPORT_AVAIL_AREA_COLOR[1],
+                                SUPPORT_AVAIL_AREA_COLOR[2],
+                            );
+                            break;
+                        default:
+                            break;
+                    }
                 }
-            });
+            }
 
             // FIXME: No override colors
             if (model.meshObject.geometry.getAttribute('color')) {
                 model.originalColorAttribute = model.meshObject.geometry.getAttribute('color') as Float32BufferAttribute;
             }
-            model.meshObject.geometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
+            model.meshObject.geometry.setAttribute('color', colors);
 
             model.originalGeometry = model.meshObject.geometry.clone(); // clone current state
 
@@ -3093,14 +3140,21 @@ class ModelGroup extends EventEmitter {
         const models = this.getModelsAttachedSupport();
         models.forEach((model) => {
             if (shouldApplyChanges) {
-                const colors = model.meshObject.geometry.getAttribute('color').array as number[];
+                const count = model.meshObject.geometry.getAttribute('position').count;
+                const faceCount = Math.round(count / 3);
+
+                const indices = model.meshObject.geometry.index;
+                const colorAttribute = model.meshObject.geometry.getAttribute('color');
+
                 const supportFaceMarks = [];
-                for (let i = 0, j = 0; i < colors.length; i += 9, j++) {
-                    // determine the support face by checking RGB value
-                    const isSupportArea = colors.slice(i, i + 9).some((color) => {
-                        return Math.abs(color - SUPPORT_ADD_AREA_COLOR[0]) < EPSILON;
-                    });
-                    supportFaceMarks[j] = isSupportArea ? FACE : NONE;
+
+                let index: number;
+                for (let faceIndex = 0; faceIndex < faceCount; faceIndex++) {
+                    index = indices ? indices.getX(faceIndex * 3 + 0) : faceIndex * 3 + 0;
+
+                    const r = colorAttribute.getX(index);
+                    const isSupportArea = (Math.abs(r - SUPPORT_ADD_AREA_COLOR[0]) < EPSILON);
+                    supportFaceMarks[faceIndex] = isSupportArea ? FACE : NONE;
                 }
                 model.supportFaceMarks = supportFaceMarks;
             } else {
@@ -3152,7 +3206,7 @@ class ModelGroup extends EventEmitter {
 
         const colorAttr = geometry.getAttribute('color');
         const byteCountAttribute = geometry.getAttribute('byte_count');
-        const indexAttr = geometry.index;
+        const indices = geometry.index;
 
         let color;
         let mark = 0;
@@ -3165,7 +3219,7 @@ class ModelGroup extends EventEmitter {
 
         for (const faceIndex of nearbyFaces) {
             for (let k = 0; k < 3; k++) {
-                const i2 = indexAttr ? indexAttr.getX(faceIndex * 3 + k) : faceIndex * 3 + k;
+                const i2 = indices ? indices.getX(faceIndex * 3 + k) : faceIndex * 3 + k;
                 if (
                     Math.abs(colorAttr.getX(i2) - SUPPORT_AVAIL_AREA_COLOR[0]) < EPSILON
                     || Math.abs(colorAttr.getX(i2) - SUPPORT_ADD_AREA_COLOR[0]) < EPSILON
