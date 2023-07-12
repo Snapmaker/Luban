@@ -1,23 +1,12 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
-// import Canvg from 'canvg';
-import { useDispatch, } from 'react-redux';
-// import { Canvg } from 'canvg';
 import { PREDEFINED_SHORTCUT_ACTIONS, ShortcutHandlerPriority, ShortcutManager } from '../../lib/shortcut';
 import styles from './styles.styl';
 import { SVG_EVENT_CONTEXTMENU } from './constants';
 import SVGCanvas from './SVGCanvas';
 import SVGLeftBar from './SVGLeftBar';
 import { Materials } from '../../constants/coordinate';
-// import { createSVGElement, setAttributes } from './element-utils';
-// import canvg from './lib/canvg';
-// import { actions as editorActions } from '../../flux/editor';
-// import i18n from '../../lib/i18n';
-// import modal from '../../lib/modal';
-import { HEAD_LASER, PROCESS_MODE_GREYSCALE } from '../../constants';
-// import { flattenNestedGroups } from './lib/FlattenNestedGroups';
-import { handleClipPath, handleMask } from './lib/ImageSvgCompose';
 
 
 export type SVGEditorHandle = {
@@ -89,7 +78,6 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
     const leftBarRef = useRef(null);
     const extRef = useRef(props.SVGCanvasExt);
     extRef.current = props.SVGCanvasExt;
-    const dispatch = useDispatch();
 
     const [menuDisabledCount, setMenuDisabledCount] = useState(props.menuDisabledCount);
     useEffect(() => {
@@ -282,17 +270,6 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         props.editorActions.onDrawTransformComplete(...args);
     };
 
-    const onClipper = async (imgs, svgs) => {
-        const clipSvgTag = await handleClipPath(svgs, imgs);
-        props.onChangeFile({ target: { files: [clipSvgTag] } });
-        console.log(clipSvgTag);
-    };
-    const onClipperSvg = async (imgs, svgs) => {
-        const maskSvgTag = await handleMask(svgs, imgs);
-        console.log(HEAD_LASER, PROCESS_MODE_GREYSCALE, dispatch);
-        props.onChangeFile({ target: { files: [maskSvgTag] } });
-        console.log('maskSvgTag', maskSvgTag);
-    };
 
     return (
         <React.Fragment>
@@ -343,8 +320,6 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
                         setMode={changeCanvasMode}
                         onChangeFile={props.onChangeFile}
                         onClickToUpload={props.onClickToUpload}
-                        onClipper={onClipper}
-                        onClipperSvg={onClipperSvg}
                         fileInput={props.fileInput}
                         allowedFiles={props.allowedFiles}
                         editable={props.editable}

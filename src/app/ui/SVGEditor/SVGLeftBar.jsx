@@ -3,17 +3,13 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import _ from 'lodash';
 
-import { useSelector } from 'react-redux';
 import SvgIcon from '../components/SvgIcon';
 import styles from './styles.styl';
 import { library } from './lib/ext-shapes';
 import i18n from '../../lib/i18n';
 import Anchor from '../components/Anchor';
-import { PROCESS_MODE_GREYSCALE, PROCESS_MODE_VECTOR } from '../../constants';
 
 const SVGLeftBar = forwardRef((props, ref) => {
-    const selectedModelArray = useSelector(state => state[props.headType]?.modelGroup?.selectedModelArray);
-
     const [extShape, setExtShape] = useState({
         showExtShape: false,
         shape: null
@@ -77,19 +73,6 @@ const SVGLeftBar = forwardRef((props, ref) => {
         stopDraw: () => {
             props.onStopDraw(true);
         },
-
-        onClip(type = 'clip') {
-            console.log('selectedModelArray', selectedModelArray);
-            console.log(type);
-            const svg = selectedModelArray.filter(v => v.sourceType === 'svg' && v.mode === PROCESS_MODE_VECTOR);
-            const imgs = selectedModelArray.filter(v => v.sourceType !== 'svg' || v.mode === PROCESS_MODE_GREYSCALE);
-            console.log(imgs, svg);
-            if (type === 'clip') {
-                props.onClipper(imgs, svg);
-            } else {
-                props.onClipperSvg(imgs, svg);
-            }
-        }
     };
 
     useImperativeHandle(ref, () => ({
@@ -219,38 +202,6 @@ const SVGLeftBar = forwardRef((props, ref) => {
                                 onClick={actions.showExt}
                             />
                         </div>
-                        <div className="margin-vertical-4">
-                            <SvgIcon
-                                type={[`${mode === 'ext' ? 'hoverNoBackground' : 'hoverNormal'}`, 'pressSpecial']}
-                                color="#545659"
-                                size={48}
-                                name="ToolbarClip"
-                                disabled={!editable}
-                                className={
-                                    classNames('background-transparent',
-                                        'padding-horizontal-4', 'position-re')
-                                }
-                                onClick={() => actions.onClip('clip')}
-                                // ,
-                                // { [styles.selected]: mode === 'ext' }
-                            />
-                        </div>
-                        <div className="margin-vertical-4">
-                            <SvgIcon
-                                type={[`${mode === 'ext' ? 'hoverNoBackground' : 'hoverNormal'}`, 'pressSpecial']}
-                                color="#545659"
-                                size={48}
-                                name="ToolbarClipSvg"
-                                disabled={!editable}
-                                className={
-                                    classNames('background-transparent',
-                                        'padding-horizontal-4', 'position-re')
-                                }
-                                onClick={() => actions.onClip('mask')}
-                                // ,
-                                // { [styles.selected]: mode === 'ext' }
-                            />
-                        </div>
                     </div>
                 </div>
                 {
@@ -352,8 +303,6 @@ SVGLeftBar.propTypes = {
     insertDefaultTextVector: PropTypes.func.isRequired,
     onChangeFile: PropTypes.func.isRequired,
     onClickToUpload: PropTypes.func.isRequired,
-    onClipper: PropTypes.func.isRequired,
-    onClipperSvg: PropTypes.func.isRequired,
     fileInput: PropTypes.object.isRequired,
     allowedFiles: PropTypes.string.isRequired,
     editable: PropTypes.bool,
