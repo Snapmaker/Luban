@@ -528,22 +528,50 @@ M3`;
         }
     };
 
+    // SSTP
+    public getActiveExtruder = (socket, options) => {
+        if (this.connectionType === CONNECTION_TYPE_WIFI) {
+            this.socket.getActiveExtruder(options);
+        }
+    };
+
     public switchExtruder = (socket, options) => {
+        const extruderIndex = options?.extruderIndex || '0';
+
         if (this.protocol === SACP_PROTOCOL) {
-            const { extruderIndex } = options;
             this.socket.switchExtruder(extruderIndex);
+        } else {
+            if (this.connectionType === CONNECTION_TYPE_WIFI) {
+                this.socket.updateActiveExtruder({
+                    eventName: options.eventName,
+                    extruderIndex,
+                });
+            } else {
+                // T0 / T1
+                this.socket.command(this.socket, {
+                    args: [`T${extruderIndex}`],
+                });
+            }
         }
     };
 
     public updateNozzleTemperature = (socket, options) => {
+        const { extruderIndex = -1, nozzleTemperatureValue } = options;
+
         if (this.protocol === SACP_PROTOCOL) {
-            const { extruderIndex, nozzleTemperatureValue } = options;
             this.socket.updateNozzleTemperature(extruderIndex, nozzleTemperatureValue);
         } else {
             if (this.connectionType === CONNECTION_TYPE_WIFI) {
-                this.socket.updateNozzleTemperature(options);
+                // SSTP is unable to change temperature for perticular extruder
+                // We use G-code instead
+                // this.socket.updateNozzleTemperature(options);
+
+                const extruderCode = extruderIndex !== -1 ? `T${extruderIndex}` : '';
+                this.socket.executeGcode({
+                    eventName: options.eventName,
+                    gcode: `M104 ${extruderCode} S${nozzleTemperatureValue}`,
+                }, null);
             } else {
-                const { nozzleTemperatureValue } = options;
                 this.socket.command(this.socket, {
                     args: [`M104 S${nozzleTemperatureValue}`]
                 });

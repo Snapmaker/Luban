@@ -27,6 +27,7 @@ export const CONNECTION_GET_GCODEFILE = 'connection:getGcodeFile';
 export const CONNECTION_UPLOAD_FILE = 'connection:uploadFile';
 export const CONNECTION_Z_OFFSET = 'connection:updateZOffset';
 export const CONNECTION_NOZZLE_TEMPERATURE = 'connection:updateNozzleTemperature';
+export const CONNECTION_GET_ACTIVE_EXTRUDER = 'connection:getActiveExtruder';
 export const CONNECTION_WORK_NOZZLE = 'connection:updateWorkNozzle';
 export const CONNECTION_BED_TEMPERATURE = 'connection:updateBedTemperature';
 export const CONNECTION_LOAD_FILAMENT = 'connection:loadFilament';
