@@ -449,9 +449,6 @@ const createSvg = (
         attr: {
             id: `${uuid()}`,
             transform: '',
-            // transform: `rotate(${svgRotate.params[0] || 0})`
-            // width: viewWidth,
-            // height: viewHeight
         },
     }) as SVGGElement;
     let children = Array.from(svgElement.children);
@@ -567,13 +564,8 @@ const createSvg = (
         const currSkewY = (skewY && skewY.params[0]) || 0;
         attributes.transform = `translate(${currX - viewboxX} ${
             currY - viewboxY
-        }) scale(${currScaleWidth} ${currScaleHeight}) rotate(${currRotate}) skewX(${currSkewX}) skewY(${currSkewY})`;
+        }) rotate(${currRotate}) scale(${currScaleWidth} ${currScaleHeight}) skewX(${currSkewX}) skewY(${currSkewY})`;
         setAttributes(curr, attributes);
-
-        // apply image(from luban fontend canvas) rotate to tag
-        // Because they are different coordinate systems, the rotate value on the tag cannot be directly added.
-        // const rootRotateValue = currScaleWidth > 0 && currScaleHeight > 0 ? (svgRotate.params[0] || 0) : -(svgRotate.params[0] || 0);
-        // rotatePath(curr, rootRotateValue);
     }
     document.body.removeChild(svgElement);
     return children;
@@ -647,7 +639,7 @@ const createSvgStr = (
     const wrapperClone = wrapperElem.cloneNode(true);
     const imgsClones = [];
     imgsSvgModel.forEach((img) => {
-        const cloneImgElem = img.elem.cloneNode(true);
+        const cloneImgElem = img.elem.cloneNode(true) as SVGElement;
         imgsClones.push(cloneImgElem);
 
         // img's position(left-top) and dimensions, before the img scale
@@ -666,10 +658,10 @@ const createSvgStr = (
         const transformYCenter = transformedY + transformedHeight / 2;
 
         // scale image for keeping img dimensions of pixel.
-        cloneImgElem.setAttribute('x', transformedX - viewboxX);
-        cloneImgElem.setAttribute('y', transformedY - viewboxY);
-        cloneImgElem.setAttribute('width', transformedWidth);
-        cloneImgElem.setAttribute('height', transformedHeight);
+        cloneImgElem.setAttribute('x', (transformedX - viewboxX).toString());
+        cloneImgElem.setAttribute('y', (transformedY - viewboxY).toString());
+        cloneImgElem.setAttribute('width', (transformedWidth).toString());
+        cloneImgElem.setAttribute('height', (transformedHeight).toString());
 
         // because we will scale img for keeping img dimensions of pixel.
         // so we need to handle img rotate after img scaled.
@@ -793,6 +785,7 @@ export const handleClipPath = async (svgs: SvgModel[], imgs: SvgModel[], holeSvg
         holeSvg ? gElem : undefined // if we need the hole svg
     );
 
+    console.log('svgTag', svgTag);
     const canvas = await svgToCanvas(svgTag, viewWidth, viewHeight);
     const img = await canvasToImage(canvas);
     return img;
@@ -844,7 +837,7 @@ export const handleMask = async (svgs: SvgModel[], imgs: SvgModel[]): Promise<Fi
         svgShapeTags.forEach((svgShapeTag) => {
             // !svgShapeTag.hasAttribute('fill') &&
             svgShapeTag.setAttribute('fill', 'black');
-            !svgShapeTag.hasAttribute('fill-opacity')
+            (!svgShapeTag.hasAttribute('fill-opacity') || svgShapeTag.getAttribute('fill-opacity') === '0')
                 && svgShapeTag.setAttribute('fill-opacity', '1');
             if (isShapeSvg(svgShapeTag)) {
                 maskElem.append(svgShapeTag);
@@ -871,6 +864,7 @@ export const handleMask = async (svgs: SvgModel[], imgs: SvgModel[]): Promise<Fi
     );
     const canvas = await svgToCanvas(svgTag, viewWidth, viewHeight);
     const img = await canvasToImage(canvas);
+    console.log('svgTag', svgTag);
     return img;
 };
 
