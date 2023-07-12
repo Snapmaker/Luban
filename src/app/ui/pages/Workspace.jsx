@@ -83,7 +83,7 @@ function getUnsupportedWidgets(machineIdentifier, toolHead) {
 
     if ([MACHINE_SERIES.A150.identifier, MACHINE_SERIES.A250.identifier, MACHINE_SERIES.A350.identifier].includes(machineIdentifier)) {
         if (toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
-            return ['marlin'];
+            return [];
         }
     }
 

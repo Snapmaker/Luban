@@ -1,7 +1,7 @@
 import { Space } from 'antd';
 import { capitalize } from 'lodash';
 import React, { useCallback, useMemo, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 
 import {
     CONNECTION_BED_TEMPERATURE,
@@ -56,7 +56,7 @@ const PrintToolControl: React.FC = () => {
 
         nozzleRightTemperature,
         nozzleRightTargetTemperature,
-    } = useSelector((state: RootState) => state.workspace);
+    } = useSelector((state: RootState) => state.workspace, shallowEqual);
 
 
     // heated bed

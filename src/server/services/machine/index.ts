@@ -37,7 +37,12 @@ function register(socketServer: SocketServer): void {
         'connection:setWorkOrigin': connectionManager.setWorkOrigin,
         'connection:updateToolHeadSpeed': connectionManager.updateToolHeadSpeed, // CNC, FOR NOW
         'connection:switchCNC': connectionManager.switchCNC, // CNC, FOR NOW
+
+        // 3D Print
+        'connection:getActiveExtruder': connectionManager.getActiveExtruder,
         'connection:updateWorkNozzle': connectionManager.switchExtruder,
+
+        // Wi-Fi
         'connection:wifiStatusTest': connectionManager.wifiStatusTest
     };
 
