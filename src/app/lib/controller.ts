@@ -66,6 +66,9 @@ class SerialPortClient {
         'machine:module-list': [],
         'machine:laser-status': [],
 
+        'connection:getActiveExtruder': [],
+        'connection:updateWorkNozzle': [],
+
         'slice:started': [],
         'slice:completed': [],
         'slice:progress': [],

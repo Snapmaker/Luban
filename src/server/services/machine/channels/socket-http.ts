@@ -23,7 +23,6 @@ import wifiServerManager from '../../socket/WifiServerManager';
 import workerManager from '../../task-manager/workerManager';
 import { EventOptions } from '../types';
 
-
 let waitConfirm: boolean;
 const log = logger('lib:SocketHttp');
 
@@ -223,6 +222,9 @@ class SocketHttp extends EventEmitter {
                 // Get enclosure status (every 1000ms)
                 clearInterval(intervalHandle);
                 intervalHandle = setInterval(this.getEnclosureStatus, 1000);
+
+                // Get Active extruder
+                this.getActiveExtruder({ eventName: 'connection:getActiveExtruder' });
             });
     };
 
@@ -543,6 +545,27 @@ class SocketHttp extends EventEmitter {
             .timeout(300000)
             .field('token', this.token)
             .attach('file', DataStorage.tmpDir + gcodePath, { filename: renderGcodeFileName })
+            .end((err, res) => {
+                this.socket && this.socket.emit(eventName, _getResult(err, res));
+            });
+    };
+
+    public getActiveExtruder = (options) => {
+        const { eventName } = options;
+        const api = `${this.host}/api/v1/active_extruder?token=${this.token}`;
+        request
+            .get(api)
+            .end((err, res) => {
+                this.socket && this.socket.emit(eventName, _getResult(err, res));
+            });
+    };
+
+    public updateActiveExtruder = ({ extruderIndex, eventName }) => {
+        const api = `${this.host}/api/v1/switch_extruder`;
+        request
+            .post(api)
+            .send(`token=${this.token}`)
+            .send(`active=${extruderIndex}`)
             .end((err, res) => {
                 this.socket && this.socket.emit(eventName, _getResult(err, res));
             });

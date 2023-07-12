@@ -408,7 +408,10 @@ export const actions = {
 
                 compareAndSet(data, currentState, 'laser10WErrorState', laser10WErrorState);
                 compareAndSet(data, currentState, 'isEmergencyStopped', isEmergencyStopped);
-                compareAndSet(data, currentState, 'currentWorkNozzle', !currentWorkNozzle ? LEFT_EXTRUDER : RIGHT_EXTRUDER);
+                if (!isNil(currentWorkNozzle)) {
+                    // SACP only, SSTP missing currentWorkNozzle
+                    compareAndSet(data, currentState, 'currentWorkNozzle', !currentWorkNozzle ? LEFT_EXTRUDER : RIGHT_EXTRUDER);
+                }
                 compareAndSet(data, currentState, 'cncTargetSpindleSpeed', cncTargetSpindleSpeed);
                 compareAndSet(data, currentState, 'cncCurrentSpindleSpeed', cncCurrentSpindleSpeed);
                 compareAndSet(data, currentState, 'enclosureLight', ledValue);
@@ -520,6 +523,23 @@ export const actions = {
 
                 dispatch(baseActions.updateState({
                     laserIsLocked: isLocked,
+                }));
+            },
+
+            'connection:getActiveExtruder': (options) => {
+                const activeExtruderIndex = options?.data?.active || 0;
+
+                const newActiveExtruder = activeExtruderIndex === 0 ? LEFT_EXTRUDER : RIGHT_EXTRUDER;
+                dispatch(baseActions.updateState({
+                    currentWorkNozzle: newActiveExtruder,
+                }));
+            },
+
+            'connection:updateWorkNozzle': () => {
+                const currentWorkNozzle = getState().workspace.currentWorkNozzle;
+                const newActiveExtruder = currentWorkNozzle === LEFT_EXTRUDER ? RIGHT_EXTRUDER : LEFT_EXTRUDER;
+                dispatch(baseActions.updateState({
+                    currentWorkNozzle: newActiveExtruder,
                 }));
             },
 

@@ -513,23 +513,41 @@ M3`;
         }
     };
 
+    // SSTP
+    public getActiveExtruder = (socket, options) => {
+        if (this.connectionType === CONNECTION_TYPE_WIFI) {
+            this.socket.getActiveExtruder(options);
+        }
+    };
+
     public switchExtruder = (socket, options) => {
+        const extruderIndex = options?.extruderIndex || '0';
+
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            const { extruderIndex } = options;
             this.channel.switchExtruder(extruderIndex);
+        } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
+            this.channel.updateActiveExtruder({
+                eventName: options.eventName,
+                extruderIndex,
+            });
+        } else {
+            // T0 / T1
+            this.channel.command(this.socket, {
+                args: [`T${extruderIndex}`],
+            });
         }
     };
 
     public updateNozzleTemperature = (socket, options) => {
+        const { extruderIndex = -1, nozzleTemperatureValue } = options;
+
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            const { extruderIndex, nozzleTemperatureValue } = options;
             this.channel.updateNozzleTemperature(extruderIndex, nozzleTemperatureValue);
         } else {
             if (this.connectionType === CONNECTION_TYPE_WIFI) {
                 this.channel.updateNozzleTemperature(options);
             } else {
-                const { nozzleTemperatureValue } = options;
-                this.channel.command(this.channel, {
+                this.channel.command(this.socket, {
                     args: [`M104 S${nozzleTemperatureValue}`]
                 });
             }
