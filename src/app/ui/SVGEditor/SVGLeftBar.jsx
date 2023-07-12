@@ -8,6 +8,7 @@ import styles from './styles.styl';
 import { library } from './lib/ext-shapes';
 import i18n from '../../lib/i18n';
 import Anchor from '../components/Anchor';
+// import { svg } from '../../../server/services/api';
 
 const SVGLeftBar = forwardRef((props, ref) => {
     const [extShape, setExtShape] = useState({
@@ -276,22 +277,39 @@ const SVGLeftBar = forwardRef((props, ref) => {
                                     >
                                         {_.map(library.use, (key) => {
                                             return (
-                                                <SvgIcon
-                                                    key={key}
-                                                    type={['hoverNormal', 'pressSpecial']}
-                                                    color="#545659"
-                                                    size={48}
-                                                    name={`Toolbar${key.split('-').map(word => word[0].toUpperCase() + word.slice(1)).join('')}`}
-                                                    disabled={!editable}
+                                                // <SvgIcon
+                                                //     key={key}
+                                                //     type={['hoverNormal', 'pressSpecial']}
+                                                //     color="#545659"
+                                                //     size={48}
+                                                //     name={`Toolbar${key.split('-').map(word => word[0].toUpperCase() + word.slice(1)).join('')}`}
+                                                //     disabled={!editable}
+                                                //     className={
+                                                //         classNames('background-transparent',
+                                                //             'padding-horizontal-4', 'position-re',
+                                                //             styles['btn-center-ext'],
+                                                //             { [styles.selected]: extShape === key })
+                                                //     }
+                                                //     onClick={() => actions.createExt(key)}
+                                                // />
+                                                // actions.setMode('ext', key)
+                                                <svg
+                                                    onClick={() => actions.createExt(key)}
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    // width="48"
+                                                    // height="48"
+                                                    viewBox="0 0 300 300"
+                                                    style={{ background: 'transparent', 'border-bottom': 0 }}
+                                                    fill="#545659"
                                                     className={
                                                         classNames('background-transparent',
                                                             'padding-horizontal-4', 'position-re',
                                                             styles['btn-center-ext'],
                                                             { [styles.selected]: extShape === key })
                                                     }
-                                                    onClick={() => actions.createExt(key)}
-                                                />
-                                                // actions.setMode('ext', key)
+                                                >
+                                                    <path stroke="black" fill="none" strokeWidth="6.25" fillRule="evenodd" clipRule="evenodd" d={library.data[key]} />
+                                                </svg>
                                             );
                                         })}
                                     </div>
