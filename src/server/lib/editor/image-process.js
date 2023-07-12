@@ -96,8 +96,11 @@ export async function processLaserGreyscale(modelInfo, onProgress) {
         .contrast((contrast - 50.0) / 50)
         .greyscale()
         .flip(scaleX < 0, scaleY < 0)
-        .resize(width * density, height * density)
-        .rotate(-rotationZ * 180 / Math.PI) // should we do this on generating toolpath?
+        .resize(width * density, height * density);
+    if (rotationZ !== 0) {
+        img.rotate(-rotationZ * 180 / Math.PI); // Rotating zero degrees will result in white edges
+    }
+    img
         .threshold({ max: whiteClip })
         .alphaToWhite(); // apply this after rotate AND invert, to avoid black gcode area
     // serpentine path
