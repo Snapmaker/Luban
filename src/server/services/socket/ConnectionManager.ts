@@ -348,7 +348,7 @@ class ConnectionManager {
         } else {
             const { workflowState } = options;
             if (this.protocol === SACP_PROTOCOL) {
-                if (headType === HEAD_LASER) {
+                if (headType === HEAD_LASER && !isRotate) {
                     if (materialThickness !== 0) {
                         await this.socket.laserSetWorkHeight({ toolHead, materialThickness });
                     }
