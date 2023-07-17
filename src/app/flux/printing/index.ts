@@ -436,6 +436,8 @@ function setMachineSavedPresetIds(series, presetIds) {
     machineStore.set('preset_ids', JSON.stringify(machinePresetIds));
 }
 
+let initPromise: Promise<void> = null;
+
 export const actions = {
     updateState: state => {
         return {
@@ -1048,7 +1050,7 @@ export const actions = {
 
     // TODO: init should be re-called
     init: () => async (dispatch, getState) => {
-        await dispatch(actions.initSize());
+        await dispatch(actions.initPrintConfig());
 
         const printingState = getState().printing;
         const { modelGroup } = printingState;
@@ -1059,6 +1061,24 @@ export const actions = {
 
         dispatch(actions.initSocketEvent());
         dispatch(actions.applyProfileToAllModels());
+    },
+
+    initPrintConfig: () => {
+        return async (dispatch) => {
+            // Ensure only one action is initializing print config
+            if (initPromise) {
+                return initPromise;
+            }
+
+            // Start init
+            initPromise = dispatch(actions.initSize());
+            initPromise
+                .then(() => {
+                    initPromise = null;
+                });
+
+            return initPromise;
+        };
     },
 
     updatePrintMode: (printMode) => (dispatch) => {

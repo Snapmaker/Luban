@@ -378,8 +378,8 @@ export class DefinitionLoader {
     }
 }
 
-function writeDefinition(headType, filename, series, definitionLoader) {
-    const filePath = path.join(DataStorage.configDir, headType, series, filename);
+function writeDefinition(filename, configPath, definitionLoader) {
+    const filePath = path.join(DataStorage.configDir, configPath, filename);
     fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
         if (err) {
             log.error(`Failed to write definition: err=${JSON.stringify(err)}`);
@@ -451,7 +451,7 @@ export function loadDefinitionsByRegex(headType, configPath, regex, defaultId) {
                 for (const ownKey of ownKeys) {
                     definitionLoader.ownKeys.add(ownKey);
                 }
-                writeDefinition(headType, filename, configPath, definitionLoader);
+                writeDefinition(filename, configPath, definitionLoader);
             }
         }
 
@@ -511,7 +511,7 @@ export function loadAllSeriesDefinitions(isDefault = false, headType, configPath
                             for (const ownKey of ownKeys) {
                                 definitionLoader.ownKeys.add(ownKey);
                             }
-                            writeDefinition(headType, filename, configPath, definitionLoader);
+                            writeDefinition(filename, configPath, definitionLoader);
                         }
                     }
                     definitions.push(definitionLoader.toObject());
