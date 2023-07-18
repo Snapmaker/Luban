@@ -16,6 +16,7 @@ import {
     PORT_SCREEN_HTTP,
     PORT_SCREEN_SACP,
     SACP_PROTOCOL,
+    SACP_UDP_PROTOCOL,
     SERIAL_PROTOCOL,
     STANDARD_CNC_TOOLHEAD_FOR_SM2,
     WORKFLOW_STATE_PAUSED,
@@ -26,6 +27,7 @@ import SocketSerialNew, { socketSerialNew } from './channels/SACP-SERIAL';
 import socketTcp from './channels/SACP-TCP';
 import socketHttp from './channels/socket-http';
 import { socketSerial } from './channels/socket-serial';
+import { sacpUdpChannel } from './channels/SacpUdpChannel';
 import { MachineInstance, RayMachineInstance, ArtisanMachineInstance } from './instances';
 import { ChannelEvent } from './channels/ChannelEvent';
 import { SnapmakerArtisanMachine, SnapmakerRayMachine } from '../../../app/machines';
@@ -110,6 +112,9 @@ class ConnectionManager {
                     if (protocol === SACP_PROTOCOL) {
                         this.protocol = SACP_PROTOCOL;
                         this.channel = socketTcp;
+                    } else if (protocol === SACP_UDP_PROTOCOL) {
+                        this.protocol = SACP_UDP_PROTOCOL;
+                        this.channel = sacpUdpChannel;
                     } else {
                         this.protocol = '';
                         this.channel = socketHttp;
@@ -204,14 +209,17 @@ class ConnectionManager {
     private inspectProtocol = async (address, connectionType = CONNECTION_TYPE_WIFI, options = { port: '' }) => {
         if (connectionType === CONNECTION_TYPE_WIFI) {
             // Inspect if we can connect to the printer via SACP (8888) or HTTP (8080)
-            const [resSACP, resHTTP] = await Promise.allSettled([
+            const [resSACP, resHTTP, sacpUdpResponse] = await Promise.allSettled([
                 this.tryConnect(address, PORT_SCREEN_SACP),
                 this.tryConnect(address, PORT_SCREEN_HTTP),
+                this.tryConnectSacpUdp(address, 2016),
             ]);
             if (resHTTP.status === 'fulfilled' && resHTTP.value) {
                 return 'HTTP';
             } else if (resSACP.status === 'fulfilled' && resSACP.value) {
                 return SACP_PROTOCOL;
+            } else if (sacpUdpResponse.status === 'fulfilled' && sacpUdpResponse.value) {
+                return SACP_UDP_PROTOCOL;
             }
         } else if (connectionType === CONNECTION_TYPE_SERIAL) {
             let protocol = 'HTTP';
@@ -297,6 +305,15 @@ class ConnectionManager {
                 resolve(false);
             });
         });
+    };
+
+    private tryConnectSacpUdp = async (host, port) => {
+        try {
+            return sacpUdpChannel.test(host, port);
+        } catch (e) {
+            log.error(e);
+            return false;
+        }
     };
 
     /**

@@ -20,6 +20,7 @@ import SocketServer from '../../../lib/SocketManager';
 import workerManager from '../../task-manager/workerManager';
 import { EventOptions } from '../types';
 import wifiServerManager from '../../socket/WifiServerManager';
+import EventEmitter from 'events';
 
 
 let waitConfirm: boolean;
@@ -100,7 +101,7 @@ export type GcodeResult = {
 /**
  * A singleton to manage devices connection.
  */
-class SocketHttp {
+class SocketHttp extends EventEmitter {
     private isGcodeExecuting = false;
 
     private gcodeInfos = [];

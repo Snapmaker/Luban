@@ -22,8 +22,8 @@ import {
 } from '../../constants';
 import { controller } from '../../lib/controller';
 import { actions as workspaceActions } from '.';
-
 import connectActions from './action-connect';
+import log from '../../lib/log';
 import baseActions from './action-base';
 import { dispatch } from '../../store';
 
@@ -55,6 +55,8 @@ export class Server extends events.EventEmitter {
     }
 
     openServer(callback) {
+        log.warn(`open server ${this.address}, sacp = ${this.sacp}`);
+
         controller
             .emitEvent(CONNECTION_OPEN, {
                 host: this.host,

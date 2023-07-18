@@ -39,6 +39,7 @@ class SocketTCP extends SocketBASE {
 
     public constructor() {
         super();
+
         this.client = new net.Socket();
 
         this.client.on('data', (buffer) => {
