@@ -29,7 +29,7 @@ import ConnectionWidget from '../../widgets/Connection';
 import ConnectionControlWidget from '../../widgets/ConnectionControl';
 import ConnectionFileTransferWidget from '../../widgets/ConnectionFileTransfer';
 import EnclosureWidget from '../../widgets/Enclosure';
-import RayMachiningWidget from '../../widgets/RayMachining';
+import RayMachiningWidget from '../../widgets/RayMachiningWidget';
 import VisualizerWidget from '../../widgets/WorkspaceVisualizer';
 import MachineNetworkModal from './modals/MachineNetworkModal';
 
