@@ -29,6 +29,7 @@ import ConnectionWidget from '../../widgets/Connection';
 import ConnectionControlWidget from '../../widgets/ConnectionControl';
 import ConnectionFileTransferWidget from '../../widgets/ConnectionFileTransfer';
 import EnclosureWidget from '../../widgets/Enclosure';
+import RayMachiningWidget from '../../widgets/RayMachining';
 import VisualizerWidget from '../../widgets/WorkspaceVisualizer';
 import MachineNetworkModal from './modals/MachineNetworkModal';
 
@@ -39,6 +40,7 @@ const allWidgets = {
     'wifi-transport': ConnectionFileTransferWidget,
     'visualizer': VisualizerWidget,
     'enclosure': EnclosureWidget,
+    'ray-machining': RayMachiningWidget,
 };
 
 
@@ -254,7 +256,7 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
         );
     };
 
-    const rightWidgetNames = ['connection'];
+    const rightWidgetNames = ['connection', 'ray-machining'];
 
     return (
         <div style={style} className={classNames(className)}>
