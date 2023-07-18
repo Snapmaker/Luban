@@ -2,6 +2,7 @@ import path from 'path';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { withRouter } from 'react-router-dom';
+import { Machine } from '@snapmaker/luban-platform';
 
 import { HEAD_LASER, PROCESS_MODE_GREYSCALE, PROCESS_MODE_VECTOR } from '../../../constants';
 import { actions as editorActions } from '../../../flux/editor';
@@ -18,12 +19,14 @@ import StackedModel from '../../widgets/LaserStackedModel';
 import LaserVisualizer from '../../widgets/LaserVisualizer';
 import useRenderMainToolBar from '../CncLaserShared/MainToolBar';
 import useRenderRemoveModelsWarning from '../CncLaserShared/RemoveAllModelsWarning';
-import renderRightView from '../CncLaserShared/RightView';
+import RenderProjectRightView from '../CncLaserShared/ProjectRightView';
 import HomePage from '../HomePage';
 import Workspace from '../Workspace';
 import StarterGuide from './StarterGuide';
 import JobSetupModal from './modals/JobSetupModal';
 import ProjectOversizeMessage from './modals/ProjectOversizeMessage';
+import { SnapmakerRayMachine } from '../../../machines';
+import { LaserWorkspaceRay } from '../laser-workspace-ray';
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 const pageHeadType = HEAD_LASER;
@@ -43,18 +46,20 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
     const toolPaths = useSelector(state => state[HEAD_LASER]?.toolPathGroup?.getToolPaths(), shallowEqual);
     const toolPathGroup = useSelector(state => state[HEAD_LASER]?.toolPathGroup, shallowEqual);
     useUnsavedTitle(pageHeadType);
-    const series = useSelector((state: RootState) => state.machine.series, shallowEqual);
     const page = useSelector(state => state[HEAD_LASER]?.page, shallowEqual);
+    const activeMachine: Machine = useSelector((state: RootState) => state.machine.activeMachine);
+    // const series = useSelector((state: RootState) => state.machine.series, shallowEqual);
     const materials = useSelector(state => state[HEAD_LASER]?.materials, shallowEqual);
+    const [isRotate, setIsRotate] = useState(materials?.isRotate);
 
     // state
     const [stackedModelModalDsiabled, setStackedModelModalDsiabled] = useState(false);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
+
+    // subview
     const [showHomePage, setShowHomePage] = useState(false);
     const [showWorkspace, setShowWorkspace] = useState(false);
     const [showJobType, setShowJobType] = useState(true);
-    const [isRotate, setIsRotate] = useState(materials?.isRotate);
-
 
     const dispatch = useDispatch();
 
@@ -162,19 +167,28 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
         }
     };
 
-    function renderWorkspace() {
+    /**
+     * Render function of workspace.
+     */
+    const renderWorkspace = useCallback(() => {
+        if (!showWorkspace) {
+            return null;
+        }
+
         const onClose = () => {
             setShowWorkspace(false);
-            logPageView({
-                pathname: '/laser',
-                isRotate
-            });
         };
-        return showWorkspace && renderPopup({
+
+        let component = Workspace;
+        if (activeMachine?.identifier === SnapmakerRayMachine.identifier) {
+            component = LaserWorkspaceRay;
+        }
+
+        return renderPopup({
             onClose,
-            component: Workspace
+            component,
         });
-    }
+    }, [showWorkspace, activeMachine?.identifier, isRotate]);
 
     function renderStackedModelModal() {
         const onClose = () => {
@@ -212,7 +226,15 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
             <ProjectLayout
                 renderMainToolBar={renderMainToolBar}
                 renderRightView={
-                    () => renderRightView({ headType: HEAD_LASER, dispatch, page, widgets, listActions })
+                    () => (
+                        <RenderProjectRightView
+                            headType={HEAD_LASER}
+                            dispatch={dispatch}
+                            page={page}
+                            widgets={widgets}
+                            listActions={listActions}
+                        />
+                    )
                 }
             >
                 <Dropzone
@@ -226,7 +248,7 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
                     {
                         showStarterGuide && (
                             <StarterGuide
-                                machineIdentifer={series}
+                                machineIdentifer={activeMachine?.identifier}
                                 isRotate={isRotate}
                                 toolPaths={toolPaths}
                                 onClose={onStarterGuideClose}

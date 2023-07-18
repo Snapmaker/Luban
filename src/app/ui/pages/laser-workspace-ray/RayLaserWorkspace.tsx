@@ -2,66 +2,43 @@ import classNames from 'classnames';
 import i18next from 'i18next';
 import _ from 'lodash';
 import includes from 'lodash/includes';
-import PropTypes from 'prop-types';
-import React, { useEffect, useRef, useState } from 'react';
-import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router-dom';
-import { CNC_GCODE_SUFFIX, LASER_GCODE_SUFFIX, PRINTING_GCODE_SUFFIX, WORKFLOW_STATE_IDLE } from '../../constants';
-import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, MACHINE_SERIES } from '../../constants/machines';
-import { actions as widgetActions } from '../../flux/widget';
-import { actions as workspaceActions } from '../../flux/workspace';
 
-import { controller } from '../../lib/controller';
-import i18n from '../../lib/i18n';
-import modal from '../../lib/modal';
-import { Button } from '../components/Buttons';
-import Dropzone from '../components/Dropzone';
-import Modal from '../components/Modal';
-import MainToolBar from '../layouts/MainToolBar';
-
-import styles from '../layouts/styles/workspace.styl';
-import WorkspaceLayout from '../layouts/WorkspaceLayout';
-
-import { logPageView, renderWidgetList } from '../utils';
-import CNCPathWidget from '../widgets/CNCPath';
-import ConnectionWidget from '../widgets/Connection';
-import ConnectionToolControlWidget from '../widgets/ConnectionToolControl';
-import ConnectionControlWidget from '../widgets/ConnectionControl';
-import ConnectionFileTransferWidget from '../widgets/ConnectionFileTransfer';
-import ConsoleWidget from '../widgets/Console';
-
-import EnclosureWidget from '../widgets/Enclosure';
-
-import LaserParamsWidget from '../widgets/LaserParams';
-import LaserSetBackground from '../widgets/LaserSetBackground';
-import LaserTestFocusWidget from '../widgets/LaserTestFocus';
-import MachineSettingWidget from '../widgets/MachineSetting';
-import MacroWidget from '../widgets/Macro';
-import PrintingVisualizer from '../widgets/PrintingVisualizer';
-import PurifierWidget from '../widgets/Purifier';
-import WebcamWidget from '../widgets/Webcam';
-import WorkingProgress from '../widgets/WorkingProgress';
-import VisualizerWidget from '../widgets/WorkspaceVisualizer';
+import {
+    CNC_GCODE_SUFFIX,
+    LASER_GCODE_SUFFIX,
+    PRINTING_GCODE_SUFFIX,
+    WORKFLOW_STATE_IDLE
+} from '../../../constants';
+import { RootState } from '../../../flux/index.def';
+import { actions as widgetActions } from '../../../flux/widget';
+import { actions as workspaceActions } from '../../../flux/workspace';
+import { controller } from '../../../lib/controller';
+import i18n from '../../../lib/i18n';
+import modal from '../../../lib/modal';
+import { Button } from '../../components/Buttons';
+import Dropzone from '../../components/Dropzone';
+import Modal from '../../components/Modal';
+import MainToolBar from '../../layouts/MainToolBar';
+import WorkspaceLayout from '../../layouts/WorkspaceLayout';
+import styles from '../../layouts/styles/workspace.styl';
+import { logPageView, renderWidgetList } from '../../utils';
+import ConnectionWidget from '../../widgets/Connection';
+import ConnectionControlWidget from '../../widgets/ConnectionControl';
+import ConnectionFileTransferWidget from '../../widgets/ConnectionFileTransfer';
+import EnclosureWidget from '../../widgets/Enclosure';
+import VisualizerWidget from '../../widgets/WorkspaceVisualizer';
+import MachineNetworkModal from './modals/MachineNetworkModal';
 
 
 const allWidgets = {
     'connection': ConnectionWidget,
     'control': ConnectionControlWidget,
     'wifi-transport': ConnectionFileTransferWidget,
-    'console': ConsoleWidget,
-    'macro': MacroWidget,
-    'purifier': PurifierWidget,
-    'marlin': ConnectionToolControlWidget,
     'visualizer': VisualizerWidget,
-    'webcam': WebcamWidget,
-    'printing-visualizer': PrintingVisualizer,
     'enclosure': EnclosureWidget,
-    'laser-params': LaserParamsWidget,
-    'laser-set-background': LaserSetBackground,
-    'laser-test-focus': LaserTestFocusWidget,
-    'cnc-path': CNCPathWidget,
-    'machine-setting': MachineSettingWidget,
-    'working-progress': WorkingProgress
 };
 
 
@@ -74,46 +51,25 @@ const reloadPage = (forcedReload = true) => {
 
 let workspaceVisualizerRef = null;
 
-// TODO: Workspace widgets can only support G-code based machine, add configuration
-//  to machine indicating if it supports plain G-code.
-function getUnsupportedWidgets(machineIdentifier, toolHead) {
-    if (!machineIdentifier) return [];
-
-    if ([MACHINE_SERIES.A150.identifier, MACHINE_SERIES.A250.identifier, MACHINE_SERIES.A350.identifier].includes(machineIdentifier)) {
-        if (toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
-            return ['marlin'];
-        }
-    }
-
-    if (machineIdentifier === MACHINE_SERIES.J1.identifier) {
-        // G-code execution need firmware upgrades
-        // Unsupported widgets: console, control, macro (v4.8)
-        return ['control', 'macro'];
-    }
-
-    if (machineIdentifier === MACHINE_SERIES.A400.identifier) {
-        return [];
-    }
-
-    return [];
+interface RayLaserWorkspaceProps {
+    isPopup?: boolean;
+    onClose: () => void;
+    style: object;
+    className: string;
 }
 
-function Workspace({ isPopup, onClose, style, className }) {
+const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose, style, className }) => {
     const history = useHistory();
     const dispatch = useDispatch();
 
-    const primaryWidgets = useSelector(state => state.widget.workspace.left.widgets);
-    const secondaryWidgets = useSelector(state => state.widget.workspace.right.widgets);
-    const defaultWidgets = useSelector(state => state.widget.workspace.default.widgets);
-
-    const {
-        machineIdentifier: connectedMachineIdentifier,
-        toolHead,
-    } = useSelector(state => state.workspace, shallowEqual);
+    const defaultWidgets = useSelector((state: RootState) => state.widget.workspace.default.widgets);
 
     const [previewModalShow, setPreviewModalShow] = useState(false);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [connected, setConnected] = useState(controller.connected);
+
+    const [showMachineNetworkModal, setShowMachineNetworkModal] = useState(false);
+
     const [leftItems, setLeftItems] = useState([
         {
             title: i18n._('key-Workspace/Page-Back'),
@@ -122,13 +78,25 @@ function Workspace({ isPopup, onClose, style, className }) {
             action: () => {
                 history.push('/');
             }
+        },
+        {
+            type: 'separator',
+            name: 'separator',
+        },
+        {
+            title: i18n._('key-Workspace/MainToolBar-Machine Network'),
+            type: 'button',
+            name: 'MainToolbarJobSetup',
+            action: () => {
+                setShowMachineNetworkModal(true);
+            },
         }
     ]);
 
     const defaultContainer = useRef();
-    const childRef = (ref) => {
+    const childRef = useCallback((ref) => {
         workspaceVisualizerRef = ref;
-    };
+    }, []);
 
     const controllerEvents = {
         'connect': () => {
@@ -158,11 +126,17 @@ function Workspace({ isPopup, onClose, style, className }) {
                 return;
             }
             const returnButton = {
+                type: 'button',
                 title: 'key-Workspace/Page-Back',
                 name: 'MainToolbarBack',
-                action: onClose
+                action: onClose,
             };
-            setLeftItems([returnButton]);
+
+            const newLeftItems = [...leftItems];
+
+            newLeftItems[0] = returnButton;
+
+            setLeftItems(newLeftItems);
         },
         onDropAccepted: (file) => {
             dispatch(workspaceActions.uploadGcodeFile(file));
@@ -261,7 +235,7 @@ function Workspace({ isPopup, onClose, style, className }) {
                     <Modal.Footer>
                         <Button
                             type="primary"
-                            onClick={reloadPage}
+                            onClick={() => reloadPage()}
                         >
                             {i18n._('key-Workspace/Page-Reload')}
                         </Button>
@@ -270,7 +244,6 @@ function Workspace({ isPopup, onClose, style, className }) {
             );
         }
     }
-
 
     const renderMainToolBar = () => {
         return (
@@ -281,22 +254,14 @@ function Workspace({ isPopup, onClose, style, className }) {
         );
     };
 
-    const unsupported = getUnsupportedWidgets(connectedMachineIdentifier, toolHead);
-
-    const leftWidgetNames = primaryWidgets.filter((widgetName) => {
-        return !includes(unsupported, widgetName);
-    });
-    const rightWidgetNames = secondaryWidgets.filter((widgetName) => {
-        return !includes(unsupported, widgetName);
-    });
+    const rightWidgetNames = ['connection'];
 
     return (
         <div style={style} className={classNames(className)}>
             <WorkspaceLayout
                 renderMainToolBar={renderMainToolBar}
-                renderLeftView={() => renderWidgetList('workspace', 'left', leftWidgetNames, allWidgets, listActions, {})}
+                renderLeftView={null}
                 renderRightView={() => renderWidgetList('workspace', 'right', rightWidgetNames, allWidgets, listActions, {}, controlActions)}
-                updateTabContainer={actions.updateTabContainer}
             >
                 <Dropzone
                     disabled={isDraggingWidget || controller.workflowState !== WORKFLOW_STATE_IDLE}
@@ -315,16 +280,16 @@ function Workspace({ isPopup, onClose, style, className }) {
                     </div>
                 </Dropzone>
                 {renderModalView(connected)}
+                {
+                    showMachineNetworkModal && (
+                        <MachineNetworkModal
+                            onClose={() => setShowMachineNetworkModal(false)}
+                        />
+                    )
+                }
             </WorkspaceLayout>
         </div>
     );
-}
-
-Workspace.propTypes = {
-    onClose: PropTypes.func,
-    isPopup: PropTypes.bool,
-    style: PropTypes.object,
-    className: PropTypes.string
 };
 
-export default Workspace;
+export default RayLaserWorkspace;

@@ -80,7 +80,7 @@ const HomePage: React.FC<HomePageProps> = (props) => { // Todo, what's the props
                     />
                 )
             }
-            <StartProject {...props} />
+            <StartProject />
             <div className={styles.secondLine}>
                 <CaseLibrary {...props} />
                 <MoreInfo />

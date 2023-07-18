@@ -21,12 +21,15 @@ import {
     MovementInstruction,
     PrintBatchGcode,
     SetLaserPower,
-    WifiConnectionInfo
-} from 'snapmaker-sacp-sdk/models';
+    WifiConnectionInfo,
+    NetworkConfiguration,
+    NetworkOptions,
+    NetworkStationState,
+} from '@snapmaker/snapmaker-sacp-sdk/dist/models';
 import {
     Serializable
-} from 'snapmaker-sacp-sdk/types';
-import { Dispatcher, RequestData, Response, ResponseCallback, ResponseData } from 'snapmaker-sacp-sdk';
+} from '@snapmaker/snapmaker-sacp-sdk/dist/types';
+import { Dispatcher, RequestData, Response, ResponseCallback, ResponseData } from '@snapmaker/snapmaker-sacp-sdk';
 import {
     readFloat,
     readString,
@@ -42,9 +45,9 @@ import {
     writeUint32,
     writeUint8,
     readBool,
-} from 'snapmaker-sacp-sdk/helper';
-import { PeerId } from 'snapmaker-sacp-sdk/communication/Header';
-import { MoveDirection } from 'snapmaker-sacp-sdk/models/MovementInstruction';
+} from '@snapmaker/snapmaker-sacp-sdk/dist/helper';
+import { PeerId } from '@snapmaker/snapmaker-sacp-sdk/dist/communication/Header';
+import { MoveDirection } from '@snapmaker/snapmaker-sacp-sdk/dist/models/MovementInstruction';
 
 import DataStorage from '../../../DataStorage';
 
@@ -145,12 +148,6 @@ export default class Business extends Dispatcher {
 
     public setLogger(log: any) {
         this.log = log;
-    }
-
-    public async updateCoordinate(coordinateType: CoordinateType) {
-        return this.send(0x01, 0x31, PeerId.CONTROLLER, Buffer.alloc(1, coordinateType)).then(({ response, packet }) => {
-            return { response, packet, data: {} };
-        });
     }
 
     public async executeGcode(gcode: string) {
@@ -459,6 +456,19 @@ export default class Business extends Dispatcher {
         });
     }
 
+    public async configureNetwork(options: NetworkOptions) {
+        // const networkMode = options?.networkMode || 1; // station default
+        const networkOptions = new NetworkConfiguration(options);
+
+        const { response, packet } = await this.send(0x01, 0x15, PeerId.CONTROLLER, networkOptions.toBuffer());
+        return {
+            response,
+            packet,
+        };
+    }
+
+    // 0x01 0x2X Get Machine Info
+
     public async getModuleInfo() {
         return this.send(0x01, 0x20, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             const moduleInfos = ModuleInfo.parseArray(response.data) as ModuleInfo[];
@@ -467,10 +477,10 @@ export default class Business extends Dispatcher {
     }
 
     public async getMachineInfo() {
-        return this.send(0x01, 0x21, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
-            const machineInfo = new MachineInfo().fromBuffer(response.data);
-            return { code: response.result, packet, data: machineInfo as MachineInfo };
-        });
+        const { response, packet } = await this.send(0x01, 0x21, PeerId.CONTROLLER, Buffer.alloc(0));
+
+        const machineInfo = new MachineInfo().fromBuffer(response.data);
+        return { code: response.result, packet, data: machineInfo as MachineInfo };
     }
 
     // unimplemented by master control
@@ -481,10 +491,54 @@ export default class Business extends Dispatcher {
         });
     }
 
+    /**
+     * Get Network Configuration.
+     *
+     * 0x01 0x25
+     */
+    public async getNetworkConfiguration() {
+        const { response, packet } = await this.send(0x01, 0x25, PeerId.CONTROLLER, Buffer.alloc(0));
+
+        const networkConfiguration = new NetworkConfiguration().fromBuffer(response.data);
+
+        return {
+            response,
+            packet,
+            data: networkConfiguration,
+        };
+    }
+
+    /**
+     * Get Network station state.
+     *
+     * Available only when network mode is NetworkMode.Station (networkConfiguration.networkMode).
+     *
+     * 1) network state
+     * 2) RSSI network strength
+     * 3) IP address
+     */
+    public async getNetworkStationState() {
+        const { response, packet } = await this.send(0x01, 0x26, PeerId.CONTROLLER, Buffer.alloc(0));
+
+        const networkStationState = new NetworkStationState().fromBuffer(response.data);
+
+        return {
+            response,
+            packet,
+            data: networkStationState,
+        };
+    }
+
     public async getCurrentCoordinateInfo() {
         return this.send(0x01, 0x30, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             const coordinateSystemInfo = new CoordinateSystemInfo().fromBuffer(response.data);
             return { response, packet, data: { coordinateSystemInfo }, coordinateSystemInfo };
+        });
+    }
+
+    public async updateCoordinate(coordinateType: CoordinateType) {
+        return this.send(0x01, 0x31, PeerId.CONTROLLER, Buffer.alloc(1, coordinateType)).then(({ response, packet }) => {
+            return { response, packet, data: {} };
         });
     }
 

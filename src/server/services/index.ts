@@ -4,10 +4,11 @@ import urljoin from '../lib/urljoin';
 import * as api from './api';
 import * as meshHandlers from './channel-handlers/mesh';
 import configstore from './configstore';
-import { register as registerMachineHandlers } from './machine';
+import { register as registerMachineHandlers } from './socket/machine-handlers';
+import { register as registerOSHandlers } from './socket/os-handlers';
 import monitor from './monitor';
-import { connectionManager } from './socket/ConnectionManager';
-import socketSerial from './socket/socket-serial';
+import { connectionManager } from './machine/ConnectionManager';
+import { socketSerial } from './machine/channels/socket-serial';
 import socketSlice from './socket/socket-slice';
 import system from './socket/system';
 import TaskManager from './task-manager';
@@ -17,6 +18,11 @@ function startServices(server) {
     // Start socket server
     const socketServer = new SocketServer();
 
+
+    // ===============
+    // OS
+    // ===============
+    registerOSHandlers(socketServer);
 
     // slice
     socketServer.registerEvent('slice', socketSlice.handleSlice);

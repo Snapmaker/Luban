@@ -12,12 +12,14 @@ import {
     MODAL_ADD_MACRO,
     MODAL_EDIT_MACRO
 } from '../../../constants';
+import useMountedState from '../../utils/useMountedState';
 
 
 function MacroWidget({ widgetId, widgetActions }) {
     const [modalName, setModalName] = useState(MODAL_NONE);
     const [modalParams, setModalParams] = useState({});
     const [macros, setMacros] = useState([]);
+    const isMounted = useMountedState();
 
     const { workflowStatus } = useSelector(state => state.workspace);
 
@@ -71,7 +73,9 @@ function MacroWidget({ widgetId, widgetActions }) {
     const fetchMacros = async () => {
         try {
             const res = await api.macros.fetch();
-            setMacros(res.body.records);
+            if (isMounted()) {
+                setMacros(res.body.records);
+            }
         } catch (err) {
             // Ignore error
         }

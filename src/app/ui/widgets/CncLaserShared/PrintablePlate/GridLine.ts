@@ -32,7 +32,7 @@ class GridLine extends Object3D {
         }
 
         for (let y = Math.ceil(minY / stepY) * stepY; y <= Math.floor(maxY / stepY) * stepY; y += stepY) {
-            const geometry = new THREE.Geometry();
+            const geometry = new Geometry();
             const material = new THREE.LineBasicMaterial({
                 vertexColors: THREE.VertexColors
             });

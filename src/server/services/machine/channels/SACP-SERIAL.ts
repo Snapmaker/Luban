@@ -1,24 +1,15 @@
+import crypto from 'crypto';
 import fs from 'fs';
 import { SerialPort } from 'serialport';
-// import path from 'path';
-import crypto from 'crypto';
-import { includes } from 'lodash';
 
-import {
-    CNC_HEAD_MODULE_IDS,
-    EMERGENCY_STOP_BUTTON,
-    LASER_HEAD_MODULE_IDS,
-    MODULEID_TOOLHEAD_MAP,
-    PRINTING_HEAD_MODULE_IDS,
-    ROTARY_MODULES,
-    SACP_TYPE_SERIES_MAP
-} from '../../../../app/constants/machines';
+import { SACP_TYPE_SERIES_MAP } from '../../../../app/constants/machines';
 import DataStorage from '../../../DataStorage';
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 import SocketServer from '../../../lib/SocketManager';
 import logger from '../../../lib/logger';
-import { ConnectedData, EventOptions } from '../types';
-import Business from './Business';
+import Business from '../sacp/Business';
+import { EventOptions } from '../types';
+import { ChannelEvent } from './ChannelEvent';
 import SocketBASE from './SACP-BASE';
 
 const log = logger('lib:SocketSerial');
@@ -47,70 +38,51 @@ class SocketSerialNew extends SocketBASE {
                 autoOpen: false,
             });
             this.sacpClient = new Business('serialport', this.serialport);
+
             this.serialport.on('data', (data) => {
                 // console.log(data.toString());
                 this.sacpClient.read(data);
             });
+
             this.serialport.on('error', (err) => {
                 log.error(`Serial connection error: ${err}`);
                 this.socket.emit('connection:connected', { err: 'this machine is not ready' });
             });
+
             this.serialport.on('close', () => {
                 log.info('serial close');
                 this.socket.emit('connection:close');
             });
+
+            // When serialport connected, we detect the machine identifier
             this.serialport.once('open', () => {
-                log.debug(`${options.port || this.availPorts[0].path} opened`);
-                // this.serialport.write('M1006\n');
+                log.debug(`Serial port ${options.port || this.availPorts[0].path} opened`);
+
+                // Force switch to SACP
+                this.serialport.write('\r\n');
                 this.serialport.write('M2000 S5 P1\r\n');
+                // this.serialport.write('M2000 U5\r\n');
+                this.serialport.write('$PS\r\n');
+
+                log.error('M2000 sent');
+
+                // Wait (at least 100ms) to let controller switch to SACP
+                // Then we get machine info, this is required to detect the machine
                 setTimeout(async () => {
-                    // TO DO: Need to get seriesSize for 'connection:connected' event
-                    let state: ConnectedData = {};
-                    await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
-                        const moduleListStatus = {
-                            // airPurifier: false,
-                            emergencyStopButton: false,
-                            // enclosure: false,
-                            rotaryModule: false
-                        };
-                        moduleInfos.forEach(module => {
-                            // let ariPurifier = false;
-                            if (includes(PRINTING_HEAD_MODULE_IDS, module.moduleId)) {
-                                state.headType = HEAD_PRINTING;
-                                state.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
-                            } else if (includes(LASER_HEAD_MODULE_IDS, module.moduleId)) {
-                                state.headType = HEAD_LASER;
-                                state.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
-                            } else if (includes(CNC_HEAD_MODULE_IDS, module.moduleId)) {
-                                state.headType = HEAD_CNC;
-                                state.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
-                            }
-                            if (includes(ROTARY_MODULES, module.moduleId)) {
-                                moduleListStatus.rotaryModule = true;
-                            }
-                            if (includes(EMERGENCY_STOP_BUTTON, module.moduleId)) {
-                                moduleListStatus.emergencyStopButton = true;
-                            }
-                        });
-                        state.moduleStatusList = moduleListStatus;
+                    // Get Machine Info
+                    const { data: machineInfos } = await this.getMachineInfo();
+                    const machineIdentifier = SACP_TYPE_SERIES_MAP[machineInfos.type];
+                    log.debug(`Get machine info, type = ${machineInfos.type}`);
+                    log.debug(`Get machine info, machine identifier = ${machineIdentifier}`);
+
+                    // Machine detected
+                    this.emit(ChannelEvent.Ready, {
+                        machineIdentifier,
                     });
-                    await this.sacpClient.getCurrentCoordinateInfo().then(({ data: coordinateInfos }) => {
-                        const isHomed = !(coordinateInfos?.coordinateSystemInfo?.homed); // 0: homed, 1: need to home
-                        state.isHomed = isHomed;
-                        state.isMoving = false;
-                    });
-                    await this.sacpClient.getMachineInfo().then(({ data: machineInfos }) => {
-                        state = {
-                            ...state,
-                            series: SACP_TYPE_SERIES_MAP[machineInfos.type]
-                        };
-                        log.debug(`serial, ${SACP_TYPE_SERIES_MAP[machineInfos.type]}`);
-                    });
-                    this.socket && this.socket.emit('connection:connected', { state: state, err: '' });
-                    this.startHeartbeatBase(this.sacpClient);
-                    this.setROTSubscribeApi();
-                }, 200);
+                }, 1000);
             });
+
+            // Open serial port
             this.serialport.open();
         }
     };
@@ -136,6 +108,11 @@ class SocketSerialNew extends SocketBASE {
         this.serialport?.destroy();
         // this.sacpClient?.dispose();
         this.socket.emit('connection:close');
+    };
+
+    public startHeartbeat = () => {
+        this.startHeartbeatBase(this.sacpClient);
+        this.setROTSubscribeApi();
     };
 
     public startGcode = async (options: EventOptions) => {
@@ -167,4 +144,6 @@ class SocketSerialNew extends SocketBASE {
     };
 }
 
-export default new SocketSerialNew();
+export const socketSerialNew = new SocketSerialNew();
+
+export default SocketSerialNew;

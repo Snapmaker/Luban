@@ -28,6 +28,7 @@ const createServer = (options, callback) => {
 
     // configstore service
     log.info(`Loading configuration from ${chalk.yellow(JSON.stringify(profile))}`);
+
     config.load(profile);
 
     settings.rcfile = profile;

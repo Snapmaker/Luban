@@ -3,7 +3,7 @@ import Jimp from 'jimp';
 import { pathWithRandomSuffix } from './random-utils';
 import DataStorage from '../DataStorage';
 import { LEVEL_TWO_POWER_LASER_FOR_SM2 } from '../../app/constants/machines';
-import { connectionManager } from '../services/socket/ConnectionManager';
+import { connectionManager } from '../services/machine/ConnectionManager';
 import logger from './logger';
 // import { remapImage } from './image-stitch';
 

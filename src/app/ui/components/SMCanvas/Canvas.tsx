@@ -162,8 +162,12 @@ class Canvas extends React.PureComponent<CanvasProps> {
         this.modelGroup.object.addEventListener('update', () => this.renderScene());
 
         this.group.add(this.modelGroup.object);
-        this.group.add(this.modelGroup.clippingGroup);
-        this.group.add(this.modelGroup.plateAdhesion);
+        if (this.modelGroup.clippingGroup) {
+            this.group.add(this.modelGroup.clippingGroup);
+        }
+        if (this.modelGroup.plateAdhesion) {
+            this.group.add(this.modelGroup.plateAdhesion);
+        }
 
         this.toolPathGroupObject && this.group.add(this.toolPathGroupObject);
         this.gcodeLineGroup && this.group.add(this.gcodeLineGroup);
