@@ -1,7 +1,5 @@
-import { find, includes } from 'lodash';
-import net from 'net';
-import { ResponseCallback } from 'snapmaker-sacp-sdk';
-import { readString, readUint16, readUint8 } from 'snapmaker-sacp-sdk/helper';
+import { ResponseCallback } from '@snapmaker/snapmaker-sacp-sdk';
+import { readString, readUint16, readUint8 } from '@snapmaker/snapmaker-sacp-sdk/dist/helper';
 import {
     AirPurifierInfo,
     CncSpeedState,
@@ -12,9 +10,13 @@ import {
     GcodeCurrentLine,
     GetHotBed,
     LaserTubeState,
-    ModuleInfo
-} from 'snapmaker-sacp-sdk/models';
-import { Direction } from 'snapmaker-sacp-sdk/models/CoordinateInfo';
+    ModuleInfo,
+    NetworkOptions
+} from '@snapmaker/snapmaker-sacp-sdk/dist/models';
+import { Direction } from '@snapmaker/snapmaker-sacp-sdk/dist/models/CoordinateInfo';
+import { EventEmitter } from 'events';
+import { find, includes } from 'lodash';
+import net from 'net';
 
 import {
     A400_HEADT_BED_FOR_SM2,
@@ -57,12 +59,12 @@ import {
 } from '../../../constants';
 import logger from '../../../lib/logger';
 import SocketServer from '../../../lib/SocketManager';
+import Business, { CoordinateType } from '../sacp/Business';
 import { EventOptions, MarlinStateData } from '../types';
-import Business, { CoordinateType } from './Business';
 
 const log = logger('lib:SocketBASE');
 
-class SocketBASE {
+class SocketBASE extends EventEmitter {
     private heartbeatTimer;
 
     public socket: SocketServer;
@@ -118,14 +120,17 @@ class SocketBASE {
 
     public startHeartbeatBase = async (sacpClient: Business, client?: net.Socket) => {
         this.sacpClient = sacpClient;
+
         let stateData: MarlinStateData = {};
         let statusKey = 0;
+
         const moduleStatusList = {
             rotaryModule: false,
             airPurifier: false,
             emergencyStopButton: false,
             enclosure: false
         };
+
         this.sacpClient.logFeedbackLevel(2).then(({ response }) => {
             log.info(`logLevel, ${response}`);
             if (response.result === 0) {
@@ -139,6 +144,7 @@ class SocketBASE {
                 this.sacpClient.subscribeLogFeedback({ interval: 60000 }, this.subscribeLogCallback);
             }
         });
+
         this.sacpClient.setHandler(0x01, 0x36, ({ param }) => {
             const isHomed = readUint8(param, 0);
             stateData = {
@@ -152,12 +158,14 @@ class SocketBASE {
             }
             this.socket && this.socket.emit('move:status', { isHoming: false });
         });
+
         this.sacpClient.setHandler(0x04, 0x00, ({ param }) => {
             const level = readUint8(param, 0);
             const owner = readUint16(param, 1);
             const error = readUint8(param, 3);
             this.socket && this.socket.emit('manager:error', { level, owner, errorCode: error });
         });
+
         this.subscribeHeartCallback = async (data) => {
             statusKey = readUint8(data.response.data, 0);
 
@@ -309,8 +317,6 @@ class SocketBASE {
             } else if (nozzleInfo.extruderList.length === 2) {
                 const leftInfo = find(nozzleInfo.extruderList, { index: 0 });
                 const rightInfo = find(nozzleInfo.extruderList, { index: 1 }) || {};
-
-                console.log('leftInfo =', leftInfo, 'rightInfo =', rightInfo);
 
                 this.currentWorkNozzle = rightInfo.status === 1 ? 1 : 0;
                 stateData = {
@@ -508,6 +514,35 @@ class SocketBASE {
             log.info(`handlerResumePrintreturn, ${data}`);
             this.resumeGcodeCallback && this.resumeGcodeCallback({ msg: data, code: data });
         });
+    };
+
+    public getMachineInfo = async () => {
+        return this.sacpClient.getMachineInfo();
+    };
+
+    public getModuleInfo = async () => {
+        return this.sacpClient.getModuleInfo();
+    };
+
+    public getCoordinateInfo = async () => {
+        return this.sacpClient.getCurrentCoordinateInfo();
+    };
+
+    /**
+     * Configure machine network.
+     *
+     * Note that this API is only implemented by Ray.
+     */
+    public configureNetwork = async (networkOptions: NetworkOptions) => {
+        return this.sacpClient.configureNetwork(networkOptions);
+    };
+
+    public getNetworkConfiguration = async () => {
+        return this.sacpClient.getNetworkConfiguration();
+    };
+
+    public getNetworkStationState = async () => {
+        return this.sacpClient.getNetworkStationState();
     };
 
     public executeGcode = async (options: EventOptions, callback: () => void) => {

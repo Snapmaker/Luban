@@ -3,7 +3,7 @@ import colornames from 'colornames';
 import isEqual from 'lodash/isEqual';
 import PropTypes from 'prop-types';
 import pubsub from 'pubsub-js';
-import React, { PureComponent } from 'react';
+import React from 'react';
 import { connect } from 'react-redux';
 import * as THREE from 'three';
 
@@ -24,10 +24,10 @@ import {
     WORKFLOW_STATUS_RUNNING,
     WORKFLOW_STATUS_UNKNOWN
 } from '../../../constants';
-import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/workspace';
+import { WORKSPACE_STAGE, actions as workspaceActions } from '../../../flux/workspace';
 import { controller } from '../../../lib/controller';
-import log from '../../../lib/log';
 import i18n from '../../../lib/i18n';
+import log from '../../../lib/log';
 import TargetPoint from '../../../scene/three-extensions/TargetPoint';
 import modalSmallHOC from '../../components/Modal/modal-small';
 import ModalSmall from '../../components/Modal/ModalSmall';
@@ -46,8 +46,7 @@ import ToolHead from './ToolHead';
 
 // import modal from '../../lib/modal';
 
-
-class Visualizer extends PureComponent {
+class Visualizer extends React.PureComponent {
     static propTypes = {
         // redux
         isEnclosureDoorOpen: PropTypes.bool,
@@ -101,6 +100,8 @@ class Visualizer extends PureComponent {
     previewPrintableArea = null;
 
     visualizerGroup = { object: new THREE.Group() };
+
+    isMounted = React.createRef();
 
     canvas = React.createRef();
 
@@ -496,25 +497,33 @@ class Visualizer extends PureComponent {
         }
     };
 
-    componentDidMount() {
+    async componentDidMount() {
+        this.isMounted.current = true;
+
+        this.visualizerGroup.object.add(this.props.modelGroup);
+
         this.props.onRef && this.props.onRef(this);
-        this.setupToolhead().then(() => {
-            const machineSize = this.props.machineSize;
-            this.subscribe();
-            this.addControllerEvents();
-            this.setupTargetPoint();
-            this.visualizerGroup.object.add(this.props.modelGroup);
-            this.previewPrintableArea = new PrintablePlate({
-                x: machineSize.x * 2,
-                y: machineSize.y * 2
-            });
+        await this.setupToolhead();
+
+        this.subscribe();
+        this.addControllerEvents();
+        this.setupTargetPoint();
+
+        const machineSize = this.props.machineSize;
+        this.previewPrintableArea = new PrintablePlate({
+            x: machineSize.x * 2,
+            y: machineSize.y * 2
+        });
+
+        // In Async function, the componenet could be unmounted already
+        if (this.isMounted.current) {
             this.setState({
                 printableArea: new PrintablePlate({
                     x: machineSize.x * 2,
                     y: machineSize.y * 2
                 })
             });
-        });
+        }
     }
 
     /**
@@ -623,8 +632,11 @@ class Visualizer extends PureComponent {
     }
 
     componentWillUnmount() {
+        this.isMounted.current = false;
         this.unsubscribe();
         this.removeControllerEvents();
+
+        this.canvas.current = null;
     }
 
     setupTargetPoint() {
@@ -661,7 +673,9 @@ class Visualizer extends PureComponent {
     subscribe() {
         const tokens = [
             pubsub.subscribe('resize', () => {
-                this.canvas.current.resizeWindow();
+                if (this.canvas.current) {
+                    this.canvas.current.resizeWindow();
+                }
             })
         ];
         this.pubsubTokens = this.pubsubTokens.concat(tokens);

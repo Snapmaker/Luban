@@ -1,17 +1,20 @@
 import { SerialPort } from 'serialport';
-import store from '../../store';
-import logger from '../../lib/logger';
-import type SocketServer from '../../lib/SocketManager';
-import { MarlinController } from '../../controllers';
-import ensureArray from '../../lib/ensure-array';
-import config from '../configstore';
-import { PROTOCOL_TEXT, WRITE_SOURCE_CLIENT } from '../../controllers/constants';
-import { CONNECTION_TYPE_SERIAL } from '../../constants';
+import { EventEmitter } from 'events';
+
+import store from '../../../store';
+import logger from '../../../lib/logger';
+import type SocketServer from '../../../lib/SocketManager';
+import { MarlinController } from '../../../controllers';
+import ensureArray from '../../../lib/ensure-array';
+import config from '../../configstore';
+import { PROTOCOL_TEXT, WRITE_SOURCE_CLIENT } from '../../../controllers/constants';
+import { CONNECTION_TYPE_SERIAL } from '../../../constants';
+import { ChannelEvent } from './ChannelEvent';
 
 const log = logger('service:socket-server');
 let intervalHandle = null;
 
-class SocketSerial {
+class SocketSerial extends EventEmitter {
     private port = '';
 
     private dataSource = '';
@@ -94,6 +97,10 @@ class SocketSerial {
         if (!controller) {
             if (dataSource === PROTOCOL_TEXT) {
                 controller = new MarlinController({ port, dataSource, baudrate: 115200, connectionTimeout: connectionTimeout });
+
+                controller.on('Ready', (data) => {
+                    this.emit(ChannelEvent.Ready, data);
+                });
             }
         }
 
@@ -106,6 +113,8 @@ class SocketSerial {
 
             socket.emit('connection:open', { port, dataSource });
             socket.emit('connection:connected', { state: controller.controller.state, dataSource, connectionType: 'serial' });
+
+            this.emit('Connected');
         } else {
             controller.open((err = null) => {
                 if (err) {
@@ -123,6 +132,8 @@ class SocketSerial {
                 // socket.join(port);
 
                 socket.emit('connection:open', { port, dataSource });
+
+                this.emit('Connected');
             }, connectionTimeout);
         }
     };
@@ -196,6 +207,6 @@ class SocketSerial {
     };
 }
 
-const socketSerial = new SocketSerial();
+export const socketSerial = new SocketSerial();
 
-export default socketSerial;
+export default SocketSerial;

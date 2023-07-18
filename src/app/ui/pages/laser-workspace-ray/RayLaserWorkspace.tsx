@@ -30,6 +30,7 @@ import ConnectionControlWidget from '../../widgets/ConnectionControl';
 import ConnectionFileTransferWidget from '../../widgets/ConnectionFileTransfer';
 import EnclosureWidget from '../../widgets/Enclosure';
 import VisualizerWidget from '../../widgets/WorkspaceVisualizer';
+import MachineNetworkModal from './modals/MachineNetworkModal';
 
 
 const allWidgets = {
@@ -66,6 +67,9 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
     const [previewModalShow, setPreviewModalShow] = useState(false);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [connected, setConnected] = useState(controller.connected);
+
+    const [showMachineNetworkModal, setShowMachineNetworkModal] = useState(false);
+
     const [leftItems, setLeftItems] = useState([
         {
             title: i18n._('key-Workspace/Page-Back'),
@@ -74,6 +78,18 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
             action: () => {
                 history.push('/');
             }
+        },
+        {
+            type: 'separator',
+            name: 'separator',
+        },
+        {
+            title: i18n._('key-Workspace/MainToolBar-Machine Network'),
+            type: 'button',
+            name: 'MainToolbarJobSetup',
+            action: () => {
+                setShowMachineNetworkModal(true);
+            },
         }
     ]);
 
@@ -110,11 +126,17 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
                 return;
             }
             const returnButton = {
+                type: 'button',
                 title: 'key-Workspace/Page-Back',
                 name: 'MainToolbarBack',
-                action: onClose
+                action: onClose,
             };
-            setLeftItems([returnButton]);
+
+            const newLeftItems = [...leftItems];
+
+            newLeftItems[0] = returnButton;
+
+            setLeftItems(newLeftItems);
         },
         onDropAccepted: (file) => {
             dispatch(workspaceActions.uploadGcodeFile(file));
@@ -258,6 +280,13 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
                     </div>
                 </Dropzone>
                 {renderModalView(connected)}
+                {
+                    showMachineNetworkModal && (
+                        <MachineNetworkModal
+                            onClose={() => setShowMachineNetworkModal(false)}
+                        />
+                    )
+                }
             </WorkspaceLayout>
         </div>
     );

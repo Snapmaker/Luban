@@ -244,7 +244,7 @@ class SerialPortClient {
         socketController.emit('machine:discover', { dataSource: this.dataSource, connectionType: 'serial' });
     }
 
-    public emitEvent(eventName, options = {}, callback) {
+    public emitEvent(eventName: string, options = {}, callback = null) {
         socketController.emit(eventName, { ...options, eventName }, callback);
         return socketController;
     }
@@ -342,6 +342,6 @@ class SerialPortClient {
     }
 }
 
-export const controller = SerialPortClient.getController(PROTOCOL_TEXT);
+export const controller: SerialPortClient = SerialPortClient.getController(PROTOCOL_TEXT);
 
 export default controller;

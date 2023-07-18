@@ -3,6 +3,8 @@ import isEqual from 'lodash/isEqual';
 import includes from 'lodash/includes';
 import noop from 'lodash/noop';
 import semver from 'semver';
+import { EventEmitter } from 'events';
+
 import SerialConnection from '../../lib/SerialConnection';
 import interpret from '../../lib/interpret';
 import EventTrigger from '../../lib/EventTrigger';
@@ -42,7 +44,7 @@ const WAIT = '%wait';
 
 const log = logger('controller:Marlin');
 
-class MarlinController {
+class MarlinController extends EventEmitter {
     type = MARLIN;
 
     // Connections
@@ -222,7 +224,10 @@ class MarlinController {
     };
 
     constructor(options) {
+        super();
+
         const { port, dataSource, baudRate, connectionTimeout = 3000 } = options;
+        console.log('data source =', dataSource);
 
         this.options = {
             ...this.options,
@@ -356,6 +361,13 @@ class MarlinController {
             }
         });
         this.controller.on('series', (res) => {
+            let machineIdentifier = '';
+            if (res.seriesSize === 'Ray2023') {
+                machineIdentifier = 'Ray';
+            }
+
+            this.checkMachineIsReady({ machineIdentifier });
+
             log.silly(`controller.on('series'): source=${this.history.writeSource},
                  line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
@@ -412,15 +424,8 @@ class MarlinController {
             }
         });
         this.controller.on('temperature', (res) => {
-            if (!this.ready) {
-                this.ready = true;
-                this.emitAll('connection:connected', {
-                    state: this.controller.state,
-                    dataSource,
-                    type: 'serial',
-                    connectionType: 'serial'
-                });
-            }
+            // this.checkMachineIsReady();
+
             // log.silly(`controller.on('temperature'): source=${this.history.writeSource},
             //    line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER, WRITE_SOURCE_SENDER], this.history.writeSource)) {
@@ -976,6 +981,21 @@ class MarlinController {
             const socket = this.connections[id];
             socket.emit(eventName, { ...options, dataSource: this.options.dataSource });
         });
+    }
+
+    checkMachineIsReady({ machineIdentifier }) {
+        if (!this.ready) {
+            this.ready = true;
+
+            this.emitAll('connection:connected', {
+                state: this.controller.state,
+                dataSource: 'text',
+                type: 'serial',
+                connectionType: 'serial'
+            });
+
+            this.emit('Ready', { machineIdentifier });
+        }
     }
 
     command(socket, cmd, ...args) {

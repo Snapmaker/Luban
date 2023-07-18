@@ -42,10 +42,12 @@ export const machine: Machine = {
             {
                 identifier: laserModule20W.identifier,
                 configPath: 'laser/snapmaker_ray_20w',
+                goHomeOnConnection: false,
             },
             {
                 identifier: laserModule40W.identifier,
                 configPath: 'laser/snapmaker_ray_40w',
+                goHomeOnConnection: false,
             },
         ],
     },

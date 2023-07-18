@@ -1,18 +1,18 @@
+import type { Machine } from '@snapmaker/luban-platform';
 import classNames from 'classnames';
 import { isObject, map } from 'lodash';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import type { Machine } from '@snapmaker/luban-platform';
 
 import { WORKFLOW_STATE_IDLE, WORKFLOW_STATE_PAUSED, WORKFLOW_STATE_RUNNING } from '../../../constants';
 import {
-    findMachineByName,
     HEAD_CNC,
     HEAD_LASER,
     HEAD_PRINTING,
-    isDualExtruder,
     LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
-    MACHINE_SERIES
+    MACHINE_SERIES,
+    findMachineByName,
+    isDualExtruder
 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
 import { actions as workspaceActions } from '../../../flux/workspace';
@@ -21,11 +21,9 @@ import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import { highPower10WLaserToolHead, standardLaserToolHead } from '../../../machines/snapmaker-2-toolheads';
 import { laser1600mWToolHeadOriginal, laserToolHeadOriginal } from '../../../machines/snapmaker-original-toolheads';
-
 import { Button } from '../../components/Buttons';
 import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
-
 import MachineModuleStatusBadge from './components/MachineModuleStatusBadge';
 import MismatchModal from './modals/MismatchModal';
 import styles from './styles.styl';
@@ -271,7 +269,7 @@ const SerialConnection: React.FC = () => {
 
     return (
         <div>
-            {
+            {/* List of serial port options */
                 !isConnected && (
                     <div className="sm-flex justify-space-between margin-bottom-16">
                         <Select
@@ -303,7 +301,7 @@ const SerialConnection: React.FC = () => {
                     </div>
                 )
             }
-            {
+            {/* State of connected machine */
                 isConnected && machineIdentifier && (
                     <div className="margin-bottom-16 margin-top-12">
                         <div
@@ -340,8 +338,8 @@ const SerialConnection: React.FC = () => {
                     </div>
                 )
             }
-
-            <div>
+            {/* Connect / Disconnect */}
+            <div className="margin-top-16">
                 {
                     !isConnected && (
                         <Button

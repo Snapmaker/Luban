@@ -85,7 +85,7 @@ const checkMeshes = async (meshInfos: MeshFileInfo[]) => {
         }
 
         await new Promise((resolve) => {
-            return controller.checkModel({
+            controller.checkModel({
                 uploadName: meshInfo.uploadName
             }, (data) => {
                 if (data.type === 'error') {

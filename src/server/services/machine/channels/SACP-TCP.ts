@@ -6,15 +6,15 @@ import os from 'os';
 import path from 'path';
 import readline from 'readline';
 
-import CalibrationInfo from 'snapmaker-sacp-sdk/models/CalibrationInfo';
-import CoordinateInfo, { Direction } from 'snapmaker-sacp-sdk/models/CoordinateInfo';
-import MovementInstruction, { MoveDirection } from 'snapmaker-sacp-sdk/models/MovementInstruction';
+import CalibrationInfo from '@snapmaker/snapmaker-sacp-sdk/dist/models/CalibrationInfo';
+import CoordinateInfo, { Direction } from '@snapmaker/snapmaker-sacp-sdk/dist/models/CoordinateInfo';
+import MovementInstruction, { MoveDirection } from '@snapmaker/snapmaker-sacp-sdk/dist/models/MovementInstruction';
 import DataStorage from '../../../DataStorage';
 import { CONNECTION_TYPE_WIFI, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 import logger from '../../../lib/logger';
-import wifiServerManager from '../WifiServerManager';
+import wifiServerManager from '../../socket/WifiServerManager';
 import { ConnectedData, EventOptions } from '../types';
-import Business, { CoordinateType, RequestPhotoInfo, ToolHeadType } from './Business';
+import Business, { CoordinateType, RequestPhotoInfo, ToolHeadType } from '../sacp/Business';
 // import MovementInstruction, { MoveDirection } from '../../lib/SACP-SDK/SACP/business/models/MovementInstruction';
 import {
     CNC_HEAD_MODULE_IDS,

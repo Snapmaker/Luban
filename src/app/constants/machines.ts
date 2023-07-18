@@ -389,8 +389,9 @@ export const SACP_TYPE_SERIES_MAP = {
     '0': 'A150',
     '1': 'A250',
     '2': 'A350',
-    '3': 'A400',
+    '3': SnapmakerArtisanMachine.identifier,
     '4': MACHINE_SERIES.J1.identifier,
+    '5': SnapmakerRayMachine.identifier,
 };
 
 export default {};
