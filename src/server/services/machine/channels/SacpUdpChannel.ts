@@ -96,6 +96,7 @@ class SacpUdpChannel extends SocketBASE {
         const { eventName } = options;
 
         const { gcodePath, renderGcodeFileName } = options;
+        log.info(`Upload file to controller... ${gcodePath}`);
 
         const gcodeFullPath = path.resolve(`${DataStorage.tmpDir}${gcodePath}`);
         const res = await this.sacpClient.uploadLargeFile(gcodeFullPath, renderGcodeFileName);

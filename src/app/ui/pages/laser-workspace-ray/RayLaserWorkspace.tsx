@@ -23,15 +23,16 @@ import Dropzone from '../../components/Dropzone';
 import Modal from '../../components/Modal';
 import MainToolBar from '../../layouts/MainToolBar';
 import WorkspaceLayout from '../../layouts/WorkspaceLayout';
-import { logPageView, renderWidgetList } from '../../utils';
+import { renderWidgetList } from '../../utils';
 import ConnectionWidget from '../../widgets/Connection';
 import ConnectionControlWidget from '../../widgets/ConnectionControl';
 import ConnectionFileTransferWidget from '../../widgets/ConnectionFileTransfer';
 import EnclosureWidget from '../../widgets/Enclosure';
 import RayMachiningWidget from '../../widgets/RayMachiningWidget';
+import RayUploadWidget from '../../widgets/RayUploadWidget';
 import VisualizerWidget from '../../widgets/WorkspaceVisualizer';
-import MachineNetworkModal from './modals/MachineNetworkModal';
 import VisualizerOverlay from './VisualizerOverlay';
+import MachineNetworkModal from './modals/MachineNetworkModal';
 
 
 const allWidgets = {
@@ -51,6 +52,38 @@ const reloadPage = (forcedReload = true) => {
     window.location.reload(forcedReload);
 };
 
+interface WorkspaceRightViewProps {
+    listActions: {
+        onDragStart: () => void;
+        onDragEnd: () => void;
+    },
+    controlActions: object;
+}
+
+const WorkspaceRightView: React.FC<WorkspaceRightViewProps> = (props) => {
+    const { listActions, controlActions } = props;
+
+    const rightWidgetNames = ['connection', 'ray-machining'];
+
+    return (
+        <div
+            className={classNames(
+                'sm-flex sm-flex-direction-c height-percent-100',
+            )}
+        >
+            <div
+                className={classNames(
+                    'sm-flex-width',
+                    'margin-bottom-8',
+                )}
+            >
+                {renderWidgetList('workspace', 'right', rightWidgetNames, allWidgets, listActions, {}, controlActions)}
+            </div>
+            <RayUploadWidget />
+        </div>
+    );
+};
+
 let workspaceVisualizerRef = null;
 
 interface RayLaserWorkspaceProps {
@@ -66,7 +99,6 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
 
     const defaultWidgets = useSelector((state: RootState) => state.widget.workspace.default.widgets);
 
-    const [previewModalShow, setPreviewModalShow] = useState(false);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [connected, setConnected] = useState(controller.connected);
 
@@ -110,7 +142,6 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
     };
 
     const listActions = {
-        // toggleToDefault: actions.toggleToDefault,
         onDragStart: () => {
             setIsDraggingWidget(true);
         },
@@ -180,11 +211,6 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
         onCallBackStop: () => {
             workspaceVisualizerRef.actions.handleStop();
         },
-        onPreviewModalShow: (value) => {
-            if (value !== previewModalShow) {
-                setPreviewModalShow(value);
-            }
-        }
     };
 
     function addControllerEvents() {
@@ -207,9 +233,6 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
         if (isPopup && onClose) {
             actions.addReturnButton();
         }
-        logPageView({
-            pathname: '/workspace'
-        });
 
         return () => {
             removeControllerEvents();
@@ -256,14 +279,18 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
         );
     };
 
-    const rightWidgetNames = ['connection', 'ray-machining'];
 
     return (
         <div style={style} className={classNames(className)}>
             <WorkspaceLayout
                 renderMainToolBar={renderMainToolBar}
                 renderLeftView={null}
-                renderRightView={() => renderWidgetList('workspace', 'right', rightWidgetNames, allWidgets, listActions, {}, controlActions)}
+                renderRightView={() => (
+                    <WorkspaceRightView
+                        listActions={listActions}
+                        controlActions={controlActions}
+                    />
+                )}
             >
                 <Dropzone
                     disabled={isDraggingWidget || controller.workflowState !== WORKFLOW_STATE_IDLE}

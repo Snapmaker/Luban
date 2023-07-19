@@ -77,7 +77,6 @@ const MachiningView: React.FC = () => {
 
         const gcodeFileObject: GCodeFileObject = await dispatch(gcodeActions.uploadGcodeFile(file));
 
-        // dispatch(workspaceActions.executeGcode(gcode));
         controller
             .emitEvent(CONNECTION_UPLOAD_FILE, {
                 gcodePath: `/${gcodeFileObject.uploadName}`,

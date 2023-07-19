@@ -885,13 +885,15 @@ export default class Business extends Dispatcher {
      * TODO: need option: peerId
      */
     public async uploadLargeFile(filePath: string, renderName?: string) {
-        const sizePerChunk = 988;
+        // const sizePerChunk = 968;
+        const sizePerChunk = 900;
         this.setHandler(0xb0, 0x11, (data) => {
             // md5
             const { nextOffset, result: md5HexStr } = readString(data.param);
 
             // index
             const index = readUint32(data.param, nextOffset);
+            this.log.info(`request file chuck index = ${index}`);
 
             const inputStream = fs.createReadStream(filePath, {
                 start: index * sizePerChunk,
@@ -921,6 +923,7 @@ export default class Business extends Dispatcher {
                     chunkBuffer,
                 ]);
 
+                console.log('ack', responseBuffer);
                 this.ack(0xb0, 0x11, data.packet, responseBuffer);
             });
             inputStream.once('error', () => {
@@ -977,6 +980,7 @@ export default class Business extends Dispatcher {
                         chunksBuffer,
                         md5Buffer,
                     ]);
+                    this.log.info(`start large file transfer... chuck count = ${chunks}`);
                     this.send(0xb0, 0x10, PeerId.CONTROLLER, buffer).catch(err => {
                         reject(err);
                     });
