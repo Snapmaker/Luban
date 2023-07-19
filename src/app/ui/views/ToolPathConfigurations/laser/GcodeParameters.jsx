@@ -71,7 +71,7 @@ class GcodeParameters extends PureComponent {
                     laserDefinitionFillKeys.push('direction');
                 }
             } else if (isImage) {
-                if (movementMode === 'greyscale-line') {
+                if (movementMode !== 'greyscale-dot') {
                     laserDefinitionFillKeys.push('direction');
                 }
                 laserDefinitionFillKeys.push('fillInterval');
@@ -90,7 +90,8 @@ class GcodeParameters extends PureComponent {
                 } else {
                     laserDefinitionFill[key].options = {
                         'greyscale-line': 'Line',
-                        'greyscale-dot': 'Dot'
+                        'greyscale-dot': 'Dot',
+                        'greyscale-variable-line': 'Variable Line',
                     };
                 }
             }
@@ -98,7 +99,7 @@ class GcodeParameters extends PureComponent {
 
         // Session Speed
         const laserDefinitionSpeedKeys = ['jogSpeed'];
-        if (pathType === 'fill' && movementMode === 'greyscale-line') {
+        if (pathType === 'fill' && movementMode !== 'greyscale-dot') {
             laserDefinitionSpeedKeys.push('workSpeed');
         } else if (pathType === 'path') {
             laserDefinitionSpeedKeys.push('workSpeed');
@@ -131,6 +132,10 @@ class GcodeParameters extends PureComponent {
 
         // Session Power
         const laserDefinitionPowerKeys = ['fixedPower'];
+        if (pathType === 'fill' && movementMode === 'greyscale-variable-line') {
+            laserDefinitionPowerKeys.push('fixedMinPower');
+            // laserDefinitionPowerKeys.push('powerLevelDivisions');
+        }
         const laserDefinitionPower = {};
         laserDefinitionPowerKeys.forEach((key) => {
             if (allDefinition[key]) {

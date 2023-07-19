@@ -500,7 +500,7 @@ export const LASER_PRESENT_CONFIG_GROUP = [
     },
     {
         name: 'key-Laser/ToolpathParameters-Power',
-        fields: ['fixed_power']
+        fields: ['fixed_power', 'fixed_min_power']
     }
 ];
 
@@ -749,9 +749,26 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         default_value: 'fixedPower',
         unit: '%'
     },
+    fixedMinPower: {
+        label: 'Minimum Laser Power',
+        description: 'The minimum laser power used for variable power line engraving.',
+        type: 'float',
+        min: 0,
+        max: 100,
+        default_value: 0,
+        unit: '%'
+    },
     fixedPowerEnabled: {
         type: 'bool',
         default_value: true
+    },
+    powerLevelDivisions: {
+        label: 'Laser Power Level Divisions',
+        description: 'The number of laser power classes divided between the maximum and minimum laser power. The different laser power levels will be associated with the grayscale of the image.',
+        type: 'float',
+        min: 2,
+        max: 65535,
+        default_value: 255
     },
     movementMode: {
         label: 'Movement Mode',
