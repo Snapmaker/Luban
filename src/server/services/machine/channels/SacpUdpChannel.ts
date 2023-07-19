@@ -1,11 +1,13 @@
 import dgram from 'dgram';
+import path from 'path';
 
-import SocketBASE from './SACP-BASE';
-import logger from '../../../lib/logger';
-import SocketServer from '../../../lib/SocketManager';
-import { EventOptions } from '../types';
-import Business from '../sacp/Business';
+import DataStorage from '../../../DataStorage';
 import { CONNECTION_TYPE_WIFI } from '../../../constants';
+import SocketServer from '../../../lib/SocketManager';
+import logger from '../../../lib/logger';
+import Business from '../sacp/Business';
+import { EventOptions } from '../types';
+import SocketBASE from './SACP-BASE';
 
 const log = logger('machine:channel:SacpUdpChannel');
 
@@ -89,12 +91,35 @@ class SacpUdpChannel extends SocketBASE {
     public startHeartbeat = () => {
         log.info('Start heartbeat.');
     };
+
+    public uploadFile = async (options: EventOptions) => {
+        const { eventName } = options;
+
+        const { gcodePath, renderGcodeFileName } = options;
+
+        const gcodeFullPath = path.resolve(`${DataStorage.tmpDir}${gcodePath}`);
+        const res = await this.sacpClient.uploadLargeFile(gcodeFullPath, renderGcodeFileName);
+
+        if (res.response.result === 0) {
+            const result = {
+                err: null,
+                text: ''
+            };
+            this.socket && this.socket.emit(eventName, result);
+        } else {
+            const result = {
+                err: 'failed',
+                text: 'Failed to upload file',
+            };
+            this.socket && this.socket.emit(eventName, result);
+        }
+    };
 }
 
 const channel = new SacpUdpChannel();
 
 export {
-    channel as sacpUdpChannel,
+    channel as sacpUdpChannel
 };
 
 export default SacpUdpChannel;

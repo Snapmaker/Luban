@@ -1,7 +1,10 @@
 // import store from '../../store';
+import EventEmitter from 'events';
 import { isEqual, isNil } from 'lodash';
 import request from 'superagent';
+
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, } from '../../../../app/constants/machines';
+import DataStorage from '../../../DataStorage';
 import {
     CONNECTION_TYPE_WIFI,
     HEAD_CNC,
@@ -13,14 +16,12 @@ import {
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     STANDARD_CNC_TOOLHEAD_FOR_SM2
 } from '../../../constants';
-import DataStorage from '../../../DataStorage';
+import SocketServer from '../../../lib/SocketManager';
 import { valueOf } from '../../../lib/contants-utils';
 import logger from '../../../lib/logger';
-import SocketServer from '../../../lib/SocketManager';
+import wifiServerManager from '../../socket/WifiServerManager';
 import workerManager from '../../task-manager/workerManager';
 import { EventOptions } from '../types';
-import wifiServerManager from '../../socket/WifiServerManager';
-import EventEmitter from 'events';
 
 
 let waitConfirm: boolean;

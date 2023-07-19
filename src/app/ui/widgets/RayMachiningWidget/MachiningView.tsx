@@ -1,7 +1,14 @@
 import { Alert, Button, Radio, RadioChangeEvent, Space } from 'antd';
 import React, { useCallback, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
+// import { actions as workspaceActions } from '../../../flux/workspace';
+import gcodeActions, { GCodeFileObject } from '../../../flux/workspace/action-gcode';
+import log from '../../../lib/log';
 import i18n from '../../../lib/i18n';
+import { RootState } from '../../../flux/index.def';
+import controller from '../../../lib/controller';
+import { CONNECTION_UPLOAD_FILE } from '../../../constants';
 
 
 enum SetupCoordinateMethod {
@@ -24,16 +31,69 @@ enum SetupCoordinateMethod {
  * general purpose work process.
  */
 const MachiningView: React.FC = () => {
+    const boundingBox = useSelector((state: RootState) => state.workspace.boundingBox);
+
+    // setup coordinate method
     const [setupCoordinateMethod, setSetupCoordinateMethod] = useState(SetupCoordinateMethod.Manual);
 
     const onChangeCoordinateMode = useCallback((e: RadioChangeEvent) => {
         setSetupCoordinateMethod(e.target.value);
     }, []);
 
+    // run boundary state
+    const [runBoundaryReady, setRunBoundaryReady] = useState(false);
 
-    const onClickRunBoundary = useCallback(() => {
-        console.log('Run Boundary');
-    }, []);
+    const dispatch = useDispatch();
+
+    /**
+     * On click run boundary (Manual)
+     */
+    const onClickRunBoundary = useCallback(async () => {
+        setRunBoundaryReady(false);
+        if (!boundingBox) {
+            log.warn('No bounding box provided, please upload G-code first.');
+            return;
+        }
+
+        log.info('Run Boundary... bbox =', boundingBox);
+        const bbox = boundingBox;
+
+        const gcodeList = [];
+        gcodeList.push(
+            'G90', // absolute position
+            'G92 X0 Y0', // set current position as origin
+            `G0 X${bbox.min.x} Y${bbox.min.y} F1200`, // run boundary
+            `G0 X${bbox.min.x} Y${bbox.max.y}`,
+            `G0 X${bbox.max.x} Y${bbox.max.y}`,
+            `G0 X${bbox.max.x} Y${bbox.min.y}`,
+            `G0 X${bbox.min.x} Y${bbox.min.y}`,
+            'G0 X0 Y0', // go back to origin
+        );
+
+        const gcode = gcodeList.join('\n');
+
+        const blob = new Blob([gcode], { type: 'text/plain' });
+        const file = new File([blob], 'boundary.nc');
+
+        const gcodeFileObject: GCodeFileObject = await dispatch(gcodeActions.uploadGcodeFile(file));
+
+        // dispatch(workspaceActions.executeGcode(gcode));
+        controller
+            .emitEvent(CONNECTION_UPLOAD_FILE, {
+                gcodePath: `/${gcodeFileObject.uploadName}`,
+                renderGcodeFileName: 'boundary.nc',
+            })
+            .once(CONNECTION_UPLOAD_FILE, ({ err, text }) => {
+                if (err) {
+                    log.error('Unable to upload G-code to execute.');
+                    log.error(err);
+                    log.error(`Reason: ${text}`);
+                } else {
+                    log.info('Uploaded boundary G-code.');
+                    setRunBoundaryReady(true);
+                }
+            });
+    }, [dispatch, boundingBox]);
 
     return (
         <div>
@@ -65,7 +125,11 @@ const MachiningView: React.FC = () => {
                         </div>
                         <Space direction="vertical" className="margin-top-8">
                             <Alert type="info" showIcon message="Steppers are disabled. You can push XY axes to move the tool head." />
-                            <Alert type="info" showIcon message="Please go the machine, click button to run boundary." />
+                            {
+                                runBoundaryReady && (
+                                    <Alert type="info" showIcon message="Please go the machine, click button to run boundary." />
+                                )
+                            }
                         </Space>
                     </div>
                 )
