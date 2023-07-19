@@ -23,7 +23,6 @@ import Dropzone from '../../components/Dropzone';
 import Modal from '../../components/Modal';
 import MainToolBar from '../../layouts/MainToolBar';
 import WorkspaceLayout from '../../layouts/WorkspaceLayout';
-import styles from '../../layouts/styles/workspace.styl';
 import { logPageView, renderWidgetList } from '../../utils';
 import ConnectionWidget from '../../widgets/Connection';
 import ConnectionControlWidget from '../../widgets/ConnectionControl';
@@ -32,6 +31,7 @@ import EnclosureWidget from '../../widgets/Enclosure';
 import RayMachiningWidget from '../../widgets/RayMachiningWidget';
 import VisualizerWidget from '../../widgets/WorkspaceVisualizer';
 import MachineNetworkModal from './modals/MachineNetworkModal';
+import VisualizerOverlay from './VisualizerOverlay';
 
 
 const allWidgets = {
@@ -275,12 +275,15 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
                     <div
                         ref={defaultContainer}
                         className={classNames(
-                            styles.defaultContainer,
+                            // styles.defaultContainer,
                         )}
                     >
                         <VisualizerWidget onRef={ref => childRef(ref)} />
                     </div>
                 </Dropzone>
+
+                <VisualizerOverlay />
+
                 {renderModalView(connected)}
                 {
                     showMachineNetworkModal && (

@@ -25,24 +25,25 @@ import {
     WORKFLOW_STATUS_UNKNOWN
 } from '../../constants';
 import {
+    EMERGENCY_STOP_BUTTON,
+    MACHINE_SERIES,
     findMachineByName,
     findToolHead,
-    MACHINE_SERIES,
-    EMERGENCY_STOP_BUTTON,
 } from '../../constants/machines';
 import { valueOf } from '../../lib/contants-utils';
 import { controller } from '../../lib/controller';
 import { logGcodeExport } from '../../lib/gaEvent';
 import log from '../../lib/log';
 import workerManager from '../../lib/manager/workerManager';
-import { machineStore } from '../../store/local-storage';
 import ThreeUtils from '../../scene/three-extensions/ThreeUtils';
+import { machineStore } from '../../store/local-storage';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import baseActions, { ACTION_UPDATE_STATE } from './action-base';
 import connectActions from './action-connect';
 import discoverActions from './action-discover';
+import { GCodeFileObject } from './action-gcode';
 import type { MachineStateUpdateOptions } from './state';
-import { ConnectionType, initialState, WORKSPACE_STAGE } from './state';
+import { ConnectionType, WORKSPACE_STAGE, initialState } from './state';
 
 export { WORKSPACE_STAGE } from './state';
 
@@ -883,7 +884,7 @@ export const actions = {
     },
 
     renderGcodeFile: (
-        gcodeFile,
+        gcodeFile: GCodeFileObject,
         needToList = true,
         shouldRenderGcode = false
     ) => async (dispatch, getState) => {

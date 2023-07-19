@@ -565,7 +565,6 @@ class PrintableArea {
 
     public _setMaterialsRect() {
         const { isRotate, x = 0, y = 0, fixtureLength = 20 } = this.materials;
-        console.warn('fixtureLength', fixtureLength);
         if (!isRotate) {
             return;
         }
