@@ -140,9 +140,9 @@ class ProtocolDetector {
         }, 1000);
 
         await new Promise((resolve) => {
+            let responseBuffer = Buffer.alloc(0);
             trySerialConnect.on('data', (data) => {
                 hasData = true;
-                const machineData = data.toString();
 
                 // SACP => SACP
                 if (data[0].toString(16) === 'aa' && data[1].toString(16) === '55') {
@@ -150,14 +150,18 @@ class ProtocolDetector {
                     trySerialConnect?.close();
                 }
 
+                // concat all previous buffer
+                responseBuffer = Buffer.concat([responseBuffer, data]);
+                const m1006Response = responseBuffer.toString();
+
                 // M1006 response: SACP V1 => SACP
-                if (machineData.match(/SACP/g)) {
+                if (m1006Response.match(/SACP/g)) {
                     protocol = SerialPortProtocol.SacpOverSerialPort;
                     trySerialConnect?.close();
                 }
 
                 // ok => plaintext protocol
-                if (machineData.match(/ok/g)) {
+                if (m1006Response.match(/ok/g)) {
                     protocol = SerialPortProtocol.PlainText;
                     trySerialConnect?.close();
                 }

@@ -9,14 +9,15 @@ import gcodeActions, { GCodeFileObject } from '../../../flux/workspace/action-gc
 import controller from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
+import ControlPanel from './ControlPanel';
 
 
 enum SetupCoordinateMethod {
     // Move tool manually
-    Manual = 'manual',
+    Manually = 'manually',
 
     // Move tool using control panel
-    ControlPanel = 'control-panel',
+    ByControlPanel = 'control-panel',
 }
 
 /**
@@ -34,7 +35,7 @@ const MachiningView: React.FC = () => {
     const boundingBox = useSelector((state: RootState) => state.workspace.boundingBox);
 
     // setup coordinate method
-    const [setupCoordinateMethod, setSetupCoordinateMethod] = useState(SetupCoordinateMethod.Manual);
+    const [setupCoordinateMethod, setSetupCoordinateMethod] = useState(SetupCoordinateMethod.Manually);
 
     const onChangeCoordinateMode = useCallback((e: RadioChangeEvent) => {
         setSetupCoordinateMethod(e.target.value);
@@ -99,11 +100,11 @@ const MachiningView: React.FC = () => {
             <div className="display-block margin-top-8">
                 <Radio.Group onChange={onChangeCoordinateMode} value={setupCoordinateMethod}>
                     <Space direction="vertical">
-                        <Radio value={SetupCoordinateMethod.Manual}>
+                        <Radio value={SetupCoordinateMethod.Manually}>
                             <span className="display-block font-weight-bold">{i18n._('Use origin by move tool head manually')}</span>
                             <span className="display-block color-black-3">{i18n._('In this mode, steppers will be disabled. You will need to move the tool head to align light spot to desired origin.')}</span>
                         </Radio>
-                        <Radio value={SetupCoordinateMethod.ControlPanel}>
+                        <Radio value={SetupCoordinateMethod.ByControlPanel}>
                             <span className="display-block font-weight-bold">{i18n._('Use origin set by control panel')}</span>
                             <span className="display-block color-black-3">{i18n._('In this mode, you will need to set origin using the control pad. Use the control panel to move the tool head to align light spot to desired origin. Then set it as origin of your job.')}</span>
                         </Radio>
@@ -111,7 +112,7 @@ const MachiningView: React.FC = () => {
                 </Radio.Group>
             </div>
             {
-                setupCoordinateMethod === SetupCoordinateMethod.Manual && (
+                setupCoordinateMethod === SetupCoordinateMethod.Manually && (
                     <div className="margin-top-8">
                         <div className="width-percent-100">
                             <Button
@@ -135,9 +136,9 @@ const MachiningView: React.FC = () => {
             }
 
             {
-                setupCoordinateMethod === SetupCoordinateMethod.ControlPanel && (
+                setupCoordinateMethod === SetupCoordinateMethod.ByControlPanel && (
                     <div className="margin-top-8">
-                        TODO: Control Panel for XY axes only
+                        <ControlPanel />
                     </div>
                 )
             }
