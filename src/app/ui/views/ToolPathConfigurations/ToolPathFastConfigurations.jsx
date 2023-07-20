@@ -181,6 +181,7 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
                 if (newSettings.fixed_power) newSettings.fixed_power.default_value = gcodeConfig?.fixedPower;
                 if (newSettings.fixed_min_power) newSettings.fixed_min_power.default_value = gcodeConfig?.fixedMinPower;
                 if (newSettings.power_level_divisions) newSettings.power_level_divisions.default_value = gcodeConfig?.powerLevelDivisions;
+                if (newSettings.auxiliary_air_pump) newSettings.auxiliary_air_pump.default_value = gcodeConfig?.auxiliaryAirPump;
             }
         }
         if (currentToolDefinition?.definitionId !== activeToolDefinition?.definitionId) {

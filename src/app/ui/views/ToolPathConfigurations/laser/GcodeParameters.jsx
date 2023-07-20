@@ -143,6 +143,15 @@ class GcodeParameters extends PureComponent {
             }
         });
 
+        // Session Auxiliary Gas
+        const laserDefinitionAuxiliaryGasKeys = ['auxiliaryAirPump'];
+        const laserDefinitionAuxiliary = {};
+        laserDefinitionAuxiliaryGasKeys.forEach((key) => {
+            if (allDefinition[key]) {
+                laserDefinitionAuxiliary[key] = allDefinition[key];
+            }
+        });
+
         return (
             <React.Fragment>
                 <div>
@@ -244,6 +253,23 @@ class GcodeParameters extends PureComponent {
                         />
                     </div>
                 )}
+                <div>
+                    <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
+                        <SvgIcon
+                            name="TitleSetting"
+                            type={['static']}
+                            size={24}
+                        />
+                        <span>{i18n._('key-Laser/ToolpathParameters-Auxiliary Gas')}</span>
+                    </div>
+                    <ToolParameters
+                        settings={laserDefinitionAuxiliary}
+                        updateToolConfig={this.props.updateToolConfig}
+                        updateGcodeConfig={this.props.updateGcodeConfig}
+                        toolPath={this.props.toolPath}
+                        styleSize="large"
+                    />
+                </div>
             </React.Fragment>
         );
     }
