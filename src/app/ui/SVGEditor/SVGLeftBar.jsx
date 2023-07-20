@@ -81,7 +81,7 @@ const SVGLeftBar = forwardRef((props, ref) => {
         },
         stopDraw: () => {
             props.onStopDraw(true);
-        }
+        },
     };
 
     useImperativeHandle(ref, () => ({

@@ -213,8 +213,6 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
             || nextProps.coordinateSize.x !== this.props.coordinateSize.x
             || nextProps.coordinateSize.y !== this.props.coordinateSize.y
             || nextProps.origin !== this.props.origin) {
-            console.log('origin =', nextProps.origin);
-
             const printableArea = this.printableArea;
             printableArea.updateCoordinateMode(nextProps.origin, nextProps.coordinateMode, nextProps.coordinateSize);
 

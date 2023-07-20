@@ -63,6 +63,7 @@ type SVGEditorProps = {
         getMouseTargetByCoordinate: (elements, options) => void;
         isSelectedAllVisible: (elements, options) => void;
     };
+    onChangeFile: (event: MouseEvent) => void;
 
     showContextMenu: (event) => void;
 
