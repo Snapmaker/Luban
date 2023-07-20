@@ -291,13 +291,9 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         });
         const bbox = element.getBBox();
         const scale = 100 / Math.max(bbox.width, bbox.height);
+        // TODO: calculate the <path> transform is better?
         const TranslateCanvasCenterX = canvasCenterX - (bbox.x + bbox.width / 2);
         const TranslateCanvasCenterY = canvasCenterY - (bbox.y + bbox.height / 2);
-        // TODO: calculate the <path> transform is better?
-        // const scaledCenterX = canvasCenterX * scale;
-        // const scaledCenterY = canvasCenterY * scale;
-        // const scaledTranslateCanvasCenterX = canvasCenterX - scaledCenterX;
-        // const scaledTranslateCanvasCenterY = canvasCenterY - scaledCenterY;
         const scaledTranslateCanvasCenterX = -10000000000;
         const scaledTranslateCanvasCenterY = -10000000000;
         element.setAttribute('x', canvasCenterX - bbox.width * scale / 2);

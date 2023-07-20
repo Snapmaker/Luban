@@ -264,40 +264,41 @@ const SVGLeftBar = forwardRef((props, ref) => {
                 {
                     extShape.showExtShape && mode === 'ext' && (
                         <div
-                            style={{ 'height': 'calc(100vh - 26px - 68px - 16px - 248px - 16px - 16px)' }}
-                            className="position-absolute overflow-hidden width-432 margin-left-72 margin-top-16 margin-bottom-16 height-528 border-default-grey-1 border-radius-8 background-color-white"
+                            style={{ 'height': 'calc(100vh - 26px - 68px - 12px)' }}
+                            className={classNames('position-absolute overflow-hidden margin-left-72 margin-bottom-8 z-index-1 border-default-grey-1 border-radius-8 background-color-white', styles['width-366'])}
                         >
                             <div className="border-bottom-normal padding-horizontal-16 height-40">
-                                {i18n._('key-Laser/LeftBar-Insert Draw')}
+                                {i18n._('key-Laser/LeftBar-Insert Shape')}
                             </div>
-                            <div className="overflow-y-auto border-radius-8" style={{ height: 'calc(100% - 40px)' }}>
+                            <div className={classNames('padding-horizontal-16 height-40', styles['online-libary'])}>
+                                <span className={classNames(styles['negative-ml-12'])}>
+                                    <SvgIcon
+                                        type={['hoverNoBackground', 'pressSpecial']}
+                                        color="#545659"
+                                        size={14}
+                                        name="MainToolbarModelRepository"
+                                        disabled
+                                        className={
+                                            classNames('background-transparent',
+                                                'padding-horizontal-4', 'position-re',
+                                                styles['btn-center-ext'])
+                                        }
+                                    />
+                                </span>
+                                {i18n._('key-Laser/LeftBar-Online Libary Tip')}
+                                <span className={classNames(styles['blue-text'])}> {i18n._('key-Laser/LeftBar-Online Libary')}</span>
+                            </div>
+                            <div className="overflow-y-auto border-radius-8" style={{ height: 'calc(100% - 40px - 40px - 5vh)' }}>
                                 <div className="sm-flex">
                                     <div
                                         className={classNames(styles['center-ext'])}
                                     >
                                         {_.map(library.use, (key) => {
                                             return (
-                                                // <SvgIcon
-                                                //     key={key}
-                                                //     type={['hoverNormal', 'pressSpecial']}
-                                                //     color="#545659"
-                                                //     size={48}
-                                                //     name={`Toolbar${key.split('-').map(word => word[0].toUpperCase() + word.slice(1)).join('')}`}
-                                                //     disabled={!editable}
-                                                //     className={
-                                                //         classNames('background-transparent',
-                                                //             'padding-horizontal-4', 'position-re',
-                                                //             styles['btn-center-ext'],
-                                                //             { [styles.selected]: extShape === key })
-                                                //     }
-                                                //     onClick={() => actions.createExt(key)}
-                                                // />
-                                                // actions.setMode('ext', key)
                                                 <svg
                                                     onClick={() => actions.createExt(key)}
                                                     xmlns="http://www.w3.org/2000/svg"
-                                                    // width="48"
-                                                    // height="48"
+                                                    role="button"
                                                     viewBox="0 0 300 300"
                                                     style={{ background: 'transparent', 'border-bottom': 0 }}
                                                     fill="#545659"
