@@ -306,9 +306,8 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             {
                 title: i18n._('key-CncLaser/MainToolBar-Mask'),
                 type: 'button',
-                name: 'MainToolbarMask',
+                name: 'MainToolbarInversemask',
                 action: async () => {
-                    console.log(LaserSelectedModelArray);
                     const svgs = LaserSelectedModelArray.filter(v => v.sourceType === 'svg' && v.mode === PROCESS_MODE_VECTOR);
                     const imgs = LaserSelectedModelArray.filter(v => v.sourceType !== 'svg' || v.mode === PROCESS_MODE_GREYSCALE);
                     const clipSvgTag = await handleClipPath(svgs, imgs);
@@ -324,14 +323,11 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             {
                 title: i18n._('key-CncLaser/MainToolBar-Inverse Mask'),
                 type: 'button',
-                name: 'MainToolbarInversesMask',
+                name: 'MainToolbarMask',
                 action: async () => {
-                    console.log(LaserSelectedModelArray);
                     const svgs = LaserSelectedModelArray.filter(v => v.sourceType === 'svg' && v.mode === PROCESS_MODE_VECTOR);
                     const imgs = LaserSelectedModelArray.filter(v => v.sourceType !== 'svg' || v.mode === PROCESS_MODE_GREYSCALE);
-                    console.log(svgs, imgs);
                     const maskSvgTag = await handleMask(svgs, imgs);
-                    console.log(maskSvgTag);
                     dispatch(editorActions.uploadImage(HEAD_LASER, maskSvgTag, PROCESS_MODE_GREYSCALE, () => {
                         modal({
                             cancelTitle: i18n._('key-Laser/Edit/ContextMenu-Close'),

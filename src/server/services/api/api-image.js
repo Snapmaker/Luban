@@ -47,7 +47,6 @@ export const set = async (req, res) => {
     const { isRotate } = req.body;
     let originalName, tempName, tempPath, originalPath;
     // if 'files' does not exist, the model in the case library is being loaded
-    console.log('req.files', req.files);
     try {
         if (files) {
             const file = files.image;
@@ -67,7 +66,6 @@ export const set = async (req, res) => {
             tempPath = `${DataStorage.tmpDir}/${tempName}`;
         }
         const extname = path.extname(tempName).toLowerCase();
-        console.log('extname', extname);
 
         if (files) {
             // jpg image may have EXIF data, parse it

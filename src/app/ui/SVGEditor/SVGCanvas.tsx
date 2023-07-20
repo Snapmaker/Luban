@@ -213,8 +213,6 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
             || nextProps.coordinateSize.x !== this.props.coordinateSize.x
             || nextProps.coordinateSize.y !== this.props.coordinateSize.y
             || nextProps.origin !== this.props.origin) {
-            console.log('origin =', nextProps.origin);
-
             const printableArea = this.printableArea;
             printableArea.updateCoordinateMode(nextProps.origin, nextProps.coordinateMode, nextProps.coordinateSize);
 
@@ -526,7 +524,6 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
 
         const matrix = this.svgContentGroup.getScreenCTM().inverse();
         const pt = transformPoint({ x: event.pageX, y: event.pageY }, matrix);
-        console.log('event', event);
         const x = pt.x;
         const y = pt.y;
         const mouseTarget = this.getMouseTarget(event, x, y);
@@ -756,7 +753,6 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
                 // newText.textContent = 'text';
                 break;
             case 'ext': {
-                console.log('mode:', this.mode);
                 if (!this.extShape) {
                     return;
                 }
@@ -777,13 +773,11 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
                         'stroke-width': 1
                     }
                 });
-                console.log(elem);
                 draw.bbox = getBBox(elem);
 
                 const transform1 = this.svgContainer.createSVGTransform();
                 const scale = this.svgContainer.createSVGTransform();
                 const transform2 = this.svgContainer.createSVGTransform();
-                console.log(elem);
                 transform1.setTranslate(0, 0);
                 scale.setScale(0.0001, 0.0001);
                 transform2.setTranslate(draw.startX, draw.startY);
@@ -986,7 +980,6 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
                     if (dx === 0 && dy === 0) {
                         break;
                     }
-                    console.log(x, y);
                     this.svgContentGroup.drawGroup.onMouseMove(event, [x, y], [dx, dy]);
                 }
                 // TODO select with drawing box
@@ -1303,19 +1296,9 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
             if (keep) {
                 // recover opacity of element newly created
                 element.setAttribute('opacity', this.currentProperties.opacity);
-
-
-                // const elem = this.svgContentGroup.addSVGElement({
-                //     element: 'clipPath',
-                //     curStyles: true,
-                // });
-                // elem.append(element.cloneNode(true));
-                // console.log(elem);
-
                 cleanupAttributes(element);
 
                 this.props.onCreateElement(element);
-
 
                 // TODO: select model newly created
                 // this.addToSelection([element]);

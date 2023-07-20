@@ -1,12 +1,76 @@
 import { v4 as uuid } from 'uuid';
 import Canvg from 'canvg';
 import { createSVGElement, setAttributes } from '../element-utils';
-import { flattenNestedGroups } from './FlattenNestedGroups';
+import { NS } from './namespaces';
 import SvgModel from '../../../models/SvgModel';
 
 enum SvgImageCombineType {
     mask,
     clipPath
+}
+/**
+ * Flattens nested <g> elements in an SVG by extracting and applying transformations to <path> elements.
+ * @param {SVGSVGElement} svgRoot - The root SVG element to process.
+ * @returns {SVGSVGElement} - The modified SVG root element without nested <g> elements.
+ */
+function flattenNestedGroups(svgRoot: SVGSVGElement | HTMLElement): SVGSVGElement {
+    const paths = [];
+    /**
+     * Extracts <path> elements from a group (<g>) and applies transformation matrices recursively.
+     * @param {SVGSVGElement} group - The SVG group element to process.
+     * @param {DOMMatrix} currentMatrix - The current transformation matrix.
+     */
+    function extractPathsFromGroup(group: SVGElement, currentMatrix: DOMMatrix) {
+        const children = group.childNodes;
+
+        for (let i = 0; i < children.length; i++) {
+            const child = children[i] as SVGAElement;
+
+            if (!child.transform || typeof child.transform.baseVal.consolidate !== 'function') {
+                // If it's an element like <text>, clone and add it to the paths array.
+                const text = child.cloneNode(true);
+                paths.push(text);
+            } else if (child.tagName !== 'g') {
+                // If it's a <path> element, clone it and apply the transformation matrix.
+                const path = child.cloneNode(true);
+
+                // Apply the matrix transformation
+                if (currentMatrix) {
+                    const childMatrix = child.transform.baseVal.consolidate() ? child.transform.baseVal.consolidate().matrix : document.createElementNS(NS.SVG, 'svg').createSVGMatrix();
+                    const combinedMatrix = currentMatrix.multiply(childMatrix);
+                    const transformString = `matrix(${combinedMatrix.a}, ${combinedMatrix.b}, ${combinedMatrix.c}, ${combinedMatrix.d}, ${combinedMatrix.e}, ${combinedMatrix.f})`;
+                    path.setAttribute('transform', transformString);
+                }
+
+                paths.push(path);
+            } else {
+                // If it's a <g> element, recursively call the function to process its child elements, passing the current transformation matrix.
+                const childMatrix = child.transform.baseVal.consolidate() ? child.transform.baseVal.consolidate().matrix : document.createElementNS(NS.SVG, 'svg').createSVGMatrix();
+                const combinedMatrix = currentMatrix ? currentMatrix.multiply(childMatrix) : childMatrix;
+                extractPathsFromGroup(child, combinedMatrix);
+            }
+        }
+    }
+
+    // Get the initial transformation matrix of the SVG root element.
+    const rootMatrix = svgRoot.createSVGMatrix();
+
+    // Extract path elements from the SVG root element.
+    extractPathsFromGroup(svgRoot, rootMatrix);
+
+    // Remove all <g> elements from the SVG root.
+    const groups = svgRoot.getElementsByTagName('g');
+    for (let i = groups.length - 1; i >= 0; i--) {
+        const group = groups[i];
+        group.parentNode.removeChild(group);
+    }
+
+    // Append all <path> elements to the svgRoot element.
+    for (const path of paths) {
+        svgRoot.appendChild(path);
+    }
+
+    return svgRoot;
 }
 
 // Helper function to multiply two 2D matrices
@@ -54,7 +118,6 @@ const decomposeMatrix = (matrix) => {
         scaleX = 0;
         scaleY = 0;
     }
-    console.log(translateX, translateY, scaleX, scaleY, skewX, skewY, angle);
 
     return {
         translateX,
@@ -455,17 +518,7 @@ const createSvg = (
     children.forEach((v) => g.appendChild(v));
     svgElement.appendChild(g);
 
-    console.log(
-        'svgElement',
-        new XMLSerializer().serializeToString(svgElement)
-    );
     rotatePath(g, svgRotate.params[0] || 0);
-    console.log(
-        'rotatePath',
-        new XMLSerializer().serializeToString(svgElement)
-    );
-    // eslint-disable-next-line
-    // debugger;
     flattenNestedGroups(svgElement);
     const [
         originalViewX,
@@ -476,11 +529,6 @@ const createSvg = (
     viewWidth = viewWidth || originalViewWidth;
     viewHeight = viewHeight || originalViewHeight;
 
-    console.log(
-        'flattenNestedGroups',
-        new XMLSerializer().serializeToString(svgElement),
-        rotatePath
-    );
     const attributes: { transform?: string } = {};
     const scaleWidth = getScale(
         svg.elem,
@@ -521,20 +569,6 @@ const createSvg = (
         const rotate = transformAttrs.find((attr) => attr.type === 'rotate');
         const skewX = transformAttrs.find((attr) => attr.type === 'skewX');
         const skewY = transformAttrs.find((attr) => attr.type === 'skewY');
-        console.log(
-            'rotate',
-            getScale,
-            scale,
-            viewboxX,
-            viewboxY,
-            translate,
-            originalViewX,
-            originalViewY,
-            scaleWidth,
-            scaleHeight,
-            x,
-            y
-        );
 
         // caculate tag finally transform
         const currX = combineTranslate(
@@ -607,7 +641,6 @@ const getSvgString = async (
             );
         })
         .catch((error) => {
-            // 处理错误
             console.error('Error:', error);
         });
 };
@@ -785,7 +818,6 @@ export const handleClipPath = async (svgs: SvgModel[], imgs: SvgModel[], holeSvg
         holeSvg ? gElem : undefined // if we need the hole svg
     );
 
-    console.log('svgTag', svgTag);
     const canvas = await svgToCanvas(svgTag, viewWidth, viewHeight);
     const img = await canvasToImage(canvas);
     return img;
@@ -864,312 +896,6 @@ export const handleMask = async (svgs: SvgModel[], imgs: SvgModel[]): Promise<Fi
     );
     const canvas = await svgToCanvas(svgTag, viewWidth, viewHeight);
     const img = await canvasToImage(canvas);
-    console.log('svgTag', svgTag);
     return img;
 };
 
-// interface ImageSvgComposeOption {
-//     viewBoxX?: number
-//     viewboxY?: number
-//     viewWidth?: number
-//     viewHeight?: number
-//     widthRatio?: 1,
-//     heightRatio?: 1
-// }
-// interface SvgHandleObj {
-//     elem?: SVGElement
-//     originalUrl?: string,
-//     angle?: number
-//     wrapperElemX?: number,
-//     wrapperElemY?: number,
-//     wrapperTransform?: string
-
-// }
-// export class ImageSvgCombine {
-//     public svgs: SvgHandleObj[];
-//     public images: SVGImageElement[] | string[];
-//     public options: ImageSvgComposeOption;
-
-//     public constructor(
-//         svgs: SvgHandleObj[],
-//         images: SVGImageElement[] | string[],
-//         options: ImageSvgComposeOption
-//     ) {
-//         this.svgs = svgs;
-//         this.images = images;
-//         this.options = Object.assign(
-//             {
-//                 viewBoxX: 0,
-//                 viewboxY: 0,
-//                 viewWidth: 0,
-//                 viewHeight: 0,
-//                 widthRatio: 1,
-//                 heightRatio: 1
-//             },
-//             options
-//         );
-//         console.log('start');
-
-//         this.initImage();
-//     }
-
-//     public initImage() {
-//         if (!Array.isArray(this.images)) { throw new Error('images must be a Array type!'); }
-//         // TODO: To handle the case when images is of type string[]
-//         // if (this.images[0] instanceof String) {
-//         //     this.images = this.images.map(image => `<image id="${uuid()}" invert="false" contrast="50" brightness="50"
-//         // whiteClip="255" bwThreshold="168" algorithm="Atkinson" svgNodeName="image" x="280" y="380.4830917874396"
-//         // width="240" height="39.033816425120776" href="${image}" transform="translate(400 400) rotate(0) scale(1 1)
-//         // translate(-400 -400)" ></image>`);
-//         // }
-//     }
-
-//     public async mask() {
-//         const { viewboxX, viewboxY, viewWidth, viewHeight, widthRatio, heightRatio } = this.options;
-//         // create svg
-//         const maskElem = createSVGElement({
-//             element: 'mask',
-//             attr: {
-//                 id: `${uuid()}`,
-//                 // width: viewWidth,
-//                 // height: viewHeight
-//             },
-//         }) as SVGMaskElement;
-//         const rect = createSVGElement({
-//             element: 'rect',
-//             attr: {
-//                 width: '100%',
-//                 height: '100%',
-//                 fill: 'white',
-//                 'fill-opacity': 1,
-//             },
-//         });
-//         const othersElem = [];
-//         setAttributes(rect, { x: 0, y: 0 });
-//         maskElem.append(rect);
-//         for (let i = 0; i < this.svgs.length; i++) {
-//             const svgShapeTags = await this._getSvgString(this.svgs[i]);
-//             if (!svgShapeTags) continue;
-//             svgShapeTags.forEach((svgShapeTag) => {
-//                 // !svgShapeTag.hasAttribute('fill') &&
-//                 svgShapeTag.setAttribute('fill', 'black');
-//                 !svgShapeTag.hasAttribute('fill-opacity')
-//                     && svgShapeTag.setAttribute('fill-opacity', '1');
-//                 if (isShapeSvg(svgShapeTag)) {
-//                     maskElem.append(svgShapeTag);
-//                 } else {
-//                     othersElem.push(svgShapeTag);
-//                 }
-//             });
-//         }
-//         this.images.forEach((img) => {
-//             img.removeAttribute('clip-path');
-//             img.setAttribute('mask', `url(#${maskElem.id})`);
-//         });
-
-
-//         const svgTag = createSvgStr(
-//             maskElem,
-//             othersElem,
-//             this.images,
-//             viewboxX,
-//             viewboxY,
-//             viewWidth,
-//             viewHeight
-//         );
-//         const canvas1 = await svgToCanvas(svgTag, viewWidth, viewHeight);
-//         const img = await canvasToImage(canvas1);
-//         return img;
-//     }
-
-//     /**
-//      * Retrieves the SVG string for the specified SVG element and converts it to a transformed SVG element.
-//      * @param svg The SVG element information.
-//      * @param viewboxX The X-coordinate of the viewbox.
-//      * @param viewboxY The Y-coordinate of the viewbox.
-//      * @param viewWidth The width of the viewbox.
-//      * @param viewHeight The height of the viewbox.
-//      * @param widthRatio The width ratio for scaling.
-//      * @param heightRatio The height ratio for scaling.
-//      * @returns A Promise that resolves to an array of transformed child elements of the created SVG element.
-//      */
-//     public async getSvgString(svg: SvgHandleObj): Promise<Element[] | void> {
-//         const url = svg.elem || svg.originalUrl;
-//         return fetch(`${url}`)
-//             .then(async (response) => response.text())
-//             .then((svgString) => {
-//                 return this._createSvg(svgString);
-//             })
-//             .catch((error) => {
-//                 // 处理错误
-//                 console.error('Error:', error);
-//             });
-//     }
-
-//     /**
-//      * Creates an SVG element from the SVG string and applies transformations.
-//      * @param svgString The SVG string to create the SVG element from.
-//      * @param svg The original SVG element information.
-//      * @param viewboxX The X-coordinate of the viewbox.
-//      * @param viewboxY The Y-coordinate of the viewbox.
-//      * @param viewWidth The width of the viewbox.
-//      * @param viewHeight The height of the viewbox.
-//      * @param widthRatio The width ratio for scaling.
-//      * @param heightRatio The height ratio for scaling.
-//      * @returns An array of transformed child elements of the created SVG element.
-//      */
-//     public _createSvg(
-//         svgString: string,
-//         svg: SvgHandleObj,
-//     ): Element[] {
-//         // const x = parseFloat(svg.elem.getAttribute('x'))
-//         //     || ((svg.elem.getBBox() && svg.elem.getBBox().x) || 0) * widthRatio;
-//         // const y = parseFloat(svg.elem.getAttribute('y'))
-//         //     || ((svg.elem.getBBox() && svg.elem.getBBox().y) || 0) * heightRatio;
-//         // const svgTransforms = parseTransform(svg.elem.getAttribute('transform'));
-//         const x = svg.wrapperElemX
-//         const y = svg.wrapperElemY
-//         const svgTransforms = parseTransform(svg.wrapperTransform)
-//         const svgRotate = svgTransforms.find((attr) => attr.type === 'rotate');
-
-//         const parser = new DOMParser();
-//         const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
-//         const svgElement = svgDoc.documentElement;
-//         document.body.appendChild(svgElement);
-
-//         // create svg
-//         const g = createSVGElement({
-//             element: 'g',
-//             attr: {
-//                 id: `${uuid()}`,
-//                 transform: '',
-//                 // transform: `rotate(${svgRotate.params[0] || 0})`
-//                 // width: viewWidth,
-//                 // height: viewHeight
-//             },
-//         }) as SVGGElement;
-//         let children = Array.from(svgElement.children);
-//         children.forEach((v) => g.appendChild(v));
-//         svgElement.appendChild(g);
-
-//         console.log(
-//             'svgElement',
-//             new XMLSerializer().serializeToString(svgElement)
-//         );
-//         rotatePath(g, svgRotate.params[0] || 0);
-//         console.log(
-//             'rotatePath',
-//             new XMLSerializer().serializeToString(svgElement)
-//         );
-//         // eslint-disable-next-line
-//         // debugger;
-//         flattenNestedGroups(svgElement);
-//         const [
-//             originalViewX,
-//             originalViewY,
-//             originalViewWidth,
-//             originalViewHeight,
-//         ] = svgElement.getAttribute('viewBox').split(' ').map(parseFloat);
-//         viewWidth = viewWidth || originalViewWidth;
-//         viewHeight = viewHeight || originalViewHeight;
-
-//         console.log(
-//             'flattenNestedGroups',
-//             new XMLSerializer().serializeToString(svgElement),
-//             rotatePath
-//         );
-//         const attributes: { transform?: string } = {};
-//         const scaleWidth = getScale(
-//             svg.elem,
-//             'width',
-//             widthRatio,
-//             viewWidth,
-//             originalViewWidth
-//         );
-//         const scaleHeight = getScale(
-//             svg.elem,
-//             'height',
-//             heightRatio,
-//             viewHeight,
-//             originalViewHeight
-//         );
-
-//         children = Array.from(svgElement.children);
-//         const combineTranslate = (
-//             translateValue = 0,
-//             originalViewBoxValue = 0,
-//             svgScaleValue = 1,
-//             currXorYValue = 0
-//         ) => {
-//             return (
-//                 (translateValue - originalViewBoxValue) * svgScaleValue
-//                 + currXorYValue
-//                 + 0
-//             );
-//         };
-//         for (let i = 0; i < children.length; i++) {
-//             const curr = children[i];
-//             const transformAttrs = parseTransform(curr.getAttribute('transform'));
-//             // TODO: handle have multi same transforms like "translate(10, 10) rotate(45) translate(20, 20)"
-//             const translate = transformAttrs.find(
-//                 (attr) => attr.type === 'translate'
-//             );
-//             const scale = transformAttrs.find((attr) => attr.type === 'scale');
-//             const rotate = transformAttrs.find((attr) => attr.type === 'rotate');
-//             const skewX = transformAttrs.find((attr) => attr.type === 'skewX');
-//             const skewY = transformAttrs.find((attr) => attr.type === 'skewY');
-//             console.log(
-//                 'rotate',
-//                 getScale,
-//                 scale,
-//                 viewboxX,
-//                 viewboxY,
-//                 translate,
-//                 originalViewX,
-//                 originalViewY,
-//                 scaleWidth,
-//                 scaleHeight,
-//                 x,
-//                 y
-//             );
-
-//             // caculate tag finally transform
-//             const currX = combineTranslate(
-//                 translate && translate.params[0],
-//                 originalViewX,
-//                 scaleWidth,
-//                 x
-//             );
-//             const currY = combineTranslate(
-//                 translate && translate.params[1],
-//                 originalViewY,
-//                 scaleHeight,
-//                 y
-//             );
-//             const currScaleWidth = scale
-//                 ? scale.params[0] * scaleWidth
-//                 : scaleWidth;
-//             const currScaleHeight = scale
-//                 ? scale.params[1] * scaleHeight
-//                 : scaleHeight;
-//             const currRotate = (rotate
-//                     && (currScaleWidth < 0 || currScaleHeight < 0
-//                         ? -rotate.params[0]
-//                         : rotate.params[0]))
-//                 || 0;
-//             const currSkewX = (skewX && skewX.params[0]) || 0;
-//             const currSkewY = (skewY && skewY.params[0]) || 0;
-//             attributes.transform = `translate(${currX - viewboxX} ${
-//                 currY - viewboxY
-//             }) scale(${currScaleWidth} ${currScaleHeight}) rotate(${currRotate}) skewX(${currSkewX}) skewY(${currSkewY})`;
-//             setAttributes(curr, attributes);
-
-//             // apply image(from luban fontend canvas) rotate to tag
-//             // Because they are different coordinate systems, the rotate value on the tag cannot be directly added.
-//             // const rootRotateValue = currScaleWidth > 0 && currScaleHeight > 0 ? (svgRotate.params[0] || 0) : -(svgRotate.params[0] || 0);
-//             // rotatePath(curr, rootRotateValue);
-//         }
-//         document.body.removeChild(svgElement);
-//         return children;
-//     }
-// }

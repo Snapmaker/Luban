@@ -518,14 +518,11 @@ class SVGActionsFactory {
      * @returns {Promise<void>}
      */
     async createModelFromElement(element) {
-        console.log(element);
         const headType = this.modelGroup.headType;
         const isRotate = this.modelGroup.materials && this.modelGroup.materials.isRotate;
 
         const data = genModelConfig(element, this.size, this.modelGroup.materials);
         const { modelID, content, width: dataWidth, height: dataHeight, transformation, config: elemConfig } = data;
-        console.log(content);
-        console.log(transformation);
         let res, textSize;
         try {
             const isText = element.nodeName === 'text';
@@ -575,8 +572,6 @@ class SVGActionsFactory {
                 elem: element,
                 size: this.size
             };
-            console.log(options);
-            console.log(element);
             const svgModel = this.modelGroup.addModel(options);
             svgModel.setParent(this.svgContentGroup.group);
             svgModel.setPreSelection(this.svgContentGroup.preSelectionGroup);

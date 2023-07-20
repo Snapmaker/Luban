@@ -62,7 +62,7 @@ type SVGEditorProps = {
         getMouseTargetByCoordinate: (elements, options) => void;
         isSelectedAllVisible: (elements, options) => void;
     };
-    onChangeFile()
+    onChangeFile: (event: MouseEvent) => void;
 
     showContextMenu: (event) => void;
 
@@ -269,7 +269,6 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
     const onDrawTransformComplete = (...args) => {
         props.editorActions.onDrawTransformComplete(...args);
     };
-
 
     return (
         <React.Fragment>
