@@ -3,12 +3,12 @@ import React, { useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 // import { actions as workspaceActions } from '../../../flux/workspace';
-import gcodeActions, { GCodeFileObject } from '../../../flux/workspace/action-gcode';
-import log from '../../../lib/log';
-import i18n from '../../../lib/i18n';
-import { RootState } from '../../../flux/index.def';
-import controller from '../../../lib/controller';
 import { CONNECTION_UPLOAD_FILE } from '../../../constants';
+import { RootState } from '../../../flux/index.def';
+import gcodeActions, { GCodeFileObject } from '../../../flux/workspace/action-gcode';
+import controller from '../../../lib/controller';
+import i18n from '../../../lib/i18n';
+import log from '../../../lib/log';
 
 
 enum SetupCoordinateMethod {
@@ -100,12 +100,12 @@ const MachiningView: React.FC = () => {
                 <Radio.Group onChange={onChangeCoordinateMode} value={setupCoordinateMethod}>
                     <Space direction="vertical">
                         <Radio value={SetupCoordinateMethod.Manual}>
-                            <span className="display-block font-weight-bold">Use origin by move tool head manually</span>
-                            <span className="display-block color-black-3">In this mode, steppers will be disabled. You will need to move the tool head to align light spot to desired origin.</span>
+                            <span className="display-block font-weight-bold">{i18n._('Use origin by move tool head manually')}</span>
+                            <span className="display-block color-black-3">{i18n._('In this mode, steppers will be disabled. You will need to move the tool head to align light spot to desired origin.')}</span>
                         </Radio>
                         <Radio value={SetupCoordinateMethod.ControlPanel}>
-                            <span className="display-block font-weight-bold">Use origin set by control panel</span>
-                            <span className="display-block color-black-3">In this mode, you will need to set origin using the control pad. Use the control panel to move the tool head to align light spot to desired origin. Then set it as origin of your job.</span>
+                            <span className="display-block font-weight-bold">{i18n._('Use origin set by control panel')}</span>
+                            <span className="display-block color-black-3">{i18n._('In this mode, you will need to set origin using the control pad. Use the control panel to move the tool head to align light spot to desired origin. Then set it as origin of your job.')}</span>
                         </Radio>
                     </Space>
                 </Radio.Group>
@@ -123,10 +123,10 @@ const MachiningView: React.FC = () => {
                             </Button>
                         </div>
                         <Space direction="vertical" className="margin-top-8">
-                            <Alert type="info" showIcon message="Steppers are disabled. You can push XY axes to move the tool head." />
+                            <Alert type="info" showIcon message={i18n._('Steppers are disabled. You can push XY axes to move the tool head.')} />
                             {
                                 runBoundaryReady && (
-                                    <Alert type="info" showIcon message="Please go the machine, click button to run boundary." />
+                                    <Alert type="info" showIcon message={i18n._('Please go the machine, click button to run boundary.')} />
                                 )
                             }
                         </Space>
