@@ -7,6 +7,7 @@ import { SVG_EVENT_CONTEXTMENU } from './constants';
 import SVGCanvas from './SVGCanvas';
 import SVGLeftBar from './SVGLeftBar';
 import { Materials } from '../../constants/coordinate';
+import { library } from './lib/ext-shapes';
 
 
 export type SVGEditorHandle = {
@@ -269,6 +270,41 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         props.editorActions.onDrawTransformComplete(...args);
     };
 
+    const createExt = (ext) => {
+        const { SVGActions, coordinateMode, coordinateSize } = props;
+        const centerX = (coordinateSize.x / 2) * coordinateMode.setting.sizeMultiplyFactor.x;
+        const centerY = (-coordinateSize.y / 2) * coordinateMode.setting.sizeMultiplyFactor.y;
+        const d = library.data[ext];
+        const canvasCenterX = SVGActions.size.x + centerX; // calculate center,
+        const canvasCenterY = SVGActions.size.y + centerY;
+        const element = canvas.current.svgContentGroup.addSVGElement({
+            element: 'path',
+            curStyles: true,
+            attr: {
+                from: 'inner-svg',
+                x: canvasCenterX,
+                y: canvasCenterY,
+                d: d,
+                opacity: 0,
+                'stroke-width': 0,
+            }
+        });
+        const bbox = element.getBBox();
+        const scale = 100 / Math.max(bbox.width, bbox.height);
+        // TODO: calculate the <path> transform is better?
+        const TranslateCanvasCenterX = canvasCenterX - (bbox.x + bbox.width / 2);
+        const TranslateCanvasCenterY = canvasCenterY - (bbox.y + bbox.height / 2);
+        const scaledTranslateCanvasCenterX = -10000000000;
+        const scaledTranslateCanvasCenterY = -10000000000;
+        element.setAttribute('x', canvasCenterX - bbox.width * scale / 2);
+        element.setAttribute('y', canvasCenterY - bbox.height * scale / 2);
+        element.setAttribute('transform', `translate(${TranslateCanvasCenterX}, ${TranslateCanvasCenterY}) scale(${scale})  translate(${scaledTranslateCanvasCenterX}, ${scaledTranslateCanvasCenterY})`);
+        element.setAttribute('opacity', 1);
+        element.setAttribute('stroke-width', 1);
+        props.onCreateElement(element);
+        changeCanvasMode('select', undefined);
+    };
+
     return (
         <React.Fragment>
             <div className={styles['laser-table']} style={{ position: 'relative' }}>
@@ -324,6 +360,9 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
                         headType={props.headType}
                         onStartDraw={() => onStartDraw()}
                         onStopDraw={(exitCompletely, nextMode) => onStopDraw(exitCompletely, nextMode)}
+                        coordinateMode={props.coordinateMode}
+                        coordinateSize={props.coordinateSize}
+                        createExt={createExt}
                     />
                 </div>
             </div>
