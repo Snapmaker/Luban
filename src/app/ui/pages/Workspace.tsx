@@ -111,7 +111,6 @@ const Workspace = ({ isPopup, onClose, style, className }) => {
         toolHead,
     } = useSelector(state => state.workspace, shallowEqual);
 
-    const [previewModalShow, setPreviewModalShow] = useState(false);
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [connected, setConnected] = useState(controller.connected);
     const [leftItems, setLeftItems] = useState([
@@ -204,11 +203,6 @@ const Workspace = ({ isPopup, onClose, style, className }) => {
         onCallBackStop: () => {
             workspaceVisualizerRef.actions.handleStop();
         },
-        onPreviewModalShow: (value) => {
-            if (value !== previewModalShow) {
-                setPreviewModalShow(value);
-            }
-        }
     };
 
     function addControllerEvents() {

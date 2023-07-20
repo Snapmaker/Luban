@@ -165,8 +165,6 @@ class PrintablePlate extends Object3D {
         this.targetPoint.visible = true;
         this.add(this.targetPoint);
 
-        console.log('plate, origin =', this.origin);
-
         if (this.origin.type === OriginType.CNCLockingBlock) {
             new SVGLoader().load(`${DEFAULT_LUBAN_HOST}/resources/images/cnc/locking-block-red.svg`, (data) => {
                 const paths = data.paths;
