@@ -886,7 +886,7 @@ export default class Business extends Dispatcher {
      */
     public async uploadLargeFile(filePath: string, renderName?: string) {
         // const sizePerChunk = 968;
-        const sizePerChunk = 900;
+        const sizePerChunk = 960;
         this.setHandler(0xb0, 0x11, (data) => {
             // md5
             const { nextOffset, result: md5HexStr } = readString(data.param);

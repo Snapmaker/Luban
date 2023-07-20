@@ -40,16 +40,22 @@ class SacpUdpChannel extends SocketBASE {
         });
     }
 
-    public test = async (host: string, port: number) => {
-        this.sacpClient = new Business('udp', {
-            socket: this.socketClient,
-            host,
-            port,
-        });
+    public async test(host: string, port: number) {
+        const sacpResponse = (async () => {
+            this.sacpClient = new Business('udp', {
+                socket: this.socketClient,
+                host,
+                port,
+            });
 
-        const { data } = await this.sacpClient.getMachineInfo();
-        return !!data;
-    };
+            const { data } = await this.sacpClient.getMachineInfo();
+            return !!data;
+        })();
+
+        const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(false), 2000));
+
+        return Promise.race([sacpResponse, timeoutPromise]);
+    }
 
     public connectionOpen = (socket: SocketServer, options: EventOptions) => {
         this.socket = socket;
