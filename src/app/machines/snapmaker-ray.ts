@@ -36,7 +36,7 @@ export const machine: Machine = {
     img: '/resources/images/machine/coming_soon.png',
 
     metadata: {
-        size: { x: 400, y: 600, z: 30 },
+        size: { x: 600, y: 400, z: 30 },
 
         toolHeads: [
             {

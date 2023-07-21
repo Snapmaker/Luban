@@ -123,6 +123,7 @@ class ConnectionManager {
             this.channel.connectionOpen(socket, options);
         } else {
             const protocol = await this.inspectSerialPortProtocol(options.port);
+            log.info(`Detected protocol: ${protocol}`);
             this.protocol = protocol;
 
             if (protocol === SerialPortProtocol.SacpOverSerialPort) {

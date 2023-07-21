@@ -553,7 +553,7 @@ class SocketBASE extends EventEmitter {
         log.debug(`executeGcode, ${gcodeLines}`);
         gcodeLines.forEach(_gcode => {
             this.sacpClient.executeGcode(_gcode).then(res => {
-                log.info(`execute gcode: ${res}`);
+                log.info(`execute gcode: ${res.response.result}`);
             });
         });
         try {
