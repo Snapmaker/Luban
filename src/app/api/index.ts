@@ -59,8 +59,6 @@ const stockRemapProcess = defaultAPIFactory((options) => request.post('/api/imag
 
 const processImage = defaultAPIFactory((options) => request.post('/api/image/process', options));
 
-const processTrace = defaultAPIFactory((options) => request.post('/api/image/trace', options));
-
 const processStitch = defaultAPIFactory((options) => request.post('/api/image/stitch', options));
 
 const processStitchEach = defaultAPIFactory((options) => request.post('/api/image/stitchEach', options));
@@ -309,7 +307,6 @@ export default {
     uploadImage,
     stockRemapProcess,
     processImage,
-    processTrace,
     processStitch,
     processStitchEach,
     processGetPhoto,

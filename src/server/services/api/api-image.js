@@ -12,7 +12,6 @@ import {
 import { unzipFile } from '../../lib/archive';
 import { editorProcess } from '../../lib/editor/process';
 import stockRemap from '../../lib/stock-remap';
-import trace from '../../lib/image-trace';
 import { ERR_INTERNAL_SERVER_ERROR } from '../../constants';
 import DataStorage from '../../DataStorage';
 import { stitch, stitchEach } from '../../lib/image-stitch';
@@ -198,37 +197,6 @@ export const stockRemapProcess = (req, res) => {
     }
 
     stockRemap(imageOptions)
-        .then((result) => {
-            res.send(result);
-        })
-        .catch((err) => {
-            res.status(ERR_INTERNAL_SERVER_ERROR).send({
-                msg: 'Unable to process image',
-                error: String(err),
-            });
-        });
-};
-
-export const processTrace = (req, res) => {
-    const options = req.body;
-
-    let imageOptions;
-    if (options.image) {
-        imageOptions = {
-            ...options,
-            image: `${DataStorage.tmpDir}/${path.parse(options.image).base}`,
-        };
-    } else {
-        imageOptions = options;
-    }
-
-    /*
-    async (imageOptions) => {
-        const result = await trace(imageOptions);
-        res.send(result);
-    };
-    */
-    trace(imageOptions)
         .then((result) => {
             res.send(result);
         })
