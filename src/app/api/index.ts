@@ -82,11 +82,6 @@ const convertTextToSvg = defaultAPIFactory((options) => request.post('/api/svg/c
 
 const convertOneLineTextToSvg = defaultAPIFactory((options) => request.post('/api/svg/convertOneLineTextToSvg', options));
 
-//
-// toolpath
-//
-const generateToolPath = defaultAPIFactory((options) => request.post('/api/toolpath/generate', options));
-
 
 //
 // Latest Version
@@ -319,8 +314,6 @@ export default {
     convertRasterToSvg,
     convertTextToSvg,
     convertOneLineTextToSvg,
-
-    generateToolPath,
 
     profileDefinitions,
 

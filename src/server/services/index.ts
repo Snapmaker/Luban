@@ -120,9 +120,6 @@ function registerApis(app) {
     app.post(urljoin(settings.route, 'api/svg/convertTextToSvg'), api.svg.convertTextToSvg);
     app.post(urljoin(settings.route, 'api/svg/convertOneLineTextToSvg'), api.svg.convertOneLineTextToSvg); // deprecated?
 
-    // ToolPath
-    app.post(urljoin(settings.route, 'api/toolpath/generate'), api.toolpath.generate); // deprecated?
-
     // Commands
     // app.get(urljoin(settings.route, 'api/commands'), api.commands.fetch);
     // app.post(urljoin(settings.route, 'api/commands'), api.commands.create);
