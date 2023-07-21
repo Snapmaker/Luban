@@ -867,8 +867,8 @@ M3`;
     public getNetworkConfiguration = async (socket, options) => {
         const { eventName } = options;
 
-        if (this.channel instanceof SocketSerialNew) {
-            const { data: networkConfiguration } = await (this.channel as SocketSerialNew).getNetworkConfiguration();
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const { data: networkConfiguration } = await this.channel.getNetworkConfiguration();
 
             socket.emit(eventName, {
                 networkMode: networkConfiguration.networkMode,
@@ -877,19 +877,29 @@ M3`;
                 stationPassword: networkConfiguration.stationPassword,
                 stationIP: networkConfiguration.stationIP,
             });
+        } else {
+            socket.emit(eventName, {
+                err: 1,
+                msg: `Unsupported event: ${eventName}`,
+            });
         }
     };
 
     public getNetworkStationState = async (socket, options) => {
         const { eventName } = options;
 
-        if (this.channel instanceof SocketSerialNew) {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const { data: networkStationState } = await (this.channel as SocketSerialNew).getNetworkStationState();
 
             socket.emit(eventName, {
                 stationIP: networkStationState.stationIP,
                 stationState: networkStationState.stationState,
                 stationRSSI: networkStationState.stationRSSI,
+            });
+        } else {
+            socket.emit(eventName, {
+                err: 1,
+                msg: `Unsupported event: ${eventName}`,
             });
         }
     };

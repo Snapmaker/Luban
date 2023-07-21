@@ -87,9 +87,9 @@ class ProtocolDetector {
         try {
             const result = await sacpUdpChannel.test(host, port);
             if (result) {
-                log.debug('connected.');
+                log.debug('SACP over UDP channel: connected.');
             } else {
-                log.debug('failed to connect.');
+                log.debug('SACP over UDP channel: failed to connect.');
             }
             return result;
         } catch (e) {
