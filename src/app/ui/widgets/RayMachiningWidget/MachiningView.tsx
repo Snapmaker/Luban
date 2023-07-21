@@ -1,10 +1,15 @@
 import { Alert, Button, Radio, RadioChangeEvent, Space } from 'antd';
-import React, { useCallback, useState } from 'react';
+import { includes } from 'lodash';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-// import { actions as workspaceActions } from '../../../flux/workspace';
-import { CONNECTION_UPLOAD_FILE } from '../../../constants';
+import {
+    CONNECTION_UPLOAD_FILE,
+    WORKFLOW_STATUS_IDLE,
+    WORKFLOW_STATUS_UNKNOWN
+} from '../../../constants';
 import { RootState } from '../../../flux/index.def';
+import { actions as workspaceActions } from '../../../flux/workspace';
 import gcodeActions, { GCodeFileObject } from '../../../flux/workspace/action-gcode';
 import controller from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
@@ -31,8 +36,28 @@ enum SetupCoordinateMethod {
  * Note that the work process is designed for the Ray machine (GRBL), it's not a
  * general purpose work process.
  */
-const MachiningView: React.FC = () => {
+interface MachiningViewProps {
+    setDisplay: (display: boolean) => void;
+}
+
+const MachiningView: React.FC<MachiningViewProps> = (props) => {
+    const { setDisplay } = props;
+
     const boundingBox = useSelector((state: RootState) => state.workspace.boundingBox);
+
+    const workflowStatus = useSelector((state: RootState) => state.workspace.workflowStatus);
+
+    // display of widget
+    // Only when machine is IDLE
+    useEffect(() => {
+        console.log('workflowStatus =', workflowStatus);
+        if (includes([WORKFLOW_STATUS_UNKNOWN, WORKFLOW_STATUS_IDLE], workflowStatus)) {
+            setDisplay(true);
+        } else {
+            // TODO: job is done, but workflow is IDLE => not display
+            setDisplay(false);
+        }
+    }, [setDisplay, workflowStatus]);
 
     // setup coordinate method
     const [setupCoordinateMethod, setSetupCoordinateMethod] = useState(SetupCoordinateMethod.Manually);
@@ -47,9 +72,11 @@ const MachiningView: React.FC = () => {
     const dispatch = useDispatch();
 
     /**
-     * On click run boundary (Manual)
+     * Run boundary
+     *
+     * - useCurrentPosition(Manual)
      */
-    const onClickRunBoundary = useCallback(async () => {
+    const runBoundary = useCallback(async ({ useCurrentPosition = false }) => {
         setRunBoundaryReady(false);
         if (!boundingBox) {
             log.warn('No bounding box provided, please upload G-code first.');
@@ -62,7 +89,15 @@ const MachiningView: React.FC = () => {
         const gcodeList = [];
         gcodeList.push(
             'G90', // absolute position
-            'G92 X0 Y0', // set current position as origin
+        );
+
+        if (useCurrentPosition) {
+            gcodeList.push(
+                'G92 X0 Y0', // set current position as origin
+            );
+        }
+
+        gcodeList.push(
             `G0 X${bbox.min.x} Y${bbox.min.y} F1200`, // run boundary
             `G0 X${bbox.min.x} Y${bbox.max.y}`,
             `G0 X${bbox.max.x} Y${bbox.max.y}`,
@@ -95,6 +130,10 @@ const MachiningView: React.FC = () => {
             });
     }, [dispatch, boundingBox]);
 
+    const executeGCode = useCallback(async (gcode: string) => {
+        return dispatch(workspaceActions.executeGcode(gcode)) as unknown as Promise<void>;
+    }, [dispatch]);
+
     return (
         <div>
             <div className="display-block margin-top-8">
@@ -118,7 +157,9 @@ const MachiningView: React.FC = () => {
                             <Button
                                 type="default"
                                 style={{ width: '100%' }}
-                                onClick={onClickRunBoundary}
+                                onClick={async () => runBoundary({
+                                    useCurrentPosition: true,
+                                })}
                             >
                                 {i18n._('key-Workspace/Control/MotionButton-Run Boundary')}
                             </Button>
@@ -138,7 +179,12 @@ const MachiningView: React.FC = () => {
             {
                 setupCoordinateMethod === SetupCoordinateMethod.ByControlPanel && (
                     <div className="margin-top-8">
-                        <ControlPanel />
+                        <ControlPanel
+                            executeGCode={executeGCode}
+                            runBoundary={async () => runBoundary({
+                                useCurrentPosition: false,
+                            })}
+                        />
                     </div>
                 )
             }

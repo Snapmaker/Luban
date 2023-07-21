@@ -6,6 +6,7 @@ import MachiningView from './MachiningView';
 
 declare interface WidgetActions {
     setTitle: (title: string) => void;
+    setDisplay: (display: boolean) => void;
 }
 
 export declare interface WidgetProps {
@@ -22,7 +23,9 @@ const RayMachiningWiget: React.FC<WidgetProps> = (props) => {
     }, [widgetActions]);
 
     return (
-        <MachiningView />
+        <MachiningView
+            setDisplay={widgetActions.setDisplay}
+        />
     );
 };
 

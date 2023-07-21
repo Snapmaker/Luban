@@ -1105,7 +1105,7 @@ export const actions = {
     /**
      * Execute G-code.
      */
-    executeGcode: (gcode, context = null, cmd = undefined) => (dispatch, getState) => {
+    executeGcode: (gcode: string, context = null, cmd = undefined) => (dispatch, getState) => {
         const { homingModal, isConnected } = getState().workspace;
         if (!isConnected) {
             if (homingModal) {
