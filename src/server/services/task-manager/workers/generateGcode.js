@@ -79,7 +79,7 @@ const checkoutBoundingBoxIsNull = (boundingBox) => {
 };
 
 // eslint-disable-next-line consistent-return
-const generateGcode = ({ toolPaths, size, toolHead, origin, series }) => {
+const generateGcode = ({ toolPaths, size, toolHead, origin, series, metadata }) => {
     if (!toolPaths && !_.isArray(toolPaths) && toolPaths.length === 0) {
         return sendMessage({ status: 'fail', value: 'modelInfo is empty.' });
     }
@@ -119,7 +119,11 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, series }) => {
             const gcodeGenerator = new GcodeGenerator();
             let gcodeLines;
             if (headType === 'laser') {
-                gcodeLines = gcodeGenerator.parseAsLaser(toolPathObj, gcodeConfig);
+                if (metadata?.gcodeFlavor === 'grbl') {
+                    gcodeLines = gcodeGenerator.parseAsGrblLaser(toolPathObj, gcodeConfig);
+                } else {
+                    gcodeLines = gcodeGenerator.parseAsLaser(toolPathObj, gcodeConfig);
+                }
             } else {
                 gcodeLines = gcodeGenerator.parseAsCNC(toolPathObj, gcodeConfig);
             }
@@ -186,6 +190,7 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, series }) => {
         + `;header_type: ${headType}\n`
         + `;tool_head: ${toolHead}\n`
         + `;machine: ${series}\n`
+        + `;gcode_flavor: ${metadata?.gcodeFlavor ? metadata?.gcodeFlavor : 'marlin'}\n`
         + `;renderMethod: ${renderMethod}\n`
         + ';file_total_lines: fileTotalLines\n'
         + `;estimated_time(s): ${estimatedTime}\n`

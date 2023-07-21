@@ -406,6 +406,7 @@ export const processActions = {
                     toolHead: currentToolHead,
                     origin: (origin.type === OriginType.CNCLockingBlock ? `position${lockingBlockPosition}` : coordinateMode.value),
                     series: activeMachine?.identifier,
+                    metadata: activeMachine?.metadata
                 }
             });
         };

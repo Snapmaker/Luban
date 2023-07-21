@@ -9,6 +9,11 @@ export enum MachineType {
     Laser = 'Laser',
 }
 
+export enum MachineGcodeFlavor {
+    MARLIN = 'marlin',
+    GRBL = 'grbl'
+}
+
 interface WorkRange {
     min: number[];
     max: number[];
@@ -50,6 +55,8 @@ export declare type MachineMetadata = {
 
     // slicer version
     slicerVersion: number;
+
+    gcodeFlavor?: MachineGcodeFlavor;
 };
 
 export declare type LaserMachineMetadata = {
