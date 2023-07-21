@@ -15,10 +15,6 @@ const log = logger('service:TaskManager');
 const generateCncViewPath = async (modelInfo, onProgress) => {
     const { sourceType, mode, uploadName } = modelInfo;
     const modelPath = `${process.env.Tmpdir}/${uploadName}`;
-    // if (config.svgNodeName === 'text') {
-    //     const result = await editorProcess(modelInfo);
-    //     modelPath = `${process.env.Tmpdir}/${result.filename}`;
-    // }
 
     if (((sourceType === 'svg') && (mode === 'vector' || mode === 'trace')) || (sourceType === 'raster' && mode === 'vector')) {
         const svgParser = new SVGParser();

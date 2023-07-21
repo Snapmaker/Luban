@@ -10,7 +10,6 @@ import {
     generateSvgFromDxf,
 } from '../../../shared/lib/DXFParser/Parser';
 import { unzipFile } from '../../lib/archive';
-import { editorProcess } from '../../lib/editor/process';
 import stockRemap from '../../lib/stock-remap';
 import { ERR_INTERNAL_SERVER_ERROR } from '../../constants';
 import DataStorage from '../../DataStorage';
@@ -161,26 +160,6 @@ export const set = async (req, res) => {
         log.error(`Failed to read image ${tempName} ,${err.message} `);
         res.status(ERR_INTERNAL_SERVER_ERROR).end();
     }
-};
-/**
- * Process Image for Laser.
- *
- * @param req
- * @param res
- */
-export const process = (req, res) => {
-    const options = req.body;
-
-    editorProcess(options)
-        .then((result) => {
-            res.send(result);
-        })
-        .catch((err) => {
-            res.status(ERR_INTERNAL_SERVER_ERROR).send({
-                msg: 'Unable to process image',
-                error: String(err),
-            });
-        });
 };
 
 export const stockRemapProcess = (req, res) => {

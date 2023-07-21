@@ -1081,24 +1081,6 @@ class SvgModel extends BaseModel {
             this.resource.processedFile.update(null);
         }
         this.generateProcessObject3D();
-
-        // const res = await api.processImage({
-        //     headType: this.headType,
-        //     uploadName: this.uploadName,
-        //     config: {
-        //         ...this.config,
-        //         density: 4
-        //     },
-        //     sourceType: this.sourceType,
-        //     mode: mode,
-        //     transformation: {
-        //         width: this.width,
-        //         height: this.height,
-        //         rotationZ: 0
-        //     }
-        // });
-        //
-        // this.processImageName = res.body.filename;
     }
 
     public computeBoundingBox() {
