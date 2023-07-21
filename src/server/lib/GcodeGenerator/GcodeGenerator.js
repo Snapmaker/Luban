@@ -107,7 +107,6 @@ class GcodeGenerator {
                         line += key + value.toFixed(3);
                         break;
                     }
-                    case 'S':
                     case 'W':
                     case 'P':
                     case 'F':
@@ -116,6 +115,14 @@ class GcodeGenerator {
                         }
                         line += `${key + item[key]}`;
                         break;
+                    case 'S': {
+                        if (!hashParam) {
+                            break;
+                        }
+                        const power = item[key] / 255 * 1000;
+                        line += `${key + power.toFixed(2)}`;
+                        break;
+                    }
                     default:
                         break;
                 }
