@@ -6,7 +6,7 @@ import {
 } from '../../../../app/constants/machines';
 import { HEAD_LASER } from '../../../constants';
 import logger from '../../../lib/logger';
-import SocketSerialNew from '../channels/SACP-SERIAL';
+import SacpSerialChannel from '../channels/SacpSerialChannel';
 import SocketSerial from '../channels/socket-serial';
 import { ConnectedData } from '../types';
 import MachineInstance from './Instance';
@@ -18,7 +18,7 @@ class RayMachineInstance extends MachineInstance {
     public onMachineReady(): void {
         log.info('Machine is ready.');
 
-        if (this.channel instanceof SocketSerialNew) {
+        if (this.channel instanceof SacpSerialChannel) {
             this._onMachineReadySACP();
         }
 
@@ -39,11 +39,11 @@ class RayMachineInstance extends MachineInstance {
         // TODO: Heartbeat is not working for now
         // (this.channel as SocketSerialNew).startHeartbeat();
 
-        const { data: machineInfo } = await (this.channel as SocketSerialNew).getMachineInfo();
+        const { data: machineInfo } = await (this.channel as SacpSerialChannel).getMachineInfo();
         console.log('machineInfo =', machineInfo);
 
         // module info
-        const { data: moduleInfos } = await (this.channel as SocketSerialNew).getModuleInfo();
+        const { data: moduleInfos } = await (this.channel as SacpSerialChannel).getModuleInfo();
         console.log('moduleInfos =', moduleInfos);
 
         const moduleListStatus = {

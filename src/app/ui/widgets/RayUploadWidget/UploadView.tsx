@@ -10,6 +10,7 @@ import controller from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import { Button } from '../../components/Buttons';
+import modalSmallHOC from '../../components/Modal/modal-small';
 import styles from './styles.styl';
 
 export type LoadGcodeOptions = {
@@ -30,18 +31,41 @@ const UploadView: React.FC = () => {
             return;
         }
 
+        const sendingModal = modalSmallHOC({
+            title: i18n._('key-Workspace/WifiTransport-Sending File'),
+            text: i18n._('key-Workspace/WifiTransport-Sending file. Please wait…'),
+            iconColor: '#4CB518',
+            img: 'WarningTipsProgress'
+        }).ref;
+
         controller
             .emitEvent(CONNECTION_UPLOAD_FILE, {
                 gcodePath: `/${gcodeFile.uploadName}`,
                 renderGcodeFileName: 'ray.nc',
             })
             .once(CONNECTION_UPLOAD_FILE, ({ err, text }) => {
+                // close sending modal
+                if (sendingModal.current) {
+                    sendingModal.current.removeContainer();
+                }
+
+                // Deal with send result
                 if (err) {
-                    log.error('Unable to upload G-code to execute.');
                     log.error(err);
                     log.error(`Reason: ${text}`);
+                    modalSmallHOC({
+                        title: i18n._('key-Workspace/WifiTransport-Failed to send file.'),
+                        text: text,
+                        iconColor: '#FF4D4F',
+                        img: 'WarningTipsError'
+                    });
                 } else {
-                    log.info('Uploaded G-code.');
+                    modalSmallHOC({
+                        title: i18n._('key-Workspace/WifiTransport-File sent successfully.'),
+                        text: i18n._('File was successfully sent. Please long press the button on the machine to start the job.'),
+                        iconColor: '#4CB518',
+                        img: 'WarningTipsSuccess'
+                    });
                 }
             });
     }, [gcodeFile]);

@@ -47,6 +47,7 @@ class SacpUdpChannel extends SocketBASE {
                 host,
                 port,
             });
+            this.sacpClient.setLogger(log);
 
             const { data } = await this.sacpClient.getMachineInfo();
             return !!data;
@@ -62,13 +63,14 @@ class SacpUdpChannel extends SocketBASE {
 
         this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
 
-        console.log('connectionOpen, options =', options);
+        log.info(`connectionOpen, options = ${options}`);
 
         this.sacpClient = new Business('udp', {
             socket: this.socketClient,
             host: options.address,
             port: 2016, // 8889
         });
+        this.sacpClient.setLogger(log);
 
         this.socket && this.socket.emit('connection:open', {});
 

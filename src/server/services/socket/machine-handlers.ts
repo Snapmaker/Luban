@@ -44,7 +44,7 @@ function register(socketServer: SocketServer): void {
         'connection:wifiStatusTest': connectionManager.wifiStatusTest,
         [ControllerEvent.GetMachineNetworkConfiguration]: connectionManager.getNetworkConfiguration,
         [ControllerEvent.GetMachineNetworkStationState]: connectionManager.getNetworkStationState,
-        [ControllerEvent.SetMachineNetworkConfiguration]: connectionManager.configureNetwork,
+        [ControllerEvent.SetMachineNetworkConfiguration]: connectionManager.configureMachineNetwork,
     };
 
     Object.entries(connectionEventsObject).forEach(([key, value]) => {
