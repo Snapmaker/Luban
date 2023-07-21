@@ -167,12 +167,10 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
 
     const onMovement = useCallback(({ x, y }) => {
         if (x === 0 && y === 0) {
-            executeGCode('G0 X0 Y0');
+            executeGCode('G1 X0 Y0 F3000');
         } else {
             const distance = standardDistance !== -1 ? standardDistance : customDistance;
-            // relative move
-            const code = `G0 X${x * distance} Y${y * distance}`;
-            console.log('code', code);
+            const code = `G1 X${x * distance} Y${y * distance} F3000`;
             executeGCode(['G91', code, 'G90'].join('\n'));
         }
     }, [executeGCode, standardDistance, customDistance]);

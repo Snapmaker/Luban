@@ -229,7 +229,6 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
                     () => (
                         <RenderProjectRightView
                             headType={HEAD_LASER}
-                            dispatch={dispatch}
                             page={page}
                             widgets={widgets}
                             listActions={listActions}

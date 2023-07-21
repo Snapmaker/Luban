@@ -21,7 +21,7 @@ import SocketServer from '../../lib/SocketManager';
 import logger from '../../lib/logger';
 import ProtocolDetector, { NetworkProtocol, SerialPortProtocol } from './ProtocolDetector';
 import { ChannelEvent } from './channels/ChannelEvent';
-import SocketSerialNew, { socketSerialNew } from './channels/SACP-SERIAL';
+import SacpSerialChannel, { sacpSerialChannel } from './channels/SacpSerialChannel';
 import socketTcp from './channels/SACP-TCP';
 import { sacpUdpChannel } from './channels/SacpUdpChannel';
 import socketHttp from './channels/socket-http';
@@ -127,7 +127,7 @@ class ConnectionManager {
             this.protocol = protocol;
 
             if (protocol === SerialPortProtocol.SacpOverSerialPort) {
-                this.channel = socketSerialNew;
+                this.channel = sacpSerialChannel;
                 this.channel.connectionOpen(socket, options);
             } else {
                 this.channel = socketSerial;
@@ -867,8 +867,8 @@ M3`;
     public getNetworkConfiguration = async (socket, options) => {
         const { eventName } = options;
 
-        if (this.channel instanceof SocketSerialNew) {
-            const { data: networkConfiguration } = await (this.channel as SocketSerialNew).getNetworkConfiguration();
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const { data: networkConfiguration } = await this.channel.getNetworkConfiguration();
 
             socket.emit(eventName, {
                 networkMode: networkConfiguration.networkMode,
@@ -877,25 +877,45 @@ M3`;
                 stationPassword: networkConfiguration.stationPassword,
                 stationIP: networkConfiguration.stationIP,
             });
+        } else {
+            socket.emit(eventName, {
+                err: 1,
+                msg: `Unsupported event: ${eventName}`,
+            });
         }
     };
 
     public getNetworkStationState = async (socket, options) => {
         const { eventName } = options;
 
-        if (this.channel instanceof SocketSerialNew) {
-            const { data: networkStationState } = await (this.channel as SocketSerialNew).getNetworkStationState();
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const { data: networkStationState } = await (this.channel as SacpSerialChannel).getNetworkStationState();
 
             socket.emit(eventName, {
                 stationIP: networkStationState.stationIP,
                 stationState: networkStationState.stationState,
                 stationRSSI: networkStationState.stationRSSI,
             });
+        } else {
+            socket.emit(eventName, {
+                err: 1,
+                msg: `Unsupported event: ${eventName}`,
+            });
         }
     };
 
-    public configureNetwork = async (socket, options) => {
-        if (this.channel instanceof SocketSerialNew) {
+    /**
+     * Configure machine network.
+     *
+     * Notice: configure machine network is supported by SACP over TCP/UDP, but it's not recommended.
+     * Since you've connected to the machine via network already.
+     */
+    public configureMachineNetwork = async (socket, options) => {
+        const { eventName } = options;
+
+        // Note: supported by SACP over UDP, but it's not needed since you already connected to the machine
+        // via network.
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const configureNetworkResult = await this.channel.configureNetwork({
                 networkMode: options?.networkMode,
                 stationIPObtain: options?.stationIPObtain,
@@ -906,6 +926,11 @@ M3`;
             if (configureNetworkResult.response.result === 0) {
                 // success
             }
+        } else {
+            socket.emit(eventName, {
+                err: 1,
+                msg: `Unsupported event: ${eventName}`,
+            });
         }
     }
 }

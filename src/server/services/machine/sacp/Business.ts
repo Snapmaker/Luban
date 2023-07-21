@@ -98,7 +98,6 @@ export default class Business extends Dispatcher {
 
             this.ack(0xb0, 0x00, data.packet, Buffer.alloc(1, 0));
 
-            console.log('upload file:', filename, fileLength, chunks, md5HexStr);
             // const hash = crypto.createHash('md5');
             const outputStream = fs.createWriteStream(path.join(DataStorage.tmpDir, filename)); // need to rename this filename
 
@@ -294,7 +293,6 @@ export default class Business extends Dispatcher {
     public async getEmergencyStopInfo() {
         return this.send(0x01, 0x3b, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             // const isTouch = readBool(response.data);
-            // console.log('emergencyResponse', response);
             return { packet, data: response };
         });
     }

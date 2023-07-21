@@ -43,21 +43,22 @@ interface MachiningViewProps {
 const MachiningView: React.FC<MachiningViewProps> = (props) => {
     const { setDisplay } = props;
 
+    // G-code
     const boundingBox = useSelector((state: RootState) => state.workspace.boundingBox);
 
+    const isConnected = useSelector((state: RootState) => state.workspace.isConnected);
     const workflowStatus = useSelector((state: RootState) => state.workspace.workflowStatus);
 
     // display of widget
     // Only when machine is IDLE
     useEffect(() => {
-        console.log('workflowStatus =', workflowStatus);
-        if (includes([WORKFLOW_STATUS_UNKNOWN, WORKFLOW_STATUS_IDLE], workflowStatus)) {
+        if (isConnected && includes([WORKFLOW_STATUS_UNKNOWN, WORKFLOW_STATUS_IDLE], workflowStatus)) {
             setDisplay(true);
         } else {
             // TODO: job is done, but workflow is IDLE => not display
             setDisplay(false);
         }
-    }, [setDisplay, workflowStatus]);
+    }, [setDisplay, isConnected, workflowStatus]);
 
     // setup coordinate method
     const [setupCoordinateMethod, setSetupCoordinateMethod] = useState(SetupCoordinateMethod.Manually);
@@ -98,12 +99,12 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
         }
 
         gcodeList.push(
-            `G0 X${bbox.min.x} Y${bbox.min.y} F1200`, // run boundary
-            `G0 X${bbox.min.x} Y${bbox.max.y}`,
-            `G0 X${bbox.max.x} Y${bbox.max.y}`,
-            `G0 X${bbox.max.x} Y${bbox.min.y}`,
-            `G0 X${bbox.min.x} Y${bbox.min.y}`,
-            'G0 X0 Y0', // go back to origin
+            `G1 X${bbox.min.x} Y${bbox.min.y} F1800 S0`, // run boundary
+            `G1 X${bbox.min.x} Y${bbox.max.y}`,
+            `G1 X${bbox.max.x} Y${bbox.max.y}`,
+            `G1 X${bbox.max.x} Y${bbox.min.y}`,
+            `G1 X${bbox.min.x} Y${bbox.min.y}`,
+            'G1 X0 Y0', // go back to origin
         );
 
         const gcode = gcodeList.join('\n');

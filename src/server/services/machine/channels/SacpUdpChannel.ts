@@ -47,6 +47,7 @@ class SacpUdpChannel extends SocketBASE {
                 host,
                 port,
             });
+            this.sacpClient.setLogger(log);
 
             const { data } = await this.sacpClient.getMachineInfo();
             return !!data;
@@ -62,13 +63,14 @@ class SacpUdpChannel extends SocketBASE {
 
         this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
 
-        console.log('connectionOpen, options =', options);
+        log.info(`connectionOpen, options = ${options}`);
 
         this.sacpClient = new Business('udp', {
             socket: this.socketClient,
             host: options.address,
             port: 2016, // 8889
         });
+        this.sacpClient.setLogger(log);
 
         this.socket && this.socket.emit('connection:open', {});
 
@@ -105,6 +107,8 @@ class SacpUdpChannel extends SocketBASE {
         log.info(`Upload file to controller... ${gcodePath}`);
 
         const gcodeFullPath = path.resolve(`${DataStorage.tmpDir}${gcodePath}`);
+        // Note: Use upload large file API instead of upload file API, newer firmware will implement this API
+        // rather than the old ones.
         const res = await this.sacpClient.uploadLargeFile(gcodeFullPath, renderGcodeFileName);
 
         if (res.response.result === 0) {
