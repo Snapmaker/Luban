@@ -64,6 +64,78 @@ class GcodeGenerator {
         return gcodeLines;
     }
 
+    parseAsGrblLaser(toolPathObj, gcodeConfig) {
+        const { data, positionX, positionY } = toolPathObj;
+        const gcodeLines = [];
+        for (let i = 0; i < data.length; i++) {
+            const item = data[i];
+            let line = '';
+            let comment = null;
+            let hashParam = false;
+            Object.keys(item).forEach((key) => {
+                // C: comment  N: empty line
+                switch (key) {
+                    case 'C':
+                    case 'N':
+                        comment = item[key];
+                        break;
+                    case 'G':
+                        line += `${key + item[key]} `;
+                        hashParam = true;
+                        break;
+                    case 'M':
+                        if (![106, 107].includes(item[key])) {
+                            if (item[key] === 3) {
+                                line += `${key + 4} `;
+                            } else {
+                                line += `${key + item[key]} `;
+                                hashParam = true;
+                            }
+                        }
+                        break;
+                    case 'X':
+                    case 'Y': {
+                        if (!hashParam) {
+                            break;
+                        }
+                        let value = item[key];
+                        if (key === 'X' && !!positionX) {
+                            value += positionX;
+                        } else if (key === 'Y' && !!positionY) {
+                            value += positionY;
+                        }
+                        line += key + value.toFixed(3);
+                        break;
+                    }
+                    case 'W':
+                    case 'P':
+                    case 'F':
+                        if (!hashParam) {
+                            break;
+                        }
+                        line += `${key + item[key]}`;
+                        break;
+                    case 'S': {
+                        if (!hashParam) {
+                            break;
+                        }
+                        const power = item[key] / 255 * 1000;
+                        line += `${key + power.toFixed(2)}`;
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            });
+            if (comment) {
+                line += comment;
+            }
+            gcodeLines.push(line);
+        }
+
+        return this.processGcodeGrblMultiPass(gcodeLines, gcodeConfig);
+    }
+
     parseAsLaser(toolPathObj, gcodeConfig) {
         const { data, positionX, positionY, rotationB } = toolPathObj;
         // process "jogSpeed, workSpeed..."
@@ -142,6 +214,33 @@ class GcodeGenerator {
                 result.push(`G0 Z${initialHeightOffset} F150`);
                 result.push('G90'); // absolute positioning
             }
+            result = result.concat(gcodeLines);
+            gcodeLines = result;
+        }
+        return gcodeLines;
+    }
+
+    processGcodeGrblMultiPass(gcodeLines, gcodeConfig) {
+        const { multiPassEnabled, multiPasses, multiPassDepth } = gcodeConfig;
+        if (multiPassEnabled && multiPasses > 0) {
+            let result = [];
+            for (let i = 0; i < multiPasses; i++) {
+                result.push(`; Laser multi-pass, pass ${i + 1} with Z = ${-i * multiPassDepth}`);
+                // dropping z
+                if (i !== 0) {
+                    result.push('; Laser multi-pass: dropping z');
+                    result.push('G91'); // relative positioning
+                    result.push('G90'); // absolute positioning
+                }
+                result = result.concat(gcodeLines);
+            }
+
+            // move back to work origin
+            result.push('G91'); // relative
+            result.push('G90'); // absolute
+            gcodeLines = result;
+        } else {
+            let result = [];
             result = result.concat(gcodeLines);
             gcodeLines = result;
         }

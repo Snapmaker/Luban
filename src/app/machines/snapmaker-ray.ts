@@ -1,4 +1,4 @@
-import { Machine, MachineType, ToolHead, ToolHeadType } from '@snapmaker/luban-platform';
+import { Machine, MachineType, MachineGcodeFlavor, ToolHead, ToolHeadType } from '@snapmaker/luban-platform';
 
 export const laserModule20W: ToolHead = {
     identifier: '20W Laser Module',
@@ -50,5 +50,7 @@ export const machine: Machine = {
                 goHomeOnConnection: false,
             },
         ],
+
+        gcodeFlavor: MachineGcodeFlavor.GRBL
     },
 };

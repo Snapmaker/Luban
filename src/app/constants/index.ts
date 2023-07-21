@@ -500,7 +500,7 @@ export const LASER_PRESENT_CONFIG_GROUP = [
     },
     {
         name: 'key-Laser/ToolpathParameters-Power',
-        fields: ['fixed_power']
+        fields: ['fixed_power', 'fixed_min_power']
     }
 ];
 
@@ -668,7 +668,7 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         default_value: 1500,
         type: 'float',
         min: 1,
-        max: 6000,
+        max: 36000,
         step: 0.01,
         label: 'Jog Speed',
         unit: 'mm/min',
@@ -707,7 +707,7 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
             'Set the speed at which the toolhead moves on the material when it is engraving or cutting.',
         type: 'float',
         min: 1,
-        max: 6000,
+        max: 36000,
         step: 1,
         default_value: 'workSpeed',
         unit: 'mm/min'
@@ -749,9 +749,32 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         default_value: 'fixedPower',
         unit: '%'
     },
+    fixedMinPower: {
+        label: 'Minimum Laser Power',
+        description: 'The minimum laser power used for variable power line engraving.',
+        type: 'float',
+        min: 0,
+        max: 100,
+        default_value: 0,
+        unit: '%'
+    },
     fixedPowerEnabled: {
         type: 'bool',
         default_value: true
+    },
+    powerLevelDivisions: {
+        label: 'Laser Power Level Divisions',
+        description: 'The number of laser power classes divided between the maximum and minimum laser power. The different laser power levels will be associated with the grayscale of the image.',
+        type: 'float',
+        min: 2,
+        max: 65535,
+        default_value: 255
+    },
+    auxiliaryAirPump: {
+        default_value: false,
+        label: 'Auxiliary Air Pump',
+        description: 'It can effectively increase the air flow rate over the laser focus point to achieve better cutting results.However, it may give worse results for non-cutting conditions.',
+        type: 'bool',
     },
     movementMode: {
         label: 'Movement Mode',
@@ -816,7 +839,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
         description:
             'Set the speed at which the toolhead moves on the material when it is not engraving or cutting.',
         min: 1,
-        max: 6000,
+        max: 36000,
         step: 1,
         type: 'float',
         unit: 'mm/min',
