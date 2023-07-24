@@ -1,5 +1,6 @@
-import { processBW, processCNCGreyscale, processHalftone, processLaserGreyscale, processVector } from './image-process';
+import { processBW, processCNCGreyscale, processHalftone, processLaserGreyscale, processVector } from './process-image';
 import {
+    HEAD_LASER,
     PROCESS_MODE_BW,
     PROCESS_MODE_GREYSCALE,
     PROCESS_MODE_HALFTONE,
@@ -8,6 +9,7 @@ import {
     SOURCE_TYPE_IMAGE3D,
     SOURCE_TYPE_RASTER
 } from '../../constants';
+
 import { MeshProcess } from '../MeshProcess/MeshProcess';
 
 const processImage3d = (modelInfo, onProgress) => {
@@ -15,11 +17,11 @@ const processImage3d = (modelInfo, onProgress) => {
     return mesh.convertToImage();
 };
 
-export const editorProcess = (modelInfo, onProgress) => {
+export const processMode = (modelInfo, onProgress) => {
     const { headType, sourceType, mode } = modelInfo;
     if (sourceType === SOURCE_TYPE_RASTER || sourceType === SOURCE_TYPE_SVG) {
         if (mode === PROCESS_MODE_GREYSCALE) {
-            if (headType === 'laser') {
+            if (headType === HEAD_LASER) {
                 return processLaserGreyscale(modelInfo, onProgress);
             } else {
                 return processCNCGreyscale(modelInfo, onProgress);

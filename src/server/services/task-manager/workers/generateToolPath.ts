@@ -3,7 +3,7 @@ import { throttle } from 'lodash';
 
 import { generateRandomPathName } from '../../../../shared/lib/random-utils';
 import { SOURCE_TYPE_RASTER, TOOLPATH_TYPE_VECTOR } from '../../../constants';
-import { editorProcess } from '../../../lib/editor/process';
+import { processMode } from '../../../lib/ProcessMode';
 import slice from '../../../slicer/call-engine';
 import logger from '../../../lib/logger';
 import sendMessage from '../utils/sendMessage';
@@ -22,7 +22,7 @@ const generateLaserToolPathFromEngine = async (allTasks, onProgress) => {
         for (const modelInfo of modelInfos) {
             const { headType, type, sourceType } = modelInfo;
             if ([TOOLPATH_TYPE_VECTOR + SOURCE_TYPE_RASTER].includes(type + sourceType)) {
-                const result = await editorProcess(modelInfo);
+                const result = await processMode(modelInfo);
                 modelInfo.uploadName = result.filename;
             }
             if (!/parsed\.svg$/i.test(modelInfo.uploadName)) {
