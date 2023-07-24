@@ -11,7 +11,6 @@ import { CNC_GCODE_SUFFIX, LASER_GCODE_SUFFIX, PRINTING_GCODE_SUFFIX, WORKFLOW_S
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, MACHINE_SERIES } from '../../constants/machines';
 import { actions as widgetActions } from '../../flux/widget';
 import { actions as workspaceActions } from '../../flux/workspace';
-
 import { controller } from '../../lib/controller';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
@@ -19,19 +18,17 @@ import { Button } from '../components/Buttons';
 import Dropzone from '../components/Dropzone';
 import Modal from '../components/Modal';
 import MainToolBar from '../layouts/MainToolBar';
-
-import styles from '../layouts/styles/workspace.styl';
 import WorkspaceLayout from '../layouts/WorkspaceLayout';
+import styles from '../layouts/styles/workspace.styl';
 import { logPageView, renderWidgetList } from '../utils';
 import CNCPathWidget from '../widgets/CNCPath';
 import ConnectionWidget from '../widgets/Connection';
-import ConnectionToolControlWidget from '../widgets/ConnectionToolControl';
 import ConnectionControlWidget from '../widgets/ConnectionControl';
 import ConnectionFileTransferWidget from '../widgets/ConnectionFileTransfer';
+import ConnectionToolControlWidget from '../widgets/ConnectionToolControl';
 import ConsoleWidget from '../widgets/Console';
-
 import EnclosureWidget from '../widgets/Enclosure';
-
+import JobStatusWidget from '../widgets/JobStatusWidget';
 import LaserParamsWidget from '../widgets/LaserParams';
 import LaserSetBackground from '../widgets/LaserSetBackground';
 import LaserTestFocusWidget from '../widgets/LaserTestFocus';
@@ -40,8 +37,8 @@ import MacroWidget from '../widgets/Macro';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import PurifierWidget from '../widgets/Purifier';
 import WebcamWidget from '../widgets/Webcam';
-import WorkingProgress from '../widgets/WorkingProgress';
 import VisualizerWidget from '../widgets/WorkspaceVisualizer';
+import { RootState } from '../../flux/index.def';
 
 
 const allWidgets = {
@@ -61,7 +58,7 @@ const allWidgets = {
     'laser-test-focus': LaserTestFocusWidget,
     'cnc-path': CNCPathWidget,
     'machine-setting': MachineSettingWidget,
-    'working-progress': WorkingProgress
+    'job-status': JobStatusWidget,
 };
 
 
@@ -98,13 +95,20 @@ function getUnsupportedWidgets(machineIdentifier, toolHead) {
     return [];
 }
 
-const Workspace = ({ isPopup, onClose, style, className }) => {
+interface WorkspaceProps {
+    isPopup?: boolean;
+    onClose?: () => void;
+    style?: object;
+    className?: string;
+}
+
+const Workspace: React.FC<WorkspaceProps> = ({ isPopup, onClose, style, className }) => {
     const history = useHistory();
     const dispatch = useDispatch();
 
-    const primaryWidgets = useSelector(state => state.widget.workspace.left.widgets);
-    const secondaryWidgets = useSelector(state => state.widget.workspace.right.widgets);
-    const defaultWidgets = useSelector(state => state.widget.workspace.default.widgets);
+    const primaryWidgets = useSelector((state: RootState) => state.widget.workspace.left.widgets);
+    const secondaryWidgets = useSelector((state: RootState) => state.widget.workspace.right.widgets);
+    const defaultWidgets = useSelector((state: RootState) => state.widget.workspace.default.widgets);
 
     const {
         machineIdentifier: connectedMachineIdentifier,
