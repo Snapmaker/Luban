@@ -1,9 +1,9 @@
-import LaserToolPathGenerator from './LaserToolPathGenerator';
 import CncToolPathGenerator from './CncToolPathGenerator';
 import CncReliefToolPathGenerator from './CncReliefToolPathGenerator';
+import CncMeshToolPathGenerator from './MeshToolPath/CncMeshToolPathGenerator';
 
 export {
-    LaserToolPathGenerator,
     CncToolPathGenerator,
-    CncReliefToolPathGenerator
+    CncReliefToolPathGenerator,
+    CncMeshToolPathGenerator
 };

@@ -1,6 +1,5 @@
 import Jimp from 'jimp';
 import EventEmitter from 'events';
-// import GcodeParser from './GcodeParser';
 import Normalizer from './Normalizer';
 import { round } from '../../../shared/lib/utils';
 import XToBToolPath from '../ToolPath/XToBToolPath';

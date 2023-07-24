@@ -1,9 +1,5 @@
-import { editorProcess } from '../../../lib/editor/process';
+import { processMode } from '../../../lib/ProcessMode';
 import sendMessage from '../utils/sendMessage';
-
-const _processImage = async (modelInfo, onProgress) => {
-    return editorProcess(modelInfo, onProgress);
-};
 
 const processImage = (modelInfo) => {
     const onProgress = (num) => {
@@ -16,7 +12,7 @@ const processImage = (modelInfo) => {
     }
 
     return new Promise((resolve, reject) => {
-        _processImage(modelInfo, onProgress).then((ret) => {
+        processMode(modelInfo, onProgress).then((ret) => {
             resolve(
                 sendMessage({ status: 'complete', value: ret })
             );

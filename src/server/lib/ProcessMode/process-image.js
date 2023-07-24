@@ -261,33 +261,3 @@ export function processVector(modelInfo, onProgress) {
     // todo: add onProgress in this return function
     return convertRasterToSvg(options);
 }
-
-
-// eslint-disable-next-line no-unused-vars
-function _process(modelInfo, onProgress) {
-    const { headType, sourceType, mode } = modelInfo;
-    if (sourceType === 'raster' || sourceType === 'svg') {
-        if (mode === 'greyscale') {
-            if (headType === 'laser') {
-                return processLaserGreyscale(modelInfo, onProgress);
-            } else {
-                return processCNCGreyscale(modelInfo, onProgress);
-            }
-        } else if (mode === 'bw') {
-            return processBW(modelInfo, onProgress);
-        } else if (mode === 'vector') {
-            // Note that vector is not flipped
-            return processVector(modelInfo, onProgress);
-        } else if (mode === 'halftone') {
-            return processHalftone(modelInfo, onProgress);
-        } else {
-            return Promise.resolve({
-                filename: ''
-            });
-        }
-    } else {
-        return Promise.resolve({
-            filename: ''
-        });
-    }
-}

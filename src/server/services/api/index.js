@@ -11,7 +11,6 @@ export * as image from './api-image';
 export * as file from './api-file';
 export * as profileDefinitions from './api-profile-definitions';
 export * as utils from './api-utils';
-export * as toolpath from './api-tool-path';
 export * as svg from './api-svg';
 export * as macros from './api-macros';
 export * as caseResrouces from './api-case-resrouces';
