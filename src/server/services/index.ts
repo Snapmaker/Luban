@@ -6,6 +6,7 @@ import * as meshHandlers from './channel-handlers/mesh';
 import configstore from './configstore';
 import { register as registerMachineHandlers } from './socket/machine-handlers';
 import { register as registerOSHandlers } from './socket/os-handlers';
+import { register as registerDiscoverHandlers } from './socket/discover-handlers';
 import monitor from './monitor';
 import { connectionManager } from './machine/ConnectionManager';
 import { socketSerial } from './machine/channels/socket-serial';
@@ -39,8 +40,7 @@ function startServices(server) {
     // ===============
     // Machine Discover
     // ===============
-    socketServer.registerEvent('machine:discover', connectionManager.refreshDevices);
-    socketServer.registerEvent('subscribe:discover', connectionManager.subscribeDevices);
+    registerDiscoverHandlers(socketServer);
 
     // ===============
     // machine control: http & serial port

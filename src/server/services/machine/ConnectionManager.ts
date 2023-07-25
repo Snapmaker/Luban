@@ -78,16 +78,6 @@ class ConnectionManager {
         }
     };
 
-    public subscribeDevices = (socket: SocketServer, bool: boolean) => {
-        if (bool) {
-            socketHttp.onSubscribe(socket);
-            socketSerial.onSubscribe(socket);
-        } else {
-            socketHttp.onDisSubscribe(socket);
-            socketSerial.onDisSubscribe(socket);
-        }
-    };
-
     public connectionOpen = async (socket, options) => {
         if (this.channel) {
             this.channel.off(ChannelEvent.Connected, this.onConnected);

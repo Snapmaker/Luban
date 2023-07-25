@@ -7,6 +7,8 @@ import { machineStore } from '../store/local-storage';
 import { lubanVisit } from './gaEvent';
 import log from './log';
 import socketController from './socket-controller';
+import ControllerEvent from '../connection/controller-events';
+import { ConnectionType } from '../flux/workspace/state';
 
 class SerialPortClient {
     private callbacks = {
@@ -49,6 +51,7 @@ class SerialPortClient {
 
         // HTTP events
         'machine:serial-discover': [],
+        [ControllerEvent.DiscoverMachine]: [],
         'machine:discover': [],
         'connection:open': [],
         'connection:close': [],
@@ -245,7 +248,10 @@ class SerialPortClient {
     }
 
     public listPorts() {
-        socketController.emit('machine:discover', { dataSource: this.dataSource, connectionType: 'serial' });
+        socketController.emit(ControllerEvent.DiscoverMachine, {
+            dataSource: this.dataSource,
+            connectionType: 'serial',
+        });
     }
 
     public emitEvent(eventName: string, options = {}, callback = null) {
@@ -255,7 +261,7 @@ class SerialPortClient {
 
     // Discover Wi-Fi enabled Snapmakers
     public listHTTPServers() {
-        socketController.emit('machine:discover', { connectionType: 'wifi' });
+        socketController.emit(ControllerEvent.DiscoverMachine, { connectionType: 'wifi' });
     }
 
     public slice(params) {
@@ -313,8 +319,16 @@ class SerialPortClient {
         socketController.emit('taskCancel:cutModel', taskId);
     }
 
-    public subscribeDiscover(bool) {
-        socketController.emit('subscribe:discover', bool);
+    public subscribeDiscover(connectionType: ConnectionType, bool: boolean): void {
+        if (bool) {
+            socketController.emit(ControllerEvent.DiscoverMachineStart, {
+                connectionType: connectionType,
+            });
+        } else {
+            socketController.emit(ControllerEvent.DiscoverMachineEnd, {
+                connectionType: connectionType,
+            });
+        }
     }
 
     // command(cmd, ...args) {

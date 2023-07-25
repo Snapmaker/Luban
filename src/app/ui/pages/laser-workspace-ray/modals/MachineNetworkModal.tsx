@@ -13,6 +13,7 @@ import controller from '../../../../lib/controller';
 import i18n from '../../../../lib/i18n';
 import { Button } from '../../../components/Buttons';
 import Modal from '../../../components/Modal';
+import useMountedState from '../../../utils/useMountedState';
 
 interface MachineNetworkModalProps {
     onClose?: () => void;
@@ -24,6 +25,7 @@ interface MachineNetworkModalProps {
 const MachineNetworkModal: React.FC<MachineNetworkModalProps> = (props) => {
     const isConnected = useSelector((state: RootState) => state.workspace.isConnected);
     const connectionType = useSelector((state: RootState) => state.workspace.connectionType);
+    const isMounted = useMountedState();
 
 
     const isConnectedViaSerialport = useMemo(() => {
@@ -31,27 +33,45 @@ const MachineNetworkModal: React.FC<MachineNetworkModalProps> = (props) => {
     }, [isConnected, connectionType]);
 
     // Current network
+    const [currentNetworkLoading, setCurrentNetworkLoading] = useState(false);
     const [currentNetwork, setCurrentNetwork] = useState('');
     const [currentNetworkIP, setCurrentNetworkIP] = useState('');
 
     useEffect(() => {
         if (isConnected) {
+            setCurrentNetworkLoading(true);
+
             controller
                 .emitEvent(ControllerEvent.GetMachineNetworkConfiguration)
                 .once(ControllerEvent.GetMachineNetworkConfiguration, (networkConfiguration: NetworkConfiguration) => {
+                    setCurrentNetworkLoading(false);
                     if (networkConfiguration.networkMode === NetworkMode.Station) {
+                        // setCurrentNetworkConfigured(true);
                         setCurrentNetwork(networkConfiguration.stationSSID);
                         controller
                             .emitEvent(ControllerEvent.GetMachineNetworkStationState)
                             .once(ControllerEvent.GetMachineNetworkStationState, (networkStationState: NetworkStationState) => {
                                 if (networkStationState.stationState === 3) {
                                     setCurrentNetworkIP(networkStationState.stationIP);
+                                } else {
+                                    setCurrentNetworkIP('');
                                 }
                             });
+                    } else {
+                        // other network mode not supported currently
+                        // setCurrentNetworkConfigured(false);
+                        setCurrentNetwork('');
+                        setCurrentNetworkIP('');
                     }
                 });
+
+            setTimeout(() => {
+                if (isMounted()) {
+                    setCurrentNetworkLoading(false);
+                }
+            }, 3000);
         }
-    }, [isConnected]);
+    }, [isConnected, isMounted]);
 
     // Network options
     const [networkOptions, setNetworkOptions] = useState([]);
@@ -129,15 +149,31 @@ const MachineNetworkModal: React.FC<MachineNetworkModalProps> = (props) => {
                                 <span className="margin-right-4">{i18n._('Machine Network')}:</span>
                                 {
                                     currentNetwork && (
-                                        <span>{currentNetwork}</span>
+                                        <>
+                                            <span>{currentNetwork}</span>
+                                            {
+                                                currentNetworkIP && (
+                                                    <span>({currentNetworkIP})</span>
+                                                )
+                                            }
+                                            {
+                                                !currentNetworkIP && (
+                                                    <span>({i18n._('Not Connected')})</span>
+                                                )
+                                            }
+                                        </>
                                     )
                                 }
                                 {
-                                    !currentNetwork && (
-                                        <span>{i18n._('key-Workspace/Connection-Unknown')}</span>
+                                    currentNetworkLoading && (
+                                        <span>{i18n._('Loading...')}</span>
                                     )
                                 }
-                                {currentNetworkIP && <span>({currentNetworkIP})</span>}
+                                {
+                                    !currentNetworkLoading && !currentNetwork && (
+                                        <span>{i18n._('Not Configured')}</span>
+                                    )
+                                }
                             </p>
                         </div>
                     )
