@@ -1,13 +1,11 @@
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { includes } from 'lodash';
-import React, { useCallback, useEffect, useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import {
     CONNECTION_SWITCH_CNC,
     CONNECTION_UPDATE_TOOLHEAD_SPEED,
-    WORKFLOW_STATUS_PAUSED,
-    WORKFLOW_STATUS_PAUSING,
-    WORKFLOW_STATUS_RUNNING
 } from '../../../constants';
 import { LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, MACHINE_SERIES } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
@@ -54,7 +52,7 @@ const CNC: React.FC = () => {
 
     const isPrinting = useMemo(() => {
         return includes(
-            [WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_PAUSING],
+            [WorkflowStatus.Running, WorkflowStatus.Pausing, WorkflowStatus.Paused],
             workflowStatus
         );
     }, [workflowStatus]);

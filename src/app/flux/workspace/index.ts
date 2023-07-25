@@ -1,3 +1,4 @@
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { includes, isEmpty, isNil, isUndefined } from 'lodash';
 import * as THREE from 'three';
 import { v4 as uuid } from 'uuid';
@@ -19,10 +20,6 @@ import {
     LEFT_EXTRUDER,
     PROTOCOL_TEXT,
     RIGHT_EXTRUDER,
-    WORKFLOW_STATUS_IDLE,
-    WORKFLOW_STATUS_PAUSED,
-    WORKFLOW_STATUS_RUNNING,
-    WORKFLOW_STATUS_UNKNOWN
 } from '../../constants';
 import {
     EMERGENCY_STOP_BUTTON,
@@ -45,6 +42,7 @@ import { GCodeFileObject } from './action-gcode';
 import type { MachineStateUpdateOptions } from './state';
 import { ConnectionType, WORKSPACE_STAGE, initialState } from './state';
 
+
 export { WORKSPACE_STAGE } from './state';
 
 
@@ -59,8 +57,8 @@ export const actions = {
             connectionStatus: CONNECTION_STATUS_IDLE,
             isHomed: null,
             connectLoading: false,
-            workflowStatus: connectionType === ConnectionType.WiFi ? WORKFLOW_STATUS_UNKNOWN : WORKFLOW_STATUS_IDLE,
-            // workflowState: WORKFLOW_STATE_IDLE,
+            // TODO: unify?
+            workflowStatus: connectionType === ConnectionType.WiFi ? WorkflowStatus.Unknown : WorkflowStatus.Idle,
             laserFocalLength: null,
             workPosition: { // work position
                 x: '0.000',
@@ -184,7 +182,7 @@ export const actions = {
                         })
                     );
                     dispatch(actions.executeGcodeG54(series, headType));
-                    if (includes([WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING], status)) {
+                    if (includes([WorkflowStatus.Running, WorkflowStatus.Paused], status)) {
                         controller
                             .emitEvent(CONNECTION_GET_GCODEFILE)
                             .once(CONNECTION_GET_GCODEFILE, (res) => {

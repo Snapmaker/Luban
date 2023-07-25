@@ -20,7 +20,7 @@ const DEFAULT_STATE = {
         right: {
             show: true,
             widgets: [
-                'working-progress', 'wifi-transport', 'enclosure', 'purifier', 'control', 'macro'
+                'job-status', 'wifi-transport', 'enclosure', 'purifier', 'control', 'macro',
             ]
         }
     },

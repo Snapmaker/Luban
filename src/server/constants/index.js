@@ -36,8 +36,6 @@ export const COMPLUTE_STATUS = 'Complete';
 // CuraEngine binaries
 export const RESOURCES_DIR = '../resources';
 
-export const WORKFLOW_STATE_PAUSED = 'paused';
-export const WORKFLOW_STATE_IDLE = 'idle';
 
 export const MACHINE_SERIES = {
     ORIGINAL: {

@@ -1,31 +1,28 @@
 /* eslint-disable import/no-cycle */
 import events from 'events';
-import { machineStore } from '../../store/local-storage';
+
+import { actions as workspaceActions } from '.';
 import {
-    CONNECTION_HEARTBEAT,
-    CONNECTION_STATUS_CONNECTING,
-    // WORKFLOW_STATUS_RUNNING,
-    CONNECTION_OPEN,
     CONNECTION_CLOSE,
+    CONNECTION_CLOSE_IMPROPER,
+    CONNECTION_COORDINATE_MOVE,
     CONNECTION_EXECUTE_GCODE,
-    CONNECTION_START_GCODE,
-    CONNECTION_RESUME_GCODE,
-    CONNECTION_PAUSE_GCODE,
+    CONNECTION_GO_HOME,
+    CONNECTION_HEARTBEAT,
+    CONNECTION_OPEN,
+    CONNECTION_SET_WORK_ORIGIN,
+    CONNECTION_STATUS_CONNECTING,
     CONNECTION_STOP_GCODE,
     CONNECTION_TYPE_SERIAL,
     CONNECTION_TYPE_WIFI,
-    CONNECTION_GO_HOME,
-    CONNECTION_COORDINATE_MOVE,
-    CONNECTION_SET_WORK_ORIGIN,
-    CONNECTION_CLOSE_IMPROPER,
-    // WORKFLOW_STATUS_STOPPING
 } from '../../constants';
 import { controller } from '../../lib/controller';
-import { actions as workspaceActions } from '.';
-import connectActions from './action-connect';
 import log from '../../lib/log';
-import baseActions from './action-base';
 import { dispatch } from '../../store';
+import { machineStore } from '../../store/local-storage';
+import baseActions from './action-base';
+import connectActions from './action-connect';
+import ControllerEvent from '../../connection/controller-events';
 
 /**
  * Server represents HTTP Server on Snapmaker 2.
@@ -148,8 +145,9 @@ export class Server extends events.EventEmitter {
     }
 
     startServerGcode(args, callback) {
-        controller.emitEvent(CONNECTION_START_GCODE, args)
-            .once(CONNECTION_START_GCODE, ({ msg, code }) => {
+        controller
+            .emitEvent(ControllerEvent.StartGCode, args)
+            .once(ControllerEvent.StartGCode, ({ msg, code }) => {
                 dispatch(baseActions.updateState({
                     isSendedOnWifi: true
                 }));
@@ -159,10 +157,6 @@ export class Server extends events.EventEmitter {
                 }
                 if (this.isWifi) {
                     this.gcodePrintingInfo.startTime = new Date().getTime();
-                    // I cancel the status update by ourselves, this status only update by heartbeat
-                    // dispatch(baseActions.updateState({
-                    //     workflowStatus: WORKFLOW_STATUS_RUNNING
-                    // }));
                 }
             });
 
@@ -171,16 +165,18 @@ export class Server extends events.EventEmitter {
         }));
     }
 
-    resumeServerGcode(args, callback) {
-        controller.emitEvent(CONNECTION_RESUME_GCODE, args, callback)
-            .once(CONNECTION_RESUME_GCODE, (options) => {
+    pauseServerGcode(callback) {
+        controller
+            .emitEvent(ControllerEvent.PauseGCode)
+            .once(ControllerEvent.PauseGCode, (options) => {
                 callback && callback(options);
             });
     }
 
-    pauseServerGcode(callback) {
-        controller.emitEvent(CONNECTION_PAUSE_GCODE)
-            .once(CONNECTION_PAUSE_GCODE, (options) => {
+    resumeServerGcode(args, callback) {
+        controller
+            .emitEvent(ControllerEvent.ResumeGCode, args, callback)
+            .once(ControllerEvent.ResumeGCode, (options) => {
                 callback && callback(options);
             });
     }
@@ -195,7 +191,6 @@ export class Server extends events.EventEmitter {
                     return;
                 }
                 dispatch(baseActions.updateState({
-                    // workflowStatus: WORKFLOW_STATUS_STOPPING,
                     isSendedOnWifi: true
                 }));
             });

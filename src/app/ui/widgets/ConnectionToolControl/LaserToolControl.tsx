@@ -1,3 +1,4 @@
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { includes, isNil } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -5,9 +6,6 @@ import { useSelector } from 'react-redux';
 import {
     CONNECTION_LASER_POWER,
     CONNECTION_SWITCH_LASER_POWER,
-    WORKFLOW_STATUS_PAUSED,
-    WORKFLOW_STATUS_PAUSING,
-    WORKFLOW_STATUS_RUNNING
 } from '../../../constants';
 import { LEVEL_TWO_POWER_LASER_FOR_SM2 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
@@ -34,7 +32,11 @@ const LaserToolControl: React.FC = () => {
     const [localLaserPower, setLocalLaserPower] = useState<number>(laserPower || 1);
 
     const isPrinting = useCallback(() => {
-        return includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_PAUSING], workflowStatus);
+        return includes([
+            WorkflowStatus.Running,
+            WorkflowStatus.Pausing,
+            WorkflowStatus.Paused,
+        ], workflowStatus);
     }, [workflowStatus]);
 
     const onClickLaserPower = useCallback(() => {

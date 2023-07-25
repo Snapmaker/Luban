@@ -1,15 +1,20 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import _ from 'lodash';
-import i18n from '../../../lib/i18n';
+import PropTypes from 'prop-types';
+import React from 'react';
+import { connect } from 'react-redux';
+
+import {
+    CONNECTION_TYPE_WIFI,
+    CONNECTION_WORKSPEED_FACTOR,
+} from '../../../constants';
 import { actions as workspaceActions } from '../../../flux/workspace';
-import { CONNECTION_TYPE_WIFI, CONNECTION_WORKSPEED_FACTOR, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING } from '../../../constants';
-import AttributeContainer from './components/AttributeContainer';
 import { controller } from '../../../lib/controller';
+import i18n from '../../../lib/i18n';
+import AttributeContainer from './components/AttributeContainer';
 
 
-class WorkSpeed extends PureComponent {
+class WorkSpeed extends React.PureComponent {
     static propTypes = {
         workflowStatus: PropTypes.string,
         connectionType: PropTypes.string,
@@ -24,7 +29,7 @@ class WorkSpeed extends PureComponent {
     actions = {
         isWifiPrinting: () => {
             const { workflowStatus, connectionType } = this.props;
-            return _.includes([WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED], workflowStatus)
+            return _.includes([WorkflowStatus.Running, WorkflowStatus.Paused], workflowStatus)
                 && connectionType === CONNECTION_TYPE_WIFI;
         },
         onClickWorkSpeed: (value) => {

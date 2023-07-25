@@ -1,10 +1,10 @@
 import type { Machine } from '@snapmaker/luban-platform';
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import classNames from 'classnames';
-import { isObject, map } from 'lodash';
+import { includes, isObject, map } from 'lodash';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { WORKFLOW_STATE_IDLE, WORKFLOW_STATE_PAUSED, WORKFLOW_STATE_RUNNING } from '../../../constants';
 import {
     HEAD_CNC,
     HEAD_LASER,
@@ -311,12 +311,18 @@ const SerialConnection: React.FC = () => {
                                 {i18n._(connectedMachine.label)}
                             </span>
                             <span className={styles['connection-state-icon']}>
-                                {workflowStatus === WORKFLOW_STATE_IDLE
-                                    && <i className="sm-icon-14 sm-icon-idle" />}
-                                {workflowStatus === WORKFLOW_STATE_PAUSED
-                                    && <i className="sm-icon-14 sm-icon-paused" />}
-                                {workflowStatus === WORKFLOW_STATE_RUNNING
-                                    && <i className="sm-icon-14 sm-icon-running" />}
+                                {
+                                    includes([WorkflowStatus.Unknown, WorkflowStatus.Idle], workflowStatus)
+                                    && <i className="sm-icon-14 sm-icon-idle" />
+                                }
+                                {
+                                    includes([WorkflowStatus.Paused, WorkflowStatus.Pausing], workflowStatus)
+                                    && <i className="sm-icon-14 sm-icon-paused" />
+                                }
+                                {
+                                    includes([WorkflowStatus.Running], workflowStatus)
+                                    && <i className="sm-icon-14 sm-icon-running" />
+                                }
                             </span>
                         </div>
                         {/* Render status badge for each machine module */}

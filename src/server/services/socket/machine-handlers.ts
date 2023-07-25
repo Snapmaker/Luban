@@ -8,10 +8,6 @@ function register(socketServer: SocketServer): void {
         'connection:open': connectionManager.connectionOpen,
         'connection:close': connectionManager.connectionClose,
         'connection:closeImproper': connectionManager.connectionCloseImproper,
-        'connection:startGcode': connectionManager.startGcode,
-        'connection:resumeGcode': connectionManager.resumeGcode,
-        'connection:pauseGcode': connectionManager.pauseGcode,
-        'connection:stopGcode': connectionManager.stopGcode,
         'connection:headBeginWork': connectionManager.startGcodeAction,
         'connection:executeGcode': connectionManager.executeGcode,
         'connection:startHeartbeat': connectionManager.startHeartbeat,
@@ -39,6 +35,12 @@ function register(socketServer: SocketServer): void {
         'connection:updateToolHeadSpeed': connectionManager.updateToolHeadSpeed, // CNC, FOR NOW
         'connection:switchCNC': connectionManager.switchCNC, // CNC, FOR NOW
         'connection:updateWorkNozzle': connectionManager.switchExtruder,
+
+        // machine print G-code
+        [ControllerEvent.StartGCode]: connectionManager.startGcode,
+        [ControllerEvent.PauseGCode]: connectionManager.pauseGcode,
+        [ControllerEvent.ResumeGCode]: connectionManager.resumeGcode,
+        [ControllerEvent.StopGCode]: connectionManager.stopGcode,
 
         // machine network
         'connection:wifiStatusTest': connectionManager.wifiStatusTest,

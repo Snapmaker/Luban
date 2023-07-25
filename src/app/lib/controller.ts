@@ -1,7 +1,8 @@
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import isEmpty from 'lodash/isEmpty';
 import noop from 'lodash/noop';
 
-import { MARLIN, PROTOCOL_TEXT, WORKFLOW_STATE_IDLE } from '../constants';
+import { MARLIN, PROTOCOL_TEXT } from '../constants';
 import { machineStore } from '../store/local-storage';
 import { lubanVisit } from './gaEvent';
 import log from './log';
@@ -123,7 +124,7 @@ class SerialPortClient {
 
     public settings = {};
 
-    public workflowState = WORKFLOW_STATE_IDLE;
+    public workflowState = WorkflowStatus.Idle;
 
     private static map = new Map();
 
@@ -186,7 +187,7 @@ class SerialPortClient {
                             this.type = '';
                             this.state = {};
                             this.settings = {};
-                            this.workflowState = WORKFLOW_STATE_IDLE;
+                            this.workflowState = WorkflowStatus.Idle;
                         }
                     }
                 }
