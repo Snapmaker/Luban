@@ -1,4 +1,4 @@
-// import { valueOf } from '../lib/contants-utils';
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 
 export const DEFAULT_LUBAN_HOST = 'luban://127.0.0.1';
 // Metric and Imperial units
@@ -15,7 +15,7 @@ export const CONNECTION_OPEN = 'connection:open';
 export const CONNECTION_CLOSE = 'connection:close';
 export const CONNECTION_CLOSE_IMPROPER = 'connection:closeImproper';
 export const CONNECTION_EXECUTE_GCODE = 'connection:executeGcode';
-export const CONNECTION_START_GCODE = 'connection:startGcode';
+// export const CONNECTION_START_GCODE = 'connection:startGcode';
 export const CONNECTION_RESUME_GCODE = 'connection:resumeGcode';
 export const CONNECTION_PAUSE_GCODE = 'connection:pauseGcode';
 export const CONNECTION_STOP_GCODE = 'connection:stopGcode';
@@ -54,40 +54,35 @@ export const MINIMUM_WIDTH_AND_HEIGHT = 0.01;
 // Controller
 export const MARLIN = 'Marlin';
 
-// Workflow State
-export const WORKFLOW_STATE_RUNNING = 'running';
-export const WORKFLOW_STATE_PAUSED = 'paused';
-export const WORKFLOW_STATE_IDLE = 'idle';
-
 // Workflow status
-export const WORKFLOW_STATUS_UNKNOWN = 'unknown';
-export const WORKFLOW_STATUS_IDLE = 'idle';
-export const WORKFLOW_STATUS_STARTING = 'starting';
-export const WORKFLOW_STATUS_RUNNING = 'running';
-export const WORKFLOW_STATUS_PAUSING = 'pausing';
-export const WORKFLOW_STATUS_PAUSED = 'paused';
-export const WORKFLOW_STATUS_STOPPING = 'stopping';
-export const WORKFLOW_STATUS_STOPPED = 'stopped';
-export const WORKFLOW_STATUS_FINISHING = 'finishing';
-export const WORKFLOW_STATUS_COMPLETED = 'completed';
-export const WORKFLOW_STATUS_RECOVERING = 'recovering';
-export const WROKFLOW_STATUS_RESUMING = 'resuming';
+// export const WORKFLOW_STATUS_UNKNOWN = 'unknown';
+// export const WORKFLOW_STATUS_IDLE = 'idle';
+// export const WORKFLOW_STATUS_STARTING = 'starting';
+// export const WORKFLOW_STATUS_RUNNING = 'running';
+// export const WORKFLOW_STATUS_PAUSING = 'pausing';
+// export const WORKFLOW_STATUS_PAUSED = 'paused';
+// export const WORKFLOW_STATUS_STOPPING = 'stopping';
+// export const WORKFLOW_STATUS_STOPPED = 'stopped';
+// export const WORKFLOW_STATUS_FINISHING = 'finishing';
+// export const WORKFLOW_STATUS_COMPLETED = 'completed';
+// export const WORKFLOW_STATUS_RECOVERING = 'recovering';
+// export const WROKFLOW_STATUS_RESUMING = 'resuming';
 
 export const LOAD_FIMAMENT = 'load';
 export const UNLOAD_FILAMENT = 'unload';
 
 export const WORKFLOW_STATUS_MAP = {
-    '0': WORKFLOW_STATE_IDLE,
-    '1': WORKFLOW_STATUS_STARTING,
-    '2': WORKFLOW_STATUS_RUNNING,
-    '3': WORKFLOW_STATUS_PAUSING,
-    '4': WORKFLOW_STATUS_PAUSED,
-    '5': WORKFLOW_STATUS_STOPPING,
-    '6': WORKFLOW_STATUS_STOPPED,
-    '7': WORKFLOW_STATUS_FINISHING,
-    '8': WORKFLOW_STATUS_COMPLETED,
-    '9': WORKFLOW_STATUS_RECOVERING,
-    '10': WROKFLOW_STATUS_RESUMING
+    '0': WorkflowStatus.Idle,
+    '1': WorkflowStatus.Starting,
+    '2': WorkflowStatus.Running,
+    '3': WorkflowStatus.Pausing,
+    '4': WorkflowStatus.Paused,
+    '5': WorkflowStatus.Stopping,
+    '6': WorkflowStatus.Stopped,
+    '7': WorkflowStatus.Finishing,
+    '8': WorkflowStatus.Completed,
+    '9': WorkflowStatus.Recovering,
+    '10': WorkflowStatus.Resuming,
 };
 
 export const COORDINATE_AXIS = {

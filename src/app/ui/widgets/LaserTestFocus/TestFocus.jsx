@@ -1,19 +1,19 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import classNames from 'classnames';
+import PropTypes from 'prop-types';
+import React, { PureComponent } from 'react';
 import { Trans } from 'react-i18next';
-import Slider from '../../components/Slider';
+import { connect } from 'react-redux';
 
+import { actions as workspaceActions } from '../../../flux/workspace';
+import generateLaserFocusGcode from '../../../lib/generateLaserFocusGcode';
 import i18n from '../../../lib/i18n';
 import { Button } from '../../components/Buttons';
-import Modal from '../../components/Modal';
 import { NumberInput as Input } from '../../components/Input';
+import Modal from '../../components/Modal';
+import Slider from '../../components/Slider';
 import TipTrigger from '../../components/TipTrigger';
 import styles from './styles.styl';
-import generateLaserFocusGcode from '../../../lib/generateLaserFocusGcode';
-import { actions as workspaceActions } from '../../../flux/workspace';
-import { WORKFLOW_STATE_IDLE } from '../../../constants';
 
 
 const Z_VALUES_1 = [0, -0.5, -1, -1.5, -2, -2.5];
@@ -72,7 +72,7 @@ class TestFocus extends PureComponent {
             ...this.actions
         };
         const { isConnected, showInstructions } = this.props;
-        const isIdle = this.props.workflowState === WORKFLOW_STATE_IDLE;
+        const isIdle = this.props.workflowState === WorkflowStatus.Idle;
 
         return (
             <React.Fragment>

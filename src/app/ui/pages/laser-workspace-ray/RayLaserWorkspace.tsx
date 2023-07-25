@@ -1,3 +1,4 @@
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import classNames from 'classnames';
 import i18next from 'i18next';
 import _ from 'lodash';
@@ -9,8 +10,7 @@ import { useHistory } from 'react-router-dom';
 import {
     CNC_GCODE_SUFFIX,
     LASER_GCODE_SUFFIX,
-    PRINTING_GCODE_SUFFIX,
-    WORKFLOW_STATE_IDLE
+    PRINTING_GCODE_SUFFIX
 } from '../../../constants';
 import { RootState } from '../../../flux/index.def';
 import { actions as widgetActions } from '../../../flux/widget';
@@ -33,6 +33,7 @@ import RayUploadWidget from '../../widgets/RayUploadWidget';
 import VisualizerWidget from '../../widgets/WorkspaceVisualizer';
 import VisualizerOverlay from './VisualizerOverlay';
 import MachineNetworkModal from './modals/MachineNetworkModal';
+import JobStatusWidget from '../../widgets/JobStatusWidget';
 
 
 const allWidgets = {
@@ -42,6 +43,7 @@ const allWidgets = {
     'visualizer': VisualizerWidget,
     'enclosure': EnclosureWidget,
     'ray-machining': RayMachiningWidget,
+    'job-status': JobStatusWidget,
 };
 
 
@@ -63,7 +65,7 @@ interface WorkspaceRightViewProps {
 const WorkspaceRightView: React.FC<WorkspaceRightViewProps> = (props) => {
     const { listActions, controlActions } = props;
 
-    const rightWidgetNames = ['connection', 'ray-machining'];
+    const rightWidgetNames = ['connection', 'ray-machining', 'job-status'];
 
     return (
         <div
@@ -293,7 +295,7 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
                 )}
             >
                 <Dropzone
-                    disabled={isDraggingWidget || controller.workflowState !== WORKFLOW_STATE_IDLE}
+                    disabled={isDraggingWidget || !includes([WorkflowStatus.Idle], controller.workflowState)}
                     accept={ACCEPT}
                     dragEnterMsg={i18n._('key-Workspace/Page-Drop a G-code file here.')}
                     onDropAccepted={actions.onDropAccepted}

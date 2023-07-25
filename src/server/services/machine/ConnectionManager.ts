@@ -1,3 +1,4 @@
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import fs from 'fs';
 import { includes } from 'lodash';
 
@@ -13,16 +14,15 @@ import {
     LEVEL_ONE_POWER_LASER_FOR_SM2,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
     MACHINE_SERIES,
-    STANDARD_CNC_TOOLHEAD_FOR_SM2,
-    WORKFLOW_STATE_PAUSED,
+    STANDARD_CNC_TOOLHEAD_FOR_SM2
 } from '../../constants';
 import ScheduledTasks from '../../lib/ScheduledTasks';
 import SocketServer from '../../lib/SocketManager';
 import logger from '../../lib/logger';
 import ProtocolDetector, { NetworkProtocol, SerialPortProtocol } from './ProtocolDetector';
 import { ChannelEvent } from './channels/ChannelEvent';
-import SacpSerialChannel, { sacpSerialChannel } from './channels/SacpSerialChannel';
 import socketTcp from './channels/SACP-TCP';
+import SacpSerialChannel, { sacpSerialChannel } from './channels/SacpSerialChannel';
 import { sacpUdpChannel } from './channels/SacpUdpChannel';
 import socketHttp from './channels/socket-http';
 import { socketSerial } from './channels/socket-serial';
@@ -352,7 +352,7 @@ class ConnectionManager {
                 }
                 // this.socket.startGcode(options);
             } else {
-                if (headType === HEAD_LASER && workflowState !== WORKFLOW_STATE_PAUSED) {
+                if (headType === HEAD_LASER && workflowState !== WorkflowStatus.Paused) {
                     this.channel.command(socket, {
                         args: ['G0 X0 Y0 B0 F1000', null]
                     });

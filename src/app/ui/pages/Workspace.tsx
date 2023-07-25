@@ -1,3 +1,4 @@
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import classNames from 'classnames';
 import i18next from 'i18next';
 import _ from 'lodash';
@@ -7,8 +8,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 
-import { CNC_GCODE_SUFFIX, LASER_GCODE_SUFFIX, PRINTING_GCODE_SUFFIX, WORKFLOW_STATE_IDLE } from '../../constants';
+import { CNC_GCODE_SUFFIX, LASER_GCODE_SUFFIX, PRINTING_GCODE_SUFFIX } from '../../constants';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, MACHINE_SERIES } from '../../constants/machines';
+import { RootState } from '../../flux/index.def';
 import { actions as widgetActions } from '../../flux/widget';
 import { actions as workspaceActions } from '../../flux/workspace';
 import { controller } from '../../lib/controller';
@@ -38,7 +40,6 @@ import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import PurifierWidget from '../widgets/Purifier';
 import WebcamWidget from '../widgets/Webcam';
 import VisualizerWidget from '../widgets/WorkspaceVisualizer';
-import { RootState } from '../../flux/index.def';
 
 
 const allWidgets = {
@@ -297,7 +298,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ isPopup, onClose, style, classNam
                 updateTabContainer={actions.updateTabContainer}
             >
                 <Dropzone
-                    disabled={isDraggingWidget || controller.workflowState !== WORKFLOW_STATE_IDLE}
+                    disabled={isDraggingWidget || controller.workflowState !== WorkflowStatus.Idle}
                     accept={ACCEPT}
                     dragEnterMsg={i18n._('key-Workspace/Page-Drop a G-code file here.')}
                     onDropAccepted={actions.onDropAccepted}

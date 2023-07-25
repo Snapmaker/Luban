@@ -1,3 +1,4 @@
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import TWEEN from '@tweenjs/tween.js';
 import colornames from 'colornames';
 import isEqual from 'lodash/isEqual';
@@ -16,13 +17,6 @@ import {
     IMAGE_WIFI_WARNING,
     MARLIN,
     PROTOCOL_TEXT,
-    WORKFLOW_STATE_IDLE,
-    WORKFLOW_STATE_PAUSED,
-    WORKFLOW_STATE_RUNNING,
-    WORKFLOW_STATUS_IDLE,
-    WORKFLOW_STATUS_PAUSED,
-    WORKFLOW_STATUS_RUNNING,
-    WORKFLOW_STATUS_UNKNOWN
 } from '../../../constants';
 import { WORKSPACE_STAGE, actions as workspaceActions } from '../../../flux/workspace';
 import { controller } from '../../../lib/controller';
@@ -36,7 +30,6 @@ import ProgressBar from '../../components/ProgressBar';
 import Canvas from '../../components/SMCanvas';
 // import WorkflowControl from './WorkflowControl';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
-
 import { loadTexture } from './helpers';
 import styles from './index.styl';
 import Loading from './Loading';
@@ -208,15 +201,15 @@ class Visualizer extends React.PureComponent {
             if (this.state.workflowState !== workflowState) {
                 this.setState({ workflowState });
                 switch (workflowState) {
-                    case WORKFLOW_STATE_IDLE:
+                    case WorkflowStatus.Idle:
                         this.stopToolheadRotationAnimation();
                         this.updateWorkPositionToZero();
                         this.props.setGcodePrintingIndex(0);
                         break;
-                    case WORKFLOW_STATE_RUNNING:
+                    case WorkflowStatus.Running:
                         this.startToolheadRotationAnimation();
                         break;
-                    case WORKFLOW_STATE_PAUSED:
+                    case WorkflowStatus.Paused:
                         this.stopToolheadRotationAnimation();
                         break;
                     default:
@@ -238,7 +231,7 @@ class Visualizer extends React.PureComponent {
                     state
                 }
             });
-            if (this.state.workflowState === WORKFLOW_STATE_RUNNING) {
+            if (this.state.workflowState === WorkflowStatus.Running) {
                 this.updateWorkPosition(pos);
             }
         },
@@ -285,7 +278,7 @@ class Visualizer extends React.PureComponent {
                 machineSize,
             } = this.props;
 
-            if (workflowStatus === WORKFLOW_STATUS_IDLE) {
+            if (workflowStatus === WorkflowStatus.Idle) {
                 log.info('Start to run G-code...');
                 server.startServerGcode({
                     headType,
@@ -333,7 +326,7 @@ class Visualizer extends React.PureComponent {
                 });
             }
 
-            if (workflowStatus === WORKFLOW_STATUS_PAUSED) {
+            if (workflowStatus === WorkflowStatus.Paused) {
                 server.resumeServerGcode({
                     headType: this.props.headType,
                     pause3dpStatus: this.props.pause3dpStatus,
@@ -423,7 +416,7 @@ class Visualizer extends React.PureComponent {
                     pos: null
                 });
             }
-            if (workflowStatus === WORKFLOW_STATUS_RUNNING) {
+            if (workflowStatus === WorkflowStatus.Running) {
                 server.pauseServerGcode(() => {
                     if (connectionType === CONNECTION_TYPE_SERIAL) {
                         this.actions.tryPause();
@@ -443,7 +436,7 @@ class Visualizer extends React.PureComponent {
             if (connectionType === CONNECTION_TYPE_SERIAL) {
                 this.actions.tryPause();
             }
-            if (workflowStatus !== WORKFLOW_STATE_IDLE) {
+            if (workflowStatus !== WorkflowStatus.Idle) {
                 setTimeout(() => {
                     server.stopServerGcode();
                 }, 60);
@@ -453,7 +446,7 @@ class Visualizer extends React.PureComponent {
             // dismiss gcode file name
             this.props.clearGcode();
             const { workflowState } = this.state;
-            if ([WORKFLOW_STATE_IDLE].includes(workflowState)) {
+            if ([WorkflowStatus.Idle].includes(workflowState)) {
                 this.props.executeGcode(null, null, 'gcode:unload');
             }
         },
@@ -550,24 +543,24 @@ class Visualizer extends React.PureComponent {
             this.canvas.current && this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(machineSize.z * 2, 300)), new THREE.Vector3());
         }
 
-        if (this.props.workflowStatus !== WORKFLOW_STATUS_IDLE && nextProps.workflowStatus === WORKFLOW_STATUS_IDLE) {
+        if (this.props.workflowStatus !== WorkflowStatus.Idle && nextProps.workflowStatus === WorkflowStatus.Idle) {
             this.stopToolheadRotationAnimation();
             this.updateWorkPositionToZero();
             this.props.setGcodePrintingIndex(0);
         }
-        if (this.props.workflowStatus !== WORKFLOW_STATUS_UNKNOWN && nextProps.workflowStatus === WORKFLOW_STATUS_UNKNOWN) {
+        if (this.props.workflowStatus !== WorkflowStatus.Unknown && nextProps.workflowStatus === WorkflowStatus.Unknown) {
             this.stopToolheadRotationAnimation();
             this.updateWorkPositionToZero();
             this.props.setGcodePrintingIndex(0);
         }
-        if (this.props.workflowStatus !== WORKFLOW_STATUS_RUNNING && nextProps.workflowStatus === WORKFLOW_STATUS_RUNNING) {
+        if (this.props.workflowStatus !== WorkflowStatus.Running && nextProps.workflowStatus === WorkflowStatus.Running) {
             for (let i = 0; i < nextProps.gcodePrintingInfo.sent; i++) {
                 this.props.setGcodePrintingIndex(i);
             }
             this.startToolheadRotationAnimation();
             this.renderScene();
         }
-        if (this.props.workflowStatus !== WORKFLOW_STATUS_PAUSED && nextProps.workflowStatus === WORKFLOW_STATUS_PAUSED) {
+        if (this.props.workflowStatus !== WorkflowStatus.Paused && nextProps.workflowStatus === WorkflowStatus.Paused) {
             this.stopToolheadRotationAnimation();
         }
         if (nextProps.gcodePrintingInfo && nextProps.gcodePrintingInfo.sent > 0 && nextProps.gcodePrintingInfo.sent !== this.props.gcodePrintingInfo.sent) {

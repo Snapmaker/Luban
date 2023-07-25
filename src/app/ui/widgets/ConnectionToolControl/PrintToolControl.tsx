@@ -1,7 +1,8 @@
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { Space } from 'antd';
 import { capitalize } from 'lodash';
 import React, { useCallback, useMemo, useState } from 'react';
-import { useDispatch, useSelector, shallowEqual } from 'react-redux';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
 import {
     CONNECTION_BED_TEMPERATURE,
@@ -13,21 +14,18 @@ import {
     LEFT_EXTRUDER,
     LEFT_EXTRUDER_MAP_NUMBER,
     RIGHT_EXTRUDER_MAP_NUMBER,
-    WORKFLOW_STATUS_PAUSED,
-    WORKFLOW_STATUS_PAUSING,
-    WORKFLOW_STATUS_RUNNING
 } from '../../../constants';
-import { machine as SnapmakerJ1Machine } from '../../../machines/snapmaker-j1';
 import { isDualExtruder } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
+import { machine as SnapmakerJ1Machine } from '../../../machines/snapmaker-j1';
 import Anchor from '../../components/Anchor';
 import { Button } from '../../components/Buttons';
 import JogDistance from './JogDistance';
-import AttributeContainer from './components/AttributeContainer';
 import WorkSpeed from './WorkSpeed';
+import AttributeContainer from './components/AttributeContainer';
 
 
 const PrintToolControl: React.FC = () => {
@@ -163,14 +161,14 @@ const PrintToolControl: React.FC = () => {
 
 
     const isPrinting = () => {
-        return workflowStatus === WORKFLOW_STATUS_RUNNING
-            || workflowStatus === WORKFLOW_STATUS_PAUSING
-            || workflowStatus === WORKFLOW_STATUS_PAUSED;
+        return workflowStatus === WorkflowStatus.Running
+            || workflowStatus === WorkflowStatus.Pausing
+            || workflowStatus === WorkflowStatus.Paused;
     };
 
     const isPausingOrPrinting = () => {
-        return workflowStatus === WORKFLOW_STATUS_RUNNING
-            || workflowStatus === WORKFLOW_STATUS_PAUSING;
+        return workflowStatus === WorkflowStatus.Running
+            || workflowStatus === WorkflowStatus.Pausing;
     };
 
     const leftNozzleTemperature = nozzleTemperature || nozzleTemperature1;
@@ -211,7 +209,7 @@ const PrintToolControl: React.FC = () => {
                 </div>
                 <Button
                     type="default"
-                    disabled={squeezing || workflowStatus === WORKFLOW_STATUS_RUNNING}
+                    disabled={squeezing || workflowStatus === WorkflowStatus.Running}
                     onClick={switchWorkNozzle}
                 >
                     {i18n._('key-Workspace/Marlin-Switch working nozzle')}

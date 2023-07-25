@@ -1,6 +1,12 @@
 
 
 enum ControllerEvent {
+    // G-code
+    StartGCode = 'connection:startGcode',
+    PauseGCode = 'connection:pauseGcode',
+    ResumeGCode = 'connection:resumeGcode',
+    StopGCode = 'connection:stopGcode',
+
     // network
     ListWiFiNetworks = 'os:list-wifi-networks',
 

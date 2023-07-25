@@ -1,8 +1,9 @@
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { Progress } from 'antd';
+import { includes } from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import { WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_PAUSING, WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_STOPPING, WROKFLOW_STATUS_RESUMING } from '../../../constants';
 import { RootState } from '../../../flux/index.def';
 import i18n from '../../../lib/i18n';
 import { Button } from '../../components/Buttons';
@@ -46,11 +47,12 @@ const JobStatusView: React.FC<JobStatusViewProps> = (props) => {
     const [showStopComfirmModal, setShowStopComfirmModal] = useState(false);
 
     useEffect(() => {
+        const isWorking = includes([
+            WorkflowStatus.Running, WorkflowStatus.Pausing, WorkflowStatus.Paused, WorkflowStatus.Stopping, WorkflowStatus.Resuming
+        ], workflowStatus);
+
         if (
-            isConnected
-            && (workflowStatus === WORKFLOW_STATUS_RUNNING || workflowStatus === WORKFLOW_STATUS_PAUSED
-                || workflowStatus === WORKFLOW_STATUS_PAUSING || workflowStatus === WORKFLOW_STATUS_STOPPING
-                || workflowStatus === WROKFLOW_STATUS_RESUMING || (total > 0 && sent >= total))
+            isConnected && (isWorking || (total > 0 && sent >= total))
         ) {
             setDisplay(true);
         } else {
@@ -59,7 +61,7 @@ const JobStatusView: React.FC<JobStatusViewProps> = (props) => {
     }, [setDisplay, isConnected, workflowStatus, sent, total]);
 
     useEffect(() => {
-        if (workflowStatus !== WORKFLOW_STATUS_PAUSING && workflowStatus !== WROKFLOW_STATUS_RESUMING) {
+        if (workflowStatus !== WorkflowStatus.Pausing && workflowStatus !== WorkflowStatus.Resuming) {
             setIsPausing(false);
         } else {
             setIsPausing(true);
@@ -133,7 +135,7 @@ const JobStatusView: React.FC<JobStatusViewProps> = (props) => {
                                     />
                                 )
                             }
-                            <span className="height-24">{(workflowStatus === WORKFLOW_STATUS_RUNNING || workflowStatus === WORKFLOW_STATUS_PAUSING) ? i18n._('key-Workspace/WorkflowControl-Pause') : i18n._('key-Workspace/WorkflowControl-Run')}</span>
+                            <span className="height-24">{(workflowStatus === WorkflowStatus.Running || workflowStatus === WorkflowStatus.Pausing) ? i18n._('key-Workspace/WorkflowControl-Pause') : i18n._('key-Workspace/WorkflowControl-Run')}</span>
                         </Button>
                         <Button width="160px" type="default" onClick={() => handleMachine('stop')}>
                             <SvgIcon

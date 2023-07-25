@@ -2,12 +2,19 @@
 // Machine Definition
 //
 export * from './src/machine-definition';
+
+//
+// Machine State
+//
+export { WorkflowStatus } from './src/machine-state/common/WorkflowStatus';
+
 //
 // Parameter Resolver
 //
 export {
     applyParameterModifications, getParameterItem, resetPresetsContext, resolveParameterValues
 } from './src/parameter-resolver';
+
 //
 // Geometry
 //

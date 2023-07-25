@@ -1,3 +1,4 @@
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { Alert, Button, Radio, RadioChangeEvent, Space } from 'antd';
 import { includes } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -5,8 +6,6 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import {
     CONNECTION_UPLOAD_FILE,
-    WORKFLOW_STATUS_IDLE,
-    WORKFLOW_STATUS_UNKNOWN
 } from '../../../constants';
 import { RootState } from '../../../flux/index.def';
 import { actions as workspaceActions } from '../../../flux/workspace';
@@ -52,7 +51,7 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
     // display of widget
     // Only when machine is IDLE
     useEffect(() => {
-        if (isConnected && includes([WORKFLOW_STATUS_UNKNOWN, WORKFLOW_STATUS_IDLE], workflowStatus)) {
+        if (isConnected && includes([WorkflowStatus.Unknown, WorkflowStatus.Idle], workflowStatus)) {
             setDisplay(true);
         } else {
             // TODO: job is done, but workflow is IDLE => not display
@@ -105,6 +104,7 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
             `G1 X${bbox.max.x} Y${bbox.min.y}`,
             `G1 X${bbox.min.x} Y${bbox.min.y}`,
             'G1 X0 Y0', // go back to origin
+            ';End', // empty line
         );
 
         const gcode = gcodeList.join('\n');

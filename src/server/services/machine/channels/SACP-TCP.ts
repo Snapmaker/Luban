@@ -488,9 +488,12 @@ class SocketTCP extends SocketBASE {
                 msg = '';
                 data = true;
             }
+            /*
+            TODO: wrong event?
             this.socket && this.socket.emit('connection:startGcode', {
                 msg: '', res: null
             });
+            */
             callback(msg, data);
         });
     };
