@@ -14,6 +14,11 @@ enum ControllerEvent {
     GetMachineNetworkConfiguration = 'machine:get-network-configuration',
     GetMachineNetworkStationState = 'machine:get-network-station-state',
     SetMachineNetworkConfiguration = 'machine:set-network-configuration',
+
+    // machine discover
+    DiscoverMachine = 'discover:machine',
+    DiscoverMachineStart = 'discover:start',
+    DiscoverMachineEnd = 'discover:end',
 }
 
 export default ControllerEvent;

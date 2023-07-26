@@ -1,29 +1,21 @@
-import { SerialPort } from 'serialport';
 import { EventEmitter } from 'events';
 
-import store from '../../../store';
-import logger from '../../../lib/logger';
-import type SocketServer from '../../../lib/SocketManager';
 import { MarlinController } from '../../../controllers';
-import ensureArray from '../../../lib/ensure-array';
-import config from '../../configstore';
 import { PROTOCOL_TEXT, WRITE_SOURCE_CLIENT } from '../../../controllers/constants';
-import { CONNECTION_TYPE_SERIAL } from '../../../constants';
+import type SocketServer from '../../../lib/SocketManager';
+import logger from '../../../lib/logger';
+import store from '../../../store';
 import { ChannelEvent } from './ChannelEvent';
 
 const log = logger('service:socket-server');
-let intervalHandle = null;
 
 class SocketSerial extends EventEmitter {
     private port = '';
 
     private dataSource = '';
 
-    private machineSubscriber = [];
 
     public onDisconnection = (socket: SocketServer) => {
-        this.onDisSubscribe(socket);
-
         const controllers = store.get('controllers', {});
         Object.keys(controllers).forEach((port) => {
             log.debug(`port, ${port}`);
@@ -33,59 +25,6 @@ class SocketSerial extends EventEmitter {
             }
             controller.removeConnection(socket);
         });
-    };
-
-    public onSubscribe = (socket: SocketServer) => {
-        this.machineSubscriber.push(socket);
-        this.serialportList();
-
-        if (!intervalHandle) {
-            intervalHandle = setInterval(() => {
-                this.serialportList();
-            }, 1000);
-        }
-    };
-
-    public onDisSubscribe = (socket: SocketServer) => {
-        this.machineSubscriber = this.machineSubscriber.filter(e => e !== socket);
-        if (this.machineSubscriber.length === 0) {
-            clearInterval(intervalHandle);
-            intervalHandle = null;
-        }
-    };
-
-    public serialportList = () => {
-        if (this.machineSubscriber.length === 0) {
-            return;
-        }
-
-        SerialPort.list()
-            .then((ports) => {
-                const allPorts = ports.concat(ensureArray(config.get('ports', [])));
-
-                const controllers = store.get('controllers', {});
-                const portsInUse = Object.keys(controllers)
-                    .filter((port) => {
-                        const controller = controllers[port];
-                        return controller && controller.isOpen();
-                    });
-                const availablePorts = allPorts.filter((port) => {
-                    return port.productId;
-                }).map((port) => {
-                    return {
-                        port: port.path,
-                        manufacturer: port.manufacturer,
-                        inuse: portsInUse.indexOf(port.path) >= 0
-                    };
-                });
-
-                for (const socket of this.machineSubscriber) {
-                    socket.emit('machine:serial-discover', { devices: availablePorts, type: CONNECTION_TYPE_SERIAL });
-                }
-            })
-            .catch((err) => {
-                log.error(err);
-            });
     };
 
     public serialportOpen = (socket: SocketServer, options) => {

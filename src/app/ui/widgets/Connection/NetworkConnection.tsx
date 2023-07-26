@@ -365,7 +365,7 @@ const NetworkConnection: React.FC = () => {
             find = _servers[0];
         }
 
-        if (find && find !== selectedServer) {
+        if (find && find !== _selectedServer) {
             setSelectedServer(find);
         }
     }, [savedServerAddress, savedServerName]);

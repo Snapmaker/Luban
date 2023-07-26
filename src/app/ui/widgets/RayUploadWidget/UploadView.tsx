@@ -24,8 +24,6 @@ const UploadView: React.FC = () => {
     // const activeGcodeFile = useSelector((state: RootState) => state.workspace.activeGcodeFile);
     const gcodeFile = useSelector((state: RootState) => state.workspace.gcodeFile);
 
-    console.log('active G-code file', gcodeFile);
-
     const onClickUploadJob = useCallback(() => {
         if (!gcodeFile) {
             return;

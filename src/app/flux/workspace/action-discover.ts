@@ -5,6 +5,7 @@ import { Server } from './Server';
 import { CUSTOM_SERVER_NAME } from '../../constants/index';
 
 import baseActions from './action-base';
+import { ConnectionType } from './state';
 
 
 const checkIfEqual = (objArray, othArray) => {
@@ -22,10 +23,10 @@ const checkIfEqual = (objArray, othArray) => {
 const init = () => (dispatch, getState) => {
     const controllerEvents = {
         // Receive when new servers discovered
-        'machine:discover': ({ devices, type }) => {
+        'machine:discover': ({ devices }) => {
             // Note that we may receive this event many times.
             const { connectionType, servers } = getState().workspace;
-            if (connectionType === type) {
+            if (connectionType === ConnectionType.WiFi) {
                 const resultServers = cloneDeep(servers.filter(v => v.address));
                 resultServers.forEach((item, index) => {
                     const idx = devices.findIndex(v => {
@@ -51,11 +52,11 @@ const init = () => (dispatch, getState) => {
                 }
             }
         },
-        'machine:serial-discover': ({ devices, type }) => {
+        'machine:serial-discover': ({ devices }) => {
             // Note that we may receive this event many times.
             const { servers, connectionType } = getState().workspace;
-            // const { series } = getState().workspace;
-            if (connectionType === type) {
+            // Update serial ports only when connenctionType is active
+            if (connectionType === ConnectionType.Serial) {
                 const resultServers = [];
                 for (const object of devices) {
                     const find = resultServers.find(v => {
