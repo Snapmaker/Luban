@@ -1,12 +1,13 @@
 import { SerialPort } from 'serialport';
 
-import { CONNECTION_TYPE_SERIAL } from '../../constants';
+import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI } from '../../constants';
 import logger from '../../lib/logger';
+import networkedMachineFinder, { NetworkedMachine } from './NetworkedMachineFinder';
 
 const log = logger('service:machine:MachineDiscoverer');
 
 interface DiscoverResult {
-    devices: object[];
+    devices: object[] | NetworkedMachine[];
 }
 
 interface DiscoverOptions {
@@ -34,6 +35,7 @@ class MachineDiscoverer {
     }
 
     private serialPortTimer = null;
+    private networkTimer = null;
 
     public async discoverSerialPorts(options: DiscoverOptions): Promise<void> {
         try {
@@ -59,13 +61,48 @@ class MachineDiscoverer {
         }
     }
 
+    public async discoverNetworkedMachines(options: DiscoverOptions): Promise<void> {
+        try {
+            const devices = await networkedMachineFinder.list();
+            options.callback({
+                devices: devices,
+            });
+        } catch (err) {
+            log.error(err);
+        }
+    }
+
     public subscribeDiscoverMachines(options: SubscribeOptions): void {
-        if (options.connectionType === CONNECTION_TYPE_SERIAL) {
+        if (options.connectionType === CONNECTION_TYPE_WIFI) {
+            // In case has been subscribed
+            if (this.networkTimer) {
+                clearInterval(this.networkTimer);
+                this.networkTimer = null;
+            }
+
+            // get immediately
+            this.discoverNetworkedMachines({
+                callback: options.callback,
+            });
+
+            // start discover periodically
+            const interval = options?.interval || 10000; // 10s by default
+            this.networkTimer = setInterval(() => {
+                this.discoverNetworkedMachines({
+                    callback: options.callback,
+                });
+            }, interval);
+        } else if (options.connectionType === CONNECTION_TYPE_SERIAL) {
             // In case has been subscribed
             if (this.serialPortTimer) {
                 clearInterval(this.serialPortTimer);
                 this.serialPortTimer = null;
             }
+
+            // get immediately
+            this.discoverSerialPorts({
+                callback: options.callback,
+            });
 
             // start list serial ports periodically
             const interval = options?.interval || 10000; // 10s by default
@@ -78,7 +115,12 @@ class MachineDiscoverer {
     }
 
     public unsubscribeDiscoverMachines(options: UnsubscribeOptions): void {
-        if (options.connectionType === CONNECTION_TYPE_SERIAL) {
+        if (options.connectionType === CONNECTION_TYPE_WIFI) {
+            if (this.networkTimer) {
+                clearInterval(this.networkTimer);
+                this.networkTimer = null;
+            }
+        } else if (options.connectionType === CONNECTION_TYPE_SERIAL) {
             if (this.serialPortTimer) {
                 clearInterval(this.serialPortTimer);
                 this.serialPortTimer = null;

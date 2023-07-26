@@ -12,9 +12,8 @@ import MovementInstruction, { MoveDirection } from '@snapmaker/snapmaker-sacp-sd
 import DataStorage from '../../../DataStorage';
 import { CONNECTION_TYPE_WIFI, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 import logger from '../../../lib/logger';
-import wifiServerManager from '../../socket/WifiServerManager';
-import { ConnectedData, EventOptions } from '../types';
 import Business, { CoordinateType, RequestPhotoInfo, ToolHeadType } from '../sacp/Business';
+import { ConnectedData, EventOptions } from '../types';
 // import MovementInstruction, { MoveDirection } from '../../lib/SACP-SDK/SACP/business/models/MovementInstruction';
 import {
     CNC_HEAD_MODULE_IDS,
@@ -61,15 +60,11 @@ class SocketTCP extends SocketBASE {
     }
 
     public onConnection = () => {
-        // wifiServerManager.onConnection(socket);
+        // empty
     };
 
-    public onDisconnection = (socket: SocketServer) => {
-        wifiServerManager.onDisconnection(socket);
-    };
-
-    public refreshDevices = () => {
-        wifiServerManager.refreshDevices();
+    public onDisconnection = () => {
+        // empty
     };
 
     public connectionOpen = (socket: SocketServer, options: EventOptions) => {

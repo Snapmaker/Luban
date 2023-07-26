@@ -6,7 +6,6 @@ import { AUTO_STRING } from '../../../app/constants';
 import { SnapmakerArtisanMachine, SnapmakerRayMachine } from '../../../app/machines';
 import DataStorage from '../../DataStorage';
 import {
-    CONNECTION_TYPE_SERIAL,
     CONNECTION_TYPE_WIFI,
     HEAD_CNC,
     HEAD_LASER,
@@ -67,15 +66,6 @@ class ConnectionManager {
         socketHttp.onDisconnection(socket);
         socketSerial.onDisconnection(socket);
         this.scheduledTasksHandle.cancelTasks();
-    };
-
-    public refreshDevices = (socket: SocketServer, options) => {
-        const { connectionType } = options;
-        if (connectionType === CONNECTION_TYPE_WIFI) {
-            socketHttp.refreshDevices();
-        } else if (connectionType === CONNECTION_TYPE_SERIAL) {
-            socketSerial.serialportList();
-        }
     };
 
     public connectionOpen = async (socket, options) => {

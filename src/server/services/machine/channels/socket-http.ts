@@ -19,7 +19,6 @@ import {
 import SocketServer from '../../../lib/SocketManager';
 import { valueOf } from '../../../lib/contants-utils';
 import logger from '../../../lib/logger';
-import wifiServerManager from '../../socket/WifiServerManager';
 import workerManager from '../../task-manager/workerManager';
 import { EventOptions } from '../types';
 
@@ -125,20 +124,8 @@ class SocketHttp extends EventEmitter {
         this.stopHeartBeat();
     };
 
-    public onDisconnection = (socket: SocketServer) => {
-        wifiServerManager.onDisconnection(socket);
-    };
-
-    public onSubscribe = (socket: SocketServer) => {
-        wifiServerManager.onSubscribe(socket);
-    };
-
-    public onDisSubscribe = (socket: SocketServer) => {
-        wifiServerManager.onDisSubscribe(socket);
-    };
-
-    public refreshDevices = () => {
-        wifiServerManager.refreshDevices();
+    public onDisconnection = () => {
+        // empty
     };
 
     public init = () => {

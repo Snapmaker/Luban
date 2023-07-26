@@ -23,10 +23,10 @@ const checkIfEqual = (objArray, othArray) => {
 const init = () => (dispatch, getState) => {
     const controllerEvents = {
         // Receive when new servers discovered
-        'machine:discover': ({ devices, type }) => {
+        'machine:discover': ({ devices }) => {
             // Note that we may receive this event many times.
             const { connectionType, servers } = getState().workspace;
-            if (connectionType === type) {
+            if (connectionType === ConnectionType.WiFi) {
                 const resultServers = cloneDeep(servers.filter(v => v.address));
                 resultServers.forEach((item, index) => {
                     const idx = devices.findIndex(v => {
