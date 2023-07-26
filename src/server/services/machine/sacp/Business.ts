@@ -465,6 +465,57 @@ export default class Business extends Dispatcher {
         };
     }
 
+    /**
+     * Export Log to Storage
+     *
+     * 0x01 0x16 Export Log to External Storage
+     * 0x01 0x17 Export Log Result
+     */
+    public async exportLogToExternalStorage() {
+        return new Promise((resolve) => {
+            // handle export result
+            this.setHandler(0x01, 0x17, (data) => {
+                this.ack(0x01, 0x17, data.packet, Buffer.alloc(1, 0));
+                if (readUint8(data.param) === 0) {
+                    this.log.info('Exporting log to external storage successfully.');
+                    resolve({
+                        response: {
+                            result: 0,
+                            data: Buffer.alloc(0),
+                        }
+                    });
+                } else {
+                    this.log.info('Failed to exporting log to external storage.');
+                    resolve({
+                        response: {
+                            result: 1,
+                            data: Buffer.alloc(0),
+                        }
+                    });
+                }
+            });
+
+            // 0 stands for SD card
+            const buffer = Buffer.alloc(1, 0);
+            this.send(0x01, 0x16, PeerId.CONTROLLER, buffer)
+                .then(({ response }) => {
+                    if (response.result === 0) {
+                        // wait for result
+                        this.log.info('Requested for exporting log to external storage.');
+                    } else {
+                        this.log.info('Requested for exporting log to external storage. Failed.');
+                        // fail already
+                        resolve({
+                            response: {
+                                result: 1,
+                                data: Buffer.alloc(0),
+                            }
+                        });
+                    }
+                });
+        });
+    }
+
     // 0x01 0x2X Get Machine Info
 
     public async getModuleInfo() {

@@ -913,6 +913,26 @@ M3`;
             });
         }
     }
+
+    /**
+     * Export log in machine to external storage.
+     */
+    public exportLogToExternalStorage = async (socket, options) => {
+        const { eventName } = options;
+
+        // SACP only
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const result = await this.channel.exportLogToExternalStorage();
+            socket.emit(eventName, {
+                err: result.response.result !== 0,
+            });
+        } else {
+            socket.emit(eventName, {
+                err: 1,
+                msg: `Unsupported event: ${eventName}`,
+            });
+        }
+    }
 }
 
 const connectionManager = new ConnectionManager();

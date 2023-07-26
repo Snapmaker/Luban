@@ -1,24 +1,37 @@
 
 
 enum ControllerEvent {
-    // G-code
+    /**
+     * Machine Discover
+     */
+    DiscoverMachine = 'discover:machine',
+    DiscoverMachineStart = 'discover:start',
+    DiscoverMachineEnd = 'discover:end',
+
+    /**
+     * Machine Network (Wi-Fi)
+     */
+    GetMachineNetworkConfiguration = 'machine:get-network-configuration',
+    GetMachineNetworkStationState = 'machine:get-network-station-state',
+    SetMachineNetworkConfiguration = 'machine:set-network-configuration',
+
+    /**
+     * Machine System
+     */
+    ExportLogToExternalStorage = 'machine:export-log-to-external-storage',
+
+    /**
+     * G-code control.
+     */
     StartGCode = 'connection:startGcode',
     PauseGCode = 'connection:pauseGcode',
     ResumeGCode = 'connection:resumeGcode',
     StopGCode = 'connection:stopGcode',
 
-    // network
+    /**
+     * Operating System
+     */
     ListWiFiNetworks = 'os:list-wifi-networks',
-
-    // machine network
-    GetMachineNetworkConfiguration = 'machine:get-network-configuration',
-    GetMachineNetworkStationState = 'machine:get-network-station-state',
-    SetMachineNetworkConfiguration = 'machine:set-network-configuration',
-
-    // machine discover
-    DiscoverMachine = 'discover:machine',
-    DiscoverMachineStart = 'discover:start',
-    DiscoverMachineEnd = 'discover:end',
 }
 
 export default ControllerEvent;
