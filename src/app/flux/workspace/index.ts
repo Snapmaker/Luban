@@ -138,8 +138,13 @@ export const actions = {
 
                 let machineSeries = '';
                 const {
-                    toolHead, series, headType, status, moduleStatusList,
-                    isHomed, isMoving,
+                    toolHead,
+                    series,
+                    headType,
+                    status,
+                    moduleStatusList,
+                    isHomed,
+                    isMoving,
                 } = state;
                 const { seriesSize } = state;
 

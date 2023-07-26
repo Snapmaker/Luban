@@ -8,7 +8,7 @@ import {
 import logger from '../../lib/logger';
 import { sacpUdpChannel } from './channels/SacpUdpChannel';
 
-const log = logger('lib:ProtocolDetector');
+const log = logger('services:machine:ProtocolDetector');
 
 export enum NetworkProtocol {
     Unknown = 'Unknown',

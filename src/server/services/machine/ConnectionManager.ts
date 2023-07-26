@@ -58,12 +58,12 @@ class ConnectionManager {
     private socket;
 
     public onConnection = (socket: SocketServer) => {
-        socketHttp.onConnection(socket);
+        socketHttp.onConnection();
         this.scheduledTasksHandle = new ScheduledTasks(socket);
     };
 
     public onDisconnection = (socket: SocketServer) => {
-        socketHttp.onDisconnection(socket);
+        socketHttp.onDisconnection();
         socketSerial.onDisconnection(socket);
         this.scheduledTasksHandle.cancelTasks();
     };

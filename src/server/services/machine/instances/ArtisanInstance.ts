@@ -48,7 +48,6 @@ class ArtisanMachineInstance extends MachineInstance {
             rotaryModule: false
         };
         moduleInfos.forEach(module => {
-            // let ariPurifier = false;
             if (includes(PRINTING_HEAD_MODULE_IDS, module.moduleId)) {
                 state.headType = HEAD_PRINTING;
                 state.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
