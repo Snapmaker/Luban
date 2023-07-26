@@ -13,7 +13,6 @@ import {
 import log from '../lib/log';
 import {
     MATERIAL_SELECTED,
-    MATERIAL_UNSELECTED,
 } from '../workers/ShaderMaterial/ToolpathRendererMeterial';
 import { MINIMUM_WIDTH_AND_HEIGHT } from '../constants';
 
@@ -282,10 +281,7 @@ class ToolPath {
         // diameter is required by LunarTPP
         this.materials.diameter = this.materials.diameter || 0;
 
-        console.log('getSelectModelsAndToolPathInfo, materials', this.materials);
-
         for (let i = 0; i < modelInfos.length; i++) {
-            console.log('getSelectModelsAndToolPathInfo, modelInfo', modelInfos[i].transformation);
             modelInfos[i] = {
                 ...modelInfos[i],
                 type: this.type,
@@ -408,6 +404,7 @@ class ToolPath {
             isSelected,
             positions,
             gCodes,
+            colors,
             positionX,
             positionY,
             rotationB,
@@ -419,24 +416,26 @@ class ToolPath {
             3
         );
         const gCodeAttribute = new THREE.Float32BufferAttribute(gCodes.send, 1);
+        const colorsAttribute = new THREE.Uint8BufferAttribute(colors.send, 3);
+        colorsAttribute.normalized = true;
         bufferGeometry.setAttribute('position', positionAttribute);
         bufferGeometry.setAttribute('a_g_code', gCodeAttribute);
-        let material;
-        if (isSelected) {
-            material = MATERIAL_SELECTED;
-        } else {
-            material = MATERIAL_UNSELECTED;
-        }
+        bufferGeometry.setAttribute('a_color', colorsAttribute);
 
         let obj;
         if (headType === 'laser') {
             if (movementMode === 'greyscale-dot') {
-                obj = new THREE.Points(bufferGeometry, material);
+                obj = new THREE.Points(bufferGeometry, MATERIAL_SELECTED);
             } else {
-                obj = new THREE.Line(bufferGeometry, material);
+                obj = new THREE.Line(bufferGeometry, MATERIAL_SELECTED);
             }
         } else {
-            obj = new THREE.Line(bufferGeometry, material);
+            obj = new THREE.Line(bufferGeometry, MATERIAL_SELECTED);
+        }
+        if (isSelected) {
+            obj.material.uniforms.u_selected.value = true;
+        } else {
+            obj.material.uniforms.u_selected.value = false;
         }
         obj.position.set(isRotate ? 0 : positionX, positionY, 0);
         if (rotationB) {

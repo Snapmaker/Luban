@@ -4,7 +4,6 @@ import { createToolPathNameByType, getModelsByToolPathType, getToolPathType, SUC
 import { generateModelDefaultConfigs } from '../models/ModelInfoUtils';
 import { DATA_PREFIX, HEAD_LASER, DEFAULT_LUBAN_HOST } from '../constants';
 import { ViewPathRenderer } from '../lib/renderer/ViewPathRenderer';
-import { MATERIAL_UNSELECTED, MATERIAL_SELECTED } from '../workers/ShaderMaterial/ToolpathRendererMeterial';
 import ThreeModel from '../models/ThreeModel';
 
 class ToolPathGroup {
@@ -254,7 +253,7 @@ class ToolPathGroup {
         // 3D SMCanvas
         this.toolPathObjects.children.forEach((item) => {
             item.children.forEach((meshObj) => {
-                meshObj.material = MATERIAL_UNSELECTED;
+                meshObj.material.uniforms.u_selected.value = false;
             });
         });
         this.selectedToolPathArray.forEach((id) => {
@@ -262,7 +261,7 @@ class ToolPathGroup {
             this.toolPathObjects.children.forEach((item) => {
                 if (selectedToolpath && selectedToolpath.object.uuid === item.uuid) {
                     item.children.forEach((meshObj) => {
-                        meshObj.material = MATERIAL_SELECTED;
+                        meshObj.material.uniforms.u_selected.value = true;
                     });
                 }
             });
