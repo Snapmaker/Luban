@@ -58,6 +58,7 @@
     "method-override": "3.0.0",
     "minimatch": "3.0.4",
     "morgan": "1.9.1",
+    "multicast-dns": "7.2.5",
     "mv": "2.1.1",
     "node-fetch": "2.6.7",
     "node-schedule": "2.1.0",

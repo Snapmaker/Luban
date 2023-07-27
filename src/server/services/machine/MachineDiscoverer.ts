@@ -2,7 +2,8 @@ import { SerialPort } from 'serialport';
 
 import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI } from '../../constants';
 import logger from '../../lib/logger';
-import networkedMachineFinder, { NetworkedMachine } from './NetworkedMachineFinder';
+import { NetworkedMachine } from './network-discover/NetworkedMachine';
+import networkedMachineFinder from './network-discover/NetworkedMachineFinder';
 
 const log = logger('service:machine:MachineDiscoverer');
 

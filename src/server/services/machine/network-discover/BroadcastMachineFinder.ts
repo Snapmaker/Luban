@@ -3,26 +3,17 @@ import EventEmitter from 'events';
 import zipWith from 'lodash/zipWith';
 import os from 'os';
 
-import logger from '../../lib/logger';
-
-const log = logger('lib:deviceManager');
-
-const DISCOVER_SERVER_PORT = 20054;
-
-export interface NetworkedMachine {
-    name: string;
-    address: string; // IP address
-    lastSeen: number; // timestamp
-    model?: string; // indicates which machine model it is
-    protocol?: string; // indicates which protocol it uses
-}
-
+import { NetworkedMachine } from './NetworkedMachine';
+import { DISCOVER_SERVER_PORT, log } from './NetworkedMachineFinder';
 
 /**
  * A singleton to manage devices remotely.
  */
-class NetworkedMachineFinder extends EventEmitter {
+export default class BroadcastMachineFinder extends EventEmitter {
     private client = createSocket('udp4');
+
+    // Map <IP, NetworkedMachine>
+    // we use Map here to filter out duplicated machines with the same IP
     private networkedMachines = new Map<string, NetworkedMachine>();
 
     public constructor() {
@@ -72,7 +63,7 @@ class NetworkedMachineFinder extends EventEmitter {
         });
     }
 
-    private sendDiscoverMessage() {
+    private sendDiscoverMessage(): void {
         const message = Buffer.from('discover');
 
         const ifaces = os.networkInterfaces();
@@ -102,16 +93,15 @@ class NetworkedMachineFinder extends EventEmitter {
         // send discover message
         this.sendDiscoverMessage();
 
-        // debounce to avoid multiple sequential calls
-        // Note: 500ms reaction time, 3000ms is too long.
+        // wait to collect responses
         await new Promise((resolve) => setTimeout(() => resolve(true), 1000));
 
-        const newTime = +new Date();
 
         // collect devices
         const recentMachines = [];
+        const now = +new Date();
         for (const server of this.networkedMachines.values()) {
-            if (newTime - server.lastSeen <= 10000) {
+            if (now - server.lastSeen <= 10000) {
                 recentMachines.push(server);
             }
         }
@@ -119,7 +109,3 @@ class NetworkedMachineFinder extends EventEmitter {
         return recentMachines;
     }
 }
-
-const networkedMachineFinder = new NetworkedMachineFinder();
-
-export default networkedMachineFinder;

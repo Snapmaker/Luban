@@ -162,6 +162,7 @@
     "moment": "2.24.0",
     "morgan": "1.9.1",
     "mousetrap": "1.6.5",
+    "multicast-dns": "7.2.5",
     "mv": "2.1.1",
     "namespace-constants": "0.5.0",
     "node-fetch": "2.6.7",
