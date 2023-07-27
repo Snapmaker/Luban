@@ -67,7 +67,7 @@ export const standardLaserToolHead: ToolHead = {
  * Detail: https://us.snapmaker.com/products/snapmaker-10w-high-power-laser-module
  */
 export const highPower10WLaserToolHead: ToolHead = {
-    identifier: LEVEL_TWO_POWER_LASER_FOR_SM2,
+    identifier: 'levelTwoLaserToolheadForSM2',
 
     label: 'key-App/Settings/MachineSettings-10W Laser',
     image: '/resources/images/machine/10w_laser.png',
@@ -76,6 +76,29 @@ export const highPower10WLaserToolHead: ToolHead = {
         headType: ToolHeadType.Laser,
     },
 };
+
+export const L20WLaserToolModule: ToolHead = {
+    identifier: '20W Laser Module',
+
+    label: '20W Laser Module',
+    image: '/resources/images/machine/coming_soon.png', // temporarily used
+
+    metadata: {
+        headType: ToolHeadType.Laser,
+    },
+};
+
+export const L40WLaserToolModule: ToolHead = {
+    identifier: '40W Laser Module',
+
+    label: '40W Laser Module',
+    image: '/resources/images/machine/coming_soon.png', // temporarily used
+
+    metadata: {
+        headType: ToolHeadType.Laser,
+    },
+};
+
 
 /**
  * Standard CNC Module for SM 2.0

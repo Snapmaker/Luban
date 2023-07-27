@@ -47,6 +47,9 @@ function register(socketServer: SocketServer): void {
         [ControllerEvent.GetMachineNetworkConfiguration]: connectionManager.getNetworkConfiguration,
         [ControllerEvent.GetMachineNetworkStationState]: connectionManager.getNetworkStationState,
         [ControllerEvent.SetMachineNetworkConfiguration]: connectionManager.configureMachineNetwork,
+
+        // machine system
+        [ControllerEvent.ExportLogToExternalStorage]: connectionManager.exportLogToExternalStorage,
     };
 
     Object.entries(connectionEventsObject).forEach(([key, value]) => {

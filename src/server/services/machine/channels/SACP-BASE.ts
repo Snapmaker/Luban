@@ -526,23 +526,6 @@ class SocketBASE extends EventEmitter {
         return this.sacpClient.getCurrentCoordinateInfo();
     };
 
-    /**
-     * Configure machine network.
-     *
-     * Note that this API is only implemented by Ray.
-     */
-    public configureNetwork = async (networkOptions: NetworkOptions) => {
-        return this.sacpClient.configureNetwork(networkOptions);
-    };
-
-    public getNetworkConfiguration = async () => {
-        return this.sacpClient.getNetworkConfiguration();
-    };
-
-    public getNetworkStationState = async () => {
-        return this.sacpClient.getNetworkStationState();
-    };
-
     public executeGcode = async (options: EventOptions, callback: () => void) => {
         log.info('run executeGcode');
         const { gcode } = options;
@@ -948,6 +931,30 @@ class SocketBASE extends EventEmitter {
             log.info(`Update Purifier speed, ${response.result}, ${options.value}`);
         });
     }
+
+    /**
+     * Export Log in machine to external storage.
+     */
+    public exportLogToExternalStorage = async () => {
+        return this.sacpClient.exportLogToExternalStorage();
+    }
+
+    /**
+     * Configure machine network.
+     *
+     * Note that this API is only implemented by Ray.
+     */
+    public configureNetwork = async (networkOptions: NetworkOptions) => {
+        return this.sacpClient.configureNetwork(networkOptions);
+    };
+
+    public getNetworkConfiguration = async () => {
+        return this.sacpClient.getNetworkConfiguration();
+    };
+
+    public getNetworkStationState = async () => {
+        return this.sacpClient.getNetworkStationState();
+    };
 }
 
 export default SocketBASE;

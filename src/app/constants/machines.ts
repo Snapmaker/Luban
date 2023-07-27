@@ -2,16 +2,19 @@ import type { Machine, MachineModule, MachineToolHeadOptions, ToolHead, ToolHead
 
 import i18n from '../lib/i18n';
 import {
-    SnapmakerRayMachine,
     SnapmakerA150Machine,
     SnapmakerA250Machine,
     SnapmakerA350Machine,
     SnapmakerArtisanMachine,
     SnapmakerJ1Machine,
     SnapmakerOriginalExtendedMachine,
-    SnapmakerOriginalMachine
+    SnapmakerOriginalMachine,
+    SnapmakerRayMachine
 } from '../machines';
+import { quickSwapKitModule } from '../machines/snapmaker-2-modules';
 import {
+    L20WLaserToolModule,
+    L40WLaserToolModule,
     dualExtrusionPrintToolHead,
     highPower200WCNCToolHead as highPower200WCNCToolHeadSM2,
     highPower10WLaserToolHead as laser10WToolHeadSM2,
@@ -28,8 +31,6 @@ import {
     laserToolHeadOriginal,
     printToolHeadOriginal
 } from '../machines/snapmaker-original-toolheads';
-import { quickSwapKitModule } from '../machines/snapmaker-2-modules';
-import { laserModule20W, laserModule40W } from '../machines/snapmaker-ray';
 
 
 export const SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL = 'singleExtruderToolheadForOriginal';
@@ -83,8 +84,8 @@ export const MACHINE_TOOL_HEADS = {
     [STANDARD_CNC_TOOLHEAD_FOR_SM2]: standardCNCToolHeadSM2,
     [highPower200WCNCToolHeadSM2.identifier]: highPower200WCNCToolHeadSM2,
     [printToolHeadJ1.identifier]: printToolHeadJ1,
-    [laserModule20W.identifier]: laserModule20W,
-    [laserModule40W.identifier]: laserModule40W,
+    [L20WLaserToolModule.identifier]: L20WLaserToolModule,
+    [L40WLaserToolModule.identifier]: L40WLaserToolModule,
 };
 
 // Module IDs
@@ -98,10 +99,15 @@ export const MODULEID_MAP = {
     '14': LEVEL_TWO_POWER_LASER_FOR_SM2,
     '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
     '16': ENCLOSURE_FOR_ARTISAN,
+    19: L20WLaserToolModule.identifier,
+    20: L40WLaserToolModule.identifier,
     '512': HEADT_BED_FOR_SM2,
     '513': SNAPMAKER_J1_HEATED_BED,
     '514': SNAPMAKER_J1_LINEAR_MODULE,
     '515': A400_HEADT_BED_FOR_SM2,
+    // 516: A400 Linear Module
+    // 518: Ray Enclosure
+    // 520: Ray Multi-Function Button
 };
 
 export const PRINTING_HEAD_MODULE_IDS = [
@@ -112,6 +118,8 @@ export const PRINTING_HEAD_MODULE_IDS = [
 export const LASER_HEAD_MODULE_IDS = [
     2, // 1.6W Laser Module
     14, // 10W Laser Module
+    19, // 20W Laser Module
+    20, // 40W Laser Module
 ];
 export const CNC_HEAD_MODULE_IDS = [
     1, // Standard CNC Module
@@ -129,6 +137,8 @@ export const MODULEID_TOOLHEAD_MAP = {
     '13': DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
     '14': LEVEL_TWO_POWER_LASER_FOR_SM2,
     '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
+    19: L20WLaserToolModule.identifier,
+    20: L40WLaserToolModule.identifier,
     '00': printToolHeadJ1.identifier,
 };
 

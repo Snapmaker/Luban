@@ -28,12 +28,13 @@ import ConnectionWidget from '../../widgets/Connection';
 import ConnectionControlWidget from '../../widgets/ConnectionControl';
 import ConnectionFileTransferWidget from '../../widgets/ConnectionFileTransfer';
 import EnclosureWidget from '../../widgets/Enclosure';
+import JobStatusWidget from '../../widgets/JobStatusWidget';
 import RayMachiningWidget from '../../widgets/RayMachiningWidget';
 import RayUploadWidget from '../../widgets/RayUploadWidget';
 import VisualizerWidget from '../../widgets/WorkspaceVisualizer';
 import VisualizerOverlay from './VisualizerOverlay';
+import MachineLogModal from './modals/MachineLogModal';
 import MachineNetworkModal from './modals/MachineNetworkModal';
-import JobStatusWidget from '../../widgets/JobStatusWidget';
 
 
 const allWidgets = {
@@ -105,6 +106,7 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
     const [connected, setConnected] = useState(controller.connected);
 
     const [showMachineNetworkModal, setShowMachineNetworkModal] = useState(false);
+    const [showMachineLogModal, setShowMachineLogModal] = useState(false);
 
     const [leftItems, setLeftItems] = useState([
         {
@@ -125,6 +127,14 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
             name: 'MainToolbarJobSetup',
             action: () => {
                 setShowMachineNetworkModal(true);
+            },
+        },
+        {
+            title: i18n._('Machine Log'),
+            type: 'button',
+            name: 'MainToolbarJobSetup',
+            action: () => {
+                setShowMachineLogModal(true);
             },
         }
     ]);
@@ -314,10 +324,21 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
                 <VisualizerOverlay />
 
                 {renderModalView(connected)}
+
+                {/* Machine Network */}
                 {
                     showMachineNetworkModal && (
                         <MachineNetworkModal
                             onClose={() => setShowMachineNetworkModal(false)}
+                        />
+                    )
+                }
+
+                {/* Machine Log */}
+                {
+                    showMachineLogModal && (
+                        <MachineLogModal
+                            onClose={() => setShowMachineLogModal(false)}
                         />
                     )
                 }

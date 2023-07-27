@@ -120,7 +120,7 @@ class SocketHttp extends EventEmitter {
     private getLaserMaterialThicknessReq = null;
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public onConnection = (socket: SocketServer) => {
+    public onConnection = () => {
         this.stopHeartBeat();
     };
 

@@ -58,12 +58,12 @@ class ConnectionManager {
     private socket;
 
     public onConnection = (socket: SocketServer) => {
-        socketHttp.onConnection(socket);
+        socketHttp.onConnection();
         this.scheduledTasksHandle = new ScheduledTasks(socket);
     };
 
     public onDisconnection = (socket: SocketServer) => {
-        socketHttp.onDisconnection(socket);
+        socketHttp.onDisconnection();
         socketSerial.onDisconnection(socket);
         this.scheduledTasksHandle.cancelTasks();
     };
@@ -906,6 +906,26 @@ M3`;
             if (configureNetworkResult.response.result === 0) {
                 // success
             }
+        } else {
+            socket.emit(eventName, {
+                err: 1,
+                msg: `Unsupported event: ${eventName}`,
+            });
+        }
+    }
+
+    /**
+     * Export log in machine to external storage.
+     */
+    public exportLogToExternalStorage = async (socket, options) => {
+        const { eventName } = options;
+
+        // SACP only
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const result = await this.channel.exportLogToExternalStorage();
+            socket.emit(eventName, {
+                err: result.response.result !== 0,
+            });
         } else {
             socket.emit(eventName, {
                 err: 1,

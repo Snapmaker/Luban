@@ -7,11 +7,13 @@ import {
 import { HEAD_LASER } from '../../../constants';
 import logger from '../../../lib/logger';
 import SacpSerialChannel from '../channels/SacpSerialChannel';
+import SacpUdpChannel from '../channels/SacpUdpChannel';
 import SocketSerial from '../channels/socket-serial';
 import { ConnectedData } from '../types';
 import MachineInstance from './Instance';
+import { SnapmakerRayMachine } from '../../../../app/machines';
 
-const log = logger('machine:RayMachineInstance');
+const log = logger('services:machine:instances:RayInstance');
 
 
 class RayMachineInstance extends MachineInstance {
@@ -19,6 +21,8 @@ class RayMachineInstance extends MachineInstance {
         log.info('Machine is ready.');
 
         if (this.channel instanceof SacpSerialChannel) {
+            this._onMachineReadySACP();
+        } else if (this.channel instanceof SacpUdpChannel) {
             this._onMachineReadySACP();
         }
 
@@ -34,17 +38,44 @@ class RayMachineInstance extends MachineInstance {
     private async _onMachineReadySACP() {
         const state: ConnectedData = {};
 
-        this.socket.emit('connection:connected', { state: state, err: '' });
-
         // TODO: Heartbeat is not working for now
         // (this.channel as SocketSerialNew).startHeartbeat();
 
+        // Get Machine Info
         const { data: machineInfo } = await (this.channel as SacpSerialChannel).getMachineInfo();
-        console.log('machineInfo =', machineInfo);
+        log.info(`Machine Firmware Version: ${machineInfo.masterControlFirmwareVersion}`);
+
+        state.series = SnapmakerRayMachine.identifier;
 
         // module info
         const { data: moduleInfos } = await (this.channel as SacpSerialChannel).getModuleInfo();
         console.log('moduleInfos =', moduleInfos);
+
+        /*
+        moduleInfos = [
+          ,
+          ModuleInfo {
+            key: 2,
+            moduleId: 518,
+            moduleIndex: 0,
+            moduleState: 2,
+            serialNumber: 524287,
+            hardwareVersion: 255,
+            moduleFirmwareVersion: 'v1.0.0',
+            byteLength: 18
+          },
+          ModuleInfo {
+            key: 3,
+            moduleId: 520,
+            moduleIndex: 0,
+            moduleState: 1,
+            serialNumber: 524287,
+            hardwareVersion: 255,
+            moduleFirmwareVersion: 'v1.0.0',
+            byteLength: 18
+          },
+        ]
+        */
 
         const moduleListStatus = {
             // airPurifier: false,
@@ -54,13 +85,14 @@ class RayMachineInstance extends MachineInstance {
         };
 
         moduleInfos.forEach(module => {
-            // let ariPurifier = false;
             if (includes(LASER_HEAD_MODULE_IDS, module.moduleId)) {
                 state.headType = HEAD_LASER;
                 state.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
             }
         });
         state.moduleStatusList = moduleListStatus;
+
+        this.socket.emit('connection:connected', { state: state, err: '' });
     }
 }
 

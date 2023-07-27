@@ -29,6 +29,7 @@ import { Server } from '../../../flux/workspace/Server';
 import { ConnectionType } from '../../../flux/workspace/state';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
+import { L20WLaserToolModule, L40WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
 import { Button } from '../../components/Buttons';
 import ModalSmall from '../../components/Modal/ModalSmall';
 import ModalSmallInput from '../../components/Modal/ModalSmallInput';
@@ -424,21 +425,45 @@ const NetworkConnection: React.FC = () => {
             });
         }
         if (headType === HEAD_LASER) {
-            if (toolHead && toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+            if (toolHead) {
+                switch (toolHead) {
+                    case LEVEL_TWO_POWER_LASER_FOR_SM2: {
+                        newModuleStatusList.push({
+                            status: true,
+                            moduleName: i18n._('key-Workspace/Connection-Laser-10W')
+                        });
+                        break;
+                    }
+                    case L20WLaserToolModule.identifier: {
+                        newModuleStatusList.push({
+                            status: true,
+                            moduleName: i18n._('20W Laser Module')
+                        });
+                        break;
+                    }
+                    case L40WLaserToolModule.identifier: {
+                        newModuleStatusList.push({
+                            status: true,
+                            moduleName: i18n._('40W Laser Module')
+                        });
+                        break;
+                    }
+                    default: {
+                        newModuleStatusList.push({
+                            status: true,
+                            moduleName: i18n._('key-Workspace/Connection-Laser')
+                        });
+                        break;
+                    }
+                }
+            }
+
+            if (laserCamera) {
                 newModuleStatusList.push({
-                    status: true,
-                    moduleName: i18n._('key-Workspace/Connection-Laser-10W')
-                });
-            } else {
-                newModuleStatusList.push({
-                    status: true,
-                    moduleName: i18n._('key-Workspace/Connection-Laser')
+                    moduleName: i18n._('key-Workspace/Connection-Laser camera'),
+                    status: laserCamera
                 });
             }
-            newModuleStatusList.push({
-                moduleName: i18n._('key-Workspace/Connection-Laser camera'),
-                status: laserCamera
-            });
         }
         if (headType === HEAD_CNC) {
             if (toolHead === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2) {

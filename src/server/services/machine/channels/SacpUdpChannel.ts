@@ -1,12 +1,13 @@
 import dgram from 'dgram';
 import path from 'path';
 
+import { SACP_TYPE_SERIES_MAP } from '../../../../app/constants/machines';
 import DataStorage from '../../../DataStorage';
-import { CONNECTION_TYPE_WIFI } from '../../../constants';
 import SocketServer from '../../../lib/SocketManager';
 import logger from '../../../lib/logger';
 import Business from '../sacp/Business';
 import { EventOptions } from '../types';
+import { ChannelEvent } from './ChannelEvent';
 import SocketBASE from './SACP-BASE';
 
 const log = logger('machine:channel:SacpUdpChannel');
@@ -58,7 +59,7 @@ class SacpUdpChannel extends SocketBASE {
         return Promise.race([sacpResponse, timeoutPromise]);
     }
 
-    public connectionOpen = (socket: SocketServer, options: EventOptions) => {
+    public connectionOpen = async (socket: SocketServer, options: EventOptions) => {
         this.socket = socket;
 
         this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
@@ -74,14 +75,18 @@ class SacpUdpChannel extends SocketBASE {
 
         this.socket && this.socket.emit('connection:open', {});
 
-        // TODO: Getting other info
-        this.socket && this.socket.emit('connection:connected', {
-            state: {},
-            err: null,
-            type: CONNECTION_TYPE_WIFI,
+        // Get Machine Info
+        const { data: machineInfos } = await this.getMachineInfo();
+        const machineIdentifier = SACP_TYPE_SERIES_MAP[machineInfos.type];
+        log.debug(`Get machine info, type = ${machineInfos.type}`);
+        log.debug(`Get machine info, machine identifier = ${machineIdentifier}`);
+
+        // Machine detected
+        this.emit(ChannelEvent.Ready, {
+            machineIdentifier,
         });
 
-        this.emit('connected');
+        // this.emit('connected');
     }
 
     public connectionClose = (socket: SocketServer, options: EventOptions) => {
