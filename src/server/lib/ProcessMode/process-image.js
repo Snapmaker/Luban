@@ -67,7 +67,6 @@ export async function processLaserGreyscale(modelInfo, onProgress) {
     const { width, height, scaleX = 1, scaleY = 1 } = modelInfo.transformation;
 
     const { invert, contrast, brightness, whiteClip, greyscaleAlgorithm, algorithm } = modelInfo.config;
-    console.log('greyscaleAlgorithm', greyscaleAlgorithm);
     const { density = 4 } = modelInfo.gcodeConfig || {};
     const outputFilename = pathWithRandomSuffix(uploadName);
 
