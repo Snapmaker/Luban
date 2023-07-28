@@ -35,10 +35,10 @@ import workerManager from '../../lib/manager/workerManager';
 import ThreeUtils from '../../scene/three-extensions/ThreeUtils';
 import { machineStore } from '../../store/local-storage';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
-import baseActions, { ACTION_UPDATE_STATE } from './action-base';
-import connectActions from './action-connect';
-import discoverActions from './action-discover';
-import { GCodeFileObject } from './action-gcode';
+import baseActions, { ACTION_UPDATE_STATE } from './actions-base';
+import connectActions from './actions-connect';
+import discoverActions from './actions-discover';
+import { GCodeFileObject } from './actions-gcode';
 import type { MachineStateUpdateOptions } from './state';
 import { ConnectionType, WORKSPACE_STAGE, initialState } from './state';
 

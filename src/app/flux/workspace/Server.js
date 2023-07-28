@@ -20,8 +20,8 @@ import { controller } from '../../lib/controller';
 import log from '../../lib/log';
 import { dispatch } from '../../store';
 import { machineStore } from '../../store/local-storage';
-import baseActions from './action-base';
-import connectActions from './action-connect';
+import baseActions from './actions-base';
+import connectActions from './actions-connect';
 import ControllerEvent from '../../connection/controller-events';
 
 /**

@@ -9,7 +9,7 @@ import {
 } from '../../../constants';
 import { RootState } from '../../../flux/index.def';
 import { actions as workspaceActions } from '../../../flux/workspace';
-import gcodeActions, { GCodeFileObject } from '../../../flux/workspace/action-gcode';
+import gcodeActions, { GCodeFileObject } from '../../../flux/workspace/actions-gcode';
 import controller from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
