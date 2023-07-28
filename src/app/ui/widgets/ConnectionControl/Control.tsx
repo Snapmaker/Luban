@@ -1,3 +1,4 @@
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { isNil } from 'lodash';
 import includes from 'lodash/includes';
 import map from 'lodash/map';
@@ -9,25 +10,19 @@ import {
     HEAD_PRINTING,
     IMPERIAL_UNITS,
     METRIC_UNITS,
-    WORKFLOW_STATE_IDLE,
-    WORKFLOW_STATUS_IDLE,
-    WORKFLOW_STATUS_STOPPED,
-    WORKFLOW_STATUS_UNKNOWN
 } from '../../../constants';
+import { RootState } from '../../../flux/index.def';
+import { actions as widgetsActions } from '../../../flux/widget';
+import { actions as workspaceActions } from '../../../flux/workspace';
 import { controller } from '../../../lib/controller';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
 import { in2mm, mm2in } from '../../../lib/units';
-
-import { RootState } from '../../../flux/index.def';
-import { actions as workspaceActions } from '../../../flux/workspace';
-import { actions as widgetsActions } from '../../../flux/widget';
 import { Button } from '../../components/Buttons';
 import Select from '../../components/Select';
-
-import { DEFAULT_AXES, DISTANCE_MAX, DISTANCE_MIN, DISTANCE_STEP } from './constants';
 import ControlPanel from './ControlPanel';
 import DisplayPanel from './DisplayPanel';
+import { DEFAULT_AXES, DISTANCE_MAX, DISTANCE_MIN, DISTANCE_STEP } from './constants';
 
 const DEFAULT_SPEED_OPTIONS = [
     {
@@ -388,9 +383,9 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, widgetActions }) 
         // This prevents accidental movement while sending G-code commands.
         setState({
             ...state,
-            keypadJogging: (workflowStatus === WORKFLOW_STATE_IDLE) ? keypadJogging : false,
-            selectedAxis: (workflowStatus === WORKFLOW_STATE_IDLE) ? selectedAxis : '',
-            canClick: (workflowStatus === WORKFLOW_STATE_IDLE || workflowStatus === WORKFLOW_STATUS_STOPPED) && !isMoving
+            keypadJogging: (workflowStatus === WorkflowStatus.Idle) ? keypadJogging : false,
+            selectedAxis: (workflowStatus === WorkflowStatus.Idle) ? selectedAxis : '',
+            canClick: (workflowStatus === WorkflowStatus.Idle || workflowStatus === WorkflowStatus.Stopped) && !isMoving
         });
     }, [workflowStatus, isMoving]);
 
@@ -470,7 +465,7 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, widgetActions }) 
     }, [state]);
 
     function canClick() {
-        return isConnected && includes([WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN], workflowStatus) && !isMoving;
+        return isConnected && includes([WorkflowStatus.Unknown, WorkflowStatus.Idle], workflowStatus) && !isMoving;
     }
 
     const _canClick = canClick();

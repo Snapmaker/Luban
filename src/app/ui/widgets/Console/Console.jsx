@@ -1,20 +1,23 @@
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import color from 'cli-color';
-import React, { useEffect, useRef, useState } from 'react';
+import { includes } from 'lodash';
 import PropTypes from 'prop-types';
+import React, { useEffect, useRef, useState } from 'react';
 // import classNames from 'classnames';
-import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import pubsub from 'pubsub-js';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { useHistory, withRouter } from 'react-router-dom';
+
 import settings from '../../../config/settings';
-import i18n from '../../../lib/i18n';
-import usePrevious from '../../../lib/hooks/previous';
+import {
+    ABSENT_OBJECT,
+    CONNECTION_TYPE_SERIAL,
+} from '../../../constants';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import { controller } from '../../../lib/controller';
+import usePrevious from '../../../lib/hooks/previous';
+import i18n from '../../../lib/i18n';
 import Terminal from './Terminal';
-import {
-    ABSENT_OBJECT, CONNECTION_TYPE_SERIAL,
-    WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_PAUSING
-} from '../../../constants';
 
 let pubsubTokens = [];
 let unlisten = null;
@@ -305,7 +308,7 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
     }, [isConnected, port, server]);
 
     useEffect(() => {
-        const isWorking = workflowStatus === WORKFLOW_STATUS_RUNNING || workflowStatus === WORKFLOW_STATUS_PAUSED || workflowStatus === WORKFLOW_STATUS_PAUSING;
+        const isWorking = includes([WorkflowStatus.Running, WorkflowStatus.Pausing, WorkflowStatus.Paused], workflowStatus);
         if (!isConnected) {
             widgetActions.setDisplay(true);
         } else {

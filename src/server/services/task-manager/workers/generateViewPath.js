@@ -2,12 +2,10 @@ import fs from 'fs';
 import _ from 'lodash';
 import { pathWithRandomSuffix } from '../../../../shared/lib/random-utils';
 import SVGParser from '../../../../shared/lib/SVGParser';
-import CncToolPathGenerator from '../../../lib/ToolPathGenerator/CncToolPathGenerator';
-import CncReliefToolPathGenerator from '../../../lib/ToolPathGenerator/CncReliefToolPathGenerator';
+import { CncToolPathGenerator, CncReliefToolPathGenerator, CncMeshToolPathGenerator } from '../../../lib/ToolPathGenerator';
 import logger from '../../../lib/logger';
 import { PROCESS_MODE_MESH } from '../../../constants';
 import { polyUnion } from '../../../../shared/lib/clipper/cLipper-adapter';
-import CncMeshToolPathGenerator from '../../../lib/ToolPathGenerator/MeshToolPath/CncMeshToolPathGenerator';
 import sendMessage from '../utils/sendMessage';
 
 const log = logger('service:TaskManager');
@@ -15,10 +13,6 @@ const log = logger('service:TaskManager');
 const generateCncViewPath = async (modelInfo, onProgress) => {
     const { sourceType, mode, uploadName } = modelInfo;
     const modelPath = `${process.env.Tmpdir}/${uploadName}`;
-    // if (config.svgNodeName === 'text') {
-    //     const result = await editorProcess(modelInfo);
-    //     modelPath = `${process.env.Tmpdir}/${result.filename}`;
-    // }
 
     if (((sourceType === 'svg') && (mode === 'vector' || mode === 'trace')) || (sourceType === 'raster' && mode === 'vector')) {
         const svgParser = new SVGParser();

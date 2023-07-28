@@ -1,6 +1,7 @@
 import type { Machine } from '@snapmaker/luban-platform';
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import classNames from 'classnames';
-import { map } from 'lodash';
+import { includes, map } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
@@ -15,10 +16,6 @@ import {
     IMAGE_WIFI_CONNECTED,
     IMAGE_WIFI_CONNECTING,
     IMAGE_WIFI_WAITING,
-    WORKFLOW_STATUS_IDLE,
-    WORKFLOW_STATUS_PAUSED,
-    WORKFLOW_STATUS_RUNNING,
-    WORKFLOW_STATUS_UNKNOWN
 } from '../../../constants';
 import {
     LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
@@ -26,26 +23,23 @@ import {
     findMachineByName,
     isDualExtruder
 } from '../../../constants/machines';
+import { RootState } from '../../../flux/index.def';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import { Server } from '../../../flux/workspace/Server';
+import { ConnectionType } from '../../../flux/workspace/state';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
-
+import { L20WLaserToolModule, L40WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
 import { Button } from '../../components/Buttons';
 import ModalSmall from '../../components/Modal/ModalSmall';
 import ModalSmallInput from '../../components/Modal/ModalSmallInput';
 import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
-
-import { RootState } from '../../../flux/index.def';
-import { ConnectionType } from '../../../flux/workspace/state';
 import MachineModuleStatusBadge from './components/MachineModuleStatusBadge';
 import LaserLockModal from './modals/LaserLockModal';
 import MismatchModal from './modals/MismatchModal';
 import MismatchNozzleModal from './modals/MismatchNozzleModal';
 import styles from './styles.styl';
-
-
 
 
 const ICON_COLOR_GREEN = '#4CB518';
@@ -372,7 +366,7 @@ const NetworkConnection: React.FC = () => {
             find = _servers[0];
         }
 
-        if (find && find !== selectedServer) {
+        if (find && find !== _selectedServer) {
             setSelectedServer(find);
         }
     }, [savedServerAddress, savedServerName]);
@@ -431,21 +425,45 @@ const NetworkConnection: React.FC = () => {
             });
         }
         if (headType === HEAD_LASER) {
-            if (toolHead && toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+            if (toolHead) {
+                switch (toolHead) {
+                    case LEVEL_TWO_POWER_LASER_FOR_SM2: {
+                        newModuleStatusList.push({
+                            status: true,
+                            moduleName: i18n._('key-Workspace/Connection-Laser-10W')
+                        });
+                        break;
+                    }
+                    case L20WLaserToolModule.identifier: {
+                        newModuleStatusList.push({
+                            status: true,
+                            moduleName: i18n._('20W Laser Module')
+                        });
+                        break;
+                    }
+                    case L40WLaserToolModule.identifier: {
+                        newModuleStatusList.push({
+                            status: true,
+                            moduleName: i18n._('40W Laser Module')
+                        });
+                        break;
+                    }
+                    default: {
+                        newModuleStatusList.push({
+                            status: true,
+                            moduleName: i18n._('key-Workspace/Connection-Laser')
+                        });
+                        break;
+                    }
+                }
+            }
+
+            if (laserCamera) {
                 newModuleStatusList.push({
-                    status: true,
-                    moduleName: i18n._('key-Workspace/Connection-Laser-10W')
-                });
-            } else {
-                newModuleStatusList.push({
-                    status: true,
-                    moduleName: i18n._('key-Workspace/Connection-Laser')
+                    moduleName: i18n._('key-Workspace/Connection-Laser camera'),
+                    status: laserCamera
                 });
             }
-            newModuleStatusList.push({
-                moduleName: i18n._('key-Workspace/Connection-Laser camera'),
-                status: laserCamera
-            });
         }
         if (headType === HEAD_CNC) {
             if (toolHead === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2) {
@@ -565,14 +583,18 @@ const NetworkConnection: React.FC = () => {
                                 {`${server?.name} (${connectedMachine.fullName})`}
                             </span>
                             <span className={styles['connection-state-icon']}>
-                                {workflowStatus === WORKFLOW_STATUS_UNKNOWN
-                                    && <i className="sm-icon-14 sm-icon-idle" />}
-                                {workflowStatus === WORKFLOW_STATUS_IDLE
-                                    && <i className="sm-icon-14 sm-icon-idle" />}
-                                {workflowStatus === WORKFLOW_STATUS_PAUSED
-                                    && <i className="sm-icon-14 sm-icon-paused" />}
-                                {workflowStatus === WORKFLOW_STATUS_RUNNING
-                                    && <i className="sm-icon-14 sm-icon-running" />}
+                                {
+                                    includes([WorkflowStatus.Unknown, WorkflowStatus.Idle], workflowStatus)
+                                    && <i className="sm-icon-14 sm-icon-idle" />
+                                }
+                                {
+                                    includes([WorkflowStatus.Paused, WorkflowStatus.Pausing], workflowStatus)
+                                    && <i className="sm-icon-14 sm-icon-paused" />
+                                }
+                                {
+                                    includes([WorkflowStatus.Running], workflowStatus)
+                                    && <i className="sm-icon-14 sm-icon-running" />
+                                }
                             </span>
                         </div>
                         {/* Render status badge for each machine module */}

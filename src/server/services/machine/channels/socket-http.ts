@@ -1,7 +1,10 @@
 // import store from '../../store';
+import EventEmitter from 'events';
 import { isEqual, isNil } from 'lodash';
 import request from 'superagent';
+
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, } from '../../../../app/constants/machines';
+import DataStorage from '../../../DataStorage';
 import {
     CONNECTION_TYPE_WIFI,
     HEAD_CNC,
@@ -13,14 +16,11 @@ import {
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     STANDARD_CNC_TOOLHEAD_FOR_SM2
 } from '../../../constants';
-import DataStorage from '../../../DataStorage';
+import SocketServer from '../../../lib/SocketManager';
 import { valueOf } from '../../../lib/contants-utils';
 import logger from '../../../lib/logger';
-import SocketServer from '../../../lib/SocketManager';
 import workerManager from '../../task-manager/workerManager';
 import { EventOptions } from '../types';
-import wifiServerManager from '../../socket/WifiServerManager';
-
 
 let waitConfirm: boolean;
 const log = logger('lib:SocketHttp');
@@ -100,7 +100,7 @@ export type GcodeResult = {
 /**
  * A singleton to manage devices connection.
  */
-class SocketHttp {
+class SocketHttp extends EventEmitter {
     private isGcodeExecuting = false;
 
     private gcodeInfos = [];
@@ -120,24 +120,12 @@ class SocketHttp {
     private getLaserMaterialThicknessReq = null;
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public onConnection = (socket: SocketServer) => {
+    public onConnection = () => {
         this.stopHeartBeat();
     };
 
-    public onDisconnection = (socket: SocketServer) => {
-        wifiServerManager.onDisconnection(socket);
-    };
-
-    public onSubscribe = (socket: SocketServer) => {
-        wifiServerManager.onSubscribe(socket);
-    };
-
-    public onDisSubscribe = (socket: SocketServer) => {
-        wifiServerManager.onDisSubscribe(socket);
-    };
-
-    public refreshDevices = () => {
-        wifiServerManager.refreshDevices();
+    public onDisconnection = () => {
+        // empty
     };
 
     public init = () => {
@@ -221,6 +209,9 @@ class SocketHttp {
                 // Get enclosure status (every 1000ms)
                 clearInterval(intervalHandle);
                 intervalHandle = setInterval(this.getEnclosureStatus, 1000);
+
+                // Get Active extruder
+                this.getActiveExtruder({ eventName: 'connection:getActiveExtruder' });
             });
     };
 
@@ -541,6 +532,27 @@ class SocketHttp {
             .timeout(300000)
             .field('token', this.token)
             .attach('file', DataStorage.tmpDir + gcodePath, { filename: renderGcodeFileName })
+            .end((err, res) => {
+                this.socket && this.socket.emit(eventName, _getResult(err, res));
+            });
+    };
+
+    public getActiveExtruder = (options) => {
+        const { eventName } = options;
+        const api = `${this.host}/api/v1/active_extruder?token=${this.token}`;
+        request
+            .get(api)
+            .end((err, res) => {
+                this.socket && this.socket.emit(eventName, _getResult(err, res));
+            });
+    };
+
+    public updateActiveExtruder = ({ extruderIndex, eventName }) => {
+        const api = `${this.host}/api/v1/switch_extruder`;
+        request
+            .post(api)
+            .send(`token=${this.token}`)
+            .send(`active=${extruderIndex}`)
             .end((err, res) => {
                 this.socket && this.socket.emit(eventName, _getResult(err, res));
             });

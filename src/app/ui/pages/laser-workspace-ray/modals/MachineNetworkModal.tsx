@@ -5,6 +5,7 @@ import classNames from 'classnames';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 
+import log from '../../../../lib/log';
 import ControllerEvent from '../../../../connection/controller-events';
 import { RootState } from '../../../../flux/index.def';
 import { ConnectionType } from '../../../../flux/workspace/state';
@@ -12,6 +13,7 @@ import controller from '../../../../lib/controller';
 import i18n from '../../../../lib/i18n';
 import { Button } from '../../../components/Buttons';
 import Modal from '../../../components/Modal';
+import useMountedState from '../../../utils/useMountedState';
 
 interface MachineNetworkModalProps {
     onClose?: () => void;
@@ -23,6 +25,7 @@ interface MachineNetworkModalProps {
 const MachineNetworkModal: React.FC<MachineNetworkModalProps> = (props) => {
     const isConnected = useSelector((state: RootState) => state.workspace.isConnected);
     const connectionType = useSelector((state: RootState) => state.workspace.connectionType);
+    const isMounted = useMountedState();
 
 
     const isConnectedViaSerialport = useMemo(() => {
@@ -30,27 +33,45 @@ const MachineNetworkModal: React.FC<MachineNetworkModalProps> = (props) => {
     }, [isConnected, connectionType]);
 
     // Current network
+    const [currentNetworkLoading, setCurrentNetworkLoading] = useState(false);
     const [currentNetwork, setCurrentNetwork] = useState('');
     const [currentNetworkIP, setCurrentNetworkIP] = useState('');
 
     useEffect(() => {
-        if (isConnectedViaSerialport) {
+        if (isConnected) {
+            setCurrentNetworkLoading(true);
+
             controller
                 .emitEvent(ControllerEvent.GetMachineNetworkConfiguration)
                 .once(ControllerEvent.GetMachineNetworkConfiguration, (networkConfiguration: NetworkConfiguration) => {
+                    setCurrentNetworkLoading(false);
                     if (networkConfiguration.networkMode === NetworkMode.Station) {
+                        // setCurrentNetworkConfigured(true);
                         setCurrentNetwork(networkConfiguration.stationSSID);
                         controller
                             .emitEvent(ControllerEvent.GetMachineNetworkStationState)
                             .once(ControllerEvent.GetMachineNetworkStationState, (networkStationState: NetworkStationState) => {
                                 if (networkStationState.stationState === 3) {
                                     setCurrentNetworkIP(networkStationState.stationIP);
+                                } else {
+                                    setCurrentNetworkIP('');
                                 }
                             });
+                    } else {
+                        // other network mode not supported currently
+                        // setCurrentNetworkConfigured(false);
+                        setCurrentNetwork('');
+                        setCurrentNetworkIP('');
                     }
                 });
+
+            setTimeout(() => {
+                if (isMounted()) {
+                    setCurrentNetworkLoading(false);
+                }
+            }, 3000);
         }
-    }, [isConnectedViaSerialport]);
+    }, [isConnected, isMounted]);
 
     // Network options
     const [networkOptions, setNetworkOptions] = useState([]);
@@ -93,9 +114,9 @@ const MachineNetworkModal: React.FC<MachineNetworkModalProps> = (props) => {
         setSelectedNetworkPassword(e.target.value);
     }, []);
 
-    // Connect
-    const onConnect = useCallback(() => {
-        console.log('onConnect', selectedNetwork);
+    // Set machine network configuration
+    const setMachineNetworkConfiguration = useCallback(() => {
+        log.info(`Connect machine to ${selectedNetwork}...`);
 
         controller
             .emitEvent(ControllerEvent.SetMachineNetworkConfiguration, {
@@ -122,60 +143,105 @@ const MachineNetworkModal: React.FC<MachineNetworkModalProps> = (props) => {
                     )
                 }
                 {
-                    isConnectedViaSerialport && (
+                    isConnected && (
                         <div>
                             <p>
-                                Current Machine Network:
-                                <span>{currentNetwork}</span>
-                                {currentNetworkIP && <span>({currentNetworkIP})</span>}
+                                <span className="margin-right-4">{i18n._('Machine Network')}:</span>
+                                {
+                                    currentNetwork && (
+                                        <>
+                                            <span>{currentNetwork}</span>
+                                            {
+                                                currentNetworkIP && (
+                                                    <span>({currentNetworkIP})</span>
+                                                )
+                                            }
+                                            {
+                                                !currentNetworkIP && (
+                                                    <span>({i18n._('Not Connected')})</span>
+                                                )
+                                            }
+                                        </>
+                                    )
+                                }
+                                {
+                                    currentNetworkLoading && (
+                                        <span>{i18n._('Loading...')}</span>
+                                    )
+                                }
+                                {
+                                    !currentNetworkLoading && !currentNetwork && (
+                                        <span>{i18n._('Not Configured')}</span>
+                                    )
+                                }
                             </p>
                         </div>
                     )
                 }
-                <div
-                    className={
-                        classNames('width-percent-100', 'sm-flex', {
-                            'margin-top-16': !isConnected,
-                        })
-                    }
-                >
-                    <Space direction="vertical" size={16} className="sm-flex-width">
-                        <div className="width-320">
-                            <p>Network:</p>
-                            <Select
-                                style={{ width: '100%' }}
-                                disabled={!isConnected}
-                                loading={networkLoading}
-                                options={networkOptions}
-                                value={selectedNetwork}
-                                onChange={onChangeSelectedNetwork}
-                            />
+                {
+                    isConnectedViaSerialport && (
+                        <div
+                            className={
+                                classNames('width-percent-100', 'sm-flex', {
+                                    'margin-top-16': !isConnected,
+                                })
+                            }
+                        >
+                            <Space direction="vertical" size={16} className="sm-flex-width">
+                                <div className="width-320">
+                                    <p>Network:</p>
+                                    <Select
+                                        style={{ width: '100%' }}
+                                        disabled={!isConnected}
+                                        loading={networkLoading}
+                                        options={networkOptions}
+                                        value={selectedNetwork}
+                                        onChange={onChangeSelectedNetwork}
+                                    />
+                                </div>
+                                <div className="width-320">
+                                    <p>Password:</p>
+                                    <Input.Password
+                                        width={300}
+                                        disabled={!isConnected}
+                                        value={selectedNetworkPassword}
+                                        onChange={onChangePassword}
+                                        placeholder={i18n._('key-Workspace/Input password')}
+                                        iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
+                                        visibilityToggle={{ visible: passwordVisible, onVisibleChange: setPasswordVisible }}
+                                    />
+                                </div>
+                            </Space>
                         </div>
-                        <div className="width-320">
-                            <p>Password:</p>
-                            <Input.Password
-                                width={300}
-                                disabled={!isConnected}
-                                value={selectedNetworkPassword}
-                                onChange={onChangePassword}
-                                placeholder={i18n._('key-Workspace/Input password')}
-                                iconRender={(visible) => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
-                                visibilityToggle={{ visible: passwordVisible, onVisibleChange: setPasswordVisible }}
-                            />
-                        </div>
-                    </Space>
-                </div>
+                    )
+                }
             </Modal.Body>
             <Modal.Footer>
-                <Button
-                    type="primary"
-                    className="align-r"
-                    width="96px"
-                    onClick={onConnect}
-                    disabled={!isConnected}
-                >
-                    {i18n._('key-Common/Config')}
-                </Button>
+                {
+                    isConnectedViaSerialport && (
+                        <Button
+                            type="primary"
+                            className="align-r"
+                            width="96px"
+                            onClick={setMachineNetworkConfiguration}
+                            disabled={!isConnected}
+                        >
+                            {i18n._('key-Common/Config')}
+                        </Button>
+                    )
+                }
+                {
+                    !isConnectedViaSerialport && (
+                        <Button
+                            type="primary"
+                            className="align-r"
+                            width="96px"
+                            onClick={props?.onClose}
+                        >
+                            {i18n._('key-App/Update-OK')}
+                        </Button>
+                    )
+                }
             </Modal.Footer>
         </Modal>
     );

@@ -1,3 +1,4 @@
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { includes, isEmpty, isNil, isUndefined } from 'lodash';
 import * as THREE from 'three';
 import { v4 as uuid } from 'uuid';
@@ -19,30 +20,28 @@ import {
     LEFT_EXTRUDER,
     PROTOCOL_TEXT,
     RIGHT_EXTRUDER,
-    WORKFLOW_STATUS_IDLE,
-    WORKFLOW_STATUS_PAUSED,
-    WORKFLOW_STATUS_RUNNING,
-    WORKFLOW_STATUS_UNKNOWN
 } from '../../constants';
 import {
+    EMERGENCY_STOP_BUTTON,
+    MACHINE_SERIES,
     findMachineByName,
     findToolHead,
-    MACHINE_SERIES,
-    EMERGENCY_STOP_BUTTON,
 } from '../../constants/machines';
 import { valueOf } from '../../lib/contants-utils';
 import { controller } from '../../lib/controller';
 import { logGcodeExport } from '../../lib/gaEvent';
 import log from '../../lib/log';
 import workerManager from '../../lib/manager/workerManager';
-import { machineStore } from '../../store/local-storage';
 import ThreeUtils from '../../scene/three-extensions/ThreeUtils';
+import { machineStore } from '../../store/local-storage';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
-import baseActions, { ACTION_UPDATE_STATE } from './action-base';
-import connectActions from './action-connect';
-import discoverActions from './action-discover';
+import baseActions, { ACTION_UPDATE_STATE } from './actions-base';
+import connectActions from './actions-connect';
+import discoverActions from './actions-discover';
+import { GCodeFileObject } from './actions-gcode';
 import type { MachineStateUpdateOptions } from './state';
-import { ConnectionType, initialState, WORKSPACE_STAGE } from './state';
+import { ConnectionType, WORKSPACE_STAGE, initialState } from './state';
+
 
 export { WORKSPACE_STAGE } from './state';
 
@@ -58,8 +57,8 @@ export const actions = {
             connectionStatus: CONNECTION_STATUS_IDLE,
             isHomed: null,
             connectLoading: false,
-            workflowStatus: connectionType === ConnectionType.WiFi ? WORKFLOW_STATUS_UNKNOWN : WORKFLOW_STATUS_IDLE,
-            // workflowState: WORKFLOW_STATE_IDLE,
+            // TODO: unify?
+            workflowStatus: connectionType === ConnectionType.WiFi ? WorkflowStatus.Unknown : WorkflowStatus.Idle,
             laserFocalLength: null,
             workPosition: { // work position
                 x: '0.000',
@@ -139,8 +138,13 @@ export const actions = {
 
                 let machineSeries = '';
                 const {
-                    toolHead, series, headType, status, moduleStatusList,
-                    isHomed, isMoving,
+                    toolHead,
+                    series,
+                    headType,
+                    status,
+                    moduleStatusList,
+                    isHomed,
+                    isMoving,
                 } = state;
                 const { seriesSize } = state;
 
@@ -183,7 +187,7 @@ export const actions = {
                         })
                     );
                     dispatch(actions.executeGcodeG54(series, headType));
-                    if (includes([WORKFLOW_STATUS_PAUSED, WORKFLOW_STATUS_RUNNING], status)) {
+                    if (includes([WorkflowStatus.Running, WorkflowStatus.Paused], status)) {
                         controller
                             .emitEvent(CONNECTION_GET_GCODEFILE)
                             .once(CONNECTION_GET_GCODEFILE, (res) => {
@@ -407,7 +411,10 @@ export const actions = {
 
                 compareAndSet(data, currentState, 'laser10WErrorState', laser10WErrorState);
                 compareAndSet(data, currentState, 'isEmergencyStopped', isEmergencyStopped);
-                compareAndSet(data, currentState, 'currentWorkNozzle', !currentWorkNozzle ? LEFT_EXTRUDER : RIGHT_EXTRUDER);
+                if (!isNil(currentWorkNozzle)) {
+                    // SACP only, SSTP missing currentWorkNozzle
+                    compareAndSet(data, currentState, 'currentWorkNozzle', !currentWorkNozzle ? LEFT_EXTRUDER : RIGHT_EXTRUDER);
+                }
                 compareAndSet(data, currentState, 'cncTargetSpindleSpeed', cncTargetSpindleSpeed);
                 compareAndSet(data, currentState, 'cncCurrentSpindleSpeed', cncCurrentSpindleSpeed);
                 compareAndSet(data, currentState, 'enclosureLight', ledValue);
@@ -519,6 +526,23 @@ export const actions = {
 
                 dispatch(baseActions.updateState({
                     laserIsLocked: isLocked,
+                }));
+            },
+
+            'connection:getActiveExtruder': (options) => {
+                const activeExtruderIndex = options?.data?.active || 0;
+
+                const newActiveExtruder = activeExtruderIndex === 0 ? LEFT_EXTRUDER : RIGHT_EXTRUDER;
+                dispatch(baseActions.updateState({
+                    currentWorkNozzle: newActiveExtruder,
+                }));
+            },
+
+            'connection:updateWorkNozzle': () => {
+                const currentWorkNozzle = getState().workspace.currentWorkNozzle;
+                const newActiveExtruder = currentWorkNozzle === LEFT_EXTRUDER ? RIGHT_EXTRUDER : LEFT_EXTRUDER;
+                dispatch(baseActions.updateState({
+                    currentWorkNozzle: newActiveExtruder,
                 }));
             },
 
@@ -883,7 +907,7 @@ export const actions = {
     },
 
     renderGcodeFile: (
-        gcodeFile,
+        gcodeFile: GCodeFileObject,
         needToList = true,
         shouldRenderGcode = false
     ) => async (dispatch, getState) => {
@@ -1084,7 +1108,7 @@ export const actions = {
     /**
      * Execute G-code.
      */
-    executeGcode: (gcode, context = null, cmd = undefined) => (dispatch, getState) => {
+    executeGcode: (gcode: string, context = null, cmd = undefined) => (dispatch, getState) => {
         const { homingModal, isConnected } = getState().workspace;
         if (!isConnected) {
             if (homingModal) {

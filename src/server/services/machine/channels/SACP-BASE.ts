@@ -1,4 +1,5 @@
 import { ResponseCallback } from '@snapmaker/snapmaker-sacp-sdk';
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { readString, readUint16, readUint8 } from '@snapmaker/snapmaker-sacp-sdk/dist/helper';
 import {
     AirPurifierInfo,
@@ -27,7 +28,6 @@ import {
     HEADT_BED_FOR_SM2,
     LOAD_FIMAMENT,
     UNLOAD_FILAMENT,
-    WORKFLOW_STATE_RUNNING,
     WORKFLOW_STATUS_MAP
 } from '../../../../app/constants';
 import {
@@ -54,8 +54,6 @@ import {
 import {
     COMPLUTE_STATUS,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
-    WORKFLOW_STATE_IDLE,
-    WORKFLOW_STATE_PAUSED
 } from '../../../constants';
 import logger from '../../../lib/logger';
 import SocketServer from '../../../lib/SocketManager';
@@ -116,7 +114,7 @@ class SocketBASE extends EventEmitter {
 
     public startTime: any;
 
-    public machineStatus: string = WORKFLOW_STATE_IDLE;
+    public machineStatus: string = WorkflowStatus.Idle;
 
     public startHeartbeatBase = async (sacpClient: Business, client?: net.Socket) => {
         this.sacpClient = sacpClient;
@@ -415,7 +413,7 @@ class SocketBASE extends EventEmitter {
                 remainingTime: remainingTime,
                 printStatus: currentLine === this.totalLine ? COMPLUTE_STATUS : ''
             };
-            includes([WORKFLOW_STATE_RUNNING, WORKFLOW_STATE_PAUSED], this.machineStatus) && this.socket && this.socket.emit('sender:status', ({ data }));
+            includes([WorkflowStatus.Running, WorkflowStatus.Paused], this.machineStatus) && this.socket && this.socket.emit('sender:status', ({ data }));
         };
         this.sacpClient.subscribeGetPrintCurrentLineNumber({ interval: 1000 }, this.subscribeGetCurrentGcodeLineCallback);
         this.sacpClient.subscribeGetPrintingTime({ interval: 1000 }, (response) => {
@@ -528,23 +526,6 @@ class SocketBASE extends EventEmitter {
         return this.sacpClient.getCurrentCoordinateInfo();
     };
 
-    /**
-     * Configure machine network.
-     *
-     * Note that this API is only implemented by Ray.
-     */
-    public configureNetwork = async (networkOptions: NetworkOptions) => {
-        return this.sacpClient.configureNetwork(networkOptions);
-    };
-
-    public getNetworkConfiguration = async () => {
-        return this.sacpClient.getNetworkConfiguration();
-    };
-
-    public getNetworkStationState = async () => {
-        return this.sacpClient.getNetworkStationState();
-    };
-
     public executeGcode = async (options: EventOptions, callback: () => void) => {
         log.info('run executeGcode');
         const { gcode } = options;
@@ -553,7 +534,9 @@ class SocketBASE extends EventEmitter {
         log.debug(`executeGcode, ${gcodeLines}`);
         gcodeLines.forEach(_gcode => {
             this.sacpClient.executeGcode(_gcode).then(res => {
-                log.info(`execute gcode: ${res}`);
+                if (res.response.result !== 0) {
+                    log.info(`failed to execute gcode: ${_gcode}`);
+                }
             });
         });
         try {
@@ -948,6 +931,30 @@ class SocketBASE extends EventEmitter {
             log.info(`Update Purifier speed, ${response.result}, ${options.value}`);
         });
     }
+
+    /**
+     * Export Log in machine to external storage.
+     */
+    public exportLogToExternalStorage = async () => {
+        return this.sacpClient.exportLogToExternalStorage();
+    }
+
+    /**
+     * Configure machine network.
+     *
+     * Note that this API is only implemented by Ray.
+     */
+    public configureNetwork = async (networkOptions: NetworkOptions) => {
+        return this.sacpClient.configureNetwork(networkOptions);
+    };
+
+    public getNetworkConfiguration = async () => {
+        return this.sacpClient.getNetworkConfiguration();
+    };
+
+    public getNetworkStationState = async () => {
+        return this.sacpClient.getNetworkStationState();
+    };
 }
 
 export default SocketBASE;

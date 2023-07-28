@@ -1,30 +1,5 @@
-import { Machine, MachineType, ToolHead, ToolHeadType } from '@snapmaker/luban-platform';
-
-export const laserModule20W: ToolHead = {
-    identifier: '20W Laser Module',
-
-    label: '20W',
-    image: '/resources/images/machine/coming_soon.png',
-
-    metadata: {
-        headType: ToolHeadType.Laser,
-
-        numberOfExtruders: 0,
-    },
-};
-
-export const laserModule40W: ToolHead = {
-    identifier: '40W Laser Module',
-
-    label: '40W',
-    image: '/resources/images/machine/coming_soon.png',
-
-    metadata: {
-        headType: ToolHeadType.Laser,
-
-        numberOfExtruders: 0,
-    },
-};
+import { Machine, MachineGcodeFlavor, MachineType } from '@snapmaker/luban-platform';
+import { L20WLaserToolModule, L40WLaserToolModule } from './snapmaker-2-toolheads';
 
 
 export const machine: Machine = {
@@ -36,19 +11,21 @@ export const machine: Machine = {
     img: '/resources/images/machine/coming_soon.png',
 
     metadata: {
-        size: { x: 400, y: 600, z: 30 },
+        size: { x: 600, y: 400, z: 30 },
 
         toolHeads: [
             {
-                identifier: laserModule20W.identifier,
+                identifier: L20WLaserToolModule.identifier,
                 configPath: 'laser/snapmaker_ray_20w',
                 goHomeOnConnection: false,
             },
             {
-                identifier: laserModule40W.identifier,
+                identifier: L40WLaserToolModule.identifier,
                 configPath: 'laser/snapmaker_ray_40w',
                 goHomeOnConnection: false,
             },
         ],
+
+        gcodeFlavor: MachineGcodeFlavor.GRBL
     },
 };

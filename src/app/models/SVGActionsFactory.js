@@ -572,7 +572,6 @@ class SVGActionsFactory {
                 elem: element,
                 size: this.size
             };
-
             const svgModel = this.modelGroup.addModel(options);
             svgModel.setParent(this.svgContentGroup.group);
             svgModel.setPreSelection(this.svgContentGroup.preSelectionGroup);

@@ -1,16 +1,14 @@
 import type { Machine, MachineToolHeadOptions, ToolHead } from '@snapmaker/luban-platform';
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import * as THREE from 'three';
 
 import {
     CONNECTION_STATUS_IDLE,
     LEFT_EXTRUDER,
-    WORKFLOW_STATE_IDLE,
-    WORKFLOW_STATUS_UNKNOWN
 } from '../../constants';
-import { CircularArray } from '../../lib/collections';
-import { controller } from '../../lib/controller';
 import History from '../../core/History';
-
+import { CircularArray } from '../../lib/collections';
+// import { controller } from '../../lib/controller';
 import { Server } from './Server';
 
 export const WORKSPACE_STAGE = {
@@ -92,7 +90,14 @@ declare interface WorkspaceOtherState {
     progress: number;
 }
 
-declare interface WorkspaceState extends WorkspaceMachineDiscoverState, WorkspaceConnectionState, WorkspaceOtherState, MachineState {
+
+
+declare interface WorkspaceMachineState {
+    // from status
+    workflowStatus: WorkflowStatus;
+}
+
+declare interface WorkspaceState extends WorkspaceMachineDiscoverState, WorkspaceConnectionState, WorkspaceOtherState, MachineState, WorkspaceMachineState {
     headType: string;
 }
 
@@ -124,7 +129,8 @@ export const initialState: WorkspaceState = {
     // serial port related
     //  - ports: all serial ports available
     //  - port: serial port selected
-    port: controller.port || '',
+    // port: controller.port || '',
+    port: '',
     ports: [],
 
     //
@@ -166,8 +172,19 @@ export const initialState: WorkspaceState = {
     //
     // Machine State
     //
-    // from workflowState: idle, running, paused/ for serial connection?
-    workflowState: WORKFLOW_STATE_IDLE,
+
+    /**
+     * Machine status, or workflow status
+     */
+    workflowStatus: WorkflowStatus.Unknown,
+
+    /**
+     * Machine status, or workflow status (for serial port connection?)
+     *
+     * from workflowState: idle, running, paused
+     */
+    workflowState: WorkflowStatus.Idle,
+
     isHomed: null,
     isMoving: false, // XYZ axes are moving
 
@@ -210,9 +227,6 @@ export const initialState: WorkspaceState = {
     // modules status
     moduleStatusList: {},
     nozzleSizeList: [],
-
-    // workflow, or machine status: unknown, idle, running, paused
-    workflowStatus: WORKFLOW_STATUS_UNKNOWN,
 
     workPosition: {
         // work position

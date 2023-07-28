@@ -11,7 +11,7 @@ import {
 import { SnapmakerArtisanMachine } from '../../../../app/machines';
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 import logger from '../../../lib/logger';
-import SocketSerialNew from '../channels/SACP-SERIAL';
+import SacpSerialChannel from '../channels/SacpSerialChannel';
 import SocketSerial from '../channels/socket-serial';
 import { ConnectedData } from '../types';
 import MachineInstance from './Instance';
@@ -23,7 +23,7 @@ class ArtisanMachineInstance extends MachineInstance {
     public onMachineReady(): void {
         log.info('Machine is ready.');
 
-        if (this.channel instanceof SocketSerialNew) {
+        if (this.channel instanceof SacpSerialChannel) {
             this._onMachineReadySACP();
         }
         if (this.channel instanceof SocketSerial) {
@@ -39,7 +39,7 @@ class ArtisanMachineInstance extends MachineInstance {
         state.series = SnapmakerArtisanMachine.identifier;
 
         // module info
-        const { data: moduleInfos } = await (this.channel as SocketSerialNew).getModuleInfo();
+        const { data: moduleInfos } = await (this.channel as SacpSerialChannel).getModuleInfo();
 
         const moduleListStatus = {
             // airPurifier: false,
@@ -48,7 +48,6 @@ class ArtisanMachineInstance extends MachineInstance {
             rotaryModule: false
         };
         moduleInfos.forEach(module => {
-            // let ariPurifier = false;
             if (includes(PRINTING_HEAD_MODULE_IDS, module.moduleId)) {
                 state.headType = HEAD_PRINTING;
                 state.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
@@ -70,7 +69,7 @@ class ArtisanMachineInstance extends MachineInstance {
 
 
         // Get Coordinate Info
-        const { data: coordinateInfos } = await (this.channel as SocketSerialNew).getCoordinateInfo();
+        const { data: coordinateInfos } = await (this.channel as SacpSerialChannel).getCoordinateInfo();
         const isHomed = !(coordinateInfos?.coordinateSystemInfo?.homed); // 0: homed, 1: need to home
         state.isHomed = isHomed;
         state.isMoving = false;
@@ -78,7 +77,7 @@ class ArtisanMachineInstance extends MachineInstance {
         this.socket.emit('connection:connected', { state: state, err: '' });
 
         // Start heartbeat
-        (this.channel as SocketSerialNew).startHeartbeat();
+        (this.channel as SacpSerialChannel).startHeartbeat();
     }
 }
 

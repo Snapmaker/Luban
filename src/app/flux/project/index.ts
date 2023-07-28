@@ -266,7 +266,7 @@ export const actions = {
         }
         if (envHeadType === HEAD_PRINTING) {
             modActions = printingActions;
-            await dispatch(printingActions.initSize());
+            await dispatch(printingActions.initPrintConfig());
         }
         const { modelGroup } = modState;
         modelGroup.removeAllModels();
@@ -677,7 +677,7 @@ export const actions = {
 
         if (headType === HEAD_PRINTING) {
             dispatch(printingActions.destroyGcodeLine());
-            await dispatch(printingActions.initSize());
+            await dispatch(printingActions.initPrintConfig());
         }
 
         modState.toolPathGroup && modState.toolPathGroup.deleteAllToolPaths();

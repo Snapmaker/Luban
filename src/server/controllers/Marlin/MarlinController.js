@@ -11,8 +11,8 @@ import EventTrigger from '../../lib/EventTrigger';
 import Feeder from '../../lib/Feeder';
 import Sender, { SP_TYPE_SEND_RESPONSE } from '../../lib/Sender';
 import Workflow, {
-    WORKFLOW_STATE_PAUSED,
-    WORKFLOW_STATE_RUNNING
+    WORKFLOW_STATUS_PAUSED,
+    WORKFLOW_STATUS_RUNNING
 } from '../../lib/Workflow';
 import { ensureRange } from '../../lib/numeric-utils';
 import ensureArray from '../../lib/ensure-array';
@@ -301,7 +301,7 @@ class MarlinController extends EventEmitter {
                 return;
             }
 
-            if (this.workflow.state !== WORKFLOW_STATE_RUNNING) {
+            if (this.workflow.state !== WORKFLOW_STATUS_RUNNING) {
                 log.error(`Unexpected workflow state: ${this.workflow.state}`);
                 return;
             }
@@ -500,7 +500,7 @@ class MarlinController extends EventEmitter {
             }
 
             // Sender
-            if (this.workflow.state === WORKFLOW_STATE_RUNNING) {
+            if (this.workflow.state === WORKFLOW_STATUS_RUNNING) {
                 // Check hold state
                 if (this.sender.state.hold) {
                     const { sent, received } = this.sender.state;
@@ -513,7 +513,7 @@ class MarlinController extends EventEmitter {
                 this.sender.multipleNext();
                 return;
             }
-            if (this.workflow.state === WORKFLOW_STATE_PAUSED) {
+            if (this.workflow.state === WORKFLOW_STATUS_PAUSED) {
                 const { sent, received } = this.sender.state;
                 if (sent > received) {
                     this.sender.ack();
@@ -532,7 +532,7 @@ class MarlinController extends EventEmitter {
             this.feeder.next();
 
             // Sender
-            if (this.workflow.state === WORKFLOW_STATE_RUNNING) {
+            if (this.workflow.state === WORKFLOW_STATUS_RUNNING) {
                 const { lines, received } = this.sender.state;
                 const line = lines[received] || '';
 

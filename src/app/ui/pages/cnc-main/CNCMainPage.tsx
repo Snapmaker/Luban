@@ -378,7 +378,14 @@ const Cnc: React.FC<CNCMainPageProps> = ({ location }) => {
             <ProjectLayout
                 renderMainToolBar={renderMainToolBar}
                 renderRightView={
-                    () => RenderProjectRightView({ headType: HEAD_CNC, dispatch, page, widgets, listActions })
+                    () => (
+                        <RenderProjectRightView
+                            headType={HEAD_CNC}
+                            page={page}
+                            widgets={widgets}
+                            listActions={listActions}
+                        />
+                    )
                 }
             >
                 <Dropzone

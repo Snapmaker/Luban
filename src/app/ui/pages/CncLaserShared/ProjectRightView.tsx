@@ -23,7 +23,6 @@ const allWidgets = {
     'laser-params': LaserParamsWidget,
     'laser-test-focus': LaserTestFocusWidget,
     'cnc-path': CNCPathWidget,
-    'cnc-output': CncLaserOutputWidget,
     'toolpath-list': ToolPathListBox,
 };
 

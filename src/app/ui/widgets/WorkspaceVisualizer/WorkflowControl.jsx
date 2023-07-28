@@ -1,21 +1,16 @@
 import _ from 'lodash';
-import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import React from 'react';
 import { connect } from 'react-redux';
-import {
-    // Workflow
-    WORKFLOW_STATE_RUNNING,
-    WORKFLOW_STATE_PAUSED,
-    WORKFLOW_STATE_IDLE,
-    WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_RUNNING, WORKFLOW_STATUS_PAUSED, CONNECTION_TYPE_WIFI, WORKFLOW_STATUS_UNKNOWN
-} from '../../../constants';
 
+import { CONNECTION_TYPE_WIFI } from '../../../constants';
+import { WorkflowStatus } from '../../../flux/workspace/state';
 import i18n from '../../../lib/i18n';
 import SvgIcon from '../../components/SvgIcon';
 // import styles from './index.styl';
 
 
-class WorkflowControl extends PureComponent {
+class WorkflowControl extends React.PureComponent {
     static propTypes = {
         uploadState: PropTypes.string.isRequired,
         isSendedOnWifi: PropTypes.bool.isRequired,
@@ -91,10 +86,10 @@ class WorkflowControl extends PureComponent {
         const status = isWifi ? workflowStatus : workflowState;
         const isRendered = this.props.renderState === 'rendered';
         const isUploaded = isWifi ? this.props.isSendedOnWifi : this.props.uploadState === 'uploaded';
-        const canClose = isRendered && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE, WORKFLOW_STATUS_UNKNOWN], status);
-        const canPlay = isConnected && isRendered && isUploaded && !_.includes([WORKFLOW_STATE_RUNNING, WORKFLOW_STATUS_RUNNING], status);
-        const canPause = _.includes([WORKFLOW_STATE_RUNNING, WORKFLOW_STATUS_RUNNING], status);
-        const canStop = _.includes([WORKFLOW_STATE_PAUSED, WORKFLOW_STATUS_PAUSED], status);
+        const canClose = isRendered && _.includes([WorkflowStatus.Idle, WorkflowStatus.Unknown], status);
+        const canPlay = isConnected && isRendered && isUploaded && !_.includes([WorkflowStatus.Running], status);
+        const canPause = _.includes([WorkflowStatus.Running], status);
+        const canStop = _.includes([WorkflowStatus.Paused], status);
 
         return (
             <div className="">

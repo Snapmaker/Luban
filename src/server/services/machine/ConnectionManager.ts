@@ -1,11 +1,11 @@
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import fs from 'fs';
-import net from 'net';
-import { SerialPort } from 'serialport';
+import { includes } from 'lodash';
 
 import { AUTO_STRING } from '../../../app/constants';
+import { SnapmakerArtisanMachine, SnapmakerRayMachine } from '../../../app/machines';
 import DataStorage from '../../DataStorage';
 import {
-    CONNECTION_TYPE_SERIAL,
     CONNECTION_TYPE_WIFI,
     HEAD_CNC,
     HEAD_LASER,
@@ -13,29 +13,25 @@ import {
     LEVEL_ONE_POWER_LASER_FOR_SM2,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
     MACHINE_SERIES,
-    PORT_SCREEN_HTTP,
-    PORT_SCREEN_SACP,
-    SACP_PROTOCOL,
-    SERIAL_PROTOCOL,
-    STANDARD_CNC_TOOLHEAD_FOR_SM2,
-    WORKFLOW_STATE_PAUSED,
+    STANDARD_CNC_TOOLHEAD_FOR_SM2
 } from '../../constants';
 import ScheduledTasks from '../../lib/ScheduledTasks';
+import SocketServer from '../../lib/SocketManager';
 import logger from '../../lib/logger';
-import SocketSerialNew, { socketSerialNew } from './channels/SACP-SERIAL';
+import ProtocolDetector, { NetworkProtocol, SerialPortProtocol } from './ProtocolDetector';
+import { ChannelEvent } from './channels/ChannelEvent';
 import socketTcp from './channels/SACP-TCP';
+import SacpSerialChannel, { sacpSerialChannel } from './channels/SacpSerialChannel';
+import { sacpUdpChannel } from './channels/SacpUdpChannel';
 import socketHttp from './channels/socket-http';
 import { socketSerial } from './channels/socket-serial';
-import { MachineInstance, RayMachineInstance, ArtisanMachineInstance } from './instances';
-import { ChannelEvent } from './channels/ChannelEvent';
-import { SnapmakerArtisanMachine, SnapmakerRayMachine } from '../../../app/machines';
+import { ArtisanMachineInstance, MachineInstance, RayMachineInstance } from './instances';
 
 const log = logger('lib:ConnectionManager');
 
 const ensureRange = (value, min, max) => {
     return Math.max(min, Math.min(max, value));
 };
-let timer = null;
 
 /**
  * Connection Type
@@ -53,7 +49,7 @@ class ConnectionManager {
     // socket used to communicate
     private channel = null;
 
-    private protocol = '';
+    private protocol: NetworkProtocol | SerialPortProtocol = NetworkProtocol.Unknown;
 
     private scheduledTasksHandle;
 
@@ -61,34 +57,15 @@ class ConnectionManager {
 
     private socket;
 
-    public onConnection = (socket) => {
-        socketHttp.onConnection(socket);
+    public onConnection = (socket: SocketServer) => {
+        socketHttp.onConnection();
         this.scheduledTasksHandle = new ScheduledTasks(socket);
     };
 
-    public onDisconnection = (socket) => {
-        socketHttp.onDisconnection(socket);
+    public onDisconnection = (socket: SocketServer) => {
+        socketHttp.onDisconnection();
         socketSerial.onDisconnection(socket);
         this.scheduledTasksHandle.cancelTasks();
-    };
-
-    public refreshDevices = (socket, options) => {
-        const { connectionType } = options;
-        if (connectionType === CONNECTION_TYPE_WIFI) {
-            socketHttp.refreshDevices();
-        } else if (connectionType === CONNECTION_TYPE_SERIAL) {
-            socketSerial.serialportList();
-        }
-    };
-
-    public subscribeDevices = (socket, bool) => {
-        if (bool) {
-            socketHttp.onSubscribe(socket);
-            socketSerial.onSubscribe(socket);
-        } else {
-            socketHttp.onDisSubscribe(socket);
-            socketSerial.onDisSubscribe(socket);
-        }
     };
 
     public connectionOpen = async (socket, options) => {
@@ -99,41 +76,41 @@ class ConnectionManager {
         }
 
         const { connectionType, sacp, addByUser, address } = options;
+
         this.connectionType = connectionType;
+
         if (connectionType === CONNECTION_TYPE_WIFI) {
             if (sacp) {
-                this.protocol = SACP_PROTOCOL;
+                // TODO: optimize sacp option
+                this.protocol = NetworkProtocol.SacpOverTCP;
                 this.channel = socketTcp;
             } else if (addByUser) {
-                try {
-                    const protocol = await this.inspectProtocol(address);
-                    if (protocol === SACP_PROTOCOL) {
-                        this.protocol = SACP_PROTOCOL;
-                        this.channel = socketTcp;
-                    } else {
-                        this.protocol = '';
-                        this.channel = socketHttp;
-                    }
-                } catch (e) {
-                    log.error(`connectionOpen inspect protocol error: ${e}`);
+                const protocol = await this.inspectNetworkProtocol(address);
+                this.protocol = protocol;
+
+                if (protocol === NetworkProtocol.SacpOverTCP) {
+                    this.channel = socketTcp;
+                } else if (protocol === NetworkProtocol.SacpOverUDP) {
+                    this.channel = sacpUdpChannel;
+                } else if (protocol === NetworkProtocol.HTTP) {
+                    this.channel = socketHttp;
                 }
             } else {
-                this.protocol = '';
+                this.protocol = NetworkProtocol.Unknown;
                 this.channel = socketHttp;
             }
 
-
             this.channel.connectionOpen(socket, options);
         } else {
-            const protocol = await this.inspectProtocol('', CONNECTION_TYPE_SERIAL, options);
+            const protocol = await this.inspectSerialPortProtocol(options.port);
+            log.info(`Detected protocol: ${protocol}`);
+            this.protocol = protocol;
 
-            if (protocol === SACP_PROTOCOL) {
-                this.channel = socketSerialNew;
-                this.protocol = SACP_PROTOCOL;
+            if (protocol === SerialPortProtocol.SacpOverSerialPort) {
+                this.channel = sacpSerialChannel;
                 this.channel.connectionOpen(socket, options);
             } else {
                 this.channel = socketSerial;
-                this.protocol = '';
                 this.channel.serialportOpen(socket, options);
             }
         }
@@ -192,7 +169,7 @@ class ConnectionManager {
     };
 
     public connectionCloseImproper = () => {
-        if (this.protocol === SACP_PROTOCOL) {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel && this.channel.connectionCloseImproper();
         } else {
             log.info('connectionCloseImproper');
@@ -201,103 +178,15 @@ class ConnectionManager {
         }
     };
 
-    private inspectProtocol = async (address, connectionType = CONNECTION_TYPE_WIFI, options = { port: '' }) => {
-        if (connectionType === CONNECTION_TYPE_WIFI) {
-            // Inspect if we can connect to the printer via SACP (8888) or HTTP (8080)
-            const [resSACP, resHTTP] = await Promise.allSettled([
-                this.tryConnect(address, PORT_SCREEN_SACP),
-                this.tryConnect(address, PORT_SCREEN_HTTP),
-            ]);
-            if (resHTTP.status === 'fulfilled' && resHTTP.value) {
-                return 'HTTP';
-            } else if (resSACP.status === 'fulfilled' && resSACP.value) {
-                return SACP_PROTOCOL;
-            }
-        } else if (connectionType === CONNECTION_TYPE_SERIAL) {
-            let protocol = 'HTTP';
-            let hasData = false;
-            const trySerialConnect = new SerialPort({
-                path: options.port,
-                baudRate: 115200,
-                autoOpen: false,
-            });
+    private async inspectNetworkProtocol(host: string): Promise<NetworkProtocol> {
+        const protocolDetector = new ProtocolDetector();
+        return protocolDetector.detectNetworkProtocol(host);
+    }
 
-            if (timer) clearTimeout(timer);
-            timer = setTimeout(() => {
-                if (!hasData) {
-                    // protocol = SERIAL_PROTOCOL;
-                    protocol = SACP_PROTOCOL;
-                    trySerialConnect?.close();
-                }
-            }, 1000);
-
-            await new Promise((resolve) => {
-                trySerialConnect.on('data', (data) => {
-                    hasData = true;
-                    const machineData = data.toString();
-
-                    // SACP => SACP
-                    if (data[0].toString(16) === 'aa' && data[1].toString(16) === '55') {
-                        protocol = SACP_PROTOCOL;
-                        trySerialConnect?.close();
-                    }
-
-                    // M1006 response: SACP V1 => SACP
-                    if (machineData.match(/SACP/g)) {
-                        protocol = SACP_PROTOCOL;
-                        trySerialConnect?.close();
-                    }
-
-                    // ok => plaintext protocol
-                    if (machineData.match(/ok/g)) {
-                        protocol = SERIAL_PROTOCOL;
-                        trySerialConnect?.close();
-                    }
-                });
-                trySerialConnect.on('close', () => {
-                    resolve(true);
-                    // callback && callback(protocol);
-                });
-                // // TODO: return a promise and throw error
-                trySerialConnect.on('error', (err) => {
-                    log.error(`error = ${err}`);
-                });
-                trySerialConnect.once('open', () => {
-                    // Use M1006 to detect if SACP is supported
-                    // Expected response: SACP V1
-                    trySerialConnect.write('M1006\r\n');
-                });
-                trySerialConnect.open();
-            });
-
-            return protocol;
-        }
-        return '';
-    };
-
-    private tryConnect = async (host, port) => {
-        return new Promise((resolve) => {
-            const tcpSocket = net.createConnection({
-                host,
-                port,
-                timeout: 1000
-            }, () => {
-                tcpSocket.destroy();
-                resolve(true);
-                log.debug(`try connect ${host}:${port}, connected.`);
-            });
-            tcpSocket.once('timeout', () => {
-                tcpSocket.destroy();
-                log.debug(`try connect ${host}:${port}, timeout`);
-                resolve(false);
-            });
-            tcpSocket.once('error', (e) => {
-                tcpSocket.destroy();
-                log.debug(`try connect ${host}:${port}, error: ${e}`);
-                resolve(false);
-            });
-        });
-    };
+    private async inspectSerialPortProtocol(port: string): Promise<SerialPortProtocol> {
+        const protocolDetector = new ProtocolDetector();
+        return protocolDetector.detectSerialPortProtocol(port);
+    }
 
     /**
      *
@@ -320,7 +209,7 @@ class ConnectionManager {
             const promises = [];
 
             if (headType === HEAD_LASER) {
-                if (this.protocol === SACP_PROTOCOL) {
+                if (includes([NetworkProtocol.SacpOverTCP], this.protocol)) {
                     // Snapmaker Artisan (SACP)
                     // this.socket.uploadGcodeFile(gcodeFilePath, headType, renderName, () => {
                     // });
@@ -426,7 +315,7 @@ class ConnectionManager {
                 });
         } else {
             const { workflowState } = options;
-            if (this.protocol === SACP_PROTOCOL) {
+            if (includes([SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
                 if (headType === HEAD_LASER && !isRotate) {
                     if (materialThickness !== 0) {
                         await this.channel.laserSetWorkHeight({ toolHead, materialThickness });
@@ -443,7 +332,7 @@ class ConnectionManager {
                 }
                 // this.socket.startGcode(options);
             } else {
-                if (headType === HEAD_LASER && workflowState !== WORKFLOW_STATE_PAUSED) {
+                if (headType === HEAD_LASER && workflowState !== WorkflowStatus.Paused) {
                     this.channel.command(socket, {
                         args: ['G0 X0 Y0 B0 F1000', null]
                     });
@@ -499,7 +388,7 @@ G1 Z${pos.z}
     };
 
     public resumeGcode = (socket, options, callback) => {
-        if (this.protocol === SACP_PROTOCOL || this.connectionType === CONNECTION_TYPE_WIFI) {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.resumeGcode({ ...options, connectionType: this.connectionType }, callback);
         } else {
             const { headType, pause3dpStatus, pauseStatus, gcodeFile, sizeZ } = options;
@@ -562,7 +451,7 @@ M3`;
     };
 
     public pauseGcode = (socket, options) => {
-        if (this.protocol === SACP_PROTOCOL || this.connectionType === CONNECTION_TYPE_WIFI) {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.pauseGcode(options);
         } else {
             const { eventName } = options;
@@ -574,22 +463,20 @@ M3`;
     };
 
     public stopGcode = (socket, options) => {
-        if (this.connectionType === CONNECTION_TYPE_WIFI) {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, NetworkProtocol.HTTP], this.protocol)) {
             this.channel.stopGcode(options);
             socket && socket.emit(options.eventName, {});
+        } else if (includes([SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            this.channel.stopGcode(options);
         } else {
-            if (this.protocol === SACP_PROTOCOL) {
-                this.channel.stopGcode(options);
-            } else {
-                this.channel.command(this.channel, {
-                    cmd: 'gcode:pause',
-                });
-                this.channel.command(this.channel, {
-                    cmd: 'gcode:stop',
-                });
-                const { eventName } = options;
-                socket && socket.emit(eventName, {});
-            }
+            this.channel.command(this.channel, {
+                cmd: 'gcode:pause',
+            });
+            this.channel.command(this.channel, {
+                cmd: 'gcode:stop',
+            });
+            const { eventName } = options;
+            socket && socket.emit(eventName, {});
         }
     };
 
@@ -597,7 +484,7 @@ M3`;
     public executeGcode = (socket, options, callback = null) => {
         const { gcode, context, cmd = 'gcode' } = options;
         log.info(`executeGcode: ${gcode}, ${this.protocol}`);
-        if (this.protocol === SACP_PROTOCOL || this.connectionType === CONNECTION_TYPE_WIFI) {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.executeGcode(options, callback);
         } else {
             this.channel.command(this.channel, {
@@ -607,23 +494,41 @@ M3`;
         }
     };
 
+    // SSTP
+    public getActiveExtruder = (socket, options) => {
+        if (this.connectionType === CONNECTION_TYPE_WIFI) {
+            this.socket.getActiveExtruder(options);
+        }
+    };
+
     public switchExtruder = (socket, options) => {
-        if (this.protocol === SACP_PROTOCOL) {
-            const { extruderIndex } = options;
+        const extruderIndex = options?.extruderIndex || '0';
+
+        if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.switchExtruder(extruderIndex);
+        } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
+            this.channel.updateActiveExtruder({
+                eventName: options.eventName,
+                extruderIndex,
+            });
+        } else {
+            // T0 / T1
+            this.channel.command(this.socket, {
+                args: [`T${extruderIndex}`],
+            });
         }
     };
 
     public updateNozzleTemperature = (socket, options) => {
-        if (this.protocol === SACP_PROTOCOL) {
-            const { extruderIndex, nozzleTemperatureValue } = options;
+        const { extruderIndex = -1, nozzleTemperatureValue } = options;
+
+        if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.updateNozzleTemperature(extruderIndex, nozzleTemperatureValue);
         } else {
             if (this.connectionType === CONNECTION_TYPE_WIFI) {
                 this.channel.updateNozzleTemperature(options);
             } else {
-                const { nozzleTemperatureValue } = options;
-                this.channel.command(this.channel, {
+                this.channel.command(this.socket, {
                     args: [`M104 S${nozzleTemperatureValue}`]
                 });
             }
@@ -631,7 +536,7 @@ M3`;
     };
 
     public updateBedTemperature = (socket, options) => {
-        if (this.protocol === SACP_PROTOCOL) {
+        if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const { /* zoneIndex, */heatedBedTemperatureValue } = options;
             this.channel.updateBedTemperature(0, heatedBedTemperatureValue);
             this.channel.updateBedTemperature(1, heatedBedTemperatureValue);
@@ -649,7 +554,7 @@ M3`;
 
     public loadFilament = (socket, options) => {
         const { eventName } = options;
-        if (this.protocol === SACP_PROTOCOL || this.connectionType === CONNECTION_TYPE_WIFI) {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const { extruderIndex } = options;
             this.channel.loadFilament(extruderIndex, eventName);
         } else {
@@ -662,7 +567,7 @@ M3`;
 
     public unloadFilament = (socket, options) => {
         const { eventName } = options;
-        if (this.protocol === SACP_PROTOCOL) {
+        if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const { extruderIndex } = options;
             this.channel.unloadFilament(extruderIndex, eventName);
         } else if (this.connectionType === CONNECTION_TYPE_WIFI) {
@@ -676,7 +581,7 @@ M3`;
     };
 
     public updateWorkSpeedFactor = (socket, options) => {
-        if (this.protocol === SACP_PROTOCOL) {
+        if ([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort].includes(this.protocol)) {
             const { toolHead, workSpeedValue, extruderIndex } = options;
             this.channel.updateWorkSpeed(toolHead, workSpeedValue, extruderIndex);
         } else {
@@ -691,14 +596,8 @@ M3`;
         }
     };
 
-    // getWorkSpeedFactor = (socket, options) => {
-    //     if (this.protocol === SACP_PROTOCOL) {
-    //         this.socket.getWorkSpeed(options);
-    //     }
-    // }
-
     public updateLaserPower = (socket, options) => {
-        if (this.protocol === SACP_PROTOCOL) {
+        if ([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort].includes(this.protocol)) {
             const { laserPower } = options;
             log.info(`updateLaserPower set laser power:[${laserPower}]`);
 
@@ -734,7 +633,7 @@ M3`;
 
     public switchLaserPower = (socket, options) => {
         const { isSM2, laserPower, laserPowerOpen } = options;
-        if (this.protocol === SACP_PROTOCOL) {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             if (laserPowerOpen) {
                 this.channel.updateLaserPower(0);
             } else {
@@ -763,7 +662,7 @@ M3`;
     };
 
     public setEnclosureLight = (socket, options) => {
-        if (this.connectionType === CONNECTION_TYPE_WIFI || this.protocol === SACP_PROTOCOL) {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.setEnclosureLight(options);
         } else {
             const { value, eventName } = options;
@@ -776,7 +675,7 @@ M3`;
     };
 
     public setEnclosureFan = (socket, options) => {
-        if (this.connectionType === CONNECTION_TYPE_WIFI || this.protocol === SACP_PROTOCOL) {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.setEnclosureFan(options);
         } else {
             const { value, eventName } = options;
@@ -789,7 +688,7 @@ M3`;
     };
 
     public setFilterSwitch = (socket, options) => {
-        if (this.connectionType === CONNECTION_TYPE_WIFI || this.protocol === SACP_PROTOCOL) {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.setFilterSwitch(options);
         } else {
             const { value, enable } = options;
@@ -801,7 +700,7 @@ M3`;
     };
 
     public setFilterWorkSpeed = (socket, options) => {
-        if (this.connectionType === CONNECTION_TYPE_WIFI || this.protocol === SACP_PROTOCOL) {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.setFilterWorkSpeed(options);
         } else {
             const { value } = options;
@@ -814,7 +713,7 @@ M3`;
 
     // only for Wifi
     public setDoorDetection = (socket, options) => {
-        if (this.connectionType === CONNECTION_TYPE_WIFI || this.protocol === SACP_PROTOCOL) {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.setDoorDetection(options);
         }
     };
@@ -832,7 +731,7 @@ M3`;
     };
 
     public updateZOffset = (socket, options) => {
-        if (this.protocol === SACP_PROTOCOL) {
+        if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const { extruderIndex, zOffset } = options;
             this.channel.updateNozzleOffset(extruderIndex, 2, zOffset);
         } else {
@@ -872,7 +771,7 @@ M3`;
 
     public goHome = (socket, options, callback) => {
         const { headType } = options;
-        if (this.protocol === SACP_PROTOCOL) {
+        if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.goHome();
             socket && socket.emit('move:status', { isHoming: true });
         } else {
@@ -894,7 +793,7 @@ M3`;
     public coordinateMove = (socket, options, callback) => {
         const { moveOrders, gcode, jogSpeed, headType } = options;
         // const { moveOrders, gcode, context, cmd, jogSpeed, headType } = options;
-        if (this.protocol === SACP_PROTOCOL) {
+        if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.coordinateMove({ moveOrders, jogSpeed, headType });
         } else {
             this.executeGcode(this.channel, { gcode }, callback);
@@ -903,7 +802,7 @@ M3`;
 
     public setWorkOrigin = (socket, options, callback) => {
         const { xPosition, yPosition, zPosition, bPosition } = options;
-        if (this.protocol === SACP_PROTOCOL) {
+        if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.setWorkOrigin({ xPosition, yPosition, zPosition, bPosition });
         } else {
             this.executeGcode(this.channel, { gcode: 'G92 X0 Y0 Z0 B0' }, callback);
@@ -911,7 +810,7 @@ M3`;
     };
 
     public updateToolHeadSpeed = (socket, options) => {
-        if (this.protocol === SACP_PROTOCOL) {
+        if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const { speed } = options;
             this.channel.updateToolHeadSpeed(speed);
         }
@@ -919,7 +818,7 @@ M3`;
 
     public switchCNC = async (socket, options, callback) => {
         const { headStatus, speed, toolHead } = options;
-        if (this.protocol === SACP_PROTOCOL) {
+        if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             if (toolHead === STANDARD_CNC_TOOLHEAD_FOR_SM2) {
                 await this.channel.setCncPower(100); // default 10
             } else {
@@ -948,8 +847,8 @@ M3`;
     public getNetworkConfiguration = async (socket, options) => {
         const { eventName } = options;
 
-        if (this.channel instanceof SocketSerialNew) {
-            const { data: networkConfiguration } = await (this.channel as SocketSerialNew).getNetworkConfiguration();
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const { data: networkConfiguration } = await this.channel.getNetworkConfiguration();
 
             socket.emit(eventName, {
                 networkMode: networkConfiguration.networkMode,
@@ -958,25 +857,45 @@ M3`;
                 stationPassword: networkConfiguration.stationPassword,
                 stationIP: networkConfiguration.stationIP,
             });
+        } else {
+            socket.emit(eventName, {
+                err: 1,
+                msg: `Unsupported event: ${eventName}`,
+            });
         }
     };
 
     public getNetworkStationState = async (socket, options) => {
         const { eventName } = options;
 
-        if (this.channel instanceof SocketSerialNew) {
-            const { data: networkStationState } = await (this.channel as SocketSerialNew).getNetworkStationState();
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const { data: networkStationState } = await (this.channel as SacpSerialChannel).getNetworkStationState();
 
             socket.emit(eventName, {
                 stationIP: networkStationState.stationIP,
                 stationState: networkStationState.stationState,
                 stationRSSI: networkStationState.stationRSSI,
             });
+        } else {
+            socket.emit(eventName, {
+                err: 1,
+                msg: `Unsupported event: ${eventName}`,
+            });
         }
     };
 
-    public configureNetwork = async (socket, options) => {
-        if (this.channel instanceof SocketSerialNew) {
+    /**
+     * Configure machine network.
+     *
+     * Notice: configure machine network is supported by SACP over TCP/UDP, but it's not recommended.
+     * Since you've connected to the machine via network already.
+     */
+    public configureMachineNetwork = async (socket, options) => {
+        const { eventName } = options;
+
+        // Note: supported by SACP over UDP, but it's not needed since you already connected to the machine
+        // via network.
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const configureNetworkResult = await this.channel.configureNetwork({
                 networkMode: options?.networkMode,
                 stationIPObtain: options?.stationIPObtain,
@@ -987,6 +906,31 @@ M3`;
             if (configureNetworkResult.response.result === 0) {
                 // success
             }
+        } else {
+            socket.emit(eventName, {
+                err: 1,
+                msg: `Unsupported event: ${eventName}`,
+            });
+        }
+    }
+
+    /**
+     * Export log in machine to external storage.
+     */
+    public exportLogToExternalStorage = async (socket, options) => {
+        const { eventName } = options;
+
+        // SACP only
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const result = await this.channel.exportLogToExternalStorage();
+            socket.emit(eventName, {
+                err: result.response.result !== 0,
+            });
+        } else {
+            socket.emit(eventName, {
+                err: 1,
+                msg: `Unsupported event: ${eventName}`,
+            });
         }
     }
 }
@@ -994,7 +938,7 @@ M3`;
 const connectionManager = new ConnectionManager();
 
 export {
-    connectionManager,
+    connectionManager
 };
 
 // export default connectionManager;

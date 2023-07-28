@@ -98,7 +98,6 @@ export default class Business extends Dispatcher {
 
             this.ack(0xb0, 0x00, data.packet, Buffer.alloc(1, 0));
 
-            console.log('upload file:', filename, fileLength, chunks, md5HexStr);
             // const hash = crypto.createHash('md5');
             const outputStream = fs.createWriteStream(path.join(DataStorage.tmpDir, filename)); // need to rename this filename
 
@@ -294,7 +293,6 @@ export default class Business extends Dispatcher {
     public async getEmergencyStopInfo() {
         return this.send(0x01, 0x3b, PeerId.CONTROLLER, Buffer.alloc(0)).then(({ response, packet }) => {
             // const isTouch = readBool(response.data);
-            // console.log('emergencyResponse', response);
             return { packet, data: response };
         });
     }
@@ -465,6 +463,57 @@ export default class Business extends Dispatcher {
             response,
             packet,
         };
+    }
+
+    /**
+     * Export Log to Storage
+     *
+     * 0x01 0x16 Export Log to External Storage
+     * 0x01 0x17 Export Log Result
+     */
+    public async exportLogToExternalStorage() {
+        return new Promise((resolve) => {
+            // handle export result
+            this.setHandler(0x01, 0x17, (data) => {
+                this.ack(0x01, 0x17, data.packet, Buffer.alloc(1, 0));
+                if (readUint8(data.param) === 0) {
+                    this.log.info('Exporting log to external storage successfully.');
+                    resolve({
+                        response: {
+                            result: 0,
+                            data: Buffer.alloc(0),
+                        }
+                    });
+                } else {
+                    this.log.info('Failed to exporting log to external storage.');
+                    resolve({
+                        response: {
+                            result: 1,
+                            data: Buffer.alloc(0),
+                        }
+                    });
+                }
+            });
+
+            // 0 stands for SD card
+            const buffer = Buffer.alloc(1, 0);
+            this.send(0x01, 0x16, PeerId.CONTROLLER, buffer)
+                .then(({ response }) => {
+                    if (response.result === 0) {
+                        // wait for result
+                        this.log.info('Requested for exporting log to external storage.');
+                    } else {
+                        this.log.info('Requested for exporting log to external storage. Failed.');
+                        // fail already
+                        resolve({
+                            response: {
+                                result: 1,
+                                data: Buffer.alloc(0),
+                            }
+                        });
+                    }
+                });
+        });
     }
 
     // 0x01 0x2X Get Machine Info
@@ -673,7 +722,6 @@ export default class Business extends Dispatcher {
     public async GetFDMInfo(key: number) {
         const info = new FdmToolHeadInfo(key);
         return this.send(0x10, 0x01, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
-            // console.log('FDMSubCase',info.toBuffer,response,packet)
             const getFDMInfo = new FdmToolHeadInfo().fromBuffer(response.data);
             return { response, packet, data: { getFDMInfo } };
         });
@@ -802,10 +850,7 @@ export default class Business extends Dispatcher {
         const sizePerChunk = 60 * 1024;
         this.setHandler(0xb0, 0x01, (data) => {
             const { nextOffset, result: md5HexStr } = readString(data.param);
-            // console.log('>>', md5HexStr, nextOffset);
             const index = readUint16(data.param, nextOffset);
-            // console.log('>>', index);
-            // this.log.info(`receive file chunk request: md5: ${md5HexStr}, index: ${index}`);
 
             const inputStream = fs.createReadStream(filePath, {
                 start: index * sizePerChunk, end: (index + 1) * sizePerChunk - 1, highWaterMark: sizePerChunk
@@ -813,11 +858,9 @@ export default class Business extends Dispatcher {
             let buffer = Buffer.alloc(1, 200); // result = 1, means file EOF reached
             let finalBuf = Buffer.alloc(0);
             inputStream.on('data', (buf: Buffer) => {
-                // console.log('>-', buf);
                 finalBuf = Buffer.concat([finalBuf, buf]);
             });
             inputStream.on('end', () => {
-                // console.log('>-', finalBuf.byteLength);
                 const md5Buffer = stringToBuffer(md5HexStr);
                 const indexBuffer = Buffer.alloc(2, 0);
                 writeUint16(indexBuffer, 0, index);
@@ -826,7 +869,6 @@ export default class Business extends Dispatcher {
                 // const chunkBuffer = Buffer.concat([chunkLengthBuffer, finalBuf]); //stringToBuffer(finalBuf.toString());
                 const chunkBuffer = stringToBuffer(finalBuf as unknown as string);
                 buffer = Buffer.concat([Buffer.alloc(1, 0), md5Buffer, indexBuffer, chunkBuffer]);
-                // console.log('>--', buffer);
                 this.ack(0xb0, 0x01, data.packet, buffer);
             });
             inputStream.once('error', () => {
@@ -872,6 +914,123 @@ export default class Business extends Dispatcher {
 
                     const buffer = Buffer.concat([filenameBuffer, fileLengthBuffer, chunksBuffer, md5Buffer]);
                     this.send(0xb0, 0x00, PeerId.SCREEN, buffer).catch(err => {
+                        reject(err);
+                    });
+                });
+            } else {
+                reject(new Error(`can not upload missing file: ${filePath}`));
+            }
+        });
+    }
+
+    /**
+     * Upload large file.
+     *
+     * - 0xb0 0x10: Start upload file request
+     * - 0xb0 0x11: Send file chuck
+     * - 0xb0 0x02: Upload finished (from controller)
+     *
+     * TODO: need option: chuckSize
+     * TODO: need option: peerId
+     */
+    public async uploadLargeFile(filePath: string, renderName?: string) {
+        // const sizePerChunk = 968;
+        const sizePerChunk = 960;
+        this.setHandler(0xb0, 0x11, (data) => {
+            // md5
+            const { nextOffset, result: md5HexStr } = readString(data.param);
+
+            // index
+            const index = readUint32(data.param, nextOffset);
+            this.log.info(`request file chuck index = ${index}`);
+
+            const inputStream = fs.createReadStream(filePath, {
+                start: index * sizePerChunk,
+                end: (index + 1) * sizePerChunk - 1,
+                highWaterMark: sizePerChunk,
+            });
+
+            let finalBuf = Buffer.alloc(0);
+            inputStream.on('data', (buf: Buffer) => {
+                finalBuf = Buffer.concat([finalBuf, buf]);
+            });
+            inputStream.on('end', () => {
+                // md5
+                const md5Buffer = stringToBuffer(md5HexStr);
+
+                // index
+                const indexBuffer = Buffer.alloc(4, 0);
+                writeUint32(indexBuffer, 0, index);
+
+                // chuck
+                const chunkBuffer = stringToBuffer(finalBuf as unknown as string);
+
+                const responseBuffer = Buffer.concat([
+                    Buffer.alloc(1, 0), // 0: success
+                    md5Buffer,
+                    indexBuffer,
+                    chunkBuffer,
+                ]);
+
+                console.log('ack', responseBuffer);
+                this.ack(0xb0, 0x11, data.packet, responseBuffer);
+            });
+            inputStream.once('error', () => {
+                // result = 0, means resource unable to use
+                const buffer = Buffer.alloc(1, 9);
+                this.ack(0xb0, 0x11, data.packet, buffer);
+            });
+        });
+
+        return new Promise<ResponseData>((resolve, reject) => {
+            // handle file upload result
+            this.setHandler(0xb0, 0x02, (data) => {
+                if (readUint8(data.param) === 0) {
+                    this.log.info('file upload success');
+                } else {
+                    this.log.error('file upload fail');
+                }
+                this.ack(0xb0, 0x02, data.packet, Buffer.alloc(1, 0));
+                resolve({
+                    response: {
+                        result: 0,
+                        data: Buffer.alloc(0)
+                    }
+                } as any);
+            });
+
+            // Start a file transfer request
+            if (fs.existsSync(filePath)) {
+                const hash = crypto.createHash('md5');
+                const inputStream = fs.createReadStream(filePath);
+                inputStream.on('data', (data) => {
+                    hash.update(data);
+                });
+                inputStream.on('end', () => {
+                    const filename = path.basename(filePath);
+                    const fileLength = fs.statSync(filePath).size;
+
+                    const filenameBuffer = renderName ? stringToBuffer(renderName) : stringToBuffer(filename);
+                    const fileLengthBuffer = Buffer.alloc(4, 0);
+                    writeUint32(fileLengthBuffer, 0, fileLength);
+
+                    // number of chucks
+                    const chunksBuffer = Buffer.alloc(4, 0);
+                    const chunks = Math.ceil(fileLength / sizePerChunk);
+                    writeUint32(chunksBuffer, 0, chunks);
+
+                    // md5
+                    const md5HexStr = hash.digest('hex');
+                    const md5Buffer = stringToBuffer(md5HexStr);
+
+                    const buffer = Buffer.concat([
+                        filenameBuffer,
+                        fileLengthBuffer,
+                        chunksBuffer,
+                        md5Buffer,
+                    ]);
+                    this.log.info(`start large file transfer... chuck count = ${chunks}`);
+                    this.send(0xb0, 0x10, PeerId.CONTROLLER, buffer).catch(err => {
                         reject(err);
                     });
                 });

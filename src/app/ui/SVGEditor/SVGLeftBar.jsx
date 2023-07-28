@@ -8,6 +8,7 @@ import styles from './styles.styl';
 import { library } from './lib/ext-shapes';
 import i18n from '../../lib/i18n';
 import Anchor from '../components/Anchor';
+// import { svg } from '../../../server/services/api';
 
 const SVGLeftBar = forwardRef((props, ref) => {
     const [extShape, setExtShape] = useState({
@@ -60,6 +61,14 @@ const SVGLeftBar = forwardRef((props, ref) => {
             });
             props.setMode('ext', selectedShape);
         },
+        createExt: async (ext) => {
+            await actions.exitDraw('ext');
+            setExtShape({
+                showExtShape: false,
+                extShape: ext ?? extShape
+            });
+            props.createExt(ext);
+        },
 
         hideLeftBarOverlay: () => {
             setExtShape({
@@ -72,7 +81,7 @@ const SVGLeftBar = forwardRef((props, ref) => {
         },
         stopDraw: () => {
             props.onStopDraw(true);
-        }
+        },
     };
 
     useImperativeHandle(ref, () => ({
@@ -255,33 +264,53 @@ const SVGLeftBar = forwardRef((props, ref) => {
                 {
                     extShape.showExtShape && mode === 'ext' && (
                         <div
-                            className="position-absolute width-272 margin-left-72 margin-top-268 border-default-grey-1 border-radius-8 background-color-white"
+                            style={{ 'height': 'calc(100vh - 26px - 68px - 12px)' }}
+                            className={classNames('position-absolute overflow-hidden margin-left-72 margin-bottom-8 z-index-1 border-default-grey-1 border-radius-8 background-color-white', styles['width-366'])}
                         >
-                            <div className="border-bottom-normal padding-vertical-8 padding-horizontal-16 height-40">
-                                {i18n._('key-Laser/LeftBar-Insert Draw')}
+                            <div className="border-bottom-normal padding-horizontal-16 height-40">
+                                {i18n._('key-Laser/LeftBar-Insert Shape')}
                             </div>
-                            <div>
+                            <div className={classNames('padding-horizontal-16 height-40', styles['online-libary'])}>
+                                <span className={classNames(styles['negative-ml-12'])}>
+                                    <SvgIcon
+                                        type={['hoverNoBackground', 'pressSpecial']}
+                                        color="#545659"
+                                        size={14}
+                                        name="MainToolbarModelRepository"
+                                        disabled
+                                        className={
+                                            classNames('background-transparent',
+                                                'padding-horizontal-4', 'position-re',
+                                                styles['btn-center-ext'])
+                                        }
+                                    />
+                                </span>
+                                {i18n._('key-Laser/LeftBar-Online Libary Tip')}
+                                <span className={classNames(styles['blue-text'])}> {i18n._('key-Laser/LeftBar-Online Libary')}</span>
+                            </div>
+                            <div className="overflow-y-auto border-radius-8" style={{ height: 'calc(100% - 40px - 40px - 5vh)' }}>
                                 <div className="sm-flex">
                                     <div
                                         className={classNames(styles['center-ext'])}
                                     >
                                         {_.map(library.use, (key) => {
                                             return (
-                                                <SvgIcon
-                                                    key={key}
-                                                    type={['hoverNormal', 'pressSpecial']}
-                                                    color="#545659"
-                                                    size={48}
-                                                    name={`Toolbar${key.split('-').map(word => word[0].toUpperCase() + word.slice(1)).join('')}`}
-                                                    disabled={!editable}
+                                                <svg
+                                                    onClick={() => actions.createExt(key)}
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    role="button"
+                                                    viewBox="0 0 300 300"
+                                                    style={{ background: 'transparent', 'border-bottom': 0 }}
+                                                    fill="#545659"
                                                     className={
                                                         classNames('background-transparent',
                                                             'padding-horizontal-4', 'position-re',
                                                             styles['btn-center-ext'],
                                                             { [styles.selected]: extShape === key })
                                                     }
-                                                    onClick={() => actions.setMode('ext', key)}
-                                                />
+                                                >
+                                                    <path stroke="black" fill="none" strokeWidth="6.25" fillRule="evenodd" clipRule="evenodd" d={library.data[key]} />
+                                                </svg>
                                             );
                                         })}
                                     </div>
@@ -308,7 +337,8 @@ SVGLeftBar.propTypes = {
     editable: PropTypes.bool,
     headType: PropTypes.string,
     onStartDraw: PropTypes.func.isRequired,
-    onStopDraw: PropTypes.func.isRequired
+    onStopDraw: PropTypes.func.isRequired,
+    createExt: PropTypes.func.isRequired,
 };
 
 

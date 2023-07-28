@@ -1,4 +1,4 @@
-// import { valueOf } from '../lib/contants-utils';
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 
 export const DEFAULT_LUBAN_HOST = 'luban://127.0.0.1';
 // Metric and Imperial units
@@ -15,7 +15,7 @@ export const CONNECTION_OPEN = 'connection:open';
 export const CONNECTION_CLOSE = 'connection:close';
 export const CONNECTION_CLOSE_IMPROPER = 'connection:closeImproper';
 export const CONNECTION_EXECUTE_GCODE = 'connection:executeGcode';
-export const CONNECTION_START_GCODE = 'connection:startGcode';
+// export const CONNECTION_START_GCODE = 'connection:startGcode';
 export const CONNECTION_RESUME_GCODE = 'connection:resumeGcode';
 export const CONNECTION_PAUSE_GCODE = 'connection:pauseGcode';
 export const CONNECTION_STOP_GCODE = 'connection:stopGcode';
@@ -27,6 +27,7 @@ export const CONNECTION_GET_GCODEFILE = 'connection:getGcodeFile';
 export const CONNECTION_UPLOAD_FILE = 'connection:uploadFile';
 export const CONNECTION_Z_OFFSET = 'connection:updateZOffset';
 export const CONNECTION_NOZZLE_TEMPERATURE = 'connection:updateNozzleTemperature';
+export const CONNECTION_GET_ACTIVE_EXTRUDER = 'connection:getActiveExtruder';
 export const CONNECTION_WORK_NOZZLE = 'connection:updateWorkNozzle';
 export const CONNECTION_BED_TEMPERATURE = 'connection:updateBedTemperature';
 export const CONNECTION_LOAD_FILAMENT = 'connection:loadFilament';
@@ -53,40 +54,35 @@ export const MINIMUM_WIDTH_AND_HEIGHT = 0.01;
 // Controller
 export const MARLIN = 'Marlin';
 
-// Workflow State
-export const WORKFLOW_STATE_RUNNING = 'running';
-export const WORKFLOW_STATE_PAUSED = 'paused';
-export const WORKFLOW_STATE_IDLE = 'idle';
-
 // Workflow status
-export const WORKFLOW_STATUS_UNKNOWN = 'unknown';
-export const WORKFLOW_STATUS_IDLE = 'idle';
-export const WORKFLOW_STATUS_STARTING = 'starting';
-export const WORKFLOW_STATUS_RUNNING = 'running';
-export const WORKFLOW_STATUS_PAUSING = 'pausing';
-export const WORKFLOW_STATUS_PAUSED = 'paused';
-export const WORKFLOW_STATUS_STOPPING = 'stopping';
-export const WORKFLOW_STATUS_STOPPED = 'stopped';
-export const WORKFLOW_STATUS_FINISHING = 'finishing';
-export const WORKFLOW_STATUS_COMPLETED = 'completed';
-export const WORKFLOW_STATUS_RECOVERING = 'recovering';
-export const WROKFLOW_STATUS_RESUMING = 'resuming';
+// export const WORKFLOW_STATUS_UNKNOWN = 'unknown';
+// export const WORKFLOW_STATUS_IDLE = 'idle';
+// export const WORKFLOW_STATUS_STARTING = 'starting';
+// export const WORKFLOW_STATUS_RUNNING = 'running';
+// export const WORKFLOW_STATUS_PAUSING = 'pausing';
+// export const WORKFLOW_STATUS_PAUSED = 'paused';
+// export const WORKFLOW_STATUS_STOPPING = 'stopping';
+// export const WORKFLOW_STATUS_STOPPED = 'stopped';
+// export const WORKFLOW_STATUS_FINISHING = 'finishing';
+// export const WORKFLOW_STATUS_COMPLETED = 'completed';
+// export const WORKFLOW_STATUS_RECOVERING = 'recovering';
+// export const WROKFLOW_STATUS_RESUMING = 'resuming';
 
 export const LOAD_FIMAMENT = 'load';
 export const UNLOAD_FILAMENT = 'unload';
 
 export const WORKFLOW_STATUS_MAP = {
-    '0': WORKFLOW_STATE_IDLE,
-    '1': WORKFLOW_STATUS_STARTING,
-    '2': WORKFLOW_STATUS_RUNNING,
-    '3': WORKFLOW_STATUS_PAUSING,
-    '4': WORKFLOW_STATUS_PAUSED,
-    '5': WORKFLOW_STATUS_STOPPING,
-    '6': WORKFLOW_STATUS_STOPPED,
-    '7': WORKFLOW_STATUS_FINISHING,
-    '8': WORKFLOW_STATUS_COMPLETED,
-    '9': WORKFLOW_STATUS_RECOVERING,
-    '10': WROKFLOW_STATUS_RESUMING
+    '0': WorkflowStatus.Idle,
+    '1': WorkflowStatus.Starting,
+    '2': WorkflowStatus.Running,
+    '3': WorkflowStatus.Pausing,
+    '4': WorkflowStatus.Paused,
+    '5': WorkflowStatus.Stopping,
+    '6': WorkflowStatus.Stopped,
+    '7': WorkflowStatus.Finishing,
+    '8': WorkflowStatus.Completed,
+    '9': WorkflowStatus.Recovering,
+    '10': WorkflowStatus.Resuming,
 };
 
 export const COORDINATE_AXIS = {
@@ -499,7 +495,7 @@ export const LASER_PRESENT_CONFIG_GROUP = [
     },
     {
         name: 'key-Laser/ToolpathParameters-Power',
-        fields: ['fixed_power']
+        fields: ['fixed_power', 'fixed_min_power']
     }
 ];
 
@@ -667,7 +663,7 @@ export const CNC_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         default_value: 1500,
         type: 'float',
         min: 1,
-        max: 6000,
+        max: 36000,
         step: 0.01,
         label: 'Jog Speed',
         unit: 'mm/min',
@@ -706,7 +702,7 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
             'Set the speed at which the toolhead moves on the material when it is engraving or cutting.',
         type: 'float',
         min: 1,
-        max: 6000,
+        max: 36000,
         step: 1,
         default_value: 'workSpeed',
         unit: 'mm/min'
@@ -748,9 +744,32 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         default_value: 'fixedPower',
         unit: '%'
     },
+    fixedMinPower: {
+        label: 'Minimum Laser Power',
+        description: 'The minimum laser power used for variable power line engraving.',
+        type: 'float',
+        min: 0,
+        max: 100,
+        default_value: 0,
+        unit: '%'
+    },
     fixedPowerEnabled: {
         type: 'bool',
         default_value: true
+    },
+    powerLevelDivisions: {
+        label: 'Laser Power Level Divisions',
+        description: 'The number of laser power classes divided between the maximum and minimum laser power. The different laser power levels will be associated with the grayscale of the image.',
+        type: 'float',
+        min: 2,
+        max: 65535,
+        default_value: 255
+    },
+    auxiliaryAirPump: {
+        default_value: false,
+        label: 'Auxiliary Air Pump',
+        description: 'It can effectively increase the air flow rate over the laser focus point to achieve better cutting results.However, it may give worse results for non-cutting conditions.',
+        type: 'bool',
     },
     movementMode: {
         label: 'Movement Mode',
@@ -815,7 +834,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
         description:
             'Set the speed at which the toolhead moves on the material when it is not engraving or cutting.',
         min: 1,
-        max: 6000,
+        max: 36000,
         step: 1,
         type: 'float',
         unit: 'mm/min',
@@ -915,23 +934,6 @@ export const SELECTEVENT = {
     ADDSELECT: 'select:addSelect',
     REMOVESELECT: 'select:removeSelect'
 };
-
-
-
-// export const SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL = 'singleExtruderToolheadForOriginal';
-// export const SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 = 'singleExtruderToolheadForSM2';
-// export const DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 = 'dualExtruderToolheadForSM2';
-// export const LEVEL_ONE_POWER_LASER_FOR_ORIGINAL = 'levelOneLaserToolheadForOriginal';
-// export const LEVEL_TWO_POWER_LASER_FOR_ORIGINAL = 'levelTwoLaserToolheadForOriginal';
-// export const LEVEL_ONE_POWER_LASER_FOR_SM2 = 'levelOneLaserToolheadForSM2';
-// export const LEVEL_TWO_POWER_LASER_FOR_SM2 = 'levelTwoLaserToolheadForSM2';
-// export const STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL = 'standardCNCToolheadForOriginal';
-// export const STANDARD_CNC_TOOLHEAD_FOR_SM2 = 'standardCNCToolheadForSM2';
-// export const LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2 = 'levelTwoCNCToolheadForSM2';
-// export const ENCLOSURE_FOR_SM2 = 'enclosureForSM2';
-// export const ENCLOSURE_FOR_ARTISAN = 'enclosureForArtisan';
-// export const AIR_PURIFIER = 'airPurifier';
-
 
 
 export const MACHINE_HEAD_TYPE = {

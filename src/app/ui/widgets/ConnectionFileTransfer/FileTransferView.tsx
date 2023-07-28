@@ -1,3 +1,4 @@
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { Spin } from 'antd';
 import classNames from 'classnames';
 import _ from 'lodash';
@@ -19,13 +20,11 @@ import {
     HEAD_PRINTING,
     MANUAL_MODE,
     SEMI_AUTO_MODE,
-    WORKFLOW_STATE_IDLE,
-    WORKFLOW_STATUS_IDLE
 } from '../../../constants';
 import { LEVEL_TWO_POWER_LASER_FOR_SM2 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
 import { actions as projectActions } from '../../../flux/project';
-import { actions as workspaceActions, WORKSPACE_STAGE } from '../../../flux/workspace';
+import { WORKSPACE_STAGE, actions as workspaceActions } from '../../../flux/workspace';
 import { ConnectionType } from '../../../flux/workspace/state';
 import { controller } from '../../../lib/controller';
 import usePrevious from '../../../lib/hooks/previous';
@@ -150,7 +149,7 @@ const PreviewModal: React.FC<PreviewModalProps> = (props) => {
                     {i18n._('key-unused-Cancel')}
                 </Button>
                 {
-                    isConnected && (workflowStatus !== WORKFLOW_STATUS_IDLE && connectionType === CONNECTION_TYPE_WIFI) && (
+                    isConnected && (workflowStatus !== WorkflowStatus.Idle && connectionType === CONNECTION_TYPE_WIFI) && (
                         <Button
                             priority="level-two"
                             type="primary"
@@ -162,7 +161,7 @@ const PreviewModal: React.FC<PreviewModalProps> = (props) => {
                     )
                 }
                 {
-                    isConnected && (workflowStatus === WORKFLOW_STATUS_IDLE && connectionType === CONNECTION_TYPE_WIFI) && (
+                    isConnected && (workflowStatus === WorkflowStatus.Idle && connectionType === CONNECTION_TYPE_WIFI) && (
                         <Dropdown
                             className="display-inline"
                             overlay={() => (
@@ -200,7 +199,7 @@ const PreviewModal: React.FC<PreviewModalProps> = (props) => {
                     )
                 }
                 {
-                    isConnected && (workflowStatus === WORKFLOW_STATE_IDLE && connectionType === CONNECTION_TYPE_SERIAL) && (
+                    isConnected && (workflowStatus === WorkflowStatus.Idle && connectionType === CONNECTION_TYPE_SERIAL) && (
                         <Button
                             priority="level-two"
                             type="primary"
@@ -552,7 +551,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
     const isWifi = connectionType === ConnectionType.WiFi;
     // TODO: what is isSendedOnWifi?
     const isSended = isWifi ? isSendedOnWifi : true;
-    const canPlay = selectedFile && hasFile && isConnected && isSended && _.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATUS_IDLE], workflowStatus);
+    const canPlay = selectedFile && hasFile && isConnected && isSended && _.includes([workflowStatus.Idle], workflowStatus);
     const canSend = hasFile && isConnected && isWifi && isSendedOnWifi;
 
     const selectedGCodeFile = gcodeFiles[selectFileIndex >= 0 ? selectFileIndex : 0];

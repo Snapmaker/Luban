@@ -36,8 +36,6 @@ export const COMPLUTE_STATUS = 'Complete';
 // CuraEngine binaries
 export const RESOURCES_DIR = '../resources';
 
-export const WORKFLOW_STATE_PAUSED = 'paused';
-export const WORKFLOW_STATE_IDLE = 'idle';
 
 export const MACHINE_SERIES = {
     ORIGINAL: {
@@ -197,8 +195,6 @@ export const KEY_DEFAULT_CATEGORY_DEFAULT = 'key-default_category-Default';
 
 export const PORT_SCREEN_HTTP = 8080;
 export const PORT_SCREEN_SACP = 8888;
-export const SACP_PROTOCOL = 'SACP';
-export const SERIAL_PROTOCOL = 'SERIAL';
 export const PRINTING_MANAGER_TYPE_MATERIAL = 'material';
 export const PRINTING_MANAGER_TYPE_QUALITY = 'quality';
 export const MATERIAL_TYPE_ARRAY = [

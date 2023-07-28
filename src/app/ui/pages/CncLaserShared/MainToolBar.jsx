@@ -11,7 +11,7 @@ import { actions as editorActions } from '../../../flux/editor';
 import Dropdown from '../../components/Dropdown';
 import Cnc3DVisualizer from '../../views/Cnc3DVisualizer';
 import MainToolBar from '../../layouts/MainToolBar';
-import { HEAD_CNC, HEAD_LASER, longLangWithType } from '../../../constants';
+import { HEAD_CNC, HEAD_LASER, PROCESS_MODE_GREYSCALE, PROCESS_MODE_VECTOR, longLangWithType } from '../../../constants';
 import { MACHINE_SERIES } from '../../../constants/machines';
 import { actions as laserActions } from '../../../flux/laser';
 import { renderModal } from '../../utils';
@@ -21,6 +21,8 @@ import ModalSmall from '../../components/Modal/ModalSmall';
 import SelectCaptureMode, { MODE_THICKNESS_COMPENSATION } from '../../widgets/LaserCameraAidBackground/SelectCaptureMode';
 import MaterialThicknessInput from '../../widgets/LaserCameraAidBackground/MaterialThicknessInput';
 import { ConnectionType } from '../../../flux/workspace/state';
+import { handleClipPath, handleMask } from '../../SVGEditor/lib/ImageSvgCompose';
+import modal from '../../../lib/modal';
 
 function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setShowWorkspace }) {
     const unSaved = useSelector(state => state?.project[headType]?.unSaved, shallowEqual);
@@ -49,6 +51,8 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
     // Laser
     const { connectionType, isConnected } = useSelector(state => state.workspace, shallowEqual);
     const series = useSelector(state => state?.machine?.series, shallowEqual);
+    const LaserSelectedModelArray = useSelector(state => state[HEAD_LASER]?.modelGroup?.selectedModelArray);
+
 
     const [cameraCaptureInfo, setCameraCaptureInfo] = useState({
         display: false,
@@ -296,6 +300,43 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
     }
     if (headType === HEAD_LASER && !isRotate) {
         leftItems.push(
+            {
+                type: 'separator'
+            },
+            {
+                title: i18n._('key-CncLaser/MainToolBar-Mask'),
+                type: 'button',
+                name: 'MainToolbarInversemask',
+                action: async () => {
+                    const svgs = LaserSelectedModelArray.filter(v => v.sourceType === 'svg' && v.mode === PROCESS_MODE_VECTOR);
+                    const imgs = LaserSelectedModelArray.filter(v => v.sourceType !== 'svg' || v.mode === PROCESS_MODE_GREYSCALE);
+                    const clipSvgTag = await handleClipPath(svgs, imgs);
+                    dispatch(editorActions.uploadImage(HEAD_LASER, clipSvgTag, PROCESS_MODE_GREYSCALE, () => {
+                        modal({
+                            cancelTitle: i18n._('key-Laser/Edit/ContextMenu-Close'),
+                            title: i18n._('key-Laser/Edit/ContextMenu-Import Error'),
+                            body: i18n._('Imgae create failed.')
+                        });
+                    }, true));
+                }
+            },
+            {
+                title: i18n._('key-CncLaser/MainToolBar-Inverse Mask'),
+                type: 'button',
+                name: 'MainToolbarMask',
+                action: async () => {
+                    const svgs = LaserSelectedModelArray.filter(v => v.sourceType === 'svg' && v.mode === PROCESS_MODE_VECTOR);
+                    const imgs = LaserSelectedModelArray.filter(v => v.sourceType !== 'svg' || v.mode === PROCESS_MODE_GREYSCALE);
+                    const maskSvgTag = await handleMask(svgs, imgs);
+                    dispatch(editorActions.uploadImage(HEAD_LASER, maskSvgTag, PROCESS_MODE_GREYSCALE, () => {
+                        modal({
+                            cancelTitle: i18n._('key-Laser/Edit/ContextMenu-Close'),
+                            title: i18n._('key-Laser/Edit/ContextMenu-Import Error'),
+                            body: i18n._('Imgae create failed.')
+                        });
+                    }, true));
+                }
+            },
             {
                 type: 'separator'
             },

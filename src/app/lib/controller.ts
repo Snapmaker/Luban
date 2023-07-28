@@ -1,11 +1,14 @@
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import isEmpty from 'lodash/isEmpty';
 import noop from 'lodash/noop';
 
-import { MARLIN, PROTOCOL_TEXT, WORKFLOW_STATE_IDLE } from '../constants';
+import { MARLIN, PROTOCOL_TEXT } from '../constants';
 import { machineStore } from '../store/local-storage';
 import { lubanVisit } from './gaEvent';
 import log from './log';
 import socketController from './socket-controller';
+import ControllerEvent from '../connection/controller-events';
+import { ConnectionType } from '../flux/workspace/state';
 
 class SerialPortClient {
     private callbacks = {
@@ -48,6 +51,7 @@ class SerialPortClient {
 
         // HTTP events
         'machine:serial-discover': [],
+        [ControllerEvent.DiscoverMachine]: [],
         'machine:discover': [],
         'connection:open': [],
         'connection:close': [],
@@ -65,6 +69,9 @@ class SerialPortClient {
         // machine related
         'machine:module-list': [],
         'machine:laser-status': [],
+
+        'connection:getActiveExtruder': [],
+        'connection:updateWorkNozzle': [],
 
         'slice:started': [],
         'slice:completed': [],
@@ -120,7 +127,7 @@ class SerialPortClient {
 
     public settings = {};
 
-    public workflowState = WORKFLOW_STATE_IDLE;
+    public workflowState = WorkflowStatus.Idle;
 
     private static map = new Map();
 
@@ -183,7 +190,7 @@ class SerialPortClient {
                             this.type = '';
                             this.state = {};
                             this.settings = {};
-                            this.workflowState = WORKFLOW_STATE_IDLE;
+                            this.workflowState = WorkflowStatus.Idle;
                         }
                     }
                 }
@@ -240,18 +247,23 @@ class SerialPortClient {
         }
     }
 
-    public listPorts() {
-        socketController.emit('machine:discover', { dataSource: this.dataSource, connectionType: 'serial' });
-    }
-
     public emitEvent(eventName: string, options = {}, callback = null) {
         socketController.emit(eventName, { ...options, eventName }, callback);
         return socketController;
     }
 
+    public listPorts() {
+        socketController.emit(ControllerEvent.DiscoverMachine, {
+            dataSource: this.dataSource,
+            connectionType: ConnectionType.Serial,
+        });
+    }
+
     // Discover Wi-Fi enabled Snapmakers
-    public listHTTPServers() {
-        socketController.emit('machine:discover', { connectionType: 'wifi' });
+    public discoverNetworkedMachines() {
+        socketController.emit(ControllerEvent.DiscoverMachine, {
+            connectionType: ConnectionType.WiFi,
+        });
     }
 
     public slice(params) {
@@ -309,8 +321,16 @@ class SerialPortClient {
         socketController.emit('taskCancel:cutModel', taskId);
     }
 
-    public subscribeDiscover(bool) {
-        socketController.emit('subscribe:discover', bool);
+    public subscribeDiscover(connectionType: ConnectionType, bool: boolean): void {
+        if (bool) {
+            socketController.emit(ControllerEvent.DiscoverMachineStart, {
+                connectionType: connectionType,
+            });
+        } else {
+            socketController.emit(ControllerEvent.DiscoverMachineEnd, {
+                connectionType: connectionType,
+            });
+        }
     }
 
     // command(cmd, ...args) {

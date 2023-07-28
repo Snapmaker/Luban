@@ -436,6 +436,8 @@ function setMachineSavedPresetIds(series, presetIds) {
     machineStore.set('preset_ids', JSON.stringify(machinePresetIds));
 }
 
+let initPromise: Promise<void> = null;
+
 export const actions = {
     updateState: state => {
         return {
@@ -1048,7 +1050,7 @@ export const actions = {
 
     // TODO: init should be re-called
     init: () => async (dispatch, getState) => {
-        await dispatch(actions.initSize());
+        await dispatch(actions.initPrintConfig());
 
         const printingState = getState().printing;
         const { modelGroup } = printingState;
@@ -1059,6 +1061,24 @@ export const actions = {
 
         dispatch(actions.initSocketEvent());
         dispatch(actions.applyProfileToAllModels());
+    },
+
+    initPrintConfig: () => {
+        return async (dispatch) => {
+            // Ensure only one action is initializing print config
+            if (initPromise) {
+                return initPromise;
+            }
+
+            // Start init
+            initPromise = dispatch(actions.initSize());
+            initPromise
+                .then(() => {
+                    initPromise = null;
+                });
+
+            return initPromise;
+        };
     },
 
     updatePrintMode: (printMode) => (dispatch) => {
@@ -4149,7 +4169,8 @@ export const actions = {
         };
 
 
-        const { promptTasks } = await loadMeshFiles(meshFileInfos, modelGroup, loadMeshFileOptions);
+        const loadMeshResult = await loadMeshFiles(meshFileInfos, modelGroup, loadMeshFileOptions);
+        const { promptTasks } = loadMeshResult;
 
         // on mesh file loaded, update state
         const modelState = modelGroup.getState();
@@ -4232,30 +4253,16 @@ export const actions = {
         dispatch(actions.applyProfileToAllModels());
         modelGroup.models = modelGroup.models.concat();
 
-        if (meshFileInfos.length === 1 && newModels.length === 0) {
-            /*
-            if (!(meshFileInfos[0]?.children?.length)) {
-                progressStatesManager.finishProgress(false);
-                dispatch(
-                    actions.updateState({
-                        modelGroup,
-                        stage: STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE,
-                        progress: 0,
-                        promptTasks
-                    })
-                );
-            }
-            */
-        } else {
-            dispatch(
-                actions.updateState({
-                    modelGroup,
-                    stage: STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE,
-                    progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1),
-                    promptTasks
-                })
-            );
-        }
+        // Done, update progress and prompt tasks
+        dispatch(
+            actions.updateState({
+                modelGroup,
+                stage: STEP_STAGE.PRINTING_LOAD_MODEL_COMPLETE,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.PRINTING_LOADING_MODEL, 1),
+                promptTasks,
+            })
+        );
+
         workerManager.continueClipper();
     },
     recordAddOperation: model => (dispatch, getState) => {

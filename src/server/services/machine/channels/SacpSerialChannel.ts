@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import fs from 'fs';
 import { SerialPort } from 'serialport';
+import path from 'path';
 
 import { SACP_TYPE_SERIES_MAP } from '../../../../app/constants/machines';
 import DataStorage from '../../../DataStorage';
@@ -14,7 +15,7 @@ import SocketBASE from './SACP-BASE';
 
 const log = logger('lib:SocketSerial');
 
-class SocketSerialNew extends SocketBASE {
+class SacpSerialChannel extends SocketBASE {
     private serialport: SerialPort;
 
     private availPorts: {
@@ -142,8 +143,38 @@ class SocketSerialNew extends SocketBASE {
             });
         });
     };
+
+    public uploadFile = async (options: EventOptions) => {
+        const { eventName } = options;
+
+        const { gcodePath, renderGcodeFileName } = options;
+        log.info(`Upload file to controller... ${gcodePath}`);
+
+        const gcodeFullPath = path.resolve(`${DataStorage.tmpDir}${gcodePath}`);
+        // Note: Use upload large file API instead of upload file API, newer firmware will implement this API
+        // rather than the old ones.
+        const res = await this.sacpClient.uploadLargeFile(gcodeFullPath, renderGcodeFileName);
+
+        if (res.response.result === 0) {
+            const result = {
+                err: null,
+                text: ''
+            };
+            this.socket && this.socket.emit(eventName, result);
+        } else {
+            const result = {
+                err: 'failed',
+                text: 'Failed to upload file',
+            };
+            this.socket && this.socket.emit(eventName, result);
+        }
+    };
 }
 
-export const socketSerialNew = new SocketSerialNew();
+const sacpSerialChannel = new SacpSerialChannel();
 
-export default SocketSerialNew;
+export {
+    sacpSerialChannel
+};
+
+export default SacpSerialChannel;

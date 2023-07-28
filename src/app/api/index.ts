@@ -57,10 +57,6 @@ const recoverProjectFile = defaultAPIFactory((data) => request.post('/api/file/r
 //  - height
 const stockRemapProcess = defaultAPIFactory((options) => request.post('/api/image/stock', options));
 
-const processImage = defaultAPIFactory((options) => request.post('/api/image/process', options));
-
-const processTrace = defaultAPIFactory((options) => request.post('/api/image/trace', options));
-
 const processStitch = defaultAPIFactory((options) => request.post('/api/image/stitch', options));
 
 const processStitchEach = defaultAPIFactory((options) => request.post('/api/image/stitchEach', options));
@@ -83,11 +79,6 @@ const convertRasterToSvg = defaultAPIFactory((options) => request.post('/api/svg
 const convertTextToSvg = defaultAPIFactory((options) => request.post('/api/svg/convertTextToSvg', options));
 
 const convertOneLineTextToSvg = defaultAPIFactory((options) => request.post('/api/svg/convertOneLineTextToSvg', options));
-
-//
-// toolpath
-//
-const generateToolPath = defaultAPIFactory((options) => request.post('/api/toolpath/generate', options));
 
 
 //
@@ -308,8 +299,6 @@ export default {
 
     uploadImage,
     stockRemapProcess,
-    processImage,
-    processTrace,
     processStitch,
     processStitchEach,
     processGetPhoto,
@@ -322,8 +311,6 @@ export default {
     convertRasterToSvg,
     convertTextToSvg,
     convertOneLineTextToSvg,
-
-    generateToolPath,
 
     profileDefinitions,
 

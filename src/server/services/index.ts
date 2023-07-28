@@ -6,6 +6,7 @@ import * as meshHandlers from './channel-handlers/mesh';
 import configstore from './configstore';
 import { register as registerMachineHandlers } from './socket/machine-handlers';
 import { register as registerOSHandlers } from './socket/os-handlers';
+import { register as registerDiscoverHandlers } from './socket/discover-handlers';
 import monitor from './monitor';
 import { connectionManager } from './machine/ConnectionManager';
 import { socketSerial } from './machine/channels/socket-serial';
@@ -39,8 +40,7 @@ function startServices(server) {
     // ===============
     // Machine Discover
     // ===============
-    socketServer.registerEvent('machine:discover', connectionManager.refreshDevices);
-    socketServer.registerEvent('subscribe:discover', connectionManager.subscribeDevices);
+    registerDiscoverHandlers(socketServer);
 
     // ===============
     // machine control: http & serial port
@@ -104,9 +104,7 @@ function registerApis(app) {
 
     // Image
     app.post(urljoin(settings.route, 'api/image'), api.image.set);
-    app.post(urljoin(settings.route, 'api/image/process'), api.image.process);
     app.post(urljoin(settings.route, 'api/image/stock'), api.image.stockRemapProcess);
-    app.post(urljoin(settings.route, 'api/image/trace'), api.image.processTrace);
     app.post(urljoin(settings.route, 'api/image/stitch'), api.image.processStitch);
     app.post(urljoin(settings.route, 'api/image/stitchEach'), api.image.processStitchEach);
     app.post(urljoin(settings.route, 'api/image/getPhoto'), api.image.processGetPhoto);
@@ -120,9 +118,6 @@ function registerApis(app) {
     app.post(urljoin(settings.route, 'api/svg/convertRasterToSvg'), api.svg.convertRasterToSvg); // deprecated?
     app.post(urljoin(settings.route, 'api/svg/convertTextToSvg'), api.svg.convertTextToSvg);
     app.post(urljoin(settings.route, 'api/svg/convertOneLineTextToSvg'), api.svg.convertOneLineTextToSvg); // deprecated?
-
-    // ToolPath
-    app.post(urljoin(settings.route, 'api/toolpath/generate'), api.toolpath.generate); // deprecated?
 
     // Commands
     // app.get(urljoin(settings.route, 'api/commands'), api.commands.fetch);
