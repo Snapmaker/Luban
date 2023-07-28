@@ -44,6 +44,7 @@ const generateLaserToolPathFromEngine = async (allTasks, onProgress) => {
                 gcodeConfig.tabHeight -= gcodeConfig.targetDepth;
             }
             modelInfo.toolpathFileName = generateRandomPathName('json');
+            modelInfo.identifier = task.identifier;
         }
 
         const sliceParams = {
