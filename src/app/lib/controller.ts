@@ -247,21 +247,23 @@ class SerialPortClient {
         }
     }
 
-    public listPorts() {
-        socketController.emit(ControllerEvent.DiscoverMachine, {
-            dataSource: this.dataSource,
-            connectionType: 'serial',
-        });
-    }
-
     public emitEvent(eventName: string, options = {}, callback = null) {
         socketController.emit(eventName, { ...options, eventName }, callback);
         return socketController;
     }
 
+    public listPorts() {
+        socketController.emit(ControllerEvent.DiscoverMachine, {
+            dataSource: this.dataSource,
+            connectionType: ConnectionType.Serial,
+        });
+    }
+
     // Discover Wi-Fi enabled Snapmakers
-    public listHTTPServers() {
-        socketController.emit(ControllerEvent.DiscoverMachine, { connectionType: 'wifi' });
+    public discoverNetworkedMachines() {
+        socketController.emit(ControllerEvent.DiscoverMachine, {
+            connectionType: ConnectionType.WiFi,
+        });
     }
 
     public slice(params) {

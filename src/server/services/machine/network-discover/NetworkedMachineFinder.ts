@@ -1,6 +1,6 @@
 
 import logger from '../../../lib/logger';
-import { MachineFinder, NetworkedMachine } from './NetworkedMachine';
+import { MachineFinder, NetworkedMachineInfo } from './NetworkedMachine';
 import MulticastDNSMachineFinder from './MulticastDNSMachineFinder';
 import BroadcastMachineFinder from './BroadcastMachineFinder';
 
@@ -17,7 +17,7 @@ class NetworkedMachineFinder implements MachineFinder {
         this.finders.push(new MulticastDNSMachineFinder());
     }
 
-    public async list(): Promise<NetworkedMachine[]> {
+    public async list(): Promise<NetworkedMachineInfo[]> {
         const result = [];
 
         for (const finder of this.finders) {

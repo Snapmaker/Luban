@@ -3,7 +3,7 @@ import EventEmitter from 'events';
 import zipWith from 'lodash/zipWith';
 import os from 'os';
 
-import { NetworkedMachine } from './NetworkedMachine';
+import { NetworkedMachineInfo } from './NetworkedMachine';
 import { DISCOVER_SERVER_PORT, log } from './NetworkedMachineFinder';
 
 /**
@@ -14,7 +14,7 @@ export default class BroadcastMachineFinder extends EventEmitter {
 
     // Map <IP, NetworkedMachine>
     // we use Map here to filter out duplicated machines with the same IP
-    private networkedMachines = new Map<string, NetworkedMachine>();
+    private networkedMachines = new Map<string, NetworkedMachineInfo>();
 
     public constructor() {
         super();
@@ -36,7 +36,7 @@ export default class BroadcastMachineFinder extends EventEmitter {
             }
             const [name, address] = parts[0].split('@');
 
-            const device: NetworkedMachine = {
+            const device: NetworkedMachineInfo = {
                 name,
                 address,
                 lastSeen: 0,
@@ -89,7 +89,7 @@ export default class BroadcastMachineFinder extends EventEmitter {
         }
     }
 
-    public async list(): Promise<NetworkedMachine[]> {
+    public async list(): Promise<NetworkedMachineInfo[]> {
         // send discover message
         this.sendDiscoverMessage();
 

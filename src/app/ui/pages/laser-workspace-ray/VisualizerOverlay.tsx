@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux';
 
 import { Button } from '../../components/Buttons';
 import i18n from '../../../lib/i18n';
-import gcodeActions, { GCodeFileObject } from '../../../flux/workspace/action-gcode';
+import gcodeActions, { GCodeFileObject } from '../../../flux/workspace/actions-gcode';
 import { actions as workspaceActions } from '../../../flux/workspace';
 
 

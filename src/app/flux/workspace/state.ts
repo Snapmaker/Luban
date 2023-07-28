@@ -8,7 +8,7 @@ import {
 } from '../../constants';
 import History from '../../core/History';
 import { CircularArray } from '../../lib/collections';
-import { controller } from '../../lib/controller';
+// import { controller } from '../../lib/controller';
 import { Server } from './Server';
 
 export const WORKSPACE_STAGE = {
@@ -129,7 +129,8 @@ export const initialState: WorkspaceState = {
     // serial port related
     //  - ports: all serial ports available
     //  - port: serial port selected
-    port: controller.port || '',
+    // port: controller.port || '',
+    port: '',
     ports: [],
 
     //

@@ -2,7 +2,7 @@ import EventEmitter from 'events';
 import { some } from 'lodash';
 import createMDNSClient from 'multicast-dns';
 
-import { MachineFinder, NetworkedMachine } from './NetworkedMachine';
+import { MachineFinder, NetworkedMachineInfo } from './NetworkedMachine';
 
 interface MulticastDNSClient extends EventEmitter {
     query: (q: Array<{ name: string; type: string }>) => void;
@@ -14,7 +14,7 @@ class MulticastDNSMachineFinder implements MachineFinder {
 
     // Map <IP, NetworkedMachine>
     // we use Map here to filter out duplicated machines with the same IP
-    private networkedMachines = new Map<string, NetworkedMachine>();
+    private networkedMachines = new Map<string, NetworkedMachineInfo>();
 
     private createMulticastDNSClient(): void {
         if (!this.client) {
@@ -31,7 +31,7 @@ class MulticastDNSMachineFinder implements MachineFinder {
                         return;
                     }
 
-                    const machine: NetworkedMachine = {
+                    const machine: NetworkedMachineInfo = {
                         name: aRecord.name,
                         address: aRecord.data,
                         lastSeen: +new Date(),
@@ -58,7 +58,7 @@ class MulticastDNSMachineFinder implements MachineFinder {
         ]);
     }
 
-    public async list(): Promise<NetworkedMachine[]> {
+    public async list(): Promise<NetworkedMachineInfo[]> {
         // send discover message
         this.sendDiscoverMessage();
 

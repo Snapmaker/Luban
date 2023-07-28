@@ -5,7 +5,7 @@ import { isEqual } from 'lodash';
 import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI } from '../../constants';
 import { machineStore } from '../../store/local-storage';
 
-import baseActions from './action-base';
+import baseActions from './actions-base';
 
 const init = () => (dispatch) => {
     // const connectionType = machineStore.get('connection.type') || CONNECTION_TYPE_SERIAL;

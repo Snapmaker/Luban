@@ -6,6 +6,3 @@ export interface NetworkedMachineInfo {
     protocol?: string; // indicates which protocol it uses
 }
 
-export interface MachineFinder {
-    list(): Promise<NetworkedMachineInfo[]>;
-}
