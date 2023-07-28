@@ -1408,6 +1408,7 @@
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Algorithm": "알고리즘",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Brightness": "밝기",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Contrast": "대비",
+    "key-Laser/ProcessingModeSection/ConfigGreyscale-Greyscale-Conversion": "",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Invert": "색상 반전",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Inverts the color of images, white becomes black, and black becomes white.": "이미지의 색상을 반전하여 흰색은 검은색이 되고 검은색은 흰색이 됩니다.",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Select an algorithm for image processing.": "이미지 처리 알고리즘을 선택합니다.",

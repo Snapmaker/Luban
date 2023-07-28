@@ -70,6 +70,7 @@ export type ModelInfo = {
     uploadName?: string,
     modelName?: string,
     config?: {
+        greyscaleAlgorithm: string;
         algorithm: string;
         brightness: number;
         bwThreshold: number;

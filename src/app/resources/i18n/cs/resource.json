@@ -1408,6 +1408,7 @@
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Algorithm": "",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Brightness": "",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Contrast": "",
+    "key-Laser/ProcessingModeSection/ConfigGreyscale-Greyscale-Conversion": "",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Invert": "",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Inverts the color of images, white becomes black, and black becomes white.": "",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Select an algorithm for image processing.": "",

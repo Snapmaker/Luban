@@ -1408,6 +1408,7 @@
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Algorithm": "アルゴリズム",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Brightness": "明るさ",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Contrast": "コントラスト",
+    "key-Laser/ProcessingModeSection/ConfigGreyscale-Greyscale-Conversion": "",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Invert": "反転",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Inverts the color of images, white becomes black, and black becomes white.": "イメージの色を反転、白が黒に、黒が白に。",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Select an algorithm for image processing.": "画像処理のアルゴリズムを選択します。",

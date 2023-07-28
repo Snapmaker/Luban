@@ -27,6 +27,7 @@ let toastId;
 export const processActions = {
     recalculateAllToolPath: headType => (dispatch, getState) => {
         const { toolPathGroup, progressStatesManager } = getState()[headType];
+        const activeMachine: Machine = getState().machine.activeMachine;
 
         // start progress
         dispatch(
@@ -44,6 +45,7 @@ export const processActions = {
 
         Promise.all(toolPathPromiseArray).then((taskArray) => {
             taskArray = taskArray.filter(d => !!d && d.visible);
+            taskArray.forEach(d => { d.identifier = activeMachine?.identifier; });
             controller.commitToolPathTaskArray(taskArray);
         });
     },

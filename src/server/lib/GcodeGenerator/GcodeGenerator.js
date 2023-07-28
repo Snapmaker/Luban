@@ -65,70 +65,53 @@ class GcodeGenerator {
     }
 
     parseAsGrblLaser(toolPathObj, gcodeConfig) {
-        const { data, positionX, positionY } = toolPathObj;
+        const { data, positionX = 0, positionY = 0, rotationB = 0 } = toolPathObj;
         const gcodeLines = [];
+        const floatFixed3 = (n) => {
+            return parseFloat(n.toFixed(3));
+        };
         for (let i = 0; i < data.length; i++) {
             const item = data[i];
+            let cmd = '';
             let line = '';
-            let comment = null;
-            let hashParam = false;
-            Object.keys(item).forEach((key) => {
-                // C: comment  N: empty line
-                switch (key) {
-                    case 'C':
-                    case 'N':
-                        comment = item[key];
-                        break;
-                    case 'G':
-                        line += `${key + item[key]} `;
-                        hashParam = true;
-                        break;
-                    case 'M':
-                        if (![106, 107].includes(item[key])) {
-                            if (item[key] === 3) {
-                                line += `${key + 4} `;
-                            } else {
-                                line += `${key + item[key]} `;
-                                hashParam = true;
-                            }
-                        }
-                        break;
-                    case 'X':
-                    case 'Y': {
-                        if (!hashParam) {
-                            break;
-                        }
-                        let value = item[key];
-                        if (key === 'X' && !!positionX) {
-                            value += positionX;
-                        } else if (key === 'Y' && !!positionY) {
-                            value += positionY;
-                        }
-                        line += key + value.toFixed(3);
-                        break;
-                    }
-                    case 'W':
-                    case 'P':
-                    case 'F':
-                        if (!hashParam) {
-                            break;
-                        }
-                        line += `${key + item[key]}`;
-                        break;
-                    case 'S': {
-                        if (!hashParam) {
-                            break;
-                        }
-                        const power = item[key] / 255 * 1000;
-                        line += `${key + power.toFixed(2)}`;
-                        break;
-                    }
-                    default:
-                        break;
+
+            if (item.G !== undefined) {
+                cmd = `G${item.G}`;
+                line = `${cmd} `;
+                if ([0, 1, 2, 3, 92].includes(item.G)) {
+                    item.X !== undefined && (line += `X${floatFixed3(item.X + positionX)}`);
+                    item.Y !== undefined && (line += `Y${floatFixed3(item.Y + positionY)}`);
+                    // item.Z !== undefined && (line += `Z${item.Z}`);
+                    item.B !== undefined && (line += `B${floatFixed3(item.B + rotationB)}`);
+                    item.F !== undefined && (line += `F${floatFixed3(item.F)}`);
+                    item.S !== undefined && (line += `S${floatFixed3(item.S * 1000 / 255)}`);
+                } else if ([4].includes(item.G)) {
+                    // Marlin G4 P:milliseconds S:seconds
+                    // Grbl G4 S:milliseconds P:seconds
+                    item.P !== undefined && (line += `S${floatFixed3(item.P)}`);
+                    item.S !== undefined && (line += `P${floatFixed3(item.S)}`);
                 }
-            });
-            if (comment) {
-                line += comment;
+            } else if (item.M !== undefined) {
+                if (item.M === 3) {
+                    item.M = 4;
+                }
+                cmd = `M${item.M}`;
+                line += `${cmd} `;
+
+                if ([3, 4, 5].includes(item.M)) {
+                    if (item.S !== undefined) {
+                        line += `S${floatFixed3(item.S * 1000 / 255)}`;
+                    } else if (item.P !== undefined) {
+                        line += `S${floatFixed3(item.P * 10)}`;
+                    }
+                } else if ([2000].includes(item.M)) {
+                    item.W !== undefined && (line += `W${item.W}`);
+                    item.S !== undefined && (line += `S${item.S}`);
+                }
+            }
+
+            if (item.C !== undefined) {
+                line += item.C;
             }
             gcodeLines.push(line);
         }

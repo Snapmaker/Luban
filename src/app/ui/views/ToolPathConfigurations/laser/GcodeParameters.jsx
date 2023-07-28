@@ -90,8 +90,7 @@ class GcodeParameters extends PureComponent {
                 } else {
                     laserDefinitionFill[key].options = {
                         'greyscale-line': 'Line',
-                        'greyscale-dot': 'Dot',
-                        'greyscale-variable-line': 'Variable Line',
+                        'greyscale-dot': 'Dot'
                     };
                 }
             }
@@ -132,10 +131,10 @@ class GcodeParameters extends PureComponent {
 
         // Session Power
         const laserDefinitionPowerKeys = ['fixedPower'];
-        if (pathType === 'fill' && movementMode === 'greyscale-variable-line') {
-            laserDefinitionPowerKeys.push('fixedMinPower');
-            // laserDefinitionPowerKeys.push('powerLevelDivisions');
-        }
+        // if (pathType === 'fill' && movementMode === 'greyscale-variable-line') {
+        //     laserDefinitionPowerKeys.push('fixedMinPower');
+        // laserDefinitionPowerKeys.push('powerLevelDivisions');
+        // }
         const laserDefinitionPower = {};
         laserDefinitionPowerKeys.forEach((key) => {
             if (allDefinition[key]) {
