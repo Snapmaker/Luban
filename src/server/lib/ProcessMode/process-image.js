@@ -66,21 +66,11 @@ export async function processLaserGreyscale(modelInfo, onProgress) {
     const { rotationZ = 0 } = modelInfo.transformation;
     const { width, height, scaleX = 1, scaleY = 1 } = modelInfo.transformation;
 
-    const { invert, contrast, brightness, whiteClip, algorithm } = modelInfo.config;
+    const { invert, contrast, brightness, whiteClip, greyscaleAlgorithm, algorithm } = modelInfo.config;
+    console.log('greyscaleAlgorithm', greyscaleAlgorithm);
     const { density = 4 } = modelInfo.gcodeConfig || {};
     const outputFilename = pathWithRandomSuffix(uploadName);
 
-    const matrix = algorithms[algorithm];
-    const matrixHeight = matrix.length;
-    const matrixWidth = matrix[0].length;
-
-    let matrixOffset = 0;
-    for (let k = 1; k < matrixWidth; k++) {
-        if (matrix[0][k] > 0) {
-            matrixOffset = k - 1;
-            break;
-        }
-    }
     onProgress && onProgress(0.4);
     const img = await Jimp.read(`${process.env.Tmpdir}/${uploadName}`);
     onProgress && onProgress(0.6);
@@ -94,7 +84,7 @@ export async function processLaserGreyscale(modelInfo, onProgress) {
         .brightness((brightness - 50.0) / 50)
         .quality(100)
         .contrast((contrast - 50.0) / 50)
-        .greyscale()
+        .greyscale(greyscaleAlgorithm)
         .flip(scaleX < 0, scaleY < 0)
         .resize(width * density, height * density);
     if (rotationZ !== 0) {
@@ -105,26 +95,40 @@ export async function processLaserGreyscale(modelInfo, onProgress) {
         .alphaToWhite(); // apply this after rotate AND invert, to avoid black gcode area
     // serpentine path
     onProgress && onProgress(0.8);
-    for (let y = 0; y < img.bitmap.height; y++) {
-        const reverse = (y & 1) === 1;
 
-        for (let x = reverse ? img.bitmap.width - 1 : 0; reverse ? x >= 0 : x < img.bitmap.width; reverse ? x-- : x++) {
-            const index = (y * img.bitmap.width + x) << 2;
-            const origin = img.bitmap.data[index];
+    const matrix = algorithms[algorithm];
+    if (matrix) {
+        const matrixHeight = matrix.length;
+        const matrixWidth = matrix[0].length;
 
-            img.bitmap.data[index] = bit(origin);
-            img.bitmap.data[index + 1] = img.bitmap.data[index];
-            img.bitmap.data[index + 2] = img.bitmap.data[index];
-            const err = origin - img.bitmap.data[index];
+        let matrixOffset = 0;
+        for (let k = 1; k < matrixWidth; k++) {
+            if (matrix[0][k] > 0) {
+                matrixOffset = k - 1;
+                break;
+            }
+        }
+        for (let y = 0; y < img.bitmap.height; y++) {
+            const reverse = (y & 1) === 1;
 
-            for (let i = 0; i < matrixWidth; i++) {
-                for (let j = 0; j < matrixHeight; j++) {
-                    if (matrix[j][i] > 0) {
-                        const x2 = reverse ? x - (i - matrixOffset) : x + (i - matrixOffset);
-                        const y2 = y + j;
-                        if (x2 >= 0 && x2 < img.bitmap.width && y2 < img.bitmap.height) {
-                            const idx2 = index + (x2 - x) * 4 + (y2 - y) * img.bitmap.width * 4;
-                            img.bitmap.data[idx2] = normalize(img.bitmap.data[idx2] + matrix[j][i] * err);
+            for (let x = reverse ? img.bitmap.width - 1 : 0; reverse ? x >= 0 : x < img.bitmap.width; reverse ? x-- : x++) {
+                const index = (y * img.bitmap.width + x) << 2;
+                const origin = img.bitmap.data[index];
+
+                img.bitmap.data[index] = bit(origin);
+                img.bitmap.data[index + 1] = img.bitmap.data[index];
+                img.bitmap.data[index + 2] = img.bitmap.data[index];
+                const err = origin - img.bitmap.data[index];
+
+                for (let i = 0; i < matrixWidth; i++) {
+                    for (let j = 0; j < matrixHeight; j++) {
+                        if (matrix[j][i] > 0) {
+                            const x2 = reverse ? x - (i - matrixOffset) : x + (i - matrixOffset);
+                            const y2 = y + j;
+                            if (x2 >= 0 && x2 < img.bitmap.width && y2 < img.bitmap.height) {
+                                const idx2 = index + (x2 - x) * 4 + (y2 - y) * img.bitmap.width * 4;
+                                img.bitmap.data[idx2] = normalize(img.bitmap.data[idx2] + matrix[j][i] * err);
+                            }
                         }
                     }
                 }

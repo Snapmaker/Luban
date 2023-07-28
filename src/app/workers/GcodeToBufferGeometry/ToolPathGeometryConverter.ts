@@ -86,18 +86,30 @@ class ToolPathGeometryConverter {
         let p = 0;
         let lastP = 0;
         let maxS = 0;
+        let lastS = 0;
         for (let i = 0; i < data.length; i++) {
             const item = data[i];
 
             if (item.M === 3) {
-                if (item.S) {
+                if (item.S !== undefined) {
                     state.S = item.S;
                 }
-                if (item.P) {
+                if (item.P !== undefined) {
                     state.S = item.P * 2.55;
                 }
+                if (item.S === undefined && item.P === undefined) {
+                    state.S = lastS;
+                }
+                lastS = state.S;
             }
             if (item.M === 5) {
+                if (item.S !== undefined) {
+                    state.S = item.S;
+                }
+                if (item.P !== undefined) {
+                    state.S = item.P * 2.55;
+                }
+                lastS = state.S;
                 state.S = 0;
             }
 
@@ -113,7 +125,7 @@ class ToolPathGeometryConverter {
             item.B !== undefined && (newState.B = item.B);
             item.S !== undefined && (newState.S = item.S);
 
-            if (state.G === newState.G || state.S !== newState.S) {
+            if (state.G !== newState.G || state.S !== newState.S) {
                 const res = this.calculateXYZ(
                     {
                         X: state.X,
@@ -188,6 +200,7 @@ class ToolPathGeometryConverter {
     private parseToPoints(data, onProgress) {
         const positions = [];
         const gCodes = [];
+        const colors = [];
         let state = {
             G: 0,
             X: 0,
@@ -213,6 +226,9 @@ class ToolPathGeometryConverter {
                 positions.push(res.Y);
                 positions.push(res.Z);
                 gCodes.push(state.G);
+                colors.push(0);
+                colors.push(0);
+                colors.push(0);
             }
 
             p = i / data.length;
@@ -225,12 +241,15 @@ class ToolPathGeometryConverter {
         // const bufferGeometry = new THREE.BufferGeometry();
         const positionsAttribute = new THREE.Float32BufferAttribute(positions, 3);
         const gCodesAttribute = new THREE.Float32BufferAttribute(gCodes, 1);
+        const colorsAttribute = new THREE.Uint8BufferAttribute(colors, 3);
+        colorsAttribute.normalized = true;
         // bufferGeometry.setAttribute('position', positionAttribute);
         // bufferGeometry.setAttribute('a_g_code', gCodeAttribute);
 
         return {
             positionsAttribute,
-            gCodesAttribute
+            gCodesAttribute,
+            colorsAttribute
         };
     }
 

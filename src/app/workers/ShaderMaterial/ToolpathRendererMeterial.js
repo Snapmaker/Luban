@@ -32,7 +32,7 @@ export const CNC_LASER_FRAG_SELECT_SHADER = [
     '        discard;',
     '    }',
     '    if(u_selected){',
-    '        gl_FragColor = vec4(v_color.x * 0.12295, v_color.y * 0.2661, v_color.z * 0.5, 1.0) + vec4(0.12295, 0.2661, 0.5, 1.0);',
+    '        gl_FragColor = vec4(v_color.x*0.92, v_color.y * 0.53 + 0.47, 1, 1.0);',
     '    } else {',
     '        gl_FragColor = vec4(v_color.xyz, 1.0);',
     '    };',
