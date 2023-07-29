@@ -1408,6 +1408,7 @@
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Algorithm": "算法",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Brightness": "亮度",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Contrast": "对比度",
+    "key-Laser/ProcessingModeSection/ConfigGreyscale-Greyscale-Conversion": "Greyscale Conversion",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Invert": "反相",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Inverts the color of images, white becomes black, and black becomes white.": "反转图像的颜色，黑色变白色，白色变黑色。",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Select an algorithm for image processing.": "选择图像处理的算法。",
