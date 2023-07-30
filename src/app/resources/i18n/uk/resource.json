@@ -1408,7 +1408,7 @@
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Algorithm": "Алгоритм",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Brightness": "Яскравість",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Contrast": "Контрастність",
-    "key-Laser/ProcessingModeSection/ConfigGreyscale-Greyscale-Conversion": "Greyscale Conversion",
+    "key-Laser/ProcessingModeSection/ConfigGreyscale-Greyscale-Conversion": "Кольори відтінків сірого",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Invert": "Інвертувати",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Inverts the color of images, white becomes black, and black becomes white.": "Інвертує кольори зображень, біле стає чорним, а чорне стає білим.",
     "key-Laser/ProcessingModeSection/ConfigGreyscale-Select an algorithm for image processing.": "Оберіть алгоритм обробки зображення.",
