@@ -2,6 +2,8 @@ import { Machine, MachineType } from '@snapmaker/luban-platform';
 
 import { quickSwapKitModule } from './snapmaker-2-modules';
 import {
+    L20WLaserToolModule,
+    L40WLaserToolModule,
     dualExtrusionPrintToolHead,
     highPower10WLaserToolHead,
     printToolHead,
@@ -53,7 +55,23 @@ export const machine: Machine = {
                 configPath: 'laser/a350_10w',
                 workRange: {
                     min: [0, 0, 0],
-                    max: [345, 357, 334], // TODO: check data
+                    max: [345, 357, 334],
+                },
+            },
+            {
+                identifier: L20WLaserToolModule.identifier,
+                configPath: 'laser/a350_20w',
+                workRange: {
+                    min: [0, 0, 0],
+                    max: [345, 357, 0], // Correct this later
+                },
+            },
+            {
+                identifier: L40WLaserToolModule.identifier,
+                configPath: 'laser/a350_40w',
+                workRange: {
+                    min: [0, 0, 0],
+                    max: [345, 357, 0], // Correct this later
                 },
             },
             {
