@@ -2,6 +2,8 @@ import type { Machine, } from '@snapmaker/luban-platform';
 import { MachineType } from '@snapmaker/luban-platform';
 
 import {
+    L20WLaserToolModule,
+    L40WLaserToolModule,
     dualExtrusionPrintToolHead,
     highPower10WLaserToolHead,
     highPower200WCNCToolHead,
@@ -42,6 +44,22 @@ export const machine: Machine = {
                 workRange: {
                     min: [0, 0, 0],
                     max: [410, 410, 420],
+                }
+            },
+            {
+                identifier: L20WLaserToolModule.identifier,
+                configPath: 'laser/a400_20w',
+                workRange: {
+                    min: [0, 0, 0],
+                    max: [410, 410, 0], // Correct this later
+                }
+            },
+            {
+                identifier: L40WLaserToolModule.identifier,
+                configPath: 'laser/a400_40w',
+                workRange: {
+                    min: [0, 0, 0],
+                    max: [410, 410, 0], // Correct this later
                 }
             },
             {
