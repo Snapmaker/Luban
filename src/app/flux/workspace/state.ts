@@ -9,7 +9,7 @@ import {
 import History from '../../core/History';
 import { CircularArray } from '../../lib/collections';
 // import { controller } from '../../lib/controller';
-import { Server } from './Server';
+import { MachineAgent } from './MachineAgent';
 
 export const WORKSPACE_STAGE = {
     EMPTY: 0,
@@ -46,11 +46,8 @@ export declare interface MachineStateUpdateOptions {
 }
 
 declare interface WorkspaceMachineDiscoverState {
-    serverDiscovering: boolean;
-    servers: Server[];
-
-    port: string;
-    ports: string[];
+    machineDiscovering: boolean;
+    machineAgents: MachineAgent[];
 
     manualIp: string;
 
@@ -120,18 +117,8 @@ export const initialState: WorkspaceState = {
     //
     // Discover
     //
-    // HTTP connection
-    //  - servers: HTTP servers on Snapmaker 2.0
-    //  - serverDiscovering: discover state
-    serverDiscovering: false,
-    servers: [],
-
-    // serial port related
-    //  - ports: all serial ports available
-    //  - port: serial port selected
-    // port: controller.port || '',
-    port: '',
-    ports: [],
+    machineDiscovering: false,
+    machineAgents: [],
 
     //
     // Connection

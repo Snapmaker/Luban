@@ -11,7 +11,6 @@ export const EXTRUDER_REGEX = /^extruder_(\d).*$/;
 
 export const CUSTOM_SERVER_NAME = 'Manual';
 export const EPSILON = 1e-6;
-export const CONNECTION_OPEN = 'connection:open';
 export const CONNECTION_CLOSE = 'connection:close';
 export const CONNECTION_CLOSE_IMPROPER = 'connection:closeImproper';
 export const CONNECTION_EXECUTE_GCODE = 'connection:executeGcode';
@@ -20,7 +19,6 @@ export const CONNECTION_RESUME_GCODE = 'connection:resumeGcode';
 export const CONNECTION_PAUSE_GCODE = 'connection:pauseGcode';
 export const CONNECTION_STOP_GCODE = 'connection:stopGcode';
 export const CONNECTION_HEAD_BEGIN_WORK = 'connection:headBeginWork';
-export const CONNECTION_HEARTBEAT = 'connection:startHeartbeat';
 export const CONNECTION_MATERIALTHICKNESS = 'connection:materialThickness';
 export const CONNECTION_MATERIALTHICKNESS_ABORT = 'connection:materialThickness_abort';
 export const CONNECTION_GET_GCODEFILE = 'connection:getGcodeFile';

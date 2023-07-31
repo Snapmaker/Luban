@@ -16,14 +16,6 @@ import SelectMachineModal from './modals/SelectMachineModal';
 import NetworkConnection from './NetworkConnection';
 import SerialConnection from './SerialConnection';
 
-declare interface WidgetActions {
-    setTitle: (title: string) => void;
-}
-
-export declare interface ConnectionProps {
-    widgetId: string;
-    widgetActions: WidgetActions;
-}
 
 /**
  * Connection Widget.
@@ -32,7 +24,7 @@ export declare interface ConnectionProps {
  * 2. Display machine basic status.
  * 3. Display operation to do when machine connected (e.g. Go Home).
  */
-const Connection: React.FC<ConnectionProps> = ({ widgetActions }) => {
+const Connection: React.FC = () => {
     const dispatch = useDispatch();
 
     const {
@@ -47,11 +39,6 @@ const Connection: React.FC<ConnectionProps> = ({ widgetActions }) => {
             setAlertMessage('');
         },
     };
-
-    // Set title
-    useEffect(() => {
-        widgetActions.setTitle(i18n._('key-Workspace/Connection-Connection'));
-    }, [dispatch, widgetActions]);
 
     // Switch to Wi-Fi connect
     const onSelectTabWifi = useCallback(() => {

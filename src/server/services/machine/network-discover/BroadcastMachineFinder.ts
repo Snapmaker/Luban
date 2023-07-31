@@ -50,8 +50,8 @@ export default class BroadcastMachineFinder extends EventEmitter {
 
                 if (key === 'model') {
                     device.model = value;
-                } else if (key === 'sacp') {
-                    device.protocol = 'sacp';
+                } else if (key === 'SACP') {
+                    device.protocol = 'SACP';
                 } else {
                     // unknown attribute
                     device[key.toLowerCase()] = value;
@@ -100,9 +100,9 @@ export default class BroadcastMachineFinder extends EventEmitter {
         // collect devices
         const recentMachines = [];
         const now = +new Date();
-        for (const server of this.networkedMachines.values()) {
-            if (now - server.lastSeen <= 10000) {
-                recentMachines.push(server);
+        for (const machine of this.networkedMachines.values()) {
+            if (now - machine.lastSeen <= 10000) {
+                recentMachines.push(machine);
             }
         }
 

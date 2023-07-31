@@ -40,7 +40,7 @@ import connectActions from './actions-connect';
 import discoverActions from './actions-discover';
 import { GCodeFileObject } from './actions-gcode';
 import type { MachineStateUpdateOptions } from './state';
-import { ConnectionType, WORKSPACE_STAGE, initialState } from './state';
+import { WORKSPACE_STAGE, initialState } from './state';
 
 
 export { WORKSPACE_STAGE } from './state';
@@ -50,32 +50,6 @@ export { WORKSPACE_STAGE } from './state';
 const ACTION_SET_STATE = 'WORKSPACE/ACTION_SET_STATE';
 
 export const actions = {
-    resetMachineState: (connectionType = ConnectionType.WiFi) => (dispatch) => {
-        dispatch(baseActions.updateState({
-            isOpen: false,
-            isConnected: false,
-            connectionStatus: CONNECTION_STATUS_IDLE,
-            isHomed: null,
-            connectLoading: false,
-            // TODO: unify?
-            workflowStatus: connectionType === ConnectionType.WiFi ? WorkflowStatus.Unknown : WorkflowStatus.Idle,
-            laserFocalLength: null,
-            workPosition: { // work position
-                x: '0.000',
-                y: '0.000',
-                z: '0.000',
-                b: '0.000',
-                isFourAxis: false,
-                a: '0.000'
-            },
-
-            originOffset: {
-                x: 0,
-                y: 0,
-                z: 0
-            },
-        }));
-    },
     init: () => (dispatch) => {
         // Discover actions init
         dispatch(discoverActions.init());
@@ -231,7 +205,7 @@ export const actions = {
                 );
             },
             'connection:close': () => {
-                dispatch(actions.resetMachineState());
+                dispatch(connectActions.resetMachineState());
             },
 
             'Marlin:settings': (options) => {
@@ -498,7 +472,7 @@ export const actions = {
                             isEmergencyStopped
                         })
                     );
-                    currentState.server.closeServer();
+                    dispatch(connectActions.disconnect(currentState.server));
                 }
             },
 
@@ -595,7 +569,7 @@ export const actions = {
                 if (includes(EMERGENCY_STOP_BUTTON, owner)) {
                     if (errorCode === 1) {
                         controller.emitEvent(CONNECTION_CLOSE, () => {
-                            dispatch(actions.resetMachineState());
+                            dispatch(connectActions.resetMachineState());
                             dispatch(actions.updateMachineState({
                                 headType: '',
                                 toolHead: ''
