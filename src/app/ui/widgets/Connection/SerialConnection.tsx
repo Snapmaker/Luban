@@ -2,7 +2,7 @@ import type { Machine } from '@snapmaker/luban-platform';
 import { WorkflowStatus } from '@snapmaker/luban-platform';
 import classNames from 'classnames';
 import { includes, isObject, map } from 'lodash';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import {
@@ -15,7 +15,7 @@ import {
     isDualExtruder
 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
-import { actions as workspaceActions } from '../../../flux/workspace';
+import connectActions from '../../../flux/workspace/actions-connect';
 import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
@@ -33,12 +33,13 @@ let loadingTimer = null;
 const SerialConnection: React.FC = () => {
     const dispatch = useDispatch();
 
+    // connection
+    const machineAgents = useSelector((state: RootState) => state.workspace.machineAgents) as MachineAgent[];
+
     const {
-        servers,
         server,
 
         connectLoading,
-        // connectionTimeout,
 
         isOpen,
         isConnected,
@@ -58,7 +59,7 @@ const SerialConnection: React.FC = () => {
     } = useSelector((state: RootState) => state.workspace);
 
     // Selected port
-    const [selectedServer, setSelectedServer] = useState(server);
+    const [selectedAgent, setSelectedAgent] = useState(server);
     // connect status: 'idle', 'connecting', 'connected'
     const [err, setErr] = useState(null);
     // UI state
@@ -73,10 +74,10 @@ const SerialConnection: React.FC = () => {
             setErr(null);
         }
 
-        log.debug(`Connected to ${selectedServer}.`);
+        log.debug(`Connected to ${selectedAgent}.`);
     }
 
-    function listPorts() {
+    const listPorts = useCallback(() => {
         // Update loading state
         setLoadingPorts(true);
         loadingTimer = setTimeout(() => {
@@ -87,41 +88,41 @@ const SerialConnection: React.FC = () => {
         }, 500);
 
         controller.listPorts();
-    }
+    }, []);
 
-    function openPort() {
-        server.openServer(({ msg }) => {
-            if (!isObject(msg) && msg !== 'inuse') {
-                setErr(i18n._('key-workspace_open_port-Can not open this port'));
-                log.error('Error opening serial port', msg);
-                return;
-            }
-            setErr(null);
-        });
-    }
+    const onChangePortOption = useCallback((option) => {
+        const agent = machineAgents.find(a => a.port === option.value);
+        if (agent) {
+            dispatch(connectActions.setSelectedAgent(agent));
+            setSelectedAgent(agent);
+        }
+    }, [dispatch, machineAgents]);
 
-    function closePort() {
-        server.closeServer();
-    }
+    const openPort = useCallback(async () => {
+        const { msg } = await dispatch(
+            connectActions.connect(server)
+        ) as unknown as { msg: string };
+
+        if (!isObject(msg) && msg !== 'inuse') {
+            setErr(i18n._('key-workspace_open_port-Can not open this port'));
+            log.error('Error opening serial port', msg);
+            return;
+        }
+
+        setErr(null);
+    }, [dispatch, server]);
+
+    const closePort = useCallback(() => {
+        dispatch(connectActions.disconnect(server));
+    }, [dispatch, server]);
 
     const actions = {
-        onChangePortOption: (option) => {
-            const serverFound = servers.find(v => v.port === option.value);
-            if (serverFound) {
-                dispatch(workspaceActions.connect.setSelectedServer(serverFound));
-                setSelectedServer(serverFound);
-            }
-        },
         onRefreshPorts: () => {
             listPorts();
         },
         onOpenPort: () => {
             openPort();
         },
-        onClosePort: () => {
-            closePort();
-        }
-
     };
 
     useEffect(() => {
@@ -144,9 +145,6 @@ const SerialConnection: React.FC = () => {
         };
         addControllerEvents();
 
-        // refresh ports on mount
-        setTimeout(() => listPorts());
-
         return () => {
             removeControllerEvents();
 
@@ -156,6 +154,11 @@ const SerialConnection: React.FC = () => {
             }
         };
     }, []);
+
+    useEffect(() => {
+        // refresh ports on mount
+        setTimeout(() => listPorts());
+    }, [listPorts]);
 
     const moduleStatusInfoList = useMemo(() => {
         const newModuleStatusList = [];
@@ -261,7 +264,7 @@ const SerialConnection: React.FC = () => {
 
     const canRefresh = !loadingPorts && !isOpen;
     const canChangePort = canRefresh;
-    const canOpenPort = selectedServer && selectedServer.port && !selectedServer.address && !isOpen;
+    const canOpenPort = selectedAgent && selectedAgent.port && !selectedAgent.address && !isOpen;
 
     const connectedMachine = useMemo<Machine | null>(() => {
         return findMachineByName(machineIdentifier);
@@ -280,14 +283,14 @@ const SerialConnection: React.FC = () => {
                             disabled={!canChangePort}
                             name="port"
                             noResultsText={i18n._('key-Workspace/Connection-No ports available.')}
-                            onChange={actions.onChangePortOption}
-                            options={map(servers, (o) => ({
+                            onChange={onChangePortOption}
+                            options={map(machineAgents, (o) => ({
                                 value: o.port,
                                 label: o.port,
                                 manufacturer: o.manufacturer
                             }))}
                             placeholder={i18n._('key-Workspace/Connection-Choose a port')}
-                            value={selectedServer && selectedServer.port || ''}
+                            value={selectedAgent && selectedAgent.port || ''}
                         />
                         <SvgIcon
                             className="border-default-black-5 margin-left-8 border-radius-8"
@@ -353,7 +356,7 @@ const SerialConnection: React.FC = () => {
                             type="primary"
                             priority="level-two"
                             disabled={!canOpenPort}
-                            onClick={actions.onOpenPort}
+                            onClick={openPort}
                             loading={connectLoading}
                             innerClassNames="sm-flex-important justify-center"
                         >
@@ -367,7 +370,7 @@ const SerialConnection: React.FC = () => {
                             width="120px"
                             type="default"
                             priority="level-two"
-                            onClick={actions.onClosePort}
+                            onClick={closePort}
                             loading={connectLoading}
                         >
                             {!connectLoading && i18n._('key-Workspace/Connection-Disconnect')}

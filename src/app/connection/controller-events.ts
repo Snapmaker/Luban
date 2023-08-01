@@ -8,6 +8,16 @@ enum ControllerEvent {
     DiscoverMachineStart = 'discover:start',
     DiscoverMachineEnd = 'discover:end',
 
+
+    /**
+     * Connection
+     */
+    ConnectionOpen = 'connection:open',
+    ConnectionClose = 'connection:close',
+
+    StartHeartbeat = 'connection:startHeartbeat',
+    EndHeartbeat = 'connection:endHeartbeat',
+
     /**
      * Machine Network (Wi-Fi)
      */
