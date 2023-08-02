@@ -138,7 +138,7 @@ class SacpUdpChannel extends SocketBASE {
             const statusKey = readUint8(data.response.data, 0);
 
             this.machineStatus = WORKFLOW_STATUS_MAP[statusKey];
-            console.log('machine status =', this.machineStatus);
+            console.log('machine status =', statusKey, this.machineStatus);
 
             this.socket && this.socket.emit('Marlin:state', {
                 state: {

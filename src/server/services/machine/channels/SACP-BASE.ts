@@ -1,5 +1,5 @@
-import { ResponseCallback } from '@snapmaker/snapmaker-sacp-sdk';
 import { WorkflowStatus } from '@snapmaker/luban-platform';
+import { ResponseCallback } from '@snapmaker/snapmaker-sacp-sdk';
 import { readString, readUint16, readUint8 } from '@snapmaker/snapmaker-sacp-sdk/dist/helper';
 import {
     AirPurifierInfo,
@@ -185,7 +185,7 @@ class SocketBASE extends EventEmitter {
                 state: {
                     ...stateData,
                     moduleStatusList,
-                    status: WORKFLOW_STATUS_MAP[statusKey],
+                    status: this.machineStatus,
                     moduleList: moduleStatusList,
                 }
             });

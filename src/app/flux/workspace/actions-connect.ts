@@ -16,10 +16,17 @@ import { ConnectionType } from './state';
 
 
 const setConnectionType = (connectionType: ConnectionType) => {
-    return (dispatch) => {
-        dispatch(baseActions.updateState({ connectionType }));
+    return (dispatch, getState) => {
+        const oldConnectionType = getState().workspace.connectionType as ConnectionType;
 
-        machineStore.set('connection.type', connectionType);
+        if (connectionType !== oldConnectionType) {
+            dispatch(baseActions.updateState({
+                connectionType,
+                machineAgents: [], // clear previous machines
+            }));
+
+            machineStore.set('connection.type', connectionType);
+        }
     };
 };
 

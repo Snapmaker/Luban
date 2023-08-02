@@ -47,6 +47,10 @@ interface ConnectionOpenOptions {
     protocol?: NetworkProtocol | SerialPortProtocol;
 }
 
+interface ConnectionCloseOptions {
+    force?: boolean;
+}
+
 /**
  * A singleton to manage devices connection.
  */
@@ -75,11 +79,45 @@ class ConnectionManager {
         this.scheduledTasksHandle.cancelTasks();
     };
 
+    private onChannelConnected = () => {
+        log.info('channel: Connected');
+    }
+
+    private onChannelReady = async (data) => {
+        log.info('channel: Ready');
+
+        const machineIdentifier = data?.machineIdentifier;
+
+        log.debug(`machineIdentifier = ${machineIdentifier}`);
+
+        // configure machine instance
+        if (machineIdentifier === SnapmakerRayMachine.identifier) {
+            this.machineInstance = new RayMachineInstance();
+            this.machineInstance.setChannel(this.channel);
+            this.machineInstance.setSocket(this.socket);
+        }
+
+        if (machineIdentifier === SnapmakerArtisanMachine.identifier) {
+            this.machineInstance = new ArtisanMachineInstance();
+            this.machineInstance.setChannel(this.channel);
+            this.machineInstance.setSocket(this.socket);
+        }
+
+        log.debug(`instance = ${this.machineInstance.constructor.name}`);
+        if (this.machineInstance) {
+            log.info('On preparing machine...');
+            await this.machineInstance.onPrepare();
+            log.info('All done, machine is ready.');
+        }
+    };
+
+
+
     public connectionOpen = async (socket, options: ConnectionOpenOptions) => {
         // Cancel subscriptions
         if (this.channel) {
-            this.channel.off(ChannelEvent.Connected, this.onConnected);
-            this.channel.off(ChannelEvent.Ready, this.onReady);
+            this.channel.off(ChannelEvent.Connected, this.onChannelConnected);
+            this.channel.off(ChannelEvent.Ready, this.onChannelReady);
             this.channel = null;
         }
 
@@ -118,49 +156,16 @@ class ConnectionManager {
 
         this.socket = socket;
 
-        this.channel.on(ChannelEvent.Connected, this.onConnected);
-        this.channel.on(ChannelEvent.Ready, this.onReady);
+        this.channel.on(ChannelEvent.Connected, this.onChannelConnected);
+        this.channel.on(ChannelEvent.Ready, this.onChannelReady);
 
-        log.debug(`connectionOpen connectionType=${connectionType} this.socket=${this.channel.constructor.name}`);
+        log.info(`ConnectionOpen: type=${connectionType}, channel=${this.channel.constructor.name}.`);
         this.channel.connectionOpen(socket, options);
     };
 
-    private onConnected = () => {
-        log.info('channel: Connected');
-    }
+    public connectionClose = (socket, options: ConnectionCloseOptions) => {
+        log.info('ConnectionClose');
 
-    private onReady = (data) => {
-        log.info('channel: Ready');
-
-        const machineIdentifier = data?.machineIdentifier;
-
-        log.debug(`machineIdentifier = ${machineIdentifier}`);
-
-        if (machineIdentifier === SnapmakerRayMachine.identifier) {
-            // Switch to SACP immediately
-            // (this.channel as SocketSerial).command(this.socket, {
-            //      gcode: 'M2000 U5',
-            // });
-
-            this.machineInstance = new RayMachineInstance();
-            this.machineInstance.setChannel(this.channel);
-            this.machineInstance.setSocket(this.socket);
-        }
-
-        if (machineIdentifier === SnapmakerArtisanMachine.identifier) {
-            this.machineInstance = new ArtisanMachineInstance();
-            this.machineInstance.setChannel(this.channel);
-            this.machineInstance.setSocket(this.socket);
-        }
-
-        log.debug(`instance = ${this.machineInstance.constructor.name}`);
-        if (this.machineInstance) {
-            this.machineInstance.onMachineReady();
-        }
-    };
-
-    public connectionClose = (socket, options) => {
-        log.debug('connectionClose');
         const force = options?.force || false;
         if (!force) {
             this.channel && this.channel.connectionClose(socket, options);
@@ -169,8 +174,8 @@ class ConnectionManager {
         }
 
         if (this.channel) {
-            this.channel.off(ChannelEvent.Connected, this.onConnected);
-            this.channel.off(ChannelEvent.Ready, this.onReady);
+            this.channel.off(ChannelEvent.Connected, this.onChannelConnected);
+            this.channel.off(ChannelEvent.Ready, this.onChannelReady);
 
             this.channel = null;
         }

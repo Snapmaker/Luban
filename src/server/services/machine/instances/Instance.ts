@@ -22,7 +22,10 @@ class MachineInstance {
         return this.isReady;
     }
 
-    public onMachineReady(): void {
+    /**
+     * Time for preparing machine initial state, start heartbeat, etc.
+     */
+    public async onPrepare(): Promise<void> {
         // TODO
     }
 }

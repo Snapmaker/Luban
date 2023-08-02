@@ -17,9 +17,7 @@ const log = logger('services:machine:instances:RayInstance');
 
 
 class RayMachineInstance extends MachineInstance {
-    public async onMachineReady(): Promise<void> {
-        log.info('Machine is ready.');
-
+    public async onPrepare(): Promise<void> {
         if (this.channel instanceof SacpSerialChannel) {
             await this._onMachineReadySACP();
         } else if (this.channel instanceof SacpUdpChannel) {

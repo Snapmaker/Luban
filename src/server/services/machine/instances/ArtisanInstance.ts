@@ -20,11 +20,11 @@ const log = logger('machine:ArtisanMachineInstance');
 
 
 class ArtisanMachineInstance extends MachineInstance {
-    public onMachineReady(): void {
+    public async onPrepare(): Promise<void> {
         log.info('Machine is ready.');
 
         if (this.channel instanceof SacpSerialChannel) {
-            this._onMachineReadySACP();
+            await this._onMachineReadySACP();
         }
         if (this.channel instanceof SocketSerial) {
             // Not implemented
