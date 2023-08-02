@@ -19,9 +19,9 @@ const log = logger('services:machine:instances:RayInstance');
 class RayMachineInstance extends MachineInstance {
     public async onPrepare(): Promise<void> {
         if (this.channel instanceof SacpSerialChannel) {
-            await this._onMachineReadySACP();
+            await this._prepareMachineSACP();
         } else if (this.channel instanceof SacpUdpChannel) {
-            await this._onMachineReadySACP();
+            await this._prepareMachineSACP();
         }
 
         if (this.channel instanceof TextSerialChannel) {
@@ -33,20 +33,20 @@ class RayMachineInstance extends MachineInstance {
         }
     }
 
-    private async _onMachineReadySACP() {
+    private async _prepareMachineSACP() {
         const state: ConnectedData = {};
 
         // TODO: Heartbeat is not working for now
         // (this.channel as SocketSerialNew).startHeartbeat();
 
         // Get Machine Info
-        const { data: machineInfo } = await (this.channel as SacpSerialChannel).getMachineInfo();
+        const { data: machineInfo } = await this.channel.getMachineInfo();
         log.info(`Machine Firmware Version: ${machineInfo.masterControlFirmwareVersion}`);
 
         state.series = SnapmakerRayMachine.identifier;
 
         // module info
-        const { data: moduleInfos } = await (this.channel as SacpSerialChannel).getModuleInfo();
+        const { data: moduleInfos } = await this.channel.getModuleInfo();
 
         /*
         moduleInfos = [
@@ -90,6 +90,9 @@ class RayMachineInstance extends MachineInstance {
         state.moduleStatusList = moduleListStatus;
 
         this.socket.emit('connection:connected', { state: state, err: '' });
+
+        // Start heartbeat
+        await this.channel.startHeartbeat();
     }
 }
 

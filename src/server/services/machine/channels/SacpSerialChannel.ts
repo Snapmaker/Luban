@@ -13,7 +13,7 @@ import { EventOptions } from '../types';
 import { ChannelEvent } from './ChannelEvent';
 import SocketBASE from './SACP-BASE';
 
-const log = logger('lib:SocketSerial');
+const log = logger('machine:channel:SacpSerialChannel');
 
 class SacpSerialChannel extends SocketBASE {
     private serialport: SerialPort;
@@ -111,10 +111,11 @@ class SacpSerialChannel extends SocketBASE {
         this.socket.emit('connection:close');
     };
 
-    public startHeartbeat = () => {
-        this.startHeartbeatBase(this.sacpClient);
+    public async startHeartbeat() {
+        await this.startHeartbeatBase(this.sacpClient);
+
         this.setROTSubscribeApi();
-    };
+    }
 
     public startGcode = async (options: EventOptions) => {
         const { headType } = options;

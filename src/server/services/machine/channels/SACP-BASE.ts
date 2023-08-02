@@ -15,7 +15,6 @@ import {
     NetworkOptions
 } from '@snapmaker/snapmaker-sacp-sdk/dist/models';
 import { Direction } from '@snapmaker/snapmaker-sacp-sdk/dist/models/CoordinateInfo';
-import { EventEmitter } from 'events';
 import { find, includes } from 'lodash';
 import net from 'net';
 
@@ -59,10 +58,11 @@ import logger from '../../../lib/logger';
 import SocketServer from '../../../lib/SocketManager';
 import Business, { CoordinateType } from '../sacp/Business';
 import { EventOptions, MarlinStateData } from '../types';
+import Channel from './Channel';
 
 const log = logger('lib:SocketBASE');
 
-class SocketBASE extends EventEmitter {
+class SocketBASE extends Channel {
     private heartbeatTimer;
 
     public socket: SocketServer;

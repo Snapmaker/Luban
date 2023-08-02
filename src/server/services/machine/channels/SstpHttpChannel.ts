@@ -23,7 +23,7 @@ import workerManager from '../../task-manager/workerManager';
 import { EventOptions } from '../types';
 
 let waitConfirm: boolean;
-const log = logger('lib:SocketHttp');
+const log = logger('machine:channel:SstpHttpChannel');
 
 
 const isJSON = (str: string) => {
@@ -233,6 +233,16 @@ class SstpHttpChannel extends EventEmitter {
             socket && socket.emit(eventName, _getResult(new Error('connection not exist'), null));
         }
         clearInterval(intervalHandle);
+    };
+
+    public connectionCloseImproper = () => {
+        const result = {
+            code: 200,
+            data: {},
+            msg: '',
+            text: ''
+        };
+        this.socket && this.socket.emit('connection:close', result);
     };
 
     public startHeartbeat = () => {

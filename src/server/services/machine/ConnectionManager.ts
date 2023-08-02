@@ -3,7 +3,7 @@ import fs from 'fs';
 import { includes } from 'lodash';
 
 import { AUTO_STRING } from '../../../app/constants';
-import { SnapmakerArtisanMachine, SnapmakerRayMachine } from '../../../app/machines';
+import { SnapmakerArtisanMachine, SnapmakerJ1Machine, SnapmakerRayMachine } from '../../../app/machines';
 import DataStorage from '../../DataStorage';
 import {
     CONNECTION_TYPE_WIFI,
@@ -26,6 +26,7 @@ import { sacpUdpChannel } from './channels/SacpUdpChannel';
 import { sstpHttpChannel } from './channels/SstpHttpChannel';
 import { textSerialChannel } from './channels/TextSerialChannel';
 import { ArtisanMachineInstance, MachineInstance, RayMachineInstance } from './instances';
+import J1MachineInstance from './instances/J1Instance';
 
 const log = logger('lib:ConnectionManager');
 
@@ -91,8 +92,8 @@ class ConnectionManager {
         log.debug(`machineIdentifier = ${machineIdentifier}`);
 
         // configure machine instance
-        if (machineIdentifier === SnapmakerRayMachine.identifier) {
-            this.machineInstance = new RayMachineInstance();
+        if (machineIdentifier === SnapmakerJ1Machine.identifier) {
+            this.machineInstance = new J1MachineInstance();
             this.machineInstance.setChannel(this.channel);
             this.machineInstance.setSocket(this.socket);
         }
@@ -103,15 +104,19 @@ class ConnectionManager {
             this.machineInstance.setSocket(this.socket);
         }
 
-        log.debug(`instance = ${this.machineInstance.constructor.name}`);
+        if (machineIdentifier === SnapmakerRayMachine.identifier) {
+            this.machineInstance = new RayMachineInstance();
+            this.machineInstance.setChannel(this.channel);
+            this.machineInstance.setSocket(this.socket);
+        }
+
         if (this.machineInstance) {
+            log.info(`instance = ${this.machineInstance.constructor.name}`);
             log.info('On preparing machine...');
             await this.machineInstance.onPrepare();
             log.info('All done, machine is ready.');
         }
     };
-
-
 
     public connectionOpen = async (socket, options: ConnectionOpenOptions) => {
         // Cancel subscriptions
@@ -126,7 +131,7 @@ class ConnectionManager {
         this.connectionType = connectionType;
 
         if (connectionType === CONNECTION_TYPE_WIFI) {
-            if (protocol) {
+            if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, NetworkProtocol.HTTP], protocol)) {
                 this.protocol = protocol;
             } else {
                 const detectedProtocol = await this.inspectNetworkProtocol(address);
@@ -159,7 +164,7 @@ class ConnectionManager {
         this.channel.on(ChannelEvent.Connected, this.onChannelConnected);
         this.channel.on(ChannelEvent.Ready, this.onChannelReady);
 
-        log.info(`ConnectionOpen: type=${connectionType}, channel=${this.channel.constructor.name}.`);
+        log.info(`ConnectionOpen: type = ${connectionType}, channel = ${this.channel.constructor.name}.`);
         this.channel.connectionOpen(socket, options);
     };
 
@@ -178,16 +183,6 @@ class ConnectionManager {
             this.channel.off(ChannelEvent.Ready, this.onChannelReady);
 
             this.channel = null;
-        }
-    };
-
-    public connectionCloseImproper = () => {
-        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            this.channel && this.channel.connectionCloseImproper();
-        } else {
-            log.info('connectionCloseImproper');
-            // force close
-            // this.socket && this.socket.emit('connection:closeImproper');
         }
     };
 
@@ -732,6 +727,8 @@ M3`;
     };
 
     public startHeartbeat = (socket, options) => {
+        console.log('startHeartbeat');
+
         this.channel.startHeartbeat(options);
     };
 

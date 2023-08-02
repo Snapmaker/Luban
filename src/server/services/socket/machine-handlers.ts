@@ -9,9 +9,6 @@ function register(socketServer: SocketServer): void {
         [ControllerEvent.ConnectionOpen]: connectionManager.connectionOpen,
         [ControllerEvent.ConnectionClose]: connectionManager.connectionClose,
 
-        'connection:closeImproper': connectionManager.connectionCloseImproper,
-        'connection:startHeartbeat': connectionManager.startHeartbeat,
-
         // general functions
         'connection:executeGcode': connectionManager.executeGcode,
 

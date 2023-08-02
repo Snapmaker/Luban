@@ -7,7 +7,7 @@ import logger from '../../../lib/logger';
 import store from '../../../store';
 import { ChannelEvent } from './ChannelEvent';
 
-const log = logger('service:socket-server');
+const log = logger('machine:channel:TextSerialChannel');
 
 class TextSerialChannel extends EventEmitter {
     private port = '';

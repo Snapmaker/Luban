@@ -13,21 +13,15 @@ import DataStorage from '../../../DataStorage';
 import { CONNECTION_TYPE_WIFI, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 import logger from '../../../lib/logger';
 import Business, { CoordinateType, RequestPhotoInfo, ToolHeadType } from '../sacp/Business';
-import { ConnectedData, EventOptions } from '../types';
+import { EventOptions } from '../types';
 // import MovementInstruction, { MoveDirection } from '../../lib/SACP-SDK/SACP/business/models/MovementInstruction';
-import {
-    CNC_HEAD_MODULE_IDS,
-    EMERGENCY_STOP_BUTTON,
-    LASER_HEAD_MODULE_IDS,
-    MODULEID_TOOLHEAD_MAP,
-    PRINTING_HEAD_MODULE_IDS,
-    ROTARY_MODULES,
-    SACP_TYPE_SERIES_MAP,
-} from '../../../../app/constants/machines';
+import { SACP_TYPE_SERIES_MAP, } from '../../../../app/constants/machines';
+import { SnapmakerArtisanMachine, SnapmakerJ1Machine } from '../../../../app/machines';
 import SocketServer from '../../../lib/SocketManager';
+import { ChannelEvent } from './ChannelEvent';
 import SocketBASE from './SACP-BASE';
 
-const log = logger('lib:SocketTCP');
+const log = logger('machine:channel:SacpTcpChannel');
 
 class SacpTcpChannel extends SocketBASE {
     private client: net.Socket;
@@ -100,110 +94,68 @@ class SacpTcpChannel extends SocketBASE {
                         // Connected
                         this.sacpClient.setLogger(log);
                         this.sacpClient.wifiConnectionHeartBeat();
-                        this.setROTSubscribeApi();
-                        let state: ConnectedData = {
-                            isHomed: true,
-                            err: null
-                        };
 
                         // Get machine info
-                        await this.sacpClient.getMachineInfo().then(({ data: machineInfos }) => {
-                            state = {
-                                ...state,
-                                series: SACP_TYPE_SERIES_MAP[machineInfos.type]
-                            };
-                            // log.debug(`serial, ${SERIAL_MAP_SACP[machineInfos.type]}`);
-                        });
+                        const { data: machineInfos } = await this.sacpClient.getMachineInfo();
 
+                        const machineIdentifier = SACP_TYPE_SERIES_MAP[machineInfos.type];
+
+                        if (machineIdentifier === SnapmakerArtisanMachine.identifier) {
+                            this.emit(ChannelEvent.Ready, {
+                                machineIdentifier,
+                            });
+                        }
+                        if (machineIdentifier === SnapmakerJ1Machine.identifier) {
+                            this.emit(ChannelEvent.Ready, {
+                                machineIdentifier,
+                            });
+                        }
+
+                        // TODO: Refactor this to ArtisanInstance
                         // Get module infos
-                        await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
-                            const moduleListStatus = {
-                                emergencyStopButton: false,
-                                rotaryModule: false,
-                            };
+                        const { data: moduleInfos } = await this.sacpClient.getModuleInfo();
 
-                            const toolHeadModules = [];
-                            moduleInfos.forEach(module => {
-                                // let ariPurifier = false;
-                                if (includes(PRINTING_HEAD_MODULE_IDS, module.moduleId)) {
-                                    state.headType = HEAD_PRINTING;
-                                    toolHeadModules.push(module);
-                                } else if (includes(LASER_HEAD_MODULE_IDS, module.moduleId)) {
-                                    state.headType = HEAD_LASER;
-                                    toolHeadModules.push(module);
-                                } else if (includes(CNC_HEAD_MODULE_IDS, module.moduleId)) {
-                                    state.headType = HEAD_CNC;
-                                    toolHeadModules.push(module);
-                                }
+                        moduleInfos.forEach(module => {
+                            // TODO: Hard-coded 10W laser head,
+                            if (module.moduleId === 14) {
+                                this.sacpClient.getLaserToolHeadInfo(module.key).then(({ laserToolHeadInfo }) => {
+                                    this.laserFocalLength = laserToolHeadInfo.laserFocalLength;
 
-                                if (includes(ROTARY_MODULES, module.moduleId)) {
-                                    moduleListStatus.rotaryModule = true;
-                                }
-                                if (includes(EMERGENCY_STOP_BUTTON, module.moduleId)) {
-                                    moduleListStatus.emergencyStopButton = true;
-                                }
-
-                                // TODO: Hard-coded 10W laser head,
-                                if (module.moduleId === 14) {
-                                    this.sacpClient.getLaserToolHeadInfo(module.key).then(({ laserToolHeadInfo }) => {
-                                        this.laserFocalLength = laserToolHeadInfo.laserFocalLength;
-
-                                        log.debug(`laserToolHeadInfo.laserFocalLength, ${laserToolHeadInfo.laserFocalLength}`);
-                                        this.socket && this.socket.emit('Marlin:state', {
-                                            state: {
-                                                temperature: {
-                                                    t: 0,
-                                                    tTarget: 0,
-                                                    b: 0,
-                                                    bTarget: 0
-                                                },
-                                                laserFocalLength: laserToolHeadInfo.laserFocalLength,
-                                                pos: {
-                                                    x: 0,
-                                                    y: 0,
-                                                    z: 0,
-                                                    b: 0,
-                                                    isFourAxis: false
-                                                },
-                                                originOffset: {
-                                                    x: 0,
-                                                    y: 0,
-                                                    z: 0,
-                                                }
+                                    log.debug(`laserToolHeadInfo.laserFocalLength, ${laserToolHeadInfo.laserFocalLength}`);
+                                    this.socket && this.socket.emit('Marlin:state', {
+                                        state: {
+                                            temperature: {
+                                                t: 0,
+                                                tTarget: 0,
+                                                b: 0,
+                                                bTarget: 0
                                             },
-                                            type: CONNECTION_TYPE_WIFI
+                                            laserFocalLength: laserToolHeadInfo.laserFocalLength,
+                                            pos: {
+                                                x: 0,
+                                                y: 0,
+                                                z: 0,
+                                                b: 0,
+                                                isFourAxis: false
+                                            },
+                                            originOffset: {
+                                                x: 0,
+                                                y: 0,
+                                                z: 0,
+                                            }
+                                        },
+                                        type: CONNECTION_TYPE_WIFI
+                                    });
+                                });
+
+                                this.sacpClient.getLaserLockStatus(module.key)
+                                    .then(({ laserLockStatus }) => {
+                                        this.socket && this.socket.emit('machine:laser-status', {
+                                            isLocked: laserLockStatus.lockStatus,
                                         });
                                     });
-
-                                    this.sacpClient.getLaserLockStatus(module.key)
-                                        .then(({ laserLockStatus }) => {
-                                            this.socket && this.socket.emit('machine:laser-status', {
-                                                isLocked: laserLockStatus.lockStatus,
-                                            });
-                                        });
-                                }
-                            });
-
-                            if (toolHeadModules.length === 0) {
-                                state.toolHead = MODULEID_TOOLHEAD_MAP['0']; // default extruder
-                            } else if (toolHeadModules.length === 1) {
-                                const module = toolHeadModules[0];
-                                state.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
-                            } else if (toolHeadModules.length === 2) {
-                                // hard-coded IDEX head for J1, refactor this later.
-                                state.toolHead = MODULEID_TOOLHEAD_MAP['00'];
                             }
-
-                            state.moduleStatusList = moduleListStatus;
                         });
-                        this.socket && this.socket.emit('connection:connected', {
-                            state,
-                            err: state?.err,
-                            type: CONNECTION_TYPE_WIFI
-                        });
-
-                        // TODO: Do not start heart beat automatically
-                        // this.startHeartbeatBase(this.sacpClient, this.client);
                     } else {
                         this.client.destroy();
                         if (this.client.destroyed) {
@@ -275,9 +227,11 @@ class SacpTcpChannel extends SocketBASE {
         });
     };
 
-    public startHeartbeat = () => {
-        this.startHeartbeatBase(this.sacpClient, undefined);
-    };
+    public async startHeartbeat() {
+        await this.startHeartbeatBase(this.sacpClient, undefined);
+
+        this.setROTSubscribeApi();
+    }
 
     public uploadFile = (options: EventOptions) => {
         const { gcodePath, eventName, renderGcodeFileName = '' } = options;
@@ -536,4 +490,4 @@ export {
     channel as sacpTcpChannel
 };
 
-export default new SacpTcpChannel();
+export default SacpTcpChannel;

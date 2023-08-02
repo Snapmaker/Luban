@@ -3,7 +3,6 @@ import { EventEmitter } from 'events';
 import ControllerEvent from '../../connection/controller-events';
 import {
     CONNECTION_CLOSE,
-    CONNECTION_CLOSE_IMPROPER,
     CONNECTION_COORDINATE_MOVE,
     CONNECTION_EXECUTE_GCODE,
     CONNECTION_GO_HOME,
@@ -116,13 +115,6 @@ export class MachineAgent extends EventEmitter {
                             this.token = data?.token;
                         }
 
-                        // Start heartbeat
-                        // delay 1000ms to make sure machine state is correct
-                        // TODO: start heart beat per machine instance.
-                        setTimeout(() => {
-                            controller.emitEvent(ControllerEvent.StartHeartbeat);
-                        }, 1000);
-
                         resolve({ code, msg });
                     } else {
                         // serial port
@@ -138,7 +130,7 @@ export class MachineAgent extends EventEmitter {
         if (!force) {
             return new Promise((resolve) => {
                 controller
-                    .emitEvent(ControllerEvent.ConnectionClose)
+                    .emitEvent(ControllerEvent.ConnectionClose, { force })
                     .once(CONNECTION_CLOSE, () => {
                         log.info('Disconnected from machine.');
                         resolve(true);
@@ -147,8 +139,8 @@ export class MachineAgent extends EventEmitter {
         } else {
             return new Promise((resolve) => {
                 controller
-                    .emitEvent(CONNECTION_CLOSE_IMPROPER)
-                    .once(CONNECTION_CLOSE_IMPROPER, () => {
+                    .emitEvent(ControllerEvent.ConnectionClose, { force })
+                    .once(CONNECTION_CLOSE, () => {
                         resolve(true);
                     });
 

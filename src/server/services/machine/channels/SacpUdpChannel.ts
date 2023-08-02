@@ -93,8 +93,6 @@ class SacpUdpChannel extends SocketBASE {
         this.emit(ChannelEvent.Ready, {
             machineIdentifier,
         });
-
-        // this.emit('connected');
     }
 
     public connectionClose = (socket: SocketServer, options: EventOptions) => {

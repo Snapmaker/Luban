@@ -15,9 +15,6 @@ enum ControllerEvent {
     ConnectionOpen = 'connection:open',
     ConnectionClose = 'connection:close',
 
-    StartHeartbeat = 'connection:startHeartbeat',
-    EndHeartbeat = 'connection:endHeartbeat',
-
     /**
      * Machine Network (Wi-Fi)
      */
