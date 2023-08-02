@@ -29,7 +29,7 @@ import SocketBASE from './SACP-BASE';
 
 const log = logger('lib:SocketTCP');
 
-class SocketTCP extends SocketBASE {
+class SacpTcpChannel extends SocketBASE {
     private client: net.Socket;
 
     private laserFocalLength = 0;
@@ -530,4 +530,10 @@ class SocketTCP extends SocketBASE {
     };
 }
 
-export default new SocketTCP();
+const channel = new SacpTcpChannel();
+
+export {
+    channel as sacpTcpChannel
+};
+
+export default new SacpTcpChannel();

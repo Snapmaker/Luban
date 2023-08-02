@@ -12,7 +12,7 @@ import { SnapmakerArtisanMachine } from '../../../../app/machines';
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 import logger from '../../../lib/logger';
 import SacpSerialChannel from '../channels/SacpSerialChannel';
-import SocketSerial from '../channels/socket-serial';
+import TextSerialChannel from '../channels/TextSerialChannel';
 import { ConnectedData } from '../types';
 import MachineInstance from './Instance';
 
@@ -26,7 +26,7 @@ class ArtisanMachineInstance extends MachineInstance {
         if (this.channel instanceof SacpSerialChannel) {
             await this._onMachineReadySACP();
         }
-        if (this.channel instanceof SocketSerial) {
+        if (this.channel instanceof TextSerialChannel) {
             // Not implemented
         }
     }

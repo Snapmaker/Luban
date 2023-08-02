@@ -100,7 +100,7 @@ export type GcodeResult = {
 /**
  * A singleton to manage devices connection.
  */
-class SocketHttp extends EventEmitter {
+class SstpHttpChannel extends EventEmitter {
     private isGcodeExecuting = false;
 
     private gcodeInfos = [];
@@ -745,6 +745,10 @@ class SocketHttp extends EventEmitter {
     }
 }
 
-const socketHttp = new SocketHttp();
+const channel = new SstpHttpChannel();
 
-export default socketHttp;
+export {
+    channel as sstpHttpChannel
+};
+
+export default SstpHttpChannel;

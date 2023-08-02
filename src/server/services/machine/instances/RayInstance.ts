@@ -8,7 +8,7 @@ import { HEAD_LASER } from '../../../constants';
 import logger from '../../../lib/logger';
 import SacpSerialChannel from '../channels/SacpSerialChannel';
 import SacpUdpChannel from '../channels/SacpUdpChannel';
-import SocketSerial from '../channels/socket-serial';
+import TextSerialChannel from '../channels/TextSerialChannel';
 import { ConnectedData } from '../types';
 import MachineInstance from './Instance';
 import { SnapmakerRayMachine } from '../../../../app/machines';
@@ -24,7 +24,7 @@ class RayMachineInstance extends MachineInstance {
             await this._onMachineReadySACP();
         }
 
-        if (this.channel instanceof SocketSerial) {
+        if (this.channel instanceof TextSerialChannel) {
             // Not implemented
             // M2000 U5 to switch protocol to SACP
             // (this.channel as SocketSerial).command(this.socket, {
@@ -47,7 +47,6 @@ class RayMachineInstance extends MachineInstance {
 
         // module info
         const { data: moduleInfos } = await (this.channel as SacpSerialChannel).getModuleInfo();
-        console.log('moduleInfos =', moduleInfos);
 
         /*
         moduleInfos = [

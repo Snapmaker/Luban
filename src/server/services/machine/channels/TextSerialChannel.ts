@@ -9,7 +9,7 @@ import { ChannelEvent } from './ChannelEvent';
 
 const log = logger('service:socket-server');
 
-class SocketSerial extends EventEmitter {
+class TextSerialChannel extends EventEmitter {
     private port = '';
 
     private dataSource = '';
@@ -145,7 +145,10 @@ class SocketSerial extends EventEmitter {
         controller.writeln(data, context);
     };
 }
+const channel = new TextSerialChannel();
 
-export const socketSerial = new SocketSerial();
+export {
+    channel as textSerialChannel
+};
 
-export default SocketSerial;
+export default TextSerialChannel;

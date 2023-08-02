@@ -20,11 +20,11 @@ import SocketServer from '../../lib/SocketManager';
 import logger from '../../lib/logger';
 import ProtocolDetector, { NetworkProtocol, SerialPortProtocol } from './ProtocolDetector';
 import { ChannelEvent } from './channels/ChannelEvent';
-import socketTcp from './channels/SACP-TCP';
-import SacpSerialChannel, { sacpSerialChannel } from './channels/SacpSerialChannel';
+import { sacpSerialChannel } from './channels/SacpSerialChannel';
+import { sacpTcpChannel } from './channels/SacpTcpChannel';
 import { sacpUdpChannel } from './channels/SacpUdpChannel';
-import socketHttp from './channels/socket-http';
-import { socketSerial } from './channels/socket-serial';
+import { sstpHttpChannel } from './channels/SstpHttpChannel';
+import { textSerialChannel } from './channels/TextSerialChannel';
 import { ArtisanMachineInstance, MachineInstance, RayMachineInstance } from './instances';
 
 const log = logger('lib:ConnectionManager');
@@ -69,13 +69,13 @@ class ConnectionManager {
     private socket;
 
     public onConnection = (socket: SocketServer) => {
-        socketHttp.onConnection();
+        sstpHttpChannel.onConnection();
         this.scheduledTasksHandle = new ScheduledTasks(socket);
     };
 
     public onDisconnection = (socket: SocketServer) => {
-        socketHttp.onDisconnection();
-        socketSerial.onDisconnection(socket);
+        sstpHttpChannel.onDisconnection();
+        textSerialChannel.onDisconnection(socket);
         this.scheduledTasksHandle.cancelTasks();
     };
 
@@ -134,13 +134,13 @@ class ConnectionManager {
             }
 
             if (this.protocol === NetworkProtocol.SacpOverTCP) {
-                this.channel = socketTcp;
+                this.channel = sacpTcpChannel;
             } else if (this.protocol === NetworkProtocol.SacpOverUDP) {
                 this.channel = sacpUdpChannel;
             } else if (this.protocol === NetworkProtocol.HTTP) {
-                this.channel = socketHttp;
+                this.channel = sstpHttpChannel;
             } else {
-                this.channel = socketHttp;
+                this.channel = sstpHttpChannel;
             }
         } else {
             const detectedProtocol = await this.inspectSerialPortProtocol(options.port);
@@ -150,7 +150,7 @@ class ConnectionManager {
             if (this.protocol === SerialPortProtocol.SacpOverSerialPort) {
                 this.channel = sacpSerialChannel;
             } else {
-                this.channel = socketSerial;
+                this.channel = textSerialChannel;
             }
         }
 
@@ -849,7 +849,7 @@ M3`;
 
     public wifiStatusTest = (socket, options) => {
         if (this.connectionType === CONNECTION_TYPE_WIFI) {
-            socketHttp.wifiStatusTest(options);
+            sstpHttpChannel.wifiStatusTest(options);
         }
     }
 
@@ -882,7 +882,7 @@ M3`;
         const { eventName } = options;
 
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            const { data: networkStationState } = await (this.channel as SacpSerialChannel).getNetworkStationState();
+            const { data: networkStationState } = await this.channel.getNetworkStationState();
 
             socket.emit(eventName, {
                 stationIP: networkStationState.stationIP,
