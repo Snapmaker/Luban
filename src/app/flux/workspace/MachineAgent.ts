@@ -102,7 +102,7 @@ export class MachineAgent extends EventEmitter {
                     address: this.address,
                     token: this.token,
                     port: this.port,
-                    sacp: this.protocol === 'SACP',
+                    protocol: this.protocol,
                     addByUser: this.addByUser,
                 })
                 .once(ControllerEvent.ConnectionOpen, ({ msg, data, code }) => {

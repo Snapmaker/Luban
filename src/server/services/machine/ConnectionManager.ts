@@ -40,6 +40,13 @@ const ensureRange = (value, min, max) => {
  */
 type ConnectionType = 'wifi' | 'serial';
 
+interface ConnectionOpenOptions {
+    connectionType: ConnectionType;
+    address: string;
+    port?: string;
+    protocol?: NetworkProtocol | SerialPortProtocol;
+}
+
 /**
  * A singleton to manage devices connection.
  */
@@ -68,58 +75,54 @@ class ConnectionManager {
         this.scheduledTasksHandle.cancelTasks();
     };
 
-    public connectionOpen = async (socket, options) => {
+    public connectionOpen = async (socket, options: ConnectionOpenOptions) => {
+        // Cancel subscriptions
         if (this.channel) {
             this.channel.off(ChannelEvent.Connected, this.onConnected);
             this.channel.off(ChannelEvent.Ready, this.onReady);
             this.channel = null;
         }
 
-        const { connectionType, sacp, addByUser, address } = options;
+        const { connectionType, protocol, address } = options;
 
         this.connectionType = connectionType;
 
         if (connectionType === CONNECTION_TYPE_WIFI) {
-            if (sacp) {
-                // TODO: optimize sacp option
-                this.protocol = NetworkProtocol.SacpOverTCP;
-                this.channel = socketTcp;
-            } else if (addByUser) {
-                const protocol = await this.inspectNetworkProtocol(address);
+            if (protocol) {
                 this.protocol = protocol;
-
-                if (protocol === NetworkProtocol.SacpOverTCP) {
-                    this.channel = socketTcp;
-                } else if (protocol === NetworkProtocol.SacpOverUDP) {
-                    this.channel = sacpUdpChannel;
-                } else if (protocol === NetworkProtocol.HTTP) {
-                    this.channel = socketHttp;
-                }
             } else {
-                this.protocol = NetworkProtocol.Unknown;
+                const detectedProtocol = await this.inspectNetworkProtocol(address);
+                this.protocol = detectedProtocol;
+            }
+
+            if (this.protocol === NetworkProtocol.SacpOverTCP) {
+                this.channel = socketTcp;
+            } else if (this.protocol === NetworkProtocol.SacpOverUDP) {
+                this.channel = sacpUdpChannel;
+            } else if (this.protocol === NetworkProtocol.HTTP) {
+                this.channel = socketHttp;
+            } else {
                 this.channel = socketHttp;
             }
-
-            this.channel.connectionOpen(socket, options);
         } else {
-            const protocol = await this.inspectSerialPortProtocol(options.port);
+            const detectedProtocol = await this.inspectSerialPortProtocol(options.port);
             log.info(`Detected protocol: ${protocol}`);
-            this.protocol = protocol;
+            this.protocol = detectedProtocol;
 
-            if (protocol === SerialPortProtocol.SacpOverSerialPort) {
+            if (this.protocol === SerialPortProtocol.SacpOverSerialPort) {
                 this.channel = sacpSerialChannel;
-                this.channel.connectionOpen(socket, options);
             } else {
                 this.channel = socketSerial;
-                this.channel.serialportOpen(socket, options);
             }
         }
-        log.debug(`connectionOpen connectionType=${connectionType} this.socket=${this.channel.constructor.name}`);
 
         this.socket = socket;
 
         this.channel.on(ChannelEvent.Connected, this.onConnected);
         this.channel.on(ChannelEvent.Ready, this.onReady);
+
+        log.debug(`connectionOpen connectionType=${connectionType} this.socket=${this.channel.constructor.name}`);
+        this.channel.connectionOpen(socket, options);
     };
 
     private onConnected = () => {
@@ -158,7 +161,12 @@ class ConnectionManager {
 
     public connectionClose = (socket, options) => {
         log.debug('connectionClose');
-        this.channel && this.channel.connectionClose(socket, options);
+        const force = options?.force || false;
+        if (!force) {
+            this.channel && this.channel.connectionClose(socket, options);
+        } else {
+            this.channel && this.channel.connectionCloseImproper();
+        }
 
         if (this.channel) {
             this.channel.off(ChannelEvent.Connected, this.onConnected);

@@ -27,7 +27,7 @@ class SocketSerial extends EventEmitter {
         });
     };
 
-    public serialportOpen = (socket: SocketServer, options) => {
+    public connectionOpen = (socket: SocketServer, options) => {
         const { port, dataSource = PROTOCOL_TEXT, connectionTimeout } = options;
         log.debug(`socket.open("${port}"): socket=${socket.id}`);
         this.port = port;

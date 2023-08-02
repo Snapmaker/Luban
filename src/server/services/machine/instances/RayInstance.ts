@@ -17,13 +17,13 @@ const log = logger('services:machine:instances:RayInstance');
 
 
 class RayMachineInstance extends MachineInstance {
-    public onMachineReady(): void {
+    public async onMachineReady(): Promise<void> {
         log.info('Machine is ready.');
 
         if (this.channel instanceof SacpSerialChannel) {
-            this._onMachineReadySACP();
+            await this._onMachineReadySACP();
         } else if (this.channel instanceof SacpUdpChannel) {
-            this._onMachineReadySACP();
+            await this._onMachineReadySACP();
         }
 
         if (this.channel instanceof SocketSerial) {

@@ -185,10 +185,8 @@ const disconnect = (agent: MachineAgent, options: DisconnectOptions = {}) => {
 /**
  * Reset all connections & redux state.
  */
-const resetConnections = (force: boolean = false) => {
+const resetConnections = ({ force = false }) => {
     return (dispatch) => {
-        console.log('DEBUG:resetConnections');
-
         // disconnect all connections when reload
         controller
             .emitEvent(ControllerEvent.ConnectionClose, { force })
@@ -217,7 +215,7 @@ const init = () => {
         }));
 
         // Reset all possible connections on initialization.
-        dispatch(resetConnections());
+        dispatch(resetConnections({ force: true }));
     };
 };
 

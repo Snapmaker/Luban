@@ -1,6 +1,9 @@
+import { ResponseCallback } from '@snapmaker/snapmaker-sacp-sdk';
+import { readUint8 } from '@snapmaker/snapmaker-sacp-sdk/dist/helper';
 import dgram from 'dgram';
 import path from 'path';
 
+import { WORKFLOW_STATUS_MAP } from '../../../../app/constants';
 import { SACP_TYPE_SERIES_MAP } from '../../../../app/constants/machines';
 import DataStorage from '../../../DataStorage';
 import SocketServer from '../../../lib/SocketManager';
@@ -16,6 +19,8 @@ class SacpUdpChannel extends SocketBASE {
     // private client: dgram.
     private socketClient = dgram.createSocket('udp4');
 
+    private heartbeatTimer2 = null;
+
     public constructor() {
         super();
 
@@ -24,7 +29,10 @@ class SacpUdpChannel extends SocketBASE {
         });
 
         this.socketClient.on('message', (buffer) => {
-            this.sacpClient.read(buffer);
+            // Only when connection is established, then SACP client will be created
+            if (this.sacpClient) {
+                this.sacpClient.read(buffer);
+            }
         });
         this.socketClient.on('close', () => {
             log.info('TCP connection closed');
@@ -99,10 +107,49 @@ class SacpUdpChannel extends SocketBASE {
             text: ''
         };
         socket && socket.emit(options.eventName, result);
-    }
+    };
 
-    public startHeartbeat = () => {
+    public connectionCloseImproper = () => {
+        this.sacpClient?.dispose();
+
+        const result = {
+            code: 200,
+            data: {},
+            msg: '',
+            text: ''
+        };
+        this.socket && this.socket.emit('connection:close', result);
+    };
+
+    public startHeartbeat = async () => {
         log.info('Start heartbeat.');
+
+        const subscribeHeartbeatCallback: ResponseCallback = (data) => {
+            if (this.heartbeatTimer2) {
+                clearTimeout(this.heartbeatTimer2);
+                this.heartbeatTimer2 = null;
+            }
+
+            this.heartbeatTimer2 = setTimeout(() => {
+                log.info('Lost heartbeat, close connection.');
+                this.socket && this.socket.emit('connection:close');
+            }, 10000);
+
+            const statusKey = readUint8(data.response.data, 0);
+
+            this.machineStatus = WORKFLOW_STATUS_MAP[statusKey];
+            console.log('machine status =', this.machineStatus);
+
+            this.socket && this.socket.emit('Marlin:state', {
+                state: {
+                    status: this.machineStatus,
+                }
+            });
+        };
+
+        const res = await this.sacpClient.subscribeHeartbeat({ interval: 2000 }, subscribeHeartbeatCallback);
+
+        log.info(`Subscribe heartbeat, result = ${res.code}`);
     };
 
     public uploadFile = async (options: EventOptions) => {
