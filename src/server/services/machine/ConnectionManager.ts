@@ -25,8 +25,8 @@ import { sacpTcpChannel } from './channels/SacpTcpChannel';
 import { sacpUdpChannel } from './channels/SacpUdpChannel';
 import { sstpHttpChannel } from './channels/SstpHttpChannel';
 import { textSerialChannel } from './channels/TextSerialChannel';
-import { ArtisanMachineInstance, MachineInstance, RayMachineInstance } from './instances';
-import J1MachineInstance from './instances/J1Instance';
+import { ArtisanMachineInstance, J1MachineInstance, MachineInstance, RayMachineInstance } from './instances';
+import Channel from './channels/Channel';
 
 const log = logger('lib:ConnectionManager');
 
@@ -59,7 +59,7 @@ class ConnectionManager {
     private connectionType: ConnectionType = CONNECTION_TYPE_WIFI;
 
     // socket used to communicate
-    private channel = null;
+    private channel: Channel = null;
 
     private protocol: NetworkProtocol | SerialPortProtocol = NetworkProtocol.Unknown;
 
@@ -80,9 +80,17 @@ class ConnectionManager {
         this.scheduledTasksHandle.cancelTasks();
     };
 
+    private onChannelConnecting = () => {
+        log.info('channel: Connecting');
+
+        this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
+    };
+
     private onChannelConnected = () => {
         log.info('channel: Connected');
-    }
+
+        this.socket && this.socket.emit('connection:open', {});
+    };
 
     private onChannelReady = async (data) => {
         log.info('channel: Ready');
@@ -118,11 +126,33 @@ class ConnectionManager {
         }
     };
 
-    public connectionOpen = async (socket, options: ConnectionOpenOptions) => {
+    private bindChannelEvents(): void {
+        if (!this.channel) {
+            return;
+        }
+
+        this.channel.on(ChannelEvent.Connecting, this.onChannelConnecting);
+        this.channel.on(ChannelEvent.Connected, this.onChannelConnected);
+        this.channel.on(ChannelEvent.Ready, this.onChannelReady);
+    }
+
+    private unbindChannelEvents(): void {
+        if (!this.channel) {
+            return;
+        }
+
+        this.channel.off(ChannelEvent.Connecting, this.onChannelConnecting);
+        this.channel.off(ChannelEvent.Connected, this.onChannelConnected);
+        this.channel.off(ChannelEvent.Ready, this.onChannelReady);
+    }
+
+    /**
+     * Connection open.
+     */
+    public connectionOpen = async (socket: SocketServer, options: ConnectionOpenOptions) => {
         // Cancel subscriptions
         if (this.channel) {
-            this.channel.off(ChannelEvent.Connected, this.onChannelConnected);
-            this.channel.off(ChannelEvent.Ready, this.onChannelReady);
+            this.unbindChannelEvents();
             this.channel = null;
         }
 
@@ -161,13 +191,17 @@ class ConnectionManager {
 
         this.socket = socket;
 
-        this.channel.on(ChannelEvent.Connected, this.onChannelConnected);
-        this.channel.on(ChannelEvent.Ready, this.onChannelReady);
+        // initialize channel
+        this.bindChannelEvents();
+        this.channel.setSocket(socket);
 
         log.info(`ConnectionOpen: type = ${connectionType}, channel = ${this.channel.constructor.name}.`);
-        this.channel.connectionOpen(socket, options);
+        await this.channel.connectionOpen(options);
     };
 
+    /**
+     * Connection close.
+     */
     public connectionClose = (socket, options: ConnectionCloseOptions) => {
         log.info('ConnectionClose');
 
@@ -179,8 +213,7 @@ class ConnectionManager {
         }
 
         if (this.channel) {
-            this.channel.off(ChannelEvent.Connected, this.onChannelConnected);
-            this.channel.off(ChannelEvent.Ready, this.onChannelReady);
+            this.unbindChannelEvents();
 
             this.channel = null;
         }

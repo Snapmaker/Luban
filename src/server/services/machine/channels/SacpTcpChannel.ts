@@ -19,11 +19,11 @@ import { SACP_TYPE_SERIES_MAP, } from '../../../../app/constants/machines';
 import { SnapmakerArtisanMachine, SnapmakerJ1Machine } from '../../../../app/machines';
 import SocketServer from '../../../lib/SocketManager';
 import { ChannelEvent } from './ChannelEvent';
-import SocketBASE from './SACP-BASE';
+import SacpChannelBase from './SacpChannel';
 
 const log = logger('machine:channel:SacpTcpChannel');
 
-class SacpTcpChannel extends SocketBASE {
+class SacpTcpChannel extends SacpChannelBase {
     private client: net.Socket;
 
     private laserFocalLength = 0;
@@ -61,120 +61,129 @@ class SacpTcpChannel extends SocketBASE {
         // empty
     };
 
-    public connectionOpen = (socket: SocketServer, options: EventOptions) => {
-        this.socket = socket;
-        this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
-        this.client.connect({
-            host: options.address,
-            port: 8888
-        }, () => {
-            log.info('TCP connected');
+    public async connectionOpen(options?: { address: string; token?: string }): Promise<boolean> {
+        this.emit(ChannelEvent.Connecting);
 
-            this.sacpClient = new Business('tcp', this.client);
-            this.socket && this.socket.emit('connection:open', {});
-            const hostName = os.hostname();
-            log.info(`os hostname: ${hostName}`);
-            setTimeout(async () => {
-                try {
-                    const { response } = await this.sacpClient.wifiConnection(hostName, 'Luban', options.token, () => {
-                        this.client.destroy();
-                        if (this.client.destroyed) {
-                            log.info('TCP manually closed');
-                            const result = {
-                                code: 200,
-                                data: {},
-                                msg: '',
-                                text: ''
-                            };
-                            socket && socket.emit('connection:close', result);
-                        }
-                    });
+        return new Promise((resolve, reject) => {
+            this.client.connect({
+                host: options.address,
+                port: 8888
+            }, () => {
+                log.info('TCP connected');
 
-                    if (response.result === 0) {
-                        // Connected
-                        this.sacpClient.setLogger(log);
-                        this.sacpClient.wifiConnectionHeartBeat();
+                this.sacpClient = new Business('tcp', this.client);
 
-                        // Get machine info
-                        const { data: machineInfos } = await this.sacpClient.getMachineInfo();
+                this.emit(ChannelEvent.Connected);
 
-                        const machineIdentifier = SACP_TYPE_SERIES_MAP[machineInfos.type];
-
-                        if (machineIdentifier === SnapmakerArtisanMachine.identifier) {
-                            this.emit(ChannelEvent.Ready, {
-                                machineIdentifier,
-                            });
-                        }
-                        if (machineIdentifier === SnapmakerJ1Machine.identifier) {
-                            this.emit(ChannelEvent.Ready, {
-                                machineIdentifier,
-                            });
-                        }
-
-                        // TODO: Refactor this to ArtisanInstance
-                        // Get module infos
-                        const { data: moduleInfos } = await this.sacpClient.getModuleInfo();
-
-                        moduleInfos.forEach(module => {
-                            // TODO: Hard-coded 10W laser head,
-                            if (module.moduleId === 14) {
-                                this.sacpClient.getLaserToolHeadInfo(module.key).then(({ laserToolHeadInfo }) => {
-                                    this.laserFocalLength = laserToolHeadInfo.laserFocalLength;
-
-                                    log.debug(`laserToolHeadInfo.laserFocalLength, ${laserToolHeadInfo.laserFocalLength}`);
-                                    this.socket && this.socket.emit('Marlin:state', {
-                                        state: {
-                                            temperature: {
-                                                t: 0,
-                                                tTarget: 0,
-                                                b: 0,
-                                                bTarget: 0
-                                            },
-                                            laserFocalLength: laserToolHeadInfo.laserFocalLength,
-                                            pos: {
-                                                x: 0,
-                                                y: 0,
-                                                z: 0,
-                                                b: 0,
-                                                isFourAxis: false
-                                            },
-                                            originOffset: {
-                                                x: 0,
-                                                y: 0,
-                                                z: 0,
-                                            }
-                                        },
-                                        type: CONNECTION_TYPE_WIFI
-                                    });
-                                });
-
-                                this.sacpClient.getLaserLockStatus(module.key)
-                                    .then(({ laserLockStatus }) => {
-                                        this.socket && this.socket.emit('machine:laser-status', {
-                                            isLocked: laserLockStatus.lockStatus,
-                                        });
-                                    });
+                const hostName = os.hostname();
+                log.info(`os hostname: ${hostName}`);
+                setTimeout(async () => {
+                    try {
+                        const { response } = await this.sacpClient.wifiConnection(hostName, 'Luban', options.token, () => {
+                            this.client.destroy();
+                            if (this.client.destroyed) {
+                                log.info('TCP manually closed');
+                                const result = {
+                                    code: 200,
+                                    data: {},
+                                    msg: '',
+                                    text: ''
+                                };
+                                this.socket && this.socket.emit('connection:close', result);
                             }
                         });
-                    } else {
-                        this.client.destroy();
-                        if (this.client.destroyed) {
-                            log.info('TCP manually closed');
-                            const result = {
-                                code: 200,
-                                data: {},
-                                msg: '',
-                                text: ''
-                            };
-                            this.socket && this.socket.emit('connection:close', result);
+
+                        if (response.result === 0) {
+                            // Connected
+                            this.sacpClient.setLogger(log);
+                            this.sacpClient.wifiConnectionHeartBeat();
+
+                            // Get machine info
+                            const { data: machineInfos } = await this.sacpClient.getMachineInfo();
+
+                            const machineIdentifier = SACP_TYPE_SERIES_MAP[machineInfos.type];
+
+                            if (machineIdentifier === SnapmakerArtisanMachine.identifier) {
+                                this.emit(ChannelEvent.Ready, {
+                                    machineIdentifier,
+                                });
+                            }
+                            if (machineIdentifier === SnapmakerJ1Machine.identifier) {
+                                this.emit(ChannelEvent.Ready, {
+                                    machineIdentifier,
+                                });
+                            }
+
+                            // TODO: Refactor this to ArtisanInstance
+                            // Get module infos
+                            const { data: moduleInfos } = await this.sacpClient.getModuleInfo();
+
+                            moduleInfos.forEach(module => {
+                                // TODO: Hard-coded 10W laser head,
+                                if (module.moduleId === 14) {
+                                    this.sacpClient.getLaserToolHeadInfo(module.key).then(({ laserToolHeadInfo }) => {
+                                        this.laserFocalLength = laserToolHeadInfo.laserFocalLength;
+
+                                        log.debug(`laserToolHeadInfo.laserFocalLength, ${laserToolHeadInfo.laserFocalLength}`);
+                                        this.socket && this.socket.emit('Marlin:state', {
+                                            state: {
+                                                temperature: {
+                                                    t: 0,
+                                                    tTarget: 0,
+                                                    b: 0,
+                                                    bTarget: 0
+                                                },
+                                                laserFocalLength: laserToolHeadInfo.laserFocalLength,
+                                                pos: {
+                                                    x: 0,
+                                                    y: 0,
+                                                    z: 0,
+                                                    b: 0,
+                                                    isFourAxis: false
+                                                },
+                                                originOffset: {
+                                                    x: 0,
+                                                    y: 0,
+                                                    z: 0,
+                                                }
+                                            },
+                                            type: CONNECTION_TYPE_WIFI
+                                        });
+                                    });
+
+                                    this.sacpClient.getLaserLockStatus(module.key)
+                                        .then(({ laserLockStatus }) => {
+                                            this.socket && this.socket.emit('machine:laser-status', {
+                                                isLocked: laserLockStatus.lockStatus,
+                                            });
+                                        });
+                                }
+                            });
+
+                            resolve(true);
+                        } else {
+                            this.client.destroy();
+                            if (this.client.destroyed) {
+                                log.info('TCP manually closed');
+                                const result = {
+                                    code: 200,
+                                    data: {},
+                                    msg: '',
+                                    text: ''
+                                };
+                                this.socket && this.socket.emit('connection:close', result);
+                            }
+
+                            resolve(false);
                         }
+                    } catch (e) {
+                        log.error(e);
+                        reject(e);
                     }
-                } catch (e) {
-                    log.error(e);
-                }
-            }, 200);
+                }, 200);
+            });
         });
-    };
+    }
 
     public connectionCloseImproper = () => {
         this.client && this.client.destroy();
@@ -191,7 +200,6 @@ class SacpTcpChannel extends SocketBASE {
     };
 
     public connectionClose = (socket: SocketServer, options: EventOptions) => {
-        this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
         // await this.sacpClient.unSubscribeLogFeedback(this.subscribeLogCallback).then(res => {
         //     log.info(`unsubscribeLog: ${res}`);
         // });

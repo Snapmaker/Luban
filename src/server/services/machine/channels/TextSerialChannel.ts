@@ -1,15 +1,14 @@
-import { EventEmitter } from 'events';
-
 import { MarlinController } from '../../../controllers';
 import { PROTOCOL_TEXT, WRITE_SOURCE_CLIENT } from '../../../controllers/constants';
 import type SocketServer from '../../../lib/SocketManager';
 import logger from '../../../lib/logger';
 import store from '../../../store';
+import Channel from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 
 const log = logger('machine:channel:TextSerialChannel');
 
-class TextSerialChannel extends EventEmitter {
+class TextSerialChannel extends Channel {
     private port = '';
 
     private dataSource = '';

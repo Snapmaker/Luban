@@ -11,11 +11,11 @@ import logger from '../../../lib/logger';
 import Business from '../sacp/Business';
 import { EventOptions } from '../types';
 import { ChannelEvent } from './ChannelEvent';
-import SocketBASE from './SACP-BASE';
+import SacpChannelBase from './SacpChannel';
 
 const log = logger('machine:channel:SacpUdpChannel');
 
-class SacpUdpChannel extends SocketBASE {
+class SacpUdpChannel extends SacpChannelBase {
     // private client: dgram.
     private socketClient = dgram.createSocket('udp4');
 
@@ -49,7 +49,7 @@ class SacpUdpChannel extends SocketBASE {
         });
     }
 
-    public async test(host: string, port: number) {
+    public async test(host: string, port: number): Promise<boolean> {
         const sacpResponse = (async () => {
             this.sacpClient = new Business('udp', {
                 socket: this.socketClient,
@@ -62,17 +62,13 @@ class SacpUdpChannel extends SocketBASE {
             return !!data;
         })();
 
-        const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(false), 2000));
+        const timeoutPromise = new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 2000));
 
         return Promise.race([sacpResponse, timeoutPromise]);
     }
 
-    public connectionOpen = async (socket: SocketServer, options: EventOptions) => {
-        this.socket = socket;
-
-        this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
-
-        log.info(`connectionOpen, options = ${options}`);
+    public async connectionOpen(options: EventOptions): Promise<boolean> {
+        log.debug(`connectionOpen, options = ${options}`);
 
         this.sacpClient = new Business('udp', {
             socket: this.socketClient,
@@ -81,7 +77,7 @@ class SacpUdpChannel extends SocketBASE {
         });
         this.sacpClient.setLogger(log);
 
-        this.socket && this.socket.emit('connection:open', {});
+        this.emit(ChannelEvent.Connecting);
 
         // Get Machine Info
         const { data: machineInfos } = await this.getMachineInfo();
@@ -89,10 +85,15 @@ class SacpUdpChannel extends SocketBASE {
         log.debug(`Get machine info, type = ${machineInfos.type}`);
         log.debug(`Get machine info, machine identifier = ${machineIdentifier}`);
 
+        // Once responsed, it's connected
+        this.emit(ChannelEvent.Connected);
+
         // Machine detected
         this.emit(ChannelEvent.Ready, {
             machineIdentifier,
         });
+
+        return true;
     }
 
     public connectionClose = (socket: SocketServer, options: EventOptions) => {

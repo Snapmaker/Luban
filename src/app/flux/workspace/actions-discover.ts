@@ -38,7 +38,6 @@ const init = () => (dispatch, getState) => {
 
             const newAgents = [];
             for (const machineInfo of machineInfoList) {
-                console.log('machine info =', machineInfo.name, machineInfo.protocol);
                 const find = machineAgents.find(agent => {
                     return agent.address === machineInfo.address && agent.name === machineInfo.name;
                 });

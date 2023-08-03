@@ -55,17 +55,14 @@ import {
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
 } from '../../../constants';
 import logger from '../../../lib/logger';
-import SocketServer from '../../../lib/SocketManager';
 import Business, { CoordinateType } from '../sacp/Business';
 import { EventOptions, MarlinStateData } from '../types';
 import Channel from './Channel';
 
 const log = logger('lib:SocketBASE');
 
-class SocketBASE extends Channel {
+class SacpChannelBase extends Channel {
     private heartbeatTimer;
-
-    public socket: SocketServer;
 
     public sacpClient: Business;
 
@@ -115,6 +112,12 @@ class SocketBASE extends Channel {
     public startTime: any;
 
     public machineStatus: string = WorkflowStatus.Idle;
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async connectionOpen(options?: object): Promise<boolean> {
+        // Implement connection open function in subclass
+        return false;
+    }
 
     public startHeartbeatBase = async (sacpClient: Business, client?: net.Socket) => {
         this.sacpClient = sacpClient;
@@ -957,4 +960,4 @@ class SocketBASE extends Channel {
     };
 }
 
-export default SocketBASE;
+export default SacpChannelBase;

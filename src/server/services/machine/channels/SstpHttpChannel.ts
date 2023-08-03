@@ -1,5 +1,3 @@
-// import store from '../../store';
-import EventEmitter from 'events';
 import { isEqual, isNil } from 'lodash';
 import request from 'superagent';
 
@@ -21,6 +19,8 @@ import { valueOf } from '../../../lib/contants-utils';
 import logger from '../../../lib/logger';
 import workerManager from '../../task-manager/workerManager';
 import { EventOptions } from '../types';
+import Channel from './Channel';
+import { ChannelEvent } from './ChannelEvent';
 
 let waitConfirm: boolean;
 const log = logger('machine:channel:SstpHttpChannel');
@@ -100,12 +100,10 @@ export type GcodeResult = {
 /**
  * A singleton to manage devices connection.
  */
-class SstpHttpChannel extends EventEmitter {
+class SstpHttpChannel extends Channel {
     private isGcodeExecuting = false;
 
     private gcodeInfos = [];
-
-    private socket: SocketServer = null;
 
     private host = '';
 
@@ -133,32 +131,39 @@ class SstpHttpChannel extends EventEmitter {
         this.isGcodeExecuting = false;
     };
 
-    public connectionOpen = (socket: SocketServer, options: EventOptions) => {
+    public async connectionOpen(options: EventOptions): Promise<boolean> {
         const { host, token } = options;
         this.host = host;
         this.token = token;
-        this.socket = socket;
         this.init();
+
+        this.emit(ChannelEvent.Connecting);
+
         log.debug(`wifi host="${this.host}" : token=${this.token}`);
-        const api = `${this.host}/api/v1/connect`;
-        request
-            .post(api)
-            .timeout(3000)
-            .send(this.token ? `token=${this.token}` : '')
-            .end((err, res) => {
-                if (res?.body?.token) {
-                    this.token = res.body.token;
-                }
+        return new Promise((resolve) => {
+            const api = `${this.host}/api/v1/connect`;
+            request
+                .post(api)
+                .timeout(3000)
+                .send(this.token ? `token=${this.token}` : '')
+                .end((err, res) => {
+                    if (res?.body?.token) {
+                        this.token = res.body.token;
+                    }
 
-                const result = _getResult(err, res);
-                if (err) {
-                    log.debug(`err="${err}"`);
-                    this.socket && this.socket.emit('connection:open', result);
-                    return;
-                }
+                    const result = _getResult(err, res);
+                    if (err) {
+                        log.debug(`err="${err}"`);
+                        this.socket && this.socket.emit('connection:open', result);
+                        resolve(false);
+                        return;
+                    }
 
-                const { data } = result;
-                if (data) {
+                    const { data } = result;
+                    if (!data) {
+                        resolve(false);
+                        return;
+                    }
                     const { series } = data;
                     const seriesValue = valueOf(MACHINE_SERIES, 'alias', series);
                     this.state.series = seriesValue ? seriesValue.value : null;
@@ -200,20 +205,26 @@ class SstpHttpChannel extends EventEmitter {
                     } else {
                         this.socket && this.socket.emit('connection:open', result);
                     }
-                }
 
+                    // Get module info
+                    this.getModuleList();
 
-                // Get module info
-                this.getModuleList();
+                    // Get enclosure status (every 1000ms)
+                    clearInterval(intervalHandle);
+                    intervalHandle = setInterval(this.getEnclosureStatus, 1000);
 
-                // Get enclosure status (every 1000ms)
-                clearInterval(intervalHandle);
-                intervalHandle = setInterval(this.getEnclosureStatus, 1000);
+                    // Get Active extruder
+                    this.getActiveExtruder({ eventName: 'connection:getActiveExtruder' });
 
-                // Get Active extruder
-                this.getActiveExtruder({ eventName: 'connection:getActiveExtruder' });
-            });
-    };
+                    this.emit(ChannelEvent.Connected);
+                    this.emit(ChannelEvent.Ready, {
+                        machineIdentifier: series,
+                    });
+
+                    resolve(true);
+                });
+        });
+    }
 
     public connectionClose = (socket: SocketServer, options: EventOptions) => {
         const { eventName } = options;
@@ -245,7 +256,7 @@ class SstpHttpChannel extends EventEmitter {
         this.socket && this.socket.emit('connection:close', result);
     };
 
-    public startHeartbeat = () => {
+    public async startHeartbeat(): Promise<void> {
         this.stopHeartBeat();
 
         waitConfirm = true;
@@ -302,7 +313,9 @@ class SstpHttpChannel extends EventEmitter {
                 });
             }
         });
-    };
+
+        return Promise.resolve();
+    }
 
     private stopHeartBeat = () => {
         this.heartBeatWorker && this.heartBeatWorker.terminate();

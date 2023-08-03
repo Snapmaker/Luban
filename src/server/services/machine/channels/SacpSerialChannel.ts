@@ -1,21 +1,20 @@
 import crypto from 'crypto';
 import fs from 'fs';
-import { SerialPort } from 'serialport';
 import path from 'path';
+import { SerialPort } from 'serialport';
 
 import { SACP_TYPE_SERIES_MAP } from '../../../../app/constants/machines';
 import DataStorage from '../../../DataStorage';
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
-import SocketServer from '../../../lib/SocketManager';
 import logger from '../../../lib/logger';
 import Business from '../sacp/Business';
 import { EventOptions } from '../types';
 import { ChannelEvent } from './ChannelEvent';
-import SocketBASE from './SACP-BASE';
+import SacpChannelBase from './SacpChannel';
 
 const log = logger('machine:channel:SacpSerialChannel');
 
-class SacpSerialChannel extends SocketBASE {
+class SacpSerialChannel extends SacpChannelBase {
     private serialport: SerialPort;
 
     private availPorts: {
@@ -28,13 +27,17 @@ class SacpSerialChannel extends SocketBASE {
 
     // public total: number;
 
-    public connectionOpen = async (socket: SocketServer, options) => {
+    public async connectionOpen(options): Promise<boolean> {
         this.availPorts = await SerialPort.list();
-        this.socket = socket;
-        if (this.availPorts.length > 0) {
-            this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
+        const port = options.port || this.availPorts[0];
+
+        if (!port) {
+            return false;
+        }
+
+        return new Promise((resolve) => {
             this.serialport = new SerialPort({
-                path: options.port ? options.port : this.availPorts[0].path,
+                path: port,
                 baudRate: 115200,
                 autoOpen: false,
             });
@@ -57,6 +60,8 @@ class SacpSerialChannel extends SocketBASE {
 
             // When serialport connected, we detect the machine identifier
             this.serialport.once('open', () => {
+                this.emit(ChannelEvent.Connected);
+
                 log.debug(`Serial port ${options.port || this.availPorts[0].path} opened`);
 
                 // Force switch to SACP
@@ -80,16 +85,19 @@ class SacpSerialChannel extends SocketBASE {
                     this.emit(ChannelEvent.Ready, {
                         machineIdentifier,
                     });
+
+                    resolve(true);
                 }, 1000);
             });
 
             // Open serial port
+            this.emit(ChannelEvent.Connecting);
+
             this.serialport.open();
-        }
-    };
+        });
+    }
 
     public connectionClose = async () => {
-        this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
         // await this.sacpClient.unSubscribeLogFeedback(this.subscribeLogCallback).then(res => {
         //     log.info(`unsubscribeLog: ${res}`);
         // });

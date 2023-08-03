@@ -93,6 +93,8 @@ class RayMachineInstance extends MachineInstance {
 
         // Start heartbeat
         await this.channel.startHeartbeat();
+
+        // Subscribe job progress
     }
 }
 
