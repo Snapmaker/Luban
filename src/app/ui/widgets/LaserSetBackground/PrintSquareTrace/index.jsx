@@ -78,7 +78,7 @@ class PrintSquareTrace extends PureComponent {
         hideModal: PropTypes.func.isRequired,
         renderGcode: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired,
-        executeGcode: PropTypes.func.isRequired,
+        executeCmd: PropTypes.func.isRequired,
         state: PropTypes.shape({
             sideLength: PropTypes.number.isRequired
         }),
@@ -112,7 +112,7 @@ class PrintSquareTrace extends PureComponent {
             this.props.renderGcode(gcodeStr);
 
             setTimeout(() => {
-                this.props.executeGcode('gcode:start');
+                this.props.executeCmd('gcode:start');
             }, 1000);
         }
     };
@@ -226,7 +226,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => ({
     renderGcode: (gcode) => dispatch(workspaceActions.renderGcode('', gcode, true)),
-    executeGcode: (cmd) => dispatch(workspaceActions.executeGcode(null, null, cmd)),
+    executeCmd: (cmd) => dispatch(workspaceActions.executeCmd(cmd)),
     clearGcode: () => dispatch(workspaceActions.clearGcode())
 });
 

@@ -24,9 +24,9 @@ import { sacpSerialChannel } from './channels/SacpSerialChannel';
 import { sacpTcpChannel } from './channels/SacpTcpChannel';
 import { sacpUdpChannel } from './channels/SacpUdpChannel';
 import { sstpHttpChannel } from './channels/SstpHttpChannel';
-import { textSerialChannel } from './channels/TextSerialChannel';
+import TextSerialChannel, { textSerialChannel } from './channels/TextSerialChannel';
 import { ArtisanMachineInstance, J1MachineInstance, MachineInstance, RayMachineInstance } from './instances';
-import Channel from './channels/Channel';
+import Channel, { GcodeChannelInterface } from './channels/Channel';
 
 const log = logger('lib:ConnectionManager');
 
@@ -50,6 +50,10 @@ interface ConnectionOpenOptions {
 
 interface ConnectionCloseOptions {
     force?: boolean;
+}
+
+interface ExecuteGCodeOptions {
+    gcode: string;
 }
 
 /**
@@ -215,14 +219,14 @@ class ConnectionManager {
     /**
      * Connection close.
      */
-    public connectionClose = (socket: SocketServer, options: ConnectionCloseOptions) => {
+    public connectionClose = async (socket: SocketServer, options: ConnectionCloseOptions) => {
         log.info('ConnectionClose');
         if (!this.channel) {
             return;
         }
 
         const force = options?.force || false;
-        const success = this.channel.connectionClose({ force });
+        const success = await this.channel.connectionClose({ force });
         if (success) {
             const result = {
                 code: 200,
@@ -230,7 +234,7 @@ class ConnectionManager {
                 msg: '',
                 text: ''
             };
-            this.socket.emit('connection:close', result);
+            socket.emit('connection:close', result);
         } else {
             // TODO
         }
@@ -240,6 +244,28 @@ class ConnectionManager {
 
             this.channel = null;
         }
+    };
+
+    public executeGcode = async (socket: SocketServer, options: ExecuteGCodeOptions) => {
+        const { gcode } = options;
+        log.info(`executeGcode: ${gcode}, ${this.protocol}`);
+
+        const success = await (this.channel as GcodeChannelInterface).executeGcode(gcode);
+        if (success) {
+            socket.emit('connection:executeGcode', { msg: '', res: null });
+        } else {
+            socket.emit('connection:executeGcode', { msg: 'Execute G-cod failed', res: null });
+        }
+    };
+
+    // TODO: For backward compatibility, refactor this function later.
+    public executeCmd = async (socket: SocketServer, options) => {
+        const { gcode, context, cmd = 'gcode' } = options;
+
+        (this.channel as TextSerialChannel).command(socket, {
+            cmd: cmd,
+            args: [gcode, context]
+        });
     };
 
     /**
@@ -295,30 +321,20 @@ class ConnectionManager {
 
                     if (!isRotate) {
                         if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
-                            const promise = new Promise((resolve) => {
-                                if (materialThickness === -1) {
-                                    this.channel.executeGcode({ gcode: 'G0 Z0 F1500;' }, () => {
-                                        resolve(true);
-                                    });
-                                } else {
-                                    this.channel.executeGcode({ gcode: `G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;` }, () => {
-                                        resolve(true);
-                                    });
-                                }
-                            });
+                            let promise;
+                            if (materialThickness === -1) {
+                                promise = (this.channel as GcodeChannelInterface).executeGcode('G0 Z0 F1500;');
+                            } else {
+                                promise = (this.channel as GcodeChannelInterface).executeGcode(`G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`);
+                            }
                             promises.push(promise);
                         } else {
-                            const promise = new Promise((resolve) => {
-                                if (isLaserPrintAutoMode) {
-                                    this.channel.executeGcode({ gcode: `G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;` }, () => {
-                                        resolve(true);
-                                    });
-                                } else {
-                                    this.channel.executeGcode({ gcode: 'G0 Z0 F1500;' }, () => {
-                                        resolve(true);
-                                    });
-                                }
-                            });
+                            let promise;
+                            if (isLaserPrintAutoMode) {
+                                promise = (this.channel as GcodeChannelInterface).executeGcode(`G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`);
+                            } else {
+                                promise = (this.channel as GcodeChannelInterface).executeGcode('G0 Z0 F1500;');
+                            }
                             promises.push(promise);
                         }
                         // Camera Aid Background mode, force machine to work on machine coordinates (Origin = 0,0)
@@ -339,20 +355,12 @@ class ConnectionManager {
                         }
                     } else {
                         // Rotary Module origin
-                        const promise = new Promise((resolve) => {
-                            this.executeGcode(this.channel, { gcode: 'G0 X0 Y0 B0 F1500;\nG0 Z0 F1500;' }, () => {
-                                resolve(true);
-                            });
-                        });
+                        const promise = (this.channel as GcodeChannelInterface).executeGcode('G0 X0 Y0 B0 F1500;\nG0 Z0 F1500;');
                         promises.push(promise);
                     }
 
                     // Laser works on G54
-                    const promise = new Promise((resolve) => {
-                        this.executeGcode(this.channel, { gcode: 'G54;' }, () => {
-                            resolve(true);
-                        });
-                    });
+                    const promise = (this.channel as GcodeChannelInterface).executeGcode('G54;');
                     promises.push(promise);
                 }
             }
@@ -531,20 +539,6 @@ M3`;
             });
             const { eventName } = options;
             socket && socket.emit(eventName, {});
-        }
-    };
-
-    // when using executeGcode, the cmd param is always 'gcode'
-    public executeGcode = (socket, options, callback = null) => {
-        const { gcode, context, cmd = 'gcode' } = options;
-        log.info(`executeGcode: ${gcode}, ${this.protocol}`);
-        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            this.channel.executeGcode(options, callback);
-        } else {
-            this.channel.command(this.channel, {
-                cmd: cmd,
-                args: [gcode, context]
-            });
         }
     };
 
@@ -825,43 +819,44 @@ M3`;
     };
     // only for Wifi
 
-    public goHome = (socket, options, callback) => {
+    public goHome = async (socket, options, callback) => {
         const { headType } = options;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.goHome();
             socket && socket.emit('move:status', { isHoming: true });
         } else {
-            this.executeGcode(this.channel, {
-                gcode: 'G53'
-            });
-            this.executeGcode(this.channel, {
-                gcode: 'G28'
-            }, callback);
+            await this.executeGcode(socket, { gcode: 'G53' });
+            await this.executeGcode(socket, { gcode: 'G28' });
+
+            callback && callback();
+
             if (this.connectionType === CONNECTION_TYPE_WIFI) {
                 socket && socket.emit('move:status', { isHoming: true });
             }
-            (headType === HEAD_LASER || headType === HEAD_CNC) && this.executeGcode(this.channel, {
-                gcode: 'G54'
-            });
+            if (headType === HEAD_LASER || headType === HEAD_CNC) {
+                await this.executeGcode(socket, { gcode: 'G54' });
+            }
         }
     };
 
-    public coordinateMove = (socket, options, callback) => {
+    public coordinateMove = async (socket, options, callback) => {
         const { moveOrders, gcode, jogSpeed, headType } = options;
         // const { moveOrders, gcode, context, cmd, jogSpeed, headType } = options;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.coordinateMove({ moveOrders, jogSpeed, headType });
         } else {
-            this.executeGcode(this.channel, { gcode }, callback);
+            await this.executeGcode(this.channel, { gcode });
+            callback && callback();
         }
     };
 
-    public setWorkOrigin = (socket, options, callback) => {
+    public setWorkOrigin = async (socket, options, callback) => {
         const { xPosition, yPosition, zPosition, bPosition } = options;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.setWorkOrigin({ xPosition, yPosition, zPosition, bPosition });
         } else {
-            this.executeGcode(this.channel, { gcode: 'G92 X0 Y0 Z0 B0' }, callback);
+            await this.executeGcode(this.channel, { gcode: 'G92 X0 Y0 Z0 B0' });
+            callback && callback();
         }
     };
 
@@ -883,9 +878,11 @@ M3`;
             await this.channel.switchCNC(headStatus);
         } else {
             if (headStatus) {
-                this.executeGcode(this.channel, { gcode: 'M5' }, callback);
+                await this.executeGcode(socket, { gcode: 'M5' });
+                callback && callback();
             } else {
-                this.executeGcode(this.channel, { gcode: 'M3 P100' }, callback);
+                await this.executeGcode(socket, { gcode: 'M3 P100' });
+                callback && callback();
             }
         }
     };

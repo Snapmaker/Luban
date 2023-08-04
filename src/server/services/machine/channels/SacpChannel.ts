@@ -57,11 +57,11 @@ import {
 import logger from '../../../lib/logger';
 import Business, { CoordinateType } from '../sacp/Business';
 import { EventOptions, MarlinStateData } from '../types';
-import Channel from './Channel';
+import Channel, { GcodeChannelInterface } from './Channel';
 
 const log = logger('lib:SocketBASE');
 
-class SacpChannelBase extends Channel {
+class SacpChannelBase extends Channel implements GcodeChannelInterface {
     private heartbeatTimer;
 
     public sacpClient: Business;
@@ -113,10 +113,24 @@ class SacpChannelBase extends Channel {
 
     public machineStatus: string = WorkflowStatus.Idle;
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public async connectionOpen(options?: object): Promise<boolean> {
-        // Implement connection open function in subclass
-        return false;
+    public async executeGcode(gcode: string): Promise<boolean> {
+        const gcodeLines = gcode.split('\n');
+
+        const promises = [];
+        gcodeLines.forEach(_gcode => {
+            promises.push(this.sacpClient.executeGcode(_gcode));
+        });
+
+        const results = await Promise.all(promises);
+
+        // if any gcode line fails, then fails
+        for (const res of results) {
+            if (res.response.result !== 0) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public startHeartbeatBase = async (sacpClient: Business, client?: net.Socket) => {
@@ -529,26 +543,7 @@ class SacpChannelBase extends Channel {
         return this.sacpClient.getCurrentCoordinateInfo();
     };
 
-    public executeGcode = async (options: EventOptions, callback: () => void) => {
-        log.info('run executeGcode');
-        const { gcode } = options;
-        const gcodeLines = gcode.split('\n');
-        // callback && callback();
-        log.debug(`executeGcode, ${gcodeLines}`);
-        gcodeLines.forEach(_gcode => {
-            this.sacpClient.executeGcode(_gcode).then(res => {
-                if (res.response.result !== 0) {
-                    log.info(`failed to execute gcode: ${_gcode}`);
-                }
-            });
-        });
-        try {
-            callback && callback();
-            this.socket && this.socket.emit('connection:executeGcode', { msg: '', res: null });
-        } catch (e) {
-            log.error(`execute gcode error: ${e}`);
-        }
-    };
+
 
     public goHome = async (headType?: string) => {
         log.info('onClick gohome');

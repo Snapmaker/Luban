@@ -15,7 +15,7 @@ interface ConnectionCloseOptions {
 /**
  * Defines basic Channel functions.
  */
-class Channel extends EventEmitter {
+export default class Channel extends EventEmitter {
     protected socket: SocketServer;
 
     public setSocket(socket: SocketServer): void {
@@ -46,5 +46,6 @@ class Channel extends EventEmitter {
     }
 }
 
-
-export default Channel;
+export interface GcodeChannelInterface extends Channel {
+    executeGcode(gcode: string): Promise<boolean>;
+}

@@ -4,7 +4,6 @@ import ControllerEvent from '../../connection/controller-events';
 import {
     CONNECTION_CLOSE,
     CONNECTION_COORDINATE_MOVE,
-    CONNECTION_EXECUTE_GCODE,
     CONNECTION_GO_HOME,
     CONNECTION_SET_WORK_ORIGIN,
     CONNECTION_STOP_GCODE,
@@ -163,8 +162,18 @@ export class MachineAgent extends EventEmitter {
     public async executeGcode(gcode, context, cmd) {
         return new Promise((resolve) => {
             controller
-                .emitEvent(CONNECTION_EXECUTE_GCODE, { gcode, context, cmd })
-                .once(CONNECTION_EXECUTE_GCODE, () => {
+                .emitEvent(ControllerEvent.ExecuteGCode, { gcode, context, cmd })
+                .once(ControllerEvent.ExecuteGCode, () => {
+                    resolve(true);
+                });
+        });
+    }
+
+    public async executeCmd(gcode, context, cmd) {
+        return new Promise((resolve) => {
+            controller
+                .emitEvent(ControllerEvent.ExecuteCmd, { gcode, context, cmd })
+                .once(ControllerEvent.ExecuteCmd, () => {
                     resolve(true);
                 });
         });

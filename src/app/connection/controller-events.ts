@@ -16,6 +16,12 @@ enum ControllerEvent {
     ConnectionClose = 'connection:close',
 
     /**
+     * Global
+     */
+    ExecuteGCode = 'connection:executeGcode',
+    ExecuteCmd = 'connection:executeCmd',
+
+    /**
      * Machine Network (Wi-Fi)
      */
     GetMachineNetworkConfiguration = 'machine:get-network-configuration',

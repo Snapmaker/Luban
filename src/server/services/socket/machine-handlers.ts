@@ -10,7 +10,8 @@ function register(socketServer: SocketServer): void {
         [ControllerEvent.ConnectionClose]: connectionManager.connectionClose,
 
         // general functions
-        'connection:executeGcode': connectionManager.executeGcode,
+        [ControllerEvent.ExecuteGCode]: connectionManager.executeGcode,
+        [ControllerEvent.ExecuteCmd]: connectionManager.executeCmd,
 
         // control functions
         'connection:headBeginWork': connectionManager.startGcodeAction,
