@@ -17,23 +17,21 @@ const log = logger('machine:channel:SacpSerialChannel');
 class SacpSerialChannel extends SacpChannelBase {
     private serialport: SerialPort;
 
-    private availPorts: {
-        path: string
-    }[];
-
     // public startTime: number;
 
     // public sent: number;
 
     // public total: number;
 
-    public async connectionOpen(options): Promise<boolean> {
-        this.availPorts = await SerialPort.list();
-        const port = options.port || this.availPorts[0];
+    public async connectionOpen(options: { port: string }): Promise<boolean> {
+        const port = options.port;
 
         if (!port) {
             return false;
         }
+
+        // connecting
+        this.emit(ChannelEvent.Connecting);
 
         return new Promise((resolve) => {
             this.serialport = new SerialPort({
@@ -62,7 +60,7 @@ class SacpSerialChannel extends SacpChannelBase {
             this.serialport.once('open', () => {
                 this.emit(ChannelEvent.Connected);
 
-                log.debug(`Serial port ${options.port || this.availPorts[0].path} opened`);
+                log.debug(`Serial port ${port} opened`);
 
                 // Force switch to SACP
                 this.serialport.write('\r\n');
@@ -97,27 +95,13 @@ class SacpSerialChannel extends SacpChannelBase {
         });
     }
 
-    public connectionClose = async () => {
-        // await this.sacpClient.unSubscribeLogFeedback(this.subscribeLogCallback).then(res => {
-        //     log.info(`unsubscribeLog: ${res}`);
-        // });
-        // await this.sacpClient.unSubscribeCurrentCoordinateInfo(this.subscribeCoordinateCallback).then(res => {
-        //     log.info(`unSubscribeCoordinate: ${res}`);
-        // });
-        // await this.sacpClient.unSubscribeHotBedTemperature(this.subscribeHotBedCallback).then(res => {
-        //     log.info(`unSubscribeHotBed, ${res}`);
-        // });
-        // await this.sacpClient.unSubscribeNozzleInfo(this.subscribeNozzleCallback).then(res => {
-        //     log.info(`unSubscribeNozzle: ${res}`);
-        // });
-        // await this.sacpClient.unsubscribeHeartbeat(this.subscribeHeartCallback).then(res => {
-        //     log.info(`unSubscribeHeart, ${res}`);
-        // });
+    public async connectionClose(): Promise<boolean> {
         this.serialport?.close();
         this.serialport?.destroy();
-        // this.sacpClient?.dispose();
-        this.socket.emit('connection:close');
-    };
+        this.sacpClient?.dispose();
+
+        return true;
+    }
 
     public async startHeartbeat() {
         await this.startHeartbeatBase(this.sacpClient);

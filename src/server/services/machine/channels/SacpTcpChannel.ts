@@ -14,10 +14,8 @@ import { CONNECTION_TYPE_WIFI, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../..
 import logger from '../../../lib/logger';
 import Business, { CoordinateType, RequestPhotoInfo, ToolHeadType } from '../sacp/Business';
 import { EventOptions } from '../types';
-// import MovementInstruction, { MoveDirection } from '../../lib/SACP-SDK/SACP/business/models/MovementInstruction';
 import { SACP_TYPE_SERIES_MAP, } from '../../../../app/constants/machines';
 import { SnapmakerArtisanMachine, SnapmakerJ1Machine } from '../../../../app/machines';
-import SocketServer from '../../../lib/SocketManager';
 import { ChannelEvent } from './ChannelEvent';
 import SacpChannelBase from './SacpChannel';
 
@@ -185,21 +183,7 @@ class SacpTcpChannel extends SacpChannelBase {
         });
     }
 
-    public connectionCloseImproper = () => {
-        this.client && this.client.destroy();
-        if (this.client.destroyed) {
-            log.info('TCP manually closed');
-            const result = {
-                code: 200,
-                data: {},
-                msg: '',
-                text: ''
-            };
-            this.socket && this.socket.emit('connection:close', result);
-        }
-    };
-
-    public connectionClose = (socket: SocketServer, options: EventOptions) => {
+    public async connectionClose(options?: { force: boolean }): Promise<boolean> {
         // await this.sacpClient.unSubscribeLogFeedback(this.subscribeLogCallback).then(res => {
         //     log.info(`unsubscribeLog: ${res}`);
         // });
@@ -215,25 +199,41 @@ class SacpTcpChannel extends SacpChannelBase {
         // await this.sacpClient.unsubscribeHeartbeat(this.subscribeHeartCallback).then(res => {
         //     log.info(`unSubscribeHeart, ${res}`);
         // });
-        this.sacpClient.wifiConnectionClose().then(({ response }) => {
+
+        const force = options?.force || false;
+
+        if (!force) {
+            const { response } = await this.sacpClient.wifiConnectionClose();
+
             if (response.result === 0) {
-                setTimeout(() => {
-                    this.sacpClient?.dispose();
-                    this.client.destroy();
-                    if (this.client.destroyed) {
-                        log.info('TCP manually closed');
-                        const result = {
-                            code: 200,
-                            data: {},
-                            msg: '',
-                            text: ''
-                        };
-                        socket && socket.emit(options.eventName, result);
-                    }
-                }, 500);
+                return new Promise<boolean>((resolve) => {
+                    // TODO: why wait 500ms, please document this.
+                    setTimeout(() => {
+                        this.sacpClient?.dispose();
+
+                        this.client.destroy();
+                        if (this.client.destroyed) {
+                            resolve(true);
+                        } else {
+                            resolve(false);
+                        }
+                    }, 500);
+                });
+            } else {
+                // close failed
+                return false;
             }
-        });
-    };
+        } else {
+            // Force close the socket connection.
+            this.sacpClient?.dispose();
+            this.client && this.client.destroy();
+            if (this.client.destroyed) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
 
     public async startHeartbeat() {
         await this.startHeartbeatBase(this.sacpClient, undefined);

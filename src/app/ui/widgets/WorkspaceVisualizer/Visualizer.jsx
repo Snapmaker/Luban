@@ -153,11 +153,7 @@ class Visualizer extends React.PureComponent {
             this.updateWorkPositionToZero();
             this.props.setGcodePrintingIndex(0);
         },
-        'connection:close': (options) => {
-            const { dataSource } = options;
-            if (dataSource !== PROTOCOL_TEXT) {
-                return;
-            }
+        'connection:close': () => {
             // reset state related to port and controller
             this.stopToolheadRotationAnimation();
             this.updateWorkPositionToZero();

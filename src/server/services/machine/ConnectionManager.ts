@@ -80,6 +80,16 @@ class ConnectionManager {
         this.scheduledTasksHandle.cancelTasks();
     };
 
+    private async inspectNetworkProtocol(host: string): Promise<NetworkProtocol> {
+        const protocolDetector = new ProtocolDetector();
+        return protocolDetector.detectNetworkProtocol(host);
+    }
+
+    private async inspectSerialPortProtocol(port: string): Promise<SerialPortProtocol> {
+        const protocolDetector = new ProtocolDetector();
+        return protocolDetector.detectSerialPortProtocol(port);
+    }
+
     private onChannelConnecting = () => {
         log.info('channel: Connecting');
 
@@ -92,7 +102,7 @@ class ConnectionManager {
         this.socket && this.socket.emit('connection:open', {});
     };
 
-    private onChannelReady = async (data) => {
+    private onChannelReady = async (data: { machineIdentifier?: string }) => {
         log.info('channel: Ready');
 
         const machineIdentifier = data?.machineIdentifier;
@@ -193,6 +203,9 @@ class ConnectionManager {
 
         // initialize channel
         this.bindChannelEvents();
+
+        // Note: this is temporary solution to make channel be able to emit data.
+        // Data should be emit by machine instance and connection manager itself by design.
         this.channel.setSocket(socket);
 
         log.info(`ConnectionOpen: type = ${connectionType}, channel = ${this.channel.constructor.name}.`);
@@ -202,14 +215,24 @@ class ConnectionManager {
     /**
      * Connection close.
      */
-    public connectionClose = (socket, options: ConnectionCloseOptions) => {
+    public connectionClose = (socket: SocketServer, options: ConnectionCloseOptions) => {
         log.info('ConnectionClose');
+        if (!this.channel) {
+            return;
+        }
 
         const force = options?.force || false;
-        if (!force) {
-            this.channel && this.channel.connectionClose(socket, options);
+        const success = this.channel.connectionClose({ force });
+        if (success) {
+            const result = {
+                code: 200,
+                data: {},
+                msg: '',
+                text: ''
+            };
+            this.socket.emit('connection:close', result);
         } else {
-            this.channel && this.channel.connectionCloseImproper();
+            // TODO
         }
 
         if (this.channel) {
@@ -218,16 +241,6 @@ class ConnectionManager {
             this.channel = null;
         }
     };
-
-    private async inspectNetworkProtocol(host: string): Promise<NetworkProtocol> {
-        const protocolDetector = new ProtocolDetector();
-        return protocolDetector.detectNetworkProtocol(host);
-    }
-
-    private async inspectSerialPortProtocol(port: string): Promise<SerialPortProtocol> {
-        const protocolDetector = new ProtocolDetector();
-        return protocolDetector.detectSerialPortProtocol(port);
-    }
 
     /**
      *

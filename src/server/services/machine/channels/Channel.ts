@@ -2,6 +2,19 @@ import { EventEmitter } from 'events';
 
 import SocketServer from '../../../lib/SocketManager';
 
+interface ConnectionOpenOptions {
+    address?: string;
+    host?: string;
+    port?: string;
+    token?: string;
+}
+interface ConnectionCloseOptions {
+    force?: boolean;
+}
+
+/**
+ * Defines basic Channel functions.
+ */
 class Channel extends EventEmitter {
     protected socket: SocketServer;
 
@@ -13,7 +26,15 @@ class Channel extends EventEmitter {
      * Connection open.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public async connectionOpen(options?: object): Promise<boolean> {
+    public async connectionOpen(options?: ConnectionOpenOptions): Promise<boolean> {
+        return false;
+    }
+
+    /**
+     * Connection close.
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async connectionClose(options?: ConnectionCloseOptions): Promise<boolean> {
         return false;
     }
 

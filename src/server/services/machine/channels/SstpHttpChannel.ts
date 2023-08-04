@@ -131,7 +131,7 @@ class SstpHttpChannel extends Channel {
         this.isGcodeExecuting = false;
     };
 
-    public async connectionOpen(options: EventOptions): Promise<boolean> {
+    public async connectionOpen(options: { address: string; host: string; token: string }): Promise<boolean> {
         const { host, token } = options;
         this.host = host;
         this.token = token;
@@ -226,35 +226,35 @@ class SstpHttpChannel extends Channel {
         });
     }
 
-    public connectionClose = (socket: SocketServer, options: EventOptions) => {
-        const { eventName } = options;
-        if (this.host) {
-            const api = `${this.host}/api/v1/disconnect`;
-            request
-                .post(api)
-                .timeout(3000)
-                .send(`token=${this.token}`)
-                .end((err, res) => {
-                    socket && socket.emit(eventName, _getResult(err, res));
-                });
-            this.host = '';
-            this.token = '';
-            this.stopHeartBeat();
-        } else {
-            socket && socket.emit(eventName, _getResult(new Error('connection not exist'), null));
-        }
+    public async connectionClose(options: { force: boolean }): Promise<boolean> {
+        // TODO: cancel intervals on instance
         clearInterval(intervalHandle);
-    };
+        this.stopHeartBeat();
 
-    public connectionCloseImproper = () => {
-        const result = {
-            code: 200,
-            data: {},
-            msg: '',
-            text: ''
-        };
-        this.socket && this.socket.emit('connection:close', result);
-    };
+        const force = options?.force || false;
+
+        if (!force) {
+            return new Promise((resolve) => {
+                const api = `${this.host}/api/v1/disconnect`;
+                request
+                    .post(api)
+                    .timeout(3000)
+                    .send(`token=${this.token}`)
+                    .end((err) => {
+                        if (err) {
+                            resolve(false);
+                        } else {
+                            resolve(true);
+                        }
+                    });
+
+                this.host = '';
+                this.token = '';
+            });
+        } else {
+            return true;
+        }
+    }
 
     public async startHeartbeat(): Promise<void> {
         this.stopHeartBeat();

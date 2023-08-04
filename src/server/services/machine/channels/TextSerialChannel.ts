@@ -26,80 +26,85 @@ class TextSerialChannel extends Channel {
         });
     };
 
-    public connectionOpen = (socket: SocketServer, options) => {
-        const { port, dataSource = PROTOCOL_TEXT, connectionTimeout } = options;
-        log.debug(`socket.open("${port}"): socket=${socket.id}`);
-        this.port = port;
-        this.dataSource = dataSource;
-        let controller = store.get(`controllers["${port}/${dataSource}"]`);
-        if (!controller) {
-            if (dataSource === PROTOCOL_TEXT) {
-                controller = new MarlinController({ port, dataSource, baudrate: 115200, connectionTimeout: connectionTimeout });
+    public async connectionOpen(options): Promise<boolean> {
+        const { port, connectionTimeout } = options;
 
-                controller.on('Ready', (data) => {
-                    this.emit(ChannelEvent.Ready, data);
-                });
-            }
+        this.port = port;
+        this.dataSource = PROTOCOL_TEXT;
+
+        let controller = store.get(`controllers["${port}/${this.dataSource}"]`);
+        if (!controller) {
+            controller = new MarlinController({
+                port,
+                dataSource: this.dataSource,
+                baudrate: 115200,
+                connectionTimeout: connectionTimeout
+            });
+
+            controller.on('Ready', (data) => {
+                this.emit(ChannelEvent.Ready, data);
+            });
         }
 
-        controller.addConnection(socket);
+        controller.addConnection(this.socket);
 
         if (controller.isOpen()) {
             log.debug('controller.isOpen() already');
             // Join the room, useless
             // socket.join(port);
 
-            socket.emit('connection:open', { port, dataSource });
-            socket.emit('connection:connected', { state: controller.controller.state, dataSource, connectionType: 'serial' });
+            this.emit(ChannelEvent.Connecting);
+            this.emit(ChannelEvent.Connected);
 
-            this.emit('Connected');
+            // TODO: need instance implementations to support emit Ready
+            this.socket.emit('connection:connected', {
+                state: controller.controller.state,
+                connectionType: 'serial',
+            });
+
+            return true;
         } else {
-            controller.open((err = null) => {
-                if (err) {
-                    socket.emit('connection:open', { port, msg: err, dataSource });
-                    return;
-                }
-                log.debug(`controller.isOpen() already ${socket}`);
+            this.emit(ChannelEvent.Connecting);
 
-                if (store.get(`controllers["${port}/${dataSource}"]`)) {
-                    log.error(`Serial port "${port}" was not properly closed`);
-                }
-                store.set(`controllers["${port}/${dataSource}"]`, controller);
+            return new Promise<boolean>((resolve) => {
+                controller.open((err = null) => {
+                    if (err) {
+                        // socket.emit('connection:open', { port, msg: err, dataSource });
+                        resolve(false);
+                        return;
+                    }
 
-                // Join the room, useless
-                // socket.join(port);
+                    store.set(`controllers["${port}/${this.dataSource}"]`, controller);
 
-                socket.emit('connection:open', { port, dataSource });
+                    this.emit(ChannelEvent.Connected);
 
-                this.emit('Connected');
-            }, connectionTimeout);
+                    resolve(true);
+                }, connectionTimeout);
+            });
         }
-    };
+    }
 
-    public connectionClose = (socket: SocketServer) => {
+    public async connectionClose(): Promise<boolean> {
         const port = this.port;
         const dataSource = this.dataSource;
-        log.debug(`socket.close("${port}"): id=${socket.id}`);
 
         const controller = store.get(`controllers["${port}/${dataSource}"]`);
         if (!controller) {
-            const err = `Serial port "${port}" not accessible`;
-            log.error(err);
-            socket.emit('connection:close', { port: port, err: new Error(err), dataSource: dataSource });
-            return;
+            return false;
         }
 
-        // Leave the room
-        // socket.leave(port);
-        controller.close(() => {
-            // Remove controller from store
-            store.unset(`controllers["${port}/${dataSource}"]`);
+        return new Promise((resolve) => {
+            controller.close(() => {
+                // Remove controller from store
+                store.unset(`controllers["${port}/${dataSource}"]`);
 
-            // Destroy controller
-            controller.destroy();
+                // Destroy controller
+                controller.destroy();
+
+                resolve(true);
+            });
         });
-        socket.emit('connection:close', { port: port, dataSource: dataSource });
-    };
+    }
 
     /**
      *

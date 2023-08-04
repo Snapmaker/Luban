@@ -67,8 +67,10 @@ class SacpUdpChannel extends SacpChannelBase {
         return Promise.race([sacpResponse, timeoutPromise]);
     }
 
-    public async connectionOpen(options: EventOptions): Promise<boolean> {
-        log.debug(`connectionOpen, options = ${options}`);
+    public async connectionOpen(options: { address: string }): Promise<boolean> {
+        log.debug(`connectionOpen(): options = ${options}`);
+
+        this.emit(ChannelEvent.Connecting);
 
         this.sacpClient = new Business('udp', {
             socket: this.socketClient,
@@ -76,8 +78,6 @@ class SacpUdpChannel extends SacpChannelBase {
             port: 2016, // 8889
         });
         this.sacpClient.setLogger(log);
-
-        this.emit(ChannelEvent.Connecting);
 
         // Get Machine Info
         const { data: machineInfos } = await this.getMachineInfo();
@@ -96,29 +96,13 @@ class SacpUdpChannel extends SacpChannelBase {
         return true;
     }
 
-    public connectionClose = (socket: SocketServer, options: EventOptions) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async connectionClose(options?: { force: boolean }): Promise<boolean> {
+        // UDP is stateless, not need to close
         this.sacpClient?.dispose();
 
-        const result = {
-            code: 200,
-            data: {},
-            msg: '',
-            text: ''
-        };
-        socket && socket.emit(options.eventName, result);
-    };
-
-    public connectionCloseImproper = () => {
-        this.sacpClient?.dispose();
-
-        const result = {
-            code: 200,
-            data: {},
-            msg: '',
-            text: ''
-        };
-        this.socket && this.socket.emit('connection:close', result);
-    };
+        return true;
+    }
 
     public startHeartbeat = async () => {
         log.info('Start heartbeat.');
