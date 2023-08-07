@@ -547,7 +547,7 @@ class SVGActionsFactory {
                 formData.append('image', file);
                 res = await api.uploadImage(formData);
             }
-            const { originalName, uploadName, width, height } = res.body;
+            const { originalName, uploadName, sourceWidth, sourceHeight } = res.body;
             const sourceType = 'svg';
             const mode = 'vector';
             let { config, gcodeConfig } = generateModelDefaultConfigs(headType, sourceType, mode, isRotate);
@@ -562,8 +562,8 @@ class SVGActionsFactory {
                 mode,
                 originalName,
                 uploadName,
-                sourceWidth: width,
-                sourceHeight: height,
+                sourceWidth: sourceWidth,
+                sourceHeight: sourceHeight,
                 width: isText ? textSize.width : dataWidth,
                 height: isText ? textSize.height : dataHeight,
                 transformation,

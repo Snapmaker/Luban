@@ -594,6 +594,7 @@ export const actions = {
         const formData = new FormData();
         formData.append('image', file);
         formData.append('isRotate', materials.isRotate);
+        console.log('uploadImage', formData);
         if (fileInfo) {
             const { width, height, originalName, uploadName } = fileInfo;
 
@@ -612,13 +613,13 @@ export const actions = {
         }
         api.uploadImage(formData)
             .then(res => {
-                const { width, height, originalName, uploadName } = res.body;
+                const { sourceWidth, sourceHeight, originalName, uploadName } = res.body;
                 dispatch(
                     actions.generateModel(headType, {
                         originalName,
                         uploadName,
-                        sourceWidth: width,
-                        sourceHeight: height,
+                        sourceWidth: sourceWidth,
+                        sourceHeight: sourceHeight,
                         mode,
                         config: { svgNodeName: 'image' },
                         isLimit
@@ -649,8 +650,8 @@ export const actions = {
                     resolve(res.body);
                     // Ensure promise is completed first
                     setTimeout(() => {
-                        const { width, height } = res.body;
-                        const isOverSize = isOverSizeModel(coordinateSize, width, height);
+                        const { sourceWidth, sourceHeight } = res.body;
+                        const isOverSize = isOverSizeModel(coordinateSize, sourceWidth, sourceHeight);
                         dispatch(
                             actions.updateState(headType, {
                                 isOverSize: isOverSize

@@ -39,7 +39,6 @@ const moveFile = (originalPath, tempPath) => {
     });
 };
 
-
 export const set = async (req, res) => {
     const files = req.files;
     const { isRotate } = req.body;
@@ -100,8 +99,8 @@ export const set = async (req, res) => {
             res.send({
                 originalName: originalName,
                 uploadName: tempName,
-                width: svg.width,
-                height: svg.height,
+                sourceWidth: svg.width,
+                sourceHeight: svg.height,
             });
         } else if (extname === '.dxf') {
             const result = await parseDxf(tempPath);
@@ -115,8 +114,8 @@ export const set = async (req, res) => {
             res.send({
                 originalName: originalName,
                 uploadName: svg.uploadName,
-                width,
-                height,
+                sourceWidth: width,
+                sourceHeight: height,
             });
         } else if (extname === '.stl' || extname === '.zip') {
             if (extname === '.zip') {
@@ -132,8 +131,8 @@ export const set = async (req, res) => {
                         res.send({
                             originalName: originalName,
                             uploadName: tempName,
-                            width: width,
-                            height: height,
+                            sourceWidth: width,
+                            sourceHeight: height,
                         });
                     } else if (payload.status === 'fail') {
                         log.error(`Failed to read image ${tempName} ,${payload.error?.message} `);
@@ -147,8 +146,8 @@ export const set = async (req, res) => {
                     res.send({
                         originalName: originalName,
                         uploadName: tempName,
-                        width: image.bitmap.width,
-                        height: image.bitmap.height,
+                        sourceWidth: image.bitmap.width,
+                        sourceHeight: image.bitmap.height,
                     });
                 })
                 .catch((err) => {
