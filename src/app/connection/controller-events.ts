@@ -22,6 +22,11 @@ enum ControllerEvent {
     ExecuteCmd = 'connection:executeCmd',
 
     /**
+     * File
+     */
+    UploadFile = 'connection:uploadFile',
+
+    /**
      * Machine Network (Wi-Fi)
      */
     GetMachineNetworkConfiguration = 'machine:get-network-configuration',

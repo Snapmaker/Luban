@@ -6,7 +6,6 @@ import { v4 as uuid } from 'uuid';
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import api from '../../api';
 import {
-    CONNECTION_CLOSE,
     CONNECTION_GET_GCODEFILE,
     CONNECTION_HEAD_BEGIN_WORK,
     CONNECTION_STATUS_CONNECTED,
@@ -568,7 +567,8 @@ export const actions = {
                 const { owner, errorCode } = options;
                 if (includes(EMERGENCY_STOP_BUTTON, owner)) {
                     if (errorCode === 1) {
-                        controller.emitEvent(CONNECTION_CLOSE, () => {
+                        // TODO
+                        controller.emitEvent(ControllerEvent.ConnectionClose, () => {
                             dispatch(connectActions.resetMachineState());
                             dispatch(actions.updateMachineState({
                                 headType: '',

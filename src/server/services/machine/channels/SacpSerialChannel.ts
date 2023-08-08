@@ -103,7 +103,7 @@ class SacpSerialChannel extends SacpChannelBase {
         return true;
     }
 
-    public async startHeartbeat() {
+    public async startHeartbeat(): Promise<void> {
         await this.startHeartbeatBase(this.sacpClient);
 
         this.setROTSubscribeApi();

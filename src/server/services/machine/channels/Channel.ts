@@ -49,3 +49,12 @@ export default class Channel extends EventEmitter {
 export interface GcodeChannelInterface extends Channel {
     executeGcode(gcode: string): Promise<boolean>;
 }
+
+export interface SystemLogInterface extends Channel {
+    exportLogToExternalStorage(): Promise<boolean>;
+}
+
+export interface FirmwareUpgradeInterface extends Channel {
+    upgradeFromFile(filePath: string): Promise<boolean>;
+    watchUpgradeResult(): Promise<boolean>;
+}

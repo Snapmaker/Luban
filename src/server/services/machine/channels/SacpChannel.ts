@@ -56,12 +56,12 @@ import {
 } from '../../../constants';
 import logger from '../../../lib/logger';
 import Business, { CoordinateType } from '../sacp/Business';
-import { EventOptions, MarlinStateData } from '../types';
-import Channel, { GcodeChannelInterface } from './Channel';
+import { MarlinStateData } from '../types';
+import Channel, { FirmwareUpgradeInterface, GcodeChannelInterface } from './Channel';
 
 const log = logger('lib:SocketBASE');
 
-class SacpChannelBase extends Channel implements GcodeChannelInterface {
+class SacpChannelBase extends Channel implements GcodeChannelInterface, FirmwareUpgradeInterface {
     private heartbeatTimer;
 
     public sacpClient: Business;
@@ -113,6 +113,11 @@ class SacpChannelBase extends Channel implements GcodeChannelInterface {
 
     public machineStatus: string = WorkflowStatus.Idle;
 
+    // GcodeChannelInterface
+
+    /**
+     * Generic execute G-code commands.
+     */
     public async executeGcode(gcode: string): Promise<boolean> {
         const gcodeLines = gcode.split('\n');
 
@@ -131,6 +136,18 @@ class SacpChannelBase extends Channel implements GcodeChannelInterface {
         }
 
         return true;
+    }
+
+    // FirmwareUpgradeInterface
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async upgradeFromFile(filePath: string): Promise<boolean> {
+        // TODO:
+        return false;
+    }
+
+    public async watchUpgradeResult(): Promise<boolean> {
+        return false;
     }
 
     public startHeartbeatBase = async (sacpClient: Business, client?: net.Socket) => {

@@ -3,12 +3,12 @@ import { PROTOCOL_TEXT, WRITE_SOURCE_CLIENT } from '../../../controllers/constan
 import type SocketServer from '../../../lib/SocketManager';
 import logger from '../../../lib/logger';
 import store from '../../../store';
-import Channel from './Channel';
+import Channel, { GcodeChannelInterface } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 
 const log = logger('machine:channel:TextSerialChannel');
 
-class TextSerialChannel extends Channel {
+class TextSerialChannel extends Channel implements GcodeChannelInterface {
     private port = '';
 
     private dataSource = '';
@@ -104,6 +104,16 @@ class TextSerialChannel extends Channel {
                 resolve(true);
             });
         });
+    }
+
+    public async executeGcode(gcode: string): Promise<boolean> {
+        const gcodeLines = gcode.split('\n');
+
+        const port = this.port;
+        const dataSource = this.dataSource;
+        const controller = store.get(`controllers["${port}/${dataSource}"]`);
+        controller.command(null, 'gcode', gcodeLines);
+        return true;
     }
 
     /**

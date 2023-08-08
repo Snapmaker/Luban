@@ -246,6 +246,11 @@ class ConnectionManager {
         }
     };
 
+    /**
+     * Generic execute G-code commands.
+     *
+     * Seperate multiple lines with '\n'.
+     */
     public executeGcode = async (socket: SocketServer, options: ExecuteGCodeOptions) => {
         const { gcode } = options;
         log.info(`executeGcode: ${gcode}, ${this.protocol}`);
@@ -258,10 +263,16 @@ class ConnectionManager {
         }
     };
 
-    // TODO: For backward compatibility, refactor this function later.
+    /**
+     * Execute custom command.
+     *
+     * For backward compatibility, this is only for serial port channel.
+     * We will refactor this function later.
+     */
     public executeCmd = async (socket: SocketServer, options) => {
         const { gcode, context, cmd = 'gcode' } = options;
 
+        // Only used by TextSerialChannel
         (this.channel as TextSerialChannel).command(socket, {
             cmd: cmd,
             args: [gcode, context]
@@ -346,11 +357,7 @@ class ConnectionManager {
                             x = Math.max(0, Math.min(x, size.x - 20));
                             y = Math.max(0, Math.min(y, size.y - 20));
 
-                            const promise = new Promise((resolve) => {
-                                this.channel.executeGcode({ gcode: `G53;\nG0 X${x} Y${y};\nG54;\nG92 X${x} Y${y};` }, () => {
-                                    resolve(true);
-                                });
-                            });
+                            const promise = (this.channel as GcodeChannelInterface).executeGcode(`G53;\nG0 X${x} Y${y};\nG54;\nG92 X${x} Y${y};`);
                             promises.push(promise);
                         }
                     } else {
@@ -660,19 +667,19 @@ M3`;
                     });
                 } else {
                     this.executeGcode(
-                        this.channel,
+                        socket,
                         { gcode: `M3 P${laserPower} S${laserPower * 255 / 100}` }
                     );
                 }
             } else {
                 if (laserPowerOpen) {
                     this.executeGcode(
-                        this.channel,
+                        socket,
                         { gcode: `M3 P${laserPower} S${laserPower * 255 / 100}` }
                     );
                 }
                 this.executeGcode(
-                    this.channel,
+                    socket,
                     { gcode: 'M500' }
                 );
             }
@@ -691,18 +698,18 @@ M3`;
         }
         if (laserPowerOpen) {
             this.executeGcode(
-                this.channel,
+                socket,
                 { gcode: 'M5' } // M3 P0 S0
             );
         } else {
             if (isSM2) {
                 this.executeGcode(
-                    this.channel,
+                    socket,
                     { gcode: 'M3 P1 S2.55' }
                 );
             } else {
                 this.executeGcode(
-                    this.channel,
+                    socket,
                     { gcode: `M3 P${laserPower} S${laserPower * 255 / 100}` }
                 );
             }
@@ -715,7 +722,7 @@ M3`;
         } else {
             const { value, eventName } = options;
             this.executeGcode(
-                this.channel,
+                socket,
                 { gcode: `M1010 S3 P${value};` }
             );
             socket && socket.emit(eventName);
@@ -728,7 +735,7 @@ M3`;
         } else {
             const { value, eventName } = options;
             this.executeGcode(
-                this.channel,
+                socket,
                 { gcode: `M1010 S4 P${value};` }
             );
             socket && socket.emit(eventName);
@@ -741,7 +748,7 @@ M3`;
         } else {
             const { value, enable } = options;
             this.executeGcode(
-                this.channel,
+                socket,
                 { gcode: `M1011 F${enable ? value : 0};` }
             );
         }
@@ -845,7 +852,7 @@ M3`;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.coordinateMove({ moveOrders, jogSpeed, headType });
         } else {
-            await this.executeGcode(this.channel, { gcode });
+            await this.executeGcode(socket, { gcode });
             callback && callback();
         }
     };
@@ -855,7 +862,7 @@ M3`;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.setWorkOrigin({ xPosition, yPosition, zPosition, bPosition });
         } else {
-            await this.executeGcode(this.channel, { gcode: 'G92 X0 Y0 Z0 B0' });
+            await this.executeGcode(socket, { gcode: 'G92 X0 Y0 Z0 B0' });
             callback && callback();
         }
     };

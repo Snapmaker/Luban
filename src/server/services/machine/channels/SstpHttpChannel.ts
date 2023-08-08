@@ -14,12 +14,11 @@ import {
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     STANDARD_CNC_TOOLHEAD_FOR_SM2
 } from '../../../constants';
-import SocketServer from '../../../lib/SocketManager';
 import { valueOf } from '../../../lib/contants-utils';
 import logger from '../../../lib/logger';
 import workerManager from '../../task-manager/workerManager';
 import { EventOptions } from '../types';
-import Channel from './Channel';
+import Channel, { GcodeChannelInterface } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 
 let waitConfirm: boolean;
@@ -97,13 +96,18 @@ export type GcodeResult = {
     code?: number
 };
 
+interface GCodeQueueItem {
+    gcodes: string[];
+    callback: () => void;
+}
+
 /**
  * A singleton to manage devices connection.
  */
-class SstpHttpChannel extends Channel {
+class SstpHttpChannel extends Channel implements GcodeChannelInterface {
     private isGcodeExecuting = false;
 
-    private gcodeInfos = [];
+    private gcodeQueue: GCodeQueueItem[] = [];
 
     private host = '';
 
@@ -127,7 +131,7 @@ class SstpHttpChannel extends Channel {
     };
 
     public init = () => {
-        this.gcodeInfos = [];
+        this.gcodeQueue = [];
         this.isGcodeExecuting = false;
     };
 
@@ -322,6 +326,63 @@ class SstpHttpChannel extends Channel {
         this.heartBeatWorker = null;
     };
 
+    private _executeGcode = async (gcode: string) => {
+        const api = `${this.host}/api/v1/execute_code`;
+        return new Promise((resolve) => {
+            const req = request.post(api);
+            req.timeout(300000)
+                .send(`token=${this.token}`)
+                .send(`code=${gcode}`)
+                // .send(formData)
+                .end((err, res) => {
+                    const { data, text } = _getResult(err, res);
+                    resolve({ data, text });
+                });
+        });
+    };
+
+    private async consumeGCodeQueue() {
+        if (this.isGcodeExecuting) {
+            return;
+        }
+        this.isGcodeExecuting = true;
+
+        // drain G-code queue
+        while (this.gcodeQueue.length > 0) {
+            const splice = this.gcodeQueue.splice(0, 1)[0];
+            const result = [];
+            for (const code of splice.gcodes) {
+                const { text } = await this._executeGcode(code) as GcodeResult;
+                if (text) {
+                    result.push(text);
+                }
+            }
+
+            splice.callback && splice.callback();
+        }
+
+        this.isGcodeExecuting = false;
+    }
+
+    /**
+     * Generic execute G-code commands.
+     */
+    public async executeGcode(gcode: string): Promise<boolean> {
+        return new Promise((resolve) => {
+            // enqueue G-code execution
+            const split = gcode.split('\n');
+            this.gcodeQueue.push({
+                gcodes: split,
+                callback: () => {
+                    resolve(true);
+                }
+            });
+
+            // consume
+            this.consumeGCodeQueue();
+        });
+    }
+
     /**
      * Get module list.
      */
@@ -391,57 +452,6 @@ class SstpHttpChannel extends Channel {
             .end((err, res) => {
                 this.socket && this.socket.emit(eventName, _getResult(err, res));
             });
-    };
-
-    public executeGcode = async (options: EventOptions, callback) => {
-        return new Promise((resolve) => {
-            const { gcode, eventName } = options;
-            const split = gcode.split('\n');
-            this.gcodeInfos.push({
-                gcodes: split,
-                callback: (result) => {
-                    callback && callback(result);
-                    resolve(result);
-                }
-            });
-            this.startExecuteGcode(eventName);
-        });
-    };
-
-    public startExecuteGcode = async (eventName: string) => {
-        if (this.isGcodeExecuting) {
-            return;
-        }
-        this.isGcodeExecuting = true;
-        while (this.gcodeInfos.length > 0) {
-            const splice = this.gcodeInfos.splice(0, 1)[0];
-            const result = [];
-            for (const gcode of splice.gcodes) {
-                const { text } = await this._executeGcode(gcode) as GcodeResult;
-                result.push(gcode);
-                if (text) {
-                    result.push(text);
-                }
-            }
-            splice.callback && splice.callback(result);
-            this.socket && this.socket.emit(eventName || 'connection:executeGcode', result);
-        }
-        this.isGcodeExecuting = false;
-    };
-
-    public _executeGcode = async (gcode: string) => {
-        const api = `${this.host}/api/v1/execute_code`;
-        return new Promise((resolve) => {
-            const req = request.post(api);
-            req.timeout(300000)
-                .send(`token=${this.token}`)
-                .send(`code=${gcode}`)
-                // .send(formData)
-                .end((err, res) => {
-                    const { data, text } = _getResult(err, res);
-                    resolve({ data, text });
-                });
-        });
     };
 
     private getGcodePrintingInfo(data) {

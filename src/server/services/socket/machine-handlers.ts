@@ -13,10 +13,12 @@ function register(socketServer: SocketServer): void {
         [ControllerEvent.ExecuteGCode]: connectionManager.executeGcode,
         [ControllerEvent.ExecuteCmd]: connectionManager.executeCmd,
 
+        // File
+        [ControllerEvent.UploadFile]: connectionManager.uploadFile,
+
         // control functions
         'connection:headBeginWork': connectionManager.startGcodeAction,
         'connection:getGcodeFile': connectionManager.getGcodeFile,
-        'connection:uploadFile': connectionManager.uploadFile,
         'connection:updateNozzleTemperature': connectionManager.updateNozzleTemperature,
         'connection:updateBedTemperature': connectionManager.updateBedTemperature,
         'connection:updateZOffset': connectionManager.updateZOffset,

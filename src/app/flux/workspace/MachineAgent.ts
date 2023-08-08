@@ -2,11 +2,9 @@ import { EventEmitter } from 'events';
 
 import ControllerEvent from '../../connection/controller-events';
 import {
-    CONNECTION_CLOSE,
     CONNECTION_COORDINATE_MOVE,
     CONNECTION_GO_HOME,
     CONNECTION_SET_WORK_ORIGIN,
-    CONNECTION_STOP_GCODE,
     CUSTOM_SERVER_NAME,
 } from '../../constants';
 import { controller } from '../../lib/controller';
@@ -130,7 +128,7 @@ export class MachineAgent extends EventEmitter {
             return new Promise((resolve) => {
                 controller
                     .emitEvent(ControllerEvent.ConnectionClose, { force })
-                    .once(CONNECTION_CLOSE, () => {
+                    .once(ControllerEvent.ConnectionClose, () => {
                         log.info('Disconnected from machine.');
                         resolve(true);
                     });
@@ -139,7 +137,7 @@ export class MachineAgent extends EventEmitter {
             return new Promise((resolve) => {
                 controller
                     .emitEvent(ControllerEvent.ConnectionClose, { force })
-                    .once(CONNECTION_CLOSE, () => {
+                    .once(ControllerEvent.ConnectionClose, () => {
                         resolve(true);
                     });
 
@@ -147,6 +145,36 @@ export class MachineAgent extends EventEmitter {
                 resolve(true);
             });
         }
+    }
+
+    /**
+     * Generic method to execute G-code.
+     *
+     * If G-code contains multiple commands, join them by '\n'.
+     */
+    public async executeGcode(gcode: string) {
+        return new Promise((resolve) => {
+            controller
+                .emitEvent(ControllerEvent.ExecuteGCode, { gcode })
+                .once(ControllerEvent.ExecuteGCode, () => {
+                    resolve(true);
+                });
+        });
+    }
+
+    /**
+     * Generic method to execute a command.
+     *
+     * This is only for serial port connected SM 2.0.
+     */
+    public async executeCmd(gcode, context, cmd) {
+        return new Promise((resolve) => {
+            controller
+                .emitEvent(ControllerEvent.ExecuteCmd, { gcode, context, cmd })
+                .once(ControllerEvent.ExecuteCmd, () => {
+                    resolve(true);
+                });
+        });
     }
 
     public coordinateMove(moveOrders, gcode, jogSpeed, headType) {
@@ -157,26 +185,6 @@ export class MachineAgent extends EventEmitter {
 
     public setWorkOrigin(xPosition, yPosition, zPosition, bPosition) {
         controller.emitEvent(CONNECTION_SET_WORK_ORIGIN, { xPosition, yPosition, zPosition, bPosition });
-    }
-
-    public async executeGcode(gcode, context, cmd) {
-        return new Promise((resolve) => {
-            controller
-                .emitEvent(ControllerEvent.ExecuteGCode, { gcode, context, cmd })
-                .once(ControllerEvent.ExecuteGCode, () => {
-                    resolve(true);
-                });
-        });
-    }
-
-    public async executeCmd(gcode, context, cmd) {
-        return new Promise((resolve) => {
-            controller
-                .emitEvent(ControllerEvent.ExecuteCmd, { gcode, context, cmd })
-                .once(ControllerEvent.ExecuteCmd, () => {
-                    resolve(true);
-                });
-        });
     }
 
     public startServerGcode(args, callback) {
@@ -218,14 +226,16 @@ export class MachineAgent extends EventEmitter {
 
     public stopServerGcode(callback) {
         controller
-            .emitEvent(CONNECTION_STOP_GCODE, { eventName: CONNECTION_STOP_GCODE })
-            .once(CONNECTION_STOP_GCODE, (options) => {
+            .emitEvent(ControllerEvent.StopGCode)
+            .once(ControllerEvent.StopGCode, (options) => {
                 callback && callback();
                 const { msg, code, data } = options;
                 if (msg) {
                     callback && callback({ msg, code, data });
                     return;
                 }
+
+                // ?
                 dispatch(baseActions.updateState({
                     isSendedOnWifi: true
                 }));

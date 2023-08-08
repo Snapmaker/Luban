@@ -235,7 +235,7 @@ class SacpTcpChannel extends SacpChannelBase {
         }
     }
 
-    public async startHeartbeat() {
+    public async startHeartbeat(): Promise<void> {
         await this.startHeartbeatBase(this.sacpClient, undefined);
 
         this.setROTSubscribeApi();

@@ -8,18 +8,18 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import * as THREE from 'three';
 
+import ControllerEvent from '../../../connection/controller-events';
 import {
     AUTO_MDOE,
     CONNECTION_MATERIALTHICKNESS,
     CONNECTION_MATERIALTHICKNESS_ABORT,
     CONNECTION_TYPE_SERIAL,
     CONNECTION_TYPE_WIFI,
-    CONNECTION_UPLOAD_FILE,
     HEAD_CNC,
     HEAD_LASER,
     HEAD_PRINTING,
     MANUAL_MODE,
-    SEMI_AUTO_MODE,
+    SEMI_AUTO_MODE
 } from '../../../constants';
 import { LEVEL_TWO_POWER_LASER_FOR_SM2 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
@@ -39,7 +39,6 @@ import modalSmallHOC from '../../components/Modal/modal-small';
 import Canvas from '../../components/SMCanvas';
 import SvgIcon from '../../components/SvgIcon';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
-
 import PrintablePlate from '../WorkspaceVisualizer/PrintablePlate';
 import GcodePreviewItem from './GCodeListItem';
 import GCodeParams from './GCodeParams';
@@ -525,8 +524,12 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
         }
 
         const gcodePath = `/${find.uploadName}`;
-        controller.emitEvent(CONNECTION_UPLOAD_FILE, { gcodePath: gcodePath, renderGcodeFileName: find.renderGcodeFileName })
-            .once(CONNECTION_UPLOAD_FILE, ({ err, text }) => {
+        controller
+            .emitEvent(ControllerEvent.UploadFile, {
+                gcodePath: gcodePath,
+                renderGcodeFileName: find.renderGcodeFileName,
+            })
+            .once(ControllerEvent.UploadFile, ({ err, text }) => {
                 isSendingFile.current && isSendingFile.current.removeContainer();
                 if (err) {
                     modalSmallHOC({
