@@ -1,37 +1,41 @@
 import classNames from 'classnames';
-import PropTypes from 'prop-types';
 import i18next from 'i18next';
+import isElectron from 'is-electron';
+import Uri from 'jsuri';
 import _ from 'lodash';
 import camelCase from 'lodash/camelCase';
-import Uri from 'jsuri';
-import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { withRouter } from 'react-router-dom';
-// import { Link } from 'react-router-dom';
-import isElectron from 'is-electron';
+
 import settings from '../../../config/settings';
-import Anchor from '../../components/Anchor';
 import confirm from '../../../lib/confirm';
 import i18n from '../../../lib/i18n';
-// import storeManager from '../../store/local-storage';
+import Anchor from '../../components/Anchor';
+import Download from './Download';
 import General from './General';
-// import FirmwareTool from './FirmwareTool';
-// import Workspace from './Workspace';
 import MachineSettings from './MachineSettings';
 import styles from './index.styl';
-import Download from './Download';
 
 const mapSectionPathToId = (path = '') => {
     return camelCase(path.split('/')[0] || '');
 };
 
-class Settings extends PureComponent {
-    static propTypes = {
+interface SectionItem {
+    id: string;
+    path: string;
+    title: string;
+    component: (props) => React.ReactElement;
+}
+
+class Settings extends React.PureComponent {
+    public static propTypes = {
         ...withRouter,
         // resetAllUserSettings: PropTypes.func.isRequired,
         pathname: PropTypes.string.isRequired
     };
 
-    sections = [
+    public sections: SectionItem[] = [
         {
             id: 'general',
             path: 'general',
@@ -50,25 +54,13 @@ class Settings extends PureComponent {
             title: i18n._('key-App/Settings/Settings-Machine Settings'),
             component: (props) => <MachineSettings {...props} />
         }
-        // {
-        //     id: 'config',
-        //     path: 'config',
-        //     title: i18n._('key-App/Settings/Settings-Config'),
-        //     component: (props) => <Workspace {...props} />
-        // },
-        // {
-        //     id: 'firmware',
-        //     path: 'firmware',
-        //     title: i18n._('key-App/Settings/Settings-Firmware Tool'),
-        //     component: (props) => <FirmwareTool {...props} />
-        // }
     ];
 
-    initialState = this.getInitialState();
+    private initialState = this.getInitialState();
 
-    state = this.getInitialState();
+    public state = this.getInitialState();
 
-    actions = {
+    private actions = {
         // General
         general: {
             load: () => {
@@ -140,15 +132,11 @@ class Settings extends PureComponent {
         },
         // About
         about: {},
-        // Firmware
-        firmware: {},
-        // download manager
-        download: {
-            onChangeFile: () => { }
-        }
+        // download
+        download: {},
     };
 
-    getInitialState() {
+    private getInitialState() {
         return {
             activePathname: null,
             // General
@@ -172,19 +160,16 @@ class Settings extends PureComponent {
                     lastUpdate: ''
                 }
             },
-            // Firmware
-            firmware: {
-            }
         };
     }
 
-    switchTab(pathname) {
+    private switchTab(pathname) {
         this.setState({
             activePathname: pathname
         });
     }
 
-    render() {
+    public render() {
         const state = {
             ...this.state
         };
@@ -197,9 +182,7 @@ class Settings extends PureComponent {
         const id = mapSectionPathToId(sectionPath || initialSectionPath);
         const activeSection = _.find(this.sections, { id: id }) || this.sections[0];
         const sectionItems = this.sections.map((section) => (
-            <div
-                key={section.id}
-            >
+            <div key={section.id}>
                 <Anchor
                     className={classNames(styles.item, { [styles.selected]: activeSection.id === section.id })}
                     onClick={(e) => {
@@ -208,7 +191,6 @@ class Settings extends PureComponent {
                     }}
                 >
                     <span className="sm-parameter-header__title">{i18n._(section.title)}</span>
-
                 </Anchor>
             </div>
         ));
@@ -223,9 +205,7 @@ class Settings extends PureComponent {
         return (
             <div className={classNames(styles['manager-wrapper'], 'sm-flex')}>
                 <div className={classNames(styles['manager-grouplist'], 'width-percent-30')}>
-                    <div className="sm-parameter-container">
-                        {sectionItems}
-                    </div>
+                    {sectionItems}
                 </div>
                 <div className={classNames(styles['manager-details'])}>
                     <Section
