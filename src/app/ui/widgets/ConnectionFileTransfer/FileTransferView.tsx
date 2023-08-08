@@ -523,11 +523,10 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
             return;
         }
 
-        const gcodePath = `/${find.uploadName}`;
         controller
             .emitEvent(ControllerEvent.UploadFile, {
-                gcodePath: gcodePath,
-                renderGcodeFileName: find.renderGcodeFileName,
+                filePath: find.uploadName,
+                targetFilename: find.renderGcodeFileName,
             })
             .once(ControllerEvent.UploadFile, ({ err, text }) => {
                 isSendingFile.current && isSendingFile.current.removeContainer();

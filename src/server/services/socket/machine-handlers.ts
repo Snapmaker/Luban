@@ -56,6 +56,7 @@ function register(socketServer: SocketServer): void {
 
         // machine system
         [ControllerEvent.ExportLogToExternalStorage]: connectionManager.exportLogToExternalStorage,
+        [ControllerEvent.UpgradeFirmware]: connectionManager.upgradeFirmwareFromFile,
     };
 
     Object.entries(connectionEventsObject).forEach(([key, value]) => {

@@ -114,8 +114,8 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
 
         controller
             .emitEvent(ControllerEvent.UploadFile, {
-                gcodePath: `/${gcodeFileObject.uploadName}`,
-                renderGcodeFileName: 'boundary.nc',
+                filePath: gcodeFileObject.uploadName,
+                targetFilename: 'boundary.nc',
             })
             .once(ControllerEvent.UploadFile, ({ err, text }) => {
                 if (err) {

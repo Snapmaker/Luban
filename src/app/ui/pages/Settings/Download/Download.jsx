@@ -11,7 +11,7 @@ import i18n from '../../../../lib/i18n';
 import SvgIcon from '../../../components/SvgIcon';
 import { TextInput } from '../../../components/Input';
 import UniApi from '../../../../lib/uni-api';
-import downloadMananger from '../../../../lib/download-mananger';
+import downloadManager from '../../../../lib/download-mananger';
 
 function Download(props) {
     const [selectedFolder, setSelectedFolder] = useState(props.downloadManangerSavedPath);
@@ -31,8 +31,8 @@ function Download(props) {
     };
     const onClickToUpload = () => {
         if (!isElectron()) return;
-        downloadMananger.emit('select-directory');
-        downloadMananger.on('selected-directory', (event, data) => {
+        downloadManager.emit('select-directory');
+        downloadManager.on('selected-directory', (event, data) => {
             const { canceled, filePaths } = JSON.parse(data);
             if (canceled) return;
             savePath(filePaths[0]);

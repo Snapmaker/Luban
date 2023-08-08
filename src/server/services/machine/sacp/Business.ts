@@ -1214,4 +1214,32 @@ export default class Business extends Dispatcher {
             return { response, packet, data: {} };
         });
     }
+
+    // - System
+
+    public async upgradeFirmwareFromFile(filename: string) {
+        return new Promise<ResponseData>((resolve, reject) => {
+            // Watch upgrade result
+            this.setHandler(0xad, 0x03, (data) => {
+                const upgradeCode = readUint8(data.param);
+
+                // ACK
+                this.ack(0xad, 0x03, data.packet, Buffer.alloc(1, 0));
+
+                // upgrade code = 0 means success
+                resolve({
+                    response: {
+                        result: upgradeCode,
+                    }
+                } as ResponseData);
+            });
+
+            // Request upgrade
+            const resourceBuffer = Buffer.alloc(1, 0); // defaults to SD Card
+            const filenameBuffer = stringToBuffer(filename);
+            const buffer = Buffer.concat([resourceBuffer, filenameBuffer]);
+            this.send(0xad, 0x00, PeerId.CONTROLLER, buffer)
+                .catch((err) => reject(err));
+        });
+    }
 }

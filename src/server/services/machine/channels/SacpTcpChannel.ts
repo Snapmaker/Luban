@@ -18,10 +18,11 @@ import { SACP_TYPE_SERIES_MAP, } from '../../../../app/constants/machines';
 import { SnapmakerArtisanMachine, SnapmakerJ1Machine } from '../../../../app/machines';
 import { ChannelEvent } from './ChannelEvent';
 import SacpChannelBase from './SacpChannel';
+import { FileChannelInterface, UploadFileOptions } from './Channel';
 
 const log = logger('machine:channel:SacpTcpChannel');
 
-class SacpTcpChannel extends SacpChannelBase {
+class SacpTcpChannel extends SacpChannelBase implements FileChannelInterface {
     private client: net.Socket;
 
     private laserFocalLength = 0;
@@ -241,26 +242,14 @@ class SacpTcpChannel extends SacpChannelBase {
         this.setROTSubscribeApi();
     }
 
-    public uploadFile = (options: EventOptions) => {
-        const { gcodePath, eventName, renderGcodeFileName = '' } = options;
-        const renderName = renderGcodeFileName || path.basename(gcodePath);
+    // interface: FileChannelInterface
 
-        const gcodeFullPath = `${DataStorage.tmpDir}${gcodePath}`;
-        this.sacpClient.uploadFile(path.resolve(gcodeFullPath), renderName).then((res) => {
-            const result = {
-                err: null,
-                text: ''
-            };
-            if (res.response.result === 0) {
-                log.info('ready to upload file');
-            } else {
-                result.text = 'can not upload file';
-                result.err = 'fail';
-                log.error('can not upload file');
-            }
-            this.socket && this.socket.emit(eventName, result);
-        });
-    };
+    public async uploadFile(options: UploadFileOptions): Promise<boolean> {
+        const { filePath, targetFilename } = options;
+
+        const res = await this.sacpClient.uploadFile(filePath, targetFilename);
+        return (res.response.result === 0);
+    }
 
     public takePhoto = async (params: RequestPhotoInfo, callback: (result: { status: boolean }) => void) => {
         return this.sacpClient.takePhoto(params).then(({ response }) => {

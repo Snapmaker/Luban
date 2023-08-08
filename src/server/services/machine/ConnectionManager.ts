@@ -1,4 +1,5 @@
 import { WorkflowStatus } from '@snapmaker/luban-platform';
+import path from 'path';
 import fs from 'fs';
 import { includes } from 'lodash';
 
@@ -26,7 +27,8 @@ import { sacpUdpChannel } from './channels/SacpUdpChannel';
 import { sstpHttpChannel } from './channels/SstpHttpChannel';
 import TextSerialChannel, { textSerialChannel } from './channels/TextSerialChannel';
 import { ArtisanMachineInstance, J1MachineInstance, MachineInstance, RayMachineInstance } from './instances';
-import Channel, { GcodeChannelInterface } from './channels/Channel';
+import Channel, { FileChannelInterface, GcodeChannelInterface, SystemChannelInterface } from './channels/Channel';
+import ControllerEvent from '../../../app/connection/controller-events';
 
 const log = logger('lib:ConnectionManager');
 
@@ -54,6 +56,15 @@ interface ConnectionCloseOptions {
 
 interface ExecuteGCodeOptions {
     gcode: string;
+}
+
+interface UploadFileOptions {
+    filePath: string;
+    targetFilename?: string;
+}
+
+interface UpgradeFirmwareOptions {
+    filename: string;
 }
 
 /**
@@ -114,6 +125,8 @@ class ConnectionManager {
         log.debug(`machineIdentifier = ${machineIdentifier}`);
 
         // configure machine instance
+        this.machineInstance = null;
+
         if (machineIdentifier === SnapmakerJ1Machine.identifier) {
             this.machineInstance = new J1MachineInstance();
             this.machineInstance.setChannel(this.channel);
@@ -228,6 +241,7 @@ class ConnectionManager {
         const force = options?.force || false;
         const success = await this.channel.connectionClose({ force });
         if (success) {
+            log.info('ConnectionClose, success.');
             const result = {
                 code: 200,
                 data: {},
@@ -277,6 +291,29 @@ class ConnectionManager {
             cmd: cmd,
             args: [gcode, context]
         });
+    };
+
+    /**
+     * Upload file to machine.
+     */
+    public uploadFile = async (socket: SocketServer, options: UploadFileOptions) => {
+        // If using relative path, we assuem it's in tmp directory
+        if (!options.filePath.startsWith('/')) {
+            options.filePath = path.resolve(`${DataStorage.tmpDir}/${options.filePath}`);
+        }
+
+        if (!options.targetFilename) {
+            options.targetFilename = path.basename(options.filePath);
+        }
+
+        log.info(`Upload file to controller... ${options.filePath} to ${options.targetFilename}`);
+
+        const success = await (this.channel as FileChannelInterface).uploadFile(options);
+        if (success) {
+            socket.emit(ControllerEvent.UploadFile, { err: null, text: '' });
+        } else {
+            socket.emit(ControllerEvent.UploadFile, { err: 'failed', text: 'Failed to upload file' });
+        }
     };
 
     /**
@@ -783,10 +820,6 @@ M3`;
         this.channel.getGcodeFile(options);
     };
 
-    public uploadFile = (socket, options) => {
-        this.channel.uploadFile(options);
-    };
-
     public updateZOffset = (socket, options) => {
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const { extruderIndex, zOffset } = options;
@@ -992,7 +1025,16 @@ M3`;
                 msg: `Unsupported event: ${eventName}`,
             });
         }
-    }
+    };
+
+    /**
+     * Upgrade firmware.
+     */
+    public upgradeFirmwareFromFile = async (socket: SocketServer, options: UpgradeFirmwareOptions) => {
+        const success = await (this.channel as SystemChannelInterface).upgradeFirmwareFromFile(options);
+
+        socket.emit(ControllerEvent.UpgradeFirmware, { err: !success });
+    };
 }
 
 const connectionManager = new ConnectionManager();

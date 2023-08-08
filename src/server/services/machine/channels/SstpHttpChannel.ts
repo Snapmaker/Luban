@@ -2,7 +2,6 @@ import { isEqual, isNil } from 'lodash';
 import request from 'superagent';
 
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, } from '../../../../app/constants/machines';
-import DataStorage from '../../../DataStorage';
 import {
     CONNECTION_TYPE_WIFI,
     HEAD_CNC,
@@ -18,7 +17,7 @@ import { valueOf } from '../../../lib/contants-utils';
 import logger from '../../../lib/logger';
 import workerManager from '../../task-manager/workerManager';
 import { EventOptions } from '../types';
-import Channel, { GcodeChannelInterface } from './Channel';
+import Channel, { FileChannelInterface, GcodeChannelInterface, UploadFileOptions } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 
 let waitConfirm: boolean;
@@ -104,7 +103,7 @@ interface GCodeQueueItem {
 /**
  * A singleton to manage devices connection.
  */
-class SstpHttpChannel extends Channel implements GcodeChannelInterface {
+class SstpHttpChannel extends Channel implements GcodeChannelInterface, FileChannelInterface {
     private isGcodeExecuting = false;
 
     private gcodeQueue: GCodeQueueItem[] = [];
@@ -383,6 +382,25 @@ class SstpHttpChannel extends Channel implements GcodeChannelInterface {
         });
     }
 
+    // interface: FileChannelInterface
+
+    public async uploadFile(options: UploadFileOptions): Promise<boolean> {
+        const { filePath, targetFilename } = options;
+        log.info(`Upload file to controller... ${filePath}`);
+
+        return new Promise((resolve) => {
+            const api = `${this.host}/api/v1/upload`;
+            request
+                .post(api)
+                .timeout(300000)
+                .field('token', this.token)
+                .attach('file', filePath, { filename: targetFilename })
+                .end((err) => {
+                    resolve(!err);
+                });
+        });
+    }
+
     /**
      * Get module list.
      */
@@ -554,19 +572,6 @@ class SstpHttpChannel extends Channel implements GcodeChannelInterface {
                         });
                     });
                 }
-            });
-    };
-
-    public uploadFile = (options: EventOptions) => {
-        const { gcodePath, eventName, renderGcodeFileName } = options;
-        const api = `${this.host}/api/v1/upload`;
-        request
-            .post(api)
-            .timeout(300000)
-            .field('token', this.token)
-            .attach('file', DataStorage.tmpDir + gcodePath, { filename: renderGcodeFileName })
-            .end((err, res) => {
-                this.socket && this.socket.emit(eventName, _getResult(err, res));
             });
     };
 
