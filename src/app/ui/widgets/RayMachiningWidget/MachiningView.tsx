@@ -4,9 +4,7 @@ import { includes } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import {
-    CONNECTION_UPLOAD_FILE,
-} from '../../../constants';
+import ControllerEvent from '../../../connection/controller-events';
 import { RootState } from '../../../flux/index.def';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import gcodeActions, { GCodeFileObject } from '../../../flux/workspace/actions-gcode';
@@ -115,11 +113,11 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
         const gcodeFileObject: GCodeFileObject = await dispatch(gcodeActions.uploadGcodeFile(file));
 
         controller
-            .emitEvent(CONNECTION_UPLOAD_FILE, {
+            .emitEvent(ControllerEvent.UploadFile, {
                 gcodePath: `/${gcodeFileObject.uploadName}`,
                 renderGcodeFileName: 'boundary.nc',
             })
-            .once(CONNECTION_UPLOAD_FILE, ({ err, text }) => {
+            .once(ControllerEvent.UploadFile, ({ err, text }) => {
                 if (err) {
                     log.error('Unable to upload G-code to execute.');
                     log.error(err);

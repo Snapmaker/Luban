@@ -4,12 +4,12 @@ import urljoin from '../lib/urljoin';
 import * as api from './api';
 import * as meshHandlers from './channel-handlers/mesh';
 import configstore from './configstore';
+import { connectionManager } from './machine/ConnectionManager';
+import { textSerialChannel } from './machine/channels/TextSerialChannel';
+import monitor from './monitor';
+import { register as registerDiscoverHandlers } from './socket/discover-handlers';
 import { register as registerMachineHandlers } from './socket/machine-handlers';
 import { register as registerOSHandlers } from './socket/os-handlers';
-import { register as registerDiscoverHandlers } from './socket/discover-handlers';
-import monitor from './monitor';
-import { connectionManager } from './machine/ConnectionManager';
-import { socketSerial } from './machine/channels/socket-serial';
 import socketSlice from './socket/socket-slice';
 import system from './socket/system';
 import TaskManager from './task-manager';
@@ -51,8 +51,9 @@ function startServices(server) {
     socketServer.on('connection', connectionManager.onConnection);
     socketServer.on('disconnection', connectionManager.onDisconnection);
 
-    socketServer.registerEvent('command', socketSerial.command);
-    socketServer.registerEvent('writeln', socketSerial.writeln);
+    // TODO: refactor these 2 API
+    socketServer.registerEvent('command', textSerialChannel.command);
+    socketServer.registerEvent('writeln', textSerialChannel.writeln);
 
     // task manager
     socketServer.registerEvent('taskCommit:generateToolPath', TaskManager.addGenerateToolPathTask);
@@ -203,9 +204,6 @@ function registerApis(app) {
 
 export {
     configstore,
-    monitor
+    monitor, registerApis, startServices
 };
-export {
-    startServices,
-    registerApis
-};
+

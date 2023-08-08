@@ -1,5 +1,3 @@
-// import store from '../../store';
-import EventEmitter from 'events';
 import { isEqual, isNil } from 'lodash';
 import request from 'superagent';
 
@@ -16,14 +14,15 @@ import {
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
     STANDARD_CNC_TOOLHEAD_FOR_SM2
 } from '../../../constants';
-import SocketServer from '../../../lib/SocketManager';
 import { valueOf } from '../../../lib/contants-utils';
 import logger from '../../../lib/logger';
 import workerManager from '../../task-manager/workerManager';
 import { EventOptions } from '../types';
+import Channel, { GcodeChannelInterface } from './Channel';
+import { ChannelEvent } from './ChannelEvent';
 
 let waitConfirm: boolean;
-const log = logger('lib:SocketHttp');
+const log = logger('machine:channel:SstpHttpChannel');
 
 
 const isJSON = (str: string) => {
@@ -97,15 +96,18 @@ export type GcodeResult = {
     code?: number
 };
 
+interface GCodeQueueItem {
+    gcodes: string[];
+    callback: () => void;
+}
+
 /**
  * A singleton to manage devices connection.
  */
-class SocketHttp extends EventEmitter {
+class SstpHttpChannel extends Channel implements GcodeChannelInterface {
     private isGcodeExecuting = false;
 
-    private gcodeInfos = [];
-
-    private socket: SocketServer = null;
+    private gcodeQueue: GCodeQueueItem[] = [];
 
     private host = '';
 
@@ -129,36 +131,43 @@ class SocketHttp extends EventEmitter {
     };
 
     public init = () => {
-        this.gcodeInfos = [];
+        this.gcodeQueue = [];
         this.isGcodeExecuting = false;
     };
 
-    public connectionOpen = (socket: SocketServer, options: EventOptions) => {
+    public async connectionOpen(options: { address: string; host: string; token: string }): Promise<boolean> {
         const { host, token } = options;
         this.host = host;
         this.token = token;
-        this.socket = socket;
         this.init();
+
+        this.emit(ChannelEvent.Connecting);
+
         log.debug(`wifi host="${this.host}" : token=${this.token}`);
-        const api = `${this.host}/api/v1/connect`;
-        request
-            .post(api)
-            .timeout(3000)
-            .send(this.token ? `token=${this.token}` : '')
-            .end((err, res) => {
-                if (res?.body?.token) {
-                    this.token = res.body.token;
-                }
+        return new Promise((resolve) => {
+            const api = `${this.host}/api/v1/connect`;
+            request
+                .post(api)
+                .timeout(3000)
+                .send(this.token ? `token=${this.token}` : '')
+                .end((err, res) => {
+                    if (res?.body?.token) {
+                        this.token = res.body.token;
+                    }
 
-                const result = _getResult(err, res);
-                if (err) {
-                    log.debug(`err="${err}"`);
-                    this.socket && this.socket.emit('connection:open', result);
-                    return;
-                }
+                    const result = _getResult(err, res);
+                    if (err) {
+                        log.debug(`err="${err}"`);
+                        this.socket && this.socket.emit('connection:open', result);
+                        resolve(false);
+                        return;
+                    }
 
-                const { data } = result;
-                if (data) {
+                    const { data } = result;
+                    if (!data) {
+                        resolve(false);
+                        return;
+                    }
                     const { series } = data;
                     const seriesValue = valueOf(MACHINE_SERIES, 'alias', series);
                     this.state.series = seriesValue ? seriesValue.value : null;
@@ -200,42 +209,58 @@ class SocketHttp extends EventEmitter {
                     } else {
                         this.socket && this.socket.emit('connection:open', result);
                     }
-                }
 
+                    // Get module info
+                    this.getModuleList();
 
-                // Get module info
-                this.getModuleList();
+                    // Get enclosure status (every 1000ms)
+                    clearInterval(intervalHandle);
+                    intervalHandle = setInterval(this.getEnclosureStatus, 1000);
 
-                // Get enclosure status (every 1000ms)
-                clearInterval(intervalHandle);
-                intervalHandle = setInterval(this.getEnclosureStatus, 1000);
+                    // Get Active extruder
+                    this.getActiveExtruder({ eventName: 'connection:getActiveExtruder' });
 
-                // Get Active extruder
-                this.getActiveExtruder({ eventName: 'connection:getActiveExtruder' });
-            });
-    };
+                    this.emit(ChannelEvent.Connected);
+                    this.emit(ChannelEvent.Ready, {
+                        machineIdentifier: series,
+                    });
 
-    public connectionClose = (socket: SocketServer, options: EventOptions) => {
-        const { eventName } = options;
-        if (this.host) {
-            const api = `${this.host}/api/v1/disconnect`;
-            request
-                .post(api)
-                .timeout(3000)
-                .send(`token=${this.token}`)
-                .end((err, res) => {
-                    socket && socket.emit(eventName, _getResult(err, res));
+                    resolve(true);
                 });
-            this.host = '';
-            this.token = '';
-            this.stopHeartBeat();
-        } else {
-            socket && socket.emit(eventName, _getResult(new Error('connection not exist'), null));
-        }
-        clearInterval(intervalHandle);
-    };
+        });
+    }
 
-    public startHeartbeat = () => {
+    public async connectionClose(options: { force: boolean }): Promise<boolean> {
+        // TODO: cancel intervals on instance
+        clearInterval(intervalHandle);
+        this.stopHeartBeat();
+
+        const force = options?.force || false;
+
+        if (!force) {
+            return new Promise((resolve) => {
+                const api = `${this.host}/api/v1/disconnect`;
+                request
+                    .post(api)
+                    .timeout(3000)
+                    .send(`token=${this.token}`)
+                    .end((err) => {
+                        if (err) {
+                            resolve(false);
+                        } else {
+                            resolve(true);
+                        }
+                    });
+
+                this.host = '';
+                this.token = '';
+            });
+        } else {
+            return true;
+        }
+    }
+
+    public async startHeartbeat(): Promise<void> {
         this.stopHeartBeat();
 
         waitConfirm = true;
@@ -292,12 +317,71 @@ class SocketHttp extends EventEmitter {
                 });
             }
         });
-    };
+
+        return Promise.resolve();
+    }
 
     private stopHeartBeat = () => {
         this.heartBeatWorker && this.heartBeatWorker.terminate();
         this.heartBeatWorker = null;
     };
+
+    private _executeGcode = async (gcode: string) => {
+        const api = `${this.host}/api/v1/execute_code`;
+        return new Promise((resolve) => {
+            const req = request.post(api);
+            req.timeout(300000)
+                .send(`token=${this.token}`)
+                .send(`code=${gcode}`)
+                // .send(formData)
+                .end((err, res) => {
+                    const { data, text } = _getResult(err, res);
+                    resolve({ data, text });
+                });
+        });
+    };
+
+    private async consumeGCodeQueue() {
+        if (this.isGcodeExecuting) {
+            return;
+        }
+        this.isGcodeExecuting = true;
+
+        // drain G-code queue
+        while (this.gcodeQueue.length > 0) {
+            const splice = this.gcodeQueue.splice(0, 1)[0];
+            const result = [];
+            for (const code of splice.gcodes) {
+                const { text } = await this._executeGcode(code) as GcodeResult;
+                if (text) {
+                    result.push(text);
+                }
+            }
+
+            splice.callback && splice.callback();
+        }
+
+        this.isGcodeExecuting = false;
+    }
+
+    /**
+     * Generic execute G-code commands.
+     */
+    public async executeGcode(gcode: string): Promise<boolean> {
+        return new Promise((resolve) => {
+            // enqueue G-code execution
+            const split = gcode.split('\n');
+            this.gcodeQueue.push({
+                gcodes: split,
+                callback: () => {
+                    resolve(true);
+                }
+            });
+
+            // consume
+            this.consumeGCodeQueue();
+        });
+    }
 
     /**
      * Get module list.
@@ -368,57 +452,6 @@ class SocketHttp extends EventEmitter {
             .end((err, res) => {
                 this.socket && this.socket.emit(eventName, _getResult(err, res));
             });
-    };
-
-    public executeGcode = async (options: EventOptions, callback) => {
-        return new Promise((resolve) => {
-            const { gcode, eventName } = options;
-            const split = gcode.split('\n');
-            this.gcodeInfos.push({
-                gcodes: split,
-                callback: (result) => {
-                    callback && callback(result);
-                    resolve(result);
-                }
-            });
-            this.startExecuteGcode(eventName);
-        });
-    };
-
-    public startExecuteGcode = async (eventName: string) => {
-        if (this.isGcodeExecuting) {
-            return;
-        }
-        this.isGcodeExecuting = true;
-        while (this.gcodeInfos.length > 0) {
-            const splice = this.gcodeInfos.splice(0, 1)[0];
-            const result = [];
-            for (const gcode of splice.gcodes) {
-                const { text } = await this._executeGcode(gcode) as GcodeResult;
-                result.push(gcode);
-                if (text) {
-                    result.push(text);
-                }
-            }
-            splice.callback && splice.callback(result);
-            this.socket && this.socket.emit(eventName || 'connection:executeGcode', result);
-        }
-        this.isGcodeExecuting = false;
-    };
-
-    public _executeGcode = async (gcode: string) => {
-        const api = `${this.host}/api/v1/execute_code`;
-        return new Promise((resolve) => {
-            const req = request.post(api);
-            req.timeout(300000)
-                .send(`token=${this.token}`)
-                .send(`code=${gcode}`)
-                // .send(formData)
-                .end((err, res) => {
-                    const { data, text } = _getResult(err, res);
-                    resolve({ data, text });
-                });
-        });
     };
 
     private getGcodePrintingInfo(data) {
@@ -745,6 +778,10 @@ class SocketHttp extends EventEmitter {
     }
 }
 
-const socketHttp = new SocketHttp();
+const channel = new SstpHttpChannel();
 
-export default socketHttp;
+export {
+    channel as sstpHttpChannel
+};
+
+export default SstpHttpChannel;

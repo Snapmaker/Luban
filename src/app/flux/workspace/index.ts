@@ -6,8 +6,6 @@ import { v4 as uuid } from 'uuid';
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import api from '../../api';
 import {
-    CONNECTION_CLOSE,
-    CONNECTION_EXECUTE_GCODE,
     CONNECTION_GET_GCODEFILE,
     CONNECTION_HEAD_BEGIN_WORK,
     CONNECTION_STATUS_CONNECTED,
@@ -41,6 +39,7 @@ import discoverActions from './actions-discover';
 import { GCodeFileObject } from './actions-gcode';
 import type { MachineStateUpdateOptions } from './state';
 import { WORKSPACE_STAGE, initialState } from './state';
+import ControllerEvent from '../../connection/controller-events';
 
 
 export { WORKSPACE_STAGE } from './state';
@@ -568,7 +567,8 @@ export const actions = {
                 const { owner, errorCode } = options;
                 if (includes(EMERGENCY_STOP_BUTTON, owner)) {
                     if (errorCode === 1) {
-                        controller.emitEvent(CONNECTION_CLOSE, () => {
+                        // TODO
+                        controller.emitEvent(ControllerEvent.ConnectionClose, () => {
                             dispatch(connectActions.resetMachineState());
                             dispatch(actions.updateMachineState({
                                 headType: '',
@@ -1045,7 +1045,7 @@ export const actions = {
     },
 
     unloadGcode: () => (dispatch) => {
-        dispatch(actions.executeGcode(null, null, 'gcode:unload'));
+        dispatch(actions.executeCmd('gcode:unload'));
         dispatch(actions.updateState({ uploadState: 'idle' }));
     },
 
@@ -1079,6 +1079,10 @@ export const actions = {
         dispatch(actions.updateState(options));
     },
 
+    executeCmd: (cmd: string) => {
+        controller.emitEvent(ControllerEvent.ExecuteGCode, { cmd });
+    },
+
     /**
      * Execute G-code.
      */
@@ -1095,7 +1099,7 @@ export const actions = {
             return;
         }
         controller.emitEvent(
-            CONNECTION_EXECUTE_GCODE,
+            ControllerEvent.ExecuteGCode,
             { gcode, context, cmd },
             () => {
                 if (homingModal && gcode === 'G28') {

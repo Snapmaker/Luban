@@ -15,6 +15,7 @@ import {
     isDualExtruder
 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
+import { MachineAgent } from '../../../flux/workspace/MachineAgent';
 import connectActions from '../../../flux/workspace/actions-connect';
 import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
@@ -31,8 +32,6 @@ import styles from './styles.styl';
 let loadingTimer = null;
 
 const SerialConnection: React.FC = () => {
-    const dispatch = useDispatch();
-
     // connection
     const machineAgents = useSelector((state: RootState) => state.workspace.machineAgents) as MachineAgent[];
 
@@ -89,6 +88,8 @@ const SerialConnection: React.FC = () => {
 
         controller.listPorts();
     }, []);
+
+    const dispatch = useDispatch();
 
     const onChangePortOption = useCallback((option) => {
         const agent = machineAgents.find(a => a.port === option.value);

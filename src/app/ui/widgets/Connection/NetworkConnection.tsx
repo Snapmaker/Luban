@@ -54,8 +54,6 @@ interface ModuleBriefStatus {
 }
 
 const NetworkConnection: React.FC = () => {
-    const dispatch = useDispatch();
-
     // connection
     const machineAgents = useSelector((state: RootState) => state.workspace.machineAgents) as MachineAgent[];
 
@@ -63,6 +61,7 @@ const NetworkConnection: React.FC = () => {
         machineDiscovering,
     } = useSelector((state: RootState) => state.workspace, shallowEqual);
 
+    const dispatch = useDispatch();
     const onRefreshServers = useCallback(() => {
         dispatch(discoverActions.discoverNetworkedMachines());
     }, [dispatch]);

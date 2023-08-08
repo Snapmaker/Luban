@@ -1,20 +1,24 @@
+import { ResponseCallback } from '@snapmaker/snapmaker-sacp-sdk';
+import { readUint8 } from '@snapmaker/snapmaker-sacp-sdk/dist/helper';
 import dgram from 'dgram';
 import path from 'path';
 
+import { WORKFLOW_STATUS_MAP } from '../../../../app/constants';
 import { SACP_TYPE_SERIES_MAP } from '../../../../app/constants/machines';
 import DataStorage from '../../../DataStorage';
-import SocketServer from '../../../lib/SocketManager';
 import logger from '../../../lib/logger';
 import Business from '../sacp/Business';
 import { EventOptions } from '../types';
 import { ChannelEvent } from './ChannelEvent';
-import SocketBASE from './SACP-BASE';
+import SacpChannelBase from './SacpChannel';
 
 const log = logger('machine:channel:SacpUdpChannel');
 
-class SacpUdpChannel extends SocketBASE {
+class SacpUdpChannel extends SacpChannelBase {
     // private client: dgram.
     private socketClient = dgram.createSocket('udp4');
+
+    private heartbeatTimer2 = null;
 
     public constructor() {
         super();
@@ -24,7 +28,10 @@ class SacpUdpChannel extends SocketBASE {
         });
 
         this.socketClient.on('message', (buffer) => {
-            this.sacpClient.read(buffer);
+            // Only when connection is established, then SACP client will be created
+            if (this.sacpClient) {
+                this.sacpClient.read(buffer);
+            }
         });
         this.socketClient.on('close', () => {
             log.info('TCP connection closed');
@@ -41,7 +48,7 @@ class SacpUdpChannel extends SocketBASE {
         });
     }
 
-    public async test(host: string, port: number) {
+    public async test(host: string, port: number): Promise<boolean> {
         const sacpResponse = (async () => {
             this.sacpClient = new Business('udp', {
                 socket: this.socketClient,
@@ -54,17 +61,15 @@ class SacpUdpChannel extends SocketBASE {
             return !!data;
         })();
 
-        const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(false), 2000));
+        const timeoutPromise = new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 2000));
 
         return Promise.race([sacpResponse, timeoutPromise]);
     }
 
-    public connectionOpen = async (socket: SocketServer, options: EventOptions) => {
-        this.socket = socket;
+    public async connectionOpen(options: { address: string }): Promise<boolean> {
+        log.debug(`connectionOpen(): options = ${options}`);
 
-        this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
-
-        log.info(`connectionOpen, options = ${options}`);
+        this.emit(ChannelEvent.Connecting);
 
         this.sacpClient = new Business('udp', {
             socket: this.socketClient,
@@ -73,36 +78,60 @@ class SacpUdpChannel extends SocketBASE {
         });
         this.sacpClient.setLogger(log);
 
-        this.socket && this.socket.emit('connection:open', {});
-
         // Get Machine Info
         const { data: machineInfos } = await this.getMachineInfo();
         const machineIdentifier = SACP_TYPE_SERIES_MAP[machineInfos.type];
         log.debug(`Get machine info, type = ${machineInfos.type}`);
         log.debug(`Get machine info, machine identifier = ${machineIdentifier}`);
 
+        // Once responsed, it's connected
+        this.emit(ChannelEvent.Connected);
+
         // Machine detected
         this.emit(ChannelEvent.Ready, {
             machineIdentifier,
         });
 
-        // this.emit('connected');
+        return true;
     }
 
-    public connectionClose = (socket: SocketServer, options: EventOptions) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async connectionClose(options?: { force: boolean }): Promise<boolean> {
+        // UDP is stateless, not need to close
         this.sacpClient?.dispose();
 
-        const result = {
-            code: 200,
-            data: {},
-            msg: '',
-            text: ''
-        };
-        socket && socket.emit(options.eventName, result);
+        return true;
     }
 
-    public startHeartbeat = () => {
+    public startHeartbeat = async () => {
         log.info('Start heartbeat.');
+
+        const subscribeHeartbeatCallback: ResponseCallback = (data) => {
+            if (this.heartbeatTimer2) {
+                clearTimeout(this.heartbeatTimer2);
+                this.heartbeatTimer2 = null;
+            }
+
+            this.heartbeatTimer2 = setTimeout(() => {
+                log.info('Lost heartbeat, close connection.');
+                this.socket && this.socket.emit('connection:close');
+            }, 10000);
+
+            const statusKey = readUint8(data.response.data, 0);
+
+            this.machineStatus = WORKFLOW_STATUS_MAP[statusKey];
+            console.log('machine status =', statusKey, this.machineStatus);
+
+            this.socket && this.socket.emit('Marlin:state', {
+                state: {
+                    status: this.machineStatus,
+                }
+            });
+        };
+
+        const res = await this.sacpClient.subscribeHeartbeat({ interval: 2000 }, subscribeHeartbeatCallback);
+
+        log.info(`Subscribe heartbeat, result = ${res.code}`);
     };
 
     public uploadFile = async (options: EventOptions) => {

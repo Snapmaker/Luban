@@ -2,13 +2,9 @@ import { EventEmitter } from 'events';
 
 import ControllerEvent from '../../connection/controller-events';
 import {
-    CONNECTION_CLOSE,
-    CONNECTION_CLOSE_IMPROPER,
     CONNECTION_COORDINATE_MOVE,
-    CONNECTION_EXECUTE_GCODE,
     CONNECTION_GO_HOME,
     CONNECTION_SET_WORK_ORIGIN,
-    CONNECTION_STOP_GCODE,
     CUSTOM_SERVER_NAME,
 } from '../../constants';
 import { controller } from '../../lib/controller';
@@ -102,7 +98,7 @@ export class MachineAgent extends EventEmitter {
                     address: this.address,
                     token: this.token,
                     port: this.port,
-                    sacp: this.protocol === 'SACP',
+                    protocol: this.protocol,
                     addByUser: this.addByUser,
                 })
                 .once(ControllerEvent.ConnectionOpen, ({ msg, data, code }) => {
@@ -115,13 +111,6 @@ export class MachineAgent extends EventEmitter {
                         if (data?.token) {
                             this.token = data?.token;
                         }
-
-                        // Start heartbeat
-                        // delay 1000ms to make sure machine state is correct
-                        // TODO: start heart beat per machine instance.
-                        setTimeout(() => {
-                            controller.emitEvent(ControllerEvent.StartHeartbeat);
-                        }, 1000);
 
                         resolve({ code, msg });
                     } else {
@@ -138,8 +127,8 @@ export class MachineAgent extends EventEmitter {
         if (!force) {
             return new Promise((resolve) => {
                 controller
-                    .emitEvent(ControllerEvent.ConnectionClose)
-                    .once(CONNECTION_CLOSE, () => {
+                    .emitEvent(ControllerEvent.ConnectionClose, { force })
+                    .once(ControllerEvent.ConnectionClose, () => {
                         log.info('Disconnected from machine.');
                         resolve(true);
                     });
@@ -147,8 +136,8 @@ export class MachineAgent extends EventEmitter {
         } else {
             return new Promise((resolve) => {
                 controller
-                    .emitEvent(CONNECTION_CLOSE_IMPROPER)
-                    .once(CONNECTION_CLOSE_IMPROPER, () => {
+                    .emitEvent(ControllerEvent.ConnectionClose, { force })
+                    .once(ControllerEvent.ConnectionClose, () => {
                         resolve(true);
                     });
 
@@ -156,6 +145,36 @@ export class MachineAgent extends EventEmitter {
                 resolve(true);
             });
         }
+    }
+
+    /**
+     * Generic method to execute G-code.
+     *
+     * If G-code contains multiple commands, join them by '\n'.
+     */
+    public async executeGcode(gcode: string) {
+        return new Promise((resolve) => {
+            controller
+                .emitEvent(ControllerEvent.ExecuteGCode, { gcode })
+                .once(ControllerEvent.ExecuteGCode, () => {
+                    resolve(true);
+                });
+        });
+    }
+
+    /**
+     * Generic method to execute a command.
+     *
+     * This is only for serial port connected SM 2.0.
+     */
+    public async executeCmd(gcode, context, cmd) {
+        return new Promise((resolve) => {
+            controller
+                .emitEvent(ControllerEvent.ExecuteCmd, { gcode, context, cmd })
+                .once(ControllerEvent.ExecuteCmd, () => {
+                    resolve(true);
+                });
+        });
     }
 
     public coordinateMove(moveOrders, gcode, jogSpeed, headType) {
@@ -166,16 +185,6 @@ export class MachineAgent extends EventEmitter {
 
     public setWorkOrigin(xPosition, yPosition, zPosition, bPosition) {
         controller.emitEvent(CONNECTION_SET_WORK_ORIGIN, { xPosition, yPosition, zPosition, bPosition });
-    }
-
-    public async executeGcode(gcode, context, cmd) {
-        return new Promise((resolve) => {
-            controller
-                .emitEvent(CONNECTION_EXECUTE_GCODE, { gcode, context, cmd })
-                .once(CONNECTION_EXECUTE_GCODE, () => {
-                    resolve(true);
-                });
-        });
     }
 
     public startServerGcode(args, callback) {
@@ -217,14 +226,16 @@ export class MachineAgent extends EventEmitter {
 
     public stopServerGcode(callback) {
         controller
-            .emitEvent(CONNECTION_STOP_GCODE, { eventName: CONNECTION_STOP_GCODE })
-            .once(CONNECTION_STOP_GCODE, (options) => {
+            .emitEvent(ControllerEvent.StopGCode)
+            .once(ControllerEvent.StopGCode, (options) => {
                 callback && callback();
                 const { msg, code, data } = options;
                 if (msg) {
                     callback && callback({ msg, code, data });
                     return;
                 }
+
+                // ?
                 dispatch(baseActions.updateState({
                     isSendedOnWifi: true
                 }));

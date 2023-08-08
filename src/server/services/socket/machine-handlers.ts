@@ -5,14 +5,20 @@ import ControllerEvent from '../../../app/connection/controller-events';
 
 function register(socketServer: SocketServer): void {
     const connectionEventsObject = {
-        'connection:open': connectionManager.connectionOpen,
-        'connection:close': connectionManager.connectionClose,
-        'connection:closeImproper': connectionManager.connectionCloseImproper,
+        // connection
+        [ControllerEvent.ConnectionOpen]: connectionManager.connectionOpen,
+        [ControllerEvent.ConnectionClose]: connectionManager.connectionClose,
+
+        // general functions
+        [ControllerEvent.ExecuteGCode]: connectionManager.executeGcode,
+        [ControllerEvent.ExecuteCmd]: connectionManager.executeCmd,
+
+        // File
+        [ControllerEvent.UploadFile]: connectionManager.uploadFile,
+
+        // control functions
         'connection:headBeginWork': connectionManager.startGcodeAction,
-        'connection:executeGcode': connectionManager.executeGcode,
-        'connection:startHeartbeat': connectionManager.startHeartbeat,
         'connection:getGcodeFile': connectionManager.getGcodeFile,
-        'connection:uploadFile': connectionManager.uploadFile,
         'connection:updateNozzleTemperature': connectionManager.updateNozzleTemperature,
         'connection:updateBedTemperature': connectionManager.updateBedTemperature,
         'connection:updateZOffset': connectionManager.updateZOffset,

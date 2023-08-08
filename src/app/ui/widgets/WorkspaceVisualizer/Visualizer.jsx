@@ -62,6 +62,7 @@ class Visualizer extends React.PureComponent {
         setGcodePrintingIndex: PropTypes.func.isRequired,
 
         executeGcode: PropTypes.func.isRequired,
+        executeCmd: PropTypes.func.isRequired,
         updatePause3dpStatus: PropTypes.func.isRequired,
         pause3dpStatus: PropTypes.object,
 
@@ -153,11 +154,7 @@ class Visualizer extends React.PureComponent {
             this.updateWorkPositionToZero();
             this.props.setGcodePrintingIndex(0);
         },
-        'connection:close': (options) => {
-            const { dataSource } = options;
-            if (dataSource !== PROTOCOL_TEXT) {
-                return;
-            }
+        'connection:close': () => {
             // reset state related to port and controller
             this.stopToolheadRotationAnimation();
             this.updateWorkPositionToZero();
@@ -447,7 +444,7 @@ class Visualizer extends React.PureComponent {
             this.props.clearGcode();
             const { workflowState } = this.state;
             if ([WorkflowStatus.Idle].includes(workflowState)) {
-                this.props.executeGcode(null, null, 'gcode:unload');
+                this.props.executeCmd('gcode:unload');
             }
         },
         // canvas
@@ -900,7 +897,8 @@ const mapDispatchToProps = (dispatch) => ({
     unloadGcode: () => dispatch(workspaceActions.unloadGcode()),
     setGcodePrintingIndex: (index) => dispatch(workspaceActions.setGcodePrintingIndex(index)),
 
-    executeGcode: (gcode, context, cmd) => dispatch(workspaceActions.executeGcode(gcode, context, cmd)),
+    executeGcode: (gcode) => dispatch(workspaceActions.executeGcode(gcode)),
+    executeCmd: (cmd) => dispatch(workspaceActions.executeCmd(cmd)),
     updatePause3dpStatus: (pause3dpStatus) => dispatch(workspaceActions.updatePause3dpStatus(pause3dpStatus))
 });
 

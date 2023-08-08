@@ -8,7 +8,7 @@ import {
     PRINTING_HEAD_MODULE_IDS,
     ROTARY_MODULES,
 } from '../../../../app/constants/machines';
-import { SnapmakerArtisanMachine } from '../../../../app/machines';
+import { SnapmakerJ1Machine } from '../../../../app/machines';
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 import logger from '../../../lib/logger';
 import SacpSerialChannel from '../channels/SacpSerialChannel';
@@ -17,10 +17,10 @@ import TextSerialChannel from '../channels/TextSerialChannel';
 import { ConnectedData } from '../types';
 import MachineInstance from './Instance';
 
-const log = logger('machine:instance:ArtisanInstance');
+const log = logger('machine:instance:J1Instance');
 
 
-class ArtisanMachineInstance extends MachineInstance {
+class J1MachineInstance extends MachineInstance {
     public async onPrepare(): Promise<void> {
         log.info('onPrepare');
 
@@ -39,10 +39,10 @@ class ArtisanMachineInstance extends MachineInstance {
         const state: ConnectedData = {};
 
         // machine info
-        state.series = SnapmakerArtisanMachine.identifier;
+        state.series = SnapmakerJ1Machine.identifier;
 
         // module info
-        const { data: moduleInfos } = await this.channel.getModuleInfo();
+        const { data: moduleInfos } = await (this.channel as SacpSerialChannel).getModuleInfo();
 
         const moduleListStatus = {
             // airPurifier: false,
@@ -84,9 +84,10 @@ class ArtisanMachineInstance extends MachineInstance {
         state.moduleStatusList = moduleListStatus;
 
         // Get Coordinate Info
-        const { data: coordinateInfos } = await this.channel.getCoordinateInfo();
-        const isHomed = !(coordinateInfos?.coordinateSystemInfo?.homed); // 0: homed, 1: need to home
-        state.isHomed = isHomed;
+        // const { data: coordinateInfos } = await this.channel.getCoordinateInfo();
+        // const isHomed = !(coordinateInfos?.coordinateSystemInfo?.homed); // 0: homed, 1: need to home
+        // For J1, it's not need to go home when connected
+        state.isHomed = true;
         state.isMoving = false;
 
         this.socket.emit('connection:connected', { state: state, err: '' });
@@ -96,4 +97,4 @@ class ArtisanMachineInstance extends MachineInstance {
     }
 }
 
-export default ArtisanMachineInstance;
+export default J1MachineInstance;

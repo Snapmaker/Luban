@@ -92,11 +92,7 @@ function GCode({ widgetActions }) {
     const [state, setState] = useState(() => getInitialState());
 
     const controllerEvents = {
-        'connection:close': (options) => {
-            const { dataSource } = options;
-            if (dataSource !== PROTOCOL_TEXT) {
-                return;
-            }
+        'connection:close': () => {
             const initialState = getInitialState();
             setState({ ...state, ...initialState });
         },

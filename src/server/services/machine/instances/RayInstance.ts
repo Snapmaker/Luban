@@ -8,7 +8,7 @@ import { HEAD_LASER } from '../../../constants';
 import logger from '../../../lib/logger';
 import SacpSerialChannel from '../channels/SacpSerialChannel';
 import SacpUdpChannel from '../channels/SacpUdpChannel';
-import SocketSerial from '../channels/socket-serial';
+import TextSerialChannel from '../channels/TextSerialChannel';
 import { ConnectedData } from '../types';
 import MachineInstance from './Instance';
 import { SnapmakerRayMachine } from '../../../../app/machines';
@@ -17,16 +17,14 @@ const log = logger('services:machine:instances:RayInstance');
 
 
 class RayMachineInstance extends MachineInstance {
-    public onMachineReady(): void {
-        log.info('Machine is ready.');
-
+    public async onPrepare(): Promise<void> {
         if (this.channel instanceof SacpSerialChannel) {
-            this._onMachineReadySACP();
+            await this._prepareMachineSACP();
         } else if (this.channel instanceof SacpUdpChannel) {
-            this._onMachineReadySACP();
+            await this._prepareMachineSACP();
         }
 
-        if (this.channel instanceof SocketSerial) {
+        if (this.channel instanceof TextSerialChannel) {
             // Not implemented
             // M2000 U5 to switch protocol to SACP
             // (this.channel as SocketSerial).command(this.socket, {
@@ -35,21 +33,20 @@ class RayMachineInstance extends MachineInstance {
         }
     }
 
-    private async _onMachineReadySACP() {
+    private async _prepareMachineSACP() {
         const state: ConnectedData = {};
 
         // TODO: Heartbeat is not working for now
         // (this.channel as SocketSerialNew).startHeartbeat();
 
         // Get Machine Info
-        const { data: machineInfo } = await (this.channel as SacpSerialChannel).getMachineInfo();
+        const { data: machineInfo } = await this.channel.getMachineInfo();
         log.info(`Machine Firmware Version: ${machineInfo.masterControlFirmwareVersion}`);
 
         state.series = SnapmakerRayMachine.identifier;
 
         // module info
-        const { data: moduleInfos } = await (this.channel as SacpSerialChannel).getModuleInfo();
-        console.log('moduleInfos =', moduleInfos);
+        const { data: moduleInfos } = await this.channel.getModuleInfo();
 
         /*
         moduleInfos = [
@@ -93,6 +90,11 @@ class RayMachineInstance extends MachineInstance {
         state.moduleStatusList = moduleListStatus;
 
         this.socket.emit('connection:connected', { state: state, err: '' });
+
+        // Start heartbeat
+        await this.channel.startHeartbeat();
+
+        // Subscribe job progress
     }
 }
 

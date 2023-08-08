@@ -2,9 +2,7 @@ import classNames from 'classnames';
 import React, { useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
-import {
-    CONNECTION_UPLOAD_FILE
-} from '../../../constants';
+import ControllerEvent from '../../../connection/controller-events';
 import { RootState } from '../../../flux/index.def';
 import controller from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
@@ -37,11 +35,11 @@ const UploadView: React.FC = () => {
         }).ref;
 
         controller
-            .emitEvent(CONNECTION_UPLOAD_FILE, {
+            .emitEvent(ControllerEvent.UploadFile, {
                 gcodePath: `/${gcodeFile.uploadName}`,
                 renderGcodeFileName: 'ray.nc',
             })
-            .once(CONNECTION_UPLOAD_FILE, ({ err, text }) => {
+            .once(ControllerEvent.UploadFile, ({ err, text }) => {
                 // close sending modal
                 if (sendingModal.current) {
                     sendingModal.current.removeContainer();

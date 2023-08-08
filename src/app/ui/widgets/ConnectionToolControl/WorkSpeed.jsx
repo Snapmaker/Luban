@@ -8,7 +8,6 @@ import {
     CONNECTION_TYPE_WIFI,
     CONNECTION_WORKSPEED_FACTOR,
 } from '../../../constants';
-import { actions as workspaceActions } from '../../../flux/workspace';
 import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import AttributeContainer from './components/AttributeContainer';
@@ -76,9 +75,8 @@ const mapStateToProps = (state) => {
 };
 
 
-const mapDispatchToProps = (dispatch) => {
+const mapDispatchToProps = () => {
     return {
-        executeGcode: (gcode, context) => dispatch(workspaceActions.executeGcode(gcode, context))
     };
 };
 

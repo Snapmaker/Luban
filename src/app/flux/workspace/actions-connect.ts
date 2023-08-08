@@ -16,10 +16,17 @@ import { ConnectionType } from './state';
 
 
 const setConnectionType = (connectionType: ConnectionType) => {
-    return (dispatch) => {
-        dispatch(baseActions.updateState({ connectionType }));
+    return (dispatch, getState) => {
+        const oldConnectionType = getState().workspace.connectionType as ConnectionType;
 
-        machineStore.set('connection.type', connectionType);
+        if (connectionType !== oldConnectionType) {
+            dispatch(baseActions.updateState({
+                connectionType,
+                machineAgents: [], // clear previous machines
+            }));
+
+            machineStore.set('connection.type', connectionType);
+        }
     };
 };
 
@@ -185,10 +192,8 @@ const disconnect = (agent: MachineAgent, options: DisconnectOptions = {}) => {
 /**
  * Reset all connections & redux state.
  */
-const resetConnections = (force: boolean = false) => {
+const resetConnections = ({ force = false }) => {
     return (dispatch) => {
-        console.log('DEBUG:resetConnections');
-
         // disconnect all connections when reload
         controller
             .emitEvent(ControllerEvent.ConnectionClose, { force })
@@ -217,7 +222,7 @@ const init = () => {
         }));
 
         // Reset all possible connections on initialization.
-        dispatch(resetConnections());
+        dispatch(resetConnections({ force: true }));
     };
 };
 

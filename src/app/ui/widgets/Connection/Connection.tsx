@@ -4,13 +4,11 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI } from '../../../constants';
 import { RootState } from '../../../flux/index.def';
-import { actions as workspaceActions } from '../../../flux/workspace';
+import connectActions from '../../../flux/workspace/actions-connect';
 import { ConnectionType } from '../../../flux/workspace/state';
 import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
-
 import Notifications from '../../components/Notifications';
-
 import GoHomeModal from './modals/GoHomeModal';
 import SelectMachineModal from './modals/SelectMachineModal';
 import NetworkConnection from './NetworkConnection';
@@ -42,12 +40,12 @@ const Connection: React.FC = () => {
 
     // Switch to Wi-Fi connect
     const onSelectTabWifi = useCallback(() => {
-        dispatch(workspaceActions.connect.setConnectionType(ConnectionType.WiFi));
+        dispatch(connectActions.setConnectionType(ConnectionType.WiFi));
     }, [dispatch]);
 
     // Switch to serial port connect
     const onSelectTabSerial = useCallback(() => {
-        dispatch(workspaceActions.connect.setConnectionType(ConnectionType.Serial));
+        dispatch(connectActions.setConnectionType(ConnectionType.Serial));
     }, [dispatch]);
 
     // Subscribe to discover machines

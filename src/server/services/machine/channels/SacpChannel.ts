@@ -1,5 +1,5 @@
-import { ResponseCallback } from '@snapmaker/snapmaker-sacp-sdk';
 import { WorkflowStatus } from '@snapmaker/luban-platform';
+import { ResponseCallback } from '@snapmaker/snapmaker-sacp-sdk';
 import { readString, readUint16, readUint8 } from '@snapmaker/snapmaker-sacp-sdk/dist/helper';
 import {
     AirPurifierInfo,
@@ -15,7 +15,6 @@ import {
     NetworkOptions
 } from '@snapmaker/snapmaker-sacp-sdk/dist/models';
 import { Direction } from '@snapmaker/snapmaker-sacp-sdk/dist/models/CoordinateInfo';
-import { EventEmitter } from 'events';
 import { find, includes } from 'lodash';
 import net from 'net';
 
@@ -56,16 +55,14 @@ import {
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
 } from '../../../constants';
 import logger from '../../../lib/logger';
-import SocketServer from '../../../lib/SocketManager';
 import Business, { CoordinateType } from '../sacp/Business';
-import { EventOptions, MarlinStateData } from '../types';
+import { MarlinStateData } from '../types';
+import Channel, { FirmwareUpgradeInterface, GcodeChannelInterface } from './Channel';
 
 const log = logger('lib:SocketBASE');
 
-class SocketBASE extends EventEmitter {
+class SacpChannelBase extends Channel implements GcodeChannelInterface, FirmwareUpgradeInterface {
     private heartbeatTimer;
-
-    public socket: SocketServer;
 
     public sacpClient: Business;
 
@@ -115,6 +112,43 @@ class SocketBASE extends EventEmitter {
     public startTime: any;
 
     public machineStatus: string = WorkflowStatus.Idle;
+
+    // GcodeChannelInterface
+
+    /**
+     * Generic execute G-code commands.
+     */
+    public async executeGcode(gcode: string): Promise<boolean> {
+        const gcodeLines = gcode.split('\n');
+
+        const promises = [];
+        gcodeLines.forEach(_gcode => {
+            promises.push(this.sacpClient.executeGcode(_gcode));
+        });
+
+        const results = await Promise.all(promises);
+
+        // if any gcode line fails, then fails
+        for (const res of results) {
+            if (res.response.result !== 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // FirmwareUpgradeInterface
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async upgradeFromFile(filePath: string): Promise<boolean> {
+        // TODO:
+        return false;
+    }
+
+    public async watchUpgradeResult(): Promise<boolean> {
+        return false;
+    }
 
     public startHeartbeatBase = async (sacpClient: Business, client?: net.Socket) => {
         this.sacpClient = sacpClient;
@@ -185,7 +219,7 @@ class SocketBASE extends EventEmitter {
                 state: {
                     ...stateData,
                     moduleStatusList,
-                    status: WORKFLOW_STATUS_MAP[statusKey],
+                    status: this.machineStatus,
                     moduleList: moduleStatusList,
                 }
             });
@@ -526,26 +560,7 @@ class SocketBASE extends EventEmitter {
         return this.sacpClient.getCurrentCoordinateInfo();
     };
 
-    public executeGcode = async (options: EventOptions, callback: () => void) => {
-        log.info('run executeGcode');
-        const { gcode } = options;
-        const gcodeLines = gcode.split('\n');
-        // callback && callback();
-        log.debug(`executeGcode, ${gcodeLines}`);
-        gcodeLines.forEach(_gcode => {
-            this.sacpClient.executeGcode(_gcode).then(res => {
-                if (res.response.result !== 0) {
-                    log.info(`failed to execute gcode: ${_gcode}`);
-                }
-            });
-        });
-        try {
-            callback && callback();
-            this.socket && this.socket.emit('connection:executeGcode', { msg: '', res: null });
-        } catch (e) {
-            log.error(`execute gcode error: ${e}`);
-        }
-    };
+
 
     public goHome = async (headType?: string) => {
         log.info('onClick gohome');
@@ -957,4 +972,4 @@ class SocketBASE extends EventEmitter {
     };
 }
 
-export default SocketBASE;
+export default SacpChannelBase;

@@ -15,8 +15,16 @@ enum ControllerEvent {
     ConnectionOpen = 'connection:open',
     ConnectionClose = 'connection:close',
 
-    StartHeartbeat = 'connection:startHeartbeat',
-    EndHeartbeat = 'connection:endHeartbeat',
+    /**
+     * Global
+     */
+    ExecuteGCode = 'connection:executeGcode',
+    ExecuteCmd = 'connection:executeCmd',
+
+    /**
+     * File
+     */
+    UploadFile = 'connection:uploadFile',
 
     /**
      * Machine Network (Wi-Fi)
