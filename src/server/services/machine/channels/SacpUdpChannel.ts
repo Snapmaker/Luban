@@ -1,20 +1,18 @@
 import { ResponseCallback } from '@snapmaker/snapmaker-sacp-sdk';
 import { readUint8 } from '@snapmaker/snapmaker-sacp-sdk/dist/helper';
 import dgram from 'dgram';
-import path from 'path';
 
 import { WORKFLOW_STATUS_MAP } from '../../../../app/constants';
 import { SACP_TYPE_SERIES_MAP } from '../../../../app/constants/machines';
-import DataStorage from '../../../DataStorage';
 import logger from '../../../lib/logger';
 import Business from '../sacp/Business';
-import { EventOptions } from '../types';
+import { FileChannelInterface, UploadFileOptions } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 import SacpChannelBase from './SacpChannel';
 
 const log = logger('machine:channel:SacpUdpChannel');
 
-class SacpUdpChannel extends SacpChannelBase {
+class SacpUdpChannel extends SacpChannelBase implements FileChannelInterface {
     // private client: dgram.
     private socketClient = dgram.createSocket('udp4');
 
@@ -134,31 +132,18 @@ class SacpUdpChannel extends SacpChannelBase {
         log.info(`Subscribe heartbeat, result = ${res.code}`);
     };
 
-    public uploadFile = async (options: EventOptions) => {
-        const { eventName } = options;
+    // interface: FileChannelInterface
 
-        const { gcodePath, renderGcodeFileName } = options;
-        log.info(`Upload file to controller... ${gcodePath}`);
+    public async uploadFile(options: UploadFileOptions): Promise<boolean> {
+        const { filePath, targetFilename } = options;
+        log.info(`Upload file to controller... ${filePath}`);
 
-        const gcodeFullPath = path.resolve(`${DataStorage.tmpDir}${gcodePath}`);
         // Note: Use upload large file API instead of upload file API, newer firmware will implement this API
         // rather than the old ones.
-        const res = await this.sacpClient.uploadLargeFile(gcodeFullPath, renderGcodeFileName);
+        const res = await this.sacpClient.uploadLargeFile(filePath, targetFilename);
 
-        if (res.response.result === 0) {
-            const result = {
-                err: null,
-                text: ''
-            };
-            this.socket && this.socket.emit(eventName, result);
-        } else {
-            const result = {
-                err: 'failed',
-                text: 'Failed to upload file',
-            };
-            this.socket && this.socket.emit(eventName, result);
-        }
-    };
+        return (res.response.result === 0);
+    }
 }
 
 const channel = new SacpUdpChannel();

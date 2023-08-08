@@ -50,8 +50,24 @@ export interface GcodeChannelInterface extends Channel {
     executeGcode(gcode: string): Promise<boolean>;
 }
 
-export interface SystemLogInterface extends Channel {
+
+export interface UploadFileOptions {
+    filePath: string;
+    targetFilename?: string;
+}
+export interface FileChannelInterface extends Channel {
+    uploadFile(options: UploadFileOptions): Promise<boolean>;
+}
+
+
+export interface UpgradeFirmwareOptions {
+    filename: string;
+}
+
+export interface SystemChannelInterface extends Channel {
     exportLogToExternalStorage(): Promise<boolean>;
+
+    upgradeFirmwareFromFile(options: UpgradeFirmwareOptions): Promise<boolean>;
 }
 
 export interface FirmwareUpgradeInterface extends Channel {

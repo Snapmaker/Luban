@@ -517,9 +517,24 @@ const showMainWindow = async () => {
 
     // open dialog for setting Download Manager default download path(save path)
     ipcMain.on('select-directory', () => {
-        dialog.showOpenDialog({ title: 'Select a location to save', properties: ['openDirectory', 'createDirectory'] }).then(res => {
-            mainWindow.webContents.send('selected-directory', JSON.stringify(res));
-        }).catch(e => console.error(e));
+        dialog
+            .showOpenDialog({
+                title: 'Select a location to save',
+                properties: ['openDirectory', 'createDirectory'],
+            })
+            .then(res => {
+                mainWindow.webContents.send('selected-directory', JSON.stringify(res));
+            })
+            .catch(e => console.error(e));
+    });
+
+    ipcMain.on('select-file', async () => {
+        const res = await dialog.showOpenDialog({
+            title: 'Select file',
+            properties: ['openFile'],
+        });
+
+        mainWindow.webContents.send('select-file-success', res);
     });
 
     // open download manager save path floder by sys file Explorer

@@ -36,8 +36,8 @@ const UploadView: React.FC = () => {
 
         controller
             .emitEvent(ControllerEvent.UploadFile, {
-                gcodePath: `/${gcodeFile.uploadName}`,
-                renderGcodeFileName: 'ray.nc',
+                filePath: gcodeFile.uploadName,
+                targetFilename: 'ray.nc',
             })
             .once(ControllerEvent.UploadFile, ({ err, text }) => {
                 // close sending modal

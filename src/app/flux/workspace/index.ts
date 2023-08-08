@@ -5,6 +5,7 @@ import { v4 as uuid } from 'uuid';
 
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import api from '../../api';
+import ControllerEvent from '../../connection/controller-events';
 import {
     CONNECTION_GET_GCODEFILE,
     CONNECTION_HEAD_BEGIN_WORK,
@@ -39,7 +40,6 @@ import discoverActions from './actions-discover';
 import { GCodeFileObject } from './actions-gcode';
 import type { MachineStateUpdateOptions } from './state';
 import { WORKSPACE_STAGE, initialState } from './state';
-import ControllerEvent from '../../connection/controller-events';
 
 
 export { WORKSPACE_STAGE } from './state';
@@ -1045,7 +1045,7 @@ export const actions = {
     },
 
     unloadGcode: () => (dispatch) => {
-        dispatch(actions.executeCmd('gcode:unload'));
+        // dispatch(actions.executeCmd('gcode:unload'));
         dispatch(actions.updateState({ uploadState: 'idle' }));
     },
 
@@ -1080,7 +1080,8 @@ export const actions = {
     },
 
     executeCmd: (cmd: string) => {
-        controller.emitEvent(ControllerEvent.ExecuteGCode, { cmd });
+        console.log('execute cmd', cmd);
+        controller.emitEvent(ControllerEvent.ExecuteCmd, { cmd });
     },
 
     /**

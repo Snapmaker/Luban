@@ -37,6 +37,7 @@ enum ControllerEvent {
      * Machine System
      */
     ExportLogToExternalStorage = 'machine:export-log-to-external-storage',
+    UpgradeFirmware = 'machine:upgrade-firmware',
 
     /**
      * G-code control.

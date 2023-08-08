@@ -57,11 +57,11 @@ import {
 import logger from '../../../lib/logger';
 import Business, { CoordinateType } from '../sacp/Business';
 import { MarlinStateData } from '../types';
-import Channel, { FirmwareUpgradeInterface, GcodeChannelInterface } from './Channel';
+import Channel, { GcodeChannelInterface, SystemChannelInterface, UpgradeFirmwareOptions } from './Channel';
 
-const log = logger('lib:SocketBASE');
+const log = logger('machine:channels:SacpChannel');
 
-class SacpChannelBase extends Channel implements GcodeChannelInterface, FirmwareUpgradeInterface {
+class SacpChannelBase extends Channel implements GcodeChannelInterface, SystemChannelInterface {
     private heartbeatTimer;
 
     public sacpClient: Business;
@@ -113,7 +113,7 @@ class SacpChannelBase extends Channel implements GcodeChannelInterface, Firmware
 
     public machineStatus: string = WorkflowStatus.Idle;
 
-    // GcodeChannelInterface
+    // interface: GcodeChannelInterface
 
     /**
      * Generic execute G-code commands.
@@ -138,16 +138,15 @@ class SacpChannelBase extends Channel implements GcodeChannelInterface, Firmware
         return true;
     }
 
-    // FirmwareUpgradeInterface
+    // interface: SystemChannelInterface
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public async upgradeFromFile(filePath: string): Promise<boolean> {
-        // TODO:
-        return false;
-    }
+    public async upgradeFirmwareFromFile(options: UpgradeFirmwareOptions): Promise<boolean> {
+        log.info(`Upgrading firmware from file: ${options.filename}`);
+        const filename = options.filename;
 
-    public async watchUpgradeResult(): Promise<boolean> {
-        return false;
+        const res = await this.sacpClient.upgradeFirmwareFromFile(filename);
+
+        return res.response.result === 0;
     }
 
     public startHeartbeatBase = async (sacpClient: Business, client?: net.Socket) => {

@@ -35,6 +35,7 @@ import VisualizerWidget from '../../widgets/WorkspaceVisualizer';
 import VisualizerOverlay from './VisualizerOverlay';
 import MachineLogModal from './modals/MachineLogModal';
 import MachineNetworkModal from './modals/MachineNetworkModal';
+import FirmwareUpgradeModal from './modals/FirmwareUpgradeModal';
 
 
 const allWidgets = {
@@ -107,6 +108,7 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
 
     const [showMachineNetworkModal, setShowMachineNetworkModal] = useState(false);
     const [showMachineLogModal, setShowMachineLogModal] = useState(false);
+    const [showFirmwareUpgradeModal, setShowFirmwareUpgradeModal] = useState(false);
 
     const [leftItems, setLeftItems] = useState([
         {
@@ -135,6 +137,14 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
             name: 'MainToolbarJobSetup',
             action: () => {
                 setShowMachineLogModal(true);
+            },
+        },
+        {
+            title: i18n._('Firmware'),
+            type: 'button',
+            name: 'MainToolbarJobSetup',
+            action: () => {
+                setShowFirmwareUpgradeModal(true);
             },
         }
     ]);
@@ -339,6 +349,15 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
                     showMachineLogModal && (
                         <MachineLogModal
                             onClose={() => setShowMachineLogModal(false)}
+                        />
+                    )
+                }
+
+                {/* Firmware Upgrade */}
+                {
+                    showFirmwareUpgradeModal && (
+                        <FirmwareUpgradeModal
+                            onClose={() => setShowFirmwareUpgradeModal(false)}
                         />
                     )
                 }

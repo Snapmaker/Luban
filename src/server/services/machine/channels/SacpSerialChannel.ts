@@ -1,6 +1,5 @@
 import crypto from 'crypto';
 import fs from 'fs';
-import path from 'path';
 import { SerialPort } from 'serialport';
 
 import { SACP_TYPE_SERIES_MAP } from '../../../../app/constants/machines';
@@ -9,12 +8,13 @@ import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 import logger from '../../../lib/logger';
 import Business from '../sacp/Business';
 import { EventOptions } from '../types';
+import { FileChannelInterface, UploadFileOptions } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 import SacpChannelBase from './SacpChannel';
 
 const log = logger('machine:channel:SacpSerialChannel');
 
-class SacpSerialChannel extends SacpChannelBase {
+class SacpSerialChannel extends SacpChannelBase implements FileChannelInterface {
     private serialport: SerialPort;
 
     // public startTime: number;
@@ -104,9 +104,12 @@ class SacpSerialChannel extends SacpChannelBase {
     }
 
     public async startHeartbeat(): Promise<void> {
-        await this.startHeartbeatBase(this.sacpClient);
+        // TODO:
+        // - only start heartbeat
+        // - and start subscriptions on instance
 
-        this.setROTSubscribeApi();
+        // await this.startHeartbeatBase(this.sacpClient);
+        // this.setROTSubscribeApi();
     }
 
     public startGcode = async (options: EventOptions) => {
@@ -137,31 +140,16 @@ class SacpSerialChannel extends SacpChannelBase {
         });
     };
 
-    public uploadFile = async (options: EventOptions) => {
-        const { eventName } = options;
+    public async uploadFile(options: UploadFileOptions): Promise<boolean> {
+        const { filePath, targetFilename } = options;
+        log.info(`Upload file to controller... ${filePath}`);
 
-        const { gcodePath, renderGcodeFileName } = options;
-        log.info(`Upload file to controller... ${gcodePath}`);
-
-        const gcodeFullPath = path.resolve(`${DataStorage.tmpDir}${gcodePath}`);
         // Note: Use upload large file API instead of upload file API, newer firmware will implement this API
         // rather than the old ones.
-        const res = await this.sacpClient.uploadLargeFile(gcodeFullPath, renderGcodeFileName);
+        const res = await this.sacpClient.uploadLargeFile(filePath, targetFilename);
 
-        if (res.response.result === 0) {
-            const result = {
-                err: null,
-                text: ''
-            };
-            this.socket && this.socket.emit(eventName, result);
-        } else {
-            const result = {
-                err: 'failed',
-                text: 'Failed to upload file',
-            };
-            this.socket && this.socket.emit(eventName, result);
-        }
-    };
+        return (res.response.result === 0);
+    }
 }
 
 const sacpSerialChannel = new SacpSerialChannel();
