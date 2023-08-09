@@ -219,6 +219,7 @@ class ConnectionManager {
         this.socket = socket;
 
         // initialize channel
+        this.unbindChannelEvents();
         this.bindChannelEvents();
 
         // Note: this is temporary solution to make channel be able to emit data.
@@ -1031,9 +1032,14 @@ M3`;
      * Upgrade firmware.
      */
     public upgradeFirmwareFromFile = async (socket: SocketServer, options: UpgradeFirmwareOptions) => {
-        const success = await (this.channel as SystemChannelInterface).upgradeFirmwareFromFile(options);
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const success = await (this.channel as SystemChannelInterface).upgradeFirmwareFromFile(options);
 
-        socket.emit(ControllerEvent.UpgradeFirmware, { err: !success });
+            socket.emit(ControllerEvent.UpgradeFirmware, { err: !success });
+        } else {
+            // not supported
+            socket.emit(ControllerEvent.UpgradeFirmware, { err: 1 });
+        }
     };
 }
 

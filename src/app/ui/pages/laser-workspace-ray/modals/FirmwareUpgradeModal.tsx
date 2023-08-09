@@ -1,6 +1,7 @@
 import { Tooltip } from 'antd';
 import React, { useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { noop } from 'lodash';
 
 import ControllerEvent from '../../../../connection/controller-events';
 import { RootState } from '../../../../flux/index.def';
@@ -21,6 +22,7 @@ interface FirmwareUpgradeModalProps {
 }
 
 const FirmwareUpgradeModal: React.FC<FirmwareUpgradeModalProps> = (props) => {
+    const { onClose = noop } = props;
     const isConnected = useSelector((state: RootState) => state.workspace.isConnected);
 
     const [selectedFilePath, setSelectedFile] = useState('');
@@ -52,7 +54,7 @@ const FirmwareUpgradeModal: React.FC<FirmwareUpgradeModalProps> = (props) => {
             controller
                 .emitEvent(ControllerEvent.UploadFile, {
                     filePath: selectedFilePath,
-                    targetFilename: 'firmware.bin',
+                    targetFilename: '/update.bin',
                 })
                 .once(ControllerEvent.UploadFile, ({ err, text }) => {
                     if (err) {
@@ -70,9 +72,9 @@ const FirmwareUpgradeModal: React.FC<FirmwareUpgradeModalProps> = (props) => {
         return new Promise((resolve) => {
             controller
                 .emitEvent(ControllerEvent.UpgradeFirmware, {
-                    filename: 'firmware.bin',
+                    filename: '/update.bin',
                 })
-                .once(ControllerEvent.UpgradeFirmware, (err) => {
+                .once(ControllerEvent.UpgradeFirmware, ({ err }) => {
                     if (err) {
                         log.error('Failed to upgrade.');
                         resolve(false);
@@ -104,11 +106,15 @@ const FirmwareUpgradeModal: React.FC<FirmwareUpgradeModalProps> = (props) => {
 
         toast(makeSceneToast('info', i18n._('Upgraded firmware successfully.')));
         setIsUpgrading(false);
-    }, [upload, upgrade]);
+
+        // Once upgrade successful, the machine will be disconnected.
+        // close the modal, let users to re-connect.
+        onClose();
+    }, [upload, upgrade, onClose]);
 
 
     return (
-        <Modal size="sm" onClose={props?.onClose}>
+        <Modal size="sm" onClose={onClose}>
             <Modal.Header>
                 {i18n._('Machine Firmware')}
             </Modal.Header>

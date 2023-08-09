@@ -145,6 +145,7 @@ class SacpChannelBase extends Channel implements GcodeChannelInterface, SystemCh
         const filename = options.filename;
 
         const res = await this.sacpClient.upgradeFirmwareFromFile(filename);
+        log.info(`Upgrade firmware result = ${res.response.result}`);
 
         return res.response.result === 0;
     }
