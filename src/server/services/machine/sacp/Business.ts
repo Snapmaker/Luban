@@ -1225,7 +1225,6 @@ export default class Business extends Dispatcher {
             // Watch upgrade preparation result
             this.setHandler(0xad, 0x03, (data) => {
                 const upgradeCode = readUint8(data.param);
-                console.log('ad03, ', upgradeCode);
 
                 // ACK
                 this.ack(0xad, 0x03, data.packet, Buffer.alloc(1, 0));
@@ -1244,8 +1243,6 @@ export default class Business extends Dispatcher {
             // Watch upgrade result
             this.setHandler(0xad, 0x10, (data) => {
                 const upgradeCode = readUint8(data.param);
-
-                console.log('ad10, ', upgradeCode);
 
                 this.ack(0xad, 0x10, data.packet, Buffer.alloc(1, 0));
 

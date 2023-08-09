@@ -236,6 +236,14 @@ class ConnectionManager {
     public connectionClose = async (socket: SocketServer, options: ConnectionCloseOptions) => {
         log.info('ConnectionClose');
         if (!this.channel) {
+            // success if no channel is used
+            const result = {
+                code: 200,
+                data: {},
+                msg: '',
+                text: ''
+            };
+            socket.emit('connection:close', result);
             return;
         }
 
@@ -1027,6 +1035,16 @@ M3`;
             });
         }
     };
+
+    public getFirmwareVersion = async (socket: SocketServer) => {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const version = await (this.channel as SystemChannelInterface).getFirmwareVersion();
+            socket.emit(ControllerEvent.GetFirmwareVersion, { err: 0, version });
+        } else {
+            // not supported
+            socket.emit(ControllerEvent.UpgradeFirmware, { err: 1 });
+        }
+    }
 
     /**
      * Upgrade firmware.
