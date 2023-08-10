@@ -1,12 +1,7 @@
 import { EventEmitter } from 'events';
 
 import ControllerEvent from '../../connection/controller-events';
-import {
-    CONNECTION_COORDINATE_MOVE,
-    CONNECTION_GO_HOME,
-    CONNECTION_SET_WORK_ORIGIN,
-    CUSTOM_SERVER_NAME,
-} from '../../constants';
+import { CUSTOM_SERVER_NAME } from '../../constants';
 import { controller } from '../../lib/controller';
 import log from '../../lib/log';
 import { dispatch } from '../../store';
@@ -178,13 +173,13 @@ export class MachineAgent extends EventEmitter {
     }
 
     public coordinateMove(moveOrders, gcode, jogSpeed, headType) {
-        controller.emitEvent(CONNECTION_COORDINATE_MOVE, { moveOrders, gcode, jogSpeed, headType }, () => {
+        controller.emitEvent(ControllerEvent.Move, { moveOrders, gcode, jogSpeed, headType }, () => {
             // homed
         });
     }
 
     public setWorkOrigin(xPosition, yPosition, zPosition, bPosition) {
-        controller.emitEvent(CONNECTION_SET_WORK_ORIGIN, { xPosition, yPosition, zPosition, bPosition });
+        controller.emitEvent(ControllerEvent.SetOrigin, { xPosition, yPosition, zPosition, bPosition });
     }
 
     public startServerGcode(args, callback) {
@@ -243,7 +238,7 @@ export class MachineAgent extends EventEmitter {
     }
 
     public goHome(data, callback) {
-        controller.emitEvent(CONNECTION_GO_HOME, data, callback);
+        controller.emitEvent(ControllerEvent.GoHome, data, callback);
     }
 
 
