@@ -11,8 +11,6 @@ import * as THREE from 'three';
 import ControllerEvent from '../../../connection/controller-events';
 import {
     AUTO_MDOE,
-    CONNECTION_MATERIALTHICKNESS,
-    CONNECTION_MATERIALTHICKNESS_ABORT,
     CONNECTION_TYPE_SERIAL,
     CONNECTION_TYPE_WIFI,
     HEAD_CNC,
@@ -392,10 +390,10 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                     isCameraCapture
                 };
                 window.addEventListener('cancelReq', () => {
-                    controller.emitEvent(CONNECTION_MATERIALTHICKNESS_ABORT);
+                    controller.emitEvent(ControllerEvent.AbortMaterialThickness);
                 });
-                controller.emitEvent(CONNECTION_MATERIALTHICKNESS, args)
-                    .once(CONNECTION_MATERIALTHICKNESS, ({ data: { status, thickness }, msg }) => {
+                controller.emitEvent(ControllerEvent.CalcMaterialThickness, args)
+                    .once(ControllerEvent.CalcMaterialThickness, ({ data: { status, thickness }, msg }) => {
                         if (msg || !status) {
                             modalSmallHOC({
                                 title: i18n._('key-Workspace/WifiTransport-Failed to measure thickness.'),

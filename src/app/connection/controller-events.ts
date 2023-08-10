@@ -54,6 +54,13 @@ enum ControllerEvent {
     SetSpindleSpeed = 'connection:updateToolHeadSpeed',
 
     /**
+     * Enclosure
+     */
+    SetEnclosureLight = 'connection:setEnclosureLight',
+    SetEnclosureFan = 'connection:setEnclosureFan',
+    SetEnclosureDoorDetection = 'connection:setDoorDetection',
+
+    /**
      * File
      */
     UploadFile = 'connection:uploadFile',

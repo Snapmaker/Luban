@@ -598,7 +598,7 @@ M3`;
     // SSTP
     public getActiveExtruder = (socket, options) => {
         if (this.connectionType === CONNECTION_TYPE_WIFI) {
-            this.socket.getActiveExtruder(options);
+            this.channel.getActiveExtruder(options);
         }
     };
 

@@ -4,16 +4,11 @@ import { capitalize } from 'lodash';
 import React, { useCallback, useMemo, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
+import ControllerEvent from '../../../connection/controller-events';
 import {
-    CONNECTION_BED_TEMPERATURE,
-    CONNECTION_LOAD_FILAMENT,
-    CONNECTION_NOZZLE_TEMPERATURE,
-    CONNECTION_UNLOAD_FILAMENT,
-    CONNECTION_WORK_NOZZLE,
-    CONNECTION_Z_OFFSET,
     LEFT_EXTRUDER,
     LEFT_EXTRUDER_MAP_NUMBER,
-    RIGHT_EXTRUDER_MAP_NUMBER,
+    RIGHT_EXTRUDER_MAP_NUMBER
 } from '../../../constants';
 import { isDualExtruder } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
@@ -64,7 +59,7 @@ const PrintToolControl: React.FC = () => {
     } = useSelector((state: RootState) => state.workspace);
 
     const setHeatedBedTemperature = useCallback((temp) => {
-        controller.emitEvent(CONNECTION_BED_TEMPERATURE, {
+        controller.emitEvent(ControllerEvent.SetBedTemperature, {
             heatedBedTemperatureValue: temp
         });
     }, []);
@@ -84,7 +79,7 @@ const PrintToolControl: React.FC = () => {
         } else {
             extruderIndex = LEFT_EXTRUDER_MAP_NUMBER;
         }
-        controller.emitEvent(CONNECTION_WORK_NOZZLE, {
+        controller.emitEvent(ControllerEvent.SwitchActiveExtruder, {
             extruderIndex,
         });
     }, [currentWorkNozzle]);
@@ -112,47 +107,51 @@ const PrintToolControl: React.FC = () => {
         },
         onClickPlusZOffset: (extruderIndex) => {
             const zOffset = extruderIndex === RIGHT_EXTRUDER_MAP_NUMBER ? rightZOffsetValue : leftZOffsetValue;
-            controller.emitEvent(CONNECTION_Z_OFFSET, {
-                zOffset,
-                extruderIndex,
-            }).once(CONNECTION_Z_OFFSET, ({ msg }) => {
-                if (msg) {
-                    return;
-                }
-                addConsoleLogs([`Z Offset ${zOffset} ok`]);
-            });
+            controller
+                .emitEvent(ControllerEvent.SetZOffset, {
+                    zOffset,
+                    extruderIndex,
+                })
+                .once(ControllerEvent.SetZOffset, ({ msg }) => {
+                    if (msg) {
+                        return;
+                    }
+                    addConsoleLogs([`Z Offset ${zOffset} ok`]);
+                });
         },
         onClickMinusZOffset: (extruderIndex) => {
             const zOffset = 0 - (extruderIndex === RIGHT_EXTRUDER_MAP_NUMBER ? rightZOffsetValue : leftZOffsetValue);
-            controller.emitEvent(CONNECTION_Z_OFFSET, {
-                zOffset,
-                extruderIndex,
-            }).once(CONNECTION_Z_OFFSET, ({ msg }) => {
-                if (msg) {
-                    return;
-                }
-                addConsoleLogs([`Z Offset ${zOffset} ok`]);
-            });
+            controller
+                .emitEvent(ControllerEvent.SetZOffset, {
+                    zOffset,
+                    extruderIndex,
+                })
+                .once(ControllerEvent.SetZOffset, ({ msg }) => {
+                    if (msg) {
+                        return;
+                    }
+                    addConsoleLogs([`Z Offset ${zOffset} ok`]);
+                });
         },
         onClickLoad: (extruderIndex) => {
             setSqueezing(true);
-            controller.emitEvent(CONNECTION_LOAD_FILAMENT, {
+            controller.emitEvent(ControllerEvent.LoadFilament, {
                 extruderIndex: extruderIndex
-            }).once(CONNECTION_LOAD_FILAMENT, () => {
+            }).once(ControllerEvent.LoadFilament, () => {
                 setSqueezing(false);
             });
         },
         onClickUnload: (extruderIndex) => {
             setSqueezing(true);
-            controller.emitEvent(CONNECTION_UNLOAD_FILAMENT, {
+            controller.emitEvent(ControllerEvent.UnloadFilamnet, {
                 extruderIndex: extruderIndex
-            }).once(CONNECTION_UNLOAD_FILAMENT, () => {
+            }).once(ControllerEvent.UnloadFilamnet, () => {
                 setSqueezing(false);
             });
         },
 
         updateNozzleTemp: (extruderIndex, temp) => {
-            controller.emitEvent(CONNECTION_NOZZLE_TEMPERATURE, {
+            controller.emitEvent(ControllerEvent.SetExtruderTemperature, {
                 extruderIndex, // RIGHT_EXTRUDER_MAP_NUMBER
                 nozzleTemperatureValue: temp
             });
