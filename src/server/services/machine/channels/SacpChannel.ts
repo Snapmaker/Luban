@@ -140,11 +140,21 @@ class SacpChannelBase extends Channel implements GcodeChannelInterface, SystemCh
 
     // interface: SystemChannelInterface
 
+    public async getFirmwareVersion(): Promise<string> {
+        const { data: machineInfo } = await this.sacpClient.getMachineInfo();
+
+        const version = machineInfo.masterControlFirmwareVersion;
+        log.info(`Get firmware version: ${version}`);
+
+        return version;
+    }
+
     public async upgradeFirmwareFromFile(options: UpgradeFirmwareOptions): Promise<boolean> {
         log.info(`Upgrading firmware from file: ${options.filename}`);
         const filename = options.filename;
 
         const res = await this.sacpClient.upgradeFirmwareFromFile(filename);
+        log.info(`Upgrade firmware result = ${res.response.result}`);
 
         return res.response.result === 0;
     }

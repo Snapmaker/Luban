@@ -37,6 +37,7 @@ enum ControllerEvent {
      * Machine System
      */
     ExportLogToExternalStorage = 'machine:export-log-to-external-storage',
+    GetFirmwareVersion = 'machine:get-firmware-version',
     UpgradeFirmware = 'machine:upgrade-firmware',
 
     /**

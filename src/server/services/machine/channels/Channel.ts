@@ -67,6 +67,8 @@ export interface UpgradeFirmwareOptions {
 export interface SystemChannelInterface extends Channel {
     exportLogToExternalStorage(): Promise<boolean>;
 
+    getFirmwareVersion(): Promise<string>;
+
     upgradeFirmwareFromFile(options: UpgradeFirmwareOptions): Promise<boolean>;
 }
 

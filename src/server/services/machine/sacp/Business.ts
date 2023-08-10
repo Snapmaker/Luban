@@ -942,7 +942,11 @@ export default class Business extends Dispatcher {
 
             // index
             const index = readUint32(data.param, nextOffset);
-            this.log.info(`request file chuck index = ${index}`);
+
+            // Log so we can see file transfer process
+            if (index % 10 === 0) {
+                this.log.info(`request file chuck index = ${index}`);
+            }
 
             const inputStream = fs.createReadStream(filePath, {
                 start: index * sizePerChunk,
@@ -972,7 +976,6 @@ export default class Business extends Dispatcher {
                     chunkBuffer,
                 ]);
 
-                console.log('ack', responseBuffer);
                 this.ack(0xb0, 0x11, data.packet, responseBuffer);
             });
             inputStream.once('error', () => {
@@ -1219,14 +1222,32 @@ export default class Business extends Dispatcher {
 
     public async upgradeFirmwareFromFile(filename: string) {
         return new Promise<ResponseData>((resolve, reject) => {
-            // Watch upgrade result
+            // Watch upgrade preparation result
             this.setHandler(0xad, 0x03, (data) => {
                 const upgradeCode = readUint8(data.param);
 
                 // ACK
                 this.ack(0xad, 0x03, data.packet, Buffer.alloc(1, 0));
 
-                // upgrade code = 0 means success
+                // code = 0 means preparation is done
+                // code != 0 means preparation is blocked (something wrong with firmware file)
+                if (upgradeCode !== 0) {
+                    resolve({
+                        response: {
+                            result: upgradeCode,
+                        }
+                    } as ResponseData);
+                }
+            });
+
+            // Watch upgrade result
+            this.setHandler(0xad, 0x10, (data) => {
+                const upgradeCode = readUint8(data.param);
+
+                this.ack(0xad, 0x10, data.packet, Buffer.alloc(1, 0));
+
+                // code = 0 means ugprade success
+                // code != 0 means upgrade failed
                 resolve({
                     response: {
                         result: upgradeCode,

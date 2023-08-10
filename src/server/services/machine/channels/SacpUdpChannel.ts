@@ -59,7 +59,7 @@ class SacpUdpChannel extends SacpChannelBase implements FileChannelInterface {
             return !!data;
         })();
 
-        const timeoutPromise = new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 2000));
+        const timeoutPromise = new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 1000));
 
         return Promise.race([sacpResponse, timeoutPromise]);
     }
@@ -130,6 +130,12 @@ class SacpUdpChannel extends SacpChannelBase implements FileChannelInterface {
         const res = await this.sacpClient.subscribeHeartbeat({ interval: 2000 }, subscribeHeartbeatCallback);
 
         log.info(`Subscribe heartbeat, result = ${res.code}`);
+    };
+
+    public stopHeartbeat = async () => {
+        const res = await this.sacpClient.unsubscribeHeartbeat(null);
+
+        log.info(`Unsubscribe heartbeat, result = ${res.code}`);
     };
 
     // interface: FileChannelInterface

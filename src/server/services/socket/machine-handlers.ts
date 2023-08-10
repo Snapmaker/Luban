@@ -56,6 +56,7 @@ function register(socketServer: SocketServer): void {
 
         // machine system
         [ControllerEvent.ExportLogToExternalStorage]: connectionManager.exportLogToExternalStorage,
+        [ControllerEvent.GetFirmwareVersion]: connectionManager.getFirmwareVersion,
         [ControllerEvent.UpgradeFirmware]: connectionManager.upgradeFirmwareFromFile,
     };
 

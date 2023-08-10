@@ -1,5 +1,6 @@
 import { Tooltip } from 'antd';
-import React, { useCallback, useState } from 'react';
+import { noop } from 'lodash';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import ControllerEvent from '../../../../connection/controller-events';
@@ -21,7 +22,20 @@ interface FirmwareUpgradeModalProps {
 }
 
 const FirmwareUpgradeModal: React.FC<FirmwareUpgradeModalProps> = (props) => {
+    const { onClose = noop } = props;
     const isConnected = useSelector((state: RootState) => state.workspace.isConnected);
+
+    const [firmwareVersion, setFirmwareVersion] = useState('');
+
+    useEffect(() => {
+        if (isConnected) {
+            controller
+                .emitEvent(ControllerEvent.GetFirmwareVersion)
+                .once(ControllerEvent.GetFirmwareVersion, ({ version }) => {
+                    setFirmwareVersion(version);
+                });
+        }
+    }, [isConnected]);
 
     const [selectedFilePath, setSelectedFile] = useState('');
 
@@ -44,17 +58,22 @@ const FirmwareUpgradeModal: React.FC<FirmwareUpgradeModalProps> = (props) => {
         });
     }, []);
 
+    const [isUploading, setIsUploading] = useState(false);
     const [isUpgrading, setIsUpgrading] = useState(false);
 
     // Upload firmware file
     const upload = useCallback(async () => {
+        setIsUploading(true);
+
         return new Promise((resolve) => {
             controller
                 .emitEvent(ControllerEvent.UploadFile, {
                     filePath: selectedFilePath,
-                    targetFilename: 'firmware.bin',
+                    targetFilename: '/update.bin',
                 })
                 .once(ControllerEvent.UploadFile, ({ err, text }) => {
+                    setIsUploading(false);
+
                     if (err) {
                         log.error(err);
                         log.error(`Reason: ${text}`);
@@ -67,12 +86,14 @@ const FirmwareUpgradeModal: React.FC<FirmwareUpgradeModalProps> = (props) => {
     }, [selectedFilePath]);
 
     const upgrade = useCallback(async () => {
+        setIsUpgrading(true);
         return new Promise((resolve) => {
             controller
                 .emitEvent(ControllerEvent.UpgradeFirmware, {
-                    filename: 'firmware.bin',
+                    filename: '/update.bin',
                 })
-                .once(ControllerEvent.UpgradeFirmware, (err) => {
+                .once(ControllerEvent.UpgradeFirmware, ({ err }) => {
+                    setIsUpgrading(false);
                     if (err) {
                         log.error('Failed to upgrade.');
                         resolve(false);
@@ -85,35 +106,39 @@ const FirmwareUpgradeModal: React.FC<FirmwareUpgradeModalProps> = (props) => {
 
     // Start to upgrade fimmware
     const startUpgradeProcedure = useCallback(async () => {
-        setIsUpgrading(true);
-
         // Upload firmware to machine
         const uploadResult = await upload();
         if (!uploadResult) {
-            setIsUpgrading(false);
             toast(makeSceneToast('info', i18n._('Failed to upgrade firmware.')));
             return;
         }
 
         const upgradeResult = await upgrade();
         if (!upgradeResult) {
-            setIsUpgrading(false);
             toast(makeSceneToast('info', i18n._('Failed to upgrade firmware.')));
             return;
         }
 
+        // success
         toast(makeSceneToast('info', i18n._('Upgraded firmware successfully.')));
-        setIsUpgrading(false);
-    }, [upload, upgrade]);
+
+        // Once upgrade successful, the machine will be disconnected.
+        // close the modal, let users to re-connect.
+        onClose();
+    }, [upload, upgrade, onClose]);
 
 
     return (
-        <Modal size="sm" onClose={props?.onClose}>
+        <Modal size="sm" onClose={onClose}>
             <Modal.Header>
                 {i18n._('Machine Firmware')}
             </Modal.Header>
             <Modal.Body className="width-400">
                 <div className="sm-flex">
+                    <span>{i18n._('Current firmware version')}:</span>
+                    <span className="margin-left-4">{firmwareVersion}</span>
+                </div>
+                <div className="sm-flex margin-top-16">
                     <Tooltip
                         title={selectedFilePath}
                     >
@@ -139,10 +164,13 @@ const FirmwareUpgradeModal: React.FC<FirmwareUpgradeModalProps> = (props) => {
                     className="align-r"
                     width="96px"
                     onClick={startUpgradeProcedure}
-                    disabled={!isConnected || isUpgrading}
+                    disabled={!isConnected || isUploading || isUpgrading}
                 >
                     {
-                        !isUpgrading && i18n._('Upgrade')
+                        !isUploading && !isUpgrading && i18n._('Upgrade')
+                    }
+                    {
+                        isUploading && i18n._('Uploading')
                     }
                     {
                         isUpgrading && i18n._('Upgrading')
