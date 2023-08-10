@@ -22,6 +22,38 @@ enum ControllerEvent {
     ExecuteCmd = 'connection:executeCmd',
 
     /**
+     * Motion
+     */
+    GoHome = 'connection:goHome',
+    Move = 'connection:coordinateMove', // Linear Move
+    SetOrigin = 'connection:setWorkOrigin',
+    SetSpeedFactor = 'connection:updateWorkSpeedFactor',
+
+    /**
+     * 3D Printing
+     */
+    SwitchActiveExtruder = 'connection:updateWorkNozzle',
+    SetExtruderTemperature = 'connection:updateNozzleTemperature',
+    LoadFilament = 'connection:loadFilament',
+    UnloadFilamnet = 'connection:unloadFilament',
+    SetBedTemperature = 'connection:updateBedTemperature',
+    SetZOffset = 'connection:updateZOffset',
+
+    /**
+     * Laser
+     */
+    SetLaserPower = 'connection:updateLaserPower',
+    SwitchLaserPower = 'connection:switchLaserPower', // ?
+    CalcMaterialThickness = 'connection:materialThickness',
+    AbortMaterialThickness = 'connection:materialThickness_abort',
+
+    /**
+     * CNC
+     */
+    SwitchCNC = 'connection:switchCNC', // ?
+    SetSpindleSpeed = 'connection:updateToolHeadSpeed',
+
+    /**
      * File
      */
     UploadFile = 'connection:uploadFile',

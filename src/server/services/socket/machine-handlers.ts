@@ -13,40 +13,51 @@ function register(socketServer: SocketServer): void {
         [ControllerEvent.ExecuteGCode]: connectionManager.executeGcode,
         [ControllerEvent.ExecuteCmd]: connectionManager.executeCmd,
 
-        // File
-        [ControllerEvent.UploadFile]: connectionManager.uploadFile,
-
-        // control functions
-        'connection:headBeginWork': connectionManager.startGcodeAction,
-        'connection:getGcodeFile': connectionManager.getGcodeFile,
-        'connection:updateNozzleTemperature': connectionManager.updateNozzleTemperature,
-        'connection:updateBedTemperature': connectionManager.updateBedTemperature,
-        'connection:updateZOffset': connectionManager.updateZOffset,
-        'connection:loadFilament': connectionManager.loadFilament,
-        'connection:unloadFilament': connectionManager.unloadFilament,
-        'connection:updateWorkSpeedFactor': connectionManager.updateWorkSpeedFactor,
+        // motion control services
+        [ControllerEvent.GoHome]: connectionManager.goHome,
+        [ControllerEvent.Move]: connectionManager.coordinateMove,
+        [ControllerEvent.SetOrigin]: connectionManager.setWorkOrigin,
         // 'connection:getWorkSpeedFactor': connectionManager.getWorkSpeedFactor,
-        'connection:updateLaserPower': connectionManager.updateLaserPower,
-        'connection:switchLaserPower': connectionManager.switchLaserPower,
-        'connection:materialThickness': connectionManager.getLaserMaterialThickness,
+        [ControllerEvent.SetSpeedFactor]: connectionManager.updateWorkSpeedFactor,
+
+        // 3d printing control services
+        [ControllerEvent.SwitchActiveExtruder]: connectionManager.switchExtruder,
+        [ControllerEvent.SetExtruderTemperature]: connectionManager.updateNozzleTemperature,
+        [ControllerEvent.LoadFilament]: connectionManager.loadFilament,
+        [ControllerEvent.UnloadFilamnet]: connectionManager.unloadFilament,
+        [ControllerEvent.SetBedTemperature]: connectionManager.updateBedTemperature,
+        [ControllerEvent.SetZOffset]: connectionManager.updateZOffset,
+
+        // laser control services
+        [ControllerEvent.SetLaserPower]: connectionManager.updateLaserPower,
+        [ControllerEvent.SwitchLaserPower]: connectionManager.switchLaserPower,
+        [ControllerEvent.CalcMaterialThickness]: connectionManager.getLaserMaterialThickness,
+        [ControllerEvent.AbortMaterialThickness]: connectionManager.abortLaserMaterialThickness,
+
+        // CNC control services
+        [ControllerEvent.SetSpindleSpeed]: connectionManager.updateToolHeadSpeed, // CNC, FOR NOW
+        [ControllerEvent.SwitchCNC]: connectionManager.switchCNC, // CNC, FOR NOW
+
+        // modules services
         'connection:setEnclosureLight': connectionManager.setEnclosureLight,
         'connection:setEnclosureFan': connectionManager.setEnclosureFan,
         'connection:setDoorDetection': connectionManager.setDoorDetection,
         'connection:setFilterSwitch': connectionManager.setFilterSwitch,
         'connection:setFilterWorkSpeed': connectionManager.setFilterWorkSpeed,
-        'connection:materialThickness_abort': connectionManager.abortLaserMaterialThickness,
-        'connection:goHome': connectionManager.goHome,
-        'connection:coordinateMove': connectionManager.coordinateMove,
-        'connection:setWorkOrigin': connectionManager.setWorkOrigin,
-        'connection:updateToolHeadSpeed': connectionManager.updateToolHeadSpeed, // CNC, FOR NOW
-        'connection:switchCNC': connectionManager.switchCNC, // CNC, FOR NOW
-        'connection:updateWorkNozzle': connectionManager.switchExtruder,
 
         // machine print G-code
         [ControllerEvent.StartGCode]: connectionManager.startGcode,
         [ControllerEvent.PauseGCode]: connectionManager.pauseGcode,
         [ControllerEvent.ResumeGCode]: connectionManager.resumeGcode,
         [ControllerEvent.StopGCode]: connectionManager.stopGcode,
+
+        'connection:getGcodeFile': connectionManager.getGcodeFile,
+        // Seems like it's an ugly solution to start job waiting for movement done
+        // TODO: Do it in instance logic
+        'connection:headBeginWork': connectionManager.startGcodeAction,
+
+        // File service
+        [ControllerEvent.UploadFile]: connectionManager.uploadFile,
 
         // machine network
         'connection:wifiStatusTest': connectionManager.wifiStatusTest,
