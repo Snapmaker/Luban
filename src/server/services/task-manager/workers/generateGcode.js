@@ -1,10 +1,11 @@
 import fs from 'fs';
 import _ from 'lodash';
 import path from 'path';
-import { GcodeGenerator } from '../../../lib/GcodeGenerator';
-import logger from '../../../lib/logger';
+
 import { pathWithRandomSuffix } from '../../../../shared/lib/random-utils';
 import { isNull } from '../../../../shared/lib/utils';
+import { GcodeGenerator } from '../../../lib/GcodeGenerator';
+import logger from '../../../lib/logger';
 import sendMessage from '../utils/sendMessage';
 
 
@@ -186,6 +187,8 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, series, metadata }) 
 
     const power = gcodeConfig.fixedPowerEnabled ? gcodeConfig.fixedPower : 0;
 
+    const hasThumbnail = series !== 'Ray';
+
     let headerStart = ';Header Start\n'
         + `;header_type: ${headType}\n`
         + `;tool_head: ${toolHead}\n`
@@ -209,10 +212,21 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, series, metadata }) 
         + `;power(%): ${power}\n`
         + `;work_size_x: ${size.x}\n`
         + `;work_size_y: ${size.y}\n`
-        + `;origin: ${origin}\n`
-        + `;thumbnail: ${thumbnail}\n`
-        + ';Header End\n'
-        + '\n';
+        + `;origin: ${origin}\n`;
+
+    // thumbnail
+    if (hasThumbnail) {
+        headerStart += [
+            (hasThumbnail ? `;thumbnail: ${thumbnail}` : ''),
+            '',
+        ].join('\n');
+    }
+
+    // header end
+    headerStart += [
+        ';Header End',
+        '',
+    ].join('\n');
 
     fileTotalLines += headerStart.split('\n').length - 1;
 

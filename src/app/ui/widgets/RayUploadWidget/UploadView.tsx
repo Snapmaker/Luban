@@ -17,8 +17,7 @@ export type LoadGcodeOptions = {
 
 const UploadView: React.FC = () => {
     // const activeMachine = useSelector((state: RootState) => state.machine.activeMachine);
-    // const dispatch = useDispatch();
-
+    const isConnected = useSelector((state: RootState) => state.workspace.isConnected);
     // const activeGcodeFile = useSelector((state: RootState) => state.workspace.activeGcodeFile);
     const gcodeFile = useSelector((state: RootState) => state.workspace.gcodeFile);
 
@@ -73,7 +72,7 @@ const UploadView: React.FC = () => {
                     type="primary"
                     priority="level-one"
                     onClick={onClickUploadJob}
-                    disabled={false}
+                    disabled={!isConnected}
                 >
                     {i18n._('key-Workspace/Upload Job')}
                 </Button>
