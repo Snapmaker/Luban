@@ -143,7 +143,7 @@ class GcodeParameters extends PureComponent {
         });
 
         // Session Auxiliary Gas
-        const laserDefinitionAuxiliaryGasKeys = ['auxiliaryAirPump'];
+        const laserDefinitionAuxiliaryGasKeys = ['auxiliaryAirPump', 'halfDiodeMode'];
         const laserDefinitionAuxiliary = {};
         laserDefinitionAuxiliaryGasKeys.forEach((key) => {
             if (allDefinition[key]) {
