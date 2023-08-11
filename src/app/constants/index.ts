@@ -757,6 +757,12 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         description: 'It can effectively increase the air flow rate over the laser focus point to achieve better cutting results.However, it may give worse results for non-cutting conditions.',
         type: 'bool',
     },
+    halfDiodeMode: {
+        default_value: false,
+        label: 'Half Diode Mode',
+        description: 'For lasers that use multiple diode combining technology and support independent control of different groups of diodes, finer power control and smaller spot sizes can be achieved by turning on only one group of diodes.',
+        type: 'bool'
+    },
     movementMode: {
         label: 'Movement Mode',
         description: 'Set whether the object is filled with lines or dots.',

@@ -45,6 +45,7 @@ const generateLaserToolPathFromEngine = async (allTasks, onProgress) => {
             }
             modelInfo.toolpathFileName = generateRandomPathName('json');
             modelInfo.identifier = task.identifier;
+            modelInfo.laserPointOnMode = task.identifier === 'Ray' ? 'inline_mode' : 'switch_mode';
         }
 
         const sliceParams = {

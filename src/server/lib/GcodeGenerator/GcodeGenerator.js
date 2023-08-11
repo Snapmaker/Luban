@@ -106,7 +106,8 @@ class GcodeGenerator {
                     }
                 } else if ([2000].includes(item.M)) {
                     item.W !== undefined && (line += `W${item.W}`);
-                    item.S !== undefined && (line += `S${item.S}`);
+                    item.L !== undefined && (line += `L${item.L}`);
+                    item.P !== undefined && (line += `P${item.P}`);
                 }
             }
 
