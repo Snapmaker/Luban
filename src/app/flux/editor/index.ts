@@ -1,3 +1,4 @@
+import { Machine } from '@snapmaker/luban-platform';
 import { includes, noop } from 'lodash';
 import { isInside } from 'overlap-area';
 import path from 'path';
@@ -2087,14 +2088,19 @@ export const actions = {
      * @param coordinateSize
      */
     changeCoordinateMode: (headType, coordinateMode = null, coordinateSize = null) => (dispatch, getState) => {
+        // deal with default coordinate mode
         const oldCoordinateMode = getState()[headType].coordinateMode;
         coordinateMode = coordinateMode ?? oldCoordinateMode;
-        const { size } = getState().machine;
 
-        coordinateSize = coordinateSize ?? {
-            x: size.x,
-            y: size.y,
-        };
+        // deal with default coordinate size
+        if (!coordinateSize) {
+            const activeMachine = getState().machine.activeMachine as Machine;
+            coordinateSize = coordinateSize ?? {
+                x: activeMachine.metadata.size.x,
+                y: activeMachine.metadata.size.y,
+            };
+        }
+
         if (coordinateMode.value !== oldCoordinateMode.value) {
             // move all elements
             const coorDelta = {
@@ -2111,11 +2117,11 @@ export const actions = {
                 coorDelta.dy -= (coordinateSize.y / 2) * coordinateMode.setting.sizeMultiplyFactor.y;
             }
 
-            const { SVGActions } = getState()[headType];
+            const SVGActions = getState()[headType].SVGActions as SVGActionsFactory;
             const elements = SVGActions.getAllModelElements();
             SVGActions.moveElementsStart(elements);
             SVGActions.moveElements(elements, coorDelta);
-            SVGActions.moveElementsFinish(elements, coorDelta);
+            SVGActions.moveElementsFinish(elements);
             SVGActions.clearSelection();
             dispatch(baseActions.render(headType));
         }

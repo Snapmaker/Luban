@@ -5,11 +5,13 @@ import { v4 as uuid } from 'uuid';
 import { timestamp } from '../../../shared/lib/random-utils';
 import api from '../../api';
 import { DISPLAYED_TYPE_MODEL, DISPLAYED_TYPE_TOOLPATH, HEAD_CNC, HEAD_LASER, SELECTEVENT } from '../../constants';
+import { Origin, OriginType } from '../../constants/coordinate';
 import CompoundOperation from '../../core/CompoundOperation';
 import { controller } from '../../lib/controller';
 import { logSvgSlice } from '../../lib/gaEvent';
 import i18n from '../../lib/i18n';
 import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
+import ToolPathGroup from '../../toolpaths/ToolPathGroup';
 import { getToolPathType } from '../../toolpaths/utils';
 import { toast } from '../../ui/components/Toast';
 import { makeSceneToast } from '../../ui/views/toasts/SceneToast';
@@ -21,12 +23,15 @@ import { baseActions } from './actions-base';
 import { actions as operationHistoryActions } from '../operation-history';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as projectActions } from '../project';
-import { Origin, OriginType } from '../../constants/coordinate';
 
 let toastId;
 export const processActions = {
+    /**
+     * Re-generate tool paths for tool path objects.
+     */
     recalculateAllToolPath: headType => (dispatch, getState) => {
-        const { toolPathGroup, progressStatesManager } = getState()[headType];
+        const { progressStatesManager } = getState()[headType];
+        const toolPathGroup = getState()[headType].toolPathGroup as ToolPathGroup;
         const activeMachine: Machine = getState().machine.activeMachine;
 
         // start progress
@@ -57,7 +62,7 @@ export const processActions = {
         }
     },
 
-    preview: headType => (dispatch, getState) => {
+    preview: (headType) => (dispatch, getState) => {
         const { SVGActions, toolPathGroup, progressStatesManager } = getState()[headType];
         let visibleToolPathsLength = 0;
         toolPathGroup.toolPaths.forEach(toolPath => {
@@ -71,6 +76,8 @@ export const processActions = {
                 [visibleToolPathsLength, visibleToolPathsLength, 1], // generate gcode consider as one task
             );
         }
+
+        // add docs?
         toolPathGroup.toolPaths.forEach(toolPath => {
             toolPath.setWarningStatus();
             toolPath.clearModelObjects();
@@ -78,13 +85,15 @@ export const processActions = {
             toolPath.object = toolPath.object.clone();
             toolPathGroup.toolPathObjects.add(toolPath.object);
         });
+
         logSvgSlice(headType, visibleToolPathsLength);
-        // toolPathGroup.selectToolPathById();
+
         dispatch(
             baseActions.updateState(headType, {
                 needToPreview: false
             })
         );
+
         dispatch(processActions.recalculateAllToolPath(headType));
         dispatch(processActions.showToolPathGroupObject(headType));
         // Different models cannot be selected in process page

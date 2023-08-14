@@ -1,35 +1,36 @@
 import * as THREE from 'three';
-import ToolPath from './ToolPath';
-import { createToolPathNameByType, getModelsByToolPathType, getToolPathType, SUCCESS } from './utils';
-import { generateModelDefaultConfigs } from '../models/ModelInfoUtils';
-import { DATA_PREFIX, HEAD_LASER, DEFAULT_LUBAN_HOST } from '../constants';
+
+import { DATA_PREFIX, DEFAULT_LUBAN_HOST, HEAD_LASER } from '../constants';
 import { ViewPathRenderer } from '../lib/renderer/ViewPathRenderer';
+import { generateModelDefaultConfigs } from '../models/ModelInfoUtils';
 import ThreeModel from '../models/ThreeModel';
+import ToolPath from './ToolPath';
+import { SUCCESS, createToolPathNameByType, getModelsByToolPathType, getToolPathType } from './utils';
 
 class ToolPathGroup {
-    toolPaths = [];
+    public toolPaths: ToolPath[] = [];
 
-    selectedToolPathArray = [];
+    public selectedToolPathArray = [];
 
-    modelGroup;
+    public modelGroup;
 
-    headType;
+    public headType;
 
-    updatedCallback;
+    private updatedCallback;
 
-    object = new THREE.Group();
+    public object = new THREE.Group();
 
-    toolPathObjects = new THREE.Group();
+    public toolPathObjects = new THREE.Group();
 
-    simulationObjects = new THREE.Group();
+    public simulationObjects = new THREE.Group();
 
-    simulationObject = null;
+    public simulationObject = null;
 
-    materialsObject = null;
+    public materialsObject = null;
 
-    thumbnail = '';
+    public thumbnail = '';
 
-    constructor(modelGroup, headType) {
+    public constructor(modelGroup, headType) {
         this.modelGroup = modelGroup;
         this.headType = headType;
 
@@ -39,55 +40,54 @@ class ToolPathGroup {
         this.object.visible = false;
     }
 
-    _updated() {
+    private _updated() {
         this.updatedCallback && this.updatedCallback();
     }
 
     /**
      * Used to show toolpath group objects in process canvas after preview models
      */
-    show() {
+    public show() {
         this.object.visible = true;
     }
 
-    get count() {
+    public get count() {
         return this.toolPaths.length + 1;
     }
 
-    get isSingleSelected() {
+    public get isSingleSelected() {
         return this.toolPaths && this.selectedToolPathArray.length === 1;
     }
 
-    get firstSelectedToolpath() {
+    public get firstSelectedToolpath() {
         return this.toolPaths && this.toolPaths.find(v => v.id === this.selectedToolPathArray[0]);
     }
 
     /**
      * Used to show model group objects in process canvas before preview models
      */
-    hide() {
+    public hide() {
         this.object.visible = false;
         this.simulationObjects.visible = false;
     }
 
-    showToolpathObjects(show, showWood) {
+    public showToolpathObjects(show, showWood) {
         this.toolPathObjects.visible = show;
         showWood && (this.simulationObjects.visible = show);
     }
 
-    showSimulationObject(show) {
+    public showSimulationObject(show) {
         // Todo, control it in actions-process
         this.simulationObject && (this.simulationObjects.visible = show);
         this.simulationObject && (this.simulationObject.visible = show);
     }
 
-
-    setUpdatedCallBack(updatedCallback) {
+    public setUpdatedCallBack(updatedCallback) {
         this.updatedCallback = updatedCallback;
     }
 
     // Select
-    selectToolPathById(toolPathId = null) {
+    public selectToolPathById(toolPathId = null) {
         if (!toolPathId) {
             this.selectedToolPathArray = [];
         } else {
@@ -98,7 +98,7 @@ class ToolPathGroup {
     }
 
     // Unselect when selected id === toolPathId
-    selectToolPathId(toolPathId) {
+    public selectToolPathId(toolPathId) {
         if (this.selectedToolPathArray.includes(toolPathId)) {
             const newArray = [];
             this.selectedToolPathArray.forEach(
@@ -116,7 +116,7 @@ class ToolPathGroup {
         this._updated();
     }
 
-    selectOneToolPathId(toolPathId) {
+    public selectOneToolPathId(toolPathId) {
         if (this.selectedToolPathArray.length > 1) {
             this.selectedToolPathArray = [toolPathId];
         } else {
@@ -130,29 +130,29 @@ class ToolPathGroup {
         this._updated();
     }
 
-    getToolPathTypes() {
+    public getToolPathTypes() {
         // return getToolPathType(this.modelGroup.getSelectedToolPathModels());
         return getToolPathType(this.modelGroup.getSelectedModelArray());
     }
 
-    _getToolPaths() {
+    private _getToolPaths() {
         return this.toolPaths;
     }
 
-    getToolPaths() {
+    public getToolPaths() {
         return this._getToolPaths().map(v => v.getState());
     }
 
-    _getToolPath(toolPathId) {
+    private _getToolPath(toolPathId) {
         return this.toolPaths.find(v => v.id === toolPathId);
     }
 
-    getToolPath(toolPathId) {
+    public getToolPath(toolPathId) {
         const toolPath = this._getToolPath(toolPathId);
         return toolPath ? toolPath.getState() : null;
     }
 
-    createToolPath(options) {
+    public createToolPath(options) {
         const { materials } = options;
 
         // const models = this.modelGroup.getSelectedToolPathModels();
@@ -187,7 +187,7 @@ class ToolPathGroup {
         return toolPathInfo;
     }
 
-    fastCreateToolPath(options) {
+    public fastCreateToolPath(options) {
         const models = this.modelGroup?.models;
         if (models.length === 0) {
             return null;
@@ -196,7 +196,9 @@ class ToolPathGroup {
         const { materials, toolParams } = options;
         Object.entries(modelObj).forEach(([type, modelsWithSameType]) => {
             const toolPathModelIDs = modelsWithSameType.map((model) => model.modelID);
-            const { gcodeConfig } = generateModelDefaultConfigs(this.headType, modelsWithSameType[0].sourceType, modelsWithSameType[0].mode, materials.isRotate);
+            const { gcodeConfig } = generateModelDefaultConfigs(
+                this.headType, modelsWithSameType[0].sourceType, modelsWithSameType[0].mode, materials.isRotate
+            );
             this._updated();
             const toolPathInfo = new ToolPath({
                 name: createToolPathNameByType(this.count, type, this.headType),
@@ -214,7 +216,7 @@ class ToolPathGroup {
         return null;
     }
 
-    saveToolPath(toolPathInfo, options, shouldCommitGenerate = true) {
+    public saveToolPath(toolPathInfo, options, shouldCommitGenerate = true) {
         let toolPath = this._getToolPath(toolPathInfo.id);
         if (toolPath) {
             toolPath.updateState({ ...toolPathInfo, ...options });
@@ -234,7 +236,7 @@ class ToolPathGroup {
         return toolPath;
     }
 
-    addSelectedToolpathColor(withoutSelection = false) {
+    public addSelectedToolpathColor(withoutSelection = false) {
         // 2D SVGCanvas
         const { modelGroup } = this;
         modelGroup.models.forEach((model) => {
@@ -278,7 +280,7 @@ class ToolPathGroup {
         }
     }
 
-    toolPathToUp(toolPathId) {
+    public toolPathToUp(toolPathId) {
         let index = -1;
         for (let i = 0; i < this.toolPaths.length; i++) {
             if (toolPathId === this.toolPaths[i].id) {
@@ -296,7 +298,7 @@ class ToolPathGroup {
         this._updated();
     }
 
-    toolPathToDown(toolPathId) {
+    public toolPathToDown(toolPathId) {
         let index = -1;
         for (let i = 0; i < this.toolPaths.length; i++) {
             if (toolPathId === this.toolPaths[i].id) {
@@ -314,7 +316,7 @@ class ToolPathGroup {
         this._updated();
     }
 
-    toolPathToTop(toolPathId) {
+    public toolPathToTop(toolPathId) {
         let index = -1;
         for (let i = 0; i < this.toolPaths.length; i++) {
             if (toolPathId === this.toolPaths[i].id) {
@@ -331,7 +333,7 @@ class ToolPathGroup {
         this._updated();
     }
 
-    toolPathToBottom(toolPathId) {
+    public toolPathToBottom(toolPathId) {
         let index = -1;
         for (let i = 0; i < this.toolPaths.length; i++) {
             if (toolPathId === this.toolPaths[i].id) {
@@ -348,7 +350,7 @@ class ToolPathGroup {
         this._updated();
     }
 
-    deleteToolPath(toolPathId) {
+    public deleteToolPath(toolPathId) {
         const toolPath = this._getToolPath(toolPathId);
 
         if (toolPath) {
@@ -361,7 +363,7 @@ class ToolPathGroup {
         this._updated();
     }
 
-    deleteAllToolPaths() {
+    public deleteAllToolPaths() {
         const toolPaths = this._getToolPaths();
         toolPaths.forEach((item) => {
             if (item) {
@@ -374,7 +376,7 @@ class ToolPathGroup {
         this._updated();
     }
 
-    commitToolPath(toolPathId) {
+    public commitToolPath(toolPathId) {
         let res = false;
         const toolPath = this._getToolPath(toolPathId);
         if (toolPath) {
@@ -384,8 +386,8 @@ class ToolPathGroup {
         return res;
     }
 
-    commitToolPathPromise(toolPathId) {
-        return new Promise(async (resolve) => {
+    public async commitToolPathPromise(toolPathId) {
+        return new Promise((resolve) => {
             let res = false;
             const toolPath = this._getToolPath(toolPathId);
             if (toolPath) {
@@ -396,7 +398,7 @@ class ToolPathGroup {
         });
     }
 
-    updateToolPath(toolPathId, newState, options) {
+    public updateToolPath(toolPathId, newState, options) {
         const toolPath = this._getToolPath(toolPathId);
         if (toolPath) {
             toolPath.updateState({ ...newState, ...options });
@@ -408,7 +410,7 @@ class ToolPathGroup {
         return toolPath;
     }
 
-    getThumbnailObject() {
+    public getThumbnailObject() {
         const toolPaths = this._getCheckAndSuccessToolPaths();
 
         const object = new THREE.Group();
@@ -424,11 +426,11 @@ class ToolPathGroup {
         return object;
     }
 
-    updateThumbnail(thumbnail) {
+    public updateThumbnail(thumbnail) {
         this.thumbnail = thumbnail;
     }
 
-    updateMaterials(materials) {
+    public updateMaterials(materials) {
         for (const toolPath of this.toolPaths) {
             toolPath.updateState({ materials });
         }
@@ -438,7 +440,7 @@ class ToolPathGroup {
         }
     }
 
-    updateLaserMaterialsBackground(materials) {
+    public updateLaserMaterialsBackground(materials) {
         this.materialsObject && this.simulationObjects.remove(this.materialsObject);
         this.materialsObject = null;
         if (materials.isRotate) {
@@ -463,7 +465,7 @@ class ToolPathGroup {
         }
     }
 
-    _getCheckAndSuccessToolPaths() {
+    public _getCheckAndSuccessToolPaths() {
         if (this.toolPaths.length === 0) {
             return null;
         }
@@ -474,12 +476,12 @@ class ToolPathGroup {
         return toolPaths;
     }
 
-    canGenerateGcode() {
+    public canGenerateGcode() {
         const toolPaths = this._getCheckAndSuccessToolPaths();
         return toolPaths !== null;
     }
 
-    getCommitGenerateGcodeInfos() {
+    public getCommitGenerateGcodeInfos() {
         const toolPaths = this._getCheckAndSuccessToolPaths();
         if (!toolPaths) {
             return null;
@@ -487,7 +489,7 @@ class ToolPathGroup {
         return toolPaths.map(v => v.getState(true));
     }
 
-    getCommitGenerateViewPathInfos(options) {
+    public getCommitGenerateViewPathInfos(options) {
         const { materials } = options;
 
         const infos = [];
@@ -510,7 +512,7 @@ class ToolPathGroup {
         return infos;
     }
 
-    onGenerateViewPath(viewPathFile, size) {
+    public async onGenerateViewPath(viewPathFile, size) {
         const toolPathFilePath = `${DATA_PREFIX}/${viewPathFile}`;
         return new Promise((resolve, reject) => {
             new THREE.FileLoader().load(
@@ -535,13 +537,13 @@ class ToolPathGroup {
         });
     }
 
-    checkoutToolPathStatus() {
+    public checkoutToolPathStatus() {
         for (const toolPath of this.toolPaths) {
             toolPath.checkoutToolPathStatus();
         }
     }
 
-    checkHasVisibleToolPaths() {
+    public checkHasVisibleToolPaths() {
         const toolPaths = this.getToolPaths();
         if (toolPaths.length === 0) {
             return false;
@@ -556,7 +558,7 @@ class ToolPathGroup {
         );
     }
 
-    checkHasToolPathsWithFile() {
+    public checkHasToolPathsWithFile() {
         const toolPaths = this.getToolPaths();
         if (toolPaths.length) {
             return toolPaths.every(

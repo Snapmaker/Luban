@@ -17,41 +17,41 @@ import {
 import { MINIMUM_WIDTH_AND_HEIGHT } from '../constants';
 
 class ToolPath {
-    id;
+    public id;
 
-    name;
+    public name;
 
-    baseName;
+    public baseName;
 
-    type; // image, vector, image3d
+    public type; // image, vector, image3d
 
-    useLegacyEngine = false;
+    public useLegacyEngine = false;
 
-    status = IDLE; // idle, running, success, warning, failed
+    public status = IDLE; // idle, running, success, warning, failed
 
-    check = true;
+    public check = true;
 
-    visible = true;
+    public visible = true;
 
     // Threejs Obj
-    object = new THREE.Group();
+    public object = new THREE.Group();
 
-    visibleModelIDs = [];
+    public visibleModelIDs = [];
 
     // { modelID, meshObj, toolPathFile, status}
-    modelMap = new Map();
+    public modelMap = new Map();
 
-    gcodeConfig;
+    public gcodeConfig;
 
-    toolParams;
+    public toolParams;
 
-    materials;
+    public materials;
 
-    lastConfigJson = '';
+    public lastConfigJson = '';
 
-    modelGroup;
+    public modelGroup;
 
-    constructor(options) {
+    public constructor(options) {
         const {
             id,
             name,
@@ -94,7 +94,7 @@ class ToolPath {
         this.checkoutToolPathStatus();
     }
 
-    getState() {
+    public getState() {
         this.visibleModelIDs = this.modelGroup.models
             .filter((model) => {
                 return (
@@ -135,19 +135,19 @@ class ToolPath {
         };
     }
 
-    updateStatus(status) {
+    public updateStatus(status) {
         this.status = status;
     }
 
-    setWarningStatus() {
+    public setWarningStatus() {
         this.status = WARNING;
     }
 
-    hasVisibleModels() {
+    public hasVisibleModels() {
         return this.getState().visibleModelIDs.length > 0;
     }
 
-    updateState(toolPath) {
+    public updateState(toolPath) {
         const {
             name = this.name,
             check = this.check,
@@ -178,7 +178,7 @@ class ToolPath {
         this.checkoutToolPathStatus();
     }
 
-    _getModels() {
+    private _getModels() {
         const models = this.modelGroup.getModels();
         return models.filter((model) => {
             return (
@@ -187,7 +187,7 @@ class ToolPath {
         });
     }
 
-    deleteModel(modelId) {
+    public deleteModel(modelId) {
         this.visibleModelIDs = this.visibleModelIDs.filter(
             (v) => v !== modelId
         );
@@ -199,7 +199,7 @@ class ToolPath {
     /**
      * Generate toolpath task to server, need to call `commitToolPathTaskArray`
      */
-    commitGenerateToolPath() {
+    public commitGenerateToolPath() {
         if (this.status === FAILED) {
             this.clearModelObjects();
             return false;
@@ -246,7 +246,7 @@ class ToolPath {
         return task;
     }
 
-    _getModelTaskInfos() {
+    private _getModelTaskInfos() {
         const selectModels = this._getModels();
         const modelInfos = selectModels
             .map((v) => v.getTaskInfo())
@@ -274,7 +274,7 @@ class ToolPath {
         return modelInfos;
     }
 
-    getSelectModelsAndToolPathInfo() {
+    public getSelectModelsAndToolPathInfo() {
         const modelInfos = this._getModelTaskInfos();
 
         // FIXME
@@ -299,7 +299,7 @@ class ToolPath {
      * Handle listening failed
      * @param taskResult
      */
-    onGenerateToolpathFailed(taskResult) {
+    public onGenerateToolpathFailed(taskResult) {
         for (let i = 0; i < taskResult.data.length; i++) {
             const modelMapResult = this.modelMap.get(
                 taskResult.data[i].modelID
@@ -310,12 +310,12 @@ class ToolPath {
         this.checkoutStatus();
     }
 
-    onGenerateToolpathFinail() {
+    public onGenerateToolpathFinail() {
         this.checkoutStatus();
         this.removeAllNonMeshObj();
     }
 
-    onGenerateToolpathModel(model, filename, renderResult) {
+    public onGenerateToolpathModel(model, filename, renderResult) {
         const modelMapResult = this.modelMap.get(model.modelID);
         if (modelMapResult) {
             modelMapResult.status = SUCCESS;
@@ -330,7 +330,7 @@ class ToolPath {
         }
     }
 
-    removeAllNonMeshObj() {
+    public removeAllNonMeshObj() {
         const reObjs = [];
         for (const child of this.object.children) {
             let removed = true;
@@ -351,7 +351,7 @@ class ToolPath {
         }
     }
 
-    checkoutStatus() {
+    public checkoutStatus() {
         const values = [];
         for (const visibleModelID of this.getState().visibleModelIDs) {
             values.push(this.modelMap.get(visibleModelID));
@@ -369,7 +369,7 @@ class ToolPath {
         }
     }
 
-    checkoutToolPathStatus() {
+    public checkoutToolPathStatus() {
         const taskInfos = this.getSelectModelsAndToolPathInfo();
         const lastConfigJson = JSON.stringify(taskInfos);
 
@@ -396,7 +396,7 @@ class ToolPath {
         }
     }
 
-    renderToolpathObj(renderResult) {
+    public renderToolpathObj(renderResult) {
         const {
             headType,
             movementMode,
@@ -445,14 +445,14 @@ class ToolPath {
         return obj;
     }
 
-    removeToolPathObject() {
+    public removeToolPathObject() {
         for (const value of this.modelMap.values()) {
             value.meshObj && this.object.remove(value.meshObj);
             value.status = WARNING;
         }
     }
 
-    clearModelObjects() {
+    public clearModelObjects() {
         for (const value of this.modelMap.values()) {
             this.object.remove(value.meshObj);
             value.meshObj = null;
