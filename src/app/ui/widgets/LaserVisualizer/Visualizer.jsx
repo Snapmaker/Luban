@@ -34,6 +34,8 @@ import modal from '../../../lib/modal';
 import UniApi from '../../../lib/uni-api';
 import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
+import { PageMode } from '../../pages/PageMode';
+import SVGClippingOverlay from '../../views/model-operation-overlay/SVGClippingOverlay';
 
 
 class Visualizer extends Component {
@@ -126,7 +128,10 @@ class Visualizer extends Component {
             isPointInSelectArea: PropTypes.func.isRequired,
             getMouseTargetByCoordinate: PropTypes.func.isRequired,
             isSelectedAllVisible: PropTypes.func.isRequired
-        })
+        }),
+
+        pageMode: PropTypes.string.isRequired,
+        setPageMode: PropTypes.func.isRequired
     };
 
     contextMenuRef = React.createRef();
@@ -693,6 +698,16 @@ class Visualizer extends Component {
                         </Modal.Footer>
                     </Modal>
                 )}
+
+                {/* Simplify Model */
+                    this.props.pageMode === PageMode.SVGClipping && (
+                        <div className={styles['visualizer-Overlay-left']}>
+                            <SVGClippingOverlay
+                                onClose={() => { this.props.setPageMode(PageMode.Default); }}
+                            />
+                        </div>
+                    )
+                }
             </div>
         );
     }

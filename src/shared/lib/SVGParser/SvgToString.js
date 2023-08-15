@@ -15,8 +15,8 @@ function getPath(shape) {
 
     return `<path d="${pathExpression}" stroke="${shape.stroke ? shape.stroke : 'none'}"
                 fill="${shape.fill ? shape.fill : 'none'}"
-                fill-rule="${shape['fill-rule'] ? shape['fill-rule'] : 'nonzero'}"
-                stroke-width="${shape.strokeWidth}"/>`;
+                style="${OVERRIDE_STYLE}"
+                stroke-width="${1}"/>`;
 }
 
 function getPathIndividual(shape) {

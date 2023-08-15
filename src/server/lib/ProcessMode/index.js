@@ -13,6 +13,7 @@ import {
 import { MeshProcess } from '../MeshProcess/MeshProcess';
 
 const processImage3d = (modelInfo, onProgress) => {
+    console.log('processImage3d');
     const mesh = new MeshProcess(modelInfo, onProgress);
     return mesh.convertToImage();
 };

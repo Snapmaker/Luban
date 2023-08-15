@@ -27,6 +27,7 @@ import JobSetupModal from './modals/JobSetupModal';
 import ProjectOversizeMessage from './modals/ProjectOversizeMessage';
 import { SnapmakerRayMachine } from '../../../machines';
 import { LaserWorkspaceRay } from '../laser-workspace-ray';
+import { PageMode } from '../PageMode';
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 const pageHeadType = HEAD_LASER;
@@ -60,6 +61,8 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
     const [showHomePage, setShowHomePage] = useState(false);
     const [showWorkspace, setShowWorkspace] = useState(false);
     const [showJobType, setShowJobType] = useState(true);
+
+    const [pageMode, setPageMode] = useState(PageMode.Default);
 
     const dispatch = useDispatch();
 
@@ -101,6 +104,10 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
         setShowStarterGuide(false);
     }, []);
 
+    const onChangeSVGClippingMode = useCallback(() => {
+        setPageMode(pageMode === PageMode.SVGClipping ? PageMode.Default : PageMode.SVGClipping);
+    }, [pageMode]);
+
     const {
         setBackgroundModal,
         renderMainToolBar
@@ -108,7 +115,8 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
         headType: HEAD_LASER,
         setShowHomePage,
         setShowJobType,
-        setShowWorkspace
+        setShowWorkspace,
+        onChangeSVGClippingMode
     });
     const renderHomepage = () => {
         const onClose = () => {
@@ -243,7 +251,10 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
                     onDropAccepted={actions.onDropAccepted}
                     onDropRejected={actions.onDropRejected}
                 >
-                    <LaserVisualizer />
+                    <LaserVisualizer
+                        pageMode={pageMode}
+                        setPageMode={setPageMode}
+                    />
                     {
                         showStarterGuide && (
                             <StarterGuide

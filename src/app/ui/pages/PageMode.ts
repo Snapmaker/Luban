@@ -19,4 +19,8 @@ export enum PageMode {
 
     // Mesh Coloring mode: Coloring mesh for multiple materials printing
     MeshColoring = 'MeshColoring',
+
+    // Laser
+    // Print mode
+    SVGClipping = 'SVGClipping',
 }

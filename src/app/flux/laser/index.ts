@@ -34,6 +34,7 @@ import {
 import { actions as editorActions } from '../editor';
 import { actions as machineActions } from '../machine';
 import definitionManager from '../manager/DefinitionManager';
+import { SVGClippingOperation, SVGClippingType } from '../../constants/clipping';
 
 const initModelGroup = new ModelGroup('laser');
 const operationHistory = new OperationHistory();
@@ -152,7 +153,13 @@ const INITIAL_STATE = {
     },
 
     enableShortcut: true,
-    projectFileOversize: false
+    projectFileOversize: false,
+
+    svgClipping: {
+        type: SVGClippingType.Offset,
+        operation: SVGClippingOperation.Merged,
+        offset: 4
+    }
 };
 
 const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';

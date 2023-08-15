@@ -867,8 +867,14 @@ class SvgModel extends BaseModel {
                 break;
             }
             case 'image': {
-                const originalWidth = Math.abs(transformation.width / transformation.scaleX);
-                const originalHeight = Math.abs(transformation.height / transformation.scaleY);
+                let originalWidth, originalHeight;
+                if (transformation.width && transformation.height) {
+                    originalWidth = Math.abs(transformation.width / transformation.scaleX);
+                    originalHeight = Math.abs(transformation.height / transformation.scaleY);
+                } else {
+                    originalWidth = width;
+                    originalHeight = height;
+                }
                 elem.setAttribute('x', `${x - originalWidth / 2}`);
                 elem.setAttribute('y', `${y - originalHeight / 2}`);
                 elem.setAttribute('width', `${originalWidth}`);
@@ -1137,6 +1143,7 @@ class SvgModel extends BaseModel {
 
             sourceHeight: this.sourceHeight,
             sourceWidth: this.sourceWidth,
+
             scale: this.scale,
             originalName: this.originalName,
             uploadName: this.resource.originalFile.name,
