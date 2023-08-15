@@ -1,11 +1,11 @@
-import path from 'path';
-import fs from 'fs';
-import mv from 'mv';
-import includes from 'lodash/includes';
-import request from 'superagent';
-import * as opentype from 'opentype.js';
 import libFontManager from 'font-scanner';
+import fs from 'fs';
+import includes from 'lodash/includes';
 import log from 'loglevel';
+import mv from 'mv';
+import * as opentype from 'opentype.js';
+import path from 'path';
+import request from 'superagent';
 
 
 /*
@@ -77,7 +77,7 @@ class FontManager {
         try {
             this.defaultFont = opentype.loadSync(dir);
         } catch (e) {
-            console.log(e);
+            log.error(e);
         }
     }
 

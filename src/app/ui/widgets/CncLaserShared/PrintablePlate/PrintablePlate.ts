@@ -22,8 +22,6 @@ const METRIC_GRID_BIG_SPACING = 50;
 
 
 class PrintablePlate extends Object3D {
-    private isPrintPlane: boolean = true;
-
     private coordinateSystem: Group = null;
     private size: { x: number; y: number };
     private materials: Materials;
@@ -37,7 +35,6 @@ class PrintablePlate extends Object3D {
         super();
 
         this.type = 'PrintPlane';
-        this.isPrintPlane = true;
 
         this.targetPoint = null;
         // this.coordinateVisible = true;

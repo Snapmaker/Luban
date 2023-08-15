@@ -344,8 +344,8 @@ class Visualizer extends Component {
     constructor(props) {
         super(props);
 
-        const { size, materials, coordinateMode } = props;
-        this.printableArea = new PrintablePlate(size, materials, coordinateMode);
+        const { size, materials, coordinateMode, origin } = props;
+        this.printableArea = new PrintablePlate(size, materials, origin, coordinateMode);
         this.state = {
             limitPicModalShow: false,
             file: null,
