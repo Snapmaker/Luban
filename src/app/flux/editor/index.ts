@@ -2022,10 +2022,6 @@ export const actions = {
             const materials = getState()[headType].materials as Materials;
             // const origin = getState()[headType].origin as Origin;
 
-            const allMaterials = {
-                ...materials,
-            };
-
             if (materials.isRotate) {
                 materials.x = round(materials.diameter * Math.PI, 2);
                 materials.y = materials.length;
@@ -2047,10 +2043,6 @@ export const actions = {
                     showSimulation: false,
                 })
             );
-
-            if (materials.isRotate !== allMaterials.isRotate) {
-                dispatch(actions.processSelectedModel(headType));
-            }
         };
     },
 
@@ -2154,10 +2146,16 @@ export const actions = {
     },
 
     setOrigin: (headType: HeadType, origin: Origin) => {
-        return (dispatch) => {
+        return (dispatch, getState) => {
             dispatch(actions.updateState(headType, {
                 origin,
             }));
+
+            console.log('setOrigin', origin);
+
+            // Update origin of tool path object
+            const toolPathGroup = getState()[headType].toolPathGroup as ToolPathGroup;
+            toolPathGroup.setOrigin(origin);
         };
     },
 

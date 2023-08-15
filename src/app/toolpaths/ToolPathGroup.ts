@@ -6,6 +6,7 @@ import { generateModelDefaultConfigs } from '../models/ModelInfoUtils';
 import ThreeModel from '../models/ThreeModel';
 import ToolPath from './ToolPath';
 import { SUCCESS, createToolPathNameByType, getModelsByToolPathType, getToolPathType } from './utils';
+import { Origin } from '../constants/coordinate';
 
 class ToolPathGroup {
     public toolPaths: ToolPath[] = [];
@@ -153,7 +154,7 @@ class ToolPathGroup {
     }
 
     public createToolPath(options) {
-        const { materials } = options;
+        const { materials, origin } = options;
 
         // const models = this.modelGroup.getSelectedToolPathModels();
         const models = this.modelGroup.getSelectedModelArray();
@@ -182,7 +183,8 @@ class ToolPathGroup {
             visibleModelIDs: this.modelGroup.selectedModelIDArray,
             modelGroup: this.modelGroup,
             gcodeConfig,
-            materials
+            materials,
+            origin,
         }).getState();
         return toolPathInfo;
     }
@@ -193,7 +195,7 @@ class ToolPathGroup {
             return null;
         }
         const modelObj = getModelsByToolPathType(models);
-        const { materials, toolParams } = options;
+        const { materials, origin, toolParams } = options;
         Object.entries(modelObj).forEach(([type, modelsWithSameType]) => {
             const toolPathModelIDs = modelsWithSameType.map((model) => model.modelID);
             const { gcodeConfig } = generateModelDefaultConfigs(
@@ -209,7 +211,8 @@ class ToolPathGroup {
                 modelGroup: this.modelGroup,
                 gcodeConfig,
                 toolParams,
-                materials
+                materials,
+                origin,
             }).getState();
             this.saveToolPath(toolPathInfo, options);
         });
@@ -377,7 +380,7 @@ class ToolPathGroup {
     }
 
     public commitToolPath(toolPathId) {
-        let res = false;
+        let res = null;
         const toolPath = this._getToolPath(toolPathId);
         if (toolPath) {
             res = toolPath.commitGenerateToolPath();
@@ -388,7 +391,7 @@ class ToolPathGroup {
 
     public async commitToolPathPromise(toolPathId) {
         return new Promise((resolve) => {
-            let res = false;
+            let res = null;
             const toolPath = this._getToolPath(toolPathId);
             if (toolPath) {
                 res = toolPath.commitGenerateToolPath();
@@ -431,12 +434,20 @@ class ToolPathGroup {
     }
 
     public updateMaterials(materials) {
+        console.log('ToolPathGroup updateMaterials', materials);
+
         for (const toolPath of this.toolPaths) {
             toolPath.updateState({ materials });
         }
 
         if (this.headType === HEAD_LASER) {
             this.updateLaserMaterialsBackground(materials);
+        }
+    }
+
+    public setOrigin(origin: Origin): void {
+        for (const toolPath of this.toolPaths) {
+            toolPath.setOrigin(origin);
         }
     }
 

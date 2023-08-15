@@ -43,16 +43,20 @@ export const processActions = {
         );
 
         // start generate toolpath
-        const toolPathPromiseArray = [];
-        toolPathGroup.toolPaths.forEach(toolPath => {
-            toolPathPromiseArray.push(toolPathGroup.commitToolPathPromise(toolPath?.id));
-        });
+        const toolPathTasks = toolPathGroup.toolPaths
+            .map(toolPath => {
+                return toolPathGroup.commitToolPath(toolPath?.id);
+            })
+            .filter(task => !!task && task.visible);
 
-        Promise.all(toolPathPromiseArray).then((taskArray) => {
-            taskArray = taskArray.filter(d => !!d && d.visible);
-            taskArray.forEach(d => { d.identifier = activeMachine?.identifier; });
-            controller.commitToolPathTaskArray(taskArray);
-        });
+        for (const task of toolPathTasks) {
+            console.log(task);
+        }
+
+        // TODO: This hardcode is used for backward compatibility of Snapmaker Original, remove this later.
+        toolPathTasks.forEach(task => { task.identifier = activeMachine?.identifier; });
+
+        controller.commitToolPathTaskArray(toolPathTasks);
     },
 
     refreshToolPathPreview: headType => (dispatch, getState) => {
@@ -247,11 +251,15 @@ export const processActions = {
     },
 
     saveToolPath: (headType, toolPath) => (dispatch, getState) => {
-        const { toolPathGroup, materials, autoPreviewEnabled, displayedType } = getState()[headType];
+        const { materials, autoPreviewEnabled, displayedType } = getState()[headType];
+
+        const origin: Origin = getState()[headType].origin;
+        const toolPathGroup: ToolPathGroup = getState()[headType].toolPathGroup;
+
         if (toolPathGroup.getToolPath(toolPath.id)) {
-            toolPathGroup.updateToolPath(toolPath.id, toolPath, { materials });
+            toolPathGroup.updateToolPath(toolPath.id, toolPath, { materials, origin });
         } else {
-            toolPathGroup.saveToolPath(toolPath, { materials }, false);
+            toolPathGroup.saveToolPath(toolPath, { materials, origin }, false);
         }
         if (autoPreviewEnabled) {
             dispatch(processActions.preview(headType));

@@ -268,6 +268,7 @@ const JobSetupView = forwardRef<JobSetupViewHandle, {}>((_, ref) => {
     useImperativeHandle(ref, () => {
         return {
             onChange: () => {
+                // Workpiece
                 dispatch(editorActions.setWorkpiece(
                     HEAD_LASER,
                     workpiece.shape,
@@ -276,7 +277,7 @@ const JobSetupView = forwardRef<JobSetupViewHandle, {}>((_, ref) => {
 
                 dispatch(editorActions.updateWorkpieceObject(HEAD_LASER));
 
-
+                // Origin
                 dispatch(editorActions.setOrigin(
                     HEAD_LASER,
                     selectedOrigin,

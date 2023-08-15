@@ -1,7 +1,15 @@
-import { v4 as uuid } from 'uuid';
 import { includes } from 'lodash';
 import * as THREE from 'three';
+import { v4 as uuid } from 'uuid';
+import { Box2 } from 'three';
 
+import { ObjectReference, Origin, OriginType, RectangleWorkpieceReference } from '../constants/coordinate';
+import { MINIMUM_WIDTH_AND_HEIGHT } from '../constants';
+import log from '../lib/log';
+import ModelGroup from '../models/ModelGroup';
+import {
+    MATERIAL_SELECTED,
+} from '../workers/ShaderMaterial/ToolpathRendererMeterial';
 import {
     FAILED,
     getToolPathType,
@@ -10,11 +18,7 @@ import {
     SUCCESS,
     WARNING,
 } from './utils';
-import log from '../lib/log';
-import {
-    MATERIAL_SELECTED,
-} from '../workers/ShaderMaterial/ToolpathRendererMeterial';
-import { MINIMUM_WIDTH_AND_HEIGHT } from '../constants';
+import SvgModel from '../models/SvgModel';
 
 class ToolPath {
     public id;
@@ -46,10 +50,11 @@ class ToolPath {
     public toolParams;
 
     public materials;
+    private origin: Origin;
 
     public lastConfigJson = '';
 
-    public modelGroup;
+    public modelGroup: ModelGroup;
 
     public constructor(options) {
         const {
@@ -65,6 +70,11 @@ class ToolPath {
             gcodeConfig,
             toolParams = {},
             materials = {},
+            origin = {
+                type: OriginType.Workpiece,
+                reference: RectangleWorkpieceReference.Center,
+                referenceMetadata: {},
+            },
             modelGroup,
         } = options;
 
@@ -88,8 +98,10 @@ class ToolPath {
 
         this.gcodeConfig = { ...gcodeConfig };
         this.toolParams = { ...toolParams };
-        this.materials = { ...materials };
         this.modelGroup = modelGroup;
+
+        this.materials = { ...materials };
+        this.origin = { ...origin };
 
         this.checkoutToolPathStatus();
     }
@@ -178,8 +190,14 @@ class ToolPath {
         this.checkoutToolPathStatus();
     }
 
-    private _getModels() {
-        const models = this.modelGroup.getModels();
+    public setOrigin(origin: Origin): void {
+        this.origin = origin;
+
+        this.checkoutToolPathStatus();
+    }
+
+    private _getModels(): SvgModel[] {
+        const models = this.modelGroup.getModels<SvgModel>();
         return models.filter((model) => {
             return (
                 includes(this.visibleModelIDs, model.modelID) && model.visible
@@ -202,12 +220,12 @@ class ToolPath {
     public commitGenerateToolPath() {
         if (this.status === FAILED) {
             this.clearModelObjects();
-            return false;
+            return null;
         }
 
         this.checkoutToolPathStatus();
         if (this.status === SUCCESS) {
-            return false;
+            return null;
         }
 
         const taskInfos = this.getSelectModelsAndToolPathInfo();
@@ -231,7 +249,7 @@ class ToolPath {
         }
         if (data.length === 0) {
             // if all the model in toolpath is invisible, do not generate toolpath
-            return false;
+            return null;
         }
 
         const task = {
@@ -248,41 +266,97 @@ class ToolPath {
 
     private _getModelTaskInfos() {
         const selectModels = this._getModels();
+
         const modelInfos = selectModels
-            .map((v) => v.getTaskInfo())
-            .map((v) => {
-                if (!v.transformation.width) {
-                    v.transformation.width = MINIMUM_WIDTH_AND_HEIGHT;
+            .map((model) => model.getTaskInfo())
+            .map((info) => {
+                if (!info.transformation.width) {
+                    info.transformation.width = MINIMUM_WIDTH_AND_HEIGHT;
                 }
-                if (!v.transformation.height) {
-                    v.transformation.height = MINIMUM_WIDTH_AND_HEIGHT;
+                if (!info.transformation.height) {
+                    info.transformation.height = MINIMUM_WIDTH_AND_HEIGHT;
                 }
                 return {
-                    visible: v.visible,
-                    modelID: v.modelID,
-                    headType: v.headType,
-                    sourceType: v.sourceType,
-                    mode: v.mode,
-                    sourceHeight: v.sourceHeight,
-                    sourceWidth: v.sourceWidth,
-                    originalName: v.originalName,
-                    uploadName: v.uploadName,
-                    transformation: v.transformation,
-                    config: v.config,
+                    visible: info.visible,
+                    modelID: info.modelID,
+                    headType: info.headType,
+                    sourceType: info.sourceType,
+                    mode: info.mode,
+                    sourceHeight: info.sourceHeight,
+                    sourceWidth: info.sourceWidth,
+                    originalName: info.originalName,
+                    uploadName: info.uploadName,
+                    transformation: info.transformation,
+                    config: info.config,
                 };
             });
+
         return modelInfos;
     }
 
     public getSelectModelsAndToolPathInfo() {
         const modelInfos = this._getModelTaskInfos();
 
+        const selectModels = this._getModels();
+
+
+        console.log('Get Task Info:');
+
+        const bbox = new Box2();
+        for (const model of selectModels) {
+            model.computeBoundingBox();
+
+            console.log('model =', model.modelID, 'bbox =', model.boundingBox);
+            bbox.expandByPoint(model.boundingBox.min);
+            bbox.expandByPoint(model.boundingBox.max);
+        }
+
+        console.log('combined bbox =', bbox);
+
+        // Deal with origin, if origin type is object, we add offsets to the model transformation here
+        if (this.origin.type === OriginType.Object) {
+            for (const modelInfo of modelInfos) {
+                switch (this.origin.reference) {
+                    case ObjectReference.Center: {
+                        modelInfo.transformation.positionX -= (bbox.min.x + bbox.max.x) * 0.5;
+                        modelInfo.transformation.positionY -= (bbox.min.y + bbox.max.y) * 0.5;
+                        break;
+                    }
+                    case ObjectReference.BottomLeft: {
+                        modelInfo.transformation.positionX -= bbox.min.x;
+                        modelInfo.transformation.positionY -= bbox.min.y;
+                        break;
+                    }
+                    case ObjectReference.BottomRight: {
+                        modelInfo.transformation.positionX -= bbox.max.x;
+                        modelInfo.transformation.positionY -= bbox.min.y;
+                        break;
+                    }
+                    case ObjectReference.TopLeft: {
+                        modelInfo.transformation.positionX -= bbox.min.x;
+                        modelInfo.transformation.positionY -= bbox.max.y;
+                        break;
+                    }
+                    case ObjectReference.TopRight: {
+                        modelInfo.transformation.positionX -= bbox.max.x;
+                        modelInfo.transformation.positionY -= bbox.max.y;
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+        }
+
         // FIXME
-        // diameter is required by LunarTPP
+        // diameter is required by LunarTPP, or it won't work properly
         this.materials.diameter = this.materials.diameter || 0;
 
+        console.log('task info, origin =', this.origin);
+
+        const taskInfos = [];
         for (let i = 0; i < modelInfos.length; i++) {
-            modelInfos[i] = {
+            const taskInfo = {
                 ...modelInfos[i],
                 type: this.type,
                 useLegacyEngine: this.useLegacyEngine,
@@ -290,9 +364,11 @@ class ToolPath {
                 toolParams: this.toolParams,
                 materials: this.materials,
             };
+
+            taskInfos.push(taskInfo);
         }
 
-        return modelInfos;
+        return taskInfos;
     }
 
     /**
