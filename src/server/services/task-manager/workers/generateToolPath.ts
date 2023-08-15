@@ -45,6 +45,8 @@ const generateLaserToolPathFromEngine = async (allTasks, onProgress) => {
             }
             modelInfo.toolpathFileName = generateRandomPathName('json');
             modelInfo.identifier = task.identifier;
+
+            // FIXME: Hardcoded for ray
             modelInfo.laserPointOnMode = task.identifier === 'Ray' ? 'inline_mode' : 'switch_mode';
         }
 

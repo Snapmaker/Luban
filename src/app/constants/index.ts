@@ -11,27 +11,10 @@ export const EXTRUDER_REGEX = /^extruder_(\d).*$/;
 
 export const CUSTOM_SERVER_NAME = 'Manual';
 export const EPSILON = 1e-6;
-export const CONNECTION_CLOSE = 'connection:close';
 export const CONNECTION_HEAD_BEGIN_WORK = 'connection:headBeginWork';
-export const CONNECTION_MATERIALTHICKNESS = 'connection:materialThickness';
-export const CONNECTION_MATERIALTHICKNESS_ABORT = 'connection:materialThickness_abort';
 export const CONNECTION_GET_GCODEFILE = 'connection:getGcodeFile';
-export const CONNECTION_Z_OFFSET = 'connection:updateZOffset';
-export const CONNECTION_NOZZLE_TEMPERATURE = 'connection:updateNozzleTemperature';
-export const CONNECTION_GET_ACTIVE_EXTRUDER = 'connection:getActiveExtruder';
-export const CONNECTION_WORK_NOZZLE = 'connection:updateWorkNozzle';
-export const CONNECTION_BED_TEMPERATURE = 'connection:updateBedTemperature';
-export const CONNECTION_LOAD_FILAMENT = 'connection:loadFilament';
-export const CONNECTION_UNLOAD_FILAMENT = 'connection:unloadFilament';
-export const CONNECTION_LASER_POWER = 'connection:updateLaserPower';
-export const CONNECTION_SWITCH_LASER_POWER = 'connection:switchLaserPower';
-export const CONNECTION_ENCLOSURE_LIGHT = 'connection:setEnclosureLight';
-export const CONNECTION_ENCLOSURE_FAN = 'connection:setEnclosureFan';
-export const CONNECTION_DOOR_DETECTION = 'connection:setDoorDetection';
 export const CONNECTION_FILTER_SWITCH = 'connection:setFilterSwitch';
 export const CONNECTION_FILTER_WORKSPEED = 'connection:setFilterWorkSpeed';
-export const CONNECTION_UPDATE_TOOLHEAD_SPEED = 'connection:updateToolHeadSpeed';
-export const CONNECTION_SWITCH_CNC = 'connection:switchCNC';
 export const CONNECTION_WIFI_STATUS_TEST = 'connection:wifiStatusTest';
 
 export const SVG_MOVE_MINI_DISTANCE = 1e-4;

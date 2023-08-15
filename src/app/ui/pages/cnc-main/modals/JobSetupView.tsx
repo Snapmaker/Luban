@@ -380,219 +380,220 @@ const JobSetupView = forwardRef<JobSetupViewHandle, {}>((_, ref) => {
     ]);
 
     return (
-        <React.Fragment>
-            <div className="margin-left-50">
-                <div className="margin-bottom-16 font-weight-bold">
-                    {i18n._('key-Term/Workpiece Size')}
-                </div>
-                {
-                    workpiece.shape === WorkpieceShape.Rectangle && (
-                        <div className="sm-flex">
-                            <img
-                                draggable="false"
-                                style={{
-                                    width: '100px',
-                                    height: '100px'
-                                }}
-                                src="/resources/images/cnc-laser/working-size-3.png"
-                                role="presentation"
-                                alt="3 Axis"
-                            />
-                            <div className="margin-left-16 sm-flex-width">
-                                <div className="sm-flex height-32 position-re">
-                                    <span className="width-144 margin-right-8">{i18n._('key-CncLaser/JobSetup-Width (X)')}</span>
-                                    <Input
-                                        suffix="mm"
-                                        disabled={inProgress || settingSizeDisabled}
-                                        value={toFixed((workpiece.size as RectangleWorkpieceSize).x, 1)}
-                                        max={maxX}
-                                        min={2}
-                                        onChange={(value) => {
-                                            setWorkpieceSize({
-                                                x: value,
-                                                y: (workpiece.size as RectangleWorkpieceSize).y,
-                                                z: (workpiece.size as RectangleWorkpieceSize).z,
-                                            });
-                                        }}
-                                    />
-                                </div>
-                                <div className="sm-flex height-32 position-re margin-top-16">
-                                    <span className="width-144 margin-right-8">{i18n._('key-CncLaser/JobSetup-Height (Y)')}</span>
-                                    <Input
-                                        suffix="mm"
-                                        disabled={inProgress || settingSizeDisabled}
-                                        value={toFixed((workpiece.size as RectangleWorkpieceSize).y, 1)}
-                                        max={maxY}
-                                        min={10}
-                                        onChange={(value) => {
-                                            setWorkpieceSize({
-                                                x: (workpiece.size as RectangleWorkpieceSize).x,
-                                                y: value,
-                                                z: (workpiece.size as RectangleWorkpieceSize).z,
-                                            });
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    )
-                }
-                {
-                    workpiece.shape === WorkpieceShape.Cylinder && (
-                        <>
-                            <div className="sm-flex">
-                                <img
-                                    draggable="false"
-                                    style={{
-                                        width: '330px',
-                                        margin: '0'
+        <div>
+            {/* Workpiece */}
+            <div className="margin-bottom-16 font-weight-bold">
+                {i18n._('key-Term/Workpiece Size')}
+            </div>
+            {
+                workpiece.shape === WorkpieceShape.Rectangle && (
+                    <div className="sm-flex">
+                        <img
+                            draggable="false"
+                            style={{
+                                width: '100px',
+                                height: '100px'
+                            }}
+                            src="/resources/images/cnc-laser/working-size-3.png"
+                            role="presentation"
+                            alt="3 Axis"
+                        />
+                        <div className="margin-left-16 sm-flex-width">
+                            <div className="sm-flex height-32 position-re">
+                                <span className="width-144 margin-right-8">{i18n._('key-CncLaser/JobSetup-Width (X)')}</span>
+                                <Input
+                                    suffix="mm"
+                                    disabled={inProgress || settingSizeDisabled}
+                                    value={toFixed((workpiece.size as RectangleWorkpieceSize).x, 1)}
+                                    max={maxX}
+                                    min={2}
+                                    onChange={(value) => {
+                                        setWorkpieceSize({
+                                            x: value,
+                                            y: (workpiece.size as RectangleWorkpieceSize).y,
+                                            z: (workpiece.size as RectangleWorkpieceSize).z,
+                                        });
                                     }}
-                                    src="/resources/images/cnc-laser/working-size-4.png"
-                                    role="presentation"
-                                    alt="3 Axis"
                                 />
                             </div>
-                            <div className="margin-top-16">
-                                <div className="sm-flex height-32 position-re">
-                                    <span className="width-144 margin-right-8">{i18n._('key-CncLaser/JobSetup-Length (L)')}</span>
-                                    <Input
-                                        suffix="mm"
-                                        disabled={inProgress || settingSizeDisabled}
-                                        value={toFixed((workpiece.size as CylinderWorkpieceSize).length, 1)}
-                                        max={maxY}
-                                        min={10}
-                                        onChange={(value) => {
-                                            setWorkpieceSize({
-                                                diameter: (workpiece.size as CylinderWorkpieceSize).diameter,
-                                                length: value,
-                                            });
-                                        }}
-                                    />
-                                </div>
-                                <div className="sm-flex height-32 position-re margin-top-8">
-                                    <span className="width-144 margin-right-8">{i18n._('key-CncLaser/JobSetup-Diameter (D)')}</span>
-                                    <Input
-                                        suffix="mm"
-                                        disabled={inProgress || settingSizeDisabled}
-                                        value={toFixed((workpiece.size as CylinderWorkpieceSize).diameter, 1)}
-                                        max={maxX}
-                                        min={2}
-                                        onChange={(value) => {
-                                            setWorkpieceSize({
-                                                diameter: value,
-                                                length: (workpiece.size as CylinderWorkpieceSize).length,
-                                            });
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        </>
-                    )
-                }
-                <div className="margin-top-24 margin-bottom-16 font-weight-bold">
-                    {i18n._('key-CncLaser/JobSetup-Work Origin')}
-                </div>
-                {
-                    workpiece.shape === WorkpieceShape.Rectangle && (
-                        <div className="sm-flex">
-                            <img
-                                draggable="false"
-                                style={{
-                                    width: '100px',
-                                    height: '100px'
-                                }}
-                                src={selectedOrigin.type === OriginType.CNCLockingBlock ? imgLockingBlockPosition : imgOF3axisCoordinateMode}
-                                role="presentation"
-                                alt="3 Axis"
-                            />
-                            <div className="margin-left-16">
-                                {/* CNC locking block */}
-                                <div className="height-32 sm-flex">
-                                    <span className="width-144 margin-right-8 text-overflow-ellipsis">{i18n._('key-CncLaser/JobSetup-Use Locking block')}</span>
-                                    <Select
-                                        backspaceRemoves={false}
-                                        size="120px"
-                                        clearable={false}
-                                        options={originTypeOptions}
-                                        isGroup={false}
-                                        placeholder={i18n._('key-CncLaser/JobSetup-Choose font')}
-                                        value={selectedOrigin.type}
-                                        onChange={onChangeOriginType}
-                                        disabled={inProgress || settingSizeDisabled}
-                                    />
-                                </div>
-                                {
-                                    selectedOrigin.type === OriginType.Workpiece && (
-                                        <div className="height-32 margin-top-16 sm-flex">
-                                            <span className="width-144 margin-right-8 text-overflow-ellipsis">{i18n._('key-CncLaser/JobSetup-Origin Position')}</span>
-                                            <Select
-                                                backspaceRemoves={false}
-                                                size="120px"
-                                                clearable={false}
-                                                options={originReferenceOptions}
-                                                isGroup={false}
-                                                placeholder={i18n._('key-CncLaser/JobSetup-Choose font')}
-                                                value={selectedOrigin.reference}
-                                                onChange={onChangeOriginReference}
-                                                disabled={inProgress || settingSizeDisabled}
-                                            />
-                                        </div>
-                                    )
-                                }
-                                {
-                                    selectedOrigin.type === OriginType.CNCLockingBlock && (
-                                        <div className="height-32 margin-top-16 sm-flex">
-                                            <span className="width-144 margin-right-8 text-overflow-ellipsis">{i18n._('key-CncLaser/JobSetup-Locking block position')}</span>
-                                            <Select
-                                                size="120px"
-                                                clearable={false}
-                                                options={lockingBlockPositionOptions}
-                                                value={lockingBlockPosition}
-                                                onChange={onChangeLockingBlockPosition}
-                                            />
-                                        </div>
-                                    )
-                                }
+                            <div className="sm-flex height-32 position-re margin-top-16">
+                                <span className="width-144 margin-right-8">{i18n._('key-CncLaser/JobSetup-Height (Y)')}</span>
+                                <Input
+                                    suffix="mm"
+                                    disabled={inProgress || settingSizeDisabled}
+                                    value={toFixed((workpiece.size as RectangleWorkpieceSize).y, 1)}
+                                    max={maxY}
+                                    min={10}
+                                    onChange={(value) => {
+                                        setWorkpieceSize({
+                                            x: (workpiece.size as RectangleWorkpieceSize).x,
+                                            y: value,
+                                            z: (workpiece.size as RectangleWorkpieceSize).z,
+                                        });
+                                    }}
+                                />
                             </div>
                         </div>
-                    )
-                }
-                {
-                    workpiece.shape === WorkpieceShape.Cylinder && (
+                    </div>
+                )
+            }
+            {
+                workpiece.shape === WorkpieceShape.Cylinder && (
+                    <>
                         <div className="sm-flex">
                             <img
                                 draggable="false"
                                 style={{
-                                    width: '116px',
-                                    height: '128px',
-                                    margin: '0 auto'
+                                    width: '330px',
+                                    margin: '0'
                                 }}
-                                src="/resources/images/cnc-laser/working-origin-laser-4.png"
+                                src="/resources/images/cnc-laser/working-size-4.png"
                                 role="presentation"
                                 alt="3 Axis"
                             />
-                            <div className="margin-left-16 sm-flex-width sm-flex height-32">
-                                <span className="width-144 margin-right-8">{i18n._('key-CncLaser/JobSetup-Origin Position')}</span>
+                        </div>
+                        <div className="margin-top-16">
+                            <div className="sm-flex height-32 position-re">
+                                <span className="width-144 margin-right-8">{i18n._('key-CncLaser/JobSetup-Length (L)')}</span>
+                                <Input
+                                    suffix="mm"
+                                    disabled={inProgress || settingSizeDisabled}
+                                    value={toFixed((workpiece.size as CylinderWorkpieceSize).length, 1)}
+                                    max={maxY}
+                                    min={10}
+                                    onChange={(value) => {
+                                        setWorkpieceSize({
+                                            diameter: (workpiece.size as CylinderWorkpieceSize).diameter,
+                                            length: value,
+                                        });
+                                    }}
+                                />
+                            </div>
+                            <div className="sm-flex height-32 position-re margin-top-8">
+                                <span className="width-144 margin-right-8">{i18n._('key-CncLaser/JobSetup-Diameter (D)')}</span>
+                                <Input
+                                    suffix="mm"
+                                    disabled={inProgress || settingSizeDisabled}
+                                    value={toFixed((workpiece.size as CylinderWorkpieceSize).diameter, 1)}
+                                    max={maxX}
+                                    min={2}
+                                    onChange={(value) => {
+                                        setWorkpieceSize({
+                                            diameter: value,
+                                            length: (workpiece.size as CylinderWorkpieceSize).length,
+                                        });
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </>
+                )
+            }
+
+            {/* Origin */}
+            <div className="margin-top-24 margin-bottom-16 font-weight-bold">
+                {i18n._('key-CncLaser/JobSetup-Work Origin')}
+            </div>
+            {
+                workpiece.shape === WorkpieceShape.Rectangle && (
+                    <div className="sm-flex">
+                        <img
+                            draggable="false"
+                            style={{
+                                width: '100px',
+                                height: '100px'
+                            }}
+                            src={selectedOrigin.type === OriginType.CNCLockingBlock ? imgLockingBlockPosition : imgOF3axisCoordinateMode}
+                            role="presentation"
+                            alt="3 Axis"
+                        />
+                        <div className="margin-left-16">
+                            {/* CNC locking block */}
+                            <div className="height-32 sm-flex">
+                                <span className="width-144 margin-right-8 text-overflow-ellipsis">{i18n._('key-CncLaser/JobSetup-Use Locking block')}</span>
                                 <Select
                                     backspaceRemoves={false}
                                     size="120px"
                                     clearable={false}
-                                    options={[
-                                        {
-                                            label: i18n._('key-CncLaser/JobSetup-Top'),
-                                            value: 'top'
-                                        }
-                                    ]}
+                                    options={originTypeOptions}
                                     isGroup={false}
-                                    value="top"
-                                    disabled
+                                    placeholder={i18n._('key-CncLaser/JobSetup-Choose font')}
+                                    value={selectedOrigin.type}
+                                    onChange={onChangeOriginType}
+                                    disabled={inProgress || settingSizeDisabled}
                                 />
                             </div>
+                            {
+                                selectedOrigin.type === OriginType.Workpiece && (
+                                    <div className="height-32 margin-top-16 sm-flex">
+                                        <span className="width-144 margin-right-8 text-overflow-ellipsis">{i18n._('key-CncLaser/JobSetup-Origin Position')}</span>
+                                        <Select
+                                            backspaceRemoves={false}
+                                            size="120px"
+                                            clearable={false}
+                                            options={originReferenceOptions}
+                                            isGroup={false}
+                                            placeholder={i18n._('key-CncLaser/JobSetup-Choose font')}
+                                            value={selectedOrigin.reference}
+                                            onChange={onChangeOriginReference}
+                                            disabled={inProgress || settingSizeDisabled}
+                                        />
+                                    </div>
+                                )
+                            }
+                            {
+                                selectedOrigin.type === OriginType.CNCLockingBlock && (
+                                    <div className="height-32 margin-top-16 sm-flex">
+                                        <span className="width-144 margin-right-8 text-overflow-ellipsis">{i18n._('key-CncLaser/JobSetup-Locking block position')}</span>
+                                        <Select
+                                            size="120px"
+                                            clearable={false}
+                                            options={lockingBlockPositionOptions}
+                                            value={lockingBlockPosition}
+                                            onChange={onChangeLockingBlockPosition}
+                                        />
+                                    </div>
+                                )
+                            }
                         </div>
-                    )
-                }
-            </div>
-        </React.Fragment>
+                    </div>
+                )
+            }
+            {
+                workpiece.shape === WorkpieceShape.Cylinder && (
+                    <div className="sm-flex">
+                        <img
+                            draggable="false"
+                            style={{
+                                width: '116px',
+                                height: '128px',
+                                margin: '0 auto'
+                            }}
+                            src="/resources/images/cnc-laser/working-origin-laser-4.png"
+                            role="presentation"
+                            alt="3 Axis"
+                        />
+                        <div className="margin-left-16 sm-flex-width sm-flex height-32">
+                            <span className="width-144 margin-right-8">{i18n._('key-CncLaser/JobSetup-Origin Position')}</span>
+                            <Select
+                                backspaceRemoves={false}
+                                size="120px"
+                                clearable={false}
+                                options={[
+                                    {
+                                        label: i18n._('key-CncLaser/JobSetup-Top'),
+                                        value: 'top'
+                                    }
+                                ]}
+                                isGroup={false}
+                                value="top"
+                                disabled
+                            />
+                        </div>
+                    </div>
+                )
+            }
+        </div>
     );
 });
 

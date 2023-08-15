@@ -2,9 +2,7 @@ import { isUndefined } from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { shallowEqual, useSelector } from 'react-redux';
 
-import {
-    CONNECTION_DOOR_DETECTION, CONNECTION_ENCLOSURE_FAN, CONNECTION_ENCLOSURE_LIGHT
-} from '../../../constants';
+import ControllerEvent from '../../../connection/controller-events';
 import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
@@ -27,29 +25,31 @@ function Enclosure() {
         onHandleLed: async () => {
             const _led = enclosureLight === 0 ? 100 : 0;
             setIsLedReady(false);
-            controller.emitEvent(CONNECTION_ENCLOSURE_LIGHT, {
+            controller.emitEvent(ControllerEvent.SetEnclosureLight, {
                 value: _led
             });
         },
         onHandleCoolingFans: async () => {
             const _fan = enclosureFan === 0 ? 100 : 0;
             setIsFanReady(false);
-            controller.emitEvent(CONNECTION_ENCLOSURE_FAN, {
+            controller.emitEvent(ControllerEvent.SetEnclosureFan, {
                 value: _fan
             });
         },
         onHandleDoorEnabled: () => {
-            controller.emitEvent(CONNECTION_DOOR_DETECTION, {
-                enable: !isDoorEnabled
-            }).once(CONNECTION_DOOR_DETECTION, ({ msg, data }) => {
-                if (msg) {
-                    log.error(msg);
-                    return;
-                }
-                if (data) {
-                    setIsDoorEnabled(data.isDoorEnabled);
-                }
-            });
+            controller
+                .emitEvent(ControllerEvent.SetEnclosureDoorDetection, {
+                    enable: !isDoorEnabled
+                })
+                .once(ControllerEvent.SetEnclosureDoorDetection, ({ msg, data }) => {
+                    if (msg) {
+                        log.error(msg);
+                        return;
+                    }
+                    if (data) {
+                        setIsDoorEnabled(data.isDoorEnabled);
+                    }
+                });
         }
     };
 

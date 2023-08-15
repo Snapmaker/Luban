@@ -3,18 +3,15 @@ import { includes, isNil } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import {
-    CONNECTION_LASER_POWER,
-    CONNECTION_SWITCH_LASER_POWER,
-} from '../../../constants';
+import ControllerEvent from '../../../connection/controller-events';
 import { LEVEL_TWO_POWER_LASER_FOR_SM2 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
 import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import SvgIcon from '../../components/SvgIcon';
 import Switch from '../../components/Switch';
-import AttributeContainer from './components/AttributeContainer';
 import WorkSpeed from './WorkSpeed';
+import AttributeContainer from './components/AttributeContainer';
 
 
 const LaserToolControl: React.FC = () => {
@@ -44,7 +41,7 @@ const LaserToolControl: React.FC = () => {
             return;
         }
 
-        controller.emitEvent(CONNECTION_SWITCH_LASER_POWER, {
+        controller.emitEvent(ControllerEvent.SwitchLaserPower, {
             isSM2: toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2,
             laserPower: 1,
             laserPowerOpen: laserPowerOpen,
@@ -54,7 +51,7 @@ const LaserToolControl: React.FC = () => {
     }, [isPrinting, laserPowerOpen, toolHead]);
 
     const onSaveLaserPower = useCallback((value: number) => {
-        controller.emitEvent(CONNECTION_LASER_POWER, {
+        controller.emitEvent(ControllerEvent.SetLaserPower, {
             isPrinting: isPrinting(),
             laserPower: value,
             laserPowerOpen: laserPowerOpen

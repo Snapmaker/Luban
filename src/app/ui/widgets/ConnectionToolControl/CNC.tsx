@@ -3,18 +3,15 @@ import { includes } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import {
-    CONNECTION_SWITCH_CNC,
-    CONNECTION_UPDATE_TOOLHEAD_SPEED,
-} from '../../../constants';
+import ControllerEvent from '../../../connection/controller-events';
 import { LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, MACHINE_SERIES } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
 import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import EditComponent from '../../components/EditComponent';
 import Switch from '../../components/Switch';
-import AttributeContainer from './components/AttributeContainer';
 import WorkSpeed from './WorkSpeed';
+import AttributeContainer from './components/AttributeContainer';
 
 const CNC: React.FC = () => {
     const { series, toolHead } = useSelector((state: RootState) => state.workspace);
@@ -34,7 +31,7 @@ const CNC: React.FC = () => {
     );
 
     const onClickToolHead = useCallback(() => {
-        controller.emitEvent(CONNECTION_SWITCH_CNC, {
+        controller.emitEvent(ControllerEvent.SwitchCNC, {
             headStatus: isHeadOn,
             speed: cncTargetSpindleSpeed,
             toolHead,
@@ -45,7 +42,7 @@ const CNC: React.FC = () => {
     }, [isHeadOn, cncTargetSpindleSpeed, toolHead, series]);
 
     const updateToolHeadSpeed = useCallback((speed: number) => {
-        controller.emitEvent(CONNECTION_UPDATE_TOOLHEAD_SPEED, {
+        controller.emitEvent(ControllerEvent.SetSpindleSpeed, {
             speed,
         });
     }, []);
