@@ -57,6 +57,8 @@ export interface UploadFileOptions {
 }
 export interface FileChannelInterface extends Channel {
     uploadFile(options: UploadFileOptions): Promise<boolean>;
+
+    compressUploadFile(options: UploadFileOptions): Promise<boolean>;
 }
 
 

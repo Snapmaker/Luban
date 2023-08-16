@@ -64,6 +64,7 @@ enum ControllerEvent {
      * File
      */
     UploadFile = 'connection:uploadFile',
+    CompressUploadFile = 'connection:compress-upload-file',
 
     /**
      * Machine Network (Wi-Fi)
