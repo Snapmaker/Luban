@@ -144,18 +144,14 @@ class SacpUdpChannel extends SacpChannelBase implements FileChannelInterface {
         const { filePath, targetFilename } = options;
         log.info(`Upload file to controller... ${filePath}`);
 
-        // Note: Use upload large file API instead of upload file API, newer firmware will implement this API
-        // rather than the old ones.
         const success = await this.sacpClient.uploadFile(filePath, targetFilename);
         return success;
     }
 
     public async compressUploadFile(options: UploadFileOptions): Promise<boolean> {
         const { filePath, targetFilename } = options;
-        log.info(`Upload file to controller... ${filePath}`);
+        log.info(`Compress and upload file to controller... ${filePath}`);
 
-        // Note: Use upload large file API instead of upload file API, newer firmware will implement this API
-        // rather than the old ones.
         const success = await this.sacpClient.uploadFileCompressed(filePath, targetFilename);
         return success;
     }
