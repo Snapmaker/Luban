@@ -1,13 +1,32 @@
 import { v4 as uuid } from 'uuid';
+import { Vector2 } from 'three';
 
-import { isEqual } from '../../../shared/lib/utils';
-import { EPSILON } from '../../constants';
-import { Materials, Origin, OriginType, RectangleWorkpieceReference } from '../../constants/coordinate';
-import { createSVGElement } from './element-utils';
+import { isEqual } from '../../shared/lib/utils';
+import { EPSILON } from '../constants';
+import {
+    Materials,
+    Origin,
+    OriginType,
+    RectangleWorkpieceReference,
+} from '../constants/coordinate';
+import { createSVGElement } from '../ui/SVGEditor/element-utils';
 
-class PrintableArea {
+interface Workpiece2dOptions {
+    size: Vector2;
+    coordinateMode;
+    coordinateSize;
+    materials: Materials;
+    scale: number;
+    getRoot: () => Element;
+}
+
+/**
+ * Workpiece in 2D.
+ *
+ * Use rectangle to represent workpiece.
+ */
+class Workpiece2d {
     private id: string;
-    private svgFactory;
     private printableAreaGroup: Element;
 
     private size: {
@@ -18,33 +37,33 @@ class PrintableArea {
     private materials: Materials;
     private origin: Origin;
     private coordinateMode;
-    private coorDelta: { dx: number; dy: number } = { dx: 0, dy: 0 };
+    private coordinateSize;
+    private coorDelta: { x: number; y: number } = { x: 0, y: 0 };
     private scale: number = 1;
 
-    public constructor(svgFactory) {
+    public constructor(options: Workpiece2dOptions) {
         this.id = uuid();
-        this.svgFactory = svgFactory;
         this.size = {
-            ...svgFactory.size
+            ...options.size
         };
         this.materials = {
-            ...svgFactory.materials
+            ...options.materials
         };
 
         this.coorDelta = {
             x: 0,
             y: 0
         };
-        this.coordinateMode = svgFactory.coordinateMode;
-        this.coordinateSize = (svgFactory.coordinateSize && svgFactory.coordinateSize.x > 0) ? svgFactory.coordinateSize : this.size;
+        this.coordinateMode = options.coordinateMode;
+        this.coordinateSize = (options.coordinateSize && options.coordinateSize.x > 0) ? options.coordinateSize : this.size;
         this.origin = {
             type: OriginType.Workpiece,
             reference: RectangleWorkpieceReference.Center,
             referenceMetadata: {},
         };
-        this._setCoordinateMode(this.coordinateMode, this.coordinateSize);
+        this._setCoordinateMode(this.coordinateMode);
 
-        this.scale = svgFactory.scale;
+        this.scale = options.scale;
         this.printableAreaGroup = createSVGElement({
             element: 'g',
             attr: {
@@ -52,7 +71,7 @@ class PrintableArea {
             }
         });
 
-        this.svgFactory.getRoot().append(this.printableAreaGroup);
+        options.getRoot().append(this.printableAreaGroup);
         this._setCoordinateAxes();
         this._setGridLine();
         this._setMaterialsRect();
@@ -131,10 +150,13 @@ class PrintableArea {
         this.coorDelta.y -= this.coordinateSize.y / 2 * coordinateMode.setting.sizeMultiplyFactor.y;
     }
 
+    /**
+     * Draw grid line, axes, scales.
+     */
     public _setGridLine() {
-        if (this.origin && this.origin.type === OriginType.Object) {
-            return;
-        }
+        // draw axis and scale
+        const drawAxis = !(this.origin && this.origin.type === OriginType.Object);
+        const drawScale = drawAxis;
 
         const { x, y } = this.size;
         const { x: cx, y: cy } = this.coordinateSize;
@@ -147,6 +169,7 @@ class PrintableArea {
         const colorTextFill = '#85888C';
         const textSize = 4;
         const coordinateModeName = this.coordinateMode.value;
+
         // small grid 10x10
         for (let i = y; i > yMin; i -= 10) {
             const color = colorSmallGrid;
@@ -161,7 +184,7 @@ class PrintableArea {
                     stroke: color,
                     fill: 'none',
                     virtualY: i - y,
-                    'stroke-width': ((i - y) === 0) ? (4 / this.scale) : (1 / this.scale),
+                    'stroke-width': (i === y && drawAxis) ? (4 / this.scale) : (1 / this.scale),
                     opacity: 1,
                     'fill-opacity': 1
                 }
@@ -181,7 +204,7 @@ class PrintableArea {
                     stroke: color,
                     fill: 'none',
                     virtualY: i - y,
-                    'stroke-width': ((i - y) === 0) ? (4 / this.scale) : (1 / this.scale),
+                    'stroke-width': ((i - y) === 0 && drawAxis) ? (4 / this.scale) : (1 / this.scale),
                     opacity: 1,
                     'fill-opacity': 1
                 }
@@ -201,7 +224,7 @@ class PrintableArea {
                     stroke: color,
                     fill: 'none',
                     virtualX: i - x,
-                    'stroke-width': ((i - x) === 0) ? (4 / this.scale) : (1 / this.scale),
+                    'stroke-width': ((i - x) === 0 && drawAxis) ? (4 / this.scale) : (1 / this.scale),
                     opacity: 1,
                     'fill-opacity': 1
                 }
@@ -221,7 +244,7 @@ class PrintableArea {
                     stroke: color,
                     fill: 'none',
                     virtualX: i - x,
-                    'stroke-width': ((i - x) === 0) ? (4 / this.scale) : (1 / this.scale),
+                    'stroke-width': ((i - x) === 0 && drawAxis) ? (4 / this.scale) : (1 / this.scale),
                     opacity: 1,
                     'fill-opacity': 1
                 }
@@ -247,25 +270,28 @@ class PrintableArea {
                     'fill-opacity': 1
                 }
             });
-            const label = createSVGElement({
-                element: 'text',
-                attr: {
-                    x: x + (coordinateModeName.indexOf('right') !== -1 ? 6 : -6),
-                    y: i + 1.2,
-                    id: uuid(),
-                    'font-size': textSize,
-                    fill: colorTextFill,
-                    'text-anchor': 'middle',
-                    'xml:space': 'preserve',
-                    'stroke-width': 1 / this.scale,
-                    'fill-opacity': 1,
-                    'stroke-opacity': 0
-                }
-            });
-            label.innerHTML = -(i - y);
-            label.style.cursor = 'default';
             this.printableAreaGroup.append(line);
-            this.printableAreaGroup.append(label);
+
+            if (drawScale) {
+                const label = createSVGElement({
+                    element: 'text',
+                    attr: {
+                        x: x + (coordinateModeName.indexOf('right') !== -1 ? 6 : -6),
+                        y: i + 1.2,
+                        id: uuid(),
+                        'font-size': textSize,
+                        fill: colorTextFill,
+                        'text-anchor': 'middle',
+                        'xml:space': 'preserve',
+                        'stroke-width': 1 / this.scale,
+                        'fill-opacity': 1,
+                        'stroke-opacity': 0
+                    }
+                });
+                label.innerHTML = -(i - y);
+                label.style.cursor = 'default';
+                this.printableAreaGroup.append(label);
+            }
         }
         for (let i = y + 50; i < yMax; i += 50) {
             const color = colorBigGrid;
@@ -284,25 +310,28 @@ class PrintableArea {
                     'fill-opacity': 1
                 }
             });
-            const label = createSVGElement({
-                element: 'text',
-                attr: {
-                    x: x + (coordinateModeName.indexOf('right') !== -1 ? 6 : -6),
-                    y: i + 1.2,
-                    id: uuid(),
-                    'font-size': textSize,
-                    fill: colorTextFill,
-                    'text-anchor': 'middle',
-                    'xml:space': 'preserve',
-                    'stroke-width': 1 / this.scale,
-                    'fill-opacity': 1,
-                    'stroke-opacity': 0
-                }
-            });
-            label.innerHTML = -(i - y);
-            label.style.cursor = 'default';
             this.printableAreaGroup.append(line);
-            this.printableAreaGroup.append(label);
+
+            if (drawScale) {
+                const label = createSVGElement({
+                    element: 'text',
+                    attr: {
+                        x: x + (coordinateModeName.indexOf('right') !== -1 ? 6 : -6),
+                        y: i + 1.2,
+                        id: uuid(),
+                        'font-size': textSize,
+                        fill: colorTextFill,
+                        'text-anchor': 'middle',
+                        'xml:space': 'preserve',
+                        'stroke-width': 1 / this.scale,
+                        'fill-opacity': 1,
+                        'stroke-opacity': 0
+                    }
+                });
+                label.innerHTML = -(i - y);
+                label.style.cursor = 'default';
+                this.printableAreaGroup.append(label);
+            }
         }
         for (let i = x; i > xMin; i -= 50) {
             const color = colorBigGrid;
@@ -321,26 +350,29 @@ class PrintableArea {
                     'fill-opacity': 1
                 }
             });
-            const label = createSVGElement({
-                element: 'text',
-                attr: {
-                    x: i,
-                    y: y + (coordinateModeName.indexOf('top') !== -1 ? -3 : 6),
-                    id: uuid(),
-                    'font-size': textSize,
-                    fill: colorTextFill,
-                    'text-anchor': 'middle',
-                    'xml:space': 'preserve',
-                    'stroke-width': 1 / this.scale,
-                    'fill-opacity': 1,
-                    'stroke-opacity': 0
-                }
-            });
-            if (i - x !== 0) {
-                label.innerHTML = i - x;
-            }
             this.printableAreaGroup.append(line);
-            this.printableAreaGroup.append(label);
+
+            if (drawScale) {
+                const label = createSVGElement({
+                    element: 'text',
+                    attr: {
+                        x: i,
+                        y: y + (coordinateModeName.indexOf('top') !== -1 ? -3 : 6),
+                        id: uuid(),
+                        'font-size': textSize,
+                        fill: colorTextFill,
+                        'text-anchor': 'middle',
+                        'xml:space': 'preserve',
+                        'stroke-width': 1 / this.scale,
+                        'fill-opacity': 1,
+                        'stroke-opacity': 0
+                    }
+                });
+                if (i - x !== 0) {
+                    label.innerHTML = i - x;
+                }
+                this.printableAreaGroup.append(label);
+            }
         }
         for (let i = x + 50; i < xMax; i += 50) {
             const color = colorBigGrid;
@@ -359,94 +391,99 @@ class PrintableArea {
                     'fill-opacity': 1
                 }
             });
-            const label = createSVGElement({
-                element: 'text',
-                attr: {
-                    x: i,
-                    y: y + (coordinateModeName.indexOf('top') !== -1 ? -3 : 6),
-                    id: uuid(),
-                    'font-size': textSize,
-                    fill: colorTextFill,
-                    'text-anchor': 'middle',
-                    'xml:space': 'preserve',
-                    'stroke-width': 1 / this.scale,
-                    'fill-opacity': 1,
-                    'stroke-opacity': 0
-                }
-            });
-            if (i - x !== 0) {
-                label.innerHTML = i - x;
-            }
             this.printableAreaGroup.append(line);
-            this.printableAreaGroup.append(label);
+
+            if (drawScale) {
+                const label = createSVGElement({
+                    element: 'text',
+                    attr: {
+                        x: i,
+                        y: y + (coordinateModeName.indexOf('top') !== -1 ? -3 : 6),
+                        id: uuid(),
+                        'font-size': textSize,
+                        fill: colorTextFill,
+                        'text-anchor': 'middle',
+                        'xml:space': 'preserve',
+                        'stroke-width': 1 / this.scale,
+                        'fill-opacity': 1,
+                        'stroke-opacity': 0
+                    }
+                });
+                if (i - x !== 0) {
+                    label.innerHTML = i - x;
+                }
+                this.printableAreaGroup.append(label);
+            }
         }
 
         // 4 border lines
-        const borderColor = '#B9BCBF';
-        const line1 = createSVGElement({
-            element: 'line',
-            attr: {
-                x1: xMin,
-                y1: yMin,
-                x2: xMin,
-                y2: yMax,
-                id: uuid(),
-                stroke: borderColor,
-                fill: 'none',
-                'stroke-width': 1 / this.scale,
-                opacity: 1,
-                'fill-opacity': 1
-            }
-        });
-        const line2 = createSVGElement({
-            element: 'line',
-            attr: {
-                x1: xMax,
-                y1: yMin,
-                x2: xMax,
-                y2: yMax,
-                id: uuid(),
-                stroke: borderColor,
-                fill: 'none',
-                'stroke-width': 1 / this.scale,
-                opacity: 1,
-                'fill-opacity': 1
-            }
-        });
-        const line3 = createSVGElement({
-            element: 'line',
-            attr: {
-                x1: xMin,
-                y1: yMin,
-                x2: xMax,
-                y2: yMin,
-                id: uuid(),
-                stroke: borderColor,
-                fill: 'none',
-                'stroke-width': 1 / this.scale,
-                opacity: 1,
-                'fill-opacity': 1
-            }
-        });
-        const line4 = createSVGElement({
-            element: 'line',
-            attr: {
-                x1: xMin,
-                y1: yMax,
-                x2: xMax,
-                y2: yMax,
-                id: uuid(),
-                stroke: borderColor,
-                fill: 'none',
-                'stroke-width': 1 / this.scale,
-                opacity: 1,
-                'fill-opacity': 1
-            }
-        });
-        this.printableAreaGroup.append(line1);
-        this.printableAreaGroup.append(line2);
-        this.printableAreaGroup.append(line3);
-        this.printableAreaGroup.append(line4);
+        if (drawScale) {
+            const borderColor = '#B9BCBF';
+            const line1 = createSVGElement({
+                element: 'line',
+                attr: {
+                    x1: xMin,
+                    y1: yMin,
+                    x2: xMin,
+                    y2: yMax,
+                    id: uuid(),
+                    stroke: borderColor,
+                    fill: 'none',
+                    'stroke-width': 1 / this.scale,
+                    opacity: 1,
+                    'fill-opacity': 1
+                }
+            });
+            const line2 = createSVGElement({
+                element: 'line',
+                attr: {
+                    x1: xMax,
+                    y1: yMin,
+                    x2: xMax,
+                    y2: yMax,
+                    id: uuid(),
+                    stroke: borderColor,
+                    fill: 'none',
+                    'stroke-width': 1 / this.scale,
+                    opacity: 1,
+                    'fill-opacity': 1
+                }
+            });
+            const line3 = createSVGElement({
+                element: 'line',
+                attr: {
+                    x1: xMin,
+                    y1: yMin,
+                    x2: xMax,
+                    y2: yMin,
+                    id: uuid(),
+                    stroke: borderColor,
+                    fill: 'none',
+                    'stroke-width': 1 / this.scale,
+                    opacity: 1,
+                    'fill-opacity': 1
+                }
+            });
+            const line4 = createSVGElement({
+                element: 'line',
+                attr: {
+                    x1: xMin,
+                    y1: yMax,
+                    x2: xMax,
+                    y2: yMax,
+                    id: uuid(),
+                    stroke: borderColor,
+                    fill: 'none',
+                    'stroke-width': 1 / this.scale,
+                    opacity: 1,
+                    'fill-opacity': 1
+                }
+            });
+            this.printableAreaGroup.append(line1);
+            this.printableAreaGroup.append(line2);
+            this.printableAreaGroup.append(line3);
+            this.printableAreaGroup.append(line4);
+        }
     }
 
     public _setBorder(x1, y1, x2, y2, color, dashed) {
@@ -596,4 +633,4 @@ class PrintableArea {
     }
 }
 
-export default PrintableArea;
+export default Workpiece2d;

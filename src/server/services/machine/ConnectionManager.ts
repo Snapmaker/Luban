@@ -325,6 +325,26 @@ class ConnectionManager {
         }
     };
 
+    public compressUploadFile = async (socket: SocketServer, options: UploadFileOptions) => {
+        // If using relative path, we assuem it's in tmp directory
+        if (!options.filePath.startsWith('/')) {
+            options.filePath = path.resolve(`${DataStorage.tmpDir}/${options.filePath}`);
+        }
+
+        if (!options.targetFilename) {
+            options.targetFilename = path.basename(options.filePath);
+        }
+
+        log.info(`Compress and upload file to controller... ${options.filePath} to ${options.targetFilename}`);
+
+        const success = await (this.channel as FileChannelInterface).compressUploadFile(options);
+        if (success) {
+            socket.emit(ControllerEvent.CompressUploadFile, { err: null, text: '' });
+        } else {
+            socket.emit(ControllerEvent.CompressUploadFile, { err: 'failed', text: 'Failed to upload file' });
+        }
+    };
+
     /**
      *
      * @param {*} socket

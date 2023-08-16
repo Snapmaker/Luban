@@ -34,11 +34,11 @@ const UploadView: React.FC = () => {
         }).ref;
 
         controller
-            .emitEvent(ControllerEvent.UploadFile, {
+            .emitEvent(ControllerEvent.CompressUploadFile, {
                 filePath: gcodeFile.uploadName,
                 targetFilename: 'ray.nc',
             })
-            .once(ControllerEvent.UploadFile, ({ err, text }) => {
+            .once(ControllerEvent.CompressUploadFile, ({ err, text }) => {
                 // close sending modal
                 if (sendingModal.current) {
                     sendingModal.current.removeContainer();

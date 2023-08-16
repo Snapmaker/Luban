@@ -113,11 +113,11 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
         const gcodeFileObject: GCodeFileObject = await dispatch(gcodeActions.uploadGcodeFile(file));
 
         controller
-            .emitEvent(ControllerEvent.UploadFile, {
+            .emitEvent(ControllerEvent.CompressUploadFile, {
                 filePath: gcodeFileObject.uploadName,
                 targetFilename: 'boundary.nc',
             })
-            .once(ControllerEvent.UploadFile, ({ err, text }) => {
+            .once(ControllerEvent.CompressUploadFile, ({ err, text }) => {
                 if (err) {
                     log.error('Unable to upload G-code to execute.');
                     log.error(err);

@@ -58,6 +58,7 @@ function register(socketServer: SocketServer): void {
 
         // File service
         [ControllerEvent.UploadFile]: connectionManager.uploadFile,
+        [ControllerEvent.CompressUploadFile]: connectionManager.compressUploadFile,
 
         // machine network
         'connection:wifiStatusTest': connectionManager.wifiStatusTest,

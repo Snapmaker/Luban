@@ -1,4 +1,5 @@
 import path from 'path';
+import zlib from 'zlib';
 import fs from 'fs';
 import crypto from 'crypto';
 import { includes } from 'lodash';
@@ -846,7 +847,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    public async uploadFile(filePath: string, renderName?: string) {
+    public async uploadFile(filePath: string, renderName?: string): Promise<boolean> {
         const sizePerChunk = 60 * 1024;
         this.setHandler(0xb0, 0x01, (data) => {
             const { nextOffset, result: md5HexStr } = readString(data.param);
@@ -876,21 +877,17 @@ export default class Business extends Dispatcher {
             });
         });
 
-        return new Promise<ResponseData>((resolve, reject) => {
+        return new Promise<boolean>((resolve, reject) => {
             // handle file upload result
             this.setHandler(0xb0, 0x02, (data) => {
-                if (readUint8(data.param) === 0) {
+                const result = readUint8(data.param);
+                if (result === 0) {
                     this.log.info('file upload success');
                 } else {
                     this.log.error('file upload fail');
                 }
                 this.ack(0xb0, 0x02, data.packet, Buffer.alloc(1, 0));
-                resolve({
-                    response: {
-                        result: 0,
-                        data: Buffer.alloc(0)
-                    }
-                } as any);
+                resolve(result === 0);
             });
 
             if (fs.existsSync(filePath)) {
@@ -933,7 +930,44 @@ export default class Business extends Dispatcher {
      * TODO: need option: chuckSize
      * TODO: need option: peerId
      */
-    public async uploadLargeFile(filePath: string, renderName?: string) {
+    public async uploadFileCompressed(filePath: string, renderName?: string): Promise<boolean> {
+        if (!fs.existsSync(filePath)) {
+            return false;
+        }
+
+        let compressedData;
+        try {
+            compressedData = await new Promise<Buffer>((resolve, reject) => {
+                const readStream = fs.createReadStream(filePath);
+                let fileData = Buffer.alloc(0);
+
+                readStream.on('data', (chunk: Buffer) => {
+                    fileData = Buffer.concat([fileData, chunk]);
+                });
+
+                readStream.on('end', () => {
+                    zlib.deflate(fileData, { level: 1 }, (err, buffer) => {
+                        if (err) {
+                            reject(new Error(`Unable to compress target file: ${filePath}`));
+                            return;
+                        }
+
+                        resolve(buffer);
+                    });
+                });
+
+                readStream.once('error', () => {
+                    reject(new Error(`Unable to read target file: ${filePath}`));
+                    // result = 0, means resource unable to use
+                    // const buffer = Buffer.alloc(1, 9);
+                    // this.ack(0xb0, 0x11, data.packet, buffer);
+                });
+            });
+        } catch (e) {
+            this.log.error(e);
+            return false;
+        }
+
         // const sizePerChunk = 968;
         const sizePerChunk = 960;
         this.setHandler(0xb0, 0x11, (data) => {
@@ -948,98 +982,76 @@ export default class Business extends Dispatcher {
                 this.log.info(`request file chuck index = ${index}`);
             }
 
-            const inputStream = fs.createReadStream(filePath, {
-                start: index * sizePerChunk,
-                end: (index + 1) * sizePerChunk - 1,
-                highWaterMark: sizePerChunk,
-            });
+            const start = sizePerChunk * index;
+            const end = sizePerChunk * (index + 1);
 
-            let finalBuf = Buffer.alloc(0);
-            inputStream.on('data', (buf: Buffer) => {
-                finalBuf = Buffer.concat([finalBuf, buf]);
-            });
-            inputStream.on('end', () => {
-                // md5
-                const md5Buffer = stringToBuffer(md5HexStr);
+            const finalBuf = compressedData.slice(start, end);
+            // md5
+            const md5Buffer = stringToBuffer(md5HexStr);
 
-                // index
-                const indexBuffer = Buffer.alloc(4, 0);
-                writeUint32(indexBuffer, 0, index);
+            // index
+            const indexBuffer = Buffer.alloc(4, 0);
+            writeUint32(indexBuffer, 0, index);
 
-                // chuck
-                const chunkBuffer = stringToBuffer(finalBuf as unknown as string);
+            // chuck
+            const chunkBuffer = stringToBuffer(finalBuf as unknown as string);
 
-                const responseBuffer = Buffer.concat([
-                    Buffer.alloc(1, 0), // 0: success
-                    md5Buffer,
-                    indexBuffer,
-                    chunkBuffer,
-                ]);
+            const responseBuffer = Buffer.concat([
+                Buffer.alloc(1, 0), // 0: success
+                md5Buffer,
+                indexBuffer,
+                chunkBuffer,
+            ]);
 
-                this.ack(0xb0, 0x11, data.packet, responseBuffer);
-            });
-            inputStream.once('error', () => {
-                // result = 0, means resource unable to use
-                const buffer = Buffer.alloc(1, 9);
-                this.ack(0xb0, 0x11, data.packet, buffer);
-            });
+            this.ack(0xb0, 0x11, data.packet, responseBuffer);
         });
 
-        return new Promise<ResponseData>((resolve, reject) => {
+        return new Promise<boolean>((resolve, reject) => {
             // handle file upload result
             this.setHandler(0xb0, 0x02, (data) => {
-                if (readUint8(data.param) === 0) {
-                    this.log.info('file upload success');
+                const result = readUint8(data.param);
+                if (result === 0) {
+                    this.log.info('File upload successful.');
                 } else {
-                    this.log.error('file upload fail');
+                    this.log.error(`File upload failed, result = ${result}`);
                 }
                 this.ack(0xb0, 0x02, data.packet, Buffer.alloc(1, 0));
-                resolve({
-                    response: {
-                        result: 0,
-                        data: Buffer.alloc(0)
-                    }
-                } as any);
+
+                resolve(result === 0);
             });
 
             // Start a file transfer request
-            if (fs.existsSync(filePath)) {
-                const hash = crypto.createHash('md5');
-                const inputStream = fs.createReadStream(filePath);
-                inputStream.on('data', (data) => {
-                    hash.update(data);
-                });
-                inputStream.on('end', () => {
-                    const filename = path.basename(filePath);
-                    const fileLength = fs.statSync(filePath).size;
+            const hash = crypto.createHash('md5');
+            hash.update(compressedData);
 
-                    const filenameBuffer = renderName ? stringToBuffer(renderName) : stringToBuffer(filename);
-                    const fileLengthBuffer = Buffer.alloc(4, 0);
-                    writeUint32(fileLengthBuffer, 0, fileLength);
+            // file name
+            const filename = path.basename(filePath);
+            const filenameBuffer = renderName ? stringToBuffer(renderName) : stringToBuffer(filename);
 
-                    // number of chucks
-                    const chunksBuffer = Buffer.alloc(4, 0);
-                    const chunks = Math.ceil(fileLength / sizePerChunk);
-                    writeUint32(chunksBuffer, 0, chunks);
+            // file length
+            const fileLengthBuffer = Buffer.alloc(4, 0);
+            const fileLength = fs.statSync(filePath).size;
+            writeUint32(fileLengthBuffer, 0, fileLength);
 
-                    // md5
-                    const md5HexStr = hash.digest('hex');
-                    const md5Buffer = stringToBuffer(md5HexStr);
+            // number of chucks
+            const chunksBuffer = Buffer.alloc(4, 0);
+            const chunks = Math.ceil(compressedData.byteLength / sizePerChunk);
+            writeUint32(chunksBuffer, 0, chunks);
 
-                    const buffer = Buffer.concat([
-                        filenameBuffer,
-                        fileLengthBuffer,
-                        chunksBuffer,
-                        md5Buffer,
-                    ]);
-                    this.log.info(`start large file transfer... chuck count = ${chunks}`);
-                    this.send(0xb0, 0x10, PeerId.CONTROLLER, buffer).catch(err => {
-                        reject(err);
-                    });
-                });
-            } else {
-                reject(new Error(`can not upload missing file: ${filePath}`));
-            }
+            // md5
+            const md5HexStr = hash.digest('hex');
+            const md5Buffer = stringToBuffer(md5HexStr);
+
+            const buffer = Buffer.concat([
+                filenameBuffer,
+                fileLengthBuffer,
+                chunksBuffer,
+                md5Buffer,
+            ]);
+            this.log.info(`start large file transfer... file size = ${fileLength}, chuck count = ${chunks}`);
+            this.send(0xb0, 0x10, PeerId.CONTROLLER, buffer).catch(err => {
+                reject(err);
+            });
         });
     }
 

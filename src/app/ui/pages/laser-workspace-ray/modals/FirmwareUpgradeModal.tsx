@@ -67,11 +67,11 @@ const FirmwareUpgradeModal: React.FC<FirmwareUpgradeModalProps> = (props) => {
 
         return new Promise((resolve) => {
             controller
-                .emitEvent(ControllerEvent.UploadFile, {
+                .emitEvent(ControllerEvent.CompressUploadFile, {
                     filePath: selectedFilePath,
                     targetFilename: '/update.bin',
                 })
-                .once(ControllerEvent.UploadFile, ({ err, text }) => {
+                .once(ControllerEvent.CompressUploadFile, ({ err, text }) => {
                     setIsUploading(false);
 
                     if (err) {

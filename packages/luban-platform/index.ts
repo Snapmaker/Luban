@@ -1,4 +1,11 @@
 //
+//
+//
+import log from './src/lib/log';
+
+export { log };
+
+//
 // Machine Definition
 //
 export * from './src/machine-definition';

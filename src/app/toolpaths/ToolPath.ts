@@ -1,7 +1,7 @@
 import { includes } from 'lodash';
 import * as THREE from 'three';
 import { v4 as uuid } from 'uuid';
-import { Box2 } from 'three';
+import { Box2, Group } from 'three';
 
 import { ObjectReference, Origin, OriginType, RectangleWorkpieceReference } from '../constants/coordinate';
 import { MINIMUM_WIDTH_AND_HEIGHT } from '../constants';
@@ -21,11 +21,11 @@ import {
 import SvgModel from '../models/SvgModel';
 
 class ToolPath {
-    public id;
+    public id: string;
 
-    public name;
+    public name: string;
 
-    public baseName;
+    public baseName: string;
 
     public type; // image, vector, image3d
 
@@ -38,7 +38,7 @@ class ToolPath {
     public visible = true;
 
     // Threejs Obj
-    public object = new THREE.Group();
+    public object = new Group();
 
     public visibleModelIDs = [];
 
@@ -297,24 +297,18 @@ class ToolPath {
     public getSelectModelsAndToolPathInfo() {
         const modelInfos = this._getModelTaskInfos();
 
-        const selectModels = this._getModels();
-
-
-        console.log('Get Task Info:');
-
-        const bbox = new Box2();
-        for (const model of selectModels) {
-            model.computeBoundingBox();
-
-            console.log('model =', model.modelID, 'bbox =', model.boundingBox);
-            bbox.expandByPoint(model.boundingBox.min);
-            bbox.expandByPoint(model.boundingBox.max);
-        }
-
-        console.log('combined bbox =', bbox);
-
         // Deal with origin, if origin type is object, we add offsets to the model transformation here
         if (this.origin.type === OriginType.Object) {
+            const selectModels = this._getModels();
+
+            const bbox = new Box2();
+            for (const model of selectModels) {
+                model.computeBoundingBox();
+
+                bbox.expandByPoint(model.boundingBox.min);
+                bbox.expandByPoint(model.boundingBox.max);
+            }
+
             for (const modelInfo of modelInfos) {
                 switch (this.origin.reference) {
                     case ObjectReference.Center: {
@@ -351,8 +345,6 @@ class ToolPath {
         // FIXME
         // diameter is required by LunarTPP, or it won't work properly
         this.materials.diameter = this.materials.diameter || 0;
-
-        console.log('task info, origin =', this.origin);
 
         const taskInfos = [];
         for (let i = 0; i < modelInfos.length; i++) {

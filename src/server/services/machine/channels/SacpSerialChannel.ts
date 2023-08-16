@@ -146,9 +146,8 @@ class SacpSerialChannel extends SacpChannelBase implements FileChannelInterface 
 
         // Note: Use upload large file API instead of upload file API, newer firmware will implement this API
         // rather than the old ones.
-        const res = await this.sacpClient.uploadLargeFile(filePath, targetFilename);
-
-        return (res.response.result === 0);
+        const success = await this.sacpClient.uploadFileCompressed(filePath, targetFilename);
+        return success;
     }
 }
 
