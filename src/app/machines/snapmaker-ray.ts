@@ -26,6 +26,8 @@ export const machine: Machine = {
             },
         ],
 
-        gcodeFlavor: MachineGcodeFlavor.GRBL
+        gcodeFlavor: MachineGcodeFlavor.GRBL,
+
+        disableWorkflowControl: true,
     },
 };

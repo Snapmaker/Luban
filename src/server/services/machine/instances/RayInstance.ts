@@ -94,7 +94,11 @@ class RayMachineInstance extends MachineInstance {
         // Start heartbeat
         await this.channel.startHeartbeat();
 
+        // subscribe to machine errors
+        // 0x04, 0x00
+
         // Subscribe job progress
+        await this.channel.subscribeGetPrintCurrentLineNumber();
     }
 }
 

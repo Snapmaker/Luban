@@ -86,7 +86,7 @@ export enum ToolHeadType {
     LASER1600mW, LASER10000mW
 }
 
-export default class Business extends Dispatcher {
+export default class SacpClient extends Dispatcher {
     private log = console;
 
     public constructor(type: string, socket) {
