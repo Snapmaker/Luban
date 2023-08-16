@@ -1,13 +1,32 @@
 import { v4 as uuid } from 'uuid';
+import { Vector2 } from 'three';
 
-import { isEqual } from '../../../shared/lib/utils';
-import { EPSILON } from '../../constants';
-import { Materials, Origin, OriginType, RectangleWorkpieceReference } from '../../constants/coordinate';
-import { createSVGElement } from './element-utils';
+import { isEqual } from '../../shared/lib/utils';
+import { EPSILON } from '../constants';
+import {
+    Materials,
+    Origin,
+    OriginType,
+    RectangleWorkpieceReference,
+} from '../constants/coordinate';
+import { createSVGElement } from '../ui/SVGEditor/element-utils';
 
-class PrintableArea {
+interface Workpiece2dOptions {
+    size: Vector2;
+    coordinateMode;
+    coordinateSize;
+    materials: Materials;
+    scale: number;
+    getRoot: () => Element;
+}
+
+/**
+ * Workpiece in 2D.
+ *
+ * Use rectangle to represent workpiece.
+ */
+class Workpiece2d {
     private id: string;
-    private svgFactory;
     private printableAreaGroup: Element;
 
     private size: {
@@ -18,33 +37,33 @@ class PrintableArea {
     private materials: Materials;
     private origin: Origin;
     private coordinateMode;
-    private coorDelta: { dx: number; dy: number } = { dx: 0, dy: 0 };
+    private coordinateSize;
+    private coorDelta: { x: number; y: number } = { x: 0, y: 0 };
     private scale: number = 1;
 
-    public constructor(svgFactory) {
+    public constructor(options: Workpiece2dOptions) {
         this.id = uuid();
-        this.svgFactory = svgFactory;
         this.size = {
-            ...svgFactory.size
+            ...options.size
         };
         this.materials = {
-            ...svgFactory.materials
+            ...options.materials
         };
 
         this.coorDelta = {
             x: 0,
             y: 0
         };
-        this.coordinateMode = svgFactory.coordinateMode;
-        this.coordinateSize = (svgFactory.coordinateSize && svgFactory.coordinateSize.x > 0) ? svgFactory.coordinateSize : this.size;
+        this.coordinateMode = options.coordinateMode;
+        this.coordinateSize = (options.coordinateSize && options.coordinateSize.x > 0) ? options.coordinateSize : this.size;
         this.origin = {
             type: OriginType.Workpiece,
             reference: RectangleWorkpieceReference.Center,
             referenceMetadata: {},
         };
-        this._setCoordinateMode(this.coordinateMode, this.coordinateSize);
+        this._setCoordinateMode(this.coordinateMode);
 
-        this.scale = svgFactory.scale;
+        this.scale = options.scale;
         this.printableAreaGroup = createSVGElement({
             element: 'g',
             attr: {
@@ -52,7 +71,7 @@ class PrintableArea {
             }
         });
 
-        this.svgFactory.getRoot().append(this.printableAreaGroup);
+        options.getRoot().append(this.printableAreaGroup);
         this._setCoordinateAxes();
         this._setGridLine();
         this._setMaterialsRect();
@@ -131,12 +150,10 @@ class PrintableArea {
         this.coorDelta.y -= this.coordinateSize.y / 2 * coordinateMode.setting.sizeMultiplyFactor.y;
     }
 
+    /**
+     * Draw grid line, axes, scales.
+     */
     public _setGridLine() {
-        // if (this.origin && this.origin.type === OriginType.Object) {
-        // return;
-        // }
-
-
         // draw axis and scale
         const drawAxis = !(this.origin && this.origin.type === OriginType.Object);
         const drawScale = drawAxis;
@@ -616,4 +633,4 @@ class PrintableArea {
     }
 }
 
-export default PrintableArea;
+export default Workpiece2d;
