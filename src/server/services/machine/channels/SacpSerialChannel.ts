@@ -6,7 +6,7 @@ import { SACP_TYPE_SERIES_MAP } from '../../../../app/constants/machines';
 import DataStorage from '../../../DataStorage';
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 import logger from '../../../lib/logger';
-import Business from '../sacp/Business';
+import SacpClient from '../sacp/SacpClient';
 import { EventOptions } from '../types';
 import { FileChannelInterface, UploadFileOptions } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
@@ -39,7 +39,7 @@ class SacpSerialChannel extends SacpChannelBase implements FileChannelInterface 
                 baudRate: 115200,
                 autoOpen: false,
             });
-            this.sacpClient = new Business('serialport', this.serialport);
+            this.sacpClient = new SacpClient('serialport', this.serialport);
 
             this.serialport.on('data', (data) => {
                 // console.log(data.toString());

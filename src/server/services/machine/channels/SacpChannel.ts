@@ -55,7 +55,7 @@ import {
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
 } from '../../../constants';
 import logger from '../../../lib/logger';
-import Business, { CoordinateType } from '../sacp/Business';
+import SacpClient, { CoordinateType } from '../sacp/SacpClient';
 import { MarlinStateData } from '../types';
 import Channel, { GcodeChannelInterface, SystemChannelInterface, UpgradeFirmwareOptions } from './Channel';
 
@@ -64,7 +64,7 @@ const log = logger('machine:channels:SacpChannel');
 class SacpChannelBase extends Channel implements GcodeChannelInterface, SystemChannelInterface {
     private heartbeatTimer;
 
-    public sacpClient: Business;
+    public sacpClient: SacpClient;
 
     public subscribeLogCallback: ResponseCallback;
 
@@ -159,7 +159,38 @@ class SacpChannelBase extends Channel implements GcodeChannelInterface, SystemCh
         return res.response.result === 0;
     }
 
-    public startHeartbeatBase = async (sacpClient: Business, client?: net.Socket) => {
+    // interface: ?
+
+    public async subscribeGetPrintCurrentLineNumber(): Promise<boolean> {
+        const callback: ResponseCallback = ({ response }) => {
+            // line number
+            const currentLineNumberInfo = new GcodeCurrentLine().fromBuffer(response.data);
+
+            const currentLine = currentLineNumberInfo.currentLine;
+            const data = {
+                sent: currentLine,
+            };
+
+            if (includes([WorkflowStatus.Running, WorkflowStatus.Paused], this.machineStatus)) {
+                this.socket && this.socket.emit('sender:status', ({ data }));
+            }
+        };
+
+        const res = await this.sacpClient.subscribeGetPrintCurrentLineNumber(
+            { interval: 2000 },
+            callback
+        );
+
+        return res.code === 0;
+    }
+
+    public async unsubscribeGetPrintCurrentLineNumber(): Promise<boolean> {
+        const res = await this.sacpClient.unSubscribeGetPrintCurrentLineNumber(null);
+        return res.code === 0;
+    }
+
+    // old heartbeat base, refactor needed
+    public startHeartbeatBase = async (sacpClient: SacpClient, client?: net.Socket) => {
         this.sacpClient = sacpClient;
 
         let stateData: MarlinStateData = {};
@@ -456,7 +487,10 @@ class SacpChannelBase extends Channel implements GcodeChannelInterface, SystemCh
                 remainingTime: remainingTime,
                 printStatus: currentLine === this.totalLine ? COMPLUTE_STATUS : ''
             };
-            includes([WorkflowStatus.Running, WorkflowStatus.Paused], this.machineStatus) && this.socket && this.socket.emit('sender:status', ({ data }));
+
+            if (includes([WorkflowStatus.Running, WorkflowStatus.Paused], this.machineStatus)) {
+                this.socket && this.socket.emit('sender:status', ({ data }));
+            }
         };
         this.sacpClient.subscribeGetPrintCurrentLineNumber({ interval: 1000 }, this.subscribeGetCurrentGcodeLineCallback);
         this.sacpClient.subscribeGetPrintingTime({ interval: 1000 }, (response) => {
@@ -568,8 +602,6 @@ class SacpChannelBase extends Channel implements GcodeChannelInterface, SystemCh
     public getCoordinateInfo = async () => {
         return this.sacpClient.getCurrentCoordinateInfo();
     };
-
-
 
     public goHome = async (headType?: string) => {
         log.info('onClick gohome');

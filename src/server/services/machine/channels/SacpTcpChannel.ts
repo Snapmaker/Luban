@@ -12,7 +12,7 @@ import MovementInstruction, { MoveDirection } from '@snapmaker/snapmaker-sacp-sd
 import DataStorage from '../../../DataStorage';
 import { CONNECTION_TYPE_WIFI, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 import logger from '../../../lib/logger';
-import Business, { CoordinateType, RequestPhotoInfo, ToolHeadType } from '../sacp/Business';
+import SacpClient, { CoordinateType, RequestPhotoInfo, ToolHeadType } from '../sacp/SacpClient';
 import { EventOptions } from '../types';
 import { SACP_TYPE_SERIES_MAP, } from '../../../../app/constants/machines';
 import { SnapmakerArtisanMachine, SnapmakerJ1Machine } from '../../../../app/machines';
@@ -70,7 +70,7 @@ class SacpTcpChannel extends SacpChannelBase implements FileChannelInterface {
             }, () => {
                 log.info('TCP connected');
 
-                this.sacpClient = new Business('tcp', this.client);
+                this.sacpClient = new SacpClient('tcp', this.client);
 
                 this.emit(ChannelEvent.Connected);
 
@@ -247,8 +247,13 @@ class SacpTcpChannel extends SacpChannelBase implements FileChannelInterface {
     public async uploadFile(options: UploadFileOptions): Promise<boolean> {
         const { filePath, targetFilename } = options;
 
-        const res = await this.sacpClient.uploadFile(filePath, targetFilename);
-        return (res.response.result === 0);
+        return this.sacpClient.uploadFile(filePath, targetFilename);
+    }
+
+    public async compressUploadFile(options: UploadFileOptions): Promise<boolean> {
+        const { filePath, targetFilename } = options;
+
+        return this.sacpClient.uploadFileCompressed(filePath, targetFilename);
     }
 
     public takePhoto = async (params: RequestPhotoInfo, callback: (result: { status: boolean }) => void) => {

@@ -5,7 +5,7 @@ import dgram from 'dgram';
 import { WORKFLOW_STATUS_MAP } from '../../../../app/constants';
 import { SACP_TYPE_SERIES_MAP } from '../../../../app/constants/machines';
 import logger from '../../../lib/logger';
-import Business from '../sacp/Business';
+import SacpClient from '../sacp/SacpClient';
 import { FileChannelInterface, UploadFileOptions } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 import SacpChannelBase from './SacpChannel';
@@ -48,7 +48,7 @@ class SacpUdpChannel extends SacpChannelBase implements FileChannelInterface {
 
     public async test(host: string, port: number): Promise<boolean> {
         const sacpResponse = (async () => {
-            this.sacpClient = new Business('udp', {
+            this.sacpClient = new SacpClient('udp', {
                 socket: this.socketClient,
                 host,
                 port,
@@ -69,7 +69,7 @@ class SacpUdpChannel extends SacpChannelBase implements FileChannelInterface {
 
         this.emit(ChannelEvent.Connecting);
 
-        this.sacpClient = new Business('udp', {
+        this.sacpClient = new SacpClient('udp', {
             socket: this.socketClient,
             host: options.address,
             port: 2016, // 8889
