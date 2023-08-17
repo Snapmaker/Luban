@@ -455,15 +455,12 @@ export default class SacpClient extends Dispatcher {
         });
     }
 
-    public async configureNetwork(options: NetworkOptions) {
+    public async configureNetwork(options: NetworkOptions): Promise<boolean> {
         // const networkMode = options?.networkMode || 1; // station default
         const networkOptions = new NetworkConfiguration(options);
 
-        const { response, packet } = await this.send(0x01, 0x15, PeerId.CONTROLLER, networkOptions.toBuffer());
-        return {
-            response,
-            packet,
-        };
+        const { response } = await this.send(0x01, 0x15, PeerId.CONTROLLER, networkOptions.toBuffer());
+        return response.result === 0;
     }
 
     /**
@@ -472,27 +469,17 @@ export default class SacpClient extends Dispatcher {
      * 0x01 0x16 Export Log to External Storage
      * 0x01 0x17 Export Log Result
      */
-    public async exportLogToExternalStorage() {
+    public async exportLogToExternalStorage(): Promise<boolean> {
         return new Promise((resolve) => {
             // handle export result
             this.setHandler(0x01, 0x17, (data) => {
                 this.ack(0x01, 0x17, data.packet, Buffer.alloc(1, 0));
                 if (readUint8(data.param) === 0) {
                     this.log.info('Exporting log to external storage successfully.');
-                    resolve({
-                        response: {
-                            result: 0,
-                            data: Buffer.alloc(0),
-                        }
-                    });
+                    resolve(true);
                 } else {
                     this.log.info('Failed to exporting log to external storage.');
-                    resolve({
-                        response: {
-                            result: 1,
-                            data: Buffer.alloc(0),
-                        }
-                    });
+                    resolve(false);
                 }
             });
 
@@ -506,12 +493,7 @@ export default class SacpClient extends Dispatcher {
                     } else {
                         this.log.info('Requested for exporting log to external storage. Failed.');
                         // fail already
-                        resolve({
-                            response: {
-                                result: 1,
-                                data: Buffer.alloc(0),
-                            }
-                        });
+                        resolve(false);
                     }
                 });
         });
@@ -546,16 +528,11 @@ export default class SacpClient extends Dispatcher {
      *
      * 0x01 0x25
      */
-    public async getNetworkConfiguration() {
-        const { response, packet } = await this.send(0x01, 0x25, PeerId.CONTROLLER, Buffer.alloc(0));
+    public async getNetworkConfiguration(): Promise<NetworkConfiguration> {
+        const { response } = await this.send(0x01, 0x25, PeerId.CONTROLLER, Buffer.alloc(0));
 
         const networkConfiguration = new NetworkConfiguration().fromBuffer(response.data);
-
-        return {
-            response,
-            packet,
-            data: networkConfiguration,
-        };
+        return networkConfiguration;
     }
 
     /**
@@ -567,16 +544,12 @@ export default class SacpClient extends Dispatcher {
      * 2) RSSI network strength
      * 3) IP address
      */
-    public async getNetworkStationState() {
-        const { response, packet } = await this.send(0x01, 0x26, PeerId.CONTROLLER, Buffer.alloc(0));
+    public async getNetworkStationState(): Promise<NetworkStationState> {
+        const { response } = await this.send(0x01, 0x26, PeerId.CONTROLLER, Buffer.alloc(0));
 
         const networkStationState = new NetworkStationState().fromBuffer(response.data);
 
-        return {
-            response,
-            packet,
-            data: networkStationState,
-        };
+        return networkStationState;
     }
 
     public async getCurrentCoordinateInfo() {

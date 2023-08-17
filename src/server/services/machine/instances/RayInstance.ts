@@ -12,6 +12,7 @@ import TextSerialChannel from '../channels/TextSerialChannel';
 import { ConnectedData } from '../types';
 import MachineInstance from './Instance';
 import { SnapmakerRayMachine } from '../../../../app/machines';
+import { PrintJobChannelInterface } from '../channels/Channel';
 
 const log = logger('services:machine:instances:RayInstance');
 
@@ -98,7 +99,7 @@ class RayMachineInstance extends MachineInstance {
         // 0x04, 0x00
 
         // Subscribe job progress
-        await this.channel.subscribeGetPrintCurrentLineNumber();
+        await (this.channel as PrintJobChannelInterface).subscribeGetPrintCurrentLineNumber();
     }
 }
 

@@ -12,7 +12,9 @@ import {
     GetHotBed,
     LaserTubeState,
     ModuleInfo,
-    NetworkOptions
+    NetworkConfiguration,
+    NetworkOptions,
+    NetworkStationState,
 } from '@snapmaker/snapmaker-sacp-sdk/dist/models';
 import { Direction } from '@snapmaker/snapmaker-sacp-sdk/dist/models/CoordinateInfo';
 import { find, includes } from 'lodash';
@@ -57,11 +59,23 @@ import {
 import logger from '../../../lib/logger';
 import SacpClient, { CoordinateType } from '../sacp/SacpClient';
 import { MarlinStateData } from '../types';
-import Channel, { GcodeChannelInterface, SystemChannelInterface, UpgradeFirmwareOptions } from './Channel';
+import Channel, {
+    CncChannelInterface,
+    GcodeChannelInterface,
+    NetworkServiceChannelInterface,
+    PrintJobChannelInterface,
+    SystemChannelInterface,
+    UpgradeFirmwareOptions
+} from './Channel';
 
 const log = logger('machine:channels:SacpChannel');
 
-class SacpChannelBase extends Channel implements GcodeChannelInterface, SystemChannelInterface {
+class SacpChannelBase extends Channel implements
+    GcodeChannelInterface,
+    SystemChannelInterface,
+    NetworkServiceChannelInterface,
+    PrintJobChannelInterface,
+    CncChannelInterface {
     private heartbeatTimer;
 
     public sacpClient: SacpClient;
@@ -138,28 +152,7 @@ class SacpChannelBase extends Channel implements GcodeChannelInterface, SystemCh
         return true;
     }
 
-    // interface: SystemChannelInterface
-
-    public async getFirmwareVersion(): Promise<string> {
-        const { data: machineInfo } = await this.sacpClient.getMachineInfo();
-
-        const version = machineInfo.masterControlFirmwareVersion;
-        log.info(`Get firmware version: ${version}`);
-
-        return version;
-    }
-
-    public async upgradeFirmwareFromFile(options: UpgradeFirmwareOptions): Promise<boolean> {
-        log.info(`Upgrading firmware from file: ${options.filename}`);
-        const filename = options.filename;
-
-        const res = await this.sacpClient.upgradeFirmwareFromFile(filename);
-        log.info(`Upgrade firmware result = ${res.response.result}`);
-
-        return res.response.result === 0;
-    }
-
-    // interface: ?
+    // interface: PrintJobChannelInterface
 
     public async subscribeGetPrintCurrentLineNumber(): Promise<boolean> {
         const callback: ResponseCallback = ({ response }) => {
@@ -187,6 +180,84 @@ class SacpChannelBase extends Channel implements GcodeChannelInterface, SystemCh
     public async unsubscribeGetPrintCurrentLineNumber(): Promise<boolean> {
         const res = await this.sacpClient.unSubscribeGetPrintCurrentLineNumber(null);
         return res.code === 0;
+    }
+
+    // interface: SystemChannelInterface
+
+    /**
+     * Export Log in machine to external storage.
+     */
+    public async exportLogToExternalStorage(): Promise<boolean> {
+        return this.sacpClient.exportLogToExternalStorage();
+    }
+
+    public async getFirmwareVersion(): Promise<string> {
+        const { data: machineInfo } = await this.sacpClient.getMachineInfo();
+
+        const version = machineInfo.masterControlFirmwareVersion;
+        log.info(`Get firmware version: ${version}`);
+
+        return version;
+    }
+
+    public async upgradeFirmwareFromFile(options: UpgradeFirmwareOptions): Promise<boolean> {
+        log.info(`Upgrading firmware from file: ${options.filename}`);
+        const filename = options.filename;
+
+        const res = await this.sacpClient.upgradeFirmwareFromFile(filename);
+        log.info(`Upgrade firmware result = ${res.response.result}`);
+
+        return res.response.result === 0;
+    }
+
+    // interface: CncChannelInterface
+
+    public async setSpindleSpeed(speed: number): Promise<boolean> {
+        // Only supports level 2 CNC module
+        const toolhead = this.moduleInfos && this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2];
+        if (!toolhead) {
+            log.error(`no match ${LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2}, moduleInfos:${this.moduleInfos}`,);
+            return false;
+        }
+
+        log.info(`Set spindle speed: ${speed} RPM`);
+        const { response } = await this.sacpClient.setToolHeadSpeed(toolhead.key, speed);
+        return response.result === 0;
+    }
+
+    public async setSpindleSpeedPercentage(percent: number): Promise<boolean> {
+        const toolhead = this.moduleInfos && (this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2] || this.moduleInfos[STANDARD_CNC_TOOLHEAD_FOR_SM2]);
+        if (!toolhead) {
+            log.error(`no match cnc tool head, moduleInfos:${JSON.stringify(this.moduleInfos)}`,);
+            return false;
+        }
+
+        log.info(`Set spindle speed: ${percent}%`);
+
+        const { response } = await this.sacpClient.setCncPower(toolhead.key, percent);
+        return response.result === 0;
+    }
+
+    public async spindleOn(): Promise<boolean> {
+        const toolhead = this.moduleInfos && (this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2] || this.moduleInfos[STANDARD_CNC_TOOLHEAD_FOR_SM2]);
+        if (!toolhead) {
+            log.error('No matched CNC module');
+            return false;
+        }
+
+        const { response } = await this.sacpClient.switchCNC(toolhead.key, true);
+        return response.result === 0;
+    }
+
+    public async spindleOff(): Promise<boolean> {
+        const toolhead = this.moduleInfos && (this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2] || this.moduleInfos[STANDARD_CNC_TOOLHEAD_FOR_SM2]);
+        if (!toolhead) {
+            log.error('No matched CNC module');
+            return false;
+        }
+
+        const { response } = await this.sacpClient.switchCNC(toolhead.key, false);
+        return response.result === 0;
     }
 
     // old heartbeat base, refactor needed
@@ -854,46 +925,6 @@ class SacpChannelBase extends Channel implements GcodeChannelInterface, SystemCh
         });
     };
 
-    public switchCNC = async function (headStatus) {
-        const toolhead = this.moduleInfos && (this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2] || this.moduleInfos[STANDARD_CNC_TOOLHEAD_FOR_SM2]);
-        if (!toolhead) {
-            log.error(`no match ${LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2} or ${STANDARD_CNC_TOOLHEAD_FOR_SM2}:1 , moduleInfos:${this.moduleInfos}`,);
-            return;
-        }
-
-        // return
-        const { response: responseForSpeed } = await this.sacpClient.setToolHeadSpeed(toolhead.key, this.cncTargetSpeed < 8000 ? 16000 : this.cncTargetSpeed);
-        if (responseForSpeed.result === 0) {
-            const { response: responseForOpen } = await this.sacpClient.switchCNC(toolhead.key, !headStatus);
-            log.info(`switchCNC to [${!headStatus}], ${JSON.stringify(responseForOpen)}`);
-        }
-        // return response;
-    };
-
-    public updateToolHeadSpeed = (speed) => {
-        const toolhead = this.moduleInfos && this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2];
-        if (!toolhead) {
-            log.error(`no match ${LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2}, moduleInfos:${this.moduleInfos}`,);
-            return;
-        }
-
-        this.sacpClient.setToolHeadSpeed(toolhead.key, speed).then(({ response }) => {
-            log.info(`updateToolHeadSpeed Speed:[${speed}], ${JSON.stringify(response)}`);
-        });
-    };
-
-    public setCncPower = (targetPower) => {
-        const toolhead = this.moduleInfos && (this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2] || this.moduleInfos[STANDARD_CNC_TOOLHEAD_FOR_SM2]);
-        if (!toolhead) {
-            log.error(`no match cnc tool head, moduleInfos:${JSON.stringify(this.moduleInfos)}`,);
-            return;
-        }
-
-        this.sacpClient.setCncPower(toolhead.key, targetPower).then(({ response }) => {
-            log.info(`setCncPower setCncPower:[${targetPower}]%, ${JSON.stringify(response)}`);
-        });
-    };
-
     public async setAbsoluteWorkOrigin({ z, isRotate = false }: {
         x: number, y: number, z: number, isRotate: boolean
     }) {
@@ -989,28 +1020,21 @@ class SacpChannelBase extends Channel implements GcodeChannelInterface, SystemCh
     }
 
     /**
-     * Export Log in machine to external storage.
-     */
-    public exportLogToExternalStorage = async () => {
-        return this.sacpClient.exportLogToExternalStorage();
-    }
-
-    /**
      * Configure machine network.
      *
      * Note that this API is only implemented by Ray.
      */
-    public configureNetwork = async (networkOptions: NetworkOptions) => {
+    public async configureNetwork(networkOptions: NetworkOptions): Promise<boolean> {
         return this.sacpClient.configureNetwork(networkOptions);
-    };
+    }
 
-    public getNetworkConfiguration = async () => {
+    public async getNetworkConfiguration(): Promise<NetworkConfiguration> {
         return this.sacpClient.getNetworkConfiguration();
-    };
+    }
 
-    public getNetworkStationState = async () => {
+    public async getNetworkStationState(): Promise<NetworkStationState> {
         return this.sacpClient.getNetworkStationState();
-    };
+    }
 }
 
 export default SacpChannelBase;

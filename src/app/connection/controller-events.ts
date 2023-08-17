@@ -50,8 +50,8 @@ enum ControllerEvent {
     /**
      * CNC
      */
-    SwitchCNC = 'connection:switchCNC', // ?
-    SetSpindleSpeed = 'connection:updateToolHeadSpeed',
+    SwitchCNC = 'connection:switchCNC',
+    SetSpindleSpeed = 'connection:set-spindle-speed',
 
     /**
      * Enclosure

@@ -35,7 +35,7 @@ function register(socketServer: SocketServer): void {
         [ControllerEvent.AbortMaterialThickness]: connectionManager.abortLaserMaterialThickness,
 
         // CNC control services
-        [ControllerEvent.SetSpindleSpeed]: connectionManager.updateToolHeadSpeed, // CNC, FOR NOW
+        [ControllerEvent.SetSpindleSpeed]: connectionManager.setSpindleSpeed, // CNC, FOR NOW
         [ControllerEvent.SwitchCNC]: connectionManager.switchCNC, // CNC, FOR NOW
 
         // modules services
