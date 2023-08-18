@@ -6,7 +6,7 @@ const log = logger('api:commands');
 
 const agent = superagentUse(superagent);
 const addPrefix = (prefix) => {
-    return function (request) {
+    return (request) => {
         if (request.url[0] === '/') {
             request.url = prefix + request.url;
         }

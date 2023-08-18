@@ -13,7 +13,7 @@ let timeoutHandle = null;
 let intervalHandle = null;
 
 const stopBeat = (msg?: string, flag?: number) => {
-    console.log(`offline flag=${flag}`);
+    log.debug(`offline flag=${flag}`);
     clearInterval(intervalHandle);
     intervalHandle = null;
     sendMessage({ status: 'offline', msg });

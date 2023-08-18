@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux';
 
 import { RootState } from '../../../flux/index.def';
 import i18n from '../../../lib/i18n';
+import log from '../../../lib/log';
 import { Button } from '../../components/Buttons';
 import SvgIcon from '../../components/SvgIcon';
 import { formatDuration } from '../GCode/GCode';
@@ -101,7 +102,7 @@ const JobStatusView: React.FC<JobStatusViewProps> = (props) => {
                     break;
             }
         } catch (e) {
-            console.error(e);
+            log.error(e);
             setIsPausing(false);
         }
     };

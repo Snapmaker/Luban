@@ -227,7 +227,6 @@ class MarlinController extends EventEmitter {
         super();
 
         const { port, dataSource, baudRate, connectionTimeout = 3000 } = options;
-        console.log('data source =', dataSource);
 
         this.options = {
             ...this.options,

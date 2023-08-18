@@ -1,8 +1,9 @@
 import { WorkflowStatus } from '@snapmaker/luban-platform';
-import path from 'path';
 import fs from 'fs';
 import { includes } from 'lodash';
+import path from 'path';
 
+import ControllerEvent from '../../../app/connection/controller-events';
 import { AUTO_STRING } from '../../../app/constants';
 import { SnapmakerArtisanMachine, SnapmakerJ1Machine, SnapmakerRayMachine } from '../../../app/machines';
 import DataStorage from '../../DataStorage';
@@ -12,14 +13,15 @@ import {
     HEAD_LASER,
     HEAD_PRINTING,
     LEVEL_ONE_POWER_LASER_FOR_SM2,
+    LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
     MACHINE_SERIES,
-    STANDARD_CNC_TOOLHEAD_FOR_SM2
 } from '../../constants';
 import ScheduledTasks from '../../lib/ScheduledTasks';
 import SocketServer from '../../lib/SocketManager';
 import logger from '../../lib/logger';
 import ProtocolDetector, { NetworkProtocol, SerialPortProtocol } from './ProtocolDetector';
+import Channel, { CncChannelInterface, FileChannelInterface, GcodeChannelInterface, NetworkServiceChannelInterface, SystemChannelInterface } from './channels/Channel';
 import { ChannelEvent } from './channels/ChannelEvent';
 import { sacpSerialChannel } from './channels/SacpSerialChannel';
 import { sacpTcpChannel } from './channels/SacpTcpChannel';
@@ -27,8 +29,6 @@ import { sacpUdpChannel } from './channels/SacpUdpChannel';
 import { sstpHttpChannel } from './channels/SstpHttpChannel';
 import TextSerialChannel, { textSerialChannel } from './channels/TextSerialChannel';
 import { ArtisanMachineInstance, J1MachineInstance, MachineInstance, RayMachineInstance } from './instances';
-import Channel, { FileChannelInterface, GcodeChannelInterface, SystemChannelInterface } from './channels/Channel';
-import ControllerEvent from '../../../app/connection/controller-events';
 
 const log = logger('lib:ConnectionManager');
 
@@ -516,7 +516,7 @@ G1 X${pos.x} Y${pos.y} B${pos.e}
 G1 Z${pos.z}
         `;
         }
-        this.channel.command(this.channel, {
+        this.channel.command(socket, {
             cmd: 'gcode',
             args: [code]
         });
@@ -530,11 +530,11 @@ G1 Z${pos.z}
             if (headType === HEAD_PRINTING) {
                 const pos = pause3dpStatus.pos;
                 const code = `G1 X${pos.x} Y${pos.y} Z${pos.z}\n`;
-                this.channel.command(this.channel, {
+                this.channel.command(socket, {
                     cmd: 'gcode',
                     args: [code]
                 });
-                this.channel.command(this.channel, {
+                this.channel.command(socket, {
                     cmd: 'gcode:resume',
                 });
             } else if (headType === HEAD_LASER) {
@@ -551,17 +551,17 @@ M3 P${powerPercent} S${powerStrength}`
                         : `
 M3`;
                 }
-                this.channel.command(this.channel, {
+                this.channel.command(socket, {
                     cmd: 'gcode',
                     args: [code]
                 });
-                this.channel.command(this.channel, {
+                this.channel.command(socket, {
                     cmd: 'gcode:resume',
                 });
             } else {
                 if (pauseStatus.headStatus) {
                     // resume spindle
-                    this.channel.command(this.channel, {
+                    this.channel.command(socket, {
                         cmd: 'gcode',
                         args: ['M3']
                     });
@@ -569,13 +569,13 @@ M3`;
                     // for CNC machine, resume need to wait >500ms to let the tool head started
                     setTimeout(() => {
                         this.recoveryCncPosition(pauseStatus, gcodeFile, sizeZ);
-                        this.channel.command(this.channel, {
+                        this.channel.command(socket, {
                             cmd: 'gcode:resume',
                         });
                     }, 1000);
                 } else {
                     this.recoveryCncPosition(pauseStatus, gcodeFile, sizeZ);
-                    this.channel.command(this.channel, {
+                    this.channel.command(socket, {
                         cmd: 'gcode:resume',
                     });
                 }
@@ -590,7 +590,7 @@ M3`;
             this.channel.pauseGcode(options);
         } else {
             const { eventName } = options;
-            this.channel.command(this.channel, {
+            this.channel.command(socket, {
                 cmd: 'gcode:pause',
             });
             socket && socket.emit(eventName, {});
@@ -604,10 +604,10 @@ M3`;
         } else if (includes([SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.stopGcode(options);
         } else {
-            this.channel.command(this.channel, {
+            this.channel.command(socket, {
                 cmd: 'gcode:pause',
             });
-            this.channel.command(this.channel, {
+            this.channel.command(socket, {
                 cmd: 'gcode:stop',
             });
             const { eventName } = options;
@@ -634,7 +634,7 @@ M3`;
             });
         } else {
             // T0 / T1
-            this.channel.command(this.socket, {
+            this.channel.command(socket, {
                 args: [`T${extruderIndex}`],
             });
         }
@@ -649,7 +649,7 @@ M3`;
             if (this.connectionType === CONNECTION_TYPE_WIFI) {
                 this.channel.updateNozzleTemperature(options);
             } else {
-                this.channel.command(this.socket, {
+                this.channel.command(socket, {
                     args: [`M104 S${nozzleTemperatureValue}`]
                 });
             }
@@ -666,7 +666,7 @@ M3`;
                 this.channel.updateBedTemperature(options);
             } else {
                 const { heatedBedTemperatureValue } = options;
-                this.channel.command(this.channel, {
+                this.channel.command(socket, {
                     args: [`M140 S${heatedBedTemperatureValue}`]
                 });
             }
@@ -679,7 +679,7 @@ M3`;
             const { extruderIndex } = options;
             this.channel.loadFilament(extruderIndex, eventName);
         } else {
-            this.channel.command(this.channel, {
+            this.channel.command(socket, {
                 args: ['G91;\nG0 E60 F200;\nG90;']
             });
             socket && socket.emit(eventName);
@@ -694,7 +694,7 @@ M3`;
         } else if (this.connectionType === CONNECTION_TYPE_WIFI) {
             this.channel.unloadFilament(options);
         } else {
-            this.channel.command(this.channel, {
+            this.channel.command(socket, {
                 args: ['G91;\nG0 E6 F200;\nG0 E-60 F150;\nG90;']
             });
             socket && socket.emit(eventName);
@@ -710,7 +710,7 @@ M3`;
                 this.channel.updateWorkSpeedFactor(options);
             } else {
                 const { workSpeedValue } = options;
-                this.channel.command(this.channel, {
+                this.channel.command(socket, {
                     args: [`M220 S${workSpeedValue}`]
                 });
             }
@@ -839,10 +839,9 @@ M3`;
         }
     };
 
-    public startHeartbeat = (socket, options) => {
-        console.log('startHeartbeat');
-
-        this.channel.startHeartbeat(options);
+    public startHeartbeat = () => {
+        log.info('Start heartbeat');
+        this.channel.startHeartbeat();
     };
 
     public getGcodeFile = (socket, options) => {
@@ -929,30 +928,39 @@ M3`;
         }
     };
 
-    public updateToolHeadSpeed = (socket, options) => {
+    public setSpindleSpeed = async (socket: SocketServer, options) => {
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const { speed } = options;
-            this.channel.updateToolHeadSpeed(speed);
+            const success = await (this.channel as CncChannelInterface).setSpindleSpeed(speed);
+
+            socket.emit(ControllerEvent.SetSpindleSpeed, {
+                err: !success,
+                speed: speed,
+            });
         }
     };
 
-    public switchCNC = async (socket, options, callback) => {
+    public switchCNC = async (socket: SocketServer, options) => {
         const { headStatus, speed, toolHead } = options;
-        if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            if (toolHead === STANDARD_CNC_TOOLHEAD_FOR_SM2) {
-                await this.channel.setCncPower(100); // default 10
-            } else {
-                await this.channel.updateToolHeadSpeed(speed);
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort, SerialPortProtocol.PlainText], this.protocol)) {
+            if (speed) {
+                if (toolHead === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2) {
+                    await (this.channel as CncChannelInterface).setSpindleSpeed(speed);
+                } else {
+                    // standard CNC module, use 100%
+                    await (this.channel as CncChannelInterface).setSpindleSpeedPercentage(100); // default 10
+                }
             }
-            await this.channel.switchCNC(headStatus);
-        } else {
+
             if (headStatus) {
-                await this.executeGcode(socket, { gcode: 'M5' });
-                callback && callback();
+                await (this.channel as CncChannelInterface).spindleOff();
             } else {
-                await this.executeGcode(socket, { gcode: 'M3 P100' });
-                callback && callback();
+                await (this.channel as CncChannelInterface).spindleOn();
             }
+
+            socket.emit(ControllerEvent.SwitchCNC, { err: 0 });
+        } else {
+            socket.emit(ControllerEvent.SwitchCNC, { err: 1, msg: 'Wrong protocol' });
         }
     };
 
@@ -970,7 +978,7 @@ M3`;
         const { eventName } = options;
 
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            const { data: networkConfiguration } = await this.channel.getNetworkConfiguration();
+            const networkConfiguration = await (this.channel as NetworkServiceChannelInterface).getNetworkConfiguration();
 
             socket.emit(eventName, {
                 networkMode: networkConfiguration.networkMode,
@@ -987,13 +995,14 @@ M3`;
         }
     };
 
-    public getNetworkStationState = async (socket, options) => {
+    public getNetworkStationState = async (socket: SocketServer, options) => {
         const { eventName } = options;
 
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            const { data: networkStationState } = await this.channel.getNetworkStationState();
+            const networkStationState = await (this.channel as NetworkServiceChannelInterface).getNetworkStationState();
 
             socket.emit(eventName, {
+                err: 0,
                 stationIP: networkStationState.stationIP,
                 stationState: networkStationState.stationState,
                 stationRSSI: networkStationState.stationRSSI,
@@ -1012,21 +1021,24 @@ M3`;
      * Notice: configure machine network is supported by SACP over TCP/UDP, but it's not recommended.
      * Since you've connected to the machine via network already.
      */
-    public configureMachineNetwork = async (socket, options) => {
+    public configureMachineNetwork = async (socket: SocketServer, options) => {
         const { eventName } = options;
 
         // Note: supported by SACP over UDP, but it's not needed since you already connected to the machine
         // via network.
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            const configureNetworkResult = await this.channel.configureNetwork({
+            const success = await (this.channel as NetworkServiceChannelInterface).configureNetwork({
                 networkMode: options?.networkMode,
                 stationIPObtain: options?.stationIPObtain,
                 stationSSID: options?.stationSSID,
                 stationPassword: options?.stationPassword,
                 stationIP: options?.stationIP,
             });
-            if (configureNetworkResult.response.result === 0) {
-                // success
+            if (success) {
+                socket.emit(eventName, {
+                    err: !success,
+                    msg: 'Failed to configure network'
+                });
             }
         } else {
             socket.emit(eventName, {
@@ -1044,15 +1056,10 @@ M3`;
 
         // SACP only
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            const result = await this.channel.exportLogToExternalStorage();
-            socket.emit(eventName, {
-                err: result.response.result !== 0,
-            });
+            const success = await (this.channel as SystemChannelInterface).exportLogToExternalStorage();
+            socket.emit(eventName, { err: !success, });
         } else {
-            socket.emit(eventName, {
-                err: 1,
-                msg: `Unsupported event: ${eventName}`,
-            });
+            socket.emit(eventName, { err: 1, msg: `Unsupported event: ${eventName}` });
         }
     };
 

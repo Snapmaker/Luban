@@ -3,12 +3,14 @@ import { PROTOCOL_TEXT, WRITE_SOURCE_CLIENT } from '../../../controllers/constan
 import type SocketServer from '../../../lib/SocketManager';
 import logger from '../../../lib/logger';
 import store from '../../../store';
-import Channel, { GcodeChannelInterface } from './Channel';
+import Channel, { CncChannelInterface, GcodeChannelInterface } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 
 const log = logger('machine:channel:TextSerialChannel');
 
-class TextSerialChannel extends Channel implements GcodeChannelInterface {
+class TextSerialChannel extends Channel implements
+    GcodeChannelInterface,
+    CncChannelInterface {
     private port = '';
 
     private dataSource = '';
@@ -114,6 +116,36 @@ class TextSerialChannel extends Channel implements GcodeChannelInterface {
         const controller = store.get(`controllers["${port}/${dataSource}"]`);
         controller.command(null, 'gcode', gcodeLines);
         return true;
+    }
+
+    // interface: CncChannelInterface
+
+    public async setSpindleSpeed(speed: number): Promise<boolean> {
+        // on and off to set speed
+        const gcode = [
+            `M3 S${speed}`,
+            'M5',
+        ].join('\n');
+
+        return this.executeGcode(gcode);
+    }
+
+    public async setSpindleSpeedPercentage(percent: number): Promise<boolean> {
+        // on and off to set speed
+        const gcode = [
+            `M3 P${percent}`,
+            'M5',
+        ].join('\n');
+
+        return this.executeGcode(gcode);
+    }
+
+    public async spindleOn(): Promise<boolean> {
+        return this.executeGcode('M3');
+    }
+
+    public async spindleOff(): Promise<boolean> {
+        return this.executeGcode('M5');
     }
 
     /**

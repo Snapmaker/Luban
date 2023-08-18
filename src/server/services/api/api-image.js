@@ -96,7 +96,6 @@ export const set = async (req, res) => {
         }
         if (extname === '.svg') {
             const svgParser = new SVGParser();
-            console.log('tempPath', tempPath);
             const svg = await svgParser.parseFile(tempPath);
             res.send({
                 originalName: originalName,
