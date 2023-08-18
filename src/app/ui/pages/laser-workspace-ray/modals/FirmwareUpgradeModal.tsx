@@ -1,4 +1,4 @@
-import { Tooltip } from 'antd';
+import { Alert, Tooltip } from 'antd';
 import { noop } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -134,29 +134,43 @@ const FirmwareUpgradeModal: React.FC<FirmwareUpgradeModalProps> = (props) => {
                 {i18n._('Machine Firmware')}
             </Modal.Header>
             <Modal.Body className="width-400">
-                <div className="sm-flex">
-                    <span>{i18n._('Current firmware version')}:</span>
-                    <span className="margin-left-4">{firmwareVersion}</span>
-                </div>
-                <div className="sm-flex margin-top-16">
-                    <Tooltip
-                        title={selectedFilePath}
-                    >
-                        <TextInput
-                            size="300px"
-                            value={selectedFilePath}
+                {
+                    !isConnected && (
+                        <Alert
+                            type="error"
+                            message={i18n._('key-Workspace/Machine not connected, please connect to the machine first.')}
                         />
-                    </Tooltip>
-                    <div className="margin-left-8">
-                        <SvgIcon
-                            type={['hoverSpecial', 'pressSpecial']}
-                            name="ToolbarOpen"
-                            size={31}
-                            color="#545659"
-                            onClick={onSelectFile}
-                        />
-                    </div>
-                </div>
+                    )
+                }
+                {
+                    isConnected && (
+                        <div>
+                            <div className="sm-flex">
+                                <span>{i18n._('Current firmware version')}:</span>
+                                <span className="margin-left-4">{firmwareVersion}</span>
+                            </div>
+                            <div className="sm-flex margin-top-16">
+                                <Tooltip
+                                    title={selectedFilePath}
+                                >
+                                    <TextInput
+                                        size="300px"
+                                        value={selectedFilePath}
+                                    />
+                                </Tooltip>
+                                <div className="margin-left-8">
+                                    <SvgIcon
+                                        type={['hoverSpecial', 'pressSpecial']}
+                                        name="ToolbarOpen"
+                                        size={31}
+                                        color="#545659"
+                                        onClick={onSelectFile}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )
+                }
             </Modal.Body>
             <Modal.Footer>
                 <Button

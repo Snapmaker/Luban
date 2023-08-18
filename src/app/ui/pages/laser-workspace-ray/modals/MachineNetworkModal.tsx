@@ -5,12 +5,12 @@ import classNames from 'classnames';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import log from '../../../../lib/log';
 import ControllerEvent from '../../../../connection/controller-events';
 import { RootState } from '../../../../flux/index.def';
 import { ConnectionType } from '../../../../flux/workspace/state';
 import controller from '../../../../lib/controller';
 import i18n from '../../../../lib/i18n';
+import log from '../../../../lib/log';
 import { Button } from '../../../components/Buttons';
 import Modal from '../../../components/Modal';
 import useMountedState from '../../../utils/useMountedState';
