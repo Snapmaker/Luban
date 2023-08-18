@@ -116,7 +116,7 @@ export const actions = {
                     headType,
                     status,
                     moduleStatusList,
-                    isHomed,
+                    isHomed = false,
                     isMoving,
                 } = state;
                 const { seriesSize } = state;
@@ -150,6 +150,9 @@ export const actions = {
                     }));
                     machineSeries = series;
                 }
+
+                log.info(`machine = ${machineSeries}`);
+                log.info(`tool = ${toolHead}`);
 
                 if (machineSeries && headType && headType !== 'UNKNOWN') {
                     dispatch(

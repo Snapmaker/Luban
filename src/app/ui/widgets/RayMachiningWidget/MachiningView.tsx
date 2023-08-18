@@ -12,6 +12,7 @@ import controller from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import ControlPanel from './ControlPanel';
+import RunBoundaryModal from './modals/RunBoundaryModal';
 
 
 enum SetupCoordinateMethod {
@@ -160,16 +161,11 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
                                     useCurrentPosition: true,
                                 })}
                             >
-                                {i18n._('key-Workspace/Control/MotionButton-Run Boundary')}
+                                {i18n._('Run Boundary')}
                             </Button>
                         </div>
                         <Space direction="vertical" className="margin-top-8">
                             <Alert type="info" showIcon message={i18n._('Steppers are disabled. You can push XY axes to move the tool head.')} />
-                            {
-                                runBoundaryReady && (
-                                    <Alert type="info" showIcon message={i18n._('Please go the machine, click button to run boundary.')} />
-                                )
-                            }
                         </Space>
                     </div>
                 )
@@ -185,6 +181,12 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
                             })}
                         />
                     </div>
+                )
+            }
+
+            {/* Run Boundary modal */
+                runBoundaryReady && (
+                    <RunBoundaryModal onClose={() => setRunBoundaryReady(false)} />
                 )
             }
         </div>

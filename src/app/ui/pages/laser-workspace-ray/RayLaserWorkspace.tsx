@@ -284,7 +284,7 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
                             type="primary"
                             onClick={() => reloadPage()}
                         >
-                            {i18n._('key-Workspace/Page-Reload')}
+                            {i18n._('Load New G-code')}
                         </Button>
                     </Modal.Footer>
                 </Modal>

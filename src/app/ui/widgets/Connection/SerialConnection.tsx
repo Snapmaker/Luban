@@ -11,7 +11,6 @@ import {
     HEAD_PRINTING,
     LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
     MACHINE_SERIES,
-    findMachineByName,
     isDualExtruder
 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
@@ -34,10 +33,9 @@ let loadingTimer = null;
 const SerialConnection: React.FC = () => {
     // connection
     const machineAgents = useSelector((state: RootState) => state.workspace.machineAgents) as MachineAgent[];
+    const agent: MachineAgent = useSelector((state: RootState) => state.workspace.server);
 
     const {
-        server,
-
         connectLoading,
 
         isOpen,
@@ -45,8 +43,13 @@ const SerialConnection: React.FC = () => {
     } = useSelector((state: RootState) => state.workspace);
 
     const {
-        toolHead, headType, machineIdentifier, isRotate
+        toolHead,
+        headType,
+        machineIdentifier,
+        isRotate,
     } = useSelector((state: RootState) => state.workspace);
+
+    const activeMachine: Machine = useSelector((state: RootState) => state.workspace.activeMachine);
 
     const {
         enclosureOnline,
@@ -58,7 +61,14 @@ const SerialConnection: React.FC = () => {
     } = useSelector((state: RootState) => state.workspace);
 
     // Selected port
-    const [selectedAgent, setSelectedAgent] = useState(server);
+    const [selectedAgent, setSelectedAgent] = useState(agent);
+
+    useEffect(() => {
+        if (!selectedAgent && machineAgents.length > 0) {
+            setSelectedAgent(machineAgents[0]);
+        }
+    }, [selectedAgent, machineAgents]);
+
     // connect status: 'idle', 'connecting', 'connected'
     const [err, setErr] = useState(null);
     // UI state
@@ -92,30 +102,29 @@ const SerialConnection: React.FC = () => {
     const dispatch = useDispatch();
 
     const onChangePortOption = useCallback((option) => {
-        const agent = machineAgents.find(a => a.port === option.value);
-        if (agent) {
-            dispatch(connectActions.setSelectedAgent(agent));
-            setSelectedAgent(agent);
+        const targetAgent = machineAgents.find(a => a.port === option.value);
+        if (targetAgent) {
+            setSelectedAgent(targetAgent);
         }
-    }, [dispatch, machineAgents]);
+    }, [machineAgents]);
 
     const openPort = useCallback(async () => {
         const { msg } = await dispatch(
-            connectActions.connect(server)
+            connectActions.connect(selectedAgent)
         ) as unknown as { msg: string };
 
-        if (!isObject(msg) && msg !== 'inuse') {
+        if (msg && !isObject(msg) && msg !== 'inuse') {
             setErr(i18n._('key-workspace_open_port-Can not open this port'));
             log.error('Error opening serial port', msg);
             return;
         }
 
         setErr(null);
-    }, [dispatch, server]);
+    }, [dispatch, selectedAgent]);
 
     const closePort = useCallback(() => {
-        dispatch(connectActions.disconnect(server));
-    }, [dispatch, server]);
+        dispatch(connectActions.disconnect(selectedAgent));
+    }, [dispatch, selectedAgent]);
 
     const actions = {
         onRefreshPorts: () => {
@@ -267,10 +276,6 @@ const SerialConnection: React.FC = () => {
     const canChangePort = canRefresh;
     const canOpenPort = selectedAgent && selectedAgent.port && !selectedAgent.address && !isOpen;
 
-    const connectedMachine = useMemo<Machine | null>(() => {
-        return findMachineByName(machineIdentifier);
-    }, [machineIdentifier]);
-
     return (
         <div>
             {/* List of serial port options */
@@ -306,13 +311,13 @@ const SerialConnection: React.FC = () => {
                 )
             }
             {/* State of connected machine */
-                isConnected && machineIdentifier && (
+                isConnected && agent && activeMachine && (
                     <div className="margin-bottom-16 margin-top-12">
                         <div
                             className={classNames(styles['connection-state'], 'padding-bottom-8', 'border-bottom-dashed-default')}
                         >
-                            <span className={styles['connection-state-name']}>
-                                {i18n._(connectedMachine.label)}
+                            <span className="main-text-normal max-width-304 text-overflow-ellipsis display-inline">
+                                {activeMachine.fullName} ({agent.port})
                             </span>
                             <span className={styles['connection-state-icon']}>
                                 {

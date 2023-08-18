@@ -14,7 +14,7 @@ const MotionButtonGroup = (props) => {
     return (
         <div className="sm-flex-overflow-visible" style={{ flexDirection: 'column' }}>
             <TipTrigger
-                title={i18n._('key-Workspace/Control/MotionButton-Run Boundary')}
+                title={i18n._('Run Boundary')}
                 content={(
                     <div>
                         <p>{i18n._('key-Workspace/Control/MotionButton-Click to check the boundary of the image to be engraved.')}</p>
@@ -35,7 +35,7 @@ const MotionButtonGroup = (props) => {
                     onClick={actions.runBoundary}
                     disabled={!canClick}
                 >
-                    {i18n._('key-Workspace/Control/MotionButton-Run Boundary')}
+                    {i18n._('Run Boundary')}
                 </Button>
             </TipTrigger>
             <TipTrigger

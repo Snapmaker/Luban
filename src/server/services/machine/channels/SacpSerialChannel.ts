@@ -68,7 +68,7 @@ class SacpSerialChannel extends SacpChannelBase implements FileChannelInterface 
                 // this.serialport.write('M2000 U5\r\n');
                 this.serialport.write('$PS\r\n');
 
-                log.error('M2000 sent');
+                log.debug('M2000 sent');
 
                 // Wait (at least 100ms) to let controller switch to SACP
                 // Then we get machine info, this is required to detect the machine

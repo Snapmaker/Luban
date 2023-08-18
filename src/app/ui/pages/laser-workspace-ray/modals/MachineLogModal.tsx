@@ -1,3 +1,4 @@
+import { Alert } from 'antd';
 import React, { useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -42,9 +43,21 @@ const ExportLogModal: React.FC<ExportLogModalProps> = (props) => {
                 {i18n._('Machine Log')}
             </Modal.Header>
             <Modal.Body className="width-400">
-                <div>
-                    <span>{i18n._('Export machine log to SD card.')}</span>
-                </div>
+                {
+                    !isConnected && (
+                        <Alert
+                            type="error"
+                            message={i18n._('key-Workspace/Machine not connected, please connect to the machine first.')}
+                        />
+                    )
+                }
+                {
+                    isConnected && (
+                        <div>
+                            <span>{i18n._('Export machine log to SD card.')}</span>
+                        </div>
+                    )
+                }
             </Modal.Body>
             <Modal.Footer>
                 <Button
