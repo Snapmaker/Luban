@@ -124,9 +124,17 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
             name: 'separator',
         },
         {
-            title: i18n._('key-Workspace/MainToolBar-Machine Network'),
+            title: i18n._('Firmware'),
             type: 'button',
-            name: 'MainToolbarJobSetup',
+            name: 'MainToolbarMachineupdate',
+            action: () => {
+                setShowFirmwareUpgradeModal(true);
+            },
+        },
+        {
+            title: i18n._('Network'),
+            type: 'button',
+            name: 'MainToolbarMachinewifi',
             action: () => {
                 setShowMachineNetworkModal(true);
             },
@@ -134,19 +142,11 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
         {
             title: i18n._('Machine Log'),
             type: 'button',
-            name: 'MainToolbarJobSetup',
+            name: 'MainToolbarMachinelog',
             action: () => {
                 setShowMachineLogModal(true);
             },
         },
-        {
-            title: i18n._('Firmware'),
-            type: 'button',
-            name: 'MainToolbarJobSetup',
-            action: () => {
-                setShowFirmwareUpgradeModal(true);
-            },
-        }
     ]);
 
     const defaultContainer = useRef();
