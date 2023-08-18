@@ -13,9 +13,9 @@ import {
     HEAD_LASER,
     HEAD_PRINTING,
     LEVEL_ONE_POWER_LASER_FOR_SM2,
+    LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
     MACHINE_SERIES,
-    STANDARD_CNC_TOOLHEAD_FOR_SM2
 } from '../../constants';
 import ScheduledTasks from '../../lib/ScheduledTasks';
 import SocketServer from '../../lib/SocketManager';
@@ -839,9 +839,8 @@ M3`;
         }
     };
 
-    public startHeartbeat = (socket, options) => {
-        console.log('startHeartbeat');
-
+    public startHeartbeat = () => {
+        log.info('Start heartbeat');
         this.channel.startHeartbeat();
     };
 
@@ -941,14 +940,16 @@ M3`;
         }
     };
 
-    public switchCNC = async (socket: SocketServer, options, callback) => {
+    public switchCNC = async (socket: SocketServer, options) => {
         const { headStatus, speed, toolHead } = options;
-        if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            if (toolHead === STANDARD_CNC_TOOLHEAD_FOR_SM2) {
-                // standard CNC module, use 100%
-                await (this.channel as CncChannelInterface).setSpindleSpeedPercentage(100); // default 10
-            } else {
-                await (this.channel as CncChannelInterface).setSpindleSpeed(speed);
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort, SerialPortProtocol.PlainText], this.protocol)) {
+            if (speed) {
+                if (toolHead === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2) {
+                    await (this.channel as CncChannelInterface).setSpindleSpeed(speed);
+                } else {
+                    // standard CNC module, use 100%
+                    await (this.channel as CncChannelInterface).setSpindleSpeedPercentage(100); // default 10
+                }
             }
 
             if (headStatus) {
@@ -956,14 +957,10 @@ M3`;
             } else {
                 await (this.channel as CncChannelInterface).spindleOn();
             }
+
+            socket.emit(ControllerEvent.SwitchCNC, { err: 0 });
         } else {
-            if (headStatus) {
-                await this.executeGcode(socket, { gcode: 'M5' });
-                callback && callback();
-            } else {
-                await this.executeGcode(socket, { gcode: 'M3 P100' });
-                callback && callback();
-            }
+            socket.emit(ControllerEvent.SwitchCNC, { err: 1, msg: 'Wrong protocol' });
         }
     };
 

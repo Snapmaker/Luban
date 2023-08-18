@@ -17,7 +17,7 @@ import { valueOf } from '../../../lib/contants-utils';
 import logger from '../../../lib/logger';
 import workerManager from '../../task-manager/workerManager';
 import { EventOptions } from '../types';
-import Channel, { FileChannelInterface, GcodeChannelInterface, UploadFileOptions } from './Channel';
+import Channel, { CncChannelInterface, FileChannelInterface, GcodeChannelInterface, UploadFileOptions } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 
 let waitConfirm: boolean;
@@ -103,7 +103,10 @@ interface GCodeQueueItem {
 /**
  * A singleton to manage devices connection.
  */
-class SstpHttpChannel extends Channel implements GcodeChannelInterface, FileChannelInterface {
+class SstpHttpChannel extends Channel implements
+    GcodeChannelInterface,
+    FileChannelInterface,
+    CncChannelInterface {
     private isGcodeExecuting = false;
 
     private gcodeQueue: GCodeQueueItem[] = [];
@@ -399,6 +402,37 @@ class SstpHttpChannel extends Channel implements GcodeChannelInterface, FileChan
                     resolve(!err);
                 });
         });
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async compressUploadFile(options: UploadFileOptions): Promise<boolean> {
+        return false;
+    }
+
+    // interface: CncChannelInterface
+
+    public async setSpindleSpeed(speed: number): Promise<boolean> {
+        // on and off to set speed
+        if (await this.executeGcode(`M3 S${speed}`)) return false;
+        if (await this.executeGcode('M5')) return false;
+
+        return true;
+    }
+
+    public async setSpindleSpeedPercentage(percent: number): Promise<boolean> {
+        // on and off to set speed
+        if (await this.executeGcode(`M3 P${percent}`)) return false;
+        if (await this.executeGcode('M5')) return false;
+
+        return true;
+    }
+
+    public async spindleOn(): Promise<boolean> {
+        return this.executeGcode('M3');
+    }
+
+    public async spindleOff(): Promise<boolean> {
+        return this.executeGcode('M5');
     }
 
     /**
