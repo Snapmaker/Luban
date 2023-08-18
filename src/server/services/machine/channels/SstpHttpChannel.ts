@@ -40,7 +40,13 @@ const isJSON = (str: string) => {
     return false;
 };
 
-const _getResult = (err, res) => {
+interface Result {
+    code: number;
+    msg: string;
+    text?: string;
+    data?: string;
+}
+const _getResult = (err, res): Result => {
     if (err) {
         if (res && isJSON(res.text) && JSON.parse(res.text).code === 202) {
             return {

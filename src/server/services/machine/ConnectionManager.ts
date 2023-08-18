@@ -114,7 +114,7 @@ class ConnectionManager {
     private onChannelConnected = () => {
         log.info('channel: Connected');
 
-        this.socket && this.socket.emit('connection:open', {});
+        this.socket && this.socket.emit(ControllerEvent.ConnectionOpen, {});
     };
 
     private onChannelReady = async (data: { machineIdentifier?: string }) => {
