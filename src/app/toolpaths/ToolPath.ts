@@ -288,6 +288,7 @@ class ToolPath {
                     uploadName: info.uploadName,
                     transformation: info.transformation,
                     config: info.config,
+                    processImageName: info.processImageName
                 };
             });
 

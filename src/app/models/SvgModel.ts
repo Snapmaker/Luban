@@ -1084,7 +1084,7 @@ class SvgModel extends BaseModel {
             }
 
             this.mode = mode;
-            this.resource.processedFile.update(null);
+            // this.resource.processedFile.update(null);
         }
         this.generateProcessObject3D();
     }
@@ -1254,6 +1254,12 @@ class SvgModel extends BaseModel {
             ...config
         };
         this.processMode(this.mode, this.config);
+    }
+
+    // Update original name
+    public updateOriginalName(originalName: string) {
+        // this.processMode(this.mode, this.config, processImageName);
+        this.resource.originalFile.update(originalName);
     }
 
     public updateProcessImageName(processImageName: string) {

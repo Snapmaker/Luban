@@ -69,6 +69,7 @@ import { actions as projectActions } from '../project';
 import { HeadType } from '../../../server/services/machine/sacp/SacpClient';
 import { actions as appGlobalActions } from '../app-global';
 import { SVGClippingResultType } from '../../constants/clipping';
+import UpdateHrefOperation2D from '../operation-history/UpdateHrefOperation2D';
 
 
 declare type HeadType = 'laser' | 'cnc';
@@ -1346,7 +1347,6 @@ export const actions = {
      * @returns {Function}
      */
     onReceiveProcessImageTaskResult: (headType, taskResult) => async (dispatch, getState) => {
-        console.log('onReceiveProcessImageTaskResult', taskResult);
         const { SVGActions, modelGroup, progressStatesManager } = getState()[headType];
         const model = modelGroup.getModel(taskResult.data.modelID);
         if (!model) {
@@ -1376,8 +1376,19 @@ export const actions = {
             }
         }
 
-        model.updateProcessImageName(processImageName);
+        if (model.resource.processedFile && model.resource.processedFile.name) {
+            const operation = new UpdateHrefOperation2D({
+                target: model,
+                svgActions: SVGActions,
+                fromHref: model.resource.processedFile.name,
+                toHref: processImageName
+            });
+            const operations = new CompoundOperation();
+            operations.push(operation);
+            dispatch(operationHistoryActions.setOperations(headType, operations));
+        }
 
+        model.updateProcessImageName(processImageName);
         SVGActions.updateSvgModelImage(model, processImageName);
 
         dispatch(baseActions.resetCalculatedState(headType));
@@ -1401,6 +1412,7 @@ export const actions = {
      */
     onReceiveSVGClippingTaskResult: (headType, taskResult) => async (dispatch, getState) => {
         const { SVGActions, modelGroup, progressStatesManager, materials } = getState()[headType];
+        // const { machine } = getState();
 
         const { result } = taskResult;
         if (!result || result.length <= 0) {
@@ -1411,8 +1423,6 @@ export const actions = {
             const res = result[i];
 
             const { modelID, resultType, sourceWidth, sourceHeight, baseWidth, baseHeight, width, height, filename } = res;
-
-            console.log('res', res, modelID, resultType, sourceWidth, sourceHeight, baseWidth, baseHeight, width, height, filename);
 
             if (resultType === SVGClippingResultType.Add) {
                 dispatch(actions.generateModel(headType, {
@@ -1428,6 +1438,8 @@ export const actions = {
                 if (!model) {
                     continue;
                 }
+
+                const operations = new CompoundOperation();
 
                 SVGActions.updateElementToImage(model.elem, {
                     transformation: model.transformation,
@@ -1449,7 +1461,35 @@ export const actions = {
                             height: height
                         }
                     };
+
+                    // const operation = new ScaleOperation2D({
+                    //     target: model,
+                    //     svgActions: SVGActions,
+                    //     machine,
+                    //     from: model.transformation,
+                    //     to: {
+                    //         ...model.transformation,
+                    //         ...modelOptions.transformation
+                    //     }
+                    // });
+                    //
+                    // operations.push(operation);
+
                     model.updateAndRefresh(modelOptions);
+                }
+
+                const operation = new UpdateHrefOperation2D({
+                    target: model,
+                    svgActions: SVGActions,
+                    fromHref: model.resource.processedFile.name || model.resource.originalFile.name,
+                    toHref: filename
+                });
+                operations.push(operation);
+                dispatch(operationHistoryActions.setOperations(headType, operations));
+
+                // Fixed
+                if (model.sourceType === 'svg') {
+                    model.updateOriginalName(filename);
                 }
 
                 model.updateProcessImageName(filename);

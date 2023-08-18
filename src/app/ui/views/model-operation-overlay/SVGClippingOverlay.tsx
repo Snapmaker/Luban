@@ -18,37 +18,37 @@ interface SVGClippingOverlayProps {
     onClose: () => void;
 }
 
-const getSVGClippingOptions = (length, operation) => {
+const getSVGClippingOptions = (length, operation, noVectorLen) => {
     const svgClippingMap = {
         [SVGClippingType.Offset]: {
             label: i18n._('key-SVGClipping/Offset'),
             value: SVGClippingType.Offset,
             iconName: 'MainToolbarPrintModeNormal',
-            disabled: length === 0
+            disabled: noVectorLen > 0 || length === 0
         },
         [SVGClippingType.Background]: {
             label: i18n._('key-SVGClipping/Background'),
             value: SVGClippingType.Background,
             iconName: 'MainToolbarPrintModeBackup',
-            disabled: length === 0
+            disabled: noVectorLen > 0 || length === 0
         },
         [SVGClippingType.Ringing]: {
             label: i18n._('key-SVGClipping/Ringing'),
             value: SVGClippingType.Ringing,
             iconName: 'MainToolbarPrintModeDuplication',
-            disabled: length === 0
+            disabled: noVectorLen > 0 || length === 0
         },
         [SVGClippingType.Union]: {
             label: i18n._('key-SVGClipping/Union'),
             value: SVGClippingType.Union,
             iconName: 'MainToolbarPrintModeMirror',
-            disabled: length === 0 || (length === 1 && operation === SVGClippingOperation.Merged)
+            disabled: noVectorLen > 0 || length === 0 || (length === 1 && operation === SVGClippingOperation.Merged)
         },
         [SVGClippingType.Clip]: {
             label: i18n._('key-SVGClipping/Clip'),
             value: SVGClippingType.Clip,
             iconName: 'MainToolbarPrintModeMirror',
-            disabled: length !== 2
+            disabled: noVectorLen > 0 || length !== 2
         }
     };
     const svgClippingOptions = [];
@@ -97,8 +97,9 @@ const SVGClippingOverlay: React.FC<SVGClippingOverlayProps> = ({ onClose }) => {
     }, [dispatch, svgClipping]);
 
     const selectedModels = modelGroup.getSelectedModelArray();
-    const svgClippingOptions = useMemo(() => getSVGClippingOptions(selectedModels.length, svgClipping.operation),
-        [selectedModels.length, svgClipping.operation]);
+    const noVectorLen = selectedModels.filter(v => v.mode !== 'vector').length;
+    const svgClippingOptions = useMemo(() => getSVGClippingOptions(selectedModels.length, svgClipping.operation, noVectorLen),
+        [selectedModels.length, svgClipping.operation, noVectorLen]);
     const applyDisabled = svgClippingOptions.filter(v => v.value === svgClipping.type)[0].disabled;
     const isDistance = [SVGClippingType.Offset, SVGClippingType.Background, SVGClippingType.Ringing].includes(svgClipping.type);
     const isOperation = [SVGClippingType.Union].includes(svgClipping.type);
