@@ -84,8 +84,6 @@ class RayMachineInstance extends MachineInstance {
 
         moduleInfos.forEach(module => {
             if (includes(LASER_HEAD_MODULE_IDS, module.moduleId)) {
-                console.log('module.moduleId = ', module.moduleId);
-
                 state.headType = HEAD_LASER;
                 state.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
             }

@@ -1922,7 +1922,7 @@
     "key-Workspace/Control/MotionButton-Click to check the boundary of the image to be engraved.": "加工するイメージの境界をチェックするにはクリックします。",
     "key-Workspace/Control/MotionButton-Go To Work Origin": "作業原点に進む",
     "key-Workspace/Control/MotionButton-Move the head to the last saved work origin.": "ツールヘッドを最後に保存された作業原点に移動します。",
-    "key-Workspace/Control/MotionButton-Run Boundary": "境界を走査",
+    "Run Boundary": "境界を走査",
     "key-Workspace/Control/MotionButton-Set Work Origin": "作業原点の設定",
     "key-Workspace/Control/MotionButton-Set the current position of the toolhead as the work origin.": "ツールヘッドの現在位置を作業原点に設定します。",
     "key-Workspace/Custom Step": "",

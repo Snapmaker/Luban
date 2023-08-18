@@ -1922,7 +1922,7 @@
     "key-Workspace/Control/MotionButton-Click to check the boundary of the image to be engraved.": "Cliquer pour vérifier la limite de l'image à graver.",
     "key-Workspace/Control/MotionButton-Go To Work Origin": "Accéder à l'origine du travail",
     "key-Workspace/Control/MotionButton-Move the head to the last saved work origin.": "Déplacer la tête d’usinage vers la dernière origine du travail enregistrée.",
-    "key-Workspace/Control/MotionButton-Run Boundary": "Exécuter la limite",
+    "Run Boundary": "Exécuter la limite",
     "key-Workspace/Control/MotionButton-Set Work Origin": "Définir l'origine du travail",
     "key-Workspace/Control/MotionButton-Set the current position of the toolhead as the work origin.": "Définir la position actuelle de la tête d'usinage comme origine du travail.",
     "key-Workspace/Custom Step": "",

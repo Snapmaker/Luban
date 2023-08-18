@@ -1922,7 +1922,7 @@
     "key-Workspace/Control/MotionButton-Click to check the boundary of the image to be engraved.": "Натисніть, щоб перевірити межі зображення для гравіювання.",
     "key-Workspace/Control/MotionButton-Go To Work Origin": "До точки відліку",
     "key-Workspace/Control/MotionButton-Move the head to the last saved work origin.": "Переміщує робочу головку до останньої збереженої точки початку відліку.",
-    "key-Workspace/Control/MotionButton-Run Boundary": "Перевірити межі",
+    "Run Boundary": "Перевірити межі",
     "key-Workspace/Control/MotionButton-Set Work Origin": "Точка відліку",
     "key-Workspace/Control/MotionButton-Set the current position of the toolhead as the work origin.": "Встановлює поточне положення робочої головки як точку відліку.",
     "key-Workspace/Custom Step": "Задана відстань",

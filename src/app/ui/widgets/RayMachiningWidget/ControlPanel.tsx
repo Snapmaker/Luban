@@ -207,7 +207,7 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
                         className="margin-top-8"
                         onClick={onRunBoundary}
                     >
-                        {i18n._('key-Workspace/Control/MotionButton-Run Boundary')}
+                        {i18n._('Run Boundary')}
                     </Button>
                 </div>
             </div>

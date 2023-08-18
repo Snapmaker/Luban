@@ -1922,7 +1922,7 @@
     "key-Workspace/Control/MotionButton-Click to check the boundary of the image to be engraved.": "点击以检查被雕刻图像的边框。",
     "key-Workspace/Control/MotionButton-Go To Work Origin": "前往工作原点",
     "key-Workspace/Control/MotionButton-Move the head to the last saved work origin.": "将执行头移至最新保存的工作原点。",
-    "key-Workspace/Control/MotionButton-Run Boundary": "跑边框",
+    "Run Boundary": "跑边框",
     "key-Workspace/Control/MotionButton-Set Work Origin": "设置工作原点",
     "key-Workspace/Control/MotionButton-Set the current position of the toolhead as the work origin.": "将执行头的当前位置设为工作原点。",
     "key-Workspace/Custom Step": "Custom Step",

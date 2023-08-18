@@ -59,7 +59,7 @@ class SacpUdpChannel extends SacpChannelBase implements FileChannelInterface {
             return !!data;
         })();
 
-        const timeoutPromise = new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 1000));
+        const timeoutPromise = new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 2000));
 
         return Promise.race([sacpResponse, timeoutPromise]);
     }
