@@ -23,31 +23,31 @@ const getSVGClippingOptions = (length, operation, noVectorLen) => {
         [SVGClippingType.Offset]: {
             label: i18n._('key-SVGClipping/Offset'),
             value: SVGClippingType.Offset,
-            iconName: 'MainToolbarPrintModeNormal',
+            iconName: 'ToolOffset',
             disabled: noVectorLen > 0 || length === 0
         },
         [SVGClippingType.Background]: {
             label: i18n._('key-SVGClipping/Background'),
             value: SVGClippingType.Background,
-            iconName: 'MainToolbarPrintModeBackup',
+            iconName: 'ToolBackground',
             disabled: noVectorLen > 0 || length === 0
         },
         [SVGClippingType.Ringing]: {
             label: i18n._('key-SVGClipping/Ringing'),
             value: SVGClippingType.Ringing,
-            iconName: 'MainToolbarPrintModeDuplication',
+            iconName: 'ToolRinging',
             disabled: noVectorLen > 0 || length === 0
         },
         [SVGClippingType.Union]: {
             label: i18n._('key-SVGClipping/Union'),
             value: SVGClippingType.Union,
-            iconName: 'MainToolbarPrintModeMirror',
+            iconName: 'ToolUnion',
             disabled: noVectorLen > 0 || length === 0 || (length === 1 && operation === SVGClippingOperation.Merged)
         },
         [SVGClippingType.Clip]: {
             label: i18n._('key-SVGClipping/Clip'),
             value: SVGClippingType.Clip,
-            iconName: 'MainToolbarPrintModeMirror',
+            iconName: 'ToolClip',
             disabled: noVectorLen > 0 || length !== 2
         }
     };
