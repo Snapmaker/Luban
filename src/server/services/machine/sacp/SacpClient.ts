@@ -232,7 +232,7 @@ export default class SacpClient extends Dispatcher {
 
     // set Handler API list for RTO
     // 0x10, 0x05
-    public handlerSwitchNozzleReturn(callback: () => void) {
+    public handlerSwitchNozzleReturn(callback: (res) => void) {
         this.setHandler(0x10, 0x0b, (request: RequestData) => {
             const result = readUint8(request.packet.payload);
             this.ack(0x10, 0x0b, request.packet, Buffer.alloc(1, 0));
@@ -822,7 +822,7 @@ export default class SacpClient extends Dispatcher {
         const info = new ExtruderMovement(key, movementType, lengthIn, speedIn, lengthOut, speedOut);
         this.log.info(`Extruder Move: type = ${movementType}, in: ${lengthIn} speed: ${speedIn}, out: ${lengthOut} speed: ${speedOut}`);
         return this.send(0x10, 0x09, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
-            this.log.info('Extruder Move: done', response);
+            this.log.info('Extruder Move: done');
             return { response, packet };
         });
     }
@@ -1035,7 +1035,7 @@ export default class SacpClient extends Dispatcher {
         });
     }
 
-    public startPrintSerial(filePath: string, callback?: () => void) {
+    public startPrintSerial(filePath: string, callback?: (printInfo) => void) {
         const content: string[] = [];
         let elapsedTime = 0;
         const rl = readline(filePath);

@@ -1,10 +1,9 @@
+import type { Machine, ToolHead } from '@snapmaker/luban-platform';
 import classNames from 'classnames';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import type { ToolHead } from '@snapmaker/luban-platform';
 
 import {
-    findToolHead,
     getMachineOptions,
     getMachineSupportedToolOptions
 } from '../../../../constants/machines';
@@ -38,9 +37,16 @@ const SelectMachineModal: React.FC = () => {
     } = useSelector((state: RootState) => state.workspace);
     const prevIsConnected = usePrevious(isConnected);
 
+    const activeMachine: Machine | null = useSelector((state: RootState) => state.workspace.activeMachine);
+    const activeTool: ToolHead | null = useSelector((state: RootState) => state.workspace.activeTool);
+
     useEffect(() => {
         if (!prevIsConnected && isConnected) {
             if (connectionType === ConnectionType.WiFi) {
+                return;
+            }
+
+            if (activeMachine && activeTool) {
                 return;
             }
 
@@ -50,33 +56,46 @@ const SelectMachineModal: React.FC = () => {
         connectionType,
         isConnected,
         prevIsConnected,
+        activeMachine,
+        activeTool,
     ]);
 
     // machine
     const {
         series: machineIdentifier,
-        toolHead: toolHeadIdentifier,
     } = useSelector((state: RootState) => state.machine);
-
-    const toolHead = useMemo(() => findToolHead(toolHeadIdentifier), [toolHeadIdentifier]);
 
     // temporary selection of machine and toolhead
     const [selectedMachineIdentifier, setSelectedMachineIdentifier] = useState(machineIdentifier);
-    const [selectedToolHead, setSelectedToolHead] = useState<ToolHead | null>(toolHead);
 
-    const machineOptions = useMemo(() => getMachineOptions(), []);
-
-    const toolHeadOptions = useMemo(() => {
-        return getMachineSupportedToolOptions(selectedMachineIdentifier);
-    }, [selectedMachineIdentifier]);
+    useEffect(() => {
+        if (activeMachine) {
+            setSelectedMachineIdentifier(activeMachine.identifier);
+        }
+    }, [activeMachine]);
 
     const onChangeMachine = useCallback((identifier: string) => {
         setSelectedMachineIdentifier(identifier);
     }, []);
 
+    const machineOptions = useMemo(() => getMachineOptions(), []);
+
+    // tool
+    const [selectedToolHead, setSelectedToolHead] = useState<ToolHead | null>(activeTool);
+
+    useEffect(() => {
+        if (activeTool) {
+            setSelectedToolHead(activeTool);
+        }
+    }, [activeTool]);
+
     const onChangeToolHead = useCallback((tool: ToolHead) => {
         setSelectedToolHead(tool);
     }, []);
+
+    const toolHeadOptions = useMemo(() => {
+        return getMachineSupportedToolOptions(selectedMachineIdentifier);
+    }, [selectedMachineIdentifier]);
 
     /**
      * Click confirm to apply selections.
@@ -94,6 +113,8 @@ const SelectMachineModal: React.FC = () => {
 
         // TODO: For SM 2.0 with laser/CNC tool head, execute G54 right after selection
     }, [dispatch, selectedMachineIdentifier, selectedToolHead]);
+
+
 
     if (!showModal) {
         // Empty

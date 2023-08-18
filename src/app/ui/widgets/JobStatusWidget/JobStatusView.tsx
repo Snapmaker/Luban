@@ -52,7 +52,7 @@ const JobStatusView: React.FC<JobStatusViewProps> = (props) => {
 
     // Whether can control machine workflow
     const canControlWorkflow = useMemo(() => {
-        if (activeMachine.machineType === MachineType.Laser) {
+        if (activeMachine && activeMachine.machineType === MachineType.Laser) {
             return !(activeMachine.metadata as LaserMachineMetadata).disableWorkflowControl;
         }
 
