@@ -408,7 +408,7 @@ class SacpTcpChannel extends SacpChannelBase implements FileChannelInterface {
         await this.laserSetWorkHeight({ toolHead: toolHead, materialThickness: this.thickness });
     }
 
-    public uploadGcodeFile = (gcodeFilePath: string, type: string, renderName: string, callback: (msg: string, data: boolean) => void) => {
+    public uploadGcodeFile = async (gcodeFilePath: string, type: string, renderName: string, callback: (msg: string, data: boolean) => void) => {
         this.totalLine = null;
         this.estimatedTime = null;
         const rl = readline.createInterface({
@@ -433,20 +433,20 @@ class SacpTcpChannel extends SacpChannelBase implements FileChannelInterface {
                 rl.close();
             }
         });
-        this.sacpClient.uploadFile(gcodeFilePath, renderName).then(({ response }) => {
-            let msg = '', data = false;
-            if (response.result === 0) {
-                msg = '';
-                data = true;
-            }
-            /*
-            TODO: wrong event?
-            this.socket && this.socket.emit('connection:startGcode', {
-                msg: '', res: null
-            });
-            */
-            callback(msg, data);
+
+        const success = await this.sacpClient.uploadFile(gcodeFilePath, renderName);
+        let msg = '', data = false;
+        if (success) {
+            msg = '';
+            data = true;
+        }
+        /*
+        TODO: wrong event?
+        this.socket && this.socket.emit('connection:startGcode', {
+            msg: '', res: null
         });
+        */
+        callback(msg, data);
     };
 
     // start print

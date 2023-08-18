@@ -516,7 +516,7 @@ G1 X${pos.x} Y${pos.y} B${pos.e}
 G1 Z${pos.z}
         `;
         }
-        this.channel.command(socket, {
+        this.channel.command(this.socket, {
             cmd: 'gcode',
             args: [code]
         });
@@ -820,13 +820,13 @@ M3`;
         }
     };
 
-    public setFilterWorkSpeed = (socket, options) => {
+    public setFilterWorkSpeed = (socket: SocketServer, options) => {
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.setFilterWorkSpeed(options);
         } else {
             const { value } = options;
             this.executeGcode(
-                this.channel,
+                socket,
                 { gcode: `M1011 F${value};` }
             );
         }
