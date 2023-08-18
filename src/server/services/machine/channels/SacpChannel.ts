@@ -110,7 +110,7 @@ class SacpChannelBase extends Channel implements
 
     public currentWorkNozzle: number;
 
-    private resumeGcodeCallback: any = null;
+    private resumeGcodeCallback: ({ msg, code }) => void = null;
 
     public readyToWork = false;
 
@@ -123,7 +123,7 @@ class SacpChannelBase extends Channel implements
 
     public estimatedTime: number | null = null;
 
-    public startTime: any;
+    public startTime: number;
 
     public machineStatus: string = WorkflowStatus.Idle;
 
