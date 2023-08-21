@@ -1,5 +1,5 @@
 import { Machine } from '@snapmaker/luban-platform';
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
 import {
@@ -151,7 +151,7 @@ export type JobSetupViewHandle = {
     onChange: () => void;
 }
 
-const JobSetupView = forwardRef<JobSetupViewHandle, {}>((_, ref) => {
+const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
     const activeMachine = useSelector((state: RootState) => state.machine.activeMachine) as Machine;
 
     const materials = useSelector((state: RootState) => state[HEAD_CNC]?.materials, shallowEqual) as Materials;

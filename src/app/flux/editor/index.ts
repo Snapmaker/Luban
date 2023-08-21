@@ -12,6 +12,7 @@ import {
     COORDINATE_MODE_CENTER,
     DATA_PREFIX,
     DISPLAYED_TYPE_MODEL,
+    HEAD_LASER,
     MAX_LASER_CNC_CANVAS_SCALE,
     MIN_LASER_CNC_CANVAS_SCALE,
     PAGE_EDITOR,
@@ -20,16 +21,27 @@ import {
     PROCESS_MODE_VECTOR,
     SOURCE_TYPE,
 } from '../../constants';
+import {
+    CylinderWorkpieceSize,
+    LaserRunBoundaryMode,
+    Materials,
+    Origin,
+    RectangleWorkpieceSize,
+    WorkpieceShape
+} from '../../constants/coordinate';
 import CompoundOperation from '../../core/CompoundOperation';
 import OperationHistory from '../../core/OperationHistory';
 import { controller } from '../../lib/controller';
 import log from '../../lib/log';
 import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
+import ModelGroup from '../../models/ModelGroup';
 import { DEFAULT_TEXT_CONFIG, checkParams, generateModelDefaultConfigs, isOverSizeModel, limitModelSizeByMachineSize } from '../../models/ModelInfoUtils';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
 import SvgModel from '../../models/SvgModel';
+import { machineStore } from '../../store/local-storage';
 import ToolPath from '../../toolpaths/ToolPath';
+import ToolPathGroup from '../../toolpaths/ToolPathGroup';
 import { NS } from '../../ui/SVGEditor/lib/namespaces';
 import ModelLoader from '../../ui/widgets/PrintingVisualizer/ModelLoader';
 import AddOperation2D from '../operation-history/AddOperation2D';
@@ -45,7 +57,6 @@ import ScaleOperation2D from '../operation-history/ScaleOperation2D';
 import VisibleOperation2D from '../operation-history/VisibleOperation2D';
 import { baseActions } from './actions-base';
 
-
 /* eslint-disable-next-line import/no-cycle */
 import { processActions } from './actions-process';
 /* eslint-disable-next-line import/no-cycle */
@@ -53,9 +64,7 @@ import { actions as operationHistoryActions } from '../operation-history';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as projectActions } from '../project';
 /* eslint-disable-next-line import/no-cycle */
-import { CylinderWorkpieceSize, Materials, Origin, RectangleWorkpieceSize, WorkpieceShape } from '../../constants/coordinate';
-import ModelGroup from '../../models/ModelGroup';
-import ToolPathGroup from '../../toolpaths/ToolPathGroup';
+import { HeadType } from '../../../server/services/machine/sacp/SacpClient';
 import { actions as appGlobalActions } from '../app-global';
 
 
@@ -2156,6 +2165,21 @@ export const actions = {
             // Update origin of tool path object
             const toolPathGroup = getState()[headType].toolPathGroup as ToolPathGroup;
             toolPathGroup.setOrigin(origin);
+        };
+    },
+
+    /**
+     * Set laser run boundary mode.
+     *
+     * Note that this is only used by ray machine now.
+     */
+    setLaserRunBoundaryMode: (laserRunBoundaryMode: LaserRunBoundaryMode) => {
+        return (dispatch) => {
+            dispatch(actions.updateState(HEAD_LASER, {
+                laserRunBoundaryMode,
+            }));
+
+            machineStore.set('LaserRunBoundaryMode', laserRunBoundaryMode);
         };
     },
 

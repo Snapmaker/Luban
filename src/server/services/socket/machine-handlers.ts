@@ -33,6 +33,10 @@ function register(socketServer: SocketServer): void {
         [ControllerEvent.SwitchLaserPower]: connectionManager.switchLaserPower,
         [ControllerEvent.CalcMaterialThickness]: connectionManager.getLaserMaterialThickness,
         [ControllerEvent.AbortMaterialThickness]: connectionManager.abortLaserMaterialThickness,
+        [ControllerEvent.GetCrosshairOffset]: connectionManager.getCrosshairOffset,
+        [ControllerEvent.SetCrosshairOffset]: connectionManager.setCrosshairOffset,
+        [ControllerEvent.GetFireSensorSensitivity]: connectionManager.getFireSensorSensitivity,
+        [ControllerEvent.SetFireSensorSensitivity]: connectionManager.setFireSensorSensitivity,
 
         // CNC control services
         [ControllerEvent.SetSpindleSpeed]: connectionManager.setSpindleSpeed, // CNC, FOR NOW

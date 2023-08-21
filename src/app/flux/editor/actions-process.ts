@@ -5,7 +5,7 @@ import { v4 as uuid } from 'uuid';
 import { timestamp } from '../../../shared/lib/random-utils';
 import api from '../../api';
 import { DISPLAYED_TYPE_MODEL, DISPLAYED_TYPE_TOOLPATH, HEAD_CNC, HEAD_LASER, SELECTEVENT } from '../../constants';
-import { Origin, OriginType } from '../../constants/coordinate';
+import { LaserRunBoundaryMode, Origin, OriginType } from '../../constants/coordinate';
 import CompoundOperation from '../../core/CompoundOperation';
 import { controller } from '../../lib/controller';
 import { logSvgSlice } from '../../lib/gaEvent';
@@ -395,6 +395,7 @@ export const processActions = {
                 coordinateMode,
                 lockingBlockPosition,
             } = getState()[headType];
+            const laserRunBoundaryMode: LaserRunBoundaryMode = getState()[headType].laserRunBoundaryMode;
 
             const { size, toolHead } = getState().machine;
             const activeMachine: Machine = getState().machine.activeMachine;
@@ -424,8 +425,9 @@ export const processActions = {
                     size,
                     toolHead: currentToolHead,
                     origin: (origin.type === OriginType.CNCLockingBlock ? `position${lockingBlockPosition}` : coordinateMode.value),
+                    laserRunBoundaryMode,
                     series: activeMachine?.identifier,
-                    metadata: activeMachine?.metadata
+                    metadata: activeMachine?.metadata,
                 }
             });
         };

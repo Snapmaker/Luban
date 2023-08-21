@@ -130,7 +130,7 @@ class GcodeParameters extends PureComponent {
         }
 
         // Session Power
-        const laserDefinitionPowerKeys = ['fixedPower'];
+        const laserDefinitionPowerKeys = ['fixedPower', 'halfDiodeMode'];
         // if (pathType === 'fill' && movementMode === 'greyscale-variable-line') {
         //     laserDefinitionPowerKeys.push('fixedMinPower');
         // laserDefinitionPowerKeys.push('powerLevelDivisions');
@@ -143,7 +143,7 @@ class GcodeParameters extends PureComponent {
         });
 
         // Session Auxiliary Gas
-        const laserDefinitionAuxiliaryGasKeys = ['auxiliaryAirPump', 'halfDiodeMode'];
+        const laserDefinitionAuxiliaryGasKeys = ['auxiliaryAirPump'];
         const laserDefinitionAuxiliary = {};
         laserDefinitionAuxiliaryGasKeys.forEach((key) => {
             if (allDefinition[key]) {
