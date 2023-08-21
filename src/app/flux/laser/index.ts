@@ -20,11 +20,11 @@ import {
     WorkpieceShape,
 } from '../../constants/coordinate';
 import { getMachineSeriesWithToolhead } from '../../constants/machines';
+import ModelGroup2D from '../../models/ModelGroup2D';
 import OperationHistory from '../../core/OperationHistory';
 import { logToolBarOperation } from '../../lib/gaEvent';
 import i18n from '../../lib/i18n';
 import { STEP_STAGE, getProgressStateManagerInstance } from '../../lib/manager/ProgressManager';
-import ModelGroup from '../../models/ModelGroup';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
 import ToolPathGroup from '../../toolpaths/ToolPathGroup';
 import {
@@ -36,7 +36,7 @@ import { actions as machineActions } from '../machine';
 import definitionManager from '../manager/DefinitionManager';
 import { SVGClippingOperation, SVGClippingType } from '../../constants/clipping';
 
-const initModelGroup = new ModelGroup('laser');
+const initModelGroup = new ModelGroup2D('laser');
 const operationHistory = new OperationHistory();
 
 const initialOrigin: Origin = {

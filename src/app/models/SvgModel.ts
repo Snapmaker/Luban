@@ -13,7 +13,7 @@ import { checkIsImageSuffix } from '../../shared/lib/utils';
 import Resource from './Resource';
 import { SOURCE_TYPE, SVG_MOVE_MINI_DISTANCE } from '../constants';
 import BaseModel, { ModelTransformation, ModelInfo, TSize, SvgModelElement, TMode } from './BaseModel';
-import ModelGroup from './ModelGroup';
+import ModelGroup2D from './ModelGroup2D';
 
 type TElementAttributes = {
     x: number;
@@ -100,8 +100,8 @@ class SvgModel extends BaseModel {
     public vertexPoints: TVertexPoint[] = [];
     public geometry: THREE.PlaneGeometry;
 
-    public constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
-        super(modelInfo, modelGroup);
+    public constructor(modelInfo: ModelInfo, modelGroup2D: ModelGroup2D) {
+        super(modelInfo, modelGroup2D);
         const { elem, size } = modelInfo;
         this.elem = elem;
         this.size = size;
@@ -1231,7 +1231,7 @@ class SvgModel extends BaseModel {
      *
      * @returns {ThreeModel}
      */
-    public clone(modelGroup: ModelGroup) {
+    public clone(modelGroup: ModelGroup2D) {
         const clone = new SvgModel({ ...this } as unknown as ModelInfo, modelGroup);
         clone.originModelID = this.modelID;
         const specialPrefix = this.isDrawGraphic() ? 'graph-' : '';

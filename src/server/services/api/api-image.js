@@ -40,7 +40,6 @@ const moveFile = (originalPath, tempPath) => {
 };
 
 export const set = async (req, res) => {
-    console.log('set', set);
     const files = req.files;
     const { isRotate } = req.body;
     let originalName, tempName, tempPath, originalPath;
