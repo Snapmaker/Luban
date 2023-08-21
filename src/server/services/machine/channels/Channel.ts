@@ -89,6 +89,12 @@ export interface PrintJobChannelInterface extends Channel {
     unsubscribeGetPrintCurrentLineNumber(): Promise<boolean>;
 }
 
+export interface LaserChannelInterface extends Channel {
+    getCrosshairOffset(): Promise<{x: number; y: number}>;
+    setCrosshairOffset(x: number, y: number): Promise<boolean>;
+    getFireSensorSensitivity(): Promise<number>;
+    setFireSensorSensitivity(sensitivity: number): Promise<boolean>;
+}
 
 export interface CncChannelInterface extends Channel {
     setSpindleSpeed(speed: number): Promise<boolean>;

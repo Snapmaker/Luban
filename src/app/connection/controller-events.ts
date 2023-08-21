@@ -46,6 +46,10 @@ enum ControllerEvent {
     SwitchLaserPower = 'connection:switchLaserPower', // ?
     CalcMaterialThickness = 'connection:materialThickness',
     AbortMaterialThickness = 'connection:materialThickness_abort',
+    GetCrosshairOffset = 'connection:get-crosshair-offset',
+    SetCrosshairOffset = 'connection:set-crosshair-offset',
+    GetFireSensorSensitivity = 'connection:get-fire-sensor-sensitivity',
+    SetFireSensorSensitivity = 'connection:set-fire-sensor-sensitivity',
 
     /**
      * CNC

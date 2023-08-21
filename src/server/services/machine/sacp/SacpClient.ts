@@ -419,6 +419,8 @@ export default class SacpClient extends Dispatcher {
         return this.send(0x01, 0x34, PeerId.CONTROLLER, Buffer.concat([buffer, speedBuffer]));
     }
 
+    // 0x12 Laser functions
+
     public async getLaserToolHeadInfo(key: number) {
         const buffer = Buffer.alloc(1, 0);
         writeUint8(buffer, 0, key);
@@ -446,6 +448,66 @@ export default class SacpClient extends Dispatcher {
                 }
                 return { response, laserLockStatus };
             });
+    }
+
+    public async getCrosshairOffset(key: number): Promise<{ x: number; y: number }> {
+        const buffer = Buffer.alloc(1, 0);
+        writeUint8(buffer, 0, key);
+
+        const { response } = await this.send(0x12, 0x11, PeerId.CONTROLLER, buffer);
+
+        if (response.result === 0) {
+            const x = readFloat(response.data, 0);
+            const y = readFloat(response.data, 4);
+
+            return { x, y };
+        } else {
+            return { x: 0, y: 0 };
+        }
+    }
+
+    public async setCrosshairOffset(key: number, x: number, y: number): Promise<boolean> {
+        const buffer = Buffer.alloc(3, 0);
+        writeUint8(buffer, 0, key);
+        writeFloat(buffer, 1, x);
+        writeFloat(buffer, 5, y);
+
+        const { response } = await this.send(0x12, 0x10, PeerId.CONTROLLER, buffer);
+
+        if (response.result === 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public async getFireSensorSensitivity(key: number): Promise<number> {
+        const buffer = Buffer.alloc(1, 0);
+        writeUint8(buffer, 0, key);
+
+        const { response } = await this.send(0x12, 0x0e, PeerId.CONTROLLER, buffer);
+
+        if (response.result === 0) {
+            const sensitivity = readUint16(response.data, 0);
+
+            return sensitivity;
+        } else {
+            return -1;
+        }
+    }
+
+    public async setFireSensorSensitivity(key: number, sensitivity: number): Promise<boolean> {
+        const buffer = Buffer.alloc(3, 0);
+        writeUint8(buffer, 0, key);
+        writeUint16(buffer, 1, sensitivity);
+
+        const { response } = await this.send(0x12, 0x0d, PeerId.CONTROLLER, buffer);
+
+        if (response.result === 0) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     // ----------

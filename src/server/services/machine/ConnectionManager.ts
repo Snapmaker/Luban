@@ -21,7 +21,7 @@ import ScheduledTasks from '../../lib/ScheduledTasks';
 import SocketServer from '../../lib/SocketManager';
 import logger from '../../lib/logger';
 import ProtocolDetector, { NetworkProtocol, SerialPortProtocol } from './ProtocolDetector';
-import Channel, { CncChannelInterface, FileChannelInterface, GcodeChannelInterface, NetworkServiceChannelInterface, SystemChannelInterface } from './channels/Channel';
+import Channel, { CncChannelInterface, FileChannelInterface, GcodeChannelInterface, LaserChannelInterface, NetworkServiceChannelInterface, SystemChannelInterface } from './channels/Channel';
 import { ChannelEvent } from './channels/ChannelEvent';
 import { sacpSerialChannel } from './channels/SacpSerialChannel';
 import { sacpTcpChannel } from './channels/SacpTcpChannel';
@@ -56,6 +56,14 @@ interface ConnectionCloseOptions {
 
 interface ExecuteGCodeOptions {
     gcode: string;
+}
+
+interface SetCrosshairOffsetOptions {
+    x: number;
+    y: number;
+}
+interface SetFireSensorSensitivityOptions {
+    sensitivity: number;
 }
 
 interface UploadFileOptions {
@@ -276,7 +284,7 @@ class ConnectionManager {
      */
     public executeGcode = async (socket: SocketServer, options: ExecuteGCodeOptions) => {
         const { gcode } = options;
-        log.info(`executeGcode: ${gcode}, ${this.protocol}`);
+        log.info(`executeGcode: ${gcode}`);
 
         const success = await (this.channel as GcodeChannelInterface).executeGcode(gcode);
         if (success) {
@@ -301,6 +309,59 @@ class ConnectionManager {
             args: [gcode, context]
         });
     };
+
+    // Laser service
+
+    public getCrosshairOffset = async (socket: SocketServer) => {
+        log.info('Get crosshair offset');
+        try {
+            const offset = await (this.channel as LaserChannelInterface).getCrosshairOffset();
+            socket.emit(ControllerEvent.GetCrosshairOffset, { err: 0, offset });
+        } catch (e) {
+            log.error(e);
+            socket.emit(ControllerEvent.GetCrosshairOffset, { err: 1, offset: null });
+        }
+    };
+
+    public setCrosshairOffset = async (socket: SocketServer, options: SetCrosshairOffsetOptions) => {
+        const x = options.x;
+        const y = options.x;
+        log.info(`Set crosshair offset: (${x}, ${y})`);
+
+        try {
+            const success = await (this.channel as LaserChannelInterface).setCrosshairOffset(x, y);
+            socket.emit(ControllerEvent.SetCrosshairOffset, { err: !success });
+        } catch (e) {
+            log.error(e);
+            socket.emit(ControllerEvent.SetCrosshairOffset, { err: 1 });
+        }
+    };
+
+    public getFireSensorSensitivity = async (socket: SocketServer) => {
+        log.info('Get fire sensor sensitivity');
+        try {
+            const sensitivity = await (this.channel as LaserChannelInterface).getFireSensorSensitivity();
+            socket.emit(ControllerEvent.GetFireSensorSensitivity, { err: 0, sensitivity });
+        } catch (e) {
+            log.error(e);
+            socket.emit(ControllerEvent.GetFireSensorSensitivity, { err: 1, sensitivity: -1 });
+        }
+    };
+
+    public setFireSensorSensitivity = async (socket: SocketServer, options: SetFireSensorSensitivityOptions) => {
+        log.info('Set fire sensor sensitivity');
+        const sensitivity = Math.max(0, Math.min(4095, options.sensitivity));
+
+        try {
+            const success = await (this.channel as LaserChannelInterface).setFireSensorSensitivity(sensitivity);
+            socket.emit(ControllerEvent.SetFireSensorSensitivity, { err: !success });
+        } catch (e) {
+            log.error(e);
+            socket.emit(ControllerEvent.SetFireSensorSensitivity, { err: 1 });
+        }
+    };
+
+    // File service
 
     /**
      * Upload file to machine.

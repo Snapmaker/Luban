@@ -33,9 +33,10 @@ import RayMachiningWidget from '../../widgets/RayMachiningWidget';
 import RayUploadWidget from '../../widgets/RayUploadWidget';
 import VisualizerWidget from '../../widgets/WorkspaceVisualizer';
 import VisualizerOverlay from './VisualizerOverlay';
+import FirmwareUpgradeModal from './modals/FirmwareUpgradeModal';
 import MachineLogModal from './modals/MachineLogModal';
 import MachineNetworkModal from './modals/MachineNetworkModal';
-import FirmwareUpgradeModal from './modals/FirmwareUpgradeModal';
+import MachineSettingsModal from './modals/MachineSettingsModal';
 
 
 const allWidgets = {
@@ -106,9 +107,10 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [connected, setConnected] = useState(controller.connected);
 
+    const [showMachineSettingsModal, setShowMachineSettingsModal] = useState(false);
+    const [showFirmwareUpgradeModal, setShowFirmwareUpgradeModal] = useState(false);
     const [showMachineNetworkModal, setShowMachineNetworkModal] = useState(false);
     const [showMachineLogModal, setShowMachineLogModal] = useState(false);
-    const [showFirmwareUpgradeModal, setShowFirmwareUpgradeModal] = useState(false);
 
     const [leftItems, setLeftItems] = useState([
         {
@@ -122,6 +124,14 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
         {
             type: 'separator',
             name: 'separator',
+        },
+        {
+            title: i18n._('Settings'),
+            type: 'button',
+            name: 'MainToolbarMachineconfig',
+            action: () => {
+                setShowMachineSettingsModal(true);
+            },
         },
         {
             title: i18n._('Firmware'),
@@ -284,7 +294,7 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
                             type="primary"
                             onClick={() => reloadPage()}
                         >
-                            {i18n._('Load New G-code')}
+                            {i18n._('key-Workspace/Page-Reload')}
                         </Button>
                     </Modal.Footer>
                 </Modal>
@@ -334,6 +344,15 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
                 <VisualizerOverlay />
 
                 {renderModalView(connected)}
+
+                {/* Machine Settings */}
+                {
+                    showMachineSettingsModal && (
+                        <MachineSettingsModal
+                            onClose={() => setShowMachineSettingsModal(false)}
+                        />
+                    )
+                }
 
                 {/* Machine Network */}
                 {

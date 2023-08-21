@@ -62,6 +62,7 @@ import { MarlinStateData } from '../types';
 import Channel, {
     CncChannelInterface,
     GcodeChannelInterface,
+    LaserChannelInterface,
     NetworkServiceChannelInterface,
     PrintJobChannelInterface,
     SystemChannelInterface,
@@ -75,6 +76,7 @@ class SacpChannelBase extends Channel implements
     SystemChannelInterface,
     NetworkServiceChannelInterface,
     PrintJobChannelInterface,
+    LaserChannelInterface,
     CncChannelInterface {
     private heartbeatTimer;
 
@@ -106,7 +108,7 @@ class SacpChannelBase extends Channel implements
 
     private filamentActionModule = null;
 
-    private moduleInfos: {};
+    private moduleInfos: { [key: string]: ModuleInfo | ModuleInfo[] };
 
     public currentWorkNozzle: number;
 
@@ -126,6 +128,24 @@ class SacpChannelBase extends Channel implements
     public startTime: number;
 
     public machineStatus: string = WorkflowStatus.Idle;
+
+    /**
+     * Get laser module info.
+     */
+    private getLaserToolHeadModule(): ModuleInfo | null {
+        let targetModule: ModuleInfo = null;
+        for (const key of Object.keys(this.moduleInfos)) {
+            const module = this.moduleInfos[key];
+            if (module && module instanceof ModuleInfo) {
+                if (includes(LASER_HEAD_MODULE_IDS, module.moduleId)) {
+                    targetModule = module;
+                    break;
+                }
+            }
+        }
+
+        return targetModule;
+    }
 
     // interface: GcodeChannelInterface
 
@@ -208,6 +228,54 @@ class SacpChannelBase extends Channel implements
         log.info(`Upgrade firmware result = ${res.response.result}`);
 
         return res.response.result === 0;
+    }
+
+    // interface: LaserChannelInterface
+
+    public async getCrosshairOffset(): Promise<{ x: number; y: number }> {
+        const module = this.getLaserToolHeadModule();
+        if (!module) {
+            return null;
+        }
+
+        const offset = await this.sacpClient.getCrosshairOffset(module.key);
+
+        log.info(`Get crosshair offset: (${offset.x}, ${offset.y})`);
+        return offset;
+    }
+
+    public async setCrosshairOffset(x: number, y: number): Promise<boolean> {
+        const module = this.getLaserToolHeadModule();
+        if (!module) {
+            return false;
+        }
+
+        const success = await this.sacpClient.setCrosshairOffset(module.key, x, y);
+        log.info(`Set crosshair offset: (${x}, ${y}), ${success ? 'success' : 'failed'}`);
+        return success;
+    }
+
+    public async getFireSensorSensitivity(): Promise<number> {
+        const module = this.getLaserToolHeadModule();
+        if (!module) {
+            return -1;
+        }
+
+        const sensitivity = await this.sacpClient.getFireSensorSensitivity(module.key);
+
+        log.info(`Get fire sensor sensitivity: ${sensitivity}`);
+        return sensitivity;
+    }
+
+    public async setFireSensorSensitivity(sensitivity: number): Promise<boolean> {
+        const module = this.getLaserToolHeadModule();
+        if (!module) {
+            return false;
+        }
+
+        const success = await this.sacpClient.setFireSensorSensitivity(module.key, sensitivity);
+        log.info(`Set fire sensor sensitivity: ${sensitivity}, ${success ? 'success' : 'failed'}`);
+        return success;
     }
 
     // interface: CncChannelInterface
@@ -533,6 +601,7 @@ class SacpChannelBase extends Channel implements
             log.info(`subscribe laser power state success: ${res}`);
         });
 
+        // TODO: Note this is only for Artisan + J1, not for RayInstance, refactor this
         this.subscribeGetCurrentGcodeLineCallback = async ({ response }) => {
             if (!this.totalLine || !this.estimatedTime) {
                 this.sacpClient.getPrintingFileInfo().then((result) => {
@@ -667,7 +736,31 @@ class SacpChannelBase extends Channel implements
     };
 
     public getModuleInfo = async () => {
-        return this.sacpClient.getModuleInfo();
+        const res = await this.sacpClient.getModuleInfo();
+
+        // save module info in channel
+        this.moduleInfos = {};
+        for (const module of res.data) {
+            const keys = Object.keys(MODULEID_MAP);
+
+            if (includes(keys, String(module.moduleId))) {
+                const identifier = MODULEID_MAP[module.moduleId];
+
+                if (!this.moduleInfos[identifier]) {
+                    this.moduleInfos[identifier] = module;
+                } else {
+                    const modules = this.moduleInfos[identifier];
+                    if (Array.isArray(modules)) {
+                        modules.push(module);
+                    } else {
+                        // convert single item to list
+                        this.moduleInfos[identifier] = [modules, module];
+                    }
+                }
+            }
+        }
+
+        return res;
     };
 
     public getCoordinateInfo = async () => {

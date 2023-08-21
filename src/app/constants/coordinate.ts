@@ -94,3 +94,9 @@ export type Origin = {
     reference: OriginReference;
     referenceMetadata: OriginReferenceMetadata;
 };
+
+
+export enum LaserRunBoundaryMode {
+    Crosshair = 'Crosshair',
+    LaserSpot = 'LaserSpot'
+}

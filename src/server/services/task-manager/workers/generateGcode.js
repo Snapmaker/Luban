@@ -7,6 +7,7 @@ import { isNull } from '../../../../shared/lib/utils';
 import { GcodeGenerator } from '../../../lib/GcodeGenerator';
 import logger from '../../../lib/logger';
 import sendMessage from '../utils/sendMessage';
+import { LaserRunBoundaryMode } from '../../../../app/constants/coordinate';
 
 
 const log = logger('service:TaskManager');
@@ -80,7 +81,7 @@ const checkoutBoundingBoxIsNull = (boundingBox) => {
 };
 
 // eslint-disable-next-line consistent-return
-const generateGcode = ({ toolPaths, size, toolHead, origin, series, metadata }) => {
+const generateGcode = ({ toolPaths, size, toolHead, origin, laserRunBoundaryMode, series, metadata }) => {
     if (!toolPaths && !_.isArray(toolPaths) && toolPaths.length === 0) {
         return sendMessage({ status: 'fail', value: 'modelInfo is empty.' });
     }
@@ -189,6 +190,7 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, series, metadata }) 
 
     const hasThumbnail = series !== 'Ray';
 
+    const headerGcodes = [];
     let headerStart = ';Header Start\n'
         + `;header_type: ${headType}\n`
         + `;tool_head: ${toolHead}\n`
@@ -216,17 +218,26 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, series, metadata }) 
 
     // thumbnail
     if (hasThumbnail) {
-        headerStart += [
-            (hasThumbnail ? `;thumbnail: ${thumbnail}` : ''),
-            '',
-        ].join('\n');
+        headerGcodes.push(
+            `;thumbnail: ${thumbnail}`,
+        );
+    }
+
+    if (headType === 'laser' && laserRunBoundaryMode === LaserRunBoundaryMode.Crosshair) {
+        headerGcodes.push(
+            'M2003', // crosshair offset
+            'M2004', // move
+        );
     }
 
     // header end
-    headerStart += [
+    headerGcodes.push(
         ';Header End',
         '',
-    ].join('\n');
+    );
+
+    // add header codes
+    headerStart += headerGcodes.join('\n');
 
     fileTotalLines += headerStart.split('\n').length - 1;
 
