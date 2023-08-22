@@ -131,11 +131,14 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, jobOffsetMode, serie
             }
 
             const renderMethod = gcodeConfig.movementMode === 'greyscale-dot' ? 'point' : 'line';
+            const maxPowerNumber = metadata?.gcodeFlavor === 'grbl' ? 1000 : 255;
+            const maxPower = (gcodeConfig.fixedPowerEnabled ? gcodeConfig.fixedPower : 100) / 100 * maxPowerNumber;
 
             if (i > 0 || j > 0) {
                 const header = '\n\n'
                     + ';Header Start\n'
                     + `;renderMethod: ${renderMethod}\n`
+                    + `;max_power: ${maxPower}\n`
                     + ';Header End\n'
                     + '\n';
                 writeStream.write(header);
@@ -185,6 +188,8 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, jobOffsetMode, serie
 
     const { gcodeConfig, thumbnail } = toolPaths[0];
     const renderMethod = gcodeConfig.movementMode === 'greyscale-dot' ? 'point' : 'line';
+    const maxPowerNumber = metadata?.gcodeFlavor === 'grbl' ? 1000 : 255;
+    const maxPower = (gcodeConfig.fixedPowerEnabled ? gcodeConfig.fixedPower : 100) / 100 * maxPowerNumber;
 
     const power = gcodeConfig.fixedPowerEnabled ? gcodeConfig.fixedPower : 0;
 
@@ -197,6 +202,7 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, jobOffsetMode, serie
         + `;machine: ${series}\n`
         + `;gcode_flavor: ${metadata?.gcodeFlavor ? metadata?.gcodeFlavor : 'marlin'}\n`
         + `;renderMethod: ${renderMethod}\n`
+        + `;max_power: ${maxPower}\n`
         + ';file_total_lines: fileTotalLines\n'
         + `;estimated_time(s): ${estimatedTime}\n`
         + `;is_rotate: ${isRotate}\n`

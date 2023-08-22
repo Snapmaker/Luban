@@ -48,6 +48,7 @@ class GcodeToBufferGeometryWorkspace {
 
             let progress = 0;
             let lastMotion = '';
+            let lastPower = 0;
 
             let boundingBox = null;
 
@@ -67,10 +68,16 @@ class GcodeToBufferGeometryWorkspace {
 
             const toolPath = new ToolPath({
                 addLine: (modal, v1, v2) => {
-                    const { motion } = modal;
-                    const color = motionColor[motion] || defaultColor;
+                    const { motion, maxPower, power, spindle, headerType } = modal;
+                    let color;
+                    if (maxPower > 0 && renderMethodTmp === 'line' && headerType === 'laser') {
+                        const powerColor = Math.round((maxPower - power) / maxPower * 255);
+                        color = (spindle === 'M5' || motion !== 'G1') ? [255, 255, 255] : [powerColor, powerColor, powerColor];
+                    } else {
+                        color = motionColor[motion] || defaultColor;
+                    }
                     const indexColor = indexMotionColor[motion] || defaultColor;
-                    if (lastMotion !== motion) {
+                    if (lastMotion !== motion || lastPower !== power) {
                         const res = calculateXYZ(v1, modal);
                         positions.push(res.x);
                         positions.push(res.y);
@@ -83,6 +90,7 @@ class GcodeToBufferGeometryWorkspace {
                         indexColors.push(indexColor[2]);
 
                         lastMotion = motion;
+                        lastPower = power;
 
                         indexs.push(indexCount);
                     }
