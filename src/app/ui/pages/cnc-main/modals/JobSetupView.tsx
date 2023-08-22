@@ -569,7 +569,7 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
                                 height: '128px',
                                 margin: '0 auto'
                             }}
-                            src="/resources/images/cnc-laser/working-origin-laser-4.png"
+                            src="/resources/images/cnc-laser/working-origin-cnc-4.png"
                             role="presentation"
                             alt="3 Axis"
                         />
@@ -581,12 +581,12 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
                                 clearable={false}
                                 options={[
                                     {
-                                        label: i18n._('key-CncLaser/JobSetup-Top'),
-                                        value: 'top'
+                                        label: i18n._('key-CncLaser/JobSetup-Center'),
+                                        value: 'center'
                                     }
                                 ]}
                                 isGroup={false}
-                                value="top"
+                                value="center"
                                 disabled
                             />
                         </div>
