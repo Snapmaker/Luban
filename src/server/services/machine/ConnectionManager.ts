@@ -155,9 +155,8 @@ class ConnectionManager {
 
         if (this.machineInstance) {
             log.info(`instance = ${this.machineInstance.constructor.name}`);
-            log.info('On preparing machine...');
+            log.info('On preparing machine instance...');
             await this.machineInstance.onPrepare();
-            log.info('All done, machine is ready.');
         }
     };
 
@@ -242,7 +241,6 @@ class ConnectionManager {
      * Connection close.
      */
     public connectionClose = async (socket: SocketServer, options: ConnectionCloseOptions) => {
-        log.info('ConnectionClose');
         if (!this.channel) {
             // success if no channel is used
             const result = {
@@ -255,10 +253,16 @@ class ConnectionManager {
             return;
         }
 
+        log.info(`Closing connection... ${this.channel.constructor.name}`);
+
+        if (this.machineInstance) {
+            this.machineInstance.onClosing();
+        }
+
         const force = options?.force || false;
         const success = await this.channel.connectionClose({ force });
         if (success) {
-            log.info('ConnectionClose, success.');
+            log.info('Closing connection, success.');
             const result = {
                 code: 200,
                 data: {},
@@ -268,12 +272,25 @@ class ConnectionManager {
             socket.emit('connection:close', result);
         } else {
             // TODO
+            log.info('Closing connection, failed.');
+            const result = {
+                code: 200,
+                data: {},
+                msg: '',
+                text: ''
+            };
+            socket.emit('connection:close', result);
         }
 
-        if (this.channel) {
-            this.unbindChannelEvents();
+        // destroy channel
+        this.unbindChannelEvents();
+        this.channel = null;
 
-            this.channel = null;
+        // destroy machine instance
+        if (this.machineInstance) {
+            this.machineInstance.onClosed();
+
+            this.machineInstance = null;
         }
     };
 

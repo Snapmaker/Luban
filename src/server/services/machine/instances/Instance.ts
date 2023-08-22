@@ -1,6 +1,7 @@
+import Channel from '../channels/Channel';
 
 class MachineInstance {
-    protected channel;
+    protected channel: Channel;
     protected socket;
 
     // state
@@ -26,6 +27,20 @@ class MachineInstance {
      * Time for preparing machine initial state, start heartbeat, etc.
      */
     public async onPrepare(): Promise<void> {
+        // TODO
+    }
+
+    /**
+     * Before closing, time to unsubscribe.
+     */
+    public async onClosing(): Promise<void> {
+        // TODO
+    }
+
+    /**
+     * connection closed, thus channel is disconnected as well.
+     */
+    public async onClosed(): Promise<void> {
         // TODO
     }
 }

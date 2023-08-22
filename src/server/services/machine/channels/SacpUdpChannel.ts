@@ -132,11 +132,16 @@ class SacpUdpChannel extends SacpChannelBase implements FileChannelInterface {
         log.info(`Subscribe heartbeat, result = ${res.code}`);
     };
 
-    public stopHeartbeat = async () => {
-        const res = await this.sacpClient.unsubscribeHeartbeat(null);
+    public async stopHeartbeat(): Promise<void> {
+        if (this.heartbeatTimer2) {
+            clearTimeout(this.heartbeatTimer2);
 
+            this.heartbeatTimer2 = null;
+        }
+
+        const res = await this.sacpClient.unsubscribeHeartbeat(null);
         log.info(`Unsubscribe heartbeat, result = ${res.code}`);
-    };
+    }
 
     // interface: FileChannelInterface
 
