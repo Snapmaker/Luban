@@ -537,7 +537,14 @@ export const actions = {
             'sender:status': (options) => {
                 log.warn('REFACTOR sender:status');
                 const { data } = options;
-                const { total, sent, received, startTime, finishTime, elapsedTime, remainingTime, printStatus } = data;
+                const { filename, total, sent, received, startTime, finishTime, elapsedTime, remainingTime, printStatus } = data;
+
+                if (filename) {
+                    dispatch(baseActions.updateState({
+                        gcodeFileName: filename,
+                    }));
+                }
+
                 dispatch(baseActions.updateState({
                     gcodePrintingInfo: {
                         total,
@@ -547,6 +554,7 @@ export const actions = {
                         finishTime,
                         elapsedTime,
                         estimatedTime: remainingTime,
+                        remainingTime,
                         printStatus
                     }
                 }));

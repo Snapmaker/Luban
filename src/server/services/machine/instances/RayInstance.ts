@@ -1,4 +1,5 @@
 import { includes } from 'lodash';
+import { PeerId } from '@snapmaker/snapmaker-sacp-sdk/dist/communication/Header';
 
 import {
     LASER_HEAD_MODULE_IDS,
@@ -13,6 +14,7 @@ import { ConnectedData } from '../types';
 import MachineInstance from './Instance';
 import { SnapmakerRayMachine } from '../../../../app/machines';
 import { PrintJobChannelInterface } from '../channels/Channel';
+import SacpChannelBase from '../channels/SacpChannel';
 
 const log = logger('services:machine:instances:RayInstance');
 
@@ -35,6 +37,9 @@ class RayMachineInstance extends MachineInstance {
     }
 
     private async _prepareMachineSACP() {
+        // configure channel
+        (this.channel as SacpChannelBase).setFilePeerId(PeerId.CONTROLLER);
+
         const state: ConnectedData = {};
 
         // TODO: Heartbeat is not working for now
