@@ -7,7 +7,7 @@ import { isNull } from '../../../../shared/lib/utils';
 import { GcodeGenerator } from '../../../lib/GcodeGenerator';
 import logger from '../../../lib/logger';
 import sendMessage from '../utils/sendMessage';
-import { LaserRunBoundaryMode } from '../../../../app/constants/coordinate';
+import { JobOffsetMode } from '../../../../app/constants/coordinate';
 
 
 const log = logger('service:TaskManager');
@@ -81,7 +81,7 @@ const checkoutBoundingBoxIsNull = (boundingBox) => {
 };
 
 // eslint-disable-next-line consistent-return
-const generateGcode = ({ toolPaths, size, toolHead, origin, laserRunBoundaryMode, series, metadata }) => {
+const generateGcode = ({ toolPaths, size, toolHead, origin, jobOffsetMode, series, metadata }) => {
     if (!toolPaths && !_.isArray(toolPaths) && toolPaths.length === 0) {
         return sendMessage({ status: 'fail', value: 'modelInfo is empty.' });
     }
@@ -223,7 +223,7 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, laserRunBoundaryMode
         );
     }
 
-    if (headType === 'laser' && laserRunBoundaryMode === LaserRunBoundaryMode.Crosshair) {
+    if (headType === 'laser' && jobOffsetMode === JobOffsetMode.Crosshair) {
         headerGcodes.push(
             'M2003', // crosshair offset
             'M2004', // move

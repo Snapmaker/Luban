@@ -5,7 +5,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import ControllerEvent from '../../../connection/controller-events';
-import { LaserRunBoundaryMode } from '../../../constants/coordinate';
+import { JobOffsetMode } from '../../../constants/coordinate';
 import { RootState } from '../../../flux/index.def';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import gcodeActions, { GCodeFileObject } from '../../../flux/workspace/actions-gcode';
@@ -68,7 +68,7 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
 
     // run boundary state
     const [runBoundaryReady, setRunBoundaryReady] = useState(false);
-    const laserRunBoundaryMode: LaserRunBoundaryMode = useSelector((state: RootState) => state.laser.laserRunBoundaryMode);
+    const jobOffsetMode: JobOffsetMode = useSelector((state: RootState) => state.laser.jobOffsetMode);
 
     const dispatch = useDispatch();
 
@@ -89,11 +89,11 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
 
         const gcodeList = [];
 
-        if (laserRunBoundaryMode === LaserRunBoundaryMode.Crosshair) {
+        if (jobOffsetMode === JobOffsetMode.Crosshair) {
             // Use crosshair to run boundary
             gcodeList.push('M3 S0');
             gcodeList.push('M2000 L13 P1'); // turn on crosshair
-        } else if (laserRunBoundaryMode === LaserRunBoundaryMode.LaserSpot) {
+        } else if (jobOffsetMode === JobOffsetMode.LaserSpot) {
             // Use laser spot to run boundary
             gcodeList.push('M3 S0');
             gcodeList.push('G1 F6000 S5'); // turn on laser spot
@@ -118,7 +118,7 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
             'G1 X0 Y0 S0', // go back to origin
         );
 
-        if (laserRunBoundaryMode === LaserRunBoundaryMode.LaserSpot) {
+        if (jobOffsetMode === JobOffsetMode.LaserSpot) {
             gcodeList.push('M5 S0'); // turn off laser spot
         }
 
@@ -148,7 +148,7 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
                     setRunBoundaryReady(true);
                 }
             });
-    }, [dispatch, boundingBox, laserRunBoundaryMode]);
+    }, [dispatch, boundingBox, jobOffsetMode]);
 
     const executeGCode = useCallback(async (gcode: string) => {
         return dispatch(workspaceActions.executeGcode(gcode)) as unknown as Promise<void>;

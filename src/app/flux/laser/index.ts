@@ -13,7 +13,7 @@ import {
     PAGE_EDITOR
 } from '../../constants';
 import {
-    LaserRunBoundaryMode,
+    JobOffsetMode,
     Origin,
     OriginType,
     RectangleWorkpieceReference,
@@ -63,7 +63,7 @@ const INITIAL_STATE = {
     origin: initialOrigin,
 
     // laser run boundary mode
-    laserRunBoundaryMode: LaserRunBoundaryMode.Crosshair,
+    jobOffsetMode: JobOffsetMode.Crosshair,
 
     stage: STEP_STAGE.EMPTY,
     progress: 0,

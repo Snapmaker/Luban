@@ -974,6 +974,7 @@ export default class SacpClient extends Dispatcher {
      */
     public async uploadFileCompressed(filePath: string, renderName?: string): Promise<boolean> {
         if (!fs.existsSync(filePath)) {
+            this.log.error(`File does not exist ${filePath}`);
             return false;
         }
 
