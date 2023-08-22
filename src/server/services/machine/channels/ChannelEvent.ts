@@ -1,11 +1,11 @@
 
 
 export enum ChannelEvent {
+    // channel connecting
+    Connecting = 'connecting',
+
     // channel connected
     Connected = 'connected',
-
-    // channel disconnected
-    Disconnected = 'disconnected',
 
     /**
      * machine is ready
@@ -14,4 +14,7 @@ export enum ChannelEvent {
      * }
      */
     Ready = 'ready',
+
+    // channel disconnected
+    Disconnected = 'disconnected',
 }

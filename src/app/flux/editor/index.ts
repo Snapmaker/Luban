@@ -1,3 +1,4 @@
+import { Machine } from '@snapmaker/luban-platform';
 import { includes, noop } from 'lodash';
 import { isInside } from 'overlap-area';
 import path from 'path';
@@ -11,6 +12,7 @@ import {
     COORDINATE_MODE_CENTER,
     DATA_PREFIX,
     DISPLAYED_TYPE_MODEL,
+    HEAD_LASER,
     MAX_LASER_CNC_CANVAS_SCALE,
     MIN_LASER_CNC_CANVAS_SCALE,
     PAGE_EDITOR,
@@ -19,16 +21,29 @@ import {
     PROCESS_MODE_VECTOR,
     SOURCE_TYPE,
 } from '../../constants';
+import {
+    CylinderWorkpieceSize,
+    JobOffsetMode,
+    Materials,
+    ObjectReference,
+    Origin,
+    OriginType,
+    RectangleWorkpieceSize,
+    WorkpieceShape
+} from '../../constants/coordinate';
 import CompoundOperation from '../../core/CompoundOperation';
 import OperationHistory from '../../core/OperationHistory';
 import { controller } from '../../lib/controller';
 import log from '../../lib/log';
 import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
+import ModelGroup from '../../models/ModelGroup';
 import { DEFAULT_TEXT_CONFIG, checkParams, generateModelDefaultConfigs, isOverSizeModel, limitModelSizeByMachineSize } from '../../models/ModelInfoUtils';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
 import SvgModel from '../../models/SvgModel';
+import { machineStore } from '../../store/local-storage';
 import ToolPath from '../../toolpaths/ToolPath';
+import ToolPathGroup from '../../toolpaths/ToolPathGroup';
 import { NS } from '../../ui/SVGEditor/lib/namespaces';
 import ModelLoader from '../../ui/widgets/PrintingVisualizer/ModelLoader';
 import AddOperation2D from '../operation-history/AddOperation2D';
@@ -44,7 +59,6 @@ import ScaleOperation2D from '../operation-history/ScaleOperation2D';
 import VisibleOperation2D from '../operation-history/VisibleOperation2D';
 import { baseActions } from './actions-base';
 
-
 /* eslint-disable-next-line import/no-cycle */
 import { processActions } from './actions-process';
 /* eslint-disable-next-line import/no-cycle */
@@ -52,9 +66,7 @@ import { actions as operationHistoryActions } from '../operation-history';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as projectActions } from '../project';
 /* eslint-disable-next-line import/no-cycle */
-import { CylinderWorkpieceSize, Materials, Origin, RectangleWorkpieceSize, WorkpieceShape } from '../../constants/coordinate';
-import ModelGroup from '../../models/ModelGroup';
-import ToolPathGroup from '../../toolpaths/ToolPathGroup';
+import { HeadType } from '../../../server/services/machine/sacp/SacpClient';
 import { actions as appGlobalActions } from '../app-global';
 
 
@@ -255,21 +267,44 @@ export const actions = {
 
     _init: headType => (dispatch, getState) => {
         const { modelGroup, toolPathGroup, initFlag } = getState()[headType];
+
         modelGroup.removeAllModels();
         modelGroup.setDataChangedCallback(() => {
             dispatch(baseActions.render(headType));
         });
+
         toolPathGroup.setUpdatedCallBack(() => {
             dispatch(baseActions.render(headType));
         });
+
         if (!initFlag) {
+            dispatch(actions.__initEditorParameters(headType));
+
             dispatch(actions.__initOnControllerEvents(headType));
+
             dispatch(
                 baseActions.updateState(headType, {
                     initFlag: true
                 })
             );
         }
+    },
+
+    __initEditorParameters: (headType: string) => {
+        return (dispatch) => {
+            const originType = machineStore.get('origin.type', OriginType.Object);
+            const originReference = machineStore.get('origin.reference', ObjectReference.BottomLeft);
+
+            const origin: Origin = {
+                type: originType,
+                reference: originReference,
+                referenceMetadata: {},
+            };
+
+            dispatch(baseActions.updateState(headType, {
+                origin,
+            }));
+        };
     },
 
     __initOnControllerEvents: headType => {
@@ -2021,10 +2056,6 @@ export const actions = {
             const materials = getState()[headType].materials as Materials;
             // const origin = getState()[headType].origin as Origin;
 
-            const allMaterials = {
-                ...materials,
-            };
-
             if (materials.isRotate) {
                 materials.x = round(materials.diameter * Math.PI, 2);
                 materials.y = materials.length;
@@ -2046,10 +2077,6 @@ export const actions = {
                     showSimulation: false,
                 })
             );
-
-            if (materials.isRotate !== allMaterials.isRotate) {
-                dispatch(actions.processSelectedModel(headType));
-            }
         };
     },
 
@@ -2087,14 +2114,19 @@ export const actions = {
      * @param coordinateSize
      */
     changeCoordinateMode: (headType, coordinateMode = null, coordinateSize = null) => (dispatch, getState) => {
+        // deal with default coordinate mode
         const oldCoordinateMode = getState()[headType].coordinateMode;
         coordinateMode = coordinateMode ?? oldCoordinateMode;
-        const { size } = getState().machine;
 
-        coordinateSize = coordinateSize ?? {
-            x: size.x,
-            y: size.y,
-        };
+        // deal with default coordinate size
+        if (!coordinateSize) {
+            const activeMachine = getState().machine.activeMachine as Machine;
+            coordinateSize = coordinateSize ?? {
+                x: activeMachine.metadata.size.x,
+                y: activeMachine.metadata.size.y,
+            };
+        }
+
         if (coordinateMode.value !== oldCoordinateMode.value) {
             // move all elements
             const coorDelta = {
@@ -2111,11 +2143,11 @@ export const actions = {
                 coorDelta.dy -= (coordinateSize.y / 2) * coordinateMode.setting.sizeMultiplyFactor.y;
             }
 
-            const { SVGActions } = getState()[headType];
+            const SVGActions = getState()[headType].SVGActions as SVGActionsFactory;
             const elements = SVGActions.getAllModelElements();
             SVGActions.moveElementsStart(elements);
             SVGActions.moveElements(elements, coorDelta);
-            SVGActions.moveElementsFinish(elements, coorDelta);
+            SVGActions.moveElementsFinish(elements);
             SVGActions.clearSelection();
             dispatch(baseActions.render(headType));
         }
@@ -2148,10 +2180,34 @@ export const actions = {
     },
 
     setOrigin: (headType: HeadType, origin: Origin) => {
-        return (dispatch) => {
+        return (dispatch, getState) => {
             dispatch(actions.updateState(headType, {
                 origin,
             }));
+
+            machineStore.set('origin.type', origin.type);
+            machineStore.set('origin.reference', origin.reference);
+
+            // Update origin of tool path object
+            const toolPathGroup = getState()[headType].toolPathGroup as ToolPathGroup;
+            toolPathGroup.setOrigin(origin);
+        };
+    },
+
+    /**
+     * Set job offset mode.
+     *
+     * Using crosshair to set origin, or use laser spot to set origin.
+     *
+     * Note that this is only used by ray machine now.
+     */
+    setJobOffsetMode: (jobOffsetMode: JobOffsetMode) => {
+        return (dispatch) => {
+            dispatch(actions.updateState(HEAD_LASER, {
+                jobOffsetMode,
+            }));
+
+            machineStore.set('job-offset-mode', jobOffsetMode);
         };
     },
 

@@ -8,6 +8,68 @@ enum ControllerEvent {
     DiscoverMachineStart = 'discover:start',
     DiscoverMachineEnd = 'discover:end',
 
+
+    /**
+     * Connection
+     */
+    ConnectionOpen = 'connection:open',
+    ConnectionClose = 'connection:close',
+
+    /**
+     * Global
+     */
+    ExecuteGCode = 'connection:executeGcode',
+    ExecuteCmd = 'connection:executeCmd',
+
+    /**
+     * Motion
+     */
+    GoHome = 'connection:goHome',
+    Move = 'connection:coordinateMove', // Linear Move
+    SetOrigin = 'connection:setWorkOrigin',
+    SetSpeedFactor = 'connection:updateWorkSpeedFactor',
+
+    /**
+     * 3D Printing
+     */
+    SwitchActiveExtruder = 'connection:updateWorkNozzle',
+    SetExtruderTemperature = 'connection:updateNozzleTemperature',
+    LoadFilament = 'connection:loadFilament',
+    UnloadFilamnet = 'connection:unloadFilament',
+    SetBedTemperature = 'connection:updateBedTemperature',
+    SetZOffset = 'connection:updateZOffset',
+
+    /**
+     * Laser
+     */
+    SetLaserPower = 'connection:updateLaserPower',
+    SwitchLaserPower = 'connection:switchLaserPower', // ?
+    CalcMaterialThickness = 'connection:materialThickness',
+    AbortMaterialThickness = 'connection:materialThickness_abort',
+    GetCrosshairOffset = 'connection:get-crosshair-offset',
+    SetCrosshairOffset = 'connection:set-crosshair-offset',
+    GetFireSensorSensitivity = 'connection:get-fire-sensor-sensitivity',
+    SetFireSensorSensitivity = 'connection:set-fire-sensor-sensitivity',
+
+    /**
+     * CNC
+     */
+    SwitchCNC = 'connection:switchCNC',
+    SetSpindleSpeed = 'connection:set-spindle-speed',
+
+    /**
+     * Enclosure
+     */
+    SetEnclosureLight = 'connection:setEnclosureLight',
+    SetEnclosureFan = 'connection:setEnclosureFan',
+    SetEnclosureDoorDetection = 'connection:setDoorDetection',
+
+    /**
+     * File
+     */
+    UploadFile = 'connection:uploadFile',
+    CompressUploadFile = 'connection:compress-upload-file',
+
     /**
      * Machine Network (Wi-Fi)
      */
@@ -19,6 +81,8 @@ enum ControllerEvent {
      * Machine System
      */
     ExportLogToExternalStorage = 'machine:export-log-to-external-storage',
+    GetFirmwareVersion = 'machine:get-firmware-version',
+    UpgradeFirmware = 'machine:upgrade-firmware',
 
     /**
      * G-code control.

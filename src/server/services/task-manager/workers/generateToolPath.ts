@@ -44,6 +44,10 @@ const generateLaserToolPathFromEngine = async (allTasks, onProgress) => {
                 gcodeConfig.tabHeight -= gcodeConfig.targetDepth;
             }
             modelInfo.toolpathFileName = generateRandomPathName('json');
+            modelInfo.identifier = task.identifier;
+
+            // FIXME: Hardcoded for ray
+            modelInfo.laserPointOnMode = task.identifier === 'Ray' ? 'inline_mode' : 'switch_mode';
         }
 
         const sliceParams = {

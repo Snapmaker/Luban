@@ -1,11 +1,12 @@
-import { WorkflowStatus } from '@snapmaker/luban-platform';
+import { LaserMachineMetadata, Machine, MachineType, WorkflowStatus } from '@snapmaker/luban-platform';
 import { Progress } from 'antd';
 import { includes } from 'lodash';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { RootState } from '../../../flux/index.def';
 import i18n from '../../../lib/i18n';
+import log from '../../../lib/log';
 import { Button } from '../../components/Buttons';
 import SvgIcon from '../../components/SvgIcon';
 import { formatDuration } from '../GCode/GCode';
@@ -36,6 +37,8 @@ interface JobStatusViewProps {
 const JobStatusView: React.FC<JobStatusViewProps> = (props) => {
     const { controlActions, setDisplay } = props;
 
+    const activeMachine: Machine = useSelector((state: RootState) => state.machine.activeMachine);
+
     const {
         isConnected,
         workflowStatus,
@@ -45,6 +48,17 @@ const JobStatusView: React.FC<JobStatusViewProps> = (props) => {
     const fileName = gcodeFileName;
     const [isPausing, setIsPausing] = useState(false);
     const [showStopComfirmModal, setShowStopComfirmModal] = useState(false);
+
+
+    // Whether can control machine workflow
+    const canControlWorkflow = useMemo(() => {
+        if (activeMachine && activeMachine.machineType === MachineType.Laser) {
+            return !(activeMachine.metadata as LaserMachineMetadata).disableWorkflowControl;
+        }
+
+        return true;
+    }, [activeMachine]);
+
 
     useEffect(() => {
         const isWorking = includes([
@@ -68,6 +82,7 @@ const JobStatusView: React.FC<JobStatusViewProps> = (props) => {
         }
     }, [workflowStatus]);
 
+
     const handleMachine = (type) => {
         try {
             switch (type) {
@@ -87,7 +102,7 @@ const JobStatusView: React.FC<JobStatusViewProps> = (props) => {
                     break;
             }
         } catch (e) {
-            console.error(e);
+            log.error(e);
             setIsPausing(false);
         }
     };
@@ -110,7 +125,7 @@ const JobStatusView: React.FC<JobStatusViewProps> = (props) => {
                 <Progress percent={actualProgress} type="circle" width={88} />
             </div>
             {
-                printStatus !== COMPLETE_STATUS && (
+                canControlWorkflow && printStatus !== COMPLETE_STATUS && (
                     <div className="sm-flex justify-space-between align-center margin-top-16">
                         <Button
                             width="160px"

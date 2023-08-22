@@ -2,7 +2,11 @@ import ControllerEvent from '../../../app/connection/controller-events';
 
 import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI } from '../../constants';
 import type SocketServer from '../../lib/SocketManager';
+import logger from '../../lib/logger';
 import MachineDiscoverer from '../machine/MachineDiscoverer';
+
+
+const log = logger('socket:discover-handlers');
 
 interface DiscoverMachineOptions {
     connectionType: 'wifi' | 'serial';
@@ -41,6 +45,7 @@ interface SubscribeDiscoverMachineOptions {
 }
 
 const subscribeDiscoverMachine = (socket: SocketServer, options: SubscribeDiscoverMachineOptions) => {
+    log.info('Subscribe discover machines...');
     if (options.connectionType === CONNECTION_TYPE_WIFI) {
         const discoverer = MachineDiscoverer.getInstance();
         discoverer.subscribeDiscoverMachines({
@@ -63,6 +68,7 @@ const subscribeDiscoverMachine = (socket: SocketServer, options: SubscribeDiscov
 };
 
 const unsubscribeDiscoverMachine = (socket: SocketServer, options: SubscribeDiscoverMachineOptions) => {
+    log.info('Unsubscribe discover machines...');
     const discoverer = MachineDiscoverer.getInstance();
     discoverer.unsubscribeDiscoverMachines({
         connectionType: options.connectionType,

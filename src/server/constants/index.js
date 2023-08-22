@@ -18,7 +18,6 @@ export const IP_WHITELIST = [
     'fc00::/7', // Unique local address
     'fe80::/10' // Link-local address
 ];
-export const CONNECTION_MATERIALTHICKNESS_ABORT = 'connection:materialThickness_abort';
 // Error Codes
 export const ERR_BAD_REQUEST = 400;
 export const ERR_UNAUTHORIZED = 401;
@@ -133,6 +132,7 @@ export const LEVEL_ONE_POWER_LASER_FOR_SM2 = 'levelOneLaserToolheadForSM2';
 export const LEVEL_TWO_POWER_LASER_FOR_SM2 = 'levelTwoLaserToolheadForSM2';
 // export const STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL = 'standardCNCToolheadForOriginal';
 export const STANDARD_CNC_TOOLHEAD_FOR_SM2 = 'standardCNCToolheadForSM2';
+export const LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2 = 'levelTwoCNCToolheadForSM2';
 
 // 3D Mesh Convert 2D Image
 export const FRONT = 'front';

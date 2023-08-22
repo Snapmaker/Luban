@@ -94,3 +94,9 @@ export type Origin = {
     reference: OriginReference;
     referenceMetadata: OriginReferenceMetadata;
 };
+
+
+export enum JobOffsetMode {
+    Crosshair = 'Crosshair',
+    LaserSpot = 'LaserSpot'
+}

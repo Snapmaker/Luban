@@ -1,4 +1,5 @@
 import path from 'path';
+import zlib from 'zlib';
 import fs from 'fs';
 import crypto from 'crypto';
 import { includes } from 'lodash';
@@ -51,6 +52,13 @@ import { MoveDirection } from '@snapmaker/snapmaker-sacp-sdk/dist/models/Movemen
 
 import DataStorage from '../../../DataStorage';
 
+interface Logger {
+    error(msg: string): void;
+    warn(msg: string): void;
+    info(msg: string): void;
+    debug(msg: string): void;
+}
+
 class LaserLockStatus implements Serializable {
     public lockStatus: boolean;
 
@@ -85,8 +93,10 @@ export enum ToolHeadType {
     LASER1600mW, LASER10000mW
 }
 
-export default class Business extends Dispatcher {
-    private log = console;
+export default class SacpClient extends Dispatcher {
+    private log: Logger = console;
+
+    private filePeerId: PeerId = PeerId.SCREEN;
 
     public constructor(type: string, socket) {
         super(type, socket);
@@ -145,8 +155,12 @@ export default class Business extends Dispatcher {
         });
     }
 
-    public setLogger(log: any) {
+    public setLogger(log: Logger) {
         this.log = log;
+    }
+
+    public setFilePeerId(peerId: PeerId): void {
+        this.filePeerId = peerId;
     }
 
     public async executeGcode(gcode: string) {
@@ -174,7 +188,7 @@ export default class Business extends Dispatcher {
     }
 
     public async getPrintingFileInfo() {
-        return this.send(0xac, 0x1a, PeerId.SCREEN, Buffer.alloc(1, 0)).then(({ response, packet }) => {
+        return this.send(0xac, 0x1a, this.filePeerId, Buffer.alloc(1, 0)).then(({ response, packet }) => {
             const data = {
                 filename: '',
                 totalLine: 0,
@@ -224,7 +238,7 @@ export default class Business extends Dispatcher {
 
     // set Handler API list for RTO
     // 0x10, 0x05
-    public handlerSwitchNozzleReturn(callback: any) {
+    public handlerSwitchNozzleReturn(callback: (res) => void) {
         this.setHandler(0x10, 0x0b, (request: RequestData) => {
             const result = readUint8(request.packet.payload);
             this.ack(0x10, 0x0b, request.packet, Buffer.alloc(1, 0));
@@ -411,6 +425,8 @@ export default class Business extends Dispatcher {
         return this.send(0x01, 0x34, PeerId.CONTROLLER, Buffer.concat([buffer, speedBuffer]));
     }
 
+    // 0x12 Laser functions
+
     public async getLaserToolHeadInfo(key: number) {
         const buffer = Buffer.alloc(1, 0);
         writeUint8(buffer, 0, key);
@@ -440,6 +456,66 @@ export default class Business extends Dispatcher {
             });
     }
 
+    public async getCrosshairOffset(key: number): Promise<{ x: number; y: number }> {
+        const buffer = Buffer.alloc(1, 0);
+        writeUint8(buffer, 0, key);
+
+        const { response } = await this.send(0x12, 0x11, PeerId.CONTROLLER, buffer);
+
+        if (response.result === 0) {
+            const x = readFloat(response.data, 0);
+            const y = readFloat(response.data, 4);
+
+            return { x, y };
+        } else {
+            return { x: 0, y: 0 };
+        }
+    }
+
+    public async setCrosshairOffset(key: number, x: number, y: number): Promise<boolean> {
+        const buffer = Buffer.alloc(3, 0);
+        writeUint8(buffer, 0, key);
+        writeFloat(buffer, 1, x);
+        writeFloat(buffer, 5, y);
+
+        const { response } = await this.send(0x12, 0x10, PeerId.CONTROLLER, buffer);
+
+        if (response.result === 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public async getFireSensorSensitivity(key: number): Promise<number> {
+        const buffer = Buffer.alloc(1, 0);
+        writeUint8(buffer, 0, key);
+
+        const { response } = await this.send(0x12, 0x0e, PeerId.CONTROLLER, buffer);
+
+        if (response.result === 0) {
+            const sensitivity = readUint16(response.data, 0);
+
+            return sensitivity;
+        } else {
+            return -1;
+        }
+    }
+
+    public async setFireSensorSensitivity(key: number, sensitivity: number): Promise<boolean> {
+        const buffer = Buffer.alloc(3, 0);
+        writeUint8(buffer, 0, key);
+        writeUint16(buffer, 1, sensitivity);
+
+        const { response } = await this.send(0x12, 0x0d, PeerId.CONTROLLER, buffer);
+
+        if (response.result === 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     // ----------
 
     public async subscribeHeartbeat({ interval = 1000 }, callback: ResponseCallback) {
@@ -454,15 +530,12 @@ export default class Business extends Dispatcher {
         });
     }
 
-    public async configureNetwork(options: NetworkOptions) {
+    public async configureNetwork(options: NetworkOptions): Promise<boolean> {
         // const networkMode = options?.networkMode || 1; // station default
         const networkOptions = new NetworkConfiguration(options);
 
-        const { response, packet } = await this.send(0x01, 0x15, PeerId.CONTROLLER, networkOptions.toBuffer());
-        return {
-            response,
-            packet,
-        };
+        const { response } = await this.send(0x01, 0x15, PeerId.CONTROLLER, networkOptions.toBuffer());
+        return response.result === 0;
     }
 
     /**
@@ -471,27 +544,17 @@ export default class Business extends Dispatcher {
      * 0x01 0x16 Export Log to External Storage
      * 0x01 0x17 Export Log Result
      */
-    public async exportLogToExternalStorage() {
+    public async exportLogToExternalStorage(): Promise<boolean> {
         return new Promise((resolve) => {
             // handle export result
             this.setHandler(0x01, 0x17, (data) => {
                 this.ack(0x01, 0x17, data.packet, Buffer.alloc(1, 0));
                 if (readUint8(data.param) === 0) {
                     this.log.info('Exporting log to external storage successfully.');
-                    resolve({
-                        response: {
-                            result: 0,
-                            data: Buffer.alloc(0),
-                        }
-                    });
+                    resolve(true);
                 } else {
                     this.log.info('Failed to exporting log to external storage.');
-                    resolve({
-                        response: {
-                            result: 1,
-                            data: Buffer.alloc(0),
-                        }
-                    });
+                    resolve(false);
                 }
             });
 
@@ -505,12 +568,7 @@ export default class Business extends Dispatcher {
                     } else {
                         this.log.info('Requested for exporting log to external storage. Failed.');
                         // fail already
-                        resolve({
-                            response: {
-                                result: 1,
-                                data: Buffer.alloc(0),
-                            }
-                        });
+                        resolve(false);
                     }
                 });
         });
@@ -545,16 +603,11 @@ export default class Business extends Dispatcher {
      *
      * 0x01 0x25
      */
-    public async getNetworkConfiguration() {
-        const { response, packet } = await this.send(0x01, 0x25, PeerId.CONTROLLER, Buffer.alloc(0));
+    public async getNetworkConfiguration(): Promise<NetworkConfiguration> {
+        const { response } = await this.send(0x01, 0x25, PeerId.CONTROLLER, Buffer.alloc(0));
 
         const networkConfiguration = new NetworkConfiguration().fromBuffer(response.data);
-
-        return {
-            response,
-            packet,
-            data: networkConfiguration,
-        };
+        return networkConfiguration;
     }
 
     /**
@@ -566,16 +619,12 @@ export default class Business extends Dispatcher {
      * 2) RSSI network strength
      * 3) IP address
      */
-    public async getNetworkStationState() {
-        const { response, packet } = await this.send(0x01, 0x26, PeerId.CONTROLLER, Buffer.alloc(0));
+    public async getNetworkStationState(): Promise<NetworkStationState> {
+        const { response } = await this.send(0x01, 0x26, PeerId.CONTROLLER, Buffer.alloc(0));
 
         const networkStationState = new NetworkStationState().fromBuffer(response.data);
 
-        return {
-            response,
-            packet,
-            data: networkStationState,
-        };
+        return networkStationState;
     }
 
     public async getCurrentCoordinateInfo() {
@@ -841,12 +890,12 @@ export default class Business extends Dispatcher {
         const info = new ExtruderMovement(key, movementType, lengthIn, speedIn, lengthOut, speedOut);
         this.log.info(`Extruder Move: type = ${movementType}, in: ${lengthIn} speed: ${speedIn}, out: ${lengthOut} speed: ${speedOut}`);
         return this.send(0x10, 0x09, PeerId.CONTROLLER, info.toBuffer()).then(({ response, packet }) => {
-            this.log.info('Extruder Move: done', response);
+            this.log.info('Extruder Move: done');
             return { response, packet };
         });
     }
 
-    public async uploadFile(filePath: string, renderName?: string) {
+    public async uploadFile(filePath: string, renderName?: string): Promise<boolean> {
         const sizePerChunk = 60 * 1024;
         this.setHandler(0xb0, 0x01, (data) => {
             const { nextOffset, result: md5HexStr } = readString(data.param);
@@ -876,21 +925,17 @@ export default class Business extends Dispatcher {
             });
         });
 
-        return new Promise<ResponseData>((resolve, reject) => {
+        return new Promise<boolean>((resolve, reject) => {
             // handle file upload result
             this.setHandler(0xb0, 0x02, (data) => {
-                if (readUint8(data.param) === 0) {
+                const result = readUint8(data.param);
+                if (result === 0) {
                     this.log.info('file upload success');
                 } else {
                     this.log.error('file upload fail');
                 }
                 this.ack(0xb0, 0x02, data.packet, Buffer.alloc(1, 0));
-                resolve({
-                    response: {
-                        result: 0,
-                        data: Buffer.alloc(0)
-                    }
-                } as any);
+                resolve(result === 0);
             });
 
             if (fs.existsSync(filePath)) {
@@ -933,7 +978,45 @@ export default class Business extends Dispatcher {
      * TODO: need option: chuckSize
      * TODO: need option: peerId
      */
-    public async uploadLargeFile(filePath: string, renderName?: string) {
+    public async uploadFileCompressed(filePath: string, renderName?: string): Promise<boolean> {
+        if (!fs.existsSync(filePath)) {
+            this.log.error(`File does not exist ${filePath}`);
+            return false;
+        }
+
+        let compressedData;
+        try {
+            compressedData = await new Promise<Buffer>((resolve, reject) => {
+                const readStream = fs.createReadStream(filePath);
+                let fileData = Buffer.alloc(0);
+
+                readStream.on('data', (chunk: Buffer) => {
+                    fileData = Buffer.concat([fileData, chunk]);
+                });
+
+                readStream.on('end', () => {
+                    zlib.deflate(fileData, { level: 1 }, (err, buffer) => {
+                        if (err) {
+                            reject(new Error(`Unable to compress target file: ${filePath}`));
+                            return;
+                        }
+
+                        resolve(buffer);
+                    });
+                });
+
+                readStream.once('error', () => {
+                    reject(new Error(`Unable to read target file: ${filePath}`));
+                    // result = 0, means resource unable to use
+                    // const buffer = Buffer.alloc(1, 9);
+                    // this.ack(0xb0, 0x11, data.packet, buffer);
+                });
+            });
+        } catch (e) {
+            this.log.error(e);
+            return false;
+        }
+
         // const sizePerChunk = 968;
         const sizePerChunk = 960;
         this.setHandler(0xb0, 0x11, (data) => {
@@ -942,105 +1025,86 @@ export default class Business extends Dispatcher {
 
             // index
             const index = readUint32(data.param, nextOffset);
-            this.log.info(`request file chuck index = ${index}`);
 
-            const inputStream = fs.createReadStream(filePath, {
-                start: index * sizePerChunk,
-                end: (index + 1) * sizePerChunk - 1,
-                highWaterMark: sizePerChunk,
-            });
+            // Log so we can see file transfer process
+            if (index % 10 === 0) {
+                this.log.info(`request file chuck index = ${index}`);
+            }
 
-            let finalBuf = Buffer.alloc(0);
-            inputStream.on('data', (buf: Buffer) => {
-                finalBuf = Buffer.concat([finalBuf, buf]);
-            });
-            inputStream.on('end', () => {
-                // md5
-                const md5Buffer = stringToBuffer(md5HexStr);
+            const start = sizePerChunk * index;
+            const end = sizePerChunk * (index + 1);
 
-                // index
-                const indexBuffer = Buffer.alloc(4, 0);
-                writeUint32(indexBuffer, 0, index);
+            const finalBuf = compressedData.slice(start, end);
+            // md5
+            const md5Buffer = stringToBuffer(md5HexStr);
 
-                // chuck
-                const chunkBuffer = stringToBuffer(finalBuf as unknown as string);
+            // index
+            const indexBuffer = Buffer.alloc(4, 0);
+            writeUint32(indexBuffer, 0, index);
 
-                const responseBuffer = Buffer.concat([
-                    Buffer.alloc(1, 0), // 0: success
-                    md5Buffer,
-                    indexBuffer,
-                    chunkBuffer,
-                ]);
+            // chuck
+            const chunkBuffer = stringToBuffer(finalBuf as unknown as string);
 
-                console.log('ack', responseBuffer);
-                this.ack(0xb0, 0x11, data.packet, responseBuffer);
-            });
-            inputStream.once('error', () => {
-                // result = 0, means resource unable to use
-                const buffer = Buffer.alloc(1, 9);
-                this.ack(0xb0, 0x11, data.packet, buffer);
-            });
+            const responseBuffer = Buffer.concat([
+                Buffer.alloc(1, 0), // 0: success
+                md5Buffer,
+                indexBuffer,
+                chunkBuffer,
+            ]);
+
+            this.ack(0xb0, 0x11, data.packet, responseBuffer);
         });
 
-        return new Promise<ResponseData>((resolve, reject) => {
+        return new Promise<boolean>((resolve, reject) => {
             // handle file upload result
             this.setHandler(0xb0, 0x02, (data) => {
-                if (readUint8(data.param) === 0) {
-                    this.log.info('file upload success');
+                const result = readUint8(data.param);
+                if (result === 0) {
+                    this.log.info('File upload successful.');
                 } else {
-                    this.log.error('file upload fail');
+                    this.log.error(`File upload failed, result = ${result}`);
                 }
                 this.ack(0xb0, 0x02, data.packet, Buffer.alloc(1, 0));
-                resolve({
-                    response: {
-                        result: 0,
-                        data: Buffer.alloc(0)
-                    }
-                } as any);
+
+                resolve(result === 0);
             });
 
             // Start a file transfer request
-            if (fs.existsSync(filePath)) {
-                const hash = crypto.createHash('md5');
-                const inputStream = fs.createReadStream(filePath);
-                inputStream.on('data', (data) => {
-                    hash.update(data);
-                });
-                inputStream.on('end', () => {
-                    const filename = path.basename(filePath);
-                    const fileLength = fs.statSync(filePath).size;
+            const hash = crypto.createHash('md5');
+            hash.update(compressedData);
 
-                    const filenameBuffer = renderName ? stringToBuffer(renderName) : stringToBuffer(filename);
-                    const fileLengthBuffer = Buffer.alloc(4, 0);
-                    writeUint32(fileLengthBuffer, 0, fileLength);
+            // file name
+            const filename = path.basename(filePath);
+            const filenameBuffer = renderName ? stringToBuffer(renderName) : stringToBuffer(filename);
 
-                    // number of chucks
-                    const chunksBuffer = Buffer.alloc(4, 0);
-                    const chunks = Math.ceil(fileLength / sizePerChunk);
-                    writeUint32(chunksBuffer, 0, chunks);
+            // file length
+            const fileLengthBuffer = Buffer.alloc(4, 0);
+            const fileLength = fs.statSync(filePath).size;
+            writeUint32(fileLengthBuffer, 0, fileLength);
 
-                    // md5
-                    const md5HexStr = hash.digest('hex');
-                    const md5Buffer = stringToBuffer(md5HexStr);
+            // number of chucks
+            const chunksBuffer = Buffer.alloc(4, 0);
+            const chunks = Math.ceil(compressedData.byteLength / sizePerChunk);
+            writeUint32(chunksBuffer, 0, chunks);
 
-                    const buffer = Buffer.concat([
-                        filenameBuffer,
-                        fileLengthBuffer,
-                        chunksBuffer,
-                        md5Buffer,
-                    ]);
-                    this.log.info(`start large file transfer... chuck count = ${chunks}`);
-                    this.send(0xb0, 0x10, PeerId.CONTROLLER, buffer).catch(err => {
-                        reject(err);
-                    });
-                });
-            } else {
-                reject(new Error(`can not upload missing file: ${filePath}`));
-            }
+            // md5
+            const md5HexStr = hash.digest('hex');
+            const md5Buffer = stringToBuffer(md5HexStr);
+
+            const buffer = Buffer.concat([
+                filenameBuffer,
+                fileLengthBuffer,
+                chunksBuffer,
+                md5Buffer,
+            ]);
+            this.log.info(`start large file transfer... file size = ${fileLength}, chuck count = ${chunks}`);
+            this.send(0xb0, 0x10, PeerId.CONTROLLER, buffer).catch(err => {
+                reject(err);
+            });
         });
     }
 
-    public startPrintSerial(filePath: string, callback?: any) {
+    public startPrintSerial(filePath: string, callback?: (printInfo) => void) {
         const content: string[] = [];
         let elapsedTime = 0;
         const rl = readline(filePath);
@@ -1049,8 +1113,8 @@ export default class Business extends Dispatcher {
             if (includes(line, ';estimated_time(s)')) {
                 elapsedTime = parseFloat(line.slice(19));
             }
-        }).on('error', (e: any) => {
-            console.log('e', e);
+        }).on('error', (e) => {
+            this.log.error(e);
         });
         this.setHandler(0xac, 0x02, async ({ param, packet }: RequestData) => {
             const batchBufferInfo = new BatchBufferInfo().fromBuffer(param);
@@ -1065,7 +1129,6 @@ export default class Business extends Dispatcher {
             callback && callback({ lineNumber: batchBufferInfo.lineNumber, length: content.length, elapsedTime });
         });
         this.setHandler(0xac, 0x01, (request: RequestData) => {
-            console.log('0xac, 0x01', request);
             this.ack(0xac, 0x01, request.packet, Buffer.alloc(1, 0));
         });
     }
@@ -1140,7 +1203,7 @@ export default class Business extends Dispatcher {
         });
     }
 
-    public async wifiConnection(hostName: string, clientName: string, token: string, callback: any) {
+    public async wifiConnection(hostName: string, clientName: string, token: string, callback: () => void) {
         const info = new WifiConnectionInfo(hostName, clientName, token).toBuffer();
         this.setHandler(0x01, 0x06, ({ packet }: RequestData) => {
             const res = new Response(0);
@@ -1212,6 +1275,52 @@ export default class Business extends Dispatcher {
         writeBool(buffer, 1, value ? 1 : 0);
         return this.send(0x17, 0x03, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
             return { response, packet, data: {} };
+        });
+    }
+
+    // - System
+
+    public async upgradeFirmwareFromFile(filename: string) {
+        return new Promise<ResponseData>((resolve, reject) => {
+            // Watch upgrade preparation result
+            this.setHandler(0xad, 0x03, (data) => {
+                const upgradeCode = readUint8(data.param);
+
+                // ACK
+                this.ack(0xad, 0x03, data.packet, Buffer.alloc(1, 0));
+
+                // code = 0 means preparation is done
+                // code != 0 means preparation is blocked (something wrong with firmware file)
+                if (upgradeCode !== 0) {
+                    resolve({
+                        response: {
+                            result: upgradeCode,
+                        }
+                    } as ResponseData);
+                }
+            });
+
+            // Watch upgrade result
+            this.setHandler(0xad, 0x10, (data) => {
+                const upgradeCode = readUint8(data.param);
+
+                this.ack(0xad, 0x10, data.packet, Buffer.alloc(1, 0));
+
+                // code = 0 means ugprade success
+                // code != 0 means upgrade failed
+                resolve({
+                    response: {
+                        result: upgradeCode,
+                    }
+                } as ResponseData);
+            });
+
+            // Request upgrade
+            const resourceBuffer = Buffer.alloc(1, 0); // defaults to SD Card
+            const filenameBuffer = stringToBuffer(filename);
+            const buffer = Buffer.concat([resourceBuffer, filenameBuffer]);
+            this.send(0xad, 0x00, PeerId.CONTROLLER, buffer)
+                .catch((err) => reject(err));
         });
     }
 }

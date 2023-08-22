@@ -1,5 +1,5 @@
 import { Machine } from '@snapmaker/luban-platform';
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo } from 'react';
+import React, { useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
 import {
@@ -13,6 +13,7 @@ import {
 } from '../../../../constants';
 import {
     CylinderWorkpieceSize,
+    JobOffsetMode,
     Materials,
     Origin,
     OriginReference,
@@ -26,6 +27,7 @@ import { RootState } from '../../../../flux/index.def';
 import useSetState from '../../../../lib/hooks/set-state';
 import i18n from '../../../../lib/i18n';
 import { toFixed } from '../../../../lib/numeric-utils';
+import { SnapmakerRayMachine } from '../../../../machines';
 import { NumberInput as Input } from '../../../components/Input';
 import Select from '../../../components/Select';
 
@@ -133,7 +135,7 @@ export type JobSetupViewHandle = {
     onChange: () => void;
 }
 
-const JobSetupView = forwardRef<JobSetupViewHandle, {}>((_, ref) => {
+const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
     const activeMachine = useSelector((state: RootState) => state.machine.activeMachine) as Machine;
 
     const materials = useSelector((state: RootState) => state[HEAD_LASER]?.materials, shallowEqual) as Materials;
@@ -207,6 +209,9 @@ const JobSetupView = forwardRef<JobSetupViewHandle, {}>((_, ref) => {
         // workpiece.shape,
     ]);
 
+    /**
+     * Work Origin
+     */
     // Origin
     const [selectedOrigin, updateSelectedOrigin] = useSetState<Origin>(origin);
 
@@ -250,6 +255,51 @@ const JobSetupView = forwardRef<JobSetupViewHandle, {}>((_, ref) => {
         originReferenceOptions, selectedOrigin.reference,
     ]);
 
+    /**
+     * Run Boundary Mode
+     */
+    const jobOffsetMode: JobOffsetMode = useSelector((state: RootState) => state.laser.jobOffsetMode);
+    const [selectedRunBoundaryMode, setSelectedRunBoundaryMode] = useState(jobOffsetMode);
+
+    const runBoundaryModeOptions = useMemo(() => {
+        // hard-coded for ray machine
+        if (activeMachine?.identifier === SnapmakerRayMachine.identifier) {
+            return [
+                {
+                    label: i18n._('Crosshair'),
+                    value: JobOffsetMode.Crosshair,
+                },
+                {
+                    label: i18n._('Laser Spot'),
+                    value: JobOffsetMode.LaserSpot,
+                },
+            ];
+        } else {
+            return [
+                {
+                    label: i18n._('Laser Spot'),
+                    value: JobOffsetMode.LaserSpot,
+                },
+            ];
+        }
+    }, [activeMachine]);
+
+    useEffect(() => {
+        const targetOption = runBoundaryModeOptions.find(option => option.value === jobOffsetMode);
+        if (targetOption) {
+            setSelectedRunBoundaryMode(jobOffsetMode);
+        } else {
+            setSelectedRunBoundaryMode(runBoundaryModeOptions[0].value);
+        }
+    }, [jobOffsetMode, runBoundaryModeOptions]);
+
+    const onChangeRunBoundaryMode = useCallback((option) => {
+        setSelectedRunBoundaryMode(option.value);
+    }, []);
+
+    /**
+     * Other parameters calculated
+     */
     const maxX = activeMachine?.metadata.size.x || 0;
     const maxY = activeMachine?.metadata.size.y || 0;
 
@@ -268,6 +318,7 @@ const JobSetupView = forwardRef<JobSetupViewHandle, {}>((_, ref) => {
     useImperativeHandle(ref, () => {
         return {
             onChange: () => {
+                // Workpiece
                 dispatch(editorActions.setWorkpiece(
                     HEAD_LASER,
                     workpiece.shape,
@@ -276,11 +327,14 @@ const JobSetupView = forwardRef<JobSetupViewHandle, {}>((_, ref) => {
 
                 dispatch(editorActions.updateWorkpieceObject(HEAD_LASER));
 
-
+                // Origin
                 dispatch(editorActions.setOrigin(
                     HEAD_LASER,
                     selectedOrigin,
                 ));
+
+                // Run Boudanry Mode
+                dispatch(editorActions.setJobOffsetMode(selectedRunBoundaryMode));
 
                 const targetOption = originReferenceOptions.find(option => option.value === selectedOrigin.reference);
 
@@ -317,11 +371,13 @@ const JobSetupView = forwardRef<JobSetupViewHandle, {}>((_, ref) => {
         workpiece.size,
 
         selectedOrigin,
+
+        selectedRunBoundaryMode,
     ]);
 
     return (
-        <React.Fragment>
-            <div className="margin-left-50">
+        <div className="margin-left-50">
+            <div>
                 <div className="margin-bottom-16 font-weight-bold">
                     {i18n._('key-Term/Workpiece Size')}
                 </div>
@@ -429,7 +485,9 @@ const JobSetupView = forwardRef<JobSetupViewHandle, {}>((_, ref) => {
                         </>
                     )
                 }
-                <div className="margin-top-24 margin-bottom-16 font-weight-bold">
+            </div>
+            <div className="margin-top-24">
+                <div className="margin-bottom-16 font-weight-bold">
                     {i18n._('key-CncLaser/JobSetup-Work Origin')}
                 </div>
                 {
@@ -447,7 +505,9 @@ const JobSetupView = forwardRef<JobSetupViewHandle, {}>((_, ref) => {
                             />
                             <div className="margin-left-16">
                                 <div className="height-32 sm-flex">
-                                    <span className="width-144 margin-right-8 text-overflow-ellipsis">{i18n._('key-CncLaser/JobSetup-Origin Mode')}</span>
+                                    <span className="width-144 margin-right-8 text-overflow-ellipsis">
+                                        {i18n._('key-CncLaser/JobSetup-Origin Mode')}
+                                    </span>
                                     <Select
                                         backspaceRemoves={false}
                                         size="120px"
@@ -513,7 +573,23 @@ const JobSetupView = forwardRef<JobSetupViewHandle, {}>((_, ref) => {
                     )
                 }
             </div>
-        </React.Fragment>
+            <div className="margin-top-24">
+                <div className="margin-bottom-16 font-weight-bold">
+                    {i18n._('Run Boundary Mode')}
+                </div>
+                <div className="sm-flex height-32">
+                    <span className="width-144 margin-right-8 text-overflow-ellipsis">
+                        {i18n._('Mode')}
+                    </span>
+                    <Select
+                        className="width-120"
+                        options={runBoundaryModeOptions}
+                        value={selectedRunBoundaryMode}
+                        onChange={onChangeRunBoundaryMode}
+                    />
+                </div>
+            </div>
+        </div>
     );
 });
 

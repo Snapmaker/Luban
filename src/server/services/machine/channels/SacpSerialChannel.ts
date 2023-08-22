@@ -1,26 +1,21 @@
 import crypto from 'crypto';
 import fs from 'fs';
 import { SerialPort } from 'serialport';
-import path from 'path';
 
 import { SACP_TYPE_SERIES_MAP } from '../../../../app/constants/machines';
 import DataStorage from '../../../DataStorage';
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
-import SocketServer from '../../../lib/SocketManager';
 import logger from '../../../lib/logger';
-import Business from '../sacp/Business';
+import SacpClient from '../sacp/SacpClient';
 import { EventOptions } from '../types';
+import { FileChannelInterface, UploadFileOptions } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
-import SocketBASE from './SACP-BASE';
+import SacpChannelBase from './SacpChannel';
 
-const log = logger('lib:SocketSerial');
+const log = logger('machine:channel:SacpSerialChannel');
 
-class SacpSerialChannel extends SocketBASE {
+class SacpSerialChannel extends SacpChannelBase implements FileChannelInterface {
     private serialport: SerialPort;
-
-    private availPorts: {
-        path: string
-    }[];
 
     // public startTime: number;
 
@@ -28,17 +23,23 @@ class SacpSerialChannel extends SocketBASE {
 
     // public total: number;
 
-    public connectionOpen = async (socket: SocketServer, options) => {
-        this.availPorts = await SerialPort.list();
-        this.socket = socket;
-        if (this.availPorts.length > 0) {
-            this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
+    public async connectionOpen(options: { port: string }): Promise<boolean> {
+        const port = options.port;
+
+        if (!port) {
+            return false;
+        }
+
+        // connecting
+        this.emit(ChannelEvent.Connecting);
+
+        return new Promise((resolve) => {
             this.serialport = new SerialPort({
-                path: options.port ? options.port : this.availPorts[0].path,
+                path: port,
                 baudRate: 115200,
                 autoOpen: false,
             });
-            this.sacpClient = new Business('serialport', this.serialport);
+            this.sacpClient = new SacpClient('serialport', this.serialport);
 
             this.serialport.on('data', (data) => {
                 // console.log(data.toString());
@@ -57,7 +58,9 @@ class SacpSerialChannel extends SocketBASE {
 
             // When serialport connected, we detect the machine identifier
             this.serialport.once('open', () => {
-                log.debug(`Serial port ${options.port || this.availPorts[0].path} opened`);
+                this.emit(ChannelEvent.Connected);
+
+                log.debug(`Serial port ${port} opened`);
 
                 // Force switch to SACP
                 this.serialport.write('\r\n');
@@ -65,7 +68,7 @@ class SacpSerialChannel extends SocketBASE {
                 // this.serialport.write('M2000 U5\r\n');
                 this.serialport.write('$PS\r\n');
 
-                log.error('M2000 sent');
+                log.debug('M2000 sent');
 
                 // Wait (at least 100ms) to let controller switch to SACP
                 // Then we get machine info, this is required to detect the machine
@@ -80,41 +83,34 @@ class SacpSerialChannel extends SocketBASE {
                     this.emit(ChannelEvent.Ready, {
                         machineIdentifier,
                     });
+
+                    resolve(true);
                 }, 1000);
             });
 
             // Open serial port
-            this.serialport.open();
-        }
-    };
+            this.emit(ChannelEvent.Connecting);
 
-    public connectionClose = async () => {
-        this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
-        // await this.sacpClient.unSubscribeLogFeedback(this.subscribeLogCallback).then(res => {
-        //     log.info(`unsubscribeLog: ${res}`);
-        // });
-        // await this.sacpClient.unSubscribeCurrentCoordinateInfo(this.subscribeCoordinateCallback).then(res => {
-        //     log.info(`unSubscribeCoordinate: ${res}`);
-        // });
-        // await this.sacpClient.unSubscribeHotBedTemperature(this.subscribeHotBedCallback).then(res => {
-        //     log.info(`unSubscribeHotBed, ${res}`);
-        // });
-        // await this.sacpClient.unSubscribeNozzleInfo(this.subscribeNozzleCallback).then(res => {
-        //     log.info(`unSubscribeNozzle: ${res}`);
-        // });
-        // await this.sacpClient.unsubscribeHeartbeat(this.subscribeHeartCallback).then(res => {
-        //     log.info(`unSubscribeHeart, ${res}`);
-        // });
+            this.serialport.open();
+        });
+    }
+
+    public async connectionClose(): Promise<boolean> {
         this.serialport?.close();
         this.serialport?.destroy();
-        // this.sacpClient?.dispose();
-        this.socket.emit('connection:close');
-    };
+        this.sacpClient?.dispose();
 
-    public startHeartbeat = () => {
-        this.startHeartbeatBase(this.sacpClient);
-        this.setROTSubscribeApi();
-    };
+        return true;
+    }
+
+    public async startHeartbeat(): Promise<void> {
+        // TODO:
+        // - only start heartbeat
+        // - and start subscriptions on instance
+
+        // await this.startHeartbeatBase(this.sacpClient);
+        // this.setROTSubscribeApi();
+    }
 
     public startGcode = async (options: EventOptions) => {
         const { headType } = options;
@@ -144,31 +140,21 @@ class SacpSerialChannel extends SocketBASE {
         });
     };
 
-    public uploadFile = async (options: EventOptions) => {
-        const { eventName } = options;
+    public async uploadFile(options: UploadFileOptions): Promise<boolean> {
+        const { filePath, targetFilename } = options;
+        log.info(`Upload file to controller... ${filePath}`);
 
-        const { gcodePath, renderGcodeFileName } = options;
-        log.info(`Upload file to controller... ${gcodePath}`);
+        const success = await this.sacpClient.uploadFile(filePath, targetFilename);
+        return success;
+    }
 
-        const gcodeFullPath = path.resolve(`${DataStorage.tmpDir}${gcodePath}`);
-        // Note: Use upload large file API instead of upload file API, newer firmware will implement this API
-        // rather than the old ones.
-        const res = await this.sacpClient.uploadLargeFile(gcodeFullPath, renderGcodeFileName);
+    public async compressUploadFile(options: UploadFileOptions): Promise<boolean> {
+        const { filePath, targetFilename } = options;
+        log.info(`Compress and upload file to controller... ${filePath}`);
 
-        if (res.response.result === 0) {
-            const result = {
-                err: null,
-                text: ''
-            };
-            this.socket && this.socket.emit(eventName, result);
-        } else {
-            const result = {
-                err: 'failed',
-                text: 'Failed to upload file',
-            };
-            this.socket && this.socket.emit(eventName, result);
-        }
-    };
+        const success = await this.sacpClient.uploadFileCompressed(filePath, targetFilename);
+        return success;
+    }
 }
 
 const sacpSerialChannel = new SacpSerialChannel();

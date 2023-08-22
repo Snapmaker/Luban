@@ -7,7 +7,7 @@ import React from 'react';
 import { DATA_PREFIX } from '../../constants';
 import { Origin } from '../../constants/coordinate';
 import SvgModel from '../../models/SvgModel';
-import PrintableArea from './PrintableArea';
+import Workpiece2d from '../../scene2d/Workpiece2d';
 import SVGSelector from './SVGSelector';
 import TextAction from './TextActions';
 import { DEFAULT_FILL_COLOR, DEFAULT_SCALE, SCALE_RATE, SVG_EVENT_CONTEXTMENU, SVG_EVENT_MODE } from './constants';
@@ -183,7 +183,7 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
         this.setupSVGSelector();
         this.setupMouseEvents();
         this.setupKeyEvents();
-        this.setupPrintableArea();
+        this.setupWorkpiece();
         this.onResize();
         this.setupTextActions();
         window.addEventListener('resize', this.onResize, false);
@@ -402,10 +402,13 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
         window.addEventListener('keyup', this.onKeyUp, false);
     }
 
-    public setupPrintableArea() {
+    /**
+     * Setup workpiece on canvas.
+     */
+    public setupWorkpiece() {
         const getRoot = () => this.svgBackground;
 
-        this.printableArea = new PrintableArea({
+        this.printableArea = new Workpiece2d({
             size: this.props.coordinateSize,
             scale: this.scale,
             getRoot,

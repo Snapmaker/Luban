@@ -108,6 +108,7 @@ const defaultConfigs = {
         brightness: 50,
         whiteClip: 255,
         bwThreshold: 168,
+        greyscaleAlgorithm: 'Luma',
         algorithm: 'Atkinson'
     },
     [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE.RASTER)]: {
@@ -125,6 +126,7 @@ const defaultConfigs = {
         brightness: 50,
         whiteClip: 255,
         bwThreshold: 168,
+        greyscaleAlgorithm: 'Luma',
         algorithm: 'Atkinson'
     },
 

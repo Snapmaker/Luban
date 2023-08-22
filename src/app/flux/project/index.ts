@@ -273,10 +273,13 @@ export const actions = {
 
         await modState?.SVGActions?.svgContentGroup.removeAllElements();
         // eslint-disable-next-line prefer-const
-        let { models, toolpaths, materials, coordinateMode, coordinateSize, machineInfo, ...restState } = envObj;
+        let { models, toolpaths, materials, origin, coordinateMode, coordinateSize, machineInfo, ...restState } = envObj;
         if (envHeadType === HEAD_CNC || envHeadType === HEAD_LASER) {
             if (materials) {
                 dispatch(editorActions.updateMaterials(envHeadType, materials));
+            }
+            if (origin) {
+                dispatch(editorActions.setOrigin(envHeadType, origin));
             }
             const isRotate = materials ? materials.isRotate : false;
             const oversize = some(keys(coordinateSize), (key) => {
@@ -308,18 +311,20 @@ export const actions = {
         const promiseArray = [];
         dispatch(actions.recoverModels(promiseArray, modActions, models, envHeadType, isGuideTours));
 
+        // Create tool paths
         const { toolPathGroup } = modState;
         if (toolPathGroup && toolPathGroup.toolPaths && toolPathGroup.toolPaths.length) {
             toolPathGroup.deleteAllToolPaths();
         }
         if (toolpaths && toolpaths.length) {
             for (let k = 0; k < toolpaths.length; k++) {
-                toolPathGroup.saveToolPath(toolpaths[k], { materials }, false);
+                toolPathGroup.saveToolPath(toolpaths[k], { materials, origin }, false);
             }
             toolPathGroup.selectToolPathById(null);
             dispatch(modActions.updateState(envHeadType, toolPathGroup));
         }
 
+        // Recover selected presets
         if (envHeadType === HEAD_PRINTING) {
             // deal with old project file
             if (restState.defaultQualityId) {

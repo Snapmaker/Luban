@@ -4,9 +4,8 @@ import { includes } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import {
-    CONNECTION_UPLOAD_FILE,
-} from '../../../constants';
+import ControllerEvent from '../../../connection/controller-events';
+import { JobOffsetMode } from '../../../constants/coordinate';
 import { RootState } from '../../../flux/index.def';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import gcodeActions, { GCodeFileObject } from '../../../flux/workspace/actions-gcode';
@@ -14,6 +13,7 @@ import controller from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import ControlPanel from './ControlPanel';
+import RunBoundaryModal from './modals/RunBoundaryModal';
 
 
 enum SetupCoordinateMethod {
@@ -68,13 +68,14 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
 
     // run boundary state
     const [runBoundaryReady, setRunBoundaryReady] = useState(false);
+    const jobOffsetMode: JobOffsetMode = useSelector((state: RootState) => state.laser.jobOffsetMode);
 
     const dispatch = useDispatch();
 
     /**
      * Run boundary
      *
-     * - useCurrentPosition(Manual)
+     * - useCurrentPosition: Use current position as origin
      */
     const runBoundary = useCallback(async ({ useCurrentPosition = false }) => {
         setRunBoundaryReady(false);
@@ -87,6 +88,17 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
         const bbox = boundingBox;
 
         const gcodeList = [];
+
+        if (jobOffsetMode === JobOffsetMode.Crosshair) {
+            // Use crosshair to run boundary
+            gcodeList.push('M3 S0');
+            gcodeList.push('M2000 L13 P1'); // turn on crosshair
+        } else if (jobOffsetMode === JobOffsetMode.LaserSpot) {
+            // Use laser spot to run boundary
+            gcodeList.push('M3 S0');
+            gcodeList.push('G1 F6000 S5'); // turn on laser spot
+        }
+
         gcodeList.push(
             'G90', // absolute position
         );
@@ -98,12 +110,19 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
         }
 
         gcodeList.push(
-            `G1 X${bbox.min.x} Y${bbox.min.y} F1800 S0`, // run boundary
+            `G1 X${bbox.min.x} Y${bbox.min.y} F6000`, // run boundary
             `G1 X${bbox.min.x} Y${bbox.max.y}`,
             `G1 X${bbox.max.x} Y${bbox.max.y}`,
             `G1 X${bbox.max.x} Y${bbox.min.y}`,
             `G1 X${bbox.min.x} Y${bbox.min.y}`,
-            'G1 X0 Y0', // go back to origin
+            'G1 X0 Y0 S0', // go back to origin
+        );
+
+        if (jobOffsetMode === JobOffsetMode.LaserSpot) {
+            gcodeList.push('M5 S0'); // turn off laser spot
+        }
+
+        gcodeList.push(
             ';End', // empty line
         );
 
@@ -115,11 +134,11 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
         const gcodeFileObject: GCodeFileObject = await dispatch(gcodeActions.uploadGcodeFile(file));
 
         controller
-            .emitEvent(CONNECTION_UPLOAD_FILE, {
-                gcodePath: `/${gcodeFileObject.uploadName}`,
-                renderGcodeFileName: 'boundary.nc',
+            .emitEvent(ControllerEvent.CompressUploadFile, {
+                filePath: gcodeFileObject.uploadName,
+                targetFilename: 'boundary.nc',
             })
-            .once(CONNECTION_UPLOAD_FILE, ({ err, text }) => {
+            .once(ControllerEvent.CompressUploadFile, ({ err, text }) => {
                 if (err) {
                     log.error('Unable to upload G-code to execute.');
                     log.error(err);
@@ -129,7 +148,7 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
                     setRunBoundaryReady(true);
                 }
             });
-    }, [dispatch, boundingBox]);
+    }, [dispatch, boundingBox, jobOffsetMode]);
 
     const executeGCode = useCallback(async (gcode: string) => {
         return dispatch(workspaceActions.executeGcode(gcode)) as unknown as Promise<void>;
@@ -158,20 +177,16 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
                             <Button
                                 type="default"
                                 style={{ width: '100%' }}
+                                disabled={!boundingBox}
                                 onClick={async () => runBoundary({
                                     useCurrentPosition: true,
                                 })}
                             >
-                                {i18n._('key-Workspace/Control/MotionButton-Run Boundary')}
+                                {i18n._('Run Boundary')}
                             </Button>
                         </div>
                         <Space direction="vertical" className="margin-top-8">
                             <Alert type="info" showIcon message={i18n._('Steppers are disabled. You can push XY axes to move the tool head.')} />
-                            {
-                                runBoundaryReady && (
-                                    <Alert type="info" showIcon message={i18n._('Please go the machine, click button to run boundary.')} />
-                                )
-                            }
                         </Space>
                     </div>
                 )
@@ -187,6 +202,12 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
                             })}
                         />
                     </div>
+                )
+            }
+
+            {/* Run Boundary modal */
+                runBoundaryReady && (
+                    <RunBoundaryModal onClose={() => setRunBoundaryReady(false)} />
                 )
             }
         </div>

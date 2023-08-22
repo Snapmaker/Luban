@@ -5,9 +5,8 @@ import { v4 as uuid } from 'uuid';
 
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import api from '../../api';
+import ControllerEvent from '../../connection/controller-events';
 import {
-    CONNECTION_CLOSE,
-    CONNECTION_EXECUTE_GCODE,
     CONNECTION_GET_GCODEFILE,
     CONNECTION_HEAD_BEGIN_WORK,
     CONNECTION_STATUS_CONNECTED,
@@ -40,7 +39,7 @@ import connectActions from './actions-connect';
 import discoverActions from './actions-discover';
 import { GCodeFileObject } from './actions-gcode';
 import type { MachineStateUpdateOptions } from './state';
-import { ConnectionType, WORKSPACE_STAGE, initialState } from './state';
+import { WORKSPACE_STAGE, initialState } from './state';
 
 
 export { WORKSPACE_STAGE } from './state';
@@ -50,32 +49,6 @@ export { WORKSPACE_STAGE } from './state';
 const ACTION_SET_STATE = 'WORKSPACE/ACTION_SET_STATE';
 
 export const actions = {
-    resetMachineState: (connectionType = ConnectionType.WiFi) => (dispatch) => {
-        dispatch(baseActions.updateState({
-            isOpen: false,
-            isConnected: false,
-            connectionStatus: CONNECTION_STATUS_IDLE,
-            isHomed: null,
-            connectLoading: false,
-            // TODO: unify?
-            workflowStatus: connectionType === ConnectionType.WiFi ? WorkflowStatus.Unknown : WorkflowStatus.Idle,
-            laserFocalLength: null,
-            workPosition: { // work position
-                x: '0.000',
-                y: '0.000',
-                z: '0.000',
-                b: '0.000',
-                isFourAxis: false,
-                a: '0.000'
-            },
-
-            originOffset: {
-                x: 0,
-                y: 0,
-                z: 0
-            },
-        }));
-    },
     init: () => (dispatch) => {
         // Discover actions init
         dispatch(discoverActions.init());
@@ -143,7 +116,7 @@ export const actions = {
                     headType,
                     status,
                     moduleStatusList,
-                    isHomed,
+                    isHomed = false,
                     isMoving,
                 } = state;
                 const { seriesSize } = state;
@@ -177,6 +150,9 @@ export const actions = {
                     }));
                     machineSeries = series;
                 }
+
+                log.info(`machine = ${machineSeries}`);
+                log.info(`tool = ${toolHead}`);
 
                 if (machineSeries && headType && headType !== 'UNKNOWN') {
                     dispatch(
@@ -231,7 +207,7 @@ export const actions = {
                 );
             },
             'connection:close': () => {
-                dispatch(actions.resetMachineState());
+                dispatch(connectActions.resetMachineState());
             },
 
             'Marlin:settings': (options) => {
@@ -498,7 +474,7 @@ export const actions = {
                             isEmergencyStopped
                         })
                     );
-                    currentState.server.closeServer();
+                    dispatch(connectActions.disconnect(currentState.server));
                 }
             },
 
@@ -561,7 +537,14 @@ export const actions = {
             'sender:status': (options) => {
                 log.warn('REFACTOR sender:status');
                 const { data } = options;
-                const { total, sent, received, startTime, finishTime, elapsedTime, remainingTime, printStatus } = data;
+                const { filename, total, sent, received, startTime, finishTime, elapsedTime, remainingTime, printStatus } = data;
+
+                if (filename) {
+                    dispatch(baseActions.updateState({
+                        gcodeFileName: filename,
+                    }));
+                }
+
                 dispatch(baseActions.updateState({
                     gcodePrintingInfo: {
                         total,
@@ -571,6 +554,7 @@ export const actions = {
                         finishTime,
                         elapsedTime,
                         estimatedTime: remainingTime,
+                        remainingTime,
                         printStatus
                     }
                 }));
@@ -594,8 +578,9 @@ export const actions = {
                 const { owner, errorCode } = options;
                 if (includes(EMERGENCY_STOP_BUTTON, owner)) {
                     if (errorCode === 1) {
-                        controller.emitEvent(CONNECTION_CLOSE, () => {
-                            dispatch(actions.resetMachineState());
+                        // TODO
+                        controller.emitEvent(ControllerEvent.ConnectionClose, () => {
+                            dispatch(connectActions.resetMachineState());
                             dispatch(actions.updateMachineState({
                                 headType: '',
                                 toolHead: ''
@@ -1071,7 +1056,7 @@ export const actions = {
     },
 
     unloadGcode: () => (dispatch) => {
-        dispatch(actions.executeGcode(null, null, 'gcode:unload'));
+        // dispatch(actions.executeCmd('gcode:unload'));
         dispatch(actions.updateState({ uploadState: 'idle' }));
     },
 
@@ -1105,6 +1090,11 @@ export const actions = {
         dispatch(actions.updateState(options));
     },
 
+    executeCmd: (cmd: string) => {
+        console.log('execute cmd', cmd);
+        controller.emitEvent(ControllerEvent.ExecuteCmd, { cmd });
+    },
+
     /**
      * Execute G-code.
      */
@@ -1121,7 +1111,7 @@ export const actions = {
             return;
         }
         controller.emitEvent(
-            CONNECTION_EXECUTE_GCODE,
+            ControllerEvent.ExecuteGCode,
             { gcode, context, cmd },
             () => {
                 if (homingModal && gcode === 'G28') {

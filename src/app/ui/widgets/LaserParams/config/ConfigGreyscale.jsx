@@ -17,6 +17,7 @@ const ConfigGreyscale = ({ disabled }) => {
     const contrast = useSelector(state => state?.laser?.modelGroup?.getSelectedModelArray()[0]?.config?.contrast);
     const brightness = useSelector(state => state?.laser?.modelGroup?.getSelectedModelArray()[0]?.config?.brightness);
     const whiteClip = useSelector(state => state?.laser?.modelGroup?.getSelectedModelArray()[0]?.config?.whiteClip);
+    const greyscaleAlgorithm = useSelector(state => state?.laser?.modelGroup?.getSelectedModelArray()[0]?.config?.greyscaleAlgorithm);
     const algorithm = useSelector(state => state?.laser?.modelGroup?.getSelectedModelArray()[0]?.config?.algorithm);
 
     const [expanded, setExpended] = useState(true);
@@ -64,6 +65,9 @@ const ConfigGreyscale = ({ disabled }) => {
         },
         onChangeAlgorithm: (options) => {
             dispatch(editorActions.updateSelectedModelConfig(HEAD_LASER, { algorithm: options.value }));
+        },
+        onChangeGreyscaleAlgorithm: (options) => {
+            dispatch(editorActions.updateSelectedModelConfig(HEAD_LASER, { greyscaleAlgorithm: options.value }));
         }
     };
 
@@ -176,6 +180,38 @@ const ConfigGreyscale = ({ disabled }) => {
                             </div>
                         </TipTrigger>
                         <TipTrigger
+                            title={i18n._('key-Laser/ProcessingModeSection/ConfigGreyscale-Greyscale-Conversion')}
+                            content={i18n._('key-Laser/ProcessingModeSection/ConfigGreyscale-Select an algorithm for image processing.')}
+                        >
+
+                            <div className="sm-flex height-32 margin-vertical-8">
+                                <span className="sm-flex-width">{i18n._('key-Laser/ProcessingModeSection/ConfigGreyscale-Greyscale-Conversion')}</span>
+                                <Select
+                                    disabled={disabled}
+                                    size="large"
+                                    clearable={false}
+                                    name="greyscaleAlgorithm"
+                                    options={[{
+                                        value: 'Luma',
+                                        label: 'Luma'
+                                    }, {
+                                        value: 'Luminance',
+                                        label: 'Luminance'
+                                    }, {
+                                        value: 'Luster',
+                                        label: 'Luster'
+                                    }]}
+                                    placeholder=""
+                                    searchable={false}
+                                    value={greyscaleAlgorithm}
+                                    onChange={(value) => {
+                                        actions.onChangeGreyscaleAlgorithm(value);
+                                        dispatch(editorActions.processSelectedModel(HEAD_LASER));
+                                    }}
+                                />
+                            </div>
+                        </TipTrigger>
+                        <TipTrigger
                             title={i18n._('key-Laser/ProcessingModeSection/ConfigGreyscale-Algorithm')}
                             content={i18n._('key-Laser/ProcessingModeSection/ConfigGreyscale-Select an algorithm for image processing.')}
                         >
@@ -187,31 +223,35 @@ const ConfigGreyscale = ({ disabled }) => {
                                     size="large"
                                     clearable={false}
                                     name="algorithm"
-                                    options={[{
-                                        value: 'FloydSteinburg',
-                                        label: 'Floyd-Steinburg'
-                                    }, {
-                                        value: 'JarvisJudiceNinke',
-                                        label: 'Jarvis-Judice-Ninke'
-                                    }, {
-                                        value: 'Stucki',
-                                        label: 'Stucki'
-                                    }, {
-                                        value: 'Atkinson',
-                                        label: 'Atkinson'
-                                    }, {
-                                        value: 'Burkes',
-                                        label: 'Burkes'
-                                    }, {
-                                        value: 'Sierra2',
-                                        label: 'Sierra-2'
-                                    }, {
-                                        value: 'Sierra3',
-                                        label: 'Sierra-3'
-                                    }, {
-                                        value: 'SierraLite',
-                                        label: 'Sierra Lite'
-                                    }]}
+                                    options={[
+                                        {
+                                            value: 'None',
+                                            label: 'None'
+                                        }, {
+                                            value: 'Atkinson',
+                                            label: 'Atkinson'
+                                        }, {
+                                            value: 'Burkes',
+                                            label: 'Burkes'
+                                        }, {
+                                            value: 'FloydSteinburg',
+                                            label: 'Floyd-Steinburg'
+                                        }, {
+                                            value: 'JarvisJudiceNinke',
+                                            label: 'Jarvis-Judice-Ninke'
+                                        }, {
+                                            value: 'Stucki',
+                                            label: 'Stucki'
+                                        }, {
+                                            value: 'Sierra2',
+                                            label: 'Sierra-2'
+                                        }, {
+                                            value: 'Sierra3',
+                                            label: 'Sierra-3'
+                                        }, {
+                                            value: 'SierraLite',
+                                            label: 'Sierra Lite'
+                                        }]}
                                     placeholder=""
                                     searchable={false}
                                     value={algorithm}

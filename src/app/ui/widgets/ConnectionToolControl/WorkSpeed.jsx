@@ -4,11 +4,8 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 
-import {
-    CONNECTION_TYPE_WIFI,
-    CONNECTION_WORKSPEED_FACTOR,
-} from '../../../constants';
-import { actions as workspaceActions } from '../../../flux/workspace';
+import ControllerEvent from '../../../connection/controller-events';
+import { CONNECTION_TYPE_WIFI, } from '../../../constants';
 import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import AttributeContainer from './components/AttributeContainer';
@@ -36,7 +33,7 @@ class WorkSpeed extends React.PureComponent {
             this.setState({
                 workSpeedValue: value
             });
-            controller.emitEvent(CONNECTION_WORKSPEED_FACTOR, {
+            controller.emitEvent(ControllerEvent.SetSpeedFactor, {
                 workSpeedValue: value,
                 toolHead: this.props.toolHead,
             });
@@ -76,9 +73,8 @@ const mapStateToProps = (state) => {
 };
 
 
-const mapDispatchToProps = (dispatch) => {
+const mapDispatchToProps = () => {
     return {
-        executeGcode: (gcode, context) => dispatch(workspaceActions.executeGcode(gcode, context))
     };
 };
 

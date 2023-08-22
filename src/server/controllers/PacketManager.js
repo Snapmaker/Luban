@@ -1,4 +1,7 @@
 import fs from 'fs';
+
+import logger from '../lib/logger';
+
 import {
     GCODE_REQUEST_EVENT_ID,
     // GCODE_RESPONSE_EVENT_ID,
@@ -75,6 +78,8 @@ function toValue(buffer, offset, byteLength) {
         return null;
     }
 }
+
+const log = logger('controllers:PacketManager');
 
 class PacketManager {
     constructor() {
@@ -783,7 +788,7 @@ class PacketManager {
             fileBuff[index++] = 1;
         } else {
             // fileBuff[index] = 0;
-            console.error('err: not support the type');
+            log.error('Not support the type');
         }
         fileBuff[index++] = (0 >> 8) & 0xff;
         fileBuff[index++] = 0 & 0xff;

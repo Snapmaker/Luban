@@ -1,6 +1,7 @@
-/* eslint-disable import/no-cycle */
-import * as THREE from 'three';
 import { cloneDeep, noop } from 'lodash';
+import * as THREE from 'three';
+
+import { timestamp } from '../../../shared/lib/random-utils';
 import {
     COORDINATE_MODE_BOTTOM_CENTER,
     COORDINATE_MODE_BOTTOM_LEFT,
@@ -11,23 +12,28 @@ import {
     // MACHINE_TOOL_HEADS,
     PAGE_EDITOR
 } from '../../constants';
-import ModelGroup from '../../models/ModelGroup';
+import {
+    JobOffsetMode,
+    Origin,
+    OriginType,
+    RectangleWorkpieceReference,
+    WorkpieceShape,
+} from '../../constants/coordinate';
+import { getMachineSeriesWithToolhead } from '../../constants/machines';
 import OperationHistory from '../../core/OperationHistory';
+import { logToolBarOperation } from '../../lib/gaEvent';
+import i18n from '../../lib/i18n';
+import { STEP_STAGE, getProgressStateManagerInstance } from '../../lib/manager/ProgressManager';
+import ModelGroup from '../../models/ModelGroup';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
+import ToolPathGroup from '../../toolpaths/ToolPathGroup';
 import {
     ACTION_UPDATE_CONFIG,
     ACTION_UPDATE_STATE
 } from '../actionType';
 import { actions as editorActions } from '../editor';
 import { actions as machineActions } from '../machine';
-import ToolPathGroup from '../../toolpaths/ToolPathGroup';
 import definitionManager from '../manager/DefinitionManager';
-import i18n from '../../lib/i18n';
-import { timestamp } from '../../../shared/lib/random-utils';
-import { STEP_STAGE, getProgressStateManagerInstance } from '../../lib/manager/ProgressManager';
-import { logToolBarOperation } from '../../lib/gaEvent';
-import { getMachineSeriesWithToolhead } from '../../constants/machines';
-import { WorkpieceShape, OriginType, RectangleWorkpieceReference, Origin } from '../../constants/coordinate';
 
 const initModelGroup = new ModelGroup('laser');
 const operationHistory = new OperationHistory();
@@ -55,6 +61,9 @@ const INITIAL_STATE = {
     coordinateMode: COORDINATE_MODE_CENTER,
     coordinateSize: { x: 0, y: 0 },
     origin: initialOrigin,
+
+    // laser run boundary mode
+    jobOffsetMode: JobOffsetMode.Crosshair,
 
     stage: STEP_STAGE.EMPTY,
     progress: 0,

@@ -2,7 +2,7 @@ import { isEqualWith } from 'lodash';
 
 import { controller } from '../../lib/controller';
 import { NetworkedMachineInfo } from './NetworkedMachine';
-import { Server } from './Server';
+import { MachineAgent } from './MachineAgent';
 import baseActions from './actions-base';
 import { ConnectionType } from './state';
 import { CUSTOM_SERVER_NAME } from '../../constants';
@@ -23,92 +23,74 @@ const checkIfEqual = (objArray, othArray) => {
 
 const init = () => (dispatch, getState) => {
     const controllerEvents = {
-        // Receive when new servers discovered
-        'machine:discover': (data: { devices: NetworkedMachineInfo[] }) => {
+        // Receive when new machines discovered
+        'machine:discover': (data: { machines: NetworkedMachineInfo[] }) => {
             // Skip
             const connectionType = getState().workspace.connectionType;
             if (connectionType !== ConnectionType.WiFi) {
                 return;
             }
 
-            const devices = data.devices as NetworkedMachineInfo[];
+            const machineInfoList = data.machines as NetworkedMachineInfo[];
 
             // Note that we may receive this event many times.
-            const { servers } = getState().workspace;
+            const machineAgents = getState().workspace.machineAgents as MachineAgent[];
 
-            /*
-            const resultServers = cloneDeep(servers.filter(v => v.address));
-            resultServers.forEach((item, index) => {
-                const idx = devices.findIndex(v => {
-                    return v.address === item.address && v.name === item.name;
-                });
-                if (idx < 0 && item.name !== CUSTOM_SERVER_NAME) {
-                    resultServers.splice(index, 1);
-                }
-            });
-
-            for (const object of devices) {
-                const find = servers.find(v => {
-                    return v.address === object.address && v.name === object.name;
-                });
-                if (!find) {
-                    const server = new Server({ name: object.name, address: object.address, sacp: object.sacp });
-                    resultServers.unshift(server);
-                }
-            }
-            const rest = isEqualWith(resultServers, servers, checkIfEqual);
-            if (!rest) {
-                dispatch(baseActions.updateState({ servers: resultServers }));
-            }
-            */
-
-            const newServers = [];
-            for (const networkedMachine of devices) {
-                const find = servers.find(server => {
-                    return server.address === networkedMachine.address && server.name === networkedMachine.name;
+            const newAgents = [];
+            for (const machineInfo of machineInfoList) {
+                const find = machineAgents.find(agent => {
+                    return agent.address === machineInfo.address && agent.name === machineInfo.name;
                 });
 
                 if (find) {
-                    newServers.push(find);
+                    newAgents.push(find);
                 } else {
-                    const server = new Server({
-                        name: networkedMachine.name,
-                        address: networkedMachine.address,
-                        sacp: networkedMachine.sacp
+                    const agent = MachineAgent.createAgent({
+                        name: machineInfo.name,
+                        address: machineInfo.address,
+                        protocol: machineInfo.protocol,
                     });
-                    newServers.push(server);
+                    newAgents.push(agent);
                 }
             }
 
-            // keep manual added servers
-            for (const server of servers) {
-                if (server.nmae === CUSTOM_SERVER_NAME) {
-                    newServers.push(server);
+            // keep manual added machine agents
+            for (const agent of machineAgents) {
+                if (agent.name === CUSTOM_SERVER_NAME) {
+                    newAgents.push(agent);
                 }
             }
 
-            const rest = isEqualWith(newServers, servers, checkIfEqual);
-            if (!rest) {
-                dispatch(baseActions.updateState({ servers: newServers }));
+            const same = isEqualWith(newAgents, machineAgents, checkIfEqual);
+            if (!same) {
+                dispatch(baseActions.updateState({ machineAgents: newAgents }));
             }
         },
-        'machine:serial-discover': ({ devices }) => {
+        'machine:serial-discover': ({ machines }) => {
             // Note that we may receive this event many times.
-            const { servers, connectionType } = getState().workspace;
+            const { connectionType } = getState().workspace;
+
+            const machineAgents = getState().workspace.machineAgents as MachineAgent[];
+
             // Update serial ports only when connenctionType is active
             if (connectionType === ConnectionType.Serial) {
                 const resultServers = [];
-                for (const object of devices) {
+                for (const object of machines) {
                     const find = resultServers.find(v => {
                         return v.port === object.port;
                     });
                     if (!find) {
-                        const server = new Server({ port: object.port, sacp: object.sacp });
+                        const server = MachineAgent.createAgent({
+                            name: object.port,
+                            address: '',
+                            port: object.port,
+                            protocol: object.protocol,
+                        });
                         resultServers.unshift(server);
                     }
                 }
-                if (!isEqualWith(resultServers, servers)) {
-                    dispatch(baseActions.updateState({ servers: resultServers }));
+                if (!isEqualWith(resultServers, machineAgents)) {
+                    dispatch(baseActions.updateState({ machineAgents: resultServers }));
                 }
             }
         }
@@ -120,17 +102,17 @@ const init = () => (dispatch, getState) => {
 };
 
 /**
- * Discover servers on Snapmaker 2.0.
+ * Discover networked machines.
  */
-const discoverSnapmakerServers = () => {
+const discoverNetworkedMachines = () => {
     return (dispatch, getState) => {
-        dispatch(baseActions.updateState({ serverDiscovering: true }));
+        dispatch(baseActions.updateState({ machineDiscovering: true }));
 
         // reset discover state whatever search is done or not
         setTimeout(() => {
-            const state = getState().machine;
-            if (state.serverDiscovering) {
-                dispatch(baseActions.updateState({ serverDiscovering: false }));
+            const machineDiscovering = getState().workspace.machineDiscovering;
+            if (machineDiscovering) {
+                dispatch(baseActions.updateState({ machineDiscovering: false }));
             }
         }, 3000);
 
@@ -138,7 +120,50 @@ const discoverSnapmakerServers = () => {
     };
 };
 
+/**
+ * Add a new machine agent manually.
+ */
+const addAgent = (agent: MachineAgent) => {
+    return (dispatch, getState): MachineAgent => {
+        const machineAgents = getState().workspace.machineAgents as MachineAgent[];
+
+        const find = machineAgents.find(s => s.address === agent.address);
+
+        // Check if agent with the same address already exists
+        if (find) {
+            return find;
+        }
+
+        // Update agent list
+        const newAgents = machineAgents.slice(0);
+        newAgents.push(agent);
+
+        dispatch(baseActions.updateState({
+            machineAgents: newAgents,
+        }));
+
+        return agent;
+    };
+};
+
+const addAgentByAddress = (address: string) => {
+    return (dispatch): MachineAgent => {
+        const agent = MachineAgent.createManualAgent({
+            name: CUSTOM_SERVER_NAME,
+            address,
+        });
+
+        return dispatch(addAgent(agent));
+    };
+};
+
 export default {
     init,
-    discoverSnapmakerServers
+
+    // discover
+    discoverNetworkedMachines,
+
+    // add manually
+    addAgent,
+    addAgentByAddress,
 };

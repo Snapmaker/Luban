@@ -1,6 +1,7 @@
-import { ResponseCallback } from '@snapmaker/snapmaker-sacp-sdk';
 import { WorkflowStatus } from '@snapmaker/luban-platform';
-import { readString, readUint16, readUint8 } from '@snapmaker/snapmaker-sacp-sdk/dist/helper';
+import { ResponseCallback } from '@snapmaker/snapmaker-sacp-sdk';
+import { PeerId } from '@snapmaker/snapmaker-sacp-sdk/dist/communication/Header';
+import { readString, readUint16, readUint32, readUint8 } from '@snapmaker/snapmaker-sacp-sdk/dist/helper';
 import {
     AirPurifierInfo,
     CncSpeedState,
@@ -12,10 +13,11 @@ import {
     GetHotBed,
     LaserTubeState,
     ModuleInfo,
-    NetworkOptions
+    NetworkConfiguration,
+    NetworkOptions,
+    NetworkStationState,
 } from '@snapmaker/snapmaker-sacp-sdk/dist/models';
 import { Direction } from '@snapmaker/snapmaker-sacp-sdk/dist/models/CoordinateInfo';
-import { EventEmitter } from 'events';
 import { find, includes } from 'lodash';
 import net from 'net';
 
@@ -56,18 +58,30 @@ import {
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
 } from '../../../constants';
 import logger from '../../../lib/logger';
-import SocketServer from '../../../lib/SocketManager';
-import Business, { CoordinateType } from '../sacp/Business';
-import { EventOptions, MarlinStateData } from '../types';
+import SacpClient, { CoordinateType } from '../sacp/SacpClient';
+import { MarlinStateData } from '../types';
+import Channel, {
+    CncChannelInterface,
+    GcodeChannelInterface,
+    LaserChannelInterface,
+    NetworkServiceChannelInterface,
+    PrintJobChannelInterface,
+    SystemChannelInterface,
+    UpgradeFirmwareOptions
+} from './Channel';
 
-const log = logger('lib:SocketBASE');
+const log = logger('machine:channels:SacpChannel');
 
-class SocketBASE extends EventEmitter {
+class SacpChannelBase extends Channel implements
+    GcodeChannelInterface,
+    SystemChannelInterface,
+    NetworkServiceChannelInterface,
+    PrintJobChannelInterface,
+    LaserChannelInterface,
+    CncChannelInterface {
     private heartbeatTimer;
 
-    public socket: SocketServer;
-
-    public sacpClient: Business;
+    public sacpClient: SacpClient;
 
     public subscribeLogCallback: ResponseCallback;
 
@@ -95,11 +109,11 @@ class SocketBASE extends EventEmitter {
 
     private filamentActionModule = null;
 
-    private moduleInfos: {};
+    private moduleInfos: { [key: string]: ModuleInfo | ModuleInfo[] };
 
     public currentWorkNozzle: number;
 
-    private resumeGcodeCallback: any = null;
+    private resumeGcodeCallback: ({ msg, code }) => void = null;
 
     public readyToWork = false;
 
@@ -108,15 +122,267 @@ class SocketBASE extends EventEmitter {
     public cncTargetSpeed: number;
 
     // gcode total lines
+    public filename: string = '';
     public totalLine: number | null = null;
-
     public estimatedTime: number | null = null;
-
-    public startTime: any;
-
+    public startTime: number;
     public machineStatus: string = WorkflowStatus.Idle;
 
-    public startHeartbeatBase = async (sacpClient: Business, client?: net.Socket) => {
+    public setFilePeerId(peerId: PeerId): void {
+        if (this.sacpClient) {
+            this.sacpClient.setFilePeerId(peerId);
+        }
+    }
+
+    /**
+     * Get laser module info.
+     */
+    private getLaserToolHeadModule(): ModuleInfo | null {
+        let targetModule: ModuleInfo = null;
+        for (const key of Object.keys(this.moduleInfos)) {
+            const module = this.moduleInfos[key];
+            if (module && module instanceof ModuleInfo) {
+                if (includes(LASER_HEAD_MODULE_IDS, module.moduleId)) {
+                    targetModule = module;
+                    break;
+                }
+            }
+        }
+
+        return targetModule;
+    }
+
+    // interface: GcodeChannelInterface
+
+    /**
+     * Generic execute G-code commands.
+     */
+    public async executeGcode(gcode: string): Promise<boolean> {
+        const gcodeLines = gcode.split('\n');
+
+        const promises = [];
+        gcodeLines.forEach(_gcode => {
+            promises.push(this.sacpClient.executeGcode(_gcode));
+        });
+
+        const results = await Promise.all(promises);
+
+        // if any gcode line fails, then fails
+        for (const res of results) {
+            if (res.response.result !== 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // interface: SystemChannelInterface
+
+    /**
+     * Export Log in machine to external storage.
+     */
+    public async exportLogToExternalStorage(): Promise<boolean> {
+        return this.sacpClient.exportLogToExternalStorage();
+    }
+
+    public async getFirmwareVersion(): Promise<string> {
+        const { data: machineInfo } = await this.sacpClient.getMachineInfo();
+
+        const version = machineInfo.masterControlFirmwareVersion;
+        log.info(`Get firmware version: ${version}`);
+
+        return version;
+    }
+
+    public async upgradeFirmwareFromFile(options: UpgradeFirmwareOptions): Promise<boolean> {
+        log.info(`Upgrading firmware from file: ${options.filename}`);
+        const filename = options.filename;
+
+        const res = await this.sacpClient.upgradeFirmwareFromFile(filename);
+        log.info(`Upgrade firmware result = ${res.response.result}`);
+
+        return res.response.result === 0;
+    }
+
+    // interface: LaserChannelInterface
+
+    public async getCrosshairOffset(): Promise<{ x: number; y: number }> {
+        const module = this.getLaserToolHeadModule();
+        if (!module) {
+            return null;
+        }
+
+        const offset = await this.sacpClient.getCrosshairOffset(module.key);
+
+        log.info(`Get crosshair offset: (${offset.x}, ${offset.y})`);
+        return offset;
+    }
+
+    public async setCrosshairOffset(x: number, y: number): Promise<boolean> {
+        const module = this.getLaserToolHeadModule();
+        if (!module) {
+            return false;
+        }
+
+        const success = await this.sacpClient.setCrosshairOffset(module.key, x, y);
+        log.info(`Set crosshair offset: (${x}, ${y}), ${success ? 'success' : 'failed'}`);
+        return success;
+    }
+
+    public async getFireSensorSensitivity(): Promise<number> {
+        const module = this.getLaserToolHeadModule();
+        if (!module) {
+            return -1;
+        }
+
+        const sensitivity = await this.sacpClient.getFireSensorSensitivity(module.key);
+
+        log.info(`Get fire sensor sensitivity: ${sensitivity}`);
+        return sensitivity;
+    }
+
+    public async setFireSensorSensitivity(sensitivity: number): Promise<boolean> {
+        const module = this.getLaserToolHeadModule();
+        if (!module) {
+            return false;
+        }
+
+        const success = await this.sacpClient.setFireSensorSensitivity(module.key, sensitivity);
+        log.info(`Set fire sensor sensitivity: ${sensitivity}, ${success ? 'success' : 'failed'}`);
+        return success;
+    }
+
+    // interface: CncChannelInterface
+
+    public async setSpindleSpeed(speed: number): Promise<boolean> {
+        // Only supports level 2 CNC module
+        const toolhead = this.moduleInfos && this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2];
+        if (!toolhead) {
+            log.error(`no match ${LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2}, moduleInfos:${this.moduleInfos}`,);
+            return false;
+        }
+
+        log.info(`Set spindle speed: ${speed} RPM`);
+        const { response } = await this.sacpClient.setToolHeadSpeed(toolhead.key, speed);
+        return response.result === 0;
+    }
+
+    public async setSpindleSpeedPercentage(percent: number): Promise<boolean> {
+        const toolhead = this.moduleInfos && (this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2] || this.moduleInfos[STANDARD_CNC_TOOLHEAD_FOR_SM2]);
+        if (!toolhead) {
+            log.error(`no match cnc tool head, moduleInfos:${JSON.stringify(this.moduleInfos)}`,);
+            return false;
+        }
+
+        log.info(`Set spindle speed: ${percent}%`);
+
+        const { response } = await this.sacpClient.setCncPower(toolhead.key, percent);
+        return response.result === 0;
+    }
+
+    public async spindleOn(): Promise<boolean> {
+        const toolhead = this.moduleInfos && (this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2] || this.moduleInfos[STANDARD_CNC_TOOLHEAD_FOR_SM2]);
+        if (!toolhead) {
+            log.error('No matched CNC module');
+            return false;
+        }
+
+        const { response } = await this.sacpClient.switchCNC(toolhead.key, true);
+        return response.result === 0;
+    }
+
+    public async spindleOff(): Promise<boolean> {
+        const toolhead = this.moduleInfos && (this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2] || this.moduleInfos[STANDARD_CNC_TOOLHEAD_FOR_SM2]);
+        if (!toolhead) {
+            log.error('No matched CNC module');
+            return false;
+        }
+
+        const { response } = await this.sacpClient.switchCNC(toolhead.key, false);
+        return response.result === 0;
+    }
+
+    // interface: PrintJobChannelInterface
+
+    private async getPrintJobFileInfo(): Promise<void> {
+        const { data } = await this.sacpClient.getPrintingFileInfo();
+
+        if (!data.totalLine) {
+            return;
+        }
+
+        this.filename = data.filename;
+        this.totalLine = data.totalLine;
+        this.estimatedTime = data.estimatedTime;
+    }
+
+    public async subscribeGetPrintCurrentLineNumber(): Promise<boolean> {
+        // Subscribe to line number
+        const callback: ResponseCallback = ({ response }) => {
+            if (!this.totalLine) {
+                this.getPrintJobFileInfo();
+            }
+
+            // line number
+            const currentLineNumberInfo = new GcodeCurrentLine().fromBuffer(response.data);
+
+            const currentLine = currentLineNumberInfo.currentLine;
+
+            let progress;
+            if (this.totalLine === 0) {
+                progress = 0;
+            } else if (currentLine >= this.totalLine) {
+                progress = 1;
+            } else {
+                progress = Math.round((currentLine / this.totalLine) * 100) / 100;
+            }
+
+            const sliceTime = new Date().getTime() - this.startTime;
+
+            const remainingTime = (1 - (progress)) * progress * (this.estimatedTime * 1000) / progress + (1 - progress) * (1 - progress) * sliceTime;
+
+            const data = {
+                filename: this.filename,
+                sent: currentLine,
+                total: this.totalLine,
+                progress: progress,
+                // printStatus: progress === 1 ? COMPLUTE_STATUS : '',
+                estimatedTime: this.estimatedTime * 1000,
+                elapsedTime: sliceTime,
+                remainingTime: remainingTime,
+            };
+
+            if (includes([WorkflowStatus.Running, WorkflowStatus.Paused], this.machineStatus)) {
+                this.socket && this.socket.emit('sender:status', ({ data }));
+            }
+        };
+
+        const res = await this.sacpClient.subscribeGetPrintCurrentLineNumber(
+            { interval: 2000 },
+            callback
+        );
+
+        // Subscribe to print time
+        const callback2: ResponseCallback = ({ response }) => {
+            const sliceTime = readUint32(response.data);
+            this.startTime = new Date().getTime() - sliceTime * 1000;
+        };
+
+        const res2 = await this.sacpClient.subscribeGetPrintingTime({ interval: 5000 }, callback2);
+
+        return res.code === 0 && res2.code === 0;
+    }
+
+    public async unsubscribeGetPrintCurrentLineNumber(): Promise<boolean> {
+        const res = await this.sacpClient.unSubscribeGetPrintCurrentLineNumber(null);
+        return res.code === 0;
+    }
+
+
+
+    // old heartbeat base, refactor needed
+    public startHeartbeatBase = async (sacpClient: SacpClient, client?: net.Socket) => {
         this.sacpClient = sacpClient;
 
         let stateData: MarlinStateData = {};
@@ -185,7 +451,7 @@ class SocketBASE extends EventEmitter {
                 state: {
                     ...stateData,
                     moduleStatusList,
-                    status: WORKFLOW_STATUS_MAP[statusKey],
+                    status: this.machineStatus,
                     moduleList: moduleStatusList,
                 }
             });
@@ -388,6 +654,7 @@ class SocketBASE extends EventEmitter {
             log.info(`subscribe laser power state success: ${res}`);
         });
 
+        // TODO: Note this is only for Artisan + J1, not for RayInstance, refactor this
         this.subscribeGetCurrentGcodeLineCallback = async ({ response }) => {
             if (!this.totalLine || !this.estimatedTime) {
                 this.sacpClient.getPrintingFileInfo().then((result) => {
@@ -413,7 +680,10 @@ class SocketBASE extends EventEmitter {
                 remainingTime: remainingTime,
                 printStatus: currentLine === this.totalLine ? COMPLUTE_STATUS : ''
             };
-            includes([WorkflowStatus.Running, WorkflowStatus.Paused], this.machineStatus) && this.socket && this.socket.emit('sender:status', ({ data }));
+
+            if (includes([WorkflowStatus.Running, WorkflowStatus.Paused], this.machineStatus)) {
+                this.socket && this.socket.emit('sender:status', ({ data }));
+            }
         };
         this.sacpClient.subscribeGetPrintCurrentLineNumber({ interval: 1000 }, this.subscribeGetCurrentGcodeLineCallback);
         this.sacpClient.subscribeGetPrintingTime({ interval: 1000 }, (response) => {
@@ -519,32 +789,35 @@ class SocketBASE extends EventEmitter {
     };
 
     public getModuleInfo = async () => {
-        return this.sacpClient.getModuleInfo();
+        const res = await this.sacpClient.getModuleInfo();
+
+        // save module info in channel
+        this.moduleInfos = {};
+        for (const module of res.data) {
+            const keys = Object.keys(MODULEID_MAP);
+
+            if (includes(keys, String(module.moduleId))) {
+                const identifier = MODULEID_MAP[module.moduleId];
+
+                if (!this.moduleInfos[identifier]) {
+                    this.moduleInfos[identifier] = module;
+                } else {
+                    const modules = this.moduleInfos[identifier];
+                    if (Array.isArray(modules)) {
+                        modules.push(module);
+                    } else {
+                        // convert single item to list
+                        this.moduleInfos[identifier] = [modules, module];
+                    }
+                }
+            }
+        }
+
+        return res;
     };
 
     public getCoordinateInfo = async () => {
         return this.sacpClient.getCurrentCoordinateInfo();
-    };
-
-    public executeGcode = async (options: EventOptions, callback: () => void) => {
-        log.info('run executeGcode');
-        const { gcode } = options;
-        const gcodeLines = gcode.split('\n');
-        // callback && callback();
-        log.debug(`executeGcode, ${gcodeLines}`);
-        gcodeLines.forEach(_gcode => {
-            this.sacpClient.executeGcode(_gcode).then(res => {
-                if (res.response.result !== 0) {
-                    log.info(`failed to execute gcode: ${_gcode}`);
-                }
-            });
-        });
-        try {
-            callback && callback();
-            this.socket && this.socket.emit('connection:executeGcode', { msg: '', res: null });
-        } catch (e) {
-            log.error(`execute gcode error: ${e}`);
-        }
     };
 
     public goHome = async (headType?: string) => {
@@ -798,46 +1071,6 @@ class SocketBASE extends EventEmitter {
         });
     };
 
-    public switchCNC = async function (headStatus) {
-        const toolhead = this.moduleInfos && (this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2] || this.moduleInfos[STANDARD_CNC_TOOLHEAD_FOR_SM2]);
-        if (!toolhead) {
-            log.error(`no match ${LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2} or ${STANDARD_CNC_TOOLHEAD_FOR_SM2}:1 , moduleInfos:${this.moduleInfos}`,);
-            return;
-        }
-
-        // return
-        const { response: responseForSpeed } = await this.sacpClient.setToolHeadSpeed(toolhead.key, this.cncTargetSpeed < 8000 ? 16000 : this.cncTargetSpeed);
-        if (responseForSpeed.result === 0) {
-            const { response: responseForOpen } = await this.sacpClient.switchCNC(toolhead.key, !headStatus);
-            log.info(`switchCNC to [${!headStatus}], ${JSON.stringify(responseForOpen)}`);
-        }
-        // return response;
-    };
-
-    public updateToolHeadSpeed = (speed) => {
-        const toolhead = this.moduleInfos && this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2];
-        if (!toolhead) {
-            log.error(`no match ${LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2}, moduleInfos:${this.moduleInfos}`,);
-            return;
-        }
-
-        this.sacpClient.setToolHeadSpeed(toolhead.key, speed).then(({ response }) => {
-            log.info(`updateToolHeadSpeed Speed:[${speed}], ${JSON.stringify(response)}`);
-        });
-    };
-
-    public setCncPower = (targetPower) => {
-        const toolhead = this.moduleInfos && (this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2] || this.moduleInfos[STANDARD_CNC_TOOLHEAD_FOR_SM2]);
-        if (!toolhead) {
-            log.error(`no match cnc tool head, moduleInfos:${JSON.stringify(this.moduleInfos)}`,);
-            return;
-        }
-
-        this.sacpClient.setCncPower(toolhead.key, targetPower).then(({ response }) => {
-            log.info(`setCncPower setCncPower:[${targetPower}]%, ${JSON.stringify(response)}`);
-        });
-    };
-
     public async setAbsoluteWorkOrigin({ z, isRotate = false }: {
         x: number, y: number, z: number, isRotate: boolean
     }) {
@@ -933,28 +1166,21 @@ class SocketBASE extends EventEmitter {
     }
 
     /**
-     * Export Log in machine to external storage.
-     */
-    public exportLogToExternalStorage = async () => {
-        return this.sacpClient.exportLogToExternalStorage();
-    }
-
-    /**
      * Configure machine network.
      *
      * Note that this API is only implemented by Ray.
      */
-    public configureNetwork = async (networkOptions: NetworkOptions) => {
+    public async configureNetwork(networkOptions: NetworkOptions): Promise<boolean> {
         return this.sacpClient.configureNetwork(networkOptions);
-    };
+    }
 
-    public getNetworkConfiguration = async () => {
+    public async getNetworkConfiguration(): Promise<NetworkConfiguration> {
         return this.sacpClient.getNetworkConfiguration();
-    };
+    }
 
-    public getNetworkStationState = async () => {
+    public async getNetworkStationState(): Promise<NetworkStationState> {
         return this.sacpClient.getNetworkStationState();
-    };
+    }
 }
 
-export default SocketBASE;
+export default SacpChannelBase;

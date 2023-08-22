@@ -33,8 +33,10 @@ import RayMachiningWidget from '../../widgets/RayMachiningWidget';
 import RayUploadWidget from '../../widgets/RayUploadWidget';
 import VisualizerWidget from '../../widgets/WorkspaceVisualizer';
 import VisualizerOverlay from './VisualizerOverlay';
+import FirmwareUpgradeModal from './modals/FirmwareUpgradeModal';
 import MachineLogModal from './modals/MachineLogModal';
 import MachineNetworkModal from './modals/MachineNetworkModal';
+import MachineSettingsModal from './modals/MachineSettingsModal';
 
 
 const allWidgets = {
@@ -105,6 +107,8 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [connected, setConnected] = useState(controller.connected);
 
+    const [showMachineSettingsModal, setShowMachineSettingsModal] = useState(false);
+    const [showFirmwareUpgradeModal, setShowFirmwareUpgradeModal] = useState(false);
     const [showMachineNetworkModal, setShowMachineNetworkModal] = useState(false);
     const [showMachineLogModal, setShowMachineLogModal] = useState(false);
 
@@ -122,9 +126,25 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
             name: 'separator',
         },
         {
-            title: i18n._('key-Workspace/MainToolBar-Machine Network'),
+            title: i18n._('Settings'),
             type: 'button',
-            name: 'MainToolbarJobSetup',
+            name: 'MainToolbarMachineconfig',
+            action: () => {
+                setShowMachineSettingsModal(true);
+            },
+        },
+        {
+            title: i18n._('Firmware'),
+            type: 'button',
+            name: 'MainToolbarMachineupdate',
+            action: () => {
+                setShowFirmwareUpgradeModal(true);
+            },
+        },
+        {
+            title: i18n._('Network'),
+            type: 'button',
+            name: 'MainToolbarMachinewifi',
             action: () => {
                 setShowMachineNetworkModal(true);
             },
@@ -132,11 +152,11 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
         {
             title: i18n._('Machine Log'),
             type: 'button',
-            name: 'MainToolbarJobSetup',
+            name: 'MainToolbarMachinelog',
             action: () => {
                 setShowMachineLogModal(true);
             },
-        }
+        },
     ]);
 
     const defaultContainer = useRef();
@@ -325,6 +345,15 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
 
                 {renderModalView(connected)}
 
+                {/* Machine Settings */}
+                {
+                    showMachineSettingsModal && (
+                        <MachineSettingsModal
+                            onClose={() => setShowMachineSettingsModal(false)}
+                        />
+                    )
+                }
+
                 {/* Machine Network */}
                 {
                     showMachineNetworkModal && (
@@ -339,6 +368,15 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
                     showMachineLogModal && (
                         <MachineLogModal
                             onClose={() => setShowMachineLogModal(false)}
+                        />
+                    )
+                }
+
+                {/* Firmware Upgrade */}
+                {
+                    showFirmwareUpgradeModal && (
+                        <FirmwareUpgradeModal
+                            onClose={() => setShowFirmwareUpgradeModal(false)}
                         />
                     )
                 }

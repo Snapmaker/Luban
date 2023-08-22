@@ -2,9 +2,7 @@ import classNames from 'classnames';
 import React, { useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
-import {
-    CONNECTION_UPLOAD_FILE
-} from '../../../constants';
+import ControllerEvent from '../../../connection/controller-events';
 import { RootState } from '../../../flux/index.def';
 import controller from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
@@ -19,8 +17,7 @@ export type LoadGcodeOptions = {
 
 const UploadView: React.FC = () => {
     // const activeMachine = useSelector((state: RootState) => state.machine.activeMachine);
-    // const dispatch = useDispatch();
-
+    const isConnected = useSelector((state: RootState) => state.workspace.isConnected);
     // const activeGcodeFile = useSelector((state: RootState) => state.workspace.activeGcodeFile);
     const gcodeFile = useSelector((state: RootState) => state.workspace.gcodeFile);
 
@@ -37,11 +34,11 @@ const UploadView: React.FC = () => {
         }).ref;
 
         controller
-            .emitEvent(CONNECTION_UPLOAD_FILE, {
-                gcodePath: `/${gcodeFile.uploadName}`,
-                renderGcodeFileName: 'ray.nc',
+            .emitEvent(ControllerEvent.CompressUploadFile, {
+                filePath: gcodeFile.uploadName,
+                targetFilename: 'ray.nc',
             })
-            .once(CONNECTION_UPLOAD_FILE, ({ err, text }) => {
+            .once(ControllerEvent.CompressUploadFile, ({ err, text }) => {
                 // close sending modal
                 if (sendingModal.current) {
                     sendingModal.current.removeContainer();
@@ -75,7 +72,7 @@ const UploadView: React.FC = () => {
                     type="primary"
                     priority="level-one"
                     onClick={onClickUploadJob}
-                    disabled={false}
+                    disabled={!isConnected}
                 >
                     {i18n._('key-Workspace/Upload Job')}
                 </Button>

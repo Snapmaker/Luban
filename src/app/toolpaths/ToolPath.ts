@@ -1,7 +1,15 @@
-import { v4 as uuid } from 'uuid';
 import { includes } from 'lodash';
 import * as THREE from 'three';
+import { v4 as uuid } from 'uuid';
+import { Box2, Group } from 'three';
 
+import { ObjectReference, Origin, OriginType, RectangleWorkpieceReference } from '../constants/coordinate';
+import { MINIMUM_WIDTH_AND_HEIGHT } from '../constants';
+import log from '../lib/log';
+import ModelGroup from '../models/ModelGroup';
+import {
+    MATERIAL_SELECTED,
+} from '../workers/ShaderMaterial/ToolpathRendererMeterial';
 import {
     FAILED,
     getToolPathType,
@@ -10,49 +18,45 @@ import {
     SUCCESS,
     WARNING,
 } from './utils';
-import log from '../lib/log';
-import {
-    MATERIAL_SELECTED,
-    MATERIAL_UNSELECTED,
-} from '../workers/ShaderMaterial/ToolpathRendererMeterial';
-import { MINIMUM_WIDTH_AND_HEIGHT } from '../constants';
+import SvgModel from '../models/SvgModel';
 
 class ToolPath {
-    id;
+    public id: string;
 
-    name;
+    public name: string;
 
-    baseName;
+    public baseName: string;
 
-    type; // image, vector, image3d
+    public type; // image, vector, image3d
 
-    useLegacyEngine = false;
+    public useLegacyEngine = false;
 
-    status = IDLE; // idle, running, success, warning, failed
+    public status = IDLE; // idle, running, success, warning, failed
 
-    check = true;
+    public check = true;
 
-    visible = true;
+    public visible = true;
 
     // Threejs Obj
-    object = new THREE.Group();
+    public object = new Group();
 
-    visibleModelIDs = [];
+    public visibleModelIDs = [];
 
     // { modelID, meshObj, toolPathFile, status}
-    modelMap = new Map();
+    public modelMap = new Map();
 
-    gcodeConfig;
+    public gcodeConfig;
 
-    toolParams;
+    public toolParams;
 
-    materials;
+    public materials;
+    private origin: Origin;
 
-    lastConfigJson = '';
+    public lastConfigJson = '';
 
-    modelGroup;
+    public modelGroup: ModelGroup;
 
-    constructor(options) {
+    public constructor(options) {
         const {
             id,
             name,
@@ -66,6 +70,11 @@ class ToolPath {
             gcodeConfig,
             toolParams = {},
             materials = {},
+            origin = {
+                type: OriginType.Workpiece,
+                reference: RectangleWorkpieceReference.Center,
+                referenceMetadata: {},
+            },
             modelGroup,
         } = options;
 
@@ -89,13 +98,15 @@ class ToolPath {
 
         this.gcodeConfig = { ...gcodeConfig };
         this.toolParams = { ...toolParams };
-        this.materials = { ...materials };
         this.modelGroup = modelGroup;
+
+        this.materials = { ...materials };
+        this.origin = { ...origin };
 
         this.checkoutToolPathStatus();
     }
 
-    getState() {
+    public getState() {
         this.visibleModelIDs = this.modelGroup.models
             .filter((model) => {
                 return (
@@ -136,19 +147,19 @@ class ToolPath {
         };
     }
 
-    updateStatus(status) {
+    public updateStatus(status) {
         this.status = status;
     }
 
-    setWarningStatus() {
+    public setWarningStatus() {
         this.status = WARNING;
     }
 
-    hasVisibleModels() {
+    public hasVisibleModels() {
         return this.getState().visibleModelIDs.length > 0;
     }
 
-    updateState(toolPath) {
+    public updateState(toolPath) {
         const {
             name = this.name,
             check = this.check,
@@ -179,8 +190,14 @@ class ToolPath {
         this.checkoutToolPathStatus();
     }
 
-    _getModels() {
-        const models = this.modelGroup.getModels();
+    public setOrigin(origin: Origin): void {
+        this.origin = origin;
+
+        this.checkoutToolPathStatus();
+    }
+
+    private _getModels(): SvgModel[] {
+        const models = this.modelGroup.getModels<SvgModel>();
         return models.filter((model) => {
             return (
                 includes(this.visibleModelIDs, model.modelID) && model.visible
@@ -188,7 +205,7 @@ class ToolPath {
         });
     }
 
-    deleteModel(modelId) {
+    public deleteModel(modelId) {
         this.visibleModelIDs = this.visibleModelIDs.filter(
             (v) => v !== modelId
         );
@@ -200,15 +217,15 @@ class ToolPath {
     /**
      * Generate toolpath task to server, need to call `commitToolPathTaskArray`
      */
-    commitGenerateToolPath() {
+    public commitGenerateToolPath() {
         if (this.status === FAILED) {
             this.clearModelObjects();
-            return false;
+            return null;
         }
 
         this.checkoutToolPathStatus();
         if (this.status === SUCCESS) {
-            return false;
+            return null;
         }
 
         const taskInfos = this.getSelectModelsAndToolPathInfo();
@@ -232,7 +249,7 @@ class ToolPath {
         }
         if (data.length === 0) {
             // if all the model in toolpath is invisible, do not generate toolpath
-            return false;
+            return null;
         }
 
         const task = {
@@ -247,46 +264,91 @@ class ToolPath {
         return task;
     }
 
-    _getModelTaskInfos() {
+    private _getModelTaskInfos() {
         const selectModels = this._getModels();
+
         const modelInfos = selectModels
-            .map((v) => v.getTaskInfo())
-            .map((v) => {
-                if (!v.transformation.width) {
-                    v.transformation.width = MINIMUM_WIDTH_AND_HEIGHT;
+            .map((model) => model.getTaskInfo())
+            .map((info) => {
+                if (!info.transformation.width) {
+                    info.transformation.width = MINIMUM_WIDTH_AND_HEIGHT;
                 }
-                if (!v.transformation.height) {
-                    v.transformation.height = MINIMUM_WIDTH_AND_HEIGHT;
+                if (!info.transformation.height) {
+                    info.transformation.height = MINIMUM_WIDTH_AND_HEIGHT;
                 }
                 return {
-                    visible: v.visible,
-                    modelID: v.modelID,
-                    headType: v.headType,
-                    sourceType: v.sourceType,
-                    mode: v.mode,
-                    sourceHeight: v.sourceHeight,
-                    sourceWidth: v.sourceWidth,
-                    originalName: v.originalName,
-                    uploadName: v.uploadName,
-                    transformation: v.transformation,
-                    config: v.config,
+                    visible: info.visible,
+                    modelID: info.modelID,
+                    headType: info.headType,
+                    sourceType: info.sourceType,
+                    mode: info.mode,
+                    sourceHeight: info.sourceHeight,
+                    sourceWidth: info.sourceWidth,
+                    originalName: info.originalName,
+                    uploadName: info.uploadName,
+                    transformation: info.transformation,
+                    config: info.config,
                 };
             });
+
         return modelInfos;
     }
 
-    getSelectModelsAndToolPathInfo() {
+    public getSelectModelsAndToolPathInfo() {
         const modelInfos = this._getModelTaskInfos();
 
+        // Deal with origin, if origin type is object, we add offsets to the model transformation here
+        if (this.origin.type === OriginType.Object) {
+            const selectModels = this._getModels();
+
+            const bbox = new Box2();
+            for (const model of selectModels) {
+                model.computeBoundingBox();
+
+                bbox.expandByPoint(model.boundingBox.min);
+                bbox.expandByPoint(model.boundingBox.max);
+            }
+
+            for (const modelInfo of modelInfos) {
+                switch (this.origin.reference) {
+                    case ObjectReference.Center: {
+                        modelInfo.transformation.positionX -= (bbox.min.x + bbox.max.x) * 0.5;
+                        modelInfo.transformation.positionY -= (bbox.min.y + bbox.max.y) * 0.5;
+                        break;
+                    }
+                    case ObjectReference.BottomLeft: {
+                        modelInfo.transformation.positionX -= bbox.min.x;
+                        modelInfo.transformation.positionY -= bbox.min.y;
+                        break;
+                    }
+                    case ObjectReference.BottomRight: {
+                        modelInfo.transformation.positionX -= bbox.max.x;
+                        modelInfo.transformation.positionY -= bbox.min.y;
+                        break;
+                    }
+                    case ObjectReference.TopLeft: {
+                        modelInfo.transformation.positionX -= bbox.min.x;
+                        modelInfo.transformation.positionY -= bbox.max.y;
+                        break;
+                    }
+                    case ObjectReference.TopRight: {
+                        modelInfo.transformation.positionX -= bbox.max.x;
+                        modelInfo.transformation.positionY -= bbox.max.y;
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+        }
+
         // FIXME
-        // diameter is required by LunarTPP
+        // diameter is required by LunarTPP, or it won't work properly
         this.materials.diameter = this.materials.diameter || 0;
 
-        console.log('getSelectModelsAndToolPathInfo, materials', this.materials);
-
+        const taskInfos = [];
         for (let i = 0; i < modelInfos.length; i++) {
-            console.log('getSelectModelsAndToolPathInfo, modelInfo', modelInfos[i].transformation);
-            modelInfos[i] = {
+            const taskInfo = {
                 ...modelInfos[i],
                 type: this.type,
                 useLegacyEngine: this.useLegacyEngine,
@@ -294,16 +356,18 @@ class ToolPath {
                 toolParams: this.toolParams,
                 materials: this.materials,
             };
+
+            taskInfos.push(taskInfo);
         }
 
-        return modelInfos;
+        return taskInfos;
     }
 
     /**
      * Handle listening failed
      * @param taskResult
      */
-    onGenerateToolpathFailed(taskResult) {
+    public onGenerateToolpathFailed(taskResult) {
         for (let i = 0; i < taskResult.data.length; i++) {
             const modelMapResult = this.modelMap.get(
                 taskResult.data[i].modelID
@@ -314,12 +378,12 @@ class ToolPath {
         this.checkoutStatus();
     }
 
-    onGenerateToolpathFinail() {
+    public onGenerateToolpathFinail() {
         this.checkoutStatus();
         this.removeAllNonMeshObj();
     }
 
-    onGenerateToolpathModel(model, filename, renderResult) {
+    public onGenerateToolpathModel(model, filename, renderResult) {
         const modelMapResult = this.modelMap.get(model.modelID);
         if (modelMapResult) {
             modelMapResult.status = SUCCESS;
@@ -334,7 +398,7 @@ class ToolPath {
         }
     }
 
-    removeAllNonMeshObj() {
+    public removeAllNonMeshObj() {
         const reObjs = [];
         for (const child of this.object.children) {
             let removed = true;
@@ -355,7 +419,7 @@ class ToolPath {
         }
     }
 
-    checkoutStatus() {
+    public checkoutStatus() {
         const values = [];
         for (const visibleModelID of this.getState().visibleModelIDs) {
             values.push(this.modelMap.get(visibleModelID));
@@ -373,7 +437,7 @@ class ToolPath {
         }
     }
 
-    checkoutToolPathStatus() {
+    public checkoutToolPathStatus() {
         const taskInfos = this.getSelectModelsAndToolPathInfo();
         const lastConfigJson = JSON.stringify(taskInfos);
 
@@ -400,7 +464,7 @@ class ToolPath {
         }
     }
 
-    renderToolpathObj(renderResult) {
+    public renderToolpathObj(renderResult) {
         const {
             headType,
             movementMode,
@@ -408,6 +472,7 @@ class ToolPath {
             isSelected,
             positions,
             gCodes,
+            colors,
             positionX,
             positionY,
             rotationB,
@@ -419,24 +484,26 @@ class ToolPath {
             3
         );
         const gCodeAttribute = new THREE.Float32BufferAttribute(gCodes.send, 1);
+        const colorsAttribute = new THREE.Uint8BufferAttribute(colors.send, 3);
+        colorsAttribute.normalized = true;
         bufferGeometry.setAttribute('position', positionAttribute);
         bufferGeometry.setAttribute('a_g_code', gCodeAttribute);
-        let material;
-        if (isSelected) {
-            material = MATERIAL_SELECTED;
-        } else {
-            material = MATERIAL_UNSELECTED;
-        }
+        bufferGeometry.setAttribute('a_color', colorsAttribute);
 
         let obj;
         if (headType === 'laser') {
             if (movementMode === 'greyscale-dot') {
-                obj = new THREE.Points(bufferGeometry, material);
+                obj = new THREE.Points(bufferGeometry, MATERIAL_SELECTED);
             } else {
-                obj = new THREE.Line(bufferGeometry, material);
+                obj = new THREE.Line(bufferGeometry, MATERIAL_SELECTED);
             }
         } else {
-            obj = new THREE.Line(bufferGeometry, material);
+            obj = new THREE.Line(bufferGeometry, MATERIAL_SELECTED);
+        }
+        if (isSelected) {
+            obj.material.uniforms.u_selected.value = true;
+        } else {
+            obj.material.uniforms.u_selected.value = false;
         }
         obj.position.set(isRotate ? 0 : positionX, positionY, 0);
         if (rotationB) {
@@ -446,14 +513,14 @@ class ToolPath {
         return obj;
     }
 
-    removeToolPathObject() {
+    public removeToolPathObject() {
         for (const value of this.modelMap.values()) {
             value.meshObj && this.object.remove(value.meshObj);
             value.status = WARNING;
         }
     }
 
-    clearModelObjects() {
+    public clearModelObjects() {
         for (const value of this.modelMap.values()) {
             this.object.remove(value.meshObj);
             value.meshObj = null;

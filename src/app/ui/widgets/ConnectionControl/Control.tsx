@@ -90,7 +90,7 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, widgetActions }) 
         boundingBox
     } = useSelector((state: RootState) => state.workspace);
 
-    const { jog, axes, dataSource } = widgets[widgetId];
+    const { jog, axes } = widgets[widgetId];
     const { speed = 1500, keypad, selectedDistance, customDistance, selectedAngle, customAngle } = jog;
 
     const serverRef = useRef(server);
@@ -338,11 +338,7 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, widgetActions }) 
     };
 
     const controllerEvents = {
-        'connection:close': (options) => {
-            const { dataSource: _dataSource } = options;
-            if (_dataSource !== dataSource) {
-                return;
-            }
+        'connection:close': () => {
             const initialState = getInitialState();
             const newState = {
                 ...state,

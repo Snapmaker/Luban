@@ -65,6 +65,11 @@ export declare type LaserMachineMetadata = {
     toolHeads: MachineToolHeadOptions[];
 
     modules?: MachineModuleOptions[];
+
+    // by default, Luban can control the machine's workflow, but for machines
+    // like Ray, you will need to use lock button on the machine to
+    // start/stop/pause/resume the machine.
+    disableWorkflowControl?: boolean;
 }
 
 

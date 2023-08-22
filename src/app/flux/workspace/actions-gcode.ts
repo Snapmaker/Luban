@@ -105,5 +105,5 @@ const uploadGcodeFile = (file: File) => {
 };
 
 export default {
-    uploadGcodeFile
+    uploadGcodeFile,
 };

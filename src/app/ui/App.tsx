@@ -1,8 +1,8 @@
+import { Machine } from '@snapmaker/luban-platform';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 import { HashRouter, Route, Switch } from 'react-router-dom';
-import { Machine } from '@snapmaker/luban-platform';
 
 import { actions as appGlobalActions } from '../flux/app-global';
 import { actions as cncActions } from '../flux/cnc';
@@ -13,21 +13,20 @@ import { actions as printingActions } from '../flux/printing';
 import { actions as settingActions } from '../flux/setting';
 import { actions as textActions } from '../flux/text';
 import { actions as workspaceActions } from '../flux/workspace';
-import { Server } from '../flux/workspace/Server';
 import { Canvas2dZoom } from '../lib/canvas2d-zoom';
 import { logErrorToGA } from '../lib/gaEvent';
 import { PREDEFINED_SHORTCUT_ACTIONS, ShortcutHandlerPriority, ShortcutManager } from '../lib/shortcut';
 import UniApi from '../lib/uni-api';
+import { SnapmakerRayMachine } from '../machines';
 import { ToastContainer } from './components/Toast';
 import AppLayout from './layouts/AppLayout';
-import { CNCMainPage } from './pages/cnc-main';
 import HomePage from './pages/HomePage';
 import Settings from './pages/Settings';
 import Workspace from './pages/Workspace';
+import { CNCMainPage } from './pages/cnc-main';
 import { LaserMainPage } from './pages/laser-main';
-import { PrintMainPage } from './pages/print-main';
-import { SnapmakerRayMachine } from '../machines';
 import { LaserWorkspaceRay } from './pages/laser-workspace-ray';
+import { PrintMainPage } from './pages/print-main';
 
 
 // Register Canvas2dZoom with tag name '', it will defaults to <canvas2d-zoom>
@@ -143,7 +142,6 @@ class App extends React.PureComponent<AppProps, AppState> {
         }, 200);
 
         ShortcutManager.register(this.shortcutHandler);
-        Server.closeServerAfterWindowReload();
     }
 
     public static getDerivedStateFromError() {

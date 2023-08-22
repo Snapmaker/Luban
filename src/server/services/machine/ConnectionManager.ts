@@ -1,9 +1,11 @@
 import { WorkflowStatus } from '@snapmaker/luban-platform';
 import fs from 'fs';
 import { includes } from 'lodash';
+import path from 'path';
 
+import ControllerEvent from '../../../app/connection/controller-events';
 import { AUTO_STRING } from '../../../app/constants';
-import { SnapmakerArtisanMachine, SnapmakerRayMachine } from '../../../app/machines';
+import { SnapmakerArtisanMachine, SnapmakerJ1Machine, SnapmakerRayMachine } from '../../../app/machines';
 import DataStorage from '../../DataStorage';
 import {
     CONNECTION_TYPE_WIFI,
@@ -11,21 +13,22 @@ import {
     HEAD_LASER,
     HEAD_PRINTING,
     LEVEL_ONE_POWER_LASER_FOR_SM2,
+    LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
     MACHINE_SERIES,
-    STANDARD_CNC_TOOLHEAD_FOR_SM2
 } from '../../constants';
 import ScheduledTasks from '../../lib/ScheduledTasks';
 import SocketServer from '../../lib/SocketManager';
 import logger from '../../lib/logger';
 import ProtocolDetector, { NetworkProtocol, SerialPortProtocol } from './ProtocolDetector';
+import Channel, { CncChannelInterface, FileChannelInterface, GcodeChannelInterface, LaserChannelInterface, NetworkServiceChannelInterface, SystemChannelInterface } from './channels/Channel';
 import { ChannelEvent } from './channels/ChannelEvent';
-import socketTcp from './channels/SACP-TCP';
-import SacpSerialChannel, { sacpSerialChannel } from './channels/SacpSerialChannel';
+import { sacpSerialChannel } from './channels/SacpSerialChannel';
+import { sacpTcpChannel } from './channels/SacpTcpChannel';
 import { sacpUdpChannel } from './channels/SacpUdpChannel';
-import socketHttp from './channels/socket-http';
-import { socketSerial } from './channels/socket-serial';
-import { ArtisanMachineInstance, MachineInstance, RayMachineInstance } from './instances';
+import { sstpHttpChannel } from './channels/SstpHttpChannel';
+import TextSerialChannel, { textSerialChannel } from './channels/TextSerialChannel';
+import { ArtisanMachineInstance, J1MachineInstance, MachineInstance, RayMachineInstance } from './instances';
 
 const log = logger('lib:ConnectionManager');
 
@@ -40,6 +43,38 @@ const ensureRange = (value, min, max) => {
  */
 type ConnectionType = 'wifi' | 'serial';
 
+interface ConnectionOpenOptions {
+    connectionType: ConnectionType;
+    address: string;
+    port?: string;
+    protocol?: NetworkProtocol | SerialPortProtocol;
+}
+
+interface ConnectionCloseOptions {
+    force?: boolean;
+}
+
+interface ExecuteGCodeOptions {
+    gcode: string;
+}
+
+interface SetCrosshairOffsetOptions {
+    x: number;
+    y: number;
+}
+interface SetFireSensorSensitivityOptions {
+    sensitivity: number;
+}
+
+interface UploadFileOptions {
+    filePath: string;
+    targetFilename?: string;
+}
+
+interface UpgradeFirmwareOptions {
+    filename: string;
+}
+
 /**
  * A singleton to manage devices connection.
  */
@@ -47,7 +82,7 @@ class ConnectionManager {
     private connectionType: ConnectionType = CONNECTION_TYPE_WIFI;
 
     // socket used to communicate
-    private channel = null;
+    private channel: Channel = null;
 
     private protocol: NetworkProtocol | SerialPortProtocol = NetworkProtocol.Unknown;
 
@@ -58,124 +93,14 @@ class ConnectionManager {
     private socket;
 
     public onConnection = (socket: SocketServer) => {
-        socketHttp.onConnection();
+        sstpHttpChannel.onConnection();
         this.scheduledTasksHandle = new ScheduledTasks(socket);
     };
 
     public onDisconnection = (socket: SocketServer) => {
-        socketHttp.onDisconnection();
-        socketSerial.onDisconnection(socket);
+        sstpHttpChannel.onDisconnection();
+        textSerialChannel.onDisconnection(socket);
         this.scheduledTasksHandle.cancelTasks();
-    };
-
-    public connectionOpen = async (socket, options) => {
-        if (this.channel) {
-            this.channel.off(ChannelEvent.Connected, this.onConnected);
-            this.channel.off(ChannelEvent.Ready, this.onReady);
-            this.channel = null;
-        }
-
-        const { connectionType, sacp, addByUser, address } = options;
-
-        this.connectionType = connectionType;
-
-        if (connectionType === CONNECTION_TYPE_WIFI) {
-            if (sacp) {
-                // TODO: optimize sacp option
-                this.protocol = NetworkProtocol.SacpOverTCP;
-                this.channel = socketTcp;
-            } else if (addByUser) {
-                const protocol = await this.inspectNetworkProtocol(address);
-                this.protocol = protocol;
-
-                if (protocol === NetworkProtocol.SacpOverTCP) {
-                    this.channel = socketTcp;
-                } else if (protocol === NetworkProtocol.SacpOverUDP) {
-                    this.channel = sacpUdpChannel;
-                } else if (protocol === NetworkProtocol.HTTP) {
-                    this.channel = socketHttp;
-                }
-            } else {
-                this.protocol = NetworkProtocol.Unknown;
-                this.channel = socketHttp;
-            }
-
-            this.channel.connectionOpen(socket, options);
-        } else {
-            const protocol = await this.inspectSerialPortProtocol(options.port);
-            log.info(`Detected protocol: ${protocol}`);
-            this.protocol = protocol;
-
-            if (protocol === SerialPortProtocol.SacpOverSerialPort) {
-                this.channel = sacpSerialChannel;
-                this.channel.connectionOpen(socket, options);
-            } else {
-                this.channel = socketSerial;
-                this.channel.serialportOpen(socket, options);
-            }
-        }
-        log.debug(`connectionOpen connectionType=${connectionType} this.socket=${this.channel.constructor.name}`);
-
-        this.socket = socket;
-
-        this.channel.on(ChannelEvent.Connected, this.onConnected);
-        this.channel.on(ChannelEvent.Ready, this.onReady);
-    };
-
-    private onConnected = () => {
-        log.info('channel: Connected');
-    }
-
-    private onReady = (data) => {
-        log.info('channel: Ready');
-
-        const machineIdentifier = data?.machineIdentifier;
-
-        log.debug(`machineIdentifier = ${machineIdentifier}`);
-
-        if (machineIdentifier === SnapmakerRayMachine.identifier) {
-            // Switch to SACP immediately
-            // (this.channel as SocketSerial).command(this.socket, {
-            //      gcode: 'M2000 U5',
-            // });
-
-            this.machineInstance = new RayMachineInstance();
-            this.machineInstance.setChannel(this.channel);
-            this.machineInstance.setSocket(this.socket);
-        }
-
-        if (machineIdentifier === SnapmakerArtisanMachine.identifier) {
-            this.machineInstance = new ArtisanMachineInstance();
-            this.machineInstance.setChannel(this.channel);
-            this.machineInstance.setSocket(this.socket);
-        }
-
-        log.debug(`instance = ${this.machineInstance.constructor.name}`);
-        if (this.machineInstance) {
-            this.machineInstance.onMachineReady();
-        }
-    };
-
-    public connectionClose = (socket, options) => {
-        log.debug('connectionClose');
-        this.channel && this.channel.connectionClose(socket, options);
-
-        if (this.channel) {
-            this.channel.off(ChannelEvent.Connected, this.onConnected);
-            this.channel.off(ChannelEvent.Ready, this.onReady);
-
-            this.channel = null;
-        }
-    };
-
-    public connectionCloseImproper = () => {
-        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            this.channel && this.channel.connectionCloseImproper();
-        } else {
-            log.info('connectionCloseImproper');
-            // force close
-            // this.socket && this.socket.emit('connection:closeImproper');
-        }
     };
 
     private async inspectNetworkProtocol(host: string): Promise<NetworkProtocol> {
@@ -187,6 +112,299 @@ class ConnectionManager {
         const protocolDetector = new ProtocolDetector();
         return protocolDetector.detectSerialPortProtocol(port);
     }
+
+    private onChannelConnecting = () => {
+        log.info('channel: Connecting');
+
+        this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
+    };
+
+    private onChannelConnected = () => {
+        log.info('channel: Connected');
+
+        this.socket && this.socket.emit(ControllerEvent.ConnectionOpen, {});
+    };
+
+    private onChannelReady = async (data: { machineIdentifier?: string }) => {
+        log.info('channel: Ready');
+
+        const machineIdentifier = data?.machineIdentifier;
+
+        log.debug(`machineIdentifier = ${machineIdentifier}`);
+
+        // configure machine instance
+        this.machineInstance = null;
+
+        if (machineIdentifier === SnapmakerJ1Machine.identifier) {
+            this.machineInstance = new J1MachineInstance();
+            this.machineInstance.setChannel(this.channel);
+            this.machineInstance.setSocket(this.socket);
+        }
+
+        if (machineIdentifier === SnapmakerArtisanMachine.identifier) {
+            this.machineInstance = new ArtisanMachineInstance();
+            this.machineInstance.setChannel(this.channel);
+            this.machineInstance.setSocket(this.socket);
+        }
+
+        if (machineIdentifier === SnapmakerRayMachine.identifier) {
+            this.machineInstance = new RayMachineInstance();
+            this.machineInstance.setChannel(this.channel);
+            this.machineInstance.setSocket(this.socket);
+        }
+
+        if (this.machineInstance) {
+            log.info(`instance = ${this.machineInstance.constructor.name}`);
+            log.info('On preparing machine...');
+            await this.machineInstance.onPrepare();
+            log.info('All done, machine is ready.');
+        }
+    };
+
+    private bindChannelEvents(): void {
+        if (!this.channel) {
+            return;
+        }
+
+        this.channel.on(ChannelEvent.Connecting, this.onChannelConnecting);
+        this.channel.on(ChannelEvent.Connected, this.onChannelConnected);
+        this.channel.on(ChannelEvent.Ready, this.onChannelReady);
+    }
+
+    private unbindChannelEvents(): void {
+        if (!this.channel) {
+            return;
+        }
+
+        this.channel.off(ChannelEvent.Connecting, this.onChannelConnecting);
+        this.channel.off(ChannelEvent.Connected, this.onChannelConnected);
+        this.channel.off(ChannelEvent.Ready, this.onChannelReady);
+    }
+
+    /**
+     * Connection open.
+     */
+    public connectionOpen = async (socket: SocketServer, options: ConnectionOpenOptions) => {
+        // Cancel subscriptions
+        if (this.channel) {
+            this.unbindChannelEvents();
+            this.channel = null;
+        }
+
+        const { connectionType, protocol, address } = options;
+
+        this.connectionType = connectionType;
+
+        if (connectionType === CONNECTION_TYPE_WIFI) {
+            if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, NetworkProtocol.HTTP], protocol)) {
+                this.protocol = protocol;
+            } else {
+                const detectedProtocol = await this.inspectNetworkProtocol(address);
+                this.protocol = detectedProtocol;
+            }
+
+            if (this.protocol === NetworkProtocol.SacpOverTCP) {
+                this.channel = sacpTcpChannel;
+            } else if (this.protocol === NetworkProtocol.SacpOverUDP) {
+                this.channel = sacpUdpChannel;
+            } else if (this.protocol === NetworkProtocol.HTTP) {
+                this.channel = sstpHttpChannel;
+            } else {
+                this.channel = sstpHttpChannel;
+            }
+        } else {
+            const detectedProtocol = await this.inspectSerialPortProtocol(options.port);
+            log.info(`Detected protocol: ${protocol}`);
+            this.protocol = detectedProtocol;
+
+            if (this.protocol === SerialPortProtocol.SacpOverSerialPort) {
+                this.channel = sacpSerialChannel;
+            } else {
+                this.channel = textSerialChannel;
+            }
+        }
+
+        this.socket = socket;
+
+        // initialize channel
+        this.unbindChannelEvents();
+        this.bindChannelEvents();
+
+        // Note: this is temporary solution to make channel be able to emit data.
+        // Data should be emit by machine instance and connection manager itself by design.
+        this.channel.setSocket(socket);
+
+        log.info(`ConnectionOpen: type = ${connectionType}, channel = ${this.channel.constructor.name}.`);
+        await this.channel.connectionOpen(options);
+    };
+
+    /**
+     * Connection close.
+     */
+    public connectionClose = async (socket: SocketServer, options: ConnectionCloseOptions) => {
+        log.info('ConnectionClose');
+        if (!this.channel) {
+            // success if no channel is used
+            const result = {
+                code: 200,
+                data: {},
+                msg: '',
+                text: ''
+            };
+            socket.emit('connection:close', result);
+            return;
+        }
+
+        const force = options?.force || false;
+        const success = await this.channel.connectionClose({ force });
+        if (success) {
+            log.info('ConnectionClose, success.');
+            const result = {
+                code: 200,
+                data: {},
+                msg: '',
+                text: ''
+            };
+            socket.emit('connection:close', result);
+        } else {
+            // TODO
+        }
+
+        if (this.channel) {
+            this.unbindChannelEvents();
+
+            this.channel = null;
+        }
+    };
+
+    /**
+     * Generic execute G-code commands.
+     *
+     * Seperate multiple lines with '\n'.
+     */
+    public executeGcode = async (socket: SocketServer, options: ExecuteGCodeOptions) => {
+        const { gcode } = options;
+        log.info(`executeGcode: ${gcode}`);
+
+        const success = await (this.channel as GcodeChannelInterface).executeGcode(gcode);
+        if (success) {
+            socket.emit('connection:executeGcode', { msg: '', res: null });
+        } else {
+            socket.emit('connection:executeGcode', { msg: 'Execute G-cod failed', res: null });
+        }
+    };
+
+    /**
+     * Execute custom command.
+     *
+     * For backward compatibility, this is only for serial port channel.
+     * We will refactor this function later.
+     */
+    public executeCmd = async (socket: SocketServer, options) => {
+        const { gcode, context, cmd = 'gcode' } = options;
+
+        // Only used by TextSerialChannel
+        (this.channel as TextSerialChannel).command(socket, {
+            cmd: cmd,
+            args: [gcode, context]
+        });
+    };
+
+    // Laser service
+
+    public getCrosshairOffset = async (socket: SocketServer) => {
+        log.info('Get crosshair offset');
+        try {
+            const offset = await (this.channel as LaserChannelInterface).getCrosshairOffset();
+            socket.emit(ControllerEvent.GetCrosshairOffset, { err: 0, offset });
+        } catch (e) {
+            log.error(e);
+            socket.emit(ControllerEvent.GetCrosshairOffset, { err: 1, offset: null });
+        }
+    };
+
+    public setCrosshairOffset = async (socket: SocketServer, options: SetCrosshairOffsetOptions) => {
+        const x = options.x;
+        const y = options.x;
+        log.info(`Set crosshair offset: (${x}, ${y})`);
+
+        try {
+            const success = await (this.channel as LaserChannelInterface).setCrosshairOffset(x, y);
+            socket.emit(ControllerEvent.SetCrosshairOffset, { err: !success });
+        } catch (e) {
+            log.error(e);
+            socket.emit(ControllerEvent.SetCrosshairOffset, { err: 1 });
+        }
+    };
+
+    public getFireSensorSensitivity = async (socket: SocketServer) => {
+        log.info('Get fire sensor sensitivity');
+        try {
+            const sensitivity = await (this.channel as LaserChannelInterface).getFireSensorSensitivity();
+            socket.emit(ControllerEvent.GetFireSensorSensitivity, { err: 0, sensitivity });
+        } catch (e) {
+            log.error(e);
+            socket.emit(ControllerEvent.GetFireSensorSensitivity, { err: 1, sensitivity: -1 });
+        }
+    };
+
+    public setFireSensorSensitivity = async (socket: SocketServer, options: SetFireSensorSensitivityOptions) => {
+        log.info('Set fire sensor sensitivity');
+        const sensitivity = Math.max(0, Math.min(4095, options.sensitivity));
+
+        try {
+            const success = await (this.channel as LaserChannelInterface).setFireSensorSensitivity(sensitivity);
+            socket.emit(ControllerEvent.SetFireSensorSensitivity, { err: !success });
+        } catch (e) {
+            log.error(e);
+            socket.emit(ControllerEvent.SetFireSensorSensitivity, { err: 1 });
+        }
+    };
+
+    // File service
+
+    /**
+     * Upload file to machine.
+     */
+    public uploadFile = async (socket: SocketServer, options: UploadFileOptions) => {
+        // If using relative path, we assuem it's in tmp directory
+        if (!options.filePath.startsWith('/')) {
+            options.filePath = path.resolve(`${DataStorage.tmpDir}/${options.filePath}`);
+        }
+
+        if (!options.targetFilename) {
+            options.targetFilename = path.basename(options.filePath);
+        }
+
+        log.info(`Upload file to controller... ${options.filePath} to ${options.targetFilename}`);
+
+        const success = await (this.channel as FileChannelInterface).uploadFile(options);
+        if (success) {
+            socket.emit(ControllerEvent.UploadFile, { err: null, text: '' });
+        } else {
+            socket.emit(ControllerEvent.UploadFile, { err: 'failed', text: 'Failed to upload file' });
+        }
+    };
+
+    public compressUploadFile = async (socket: SocketServer, options: UploadFileOptions) => {
+        // If using relative path, we assuem it's in tmp directory
+        if (!options.filePath.startsWith('/')) {
+            options.filePath = path.resolve(`${DataStorage.tmpDir}/${options.filePath}`);
+        }
+
+        if (!options.targetFilename) {
+            options.targetFilename = path.basename(options.filePath);
+        }
+
+        log.info(`Compress and upload file to controller... ${options.filePath} to ${options.targetFilename}`);
+
+        const success = await (this.channel as FileChannelInterface).compressUploadFile(options);
+        if (success) {
+            socket.emit(ControllerEvent.CompressUploadFile, { err: null, text: '' });
+        } else {
+            socket.emit(ControllerEvent.CompressUploadFile, { err: 'failed', text: 'Failed to upload file' });
+        }
+    };
 
     /**
      *
@@ -241,30 +459,20 @@ class ConnectionManager {
 
                     if (!isRotate) {
                         if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
-                            const promise = new Promise((resolve) => {
-                                if (materialThickness === -1) {
-                                    this.channel.executeGcode({ gcode: 'G0 Z0 F1500;' }, () => {
-                                        resolve(true);
-                                    });
-                                } else {
-                                    this.channel.executeGcode({ gcode: `G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;` }, () => {
-                                        resolve(true);
-                                    });
-                                }
-                            });
+                            let promise;
+                            if (materialThickness === -1) {
+                                promise = (this.channel as GcodeChannelInterface).executeGcode('G0 Z0 F1500;');
+                            } else {
+                                promise = (this.channel as GcodeChannelInterface).executeGcode(`G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`);
+                            }
                             promises.push(promise);
                         } else {
-                            const promise = new Promise((resolve) => {
-                                if (isLaserPrintAutoMode) {
-                                    this.channel.executeGcode({ gcode: `G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;` }, () => {
-                                        resolve(true);
-                                    });
-                                } else {
-                                    this.channel.executeGcode({ gcode: 'G0 Z0 F1500;' }, () => {
-                                        resolve(true);
-                                    });
-                                }
-                            });
+                            let promise;
+                            if (isLaserPrintAutoMode) {
+                                promise = (this.channel as GcodeChannelInterface).executeGcode(`G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`);
+                            } else {
+                                promise = (this.channel as GcodeChannelInterface).executeGcode('G0 Z0 F1500;');
+                            }
                             promises.push(promise);
                         }
                         // Camera Aid Background mode, force machine to work on machine coordinates (Origin = 0,0)
@@ -276,29 +484,17 @@ class ConnectionManager {
                             x = Math.max(0, Math.min(x, size.x - 20));
                             y = Math.max(0, Math.min(y, size.y - 20));
 
-                            const promise = new Promise((resolve) => {
-                                this.channel.executeGcode({ gcode: `G53;\nG0 X${x} Y${y};\nG54;\nG92 X${x} Y${y};` }, () => {
-                                    resolve(true);
-                                });
-                            });
+                            const promise = (this.channel as GcodeChannelInterface).executeGcode(`G53;\nG0 X${x} Y${y};\nG54;\nG92 X${x} Y${y};`);
                             promises.push(promise);
                         }
                     } else {
                         // Rotary Module origin
-                        const promise = new Promise((resolve) => {
-                            this.executeGcode(this.channel, { gcode: 'G0 X0 Y0 B0 F1500;\nG0 Z0 F1500;' }, () => {
-                                resolve(true);
-                            });
-                        });
+                        const promise = (this.channel as GcodeChannelInterface).executeGcode('G0 X0 Y0 B0 F1500;\nG0 Z0 F1500;');
                         promises.push(promise);
                     }
 
                     // Laser works on G54
-                    const promise = new Promise((resolve) => {
-                        this.executeGcode(this.channel, { gcode: 'G54;' }, () => {
-                            resolve(true);
-                        });
-                    });
+                    const promise = (this.channel as GcodeChannelInterface).executeGcode('G54;');
                     promises.push(promise);
                 }
             }
@@ -381,7 +577,7 @@ G1 X${pos.x} Y${pos.y} B${pos.e}
 G1 Z${pos.z}
         `;
         }
-        this.channel.command(this.channel, {
+        this.channel.command(this.socket, {
             cmd: 'gcode',
             args: [code]
         });
@@ -395,11 +591,11 @@ G1 Z${pos.z}
             if (headType === HEAD_PRINTING) {
                 const pos = pause3dpStatus.pos;
                 const code = `G1 X${pos.x} Y${pos.y} Z${pos.z}\n`;
-                this.channel.command(this.channel, {
+                this.channel.command(socket, {
                     cmd: 'gcode',
                     args: [code]
                 });
-                this.channel.command(this.channel, {
+                this.channel.command(socket, {
                     cmd: 'gcode:resume',
                 });
             } else if (headType === HEAD_LASER) {
@@ -416,17 +612,17 @@ M3 P${powerPercent} S${powerStrength}`
                         : `
 M3`;
                 }
-                this.channel.command(this.channel, {
+                this.channel.command(socket, {
                     cmd: 'gcode',
                     args: [code]
                 });
-                this.channel.command(this.channel, {
+                this.channel.command(socket, {
                     cmd: 'gcode:resume',
                 });
             } else {
                 if (pauseStatus.headStatus) {
                     // resume spindle
-                    this.channel.command(this.channel, {
+                    this.channel.command(socket, {
                         cmd: 'gcode',
                         args: ['M3']
                     });
@@ -434,13 +630,13 @@ M3`;
                     // for CNC machine, resume need to wait >500ms to let the tool head started
                     setTimeout(() => {
                         this.recoveryCncPosition(pauseStatus, gcodeFile, sizeZ);
-                        this.channel.command(this.channel, {
+                        this.channel.command(socket, {
                             cmd: 'gcode:resume',
                         });
                     }, 1000);
                 } else {
                     this.recoveryCncPosition(pauseStatus, gcodeFile, sizeZ);
-                    this.channel.command(this.channel, {
+                    this.channel.command(socket, {
                         cmd: 'gcode:resume',
                     });
                 }
@@ -455,7 +651,7 @@ M3`;
             this.channel.pauseGcode(options);
         } else {
             const { eventName } = options;
-            this.channel.command(this.channel, {
+            this.channel.command(socket, {
                 cmd: 'gcode:pause',
             });
             socket && socket.emit(eventName, {});
@@ -469,10 +665,10 @@ M3`;
         } else if (includes([SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.stopGcode(options);
         } else {
-            this.channel.command(this.channel, {
+            this.channel.command(socket, {
                 cmd: 'gcode:pause',
             });
-            this.channel.command(this.channel, {
+            this.channel.command(socket, {
                 cmd: 'gcode:stop',
             });
             const { eventName } = options;
@@ -480,24 +676,10 @@ M3`;
         }
     };
 
-    // when using executeGcode, the cmd param is always 'gcode'
-    public executeGcode = (socket, options, callback = null) => {
-        const { gcode, context, cmd = 'gcode' } = options;
-        log.info(`executeGcode: ${gcode}, ${this.protocol}`);
-        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            this.channel.executeGcode(options, callback);
-        } else {
-            this.channel.command(this.channel, {
-                cmd: cmd,
-                args: [gcode, context]
-            });
-        }
-    };
-
     // SSTP
     public getActiveExtruder = (socket, options) => {
         if (this.connectionType === CONNECTION_TYPE_WIFI) {
-            this.socket.getActiveExtruder(options);
+            this.channel.getActiveExtruder(options);
         }
     };
 
@@ -513,7 +695,7 @@ M3`;
             });
         } else {
             // T0 / T1
-            this.channel.command(this.socket, {
+            this.channel.command(socket, {
                 args: [`T${extruderIndex}`],
             });
         }
@@ -528,7 +710,7 @@ M3`;
             if (this.connectionType === CONNECTION_TYPE_WIFI) {
                 this.channel.updateNozzleTemperature(options);
             } else {
-                this.channel.command(this.socket, {
+                this.channel.command(socket, {
                     args: [`M104 S${nozzleTemperatureValue}`]
                 });
             }
@@ -545,7 +727,7 @@ M3`;
                 this.channel.updateBedTemperature(options);
             } else {
                 const { heatedBedTemperatureValue } = options;
-                this.channel.command(this.channel, {
+                this.channel.command(socket, {
                     args: [`M140 S${heatedBedTemperatureValue}`]
                 });
             }
@@ -558,7 +740,7 @@ M3`;
             const { extruderIndex } = options;
             this.channel.loadFilament(extruderIndex, eventName);
         } else {
-            this.channel.command(this.channel, {
+            this.channel.command(socket, {
                 args: ['G91;\nG0 E60 F200;\nG90;']
             });
             socket && socket.emit(eventName);
@@ -573,7 +755,7 @@ M3`;
         } else if (this.connectionType === CONNECTION_TYPE_WIFI) {
             this.channel.unloadFilament(options);
         } else {
-            this.channel.command(this.channel, {
+            this.channel.command(socket, {
                 args: ['G91;\nG0 E6 F200;\nG0 E-60 F150;\nG90;']
             });
             socket && socket.emit(eventName);
@@ -589,7 +771,7 @@ M3`;
                 this.channel.updateWorkSpeedFactor(options);
             } else {
                 const { workSpeedValue } = options;
-                this.channel.command(this.channel, {
+                this.channel.command(socket, {
                     args: [`M220 S${workSpeedValue}`]
                 });
             }
@@ -612,19 +794,19 @@ M3`;
                     });
                 } else {
                     this.executeGcode(
-                        this.channel,
+                        socket,
                         { gcode: `M3 P${laserPower} S${laserPower * 255 / 100}` }
                     );
                 }
             } else {
                 if (laserPowerOpen) {
                     this.executeGcode(
-                        this.channel,
+                        socket,
                         { gcode: `M3 P${laserPower} S${laserPower * 255 / 100}` }
                     );
                 }
                 this.executeGcode(
-                    this.channel,
+                    socket,
                     { gcode: 'M500' }
                 );
             }
@@ -643,18 +825,18 @@ M3`;
         }
         if (laserPowerOpen) {
             this.executeGcode(
-                this.channel,
+                socket,
                 { gcode: 'M5' } // M3 P0 S0
             );
         } else {
             if (isSM2) {
                 this.executeGcode(
-                    this.channel,
+                    socket,
                     { gcode: 'M3 P1 S2.55' }
                 );
             } else {
                 this.executeGcode(
-                    this.channel,
+                    socket,
                     { gcode: `M3 P${laserPower} S${laserPower * 255 / 100}` }
                 );
             }
@@ -667,7 +849,7 @@ M3`;
         } else {
             const { value, eventName } = options;
             this.executeGcode(
-                this.channel,
+                socket,
                 { gcode: `M1010 S3 P${value};` }
             );
             socket && socket.emit(eventName);
@@ -680,7 +862,7 @@ M3`;
         } else {
             const { value, eventName } = options;
             this.executeGcode(
-                this.channel,
+                socket,
                 { gcode: `M1010 S4 P${value};` }
             );
             socket && socket.emit(eventName);
@@ -693,19 +875,19 @@ M3`;
         } else {
             const { value, enable } = options;
             this.executeGcode(
-                this.channel,
+                socket,
                 { gcode: `M1011 F${enable ? value : 0};` }
             );
         }
     };
 
-    public setFilterWorkSpeed = (socket, options) => {
+    public setFilterWorkSpeed = (socket: SocketServer, options) => {
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.setFilterWorkSpeed(options);
         } else {
             const { value } = options;
             this.executeGcode(
-                this.channel,
+                socket,
                 { gcode: `M1011 F${value};` }
             );
         }
@@ -718,16 +900,13 @@ M3`;
         }
     };
 
-    public startHeartbeat = (socket, options) => {
-        this.channel.startHeartbeat(options);
+    public startHeartbeat = () => {
+        log.info('Start heartbeat');
+        this.channel.startHeartbeat();
     };
 
     public getGcodeFile = (socket, options) => {
         this.channel.getGcodeFile(options);
-    };
-
-    public uploadFile = (socket, options) => {
-        this.channel.uploadFile(options);
     };
 
     public updateZOffset = (socket, options) => {
@@ -769,74 +948,86 @@ M3`;
     };
     // only for Wifi
 
-    public goHome = (socket, options, callback) => {
+    public goHome = async (socket, options, callback) => {
         const { headType } = options;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.goHome();
             socket && socket.emit('move:status', { isHoming: true });
         } else {
-            this.executeGcode(this.channel, {
-                gcode: 'G53'
-            });
-            this.executeGcode(this.channel, {
-                gcode: 'G28'
-            }, callback);
+            await this.executeGcode(socket, { gcode: 'G53' });
+            await this.executeGcode(socket, { gcode: 'G28' });
+
+            callback && callback();
+
             if (this.connectionType === CONNECTION_TYPE_WIFI) {
                 socket && socket.emit('move:status', { isHoming: true });
             }
-            (headType === HEAD_LASER || headType === HEAD_CNC) && this.executeGcode(this.channel, {
-                gcode: 'G54'
-            });
+            if (headType === HEAD_LASER || headType === HEAD_CNC) {
+                await this.executeGcode(socket, { gcode: 'G54' });
+            }
         }
     };
 
-    public coordinateMove = (socket, options, callback) => {
+    public coordinateMove = async (socket, options, callback) => {
         const { moveOrders, gcode, jogSpeed, headType } = options;
         // const { moveOrders, gcode, context, cmd, jogSpeed, headType } = options;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.coordinateMove({ moveOrders, jogSpeed, headType });
         } else {
-            this.executeGcode(this.channel, { gcode }, callback);
+            await this.executeGcode(socket, { gcode });
+            callback && callback();
         }
     };
 
-    public setWorkOrigin = (socket, options, callback) => {
+    public setWorkOrigin = async (socket, options, callback) => {
         const { xPosition, yPosition, zPosition, bPosition } = options;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.setWorkOrigin({ xPosition, yPosition, zPosition, bPosition });
         } else {
-            this.executeGcode(this.channel, { gcode: 'G92 X0 Y0 Z0 B0' }, callback);
+            await this.executeGcode(socket, { gcode: 'G92 X0 Y0 Z0 B0' });
+            callback && callback();
         }
     };
 
-    public updateToolHeadSpeed = (socket, options) => {
+    public setSpindleSpeed = async (socket: SocketServer, options) => {
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const { speed } = options;
-            this.channel.updateToolHeadSpeed(speed);
+            const success = await (this.channel as CncChannelInterface).setSpindleSpeed(speed);
+
+            socket.emit(ControllerEvent.SetSpindleSpeed, {
+                err: !success,
+                speed: speed,
+            });
         }
     };
 
-    public switchCNC = async (socket, options, callback) => {
+    public switchCNC = async (socket: SocketServer, options) => {
         const { headStatus, speed, toolHead } = options;
-        if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            if (toolHead === STANDARD_CNC_TOOLHEAD_FOR_SM2) {
-                await this.channel.setCncPower(100); // default 10
-            } else {
-                await this.channel.updateToolHeadSpeed(speed);
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort, SerialPortProtocol.PlainText], this.protocol)) {
+            if (speed) {
+                if (toolHead === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2) {
+                    await (this.channel as CncChannelInterface).setSpindleSpeed(speed);
+                } else {
+                    // standard CNC module, use 100%
+                    await (this.channel as CncChannelInterface).setSpindleSpeedPercentage(100); // default 10
+                }
             }
-            await this.channel.switchCNC(headStatus);
-        } else {
+
             if (headStatus) {
-                this.executeGcode(this.channel, { gcode: 'M5' }, callback);
+                await (this.channel as CncChannelInterface).spindleOff();
             } else {
-                this.executeGcode(this.channel, { gcode: 'M3 P100' }, callback);
+                await (this.channel as CncChannelInterface).spindleOn();
             }
+
+            socket.emit(ControllerEvent.SwitchCNC, { err: 0 });
+        } else {
+            socket.emit(ControllerEvent.SwitchCNC, { err: 1, msg: 'Wrong protocol' });
         }
     };
 
     public wifiStatusTest = (socket, options) => {
         if (this.connectionType === CONNECTION_TYPE_WIFI) {
-            socketHttp.wifiStatusTest(options);
+            sstpHttpChannel.wifiStatusTest(options);
         }
     }
 
@@ -848,7 +1039,7 @@ M3`;
         const { eventName } = options;
 
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            const { data: networkConfiguration } = await this.channel.getNetworkConfiguration();
+            const networkConfiguration = await (this.channel as NetworkServiceChannelInterface).getNetworkConfiguration();
 
             socket.emit(eventName, {
                 networkMode: networkConfiguration.networkMode,
@@ -865,13 +1056,14 @@ M3`;
         }
     };
 
-    public getNetworkStationState = async (socket, options) => {
+    public getNetworkStationState = async (socket: SocketServer, options) => {
         const { eventName } = options;
 
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            const { data: networkStationState } = await (this.channel as SacpSerialChannel).getNetworkStationState();
+            const networkStationState = await (this.channel as NetworkServiceChannelInterface).getNetworkStationState();
 
             socket.emit(eventName, {
+                err: 0,
                 stationIP: networkStationState.stationIP,
                 stationState: networkStationState.stationState,
                 stationRSSI: networkStationState.stationRSSI,
@@ -890,21 +1082,24 @@ M3`;
      * Notice: configure machine network is supported by SACP over TCP/UDP, but it's not recommended.
      * Since you've connected to the machine via network already.
      */
-    public configureMachineNetwork = async (socket, options) => {
+    public configureMachineNetwork = async (socket: SocketServer, options) => {
         const { eventName } = options;
 
         // Note: supported by SACP over UDP, but it's not needed since you already connected to the machine
         // via network.
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            const configureNetworkResult = await this.channel.configureNetwork({
+            const success = await (this.channel as NetworkServiceChannelInterface).configureNetwork({
                 networkMode: options?.networkMode,
                 stationIPObtain: options?.stationIPObtain,
                 stationSSID: options?.stationSSID,
                 stationPassword: options?.stationPassword,
                 stationIP: options?.stationIP,
             });
-            if (configureNetworkResult.response.result === 0) {
-                // success
+            if (success) {
+                socket.emit(eventName, {
+                    err: !success,
+                    msg: 'Failed to configure network'
+                });
             }
         } else {
             socket.emit(eventName, {
@@ -922,17 +1117,36 @@ M3`;
 
         // SACP only
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            const result = await this.channel.exportLogToExternalStorage();
-            socket.emit(eventName, {
-                err: result.response.result !== 0,
-            });
+            const success = await (this.channel as SystemChannelInterface).exportLogToExternalStorage();
+            socket.emit(eventName, { err: !success, });
         } else {
-            socket.emit(eventName, {
-                err: 1,
-                msg: `Unsupported event: ${eventName}`,
-            });
+            socket.emit(eventName, { err: 1, msg: `Unsupported event: ${eventName}` });
+        }
+    };
+
+    public getFirmwareVersion = async (socket: SocketServer) => {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const version = await (this.channel as SystemChannelInterface).getFirmwareVersion();
+            socket.emit(ControllerEvent.GetFirmwareVersion, { err: 0, version });
+        } else {
+            // not supported
+            socket.emit(ControllerEvent.UpgradeFirmware, { err: 1 });
         }
     }
+
+    /**
+     * Upgrade firmware.
+     */
+    public upgradeFirmwareFromFile = async (socket: SocketServer, options: UpgradeFirmwareOptions) => {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const success = await (this.channel as SystemChannelInterface).upgradeFirmwareFromFile(options);
+
+            socket.emit(ControllerEvent.UpgradeFirmware, { err: !success });
+        } else {
+            // not supported
+            socket.emit(ControllerEvent.UpgradeFirmware, { err: 1 });
+        }
+    };
 }
 
 const connectionManager = new ConnectionManager();

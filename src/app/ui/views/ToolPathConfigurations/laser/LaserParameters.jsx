@@ -46,14 +46,6 @@ class LaserParameters extends PureComponent {
                     fixedPower: 30,
                     movementMode: options.value
                 });
-            } else if (options.value === 'greyscale-variable-line') {
-                this.props.updateGcodeConfig({
-                    dwellTime: 42,
-                    jogSpeed: 1500,
-                    workSpeed: 500,
-                    fixedPower: 50,
-                    movementMode: options.value
-                });
             }
         },
         updateToolConfig: (key, value) => {
@@ -72,13 +64,6 @@ class LaserParameters extends PureComponent {
                 option.fixedPower = 60;
             }
             if (option.movementMode === 'greyscale-line') {
-                option.direction = (!this.props.toolPath.materials?.isRotate ? 'Horizontal' : 'Vertical');
-                option.fillInterval = 0.25;
-                option.jogSpeed = 3000;
-                option.workSpeed = 500;
-                option.fixedPower = 100;
-            }
-            if (option.movementMode === 'greyscale-variable-line') {
                 option.direction = (!this.props.toolPath.materials?.isRotate ? 'Horizontal' : 'Vertical');
                 option.fillInterval = 0.25;
                 option.jogSpeed = 3000;

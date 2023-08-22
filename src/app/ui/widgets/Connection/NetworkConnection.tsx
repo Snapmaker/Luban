@@ -25,7 +25,9 @@ import {
 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
 import { actions as workspaceActions } from '../../../flux/workspace';
-import { Server } from '../../../flux/workspace/Server';
+import connectActions from '../../../flux/workspace/actions-connect';
+import discoverActions from '../../../flux/workspace/actions-discover';
+import { MachineAgent } from '../../../flux/workspace/MachineAgent';
 import { ConnectionType } from '../../../flux/workspace/state';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
@@ -52,16 +54,21 @@ interface ModuleBriefStatus {
 }
 
 const NetworkConnection: React.FC = () => {
-    const dispatch = useDispatch();
-
     // connection
-    const {
-        serverDiscovering,
-        servers,
+    const machineAgents = useSelector((state: RootState) => state.workspace.machineAgents) as MachineAgent[];
 
+    const {
+        machineDiscovering,
+    } = useSelector((state: RootState) => state.workspace, shallowEqual);
+
+    const dispatch = useDispatch();
+    const onRefreshServers = useCallback(() => {
+        dispatch(discoverActions.discoverNetworkedMachines());
+    }, [dispatch]);
+
+    const {
         savedServerAddress,
         savedServerName,
-        savedServerToken,
         manualIp,
 
         connectionType,
@@ -125,26 +132,20 @@ const NetworkConnection: React.FC = () => {
         onCancel: null,
         onConfirm: null
     });
-    const [selectedServer, setSelectedServer] = useState<Server | null>(null);
-    const [serverOpenState, setServerOpenState] = useState(null);
+    const [selectedAgent, setSelectedAgent] = useState<MachineAgent | null>(null);
     const prevProps = usePrevious({
         connectionStatus
     });
 
-    const onRefreshServers = useCallback(() => {
-        dispatch(workspaceActions.discover.discoverSnapmakerServers());
-    }, [dispatch]);
 
     /**
      * Force close server.
      */
     const forceCloseServer = useCallback(() => {
         if (server) {
-            server.closeServerImproper();
+            dispatch(connectActions.disconnect(server, { force: true }));
         }
-
-        setServerOpenState(null);
-    }, [server]);
+    }, [dispatch, server]);
 
     /**
      * Show Connection On-going.
@@ -210,8 +211,8 @@ const NetworkConnection: React.FC = () => {
     /**
      * Show Connection Error.
      */
-    const showWifiError = useCallback((msg: string, text: string, code: number | string) => {
-        let actualText = text;
+    const showWifiError = useCallback((code: number | string, msg: string) => {
+        let actualText = '';
         switch (code) {
             case 'EHOSTDOWN':
             case 'ENETUNREACH':
@@ -248,48 +249,30 @@ const NetworkConnection: React.FC = () => {
         setShowConnectionMessage(true);
     }, []);
 
-    //
-    // Open server
-    //
-    const openServer = useCallback(() => {
-        if (!selectedServer) {
+    /**
+     * Connect to machine.
+     */
+    const connect = useCallback(async () => {
+        if (!selectedAgent) {
             return;
         }
 
-        // update redux state
-        dispatch(workspaceActions.connect.setSelectedServer(selectedServer));
+        const { code, msg } = await dispatch(
+            connectActions.connect(selectedAgent)
+        ) as unknown as { code: number | string; msg: string; };
 
-        if (selectedServer.address === savedServerAddress) {
-            selectedServer.setToken(savedServerToken);
-        } else if (selectedServer.name === savedServerName) {
-            // In case server address is re-allocated, check for saved server name
-            selectedServer.setToken(savedServerToken);
+        if (msg) {
+            // connection failed, clear saved state.
+            showWifiError(code, msg);
+            // setSavedServerAddressState('');
         }
+    }, [dispatch, selectedAgent, showWifiError]);
 
-        selectedServer.openServer(({ msg, text, code }) => {
-            if (msg) {
-                // connection failed, clear saved state.
-                showWifiError(msg, text, code);
-                // setSavedServerAddressState('');
-            }
-
-            // Clear open state
-            setServerOpenState(null);
-        });
-    }, [selectedServer, showWifiError]);
-
-    const closeServer = useCallback(() => {
+    const disconnect = useCallback(() => {
         if (server) {
-            server.closeServer();
+            dispatch(connectActions.disconnect(server));
         }
-    }, [server]);
-
-    useEffect(() => {
-        // Once serverOpenState is not null, trigger open
-        if (serverOpenState) {
-            openServer();
-        }
-    }, [serverOpenState]);
+    }, [dispatch, server]);
 
     /**
     * Hide manual Wi-Fi modal
@@ -315,66 +298,62 @@ const NetworkConnection: React.FC = () => {
                 onCloseManualWiFi();
 
                 dispatch(workspaceActions.connect.setManualIP(text));
-                const newServer = new Server({
+                const newServer = MachineAgent.createManualAgent({
                     name: CUSTOM_SERVER_NAME,
                     address: text,
-                    addByUser: true,
                 });
 
                 // Try add new server
-                const verifiedServer = dispatch(workspaceActions.connect.addServer(newServer));
+                const verifiedServer = dispatch(discoverActions.addAgent(newServer));
 
                 // set state server and then open it
-                setSelectedServer(verifiedServer);
-                // setServerOpenState(verifiedServer);
-                openServer();
+                setSelectedAgent(verifiedServer);
+                connect();
             }
         });
         setShowManualWiFiModal(true);
-    }, [dispatch, manualIp, onCloseManualWiFi]);
+    }, [dispatch, manualIp, onCloseManualWiFi, connect]);
 
-    const onChangeServerOption = useCallback((option) => {
-        const serverFound = servers.find(v => v.name === option.name && v.address === option.address);
-        if (serverFound) {
+    const onChangeAgentOption = useCallback((option) => {
+        const found = machineAgents.find(v => v.name === option.name && v.address === option.address);
+        if (found) {
             // dispatch(workspaceActions.connect.setSelectedServer(serverFound));
-            setSelectedServer(serverFound);
+            setSelectedAgent(found);
         }
-    }, [servers]);
+    }, [machineAgents]);
 
     /**
-     * Find server object in `servers` that matches `this.props.server`, and set it
-     * as `this.state.server`. If no matches found, set the first object as server.
-     * `this.state.server` is used to be displayed in in dropdown menu.
+     * Find agent object in `agents` that matches `selected`, and set it
+     * as `selectedAgent`.
      */
-    const autoSetServer = useCallback((_servers: Server[], _selectedServer: Server | null) => {
-        let find: Server | undefined;
-        if (_selectedServer) {
-            find = _servers.find(_server => _server.name === _selectedServer.name
-                && _server.address === _selectedServer.address);
+    const autoSetServer = useCallback((agents: MachineAgent[], selected: MachineAgent | null) => {
+        let find: MachineAgent | undefined;
+        if (selected) {
+            find = agents.find(_server => _server.name === selected.name
+                && _server.address === selected.address);
         }
 
         if (!find) {
-            find = _servers.find(v => v.address === savedServerAddress);
+            find = agents.find(v => v.address === savedServerAddress);
         }
 
         if (!find) {
-            find = _servers.find(v => v.name === savedServerName);
+            find = agents.find(v => v.name === savedServerName);
         }
 
         if (!find) {
             // Default select first server
-            find = _servers[0];
+            find = agents[0];
         }
 
-        if (find && find !== _selectedServer) {
-            setSelectedServer(find);
+        if (find && find !== selected) {
+            setSelectedAgent(find);
         }
     }, [savedServerAddress, savedServerName]);
 
-    // servers changed
     useEffect(() => {
-        autoSetServer(servers, selectedServer);
-    }, [autoSetServer, servers, selectedServer]);
+        autoSetServer(machineAgents, selectedAgent);
+    }, [autoSetServer, machineAgents, selectedAgent]);
 
     // connection status changed, display corresponding dialog
     useEffect(() => {
@@ -533,16 +512,16 @@ const NetworkConnection: React.FC = () => {
                             size="252px"
                             name="port"
                             noResultsText={i18n._('key-Workspace/Connection-No machines detected.')}
-                            onChange={onChangeServerOption}
+                            onChange={onChangeAgentOption}
                             disabled={isOpen}
-                            options={map(servers, (s) => ({
+                            options={map(machineAgents, (s) => ({
                                 value: `${s.name}@${s.address}`,
                                 name: s.name,
                                 address: s.address,
                                 label: `${s.name} (${s.address})`
                             }))}
                             placeholder={i18n._('key-Workspace/Connection-Choose a machine')}
-                            value={`${selectedServer?.name}@${selectedServer?.address}`}
+                            value={`${selectedAgent?.name}@${selectedAgent?.address}`}
                         />
                         <div className="sm-flex-auto margin-left-4">
                             <SvgIcon
@@ -550,10 +529,10 @@ const NetworkConnection: React.FC = () => {
                                     'border-default-black-5 border-radius-left-8',
                                     'margin-right-4'
                                 )}
-                                name={serverDiscovering ? 'Refresh' : 'Reset'}
+                                name={machineDiscovering ? 'Refresh' : 'Reset'}
                                 title={i18n._('key-Workspace/Connection-Refresh')}
                                 onClick={onRefreshServers}
-                                disabled={isOpen}
+                                disabled={isOpen || machineDiscovering}
                                 size={24}
                                 borderRadius={8}
                             />
@@ -624,7 +603,7 @@ const NetworkConnection: React.FC = () => {
                             width="120px"
                             type="primary"
                             priority="level-two"
-                            onClick={openServer}
+                            onClick={connect}
                             disabled={isOpen}
                         >
                             {i18n._('key-Workspace/Connection-Connect')}
@@ -637,7 +616,7 @@ const NetworkConnection: React.FC = () => {
                             width="120px"
                             type="default"
                             priority="level-two"
-                            onClick={closeServer}
+                            onClick={disconnect}
                         >
                             {i18n._('key-Workspace/Connection-Disconnect')}
                         </Button>

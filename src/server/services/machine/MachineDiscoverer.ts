@@ -8,7 +8,7 @@ import networkedMachineFinder from './network-discover/NetworkedMachineFinder';
 const log = logger('service:machine:MachineDiscoverer');
 
 interface DiscoverResult {
-    devices: object[] | NetworkedMachineInfo[];
+    machines: object[] | NetworkedMachineInfo[];
 }
 
 interface DiscoverOptions {
@@ -55,7 +55,7 @@ class MachineDiscoverer {
                 });
 
             options.callback({
-                devices: availablePorts,
+                machines: availablePorts,
             });
         } catch (err) {
             log.error(err);
@@ -64,9 +64,9 @@ class MachineDiscoverer {
 
     public async discoverNetworkedMachines(options: DiscoverOptions): Promise<void> {
         try {
-            const devices = await networkedMachineFinder.list();
+            const machines = await networkedMachineFinder.list();
             options.callback({
-                devices: devices,
+                machines: machines,
             });
         } catch (err) {
             log.error(err);

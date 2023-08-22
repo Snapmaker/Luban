@@ -12,24 +12,17 @@ import MovementInstruction, { MoveDirection } from '@snapmaker/snapmaker-sacp-sd
 import DataStorage from '../../../DataStorage';
 import { CONNECTION_TYPE_WIFI, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 import logger from '../../../lib/logger';
-import Business, { CoordinateType, RequestPhotoInfo, ToolHeadType } from '../sacp/Business';
-import { ConnectedData, EventOptions } from '../types';
-// import MovementInstruction, { MoveDirection } from '../../lib/SACP-SDK/SACP/business/models/MovementInstruction';
-import {
-    CNC_HEAD_MODULE_IDS,
-    EMERGENCY_STOP_BUTTON,
-    LASER_HEAD_MODULE_IDS,
-    MODULEID_TOOLHEAD_MAP,
-    PRINTING_HEAD_MODULE_IDS,
-    ROTARY_MODULES,
-    SACP_TYPE_SERIES_MAP,
-} from '../../../../app/constants/machines';
-import SocketServer from '../../../lib/SocketManager';
-import SocketBASE from './SACP-BASE';
+import SacpClient, { CoordinateType, RequestPhotoInfo, ToolHeadType } from '../sacp/SacpClient';
+import { EventOptions } from '../types';
+import { SACP_TYPE_SERIES_MAP, } from '../../../../app/constants/machines';
+import { SnapmakerArtisanMachine, SnapmakerJ1Machine } from '../../../../app/machines';
+import { ChannelEvent } from './ChannelEvent';
+import SacpChannelBase from './SacpChannel';
+import { FileChannelInterface, UploadFileOptions } from './Channel';
 
-const log = logger('lib:SocketTCP');
+const log = logger('machine:channel:SacpTcpChannel');
 
-class SocketTCP extends SocketBASE {
+class SacpTcpChannel extends SacpChannelBase implements FileChannelInterface {
     private client: net.Socket;
 
     private laserFocalLength = 0;
@@ -67,82 +60,64 @@ class SocketTCP extends SocketBASE {
         // empty
     };
 
-    public connectionOpen = (socket: SocketServer, options: EventOptions) => {
-        this.socket = socket;
-        this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
-        this.client.connect({
-            host: options.address,
-            port: 8888
-        }, () => {
-            log.info('TCP connected');
+    public async connectionOpen(options?: { address: string; token?: string }): Promise<boolean> {
+        this.emit(ChannelEvent.Connecting);
 
-            this.sacpClient = new Business('tcp', this.client);
-            this.socket && this.socket.emit('connection:open', {});
-            const hostName = os.hostname();
-            log.info(`os hostname: ${hostName}`);
-            setTimeout(async () => {
-                try {
-                    const { response } = await this.sacpClient.wifiConnection(hostName, 'Luban', options.token, () => {
-                        this.client.destroy();
-                        if (this.client.destroyed) {
-                            log.info('TCP manually closed');
-                            const result = {
-                                code: 200,
-                                data: {},
-                                msg: '',
-                                text: ''
-                            };
-                            socket && socket.emit('connection:close', result);
-                        }
-                    });
+        return new Promise((resolve, reject) => {
+            this.client.connect({
+                host: options.address,
+                port: 8888
+            }, () => {
+                log.info('TCP connected');
 
-                    if (response.result === 0) {
-                        // Connected
-                        this.sacpClient.setLogger(log);
-                        this.sacpClient.wifiConnectionHeartBeat();
-                        this.setROTSubscribeApi();
-                        let state: ConnectedData = {
-                            isHomed: true,
-                            err: null
-                        };
+                this.sacpClient = new SacpClient('tcp', this.client);
 
-                        // Get machine info
-                        await this.sacpClient.getMachineInfo().then(({ data: machineInfos }) => {
-                            state = {
-                                ...state,
-                                series: SACP_TYPE_SERIES_MAP[machineInfos.type]
-                            };
-                            // log.debug(`serial, ${SERIAL_MAP_SACP[machineInfos.type]}`);
+                this.emit(ChannelEvent.Connected);
+
+                const hostName = os.hostname();
+                log.info(`os hostname: ${hostName}`);
+                setTimeout(async () => {
+                    try {
+                        const { response } = await this.sacpClient.wifiConnection(hostName, 'Luban', options.token, () => {
+                            this.client.destroy();
+                            if (this.client.destroyed) {
+                                log.info('TCP manually closed');
+                                const result = {
+                                    code: 200,
+                                    data: {},
+                                    msg: '',
+                                    text: ''
+                                };
+                                this.socket && this.socket.emit('connection:close', result);
+                            }
                         });
 
-                        // Get module infos
-                        await this.sacpClient.getModuleInfo().then(({ data: moduleInfos }) => {
-                            const moduleListStatus = {
-                                emergencyStopButton: false,
-                                rotaryModule: false,
-                            };
+                        if (response.result === 0) {
+                            // Connected
+                            this.sacpClient.setLogger(log);
+                            this.sacpClient.wifiConnectionHeartBeat();
 
-                            const toolHeadModules = [];
+                            // Get machine info
+                            const { data: machineInfos } = await this.sacpClient.getMachineInfo();
+
+                            const machineIdentifier = SACP_TYPE_SERIES_MAP[machineInfos.type];
+
+                            if (machineIdentifier === SnapmakerArtisanMachine.identifier) {
+                                this.emit(ChannelEvent.Ready, {
+                                    machineIdentifier,
+                                });
+                            }
+                            if (machineIdentifier === SnapmakerJ1Machine.identifier) {
+                                this.emit(ChannelEvent.Ready, {
+                                    machineIdentifier,
+                                });
+                            }
+
+                            // TODO: Refactor this to ArtisanInstance
+                            // Get module infos
+                            const { data: moduleInfos } = await this.sacpClient.getModuleInfo();
+
                             moduleInfos.forEach(module => {
-                                // let ariPurifier = false;
-                                if (includes(PRINTING_HEAD_MODULE_IDS, module.moduleId)) {
-                                    state.headType = HEAD_PRINTING;
-                                    toolHeadModules.push(module);
-                                } else if (includes(LASER_HEAD_MODULE_IDS, module.moduleId)) {
-                                    state.headType = HEAD_LASER;
-                                    toolHeadModules.push(module);
-                                } else if (includes(CNC_HEAD_MODULE_IDS, module.moduleId)) {
-                                    state.headType = HEAD_CNC;
-                                    toolHeadModules.push(module);
-                                }
-
-                                if (includes(ROTARY_MODULES, module.moduleId)) {
-                                    moduleListStatus.rotaryModule = true;
-                                }
-                                if (includes(EMERGENCY_STOP_BUTTON, module.moduleId)) {
-                                    moduleListStatus.emergencyStopButton = true;
-                                }
-
                                 // TODO: Hard-coded 10W laser head,
                                 if (module.moduleId === 14) {
                                     this.sacpClient.getLaserToolHeadInfo(module.key).then(({ laserToolHeadInfo }) => {
@@ -184,62 +159,32 @@ class SocketTCP extends SocketBASE {
                                 }
                             });
 
-                            if (toolHeadModules.length === 0) {
-                                state.toolHead = MODULEID_TOOLHEAD_MAP['0']; // default extruder
-                            } else if (toolHeadModules.length === 1) {
-                                const module = toolHeadModules[0];
-                                state.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
-                            } else if (toolHeadModules.length === 2) {
-                                // hard-coded IDEX head for J1, refactor this later.
-                                state.toolHead = MODULEID_TOOLHEAD_MAP['00'];
+                            resolve(true);
+                        } else {
+                            this.client.destroy();
+                            if (this.client.destroyed) {
+                                log.info('TCP manually closed');
+                                const result = {
+                                    code: 200,
+                                    data: {},
+                                    msg: '',
+                                    text: ''
+                                };
+                                this.socket && this.socket.emit('connection:close', result);
                             }
 
-                            state.moduleStatusList = moduleListStatus;
-                        });
-                        this.socket && this.socket.emit('connection:connected', {
-                            state,
-                            err: state?.err,
-                            type: CONNECTION_TYPE_WIFI
-                        });
-
-                        // TODO: Do not start heart beat automatically
-                        // this.startHeartbeatBase(this.sacpClient, this.client);
-                    } else {
-                        this.client.destroy();
-                        if (this.client.destroyed) {
-                            log.info('TCP manually closed');
-                            const result = {
-                                code: 200,
-                                data: {},
-                                msg: '',
-                                text: ''
-                            };
-                            this.socket && this.socket.emit('connection:close', result);
+                            resolve(false);
                         }
+                    } catch (e) {
+                        log.error(e);
+                        reject(e);
                     }
-                } catch (e) {
-                    log.error(e);
-                }
-            }, 200);
+                }, 200);
+            });
         });
-    };
+    }
 
-    public connectionCloseImproper = () => {
-        this.client && this.client.destroy();
-        if (this.client.destroyed) {
-            log.info('TCP manually closed');
-            const result = {
-                code: 200,
-                data: {},
-                msg: '',
-                text: ''
-            };
-            this.socket && this.socket.emit('connection:close', result);
-        }
-    };
-
-    public connectionClose = (socket: SocketServer, options: EventOptions) => {
-        this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
+    public async connectionClose(options?: { force: boolean }): Promise<boolean> {
         // await this.sacpClient.unSubscribeLogFeedback(this.subscribeLogCallback).then(res => {
         //     log.info(`unsubscribeLog: ${res}`);
         // });
@@ -255,50 +200,61 @@ class SocketTCP extends SocketBASE {
         // await this.sacpClient.unsubscribeHeartbeat(this.subscribeHeartCallback).then(res => {
         //     log.info(`unSubscribeHeart, ${res}`);
         // });
-        this.sacpClient.wifiConnectionClose().then(({ response }) => {
+
+        const force = options?.force || false;
+
+        if (!force) {
+            const { response } = await this.sacpClient.wifiConnectionClose();
+
             if (response.result === 0) {
-                setTimeout(() => {
-                    this.sacpClient?.dispose();
-                    this.client.destroy();
-                    if (this.client.destroyed) {
-                        log.info('TCP manually closed');
-                        const result = {
-                            code: 200,
-                            data: {},
-                            msg: '',
-                            text: ''
-                        };
-                        socket && socket.emit(options.eventName, result);
-                    }
-                }, 500);
-            }
-        });
-    };
+                return new Promise<boolean>((resolve) => {
+                    // TODO: why wait 500ms, please document this.
+                    setTimeout(() => {
+                        this.sacpClient?.dispose();
 
-    public startHeartbeat = () => {
-        this.startHeartbeatBase(this.sacpClient, undefined);
-    };
-
-    public uploadFile = (options: EventOptions) => {
-        const { gcodePath, eventName, renderGcodeFileName = '' } = options;
-        const renderName = renderGcodeFileName || path.basename(gcodePath);
-
-        const gcodeFullPath = `${DataStorage.tmpDir}${gcodePath}`;
-        this.sacpClient.uploadFile(path.resolve(gcodeFullPath), renderName).then((res) => {
-            const result = {
-                err: null,
-                text: ''
-            };
-            if (res.response.result === 0) {
-                log.info('ready to upload file');
+                        this.client.destroy();
+                        if (this.client.destroyed) {
+                            resolve(true);
+                        } else {
+                            resolve(false);
+                        }
+                    }, 500);
+                });
             } else {
-                result.text = 'can not upload file';
-                result.err = 'fail';
-                log.error('can not upload file');
+                // close failed
+                return false;
             }
-            this.socket && this.socket.emit(eventName, result);
-        });
-    };
+        } else {
+            // Force close the socket connection.
+            this.sacpClient?.dispose();
+            this.client && this.client.destroy();
+            if (this.client.destroyed) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    public async startHeartbeat(): Promise<void> {
+        await this.startHeartbeatBase(this.sacpClient, undefined);
+
+        this.setROTSubscribeApi();
+    }
+
+    // interface: FileChannelInterface
+
+    public async uploadFile(options: UploadFileOptions): Promise<boolean> {
+        const { filePath, targetFilename } = options;
+
+        return this.sacpClient.uploadFile(filePath, targetFilename);
+    }
+
+    public async compressUploadFile(options: UploadFileOptions): Promise<boolean> {
+        const { filePath, targetFilename } = options;
+
+        return this.sacpClient.uploadFileCompressed(filePath, targetFilename);
+    }
 
     public takePhoto = async (params: RequestPhotoInfo, callback: (result: { status: boolean }) => void) => {
         return this.sacpClient.takePhoto(params).then(({ response }) => {
@@ -452,7 +408,7 @@ class SocketTCP extends SocketBASE {
         await this.laserSetWorkHeight({ toolHead: toolHead, materialThickness: this.thickness });
     }
 
-    public uploadGcodeFile = (gcodeFilePath: string, type: string, renderName: string, callback: (msg: string, data: boolean) => void) => {
+    public uploadGcodeFile = async (gcodeFilePath: string, type: string, renderName: string, callback: (msg: string, data: boolean) => void) => {
         this.totalLine = null;
         this.estimatedTime = null;
         const rl = readline.createInterface({
@@ -477,20 +433,20 @@ class SocketTCP extends SocketBASE {
                 rl.close();
             }
         });
-        this.sacpClient.uploadFile(gcodeFilePath, renderName).then(({ response }) => {
-            let msg = '', data = false;
-            if (response.result === 0) {
-                msg = '';
-                data = true;
-            }
-            /*
-            TODO: wrong event?
-            this.socket && this.socket.emit('connection:startGcode', {
-                msg: '', res: null
-            });
-            */
-            callback(msg, data);
+
+        const success = await this.sacpClient.uploadFile(gcodeFilePath, renderName);
+        let msg = '', data = false;
+        if (success) {
+            msg = '';
+            data = true;
+        }
+        /*
+        TODO: wrong event?
+        this.socket && this.socket.emit('connection:startGcode', {
+            msg: '', res: null
         });
+        */
+        callback(msg, data);
     };
 
     // start print
@@ -530,4 +486,10 @@ class SocketTCP extends SocketBASE {
     };
 }
 
-export default new SocketTCP();
+const channel = new SacpTcpChannel();
+
+export {
+    channel as sacpTcpChannel
+};
+
+export default SacpTcpChannel;

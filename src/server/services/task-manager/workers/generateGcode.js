@@ -1,11 +1,13 @@
 import fs from 'fs';
 import _ from 'lodash';
 import path from 'path';
-import { GcodeGenerator } from '../../../lib/GcodeGenerator';
-import logger from '../../../lib/logger';
+
 import { pathWithRandomSuffix } from '../../../../shared/lib/random-utils';
 import { isNull } from '../../../../shared/lib/utils';
+import { GcodeGenerator } from '../../../lib/GcodeGenerator';
+import logger from '../../../lib/logger';
 import sendMessage from '../utils/sendMessage';
+import { JobOffsetMode } from '../../../../app/constants/coordinate';
 
 
 const log = logger('service:TaskManager');
@@ -79,7 +81,7 @@ const checkoutBoundingBoxIsNull = (boundingBox) => {
 };
 
 // eslint-disable-next-line consistent-return
-const generateGcode = ({ toolPaths, size, toolHead, origin, series, metadata }) => {
+const generateGcode = ({ toolPaths, size, toolHead, origin, jobOffsetMode, series, metadata }) => {
     if (!toolPaths && !_.isArray(toolPaths) && toolPaths.length === 0) {
         return sendMessage({ status: 'fail', value: 'modelInfo is empty.' });
     }
@@ -186,6 +188,9 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, series, metadata }) 
 
     const power = gcodeConfig.fixedPowerEnabled ? gcodeConfig.fixedPower : 0;
 
+    const hasThumbnail = series !== 'Ray';
+
+    const headerGcodes = [];
     let headerStart = ';Header Start\n'
         + `;header_type: ${headType}\n`
         + `;tool_head: ${toolHead}\n`
@@ -209,10 +214,30 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, series, metadata }) 
         + `;power(%): ${power}\n`
         + `;work_size_x: ${size.x}\n`
         + `;work_size_y: ${size.y}\n`
-        + `;origin: ${origin}\n`
-        + `;thumbnail: ${thumbnail}\n`
-        + ';Header End\n'
-        + '\n';
+        + `;origin: ${origin}\n`;
+
+    // thumbnail
+    if (hasThumbnail) {
+        headerGcodes.push(
+            `;thumbnail: ${thumbnail}`,
+        );
+    }
+
+    if (headType === 'laser' && jobOffsetMode === JobOffsetMode.Crosshair) {
+        headerGcodes.push(
+            'M2003', // crosshair offset
+            'M2004', // move
+        );
+    }
+
+    // header end
+    headerGcodes.push(
+        ';Header End',
+        '',
+    );
+
+    // add header codes
+    headerStart += headerGcodes.join('\n');
 
     fileTotalLines += headerStart.split('\n').length - 1;
 
