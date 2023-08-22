@@ -47,10 +47,13 @@ export default class Channel extends EventEmitter {
     }
 }
 
+// G-code
+
 export interface GcodeChannelInterface extends Channel {
     executeGcode(gcode: string): Promise<boolean>;
 }
 
+// File
 
 export interface UploadFileOptions {
     filePath: string;
@@ -62,6 +65,7 @@ export interface FileChannelInterface extends Channel {
     compressUploadFile(options: UploadFileOptions): Promise<boolean>;
 }
 
+// System
 
 export interface UpgradeFirmwareOptions {
     filename: string;
@@ -77,11 +81,15 @@ export interface SystemChannelInterface extends Channel {
     upgradeFirmwareFromFile(options: UpgradeFirmwareOptions): Promise<boolean>;
 }
 
+// Network
+
 export interface NetworkServiceChannelInterface extends Channel {
     configureNetwork(networkOptions: NetworkOptions): Promise<boolean>;
     getNetworkConfiguration(): Promise<NetworkConfiguration>;
     getNetworkStationState(): Promise<NetworkStationState>;
 }
+
+// Print Job
 
 export interface PrintJobChannelInterface extends Channel {
     // TODO: add callback
@@ -89,12 +97,16 @@ export interface PrintJobChannelInterface extends Channel {
     unsubscribeGetPrintCurrentLineNumber(): Promise<boolean>;
 }
 
+// Laser
+
 export interface LaserChannelInterface extends Channel {
     getCrosshairOffset(): Promise<{x: number; y: number}>;
     setCrosshairOffset(x: number, y: number): Promise<boolean>;
     getFireSensorSensitivity(): Promise<number>;
     setFireSensorSensitivity(sensitivity: number): Promise<boolean>;
 }
+
+// CNC
 
 export interface CncChannelInterface extends Channel {
     setSpindleSpeed(speed: number): Promise<boolean>;

@@ -13,7 +13,7 @@ import {
 } from '../../../../constants';
 import {
     CylinderWorkpieceSize,
-    LaserRunBoundaryMode,
+    JobOffsetMode,
     Materials,
     Origin,
     OriginReference,
@@ -258,8 +258,8 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
     /**
      * Run Boundary Mode
      */
-    const laserRunBoundaryMode: LaserRunBoundaryMode = useSelector((state: RootState) => state.laser.laserRunBoundaryMode);
-    const [selectedRunBoundaryMode, setSelectedRunBoundaryMode] = useState(laserRunBoundaryMode);
+    const jobOffsetMode: JobOffsetMode = useSelector((state: RootState) => state.laser.jobOffsetMode);
+    const [selectedRunBoundaryMode, setSelectedRunBoundaryMode] = useState(jobOffsetMode);
 
     const runBoundaryModeOptions = useMemo(() => {
         // hard-coded for ray machine
@@ -267,31 +267,31 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
             return [
                 {
                     label: i18n._('Crosshair'),
-                    value: LaserRunBoundaryMode.Crosshair,
+                    value: JobOffsetMode.Crosshair,
                 },
                 {
                     label: i18n._('Laser Spot'),
-                    value: LaserRunBoundaryMode.LaserSpot,
+                    value: JobOffsetMode.LaserSpot,
                 },
             ];
         } else {
             return [
                 {
                     label: i18n._('Laser Spot'),
-                    value: LaserRunBoundaryMode.LaserSpot,
+                    value: JobOffsetMode.LaserSpot,
                 },
             ];
         }
     }, [activeMachine]);
 
     useEffect(() => {
-        const targetOption = runBoundaryModeOptions.find(option => option.value === laserRunBoundaryMode);
+        const targetOption = runBoundaryModeOptions.find(option => option.value === jobOffsetMode);
         if (targetOption) {
-            setSelectedRunBoundaryMode(laserRunBoundaryMode);
+            setSelectedRunBoundaryMode(jobOffsetMode);
         } else {
             setSelectedRunBoundaryMode(runBoundaryModeOptions[0].value);
         }
-    }, [laserRunBoundaryMode, runBoundaryModeOptions]);
+    }, [jobOffsetMode, runBoundaryModeOptions]);
 
     const onChangeRunBoundaryMode = useCallback((option) => {
         setSelectedRunBoundaryMode(option.value);
@@ -334,7 +334,7 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
                 ));
 
                 // Run Boudanry Mode
-                dispatch(editorActions.setLaserRunBoundaryMode(selectedRunBoundaryMode));
+                dispatch(editorActions.setJobOffsetMode(selectedRunBoundaryMode));
 
                 const targetOption = originReferenceOptions.find(option => option.value === selectedOrigin.reference);
 

@@ -96,6 +96,8 @@ export enum ToolHeadType {
 export default class SacpClient extends Dispatcher {
     private log: Logger = console;
 
+    private filePeerId: PeerId = PeerId.SCREEN;
+
     public constructor(type: string, socket) {
         super(type, socket);
         this.setHandler(0xb0, 0x00, async (data) => {
@@ -157,6 +159,10 @@ export default class SacpClient extends Dispatcher {
         this.log = log;
     }
 
+    public setFilePeerId(peerId: PeerId): void {
+        this.filePeerId = peerId;
+    }
+
     public async executeGcode(gcode: string) {
         return this.send(0x01, 0x02, PeerId.CONTROLLER, stringToBuffer(gcode)).then(({ response, packet }) => {
             return { response, packet, data: {} };
@@ -182,7 +188,7 @@ export default class SacpClient extends Dispatcher {
     }
 
     public async getPrintingFileInfo() {
-        return this.send(0xac, 0x1a, PeerId.SCREEN, Buffer.alloc(1, 0)).then(({ response, packet }) => {
+        return this.send(0xac, 0x1a, this.filePeerId, Buffer.alloc(1, 0)).then(({ response, packet }) => {
             const data = {
                 filename: '',
                 totalLine: 0,
@@ -974,6 +980,7 @@ export default class SacpClient extends Dispatcher {
      */
     public async uploadFileCompressed(filePath: string, renderName?: string): Promise<boolean> {
         if (!fs.existsSync(filePath)) {
+            this.log.error(`File does not exist ${filePath}`);
             return false;
         }
 

@@ -96,7 +96,7 @@ export type Origin = {
 };
 
 
-export enum LaserRunBoundaryMode {
+export enum JobOffsetMode {
     Crosshair = 'Crosshair',
     LaserSpot = 'LaserSpot'
 }

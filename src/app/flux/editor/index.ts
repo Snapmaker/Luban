@@ -23,9 +23,11 @@ import {
 } from '../../constants';
 import {
     CylinderWorkpieceSize,
-    LaserRunBoundaryMode,
+    JobOffsetMode,
     Materials,
+    ObjectReference,
     Origin,
+    OriginType,
     RectangleWorkpieceSize,
     WorkpieceShape
 } from '../../constants/coordinate';
@@ -265,21 +267,44 @@ export const actions = {
 
     _init: headType => (dispatch, getState) => {
         const { modelGroup, toolPathGroup, initFlag } = getState()[headType];
+
         modelGroup.removeAllModels();
         modelGroup.setDataChangedCallback(() => {
             dispatch(baseActions.render(headType));
         });
+
         toolPathGroup.setUpdatedCallBack(() => {
             dispatch(baseActions.render(headType));
         });
+
         if (!initFlag) {
+            dispatch(actions.__initEditorParameters(headType));
+
             dispatch(actions.__initOnControllerEvents(headType));
+
             dispatch(
                 baseActions.updateState(headType, {
                     initFlag: true
                 })
             );
         }
+    },
+
+    __initEditorParameters: (headType: string) => {
+        return (dispatch) => {
+            const originType = machineStore.get('origin.type', OriginType.Object);
+            const originReference = machineStore.get('origin.reference', ObjectReference.BottomLeft);
+
+            const origin: Origin = {
+                type: originType,
+                reference: originReference,
+                referenceMetadata: {},
+            };
+
+            dispatch(baseActions.updateState(headType, {
+                origin,
+            }));
+        };
     },
 
     __initOnControllerEvents: headType => {
@@ -2160,7 +2185,8 @@ export const actions = {
                 origin,
             }));
 
-            console.log('setOrigin', origin);
+            machineStore.set('origin.type', origin.type);
+            machineStore.set('origin.reference', origin.reference);
 
             // Update origin of tool path object
             const toolPathGroup = getState()[headType].toolPathGroup as ToolPathGroup;
@@ -2169,17 +2195,19 @@ export const actions = {
     },
 
     /**
-     * Set laser run boundary mode.
+     * Set job offset mode.
+     *
+     * Using crosshair to set origin, or use laser spot to set origin.
      *
      * Note that this is only used by ray machine now.
      */
-    setLaserRunBoundaryMode: (laserRunBoundaryMode: LaserRunBoundaryMode) => {
+    setJobOffsetMode: (jobOffsetMode: JobOffsetMode) => {
         return (dispatch) => {
             dispatch(actions.updateState(HEAD_LASER, {
-                laserRunBoundaryMode,
+                jobOffsetMode,
             }));
 
-            machineStore.set('LaserRunBoundaryMode', laserRunBoundaryMode);
+            machineStore.set('job-offset-mode', jobOffsetMode);
         };
     },
 

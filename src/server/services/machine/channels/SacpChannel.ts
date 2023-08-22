@@ -1,6 +1,7 @@
 import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { ResponseCallback } from '@snapmaker/snapmaker-sacp-sdk';
-import { readString, readUint16, readUint8 } from '@snapmaker/snapmaker-sacp-sdk/dist/helper';
+import { PeerId } from '@snapmaker/snapmaker-sacp-sdk/dist/communication/Header';
+import { readString, readUint16, readUint32, readUint8 } from '@snapmaker/snapmaker-sacp-sdk/dist/helper';
 import {
     AirPurifierInfo,
     CncSpeedState,
@@ -121,13 +122,17 @@ class SacpChannelBase extends Channel implements
     public cncTargetSpeed: number;
 
     // gcode total lines
+    public filename: string = '';
     public totalLine: number | null = null;
-
     public estimatedTime: number | null = null;
-
     public startTime: number;
-
     public machineStatus: string = WorkflowStatus.Idle;
+
+    public setFilePeerId(peerId: PeerId): void {
+        if (this.sacpClient) {
+            this.sacpClient.setFilePeerId(peerId);
+        }
+    }
 
     /**
      * Get laser module info.
@@ -170,36 +175,6 @@ class SacpChannelBase extends Channel implements
         }
 
         return true;
-    }
-
-    // interface: PrintJobChannelInterface
-
-    public async subscribeGetPrintCurrentLineNumber(): Promise<boolean> {
-        const callback: ResponseCallback = ({ response }) => {
-            // line number
-            const currentLineNumberInfo = new GcodeCurrentLine().fromBuffer(response.data);
-
-            const currentLine = currentLineNumberInfo.currentLine;
-            const data = {
-                sent: currentLine,
-            };
-
-            if (includes([WorkflowStatus.Running, WorkflowStatus.Paused], this.machineStatus)) {
-                this.socket && this.socket.emit('sender:status', ({ data }));
-            }
-        };
-
-        const res = await this.sacpClient.subscribeGetPrintCurrentLineNumber(
-            { interval: 2000 },
-            callback
-        );
-
-        return res.code === 0;
-    }
-
-    public async unsubscribeGetPrintCurrentLineNumber(): Promise<boolean> {
-        const res = await this.sacpClient.unSubscribeGetPrintCurrentLineNumber(null);
-        return res.code === 0;
     }
 
     // interface: SystemChannelInterface
@@ -327,6 +302,84 @@ class SacpChannelBase extends Channel implements
         const { response } = await this.sacpClient.switchCNC(toolhead.key, false);
         return response.result === 0;
     }
+
+    // interface: PrintJobChannelInterface
+
+    private async getPrintJobFileInfo(): Promise<void> {
+        const { data } = await this.sacpClient.getPrintingFileInfo();
+
+        if (!data.totalLine) {
+            return;
+        }
+
+        this.filename = data.filename;
+        this.totalLine = data.totalLine;
+        this.estimatedTime = data.estimatedTime;
+    }
+
+    public async subscribeGetPrintCurrentLineNumber(): Promise<boolean> {
+        // Subscribe to line number
+        const callback: ResponseCallback = ({ response }) => {
+            if (!this.totalLine) {
+                this.getPrintJobFileInfo();
+            }
+
+            // line number
+            const currentLineNumberInfo = new GcodeCurrentLine().fromBuffer(response.data);
+
+            const currentLine = currentLineNumberInfo.currentLine;
+
+            let progress;
+            if (this.totalLine === 0) {
+                progress = 0;
+            } else if (currentLine >= this.totalLine) {
+                progress = 1;
+            } else {
+                progress = Math.round((currentLine / this.totalLine) * 100) / 100;
+            }
+
+            const sliceTime = new Date().getTime() - this.startTime;
+
+            const remainingTime = (1 - (progress)) * progress * (this.estimatedTime * 1000) / progress + (1 - progress) * (1 - progress) * sliceTime;
+
+            const data = {
+                filename: this.filename,
+                sent: currentLine,
+                total: this.totalLine,
+                progress: progress,
+                // printStatus: progress === 1 ? COMPLUTE_STATUS : '',
+                estimatedTime: this.estimatedTime * 1000,
+                elapsedTime: sliceTime,
+                remainingTime: remainingTime,
+            };
+
+            if (includes([WorkflowStatus.Running, WorkflowStatus.Paused], this.machineStatus)) {
+                this.socket && this.socket.emit('sender:status', ({ data }));
+            }
+        };
+
+        const res = await this.sacpClient.subscribeGetPrintCurrentLineNumber(
+            { interval: 2000 },
+            callback
+        );
+
+        // Subscribe to print time
+        const callback2: ResponseCallback = ({ response }) => {
+            const sliceTime = readUint32(response.data);
+            this.startTime = new Date().getTime() - sliceTime * 1000;
+        };
+
+        const res2 = await this.sacpClient.subscribeGetPrintingTime({ interval: 5000 }, callback2);
+
+        return res.code === 0 && res2.code === 0;
+    }
+
+    public async unsubscribeGetPrintCurrentLineNumber(): Promise<boolean> {
+        const res = await this.sacpClient.unSubscribeGetPrintCurrentLineNumber(null);
+        return res.code === 0;
+    }
+
+
 
     // old heartbeat base, refactor needed
     public startHeartbeatBase = async (sacpClient: SacpClient, client?: net.Socket) => {
