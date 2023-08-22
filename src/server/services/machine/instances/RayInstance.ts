@@ -1,41 +1,25 @@
-import { includes } from 'lodash';
 import { PeerId } from '@snapmaker/snapmaker-sacp-sdk/dist/communication/Header';
+import { includes } from 'lodash';
 
 import {
     LASER_HEAD_MODULE_IDS,
     MODULEID_TOOLHEAD_MAP,
 } from '../../../../app/constants/machines';
+import { SnapmakerRayMachine } from '../../../../app/machines';
 import { HEAD_LASER } from '../../../constants';
 import logger from '../../../lib/logger';
+import { PrintJobChannelInterface } from '../channels/Channel';
+import SacpChannelBase from '../channels/SacpChannel';
 import SacpSerialChannel from '../channels/SacpSerialChannel';
 import SacpUdpChannel from '../channels/SacpUdpChannel';
 import TextSerialChannel from '../channels/TextSerialChannel';
 import { ConnectedData } from '../types';
 import MachineInstance from './Instance';
-import { SnapmakerRayMachine } from '../../../../app/machines';
-import { PrintJobChannelInterface } from '../channels/Channel';
-import SacpChannelBase from '../channels/SacpChannel';
 
 const log = logger('services:machine:instances:RayInstance');
 
 
 class RayMachineInstance extends MachineInstance {
-    public async onPrepare(): Promise<void> {
-        if (this.channel instanceof SacpSerialChannel) {
-            await this._prepareMachineSACP();
-        } else if (this.channel instanceof SacpUdpChannel) {
-            await this._prepareMachineSACP();
-        }
-
-        if (this.channel instanceof TextSerialChannel) {
-            // Not implemented
-            // M2000 U5 to switch protocol to SACP
-            // (this.channel as SocketSerial).command(this.socket, {
-            //    gcode: 'M2000 U5',
-            // });
-        }
-    }
-
     private async _prepareMachineSACP() {
         // configure channel
         (this.channel as SacpChannelBase).setFilePeerId(PeerId.CONTROLLER);
@@ -105,6 +89,30 @@ class RayMachineInstance extends MachineInstance {
 
         // Subscribe job progress
         await (this.channel as PrintJobChannelInterface).subscribeGetPrintCurrentLineNumber();
+    }
+
+    public async onPrepare(): Promise<void> {
+        if (this.channel instanceof SacpSerialChannel) {
+            await this._prepareMachineSACP();
+        } else if (this.channel instanceof SacpUdpChannel) {
+            await this._prepareMachineSACP();
+        }
+
+        if (this.channel instanceof TextSerialChannel) {
+            // Not implemented
+            // M2000 U5 to switch protocol to SACP
+            // (this.channel as SocketSerial).command(this.socket, {
+            //    gcode: 'M2000 U5',
+            // });
+        }
+    }
+
+    public async onClosing(): Promise<void> {
+        log.info('On closing connection...');
+
+        log.info('Stop heartbeat.');
+        log.debug(`channel = ${this.channel.constructor.name}`);
+        await this.channel.stopHeartbeat();
     }
 }
 

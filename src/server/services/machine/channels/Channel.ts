@@ -45,6 +45,10 @@ export default class Channel extends EventEmitter {
     public async startHeartbeat(): Promise<void> {
         return Promise.resolve();
     }
+
+    public async stopHeartbeat(): Promise<void> {
+        return Promise.resolve();
+    }
 }
 
 // G-code

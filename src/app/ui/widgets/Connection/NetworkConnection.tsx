@@ -42,6 +42,7 @@ import LaserLockModal from './modals/LaserLockModal';
 import MismatchModal from './modals/MismatchModal';
 import MismatchNozzleModal from './modals/MismatchNozzleModal';
 import styles from './styles.styl';
+import useThrottle from '../../utils/useThrottle';
 
 
 const ICON_COLOR_GREEN = '#4CB518';
@@ -257,6 +258,7 @@ const NetworkConnection: React.FC = () => {
             return;
         }
 
+        // connect to agent
         const { code, msg } = await dispatch(
             connectActions.connect(selectedAgent)
         ) as unknown as { code: number | string; msg: string; };
@@ -273,6 +275,9 @@ const NetworkConnection: React.FC = () => {
             dispatch(connectActions.disconnect(server));
         }
     }, [dispatch, server]);
+
+    const onClickConnect = useThrottle(connect, 100);
+    const onClickDisconnect = useThrottle(disconnect, 100);
 
     /**
     * Hide manual Wi-Fi modal
@@ -603,7 +608,7 @@ const NetworkConnection: React.FC = () => {
                             width="120px"
                             type="primary"
                             priority="level-two"
-                            onClick={connect}
+                            onClick={onClickConnect}
                             disabled={isOpen}
                         >
                             {i18n._('key-Workspace/Connection-Connect')}
@@ -616,7 +621,7 @@ const NetworkConnection: React.FC = () => {
                             width="120px"
                             type="default"
                             priority="level-two"
-                            onClick={disconnect}
+                            onClick={onClickDisconnect}
                         >
                             {i18n._('key-Workspace/Connection-Disconnect')}
                         </Button>
