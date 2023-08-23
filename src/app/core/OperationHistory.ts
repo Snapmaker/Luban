@@ -14,6 +14,10 @@ class OperationHistory {
         this.clear();
     }
 
+    public size() {
+        return this.operations.length;
+    }
+
     private _updateUndoRedo() {
         this.canUndo = (this.index >= 0);
         this.canRedo = (this.index + 1 < this.operations.length);
@@ -39,6 +43,14 @@ class OperationHistory {
         }
 
         this._updateUndoRedo();
+    }
+
+    public pop() {
+        const pop = this.operations[this.index--];
+        this.operations.length = this.index + 1;
+
+        this._updateUndoRedo();
+        return pop;
     }
 
     public clear() {

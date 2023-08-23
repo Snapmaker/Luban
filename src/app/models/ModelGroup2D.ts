@@ -5,13 +5,10 @@ import {
     Group,
     Intersection,
     Matrix4,
-    Mesh,
-    Plane,
     Vector3
 } from 'three';
 
 import { HEAD_CNC, HEAD_LASER } from '../constants';
-import { THelperExtruderConfig, TSupportExtruderConfig } from '../constants/preset';
 import i18n from '../lib/i18n';
 import log from '../lib/log';
 import { checkVector3NaN } from '../lib/numeric-utils';
@@ -60,17 +57,14 @@ export interface SmartFillBrushOptions {
 class ModelGroup2D extends EventEmitter {
     public namesMap: Map<string, { number: number, count: number }> = new Map();
     public object: Group;
-    public grayModeObject: Group;
     public models: (TModel)[];
     public selectedModelArray: TModel[];
     public _bbox: Box3;
     public materials: TMaterials;
-    private sectionMesh: Mesh = null;
     private headType: THeadType;
     private clipboard: TModel[];
     private estimatedTime: number;
     private selectedGroup: Group;
-    private selectedModelConvexMeshGroup: Group;
     private selectedToolPathModelIDs: string[];
     private onDataChangedCallback: () => void;
     private series: string;
@@ -79,13 +73,6 @@ class ModelGroup2D extends EventEmitter {
         y: number;
     }[];
 
-    public clippingGroup = new Group();
-    public localPlane = new Plane(new Vector3(0, 0, -1), PLANE_MAX_HEIGHT);
-    public clippingFaceGroup = new Group();
-    public clipping: 'true' | 'false' = 'true';
-
-    private helpersExtruderConfig: THelperExtruderConfig;
-    private supportExtruderConfig: TSupportExtruderConfig;
 
     public constructor(headType: THeadType) {
         super();
@@ -94,8 +81,6 @@ class ModelGroup2D extends EventEmitter {
         this.object = new Group();
         this.object.name = 'Model Group';
 
-        this.grayModeObject = new Group();
-        this.grayModeObject.name = 'Gray Group';
         this.models = [];
 
         this.selectedGroup = new Group();
@@ -111,18 +96,8 @@ class ModelGroup2D extends EventEmitter {
         // this.selectedModelIDArray = [];
         this.candidatePoints = null;
         this._bbox = null;
-        this.selectedModelConvexMeshGroup = new Group();
         // The selectedToolPathModelIDs is used to generate the toolpath
         this.selectedToolPathModelIDs = [];
-
-        this.helpersExtruderConfig = {
-            adhesion: '0',
-        };
-
-        this.supportExtruderConfig = {
-            support: '0',
-            interface: '0',
-        };
     }
 
     // TODO: save last value and compare changes
@@ -289,7 +264,6 @@ class ModelGroup2D extends EventEmitter {
      */
     // todo, remove mesh obj in 2d
     public removeSelectedModel() {
-        console.log('removeSelectedModel');
         this._removeSelectedModels();
         this.unselectAllModels();
         return this.getState();
@@ -301,8 +275,6 @@ class ModelGroup2D extends EventEmitter {
             model.meshObject.removeEventListener('update', this.onModelUpdate);
             model.meshObject.parent && model.meshObject.parent.remove(model.meshObject);
         }
-        this.object.remove(this.sectionMesh);
-        this.sectionMesh = null;
         this.models = [];
     }
 
@@ -979,7 +951,6 @@ class ModelGroup2D extends EventEmitter {
      * @returns {TModel}
      */
     public addModel(modelInfo: ModelInfo | SVGModelInfo, resolve, reject) {
-        console.log('modelInfo', modelInfo);
         if (!modelInfo.modelName) {
             const modelNameObj = this._createNewModelName({
                 sourceType: modelInfo.sourceType as '3d' | '2d',
@@ -1012,31 +983,6 @@ class ModelGroup2D extends EventEmitter {
         this.modelChanged();
         resolve && resolve(model);
         return model;
-    }
-
-    public getHelpersExtruderConfig(): THelperExtruderConfig {
-        return this.helpersExtruderConfig;
-    }
-
-    public setHelpersExtruderConfig(helpersExtruderConfig: THelperExtruderConfig): void {
-        this.helpersExtruderConfig = {
-            ...this.helpersExtruderConfig,
-            ...helpersExtruderConfig,
-        };
-
-        this.modelAttributesChanged('extruderConfig');
-    }
-
-    public getSupportExtruderConfig(): TSupportExtruderConfig {
-        return this.supportExtruderConfig;
-    }
-
-    public setSupportExtruderConfig(extruderConfig: TSupportExtruderConfig): void {
-        this.supportExtruderConfig = {
-            ...this.supportExtruderConfig,
-            ...extruderConfig,
-        };
-        this.modelAttributesChanged('extruderConfig');
     }
 
     public modelChanged() {
@@ -1154,23 +1100,6 @@ class ModelGroup2D extends EventEmitter {
     public setAllSelectedToolPathModelIDs() {
         this.selectedToolPathModelIDs = this.models.map((v) => v.modelID);
         this.modelChanged();
-    }
-
-    public resetSelectedModelConvexMeshGroup() {
-        if (this.selectedModelArray.length === 1) {
-            const model = this.selectedModelArray[0];
-            for (let i = model.meshObject.children.length - 1; i >= 0; i--) {
-                if (model.meshObject.children[i].userData.isRotationFace) {
-                    model.meshObject.remove(model.meshObject.children[i]);
-                }
-            }
-            for (let i = this.selectedModelConvexMeshGroup.children.length - 1; i >= 0; i--) {
-                this.selectedModelConvexMeshGroup.remove(this.selectedModelConvexMeshGroup.children[i]);
-            }
-            this.selectedModelConvexMeshGroup = new Group();
-            return this.selectedModelConvexMeshGroup;
-        }
-        return null;
     }
 
     public isSelectedModelAllVisible() {

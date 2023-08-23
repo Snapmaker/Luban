@@ -94,9 +94,9 @@ const checkoutAndClosedSVG = (svg) => {
 };
 
 const standardizationSVG = (svg, modelInfo) => {
-    const { width, height } = modelInfo.transformation;
-    const scaleX = width / svg.width;
-    const scaleY = height / svg.height;
+    const { width, height, scaleX, scaleY } = modelInfo.transformation;
+    const nScaleX = width / svg.width * scaleX;
+    const nScaleY = height / svg.height * scaleY;
     const moveX = svg.viewBox[0] + svg.width / 2;
     const moveY = svg.viewBox[1] + svg.height / 2;
 
@@ -104,8 +104,8 @@ const standardizationSVG = (svg, modelInfo) => {
         for (let j = 0; j < svg.shapes[i].paths.length; j++) {
             for (let k = 0; k < svg.shapes[i].paths[j].points.length; k++) {
                 const p = svg.shapes[i].paths[j].points[k];
-                p[0] = (p[0] - moveX) * scaleX;
-                p[1] = (p[1] - moveY) * scaleY;
+                p[0] = (p[0] - moveX) * nScaleX;
+                p[1] = (p[1] - moveY) * nScaleY;
             }
         }
     }
@@ -127,34 +127,6 @@ const getSVG = async (modelInfo) => {
     return svg;
 };
 
-const writeSVG = async (svg, modelID, uploadName, type, offset = 0) => {
-    const outputFilename = pathWithRandomSuffix(`${uploadName}.svg`);
-    const targetPath = `${process.env.Tmpdir}/${outputFilename}`;
-
-    const newWidth = svg.width + 2 * offset;
-    const newHeight = svg.height + 2 * offset;
-
-    svg.viewBox = [svg.viewBox[0] - offset, svg.viewBox[1] - offset, newWidth, newHeight];
-    svg.width = newWidth;
-    svg.height = newHeight;
-
-    return new Promise((resolve) => {
-        fs.writeFile(targetPath, svgToString(svg), () => {
-            resolve({
-                modelID,
-                resultType: type,
-                originalName: outputFilename,
-                filename: outputFilename,
-                sourceWidth: newWidth,
-                sourceHeight: newHeight,
-                baseWidth: newWidth,
-                baseHeight: newHeight,
-                width: newWidth,
-                height: newHeight
-            });
-        });
-    });
-};
 
 const svgShapeToPolygons = (shape) => {
     const closedPolygons = [];
@@ -186,24 +158,73 @@ const svgToPolygons = (svg) => {
         openPolygons: allOpenPolygons
     };
 };
+//
+// const getBoundingBox = (polygons) => {
+//     let minX = polygons[0][0][0];
+//     let maxX = polygons[0][0][0];
+//     let minY = polygons[0][0][1];
+//     let maxY = polygons[0][0][1];
+//     for (let i = 0; i < polygons.length; i++) {
+//         for (let j = 0; j < polygons[i].length; j++) {
+//             const p = polygons[i][j];
+//             minX = Math.min(minX, p[0]);
+//             minY = Math.min(minY, p[1]);
+//             maxX = Math.max(maxX, p[0]);
+//             maxY = Math.max(maxY, p[1]);
+//         }
+//     }
+//     return {
+//         minX, maxX, minY, maxY
+//     };
+// };
 
-const getBoundingBox = (polygons) => {
-    let minX = polygons[0][0][0];
-    let maxX = polygons[0][0][0];
-    let minY = polygons[0][0][1];
-    let maxY = polygons[0][0][1];
-    for (let i = 0; i < polygons.length; i++) {
-        for (let j = 0; j < polygons[i].length; j++) {
-            const p = polygons[i][j];
-            minX = Math.min(minX, p[0]);
-            minY = Math.min(minY, p[1]);
-            maxX = Math.max(maxX, p[0]);
-            maxY = Math.max(maxY, p[1]);
+const getBoundingBoxBySVG = (svg) => {
+    let minX = svg.shapes[0].paths[0].points[0][0];
+    let maxX = svg.shapes[0].paths[0].points[0][0];
+    let minY = svg.shapes[0].paths[0].points[0][1];
+    let maxY = svg.shapes[0].paths[0].points[0][1];
+    for (let i = 0; i < svg.shapes.length; i++) {
+        for (let j = 0; j < svg.shapes[i].paths.length; j++) {
+            for (let k = 0; k < svg.shapes[i].paths[j].points.length; k++) {
+                const p = svg.shapes[i].paths[j].points[k];
+                minX = Math.min(minX, p[0]);
+                minY = Math.min(minY, p[1]);
+                maxX = Math.max(maxX, p[0]);
+                maxY = Math.max(maxY, p[1]);
+            }
         }
     }
     return {
         minX, maxX, minY, maxY
     };
+};
+
+const writeSVG = async (svg, modelID, uploadName, type, transformation = {}) => {
+    const outputFilename = pathWithRandomSuffix(`${uploadName}.svg`);
+    const targetPath = `${process.env.Tmpdir}/${outputFilename}`;
+
+    const newWidth = svg.width;
+    const newHeight = svg.height;
+
+    return new Promise((resolve) => {
+        fs.writeFile(targetPath, svgToString(svg), () => {
+            resolve({
+                modelID,
+                resultType: type,
+                originalName: outputFilename,
+                filename: outputFilename,
+                sourceWidth: newWidth,
+                sourceHeight: newHeight,
+                baseWidth: newWidth,
+                baseHeight: newHeight,
+                transformation: {
+                    ...transformation,
+                    width: newWidth,
+                    height: newHeight
+                }
+            });
+        });
+    });
 };
 
 const transforPolygonsStart = (polygons, modelInfo) => {
@@ -212,23 +233,28 @@ const transforPolygonsStart = (polygons, modelInfo) => {
     polygonsMove(polygons, positionX, -positionY);
 };
 
-const transforPolygonsEnd = (polygons, modelInfo) => {
-    const { positionX, positionY, rotationZ } = modelInfo.transformation;
-    polygonsMove(polygons, -positionX, positionY);
-    polygonsRotate(polygons, rotationZ);
+// const transforPolygonsEnd = (polygons, modelInfo) => {
+//     const { positionX, positionY, rotationZ } = modelInfo.transformation;
+//     polygonsMove(polygons, -positionX, positionY);
+//     polygonsRotate(polygons, rotationZ);
+// };
+
+const calculateSVGViewBox = (svg, offset = 0) => {
+    const { minX, maxX, minY, maxY } = getBoundingBoxBySVG(svg);
+    svg.width = maxX - minX + offset * 2;
+    svg.height = maxY - minY + offset * 2;
+    svg.viewBox = [minX - offset, minY - offset, svg.width, svg.height];
 };
 
 const createNewSVG = (result) => {
-    const { minX, maxX, minY, maxY } = getBoundingBox(result);
-
     const resultSVG = {
         shapes: [{
             visibility: true,
             paths: []
         }],
-        width: maxX - minX,
-        height: maxY - minY,
-        viewBox: [minX, minY, maxX - minX, maxY - minY]
+        width: 0,
+        height: 0,
+        viewBox: [0, 0, 0, 0]
     };
 
     for (let i = 0; i < result.length; i++) {
@@ -237,6 +263,9 @@ const createNewSVG = (result) => {
             points: result[i]
         });
     }
+
+    calculateSVGViewBox(resultSVG);
+
     return resultSVG;
 };
 
@@ -248,6 +277,7 @@ const svgModelOffset = async (modelInfo, offset, onProgress) => {
         for (let i = 0; i < svg.shapes.length; i++) {
             const shape = svg.shapes[i];
             const { closedPolygons, openPolygons } = svgShapeToPolygons(shape);
+
             const closedResult = polyOffset(closedPolygons, offset, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon, 3, 0.0025);
             const openResult = polyOffset(openPolygons, offset, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etOpenSquare, 3, 0.0025);
 
@@ -268,8 +298,14 @@ const svgModelOffset = async (modelInfo, offset, onProgress) => {
             onProgress && onProgress(i / svg.shapes.length * 0.9 + 0.1);
         }
 
+        calculateSVGViewBox(svg);
+
         onProgress && onProgress(1);
-        return writeSVG(svg, modelInfo.modelID, modelInfo.uploadName, SVGClippingResultType.Update, offset);
+        return writeSVG(svg, modelInfo.modelID, modelInfo.uploadName, SVGClippingResultType.Add, {
+            positionX: modelInfo.transformation.positionX,
+            positionY: modelInfo.transformation.positionY,
+            rotationZ: modelInfo.transformation.rotationZ
+        });
     } catch (e) {
         console.log(e);
         throw new Error();
@@ -325,8 +361,15 @@ const svgModelBackground = async (modelInfo, offset, onProgress) => {
             });
         }
     }
+
+    calculateSVGViewBox(svg);
+
     onProgress && onProgress(1);
-    return writeSVG(svg, modelInfo.modelID, modelInfo.uploadName, SVGClippingResultType.Update, offset);
+    return writeSVG(svg, modelInfo.modelID, modelInfo.uploadName, SVGClippingResultType.Add, {
+        positionX: modelInfo.transformation.positionX,
+        positionY: modelInfo.transformation.positionY,
+        rotationZ: modelInfo.transformation.rotationZ
+    });
 };
 
 const svgModelRinging = async (modelInfo, offset, onProgress) => {
@@ -358,9 +401,15 @@ const svgModelRinging = async (modelInfo, offset, onProgress) => {
         onProgress && onProgress(i / svg.shapes.length * 0.9 + 0.1);
     }
 
+    calculateSVGViewBox(svg);
+
     onProgress && onProgress(1);
 
-    return writeSVG(svg, modelInfo.modelID, modelInfo.uploadName, SVGClippingResultType.Update, offset);
+    return writeSVG(svg, modelInfo.modelID, modelInfo.uploadName, SVGClippingResultType.Add, {
+        positionX: modelInfo.transformation.positionX,
+        positionY: modelInfo.transformation.positionY,
+        rotationZ: modelInfo.transformation.rotationZ
+    });
 };
 
 const svgModelUnion = async (modelInfo, onProgress) => {
@@ -386,8 +435,14 @@ const svgModelUnion = async (modelInfo, onProgress) => {
         });
     }
 
+    calculateSVGViewBox(svg);
+
     onProgress && onProgress(1);
-    return writeSVG(svg, modelInfo.modelID, modelInfo.uploadName, SVGClippingResultType.Update, 0);
+    return writeSVG(svg, modelInfo.modelID, modelInfo.uploadName, SVGClippingResultType.Update, {
+        positionX: modelInfo.transformation.positionX,
+        positionY: modelInfo.transformation.positionY,
+        rotationZ: modelInfo.transformation.rotationZ
+    });
 };
 
 
@@ -416,52 +471,12 @@ const svgModelsUnion = async (modelInfos, onProgress) => {
     const resultSVG = createNewSVG(result);
 
     onProgress && onProgress(1);
-    return writeSVG(resultSVG, '', modelInfos[0].uploadName, SVGClippingResultType.Add, 0);
+    return writeSVG(resultSVG, '', modelInfos[0].uploadName, SVGClippingResultType.Add, {
+        positionX: resultSVG.viewBox[0] + resultSVG.viewBox[2] / 2,
+        positionY: -(resultSVG.viewBox[1] + resultSVG.viewBox[3] / 2)
+    });
 };
-//
-// const svgModelsClip = async (modelInfos) => {
-//     if (modelInfos.length !== 2) {
-//         throw new Error('SVG Clip model infos length < 2');
-//     }
-//
-//     const subSVG = await getSVG(modelInfos[0]);
-//     const subPolygons = svgToPolygons(subSVG);
-//     const subClosedPolygons = subPolygons.closedPolygons;
-//
-//     transforPolygonsStart(subClosedPolygons, modelInfos[0]);
-//
-//     const subOpenPolygons = subPolygons.openPolygons;
-//     const allClipClosedPolygons = [];
-//
-//     for (let i = 1; i < modelInfos.length; i++) {
-//         const clipSVG = await getSVG(modelInfos[i]);
-//         const clipClosedPolygons = svgToPolygons(clipSVG).closedPolygons;
-//
-//         transforPolygonsStart(clipClosedPolygons, modelInfos[i]);
-//
-//         allClipClosedPolygons.push(...clipClosedPolygons);
-//     }
-//     const result = polyDiff(subClosedPolygons, allClipClosedPolygons);
-//
-//     transforPolygonsEnd(result, modelInfos[0]);
-//
-//     subSVG.shapes.splice(1);
-//     subSVG.shapes[0].paths.splice(0);
-//     for (let i = 0; i < result.length; i++) {
-//         subSVG.shapes[0].paths.push({
-//             closed: true,
-//             points: result[i]
-//         });
-//     }
-//     for (let i = 0; i < subOpenPolygons.length; i++) {
-//         subSVG.shapes[0].paths.push({
-//             closed: false,
-//             points: subOpenPolygons[i]
-//         });
-//     }
-//
-//     return writeSVG(subSVG, modelInfos[0].uploadName, 0);
-// };
+
 
 const svgModelsClip = async (modelInfos, onProgress) => {
     if (modelInfos.length !== 2) {
@@ -483,51 +498,33 @@ const svgModelsClip = async (modelInfos, onProgress) => {
     const result1 = polyDiff(polygons1, polygons0);
     const result2 = polyIntersection(polygons0, polygons1);
 
-    transforPolygonsEnd(result0, modelInfos[0]);
-    transforPolygonsEnd(result1, modelInfos[1]);
+    // transforPolygonsEnd(result0, modelInfos[0]);
+    // transforPolygonsEnd(result1, modelInfos[1]);
 
     onProgress && onProgress(0.8);
 
-    svg0.shapes.splice(1);
-    svg0.shapes[0].paths.splice(0);
-    svg1.shapes.splice(1);
-    svg1.shapes[0].paths.splice(0);
-
     const results = [];
 
-    // if (result0.length > 0) {
-    for (let i = 0; i < result0.length; i++) {
-        svg0.shapes[0].paths.push({
-            closed: true,
-            points: result0[i]
-        });
+    if (result0.length > 0) {
+        const resSVG0 = createNewSVG(result0);
+        results.push(await writeSVG(resSVG0, modelInfos[0].modelID, modelInfos[0].uploadName, SVGClippingResultType.Add, {
+            positionX: resSVG0.viewBox[0] + resSVG0.viewBox[2] / 2,
+            positionY: -(resSVG0.viewBox[1] + resSVG0.viewBox[3] / 2)
+        }));
     }
-    results.push(await writeSVG(svg0, modelInfos[0].modelID, modelInfos[0].uploadName, SVGClippingResultType.Update, 0));
-    // } else {
-    //     results.push({
-    //         modelID: modelInfos[0].modelID,
-    //         type: SVGClippingResultType.Delete,
-    //     });
-    // }
-
-    // if (result1.length > 0) {
-    for (let i = 0; i < result1.length; i++) {
-        svg1.shapes[0].paths.push({
-            closed: true,
-            points: result1[i]
-        });
+    if (result1.length > 0) {
+        const resSVG1 = createNewSVG(result1);
+        results.push(await writeSVG(resSVG1, modelInfos[1].modelID, modelInfos[1].uploadName, SVGClippingResultType.Add, {
+            positionX: resSVG1.viewBox[0] + resSVG1.viewBox[2] / 2,
+            positionY: -(resSVG1.viewBox[1] + resSVG1.viewBox[3] / 2)
+        }));
     }
-    results.push(await writeSVG(svg1, modelInfos[1].modelID, modelInfos[1].uploadName, SVGClippingResultType.Update, 0));
-    // } else {
-    //     results.push({
-    //         modelID: modelInfos[1].modelID,
-    //         type: SVGClippingResultType.Delete,
-    //     });
-    // }
-
     if (result2.length > 0) {
-        const svg2 = createNewSVG(result2);
-        results.push(await writeSVG(svg2, '', modelInfos[0].uploadName, SVGClippingResultType.Add, 0));
+        const resSVG2 = createNewSVG(result2);
+        results.push(await writeSVG(resSVG2, modelInfos[1].modelID, modelInfos[1].uploadName, SVGClippingResultType.Add, {
+            positionX: resSVG2.viewBox[0] + resSVG2.viewBox[2] / 2,
+            positionY: -(resSVG2.viewBox[1] + resSVG2.viewBox[3] / 2)
+        }));
     }
 
     onProgress && onProgress(1);
@@ -541,7 +538,6 @@ const svgClipping = async (taskInfo) => {
         };
         return onProgress;
     };
-
 
     const { config, modelInfos } = taskInfo;
     const { offset } = config;

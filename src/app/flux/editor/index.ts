@@ -68,7 +68,7 @@ import { actions as projectActions } from '../project';
 /* eslint-disable-next-line import/no-cycle */
 import { HeadType } from '../../../server/services/machine/sacp/SacpClient';
 import { actions as appGlobalActions } from '../app-global';
-import { SVGClippingResultType } from '../../constants/clipping';
+import { SVGClippingResultType, SVGClippingType } from '../../constants/clipping';
 import UpdateHrefOperation2D from '../operation-history/UpdateHrefOperation2D';
 
 
@@ -1411,18 +1411,29 @@ export const actions = {
      * @returns {Function}
      */
     onReceiveSVGClippingTaskResult: (headType, taskResult) => async (dispatch, getState) => {
-        const { SVGActions, modelGroup, progressStatesManager, materials } = getState()[headType];
+        // const { SVGActions, modelGroup, progressStatesManager, materials } = getState()[headType];
+        const { progressStatesManager, history } = getState()[headType];
         // const { machine } = getState();
+
+        const { config } = taskResult.data;
 
         const { result } = taskResult;
         if (!result || result.length <= 0) {
             return;
         }
 
+        let historyCount = 0;
+
+        if (config.type === SVGClippingType.Union || config.type === SVGClippingType.Clip) {
+            dispatch(actions.removeSelectedModel(headType));
+            historyCount++;
+        }
+
         for (let i = 0; i < result.length; i++) {
             const res = result[i];
 
-            const { modelID, resultType, sourceWidth, sourceHeight, baseWidth, baseHeight, width, height, filename } = res;
+            // const { modelID, resultType, sourceWidth, sourceHeight, baseWidth, baseHeight, transformation, filename } = res;
+            const { resultType, sourceWidth, sourceHeight, transformation, filename } = res;
 
             if (resultType === SVGClippingResultType.Add) {
                 dispatch(actions.generateModel(headType, {
@@ -1431,72 +1442,24 @@ export const actions = {
                     sourceWidth,
                     sourceHeight,
                     mode: 'vector',
-                    sourceType: 'svg'
+                    sourceType: 'svg',
+                    transformation: {
+                        ...transformation
+                    }
                 }));
-            } else if (resultType === SVGClippingResultType.Update) {
-                const model = modelGroup.getModel(modelID);
-                if (!model) {
-                    continue;
-                }
-
-                const operations = new CompoundOperation();
-
-                SVGActions.updateElementToImage(model.elem, {
-                    transformation: model.transformation,
-                    processImageName: filename
-                });
-
-                SVGActions.selectElements([model.elem], materials.isRotate);
-
-                if (sourceWidth && sourceHeight) {
-                    const modelOptions = {
-                        sourceWidth: sourceWidth,
-                        sourceHeight: sourceHeight,
-                        width: baseWidth,
-                        height: baseHeight,
-                        transformation: {
-                            scaleX: width / baseWidth,
-                            scaleY: height / baseHeight,
-                            width: width,
-                            height: height
-                        }
-                    };
-
-                    // const operation = new ScaleOperation2D({
-                    //     target: model,
-                    //     svgActions: SVGActions,
-                    //     machine,
-                    //     from: model.transformation,
-                    //     to: {
-                    //         ...model.transformation,
-                    //         ...modelOptions.transformation
-                    //     }
-                    // });
-                    //
-                    // operations.push(operation);
-
-                    model.updateAndRefresh(modelOptions);
-                }
-
-                const operation = new UpdateHrefOperation2D({
-                    target: model,
-                    svgActions: SVGActions,
-                    fromHref: model.resource.processedFile.name || model.resource.originalFile.name,
-                    toHref: filename
-                });
-                operations.push(operation);
-                dispatch(operationHistoryActions.setOperations(headType, operations));
-
-                // Fixed
-                if (model.sourceType === 'svg') {
-                    model.updateOriginalName(filename);
-                }
-
-                model.updateProcessImageName(filename);
-                SVGActions.updateSvgModelImage(model, filename);
             }
         }
-        SVGActions.resetSelection();
+
+        historyCount += result.length;
+
+        const operations = new CompoundOperation();
+        for (let i = 0; i < historyCount; i++) {
+            const pop = history.pop();
+            operations.push(pop);
+        }
+        dispatch(operationHistoryActions.setOperations(headType, operations));
+
+        dispatch(actions.clearSelection(headType));
 
         dispatch(baseActions.resetCalculatedState(headType));
         dispatch(baseActions.render(headType));
