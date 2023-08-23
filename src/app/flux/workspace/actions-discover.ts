@@ -76,7 +76,6 @@ const init = () => (dispatch, getState) => {
             if (activeMachine?.machineType === MachineType.Laser) {
                 baudRate = (activeMachine?.metadata as LaserMachineMetadata).serialPortBaudRate || DEFAULT_BAUDRATE;
             }
-            console.log('meta', activeMachine, activeMachine?.metadata);
 
             const { connectionType } = getState().workspace;
 

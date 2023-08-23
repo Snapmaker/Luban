@@ -35,9 +35,6 @@ class SacpSerialChannel extends SacpChannelBase implements FileChannelInterface 
         // connecting
         this.emit(ChannelEvent.Connecting);
 
-        console.log(options);
-        log.debug(`baudRate = ${options.baudRate}`);
-
         return new Promise((resolve) => {
             this.serialport = new SerialPort({
                 path: port,

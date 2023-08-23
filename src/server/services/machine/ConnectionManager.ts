@@ -215,7 +215,6 @@ class ConnectionManager {
             }
         } else {
             const { port, baudRate } = options;
-            log.debug(`baudRate = ${baudRate}`);
             const detectedProtocol = await this.inspectSerialPortProtocol(port, baudRate);
             log.info(`Detected protocol: ${protocol}`);
             this.protocol = detectedProtocol;
