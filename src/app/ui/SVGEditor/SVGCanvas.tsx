@@ -700,7 +700,6 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
                         opacity: opacity / 2
                     }
                 });
-                console.log('rect down');
                 break;
             }
             case 'circle': {

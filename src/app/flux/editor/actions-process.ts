@@ -42,16 +42,14 @@ export const processActions = {
             })
         );
 
+        toolPathGroup.computeReferenceBox();
+
         // start generate toolpath
         const toolPathTasks = toolPathGroup.toolPaths
+            .filter(toolPath => toolPath.visible)
             .map(toolPath => {
-                return toolPathGroup.commitToolPath(toolPath?.id);
-            })
-            .filter(task => !!task && task.visible);
-
-        for (const task of toolPathTasks) {
-            console.log(task);
-        }
+                return toolPathGroup.getGenerateToolPathTask(toolPath.id);
+            });
 
         // TODO: This hardcode is used for backward compatibility of Snapmaker Original, remove this later.
         toolPathTasks.forEach(task => { task.identifier = activeMachine?.identifier; });
@@ -364,8 +362,11 @@ export const processActions = {
     },
 
     commitGenerateToolPath: (headType, toolPathId) => (dispatch, getState) => {
-        const { toolPathGroup, materials, progressStatesManager } = getState()[headType];
-        if (toolPathGroup.commitToolPath(toolPathId, { materials })) {
+        const { progressStatesManager } = getState()[headType];
+
+        const toolPathGroup = getState()[headType].toolPathGroup as ToolPathGroup;
+
+        if (toolPathGroup.getGenerateToolPathTask(toolPathId)) {
             dispatch(
                 baseActions.updateState(headType, {
                     stage: STEP_STAGE.CNC_LASER_GENERATING_TOOLPATH,

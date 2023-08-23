@@ -320,7 +320,7 @@ class SacpChannelBase extends Channel implements
     public async subscribeGetPrintCurrentLineNumber(): Promise<boolean> {
         // Subscribe to line number
         const callback: ResponseCallback = ({ response }) => {
-            if (!this.totalLine) {
+            if (!this.totalLine && includes([WorkflowStatus.Running, WorkflowStatus.Paused], this.machineStatus)) {
                 this.getPrintJobFileInfo();
             }
 
