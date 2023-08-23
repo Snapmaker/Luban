@@ -12,6 +12,7 @@ interface CreateOptions {
     name: string;
     address: string;
     port?: string;
+    baudRate?: number;
     protocol?: string;
 }
 
@@ -27,13 +28,15 @@ export class MachineAgent extends EventEmitter {
     public name: string;
 
     public address: string; // for networked machine, it's IP address
-    public port: string; // for serial machine, it's serial port path
 
     private token?: string; // possible token for authentication
 
     private model?: string; // indicates which machine
     private protocol?: string; // which protocol to use
     private addByUser: boolean = false;
+
+    public port: string; // for serial machine, it's serial port path
+    public baudRate: number = 0;
 
     // TODO: creation methods
 
@@ -43,6 +46,7 @@ export class MachineAgent extends EventEmitter {
         agent.name = options.name;
         agent.address = options.address;
         agent.port = options.port;
+        agent.baudRate = options?.baudRate;
         agent.protocol = options?.protocol || ''; // unknown protocol
 
         return agent;
@@ -93,6 +97,7 @@ export class MachineAgent extends EventEmitter {
                     address: this.address,
                     token: this.token,
                     port: this.port,
+                    baudRate: this.baudRate,
                     protocol: this.protocol,
                     addByUser: this.addByUser,
                 })

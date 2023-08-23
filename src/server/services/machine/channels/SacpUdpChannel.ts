@@ -72,7 +72,7 @@ class SacpUdpChannel extends SacpChannelBase implements FileChannelInterface {
         this.sacpClient = new SacpClient('udp', {
             socket: this.socketClient,
             host: options.address,
-            port: 2016, // 8889
+            port: 8889,
         });
         this.sacpClient.setLogger(log);
 

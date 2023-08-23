@@ -32,7 +32,7 @@ let loadingTimer = null;
 
 const SerialConnection: React.FC = () => {
     // connection
-    const machineAgents = useSelector((state: RootState) => state.workspace.machineAgents) as MachineAgent[];
+    const machineAgents: MachineAgent[] = useSelector((state: RootState) => state.workspace.machineAgents);
     const agent: MachineAgent = useSelector((state: RootState) => state.workspace.server);
 
     const {

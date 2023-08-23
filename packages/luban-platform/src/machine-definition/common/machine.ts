@@ -70,6 +70,8 @@ export declare type LaserMachineMetadata = {
     // like Ray, you will need to use lock button on the machine to
     // start/stop/pause/resume the machine.
     disableWorkflowControl?: boolean;
+
+    serialPortBaudRate?: number;
 }
 
 

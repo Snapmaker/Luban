@@ -29,5 +29,7 @@ export const machine: Machine = {
         gcodeFlavor: MachineGcodeFlavor.GRBL,
 
         disableWorkflowControl: true,
+
+        serialPortBaudRate: 460800,
     },
 };
