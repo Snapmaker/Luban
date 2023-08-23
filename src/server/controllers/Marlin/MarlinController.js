@@ -1,43 +1,46 @@
+import { EventEmitter } from 'events';
+import includes from 'lodash/includes';
 import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
-import includes from 'lodash/includes';
 import noop from 'lodash/noop';
 import semver from 'semver';
-import { EventEmitter } from 'events';
 
-import SerialConnection from '../../lib/SerialConnection';
-import interpret from '../../lib/interpret';
+import { DEFAULT_BAUDRATE } from '../../constants';
 import EventTrigger from '../../lib/EventTrigger';
 import Feeder from '../../lib/Feeder';
 import Sender, { SP_TYPE_SEND_RESPONSE } from '../../lib/Sender';
+import SerialConnection from '../../lib/SerialConnection';
 import Workflow, {
     WORKFLOW_STATUS_PAUSED,
     WORKFLOW_STATUS_RUNNING
 } from '../../lib/Workflow';
-import { ensureRange } from '../../lib/numeric-utils';
 import ensureArray from '../../lib/ensure-array';
 import ensurePositiveNumber from '../../lib/ensure-positive-number';
 import evaluateExpression from '../../lib/evaluateExpression';
+import interpret from '../../lib/interpret';
 import logger from '../../lib/logger';
+import { ensureRange } from '../../lib/numeric-utils';
 import translateWithContext from '../../lib/translateWithContext';
 import monitor from '../../services/monitor';
 import taskRunner from '../../services/taskrunner';
 import store from '../../store';
-import Marlin from './Marlin';
 import {
+    HEAD_TYPE_3DP,
+    HEAD_TYPE_PRINTING,
     MARLIN,
-    QUERY_TYPE_POSITION,
+    QUERY_TYPE_EMERGEMCY_STOP,
+    QUERY_TYPE_ENCLOSURE,
     QUERY_TYPE_ORIGIN_OFFSET,
+    QUERY_TYPE_POSITION,
+    QUERY_TYPE_PURIFIER,
     QUERY_TYPE_TEMPERATURE,
     WRITE_SOURCE_CLIENT,
     WRITE_SOURCE_FEEDER,
-    WRITE_SOURCE_SENDER,
     WRITE_SOURCE_QUERY,
-    WRITE_SOURCE_UNKNOWN,
-    QUERY_TYPE_ENCLOSURE, QUERY_TYPE_PURIFIER, QUERY_TYPE_EMERGEMCY_STOP,
-    HEAD_TYPE_PRINTING,
-    HEAD_TYPE_3DP
+    WRITE_SOURCE_SENDER,
+    WRITE_SOURCE_UNKNOWN
 } from '../constants';
+import Marlin from './Marlin';
 
 // % commands
 const WAIT = '%wait';
@@ -53,7 +56,7 @@ class MarlinController extends EventEmitter {
     // SerialPort
     options = {
         port: '',
-        baudRate: 115200,
+        baudRate: DEFAULT_BAUDRATE,
         connectionTimeout: 3000
     };
 

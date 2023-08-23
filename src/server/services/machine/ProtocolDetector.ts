@@ -82,7 +82,7 @@ class ProtocolDetector {
      * Try connect to machine via SACP over UDP.
      */
     private tryConnectSacpUdp = async (host: string) => {
-        const port = 2016;
+        const port = 8889;
         log.debug(`Try connect to ${host} via SACP over UDP channel...`);
         try {
             const result = await sacpUdpChannel.test(host, port);
@@ -122,13 +122,13 @@ class ProtocolDetector {
     /**
      * Detect serial port protocol.
      */
-    public async detectSerialPortProtocol(port: string): Promise<SerialPortProtocol> {
+    public async detectSerialPortProtocol(port: string, baudRate: number): Promise<SerialPortProtocol> {
         let protocol: SerialPortProtocol = SerialPortProtocol.PlainText;
         let hasData = false;
 
         const trySerialConnect = new SerialPort({
             path: port,
-            baudRate: 115200,
+            baudRate: baudRate,
             autoOpen: false,
         });
 
@@ -139,7 +139,7 @@ class ProtocolDetector {
             }
         }, 1000);
 
-        await new Promise((resolve) => {
+        await new Promise<void>((resolve) => {
             let responseBuffer = Buffer.alloc(0);
             trySerialConnect.on('data', (data) => {
                 hasData = true;
@@ -167,7 +167,7 @@ class ProtocolDetector {
                 }
             });
             trySerialConnect.on('close', () => {
-                resolve(true);
+                resolve();
             });
             trySerialConnect.on('error', (err) => {
                 log.error(`error = ${err}`);

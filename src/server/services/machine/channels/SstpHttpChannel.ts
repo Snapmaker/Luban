@@ -44,7 +44,7 @@ interface Result {
     code: number;
     msg: string;
     text?: string;
-    data?: string;
+    data?: object;
 }
 const _getResult = (err, res): Result => {
     if (err) {
@@ -95,10 +95,10 @@ export type StateOptions = {
 };
 
 export type GcodeResult = {
-    text?: string,
-    data?: any,
-    msg?: string,
-    code?: number
+    text?: string;
+    data?: string;
+    msg?: string;
+    code?: number;
 };
 
 interface GCodeQueueItem {
@@ -275,7 +275,7 @@ class SstpHttpChannel extends Channel implements
         this.heartBeatWorker = workerManager.heartBeat([{
             host: this.host,
             token: this.token
-        }], (result: any) => {
+        }], (result: object) => {
             if (result.status === 'offline') {
                 log.info(`[wifi connection offline]: msg=${result.msg}`);
                 clearInterval(intervalHandle);

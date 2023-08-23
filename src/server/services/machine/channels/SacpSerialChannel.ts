@@ -4,7 +4,7 @@ import { SerialPort } from 'serialport';
 
 import { SACP_TYPE_SERIES_MAP } from '../../../../app/constants/machines';
 import DataStorage from '../../../DataStorage';
-import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
+import { DEFAULT_BAUDRATE, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 import logger from '../../../lib/logger';
 import SacpClient from '../sacp/SacpClient';
 import { EventOptions } from '../types';
@@ -13,6 +13,7 @@ import { ChannelEvent } from './ChannelEvent';
 import SacpChannelBase from './SacpChannel';
 
 const log = logger('machine:channel:SacpSerialChannel');
+
 
 class SacpSerialChannel extends SacpChannelBase implements FileChannelInterface {
     private serialport: SerialPort;
@@ -23,8 +24,9 @@ class SacpSerialChannel extends SacpChannelBase implements FileChannelInterface 
 
     // public total: number;
 
-    public async connectionOpen(options: { port: string }): Promise<boolean> {
+    public async connectionOpen(options: { port: string, baudRate: number }): Promise<boolean> {
         const port = options.port;
+        const baudRate = options.baudRate || DEFAULT_BAUDRATE;
 
         if (!port) {
             return false;
@@ -36,7 +38,7 @@ class SacpSerialChannel extends SacpChannelBase implements FileChannelInterface 
         return new Promise((resolve) => {
             this.serialport = new SerialPort({
                 path: port,
-                baudRate: 115200,
+                baudRate,
                 autoOpen: false,
             });
             this.sacpClient = new SacpClient('serialport', this.serialport);

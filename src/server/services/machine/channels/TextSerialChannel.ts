@@ -8,6 +8,7 @@ import { ChannelEvent } from './ChannelEvent';
 
 const log = logger('machine:channel:TextSerialChannel');
 
+const DEFAULT_BAUDRATE = 115200;
 class TextSerialChannel extends Channel implements
     GcodeChannelInterface,
     CncChannelInterface {
@@ -29,7 +30,7 @@ class TextSerialChannel extends Channel implements
     };
 
     public async connectionOpen(options): Promise<boolean> {
-        const { port, connectionTimeout } = options;
+        const { port, baudRate = DEFAULT_BAUDRATE, connectionTimeout } = options;
 
         this.port = port;
         this.dataSource = PROTOCOL_TEXT;
@@ -39,7 +40,7 @@ class TextSerialChannel extends Channel implements
             controller = new MarlinController({
                 port,
                 dataSource: this.dataSource,
-                baudrate: 115200,
+                baudrate: baudRate,
                 connectionTimeout: connectionTimeout
             });
 

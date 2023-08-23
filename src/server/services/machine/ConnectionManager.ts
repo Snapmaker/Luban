@@ -47,6 +47,7 @@ interface ConnectionOpenOptions {
     connectionType: ConnectionType;
     address: string;
     port?: string;
+    baudRate?: number;
     protocol?: NetworkProtocol | SerialPortProtocol;
 }
 
@@ -108,9 +109,9 @@ class ConnectionManager {
         return protocolDetector.detectNetworkProtocol(host);
     }
 
-    private async inspectSerialPortProtocol(port: string): Promise<SerialPortProtocol> {
+    private async inspectSerialPortProtocol(port: string, baudRate: number): Promise<SerialPortProtocol> {
         const protocolDetector = new ProtocolDetector();
-        return protocolDetector.detectSerialPortProtocol(port);
+        return protocolDetector.detectSerialPortProtocol(port, baudRate);
     }
 
     private onChannelConnecting = () => {
@@ -190,11 +191,12 @@ class ConnectionManager {
             this.channel = null;
         }
 
-        const { connectionType, protocol, address } = options;
+        const { connectionType, protocol } = options;
 
         this.connectionType = connectionType;
 
         if (connectionType === CONNECTION_TYPE_WIFI) {
+            const { address } = options;
             if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, NetworkProtocol.HTTP], protocol)) {
                 this.protocol = protocol;
             } else {
@@ -212,7 +214,8 @@ class ConnectionManager {
                 this.channel = sstpHttpChannel;
             }
         } else {
-            const detectedProtocol = await this.inspectSerialPortProtocol(options.port);
+            const { port, baudRate } = options;
+            const detectedProtocol = await this.inspectSerialPortProtocol(port, baudRate);
             log.info(`Detected protocol: ${protocol}`);
             this.protocol = detectedProtocol;
 

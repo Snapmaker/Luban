@@ -404,4 +404,6 @@ export const SACP_TYPE_SERIES_MAP = {
     '5': SnapmakerRayMachine.identifier,
 };
 
+export const DEFAULT_BAUDRATE = 115200;
+
 export default {};
