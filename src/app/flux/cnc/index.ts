@@ -18,7 +18,7 @@ import { getMachineToolHeadConfigPath } from '../../constants/machines';
 import OperationHistory from '../../core/OperationHistory';
 import i18n from '../../lib/i18n';
 import { STEP_STAGE, getProgressStateManagerInstance } from '../../lib/manager/ProgressManager';
-import ModelGroup from '../../models/ModelGroup';
+import ModelGroup2D from '../../models/ModelGroup2D';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
 import ToolPathGroup from '../../toolpaths/ToolPathGroup';
 import {
@@ -33,7 +33,7 @@ import definitionManager from '../manager/DefinitionManager';
 // eslint-disable-next-line import/no-cycle
 const ACTION_CHANGE_TOOL_PARAMS = 'cnc/ACTION_CHANGE_TOOL_PARAMS';
 
-const initModelGroup = new ModelGroup('cnc');
+const initModelGroup = new ModelGroup2D('cnc');
 const operationHistory = new OperationHistory();
 
 const initialOrigin: Origin = {

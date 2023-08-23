@@ -82,9 +82,11 @@ class SerialPortClient {
         'taskProgress:generateToolPath': [],
         'taskProgress:generateGcode': [],
         'taskProgress:processImage': [],
+        'taskProgress:svgClipping': [],
         'taskCompleted:generateToolPath': [],
         'taskCompleted:generateGcode': [],
         'taskCompleted:processImage': [],
+        'taskCompleted:svgClipping': [],
         'taskProgress:generateViewPath': [],
         'taskCompleted:generateViewPath': [],
         'taskProgress:cutModel': [],
@@ -311,6 +313,10 @@ class SerialPortClient {
 
     public commitProcessImage(task) {
         socketController.emit('taskCommit:processImage', task);
+    }
+
+    public commitSVGClipping(task) {
+        socketController.emit('taskCommit:svgClipping', task);
     }
 
     public commitCutModelTask(task) {

@@ -68,6 +68,8 @@ import { actions as projectActions } from '../project';
 /* eslint-disable-next-line import/no-cycle */
 import { HeadType } from '../../../server/services/machine/sacp/SacpClient';
 import { actions as appGlobalActions } from '../app-global';
+import { SVGClippingResultType, SVGClippingType } from '../../constants/clipping';
+import UpdateHrefOperation2D from '../operation-history/UpdateHrefOperation2D';
 
 
 declare type HeadType = 'laser' | 'cnc';
@@ -368,6 +370,26 @@ export const actions = {
                 dispatch(actions.onReceiveProcessImageTaskResult(headType, taskResult));
             });
 
+            controller.on('taskProgress:svgClipping', taskResult => {
+                if (headType !== taskResult.headType) {
+                    return;
+                }
+                const { progressStatesManager } = getState()[headType];
+                dispatch(
+                    actions.updateState(headType, {
+                        progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_SVG_CLIPPING, taskResult.progress)
+                    })
+                );
+            });
+
+            // task completed
+            controller.on('taskCompleted:svgClipping', (taskResult) => {
+                if (headType !== taskResult.headType) {
+                    return;
+                }
+                dispatch(actions.onReceiveSVGClippingTaskResult(headType, taskResult));
+            });
+
             controller.on('taskCompleted:generateToolPath', async (toolPathTaskResult) => {
                 const { toolPathGroup } = getState()[headType];
                 const progressStatesManager = getState()[headType].progressStatesManager as ProgressStatesManager;
@@ -595,14 +617,14 @@ export const actions = {
         formData.append('image', file);
         formData.append('isRotate', materials.isRotate);
         if (fileInfo) {
-            const { width, height, originalName, uploadName } = fileInfo;
+            const { sourceWidth, sourceHeight, originalName, uploadName } = fileInfo;
 
             dispatch(
                 actions.generateModel(headType, {
                     originalName,
                     uploadName,
-                    sourceWidth: width,
-                    sourceHeight: height,
+                    sourceWidth,
+                    sourceHeight,
                     mode,
                     config: { svgNodeName: 'image' },
                     isLimit
@@ -612,13 +634,13 @@ export const actions = {
         }
         api.uploadImage(formData)
             .then(res => {
-                const { width, height, originalName, uploadName } = res.body;
+                const { sourceWidth, sourceHeight, originalName, uploadName } = res.body;
                 dispatch(
                     actions.generateModel(headType, {
                         originalName,
                         uploadName,
-                        sourceWidth: width,
-                        sourceHeight: height,
+                        sourceWidth: sourceWidth,
+                        sourceHeight: sourceHeight,
                         mode,
                         config: { svgNodeName: 'image' },
                         isLimit
@@ -649,8 +671,8 @@ export const actions = {
                     resolve(res.body);
                     // Ensure promise is completed first
                     setTimeout(() => {
-                        const { width, height } = res.body;
-                        const isOverSize = isOverSizeModel(coordinateSize, width, height);
+                        const { sourceWidth, sourceHeight } = res.body;
+                        const isOverSize = isOverSizeModel(coordinateSize, sourceWidth, sourceHeight);
                         dispatch(
                             actions.updateState(headType, {
                                 isOverSize: isOverSize
@@ -908,7 +930,7 @@ export const actions = {
             ...DEFAULT_TEXT_CONFIG
         }).then(async res => {
             // const { name, filename, width, height } = res.body;
-            const { originalName, uploadName, width, height } = res.body;
+            const { originalName, uploadName, sourceWidth, sourceHeight } = res.body;
             const sourceType = 'text';
             const mode = 'vector';
 
@@ -916,8 +938,8 @@ export const actions = {
                 actions.generateModel(headType, {
                     originalName,
                     uploadName,
-                    sourceWidth: width,
-                    sourceHeight: height,
+                    sourceWidth,
+                    sourceHeight,
                     mode,
                     sourceType
                 })
@@ -1107,6 +1129,53 @@ export const actions = {
             taskId: uuid(),
             headType: headType,
             data: options
+        });
+    },
+
+    updateSVGClipping: (headType, newSVGClipping) => (dispatch, getState) => {
+        const { svgClipping } = getState()[headType];
+        dispatch(
+            baseActions.updateState(headType, {
+                svgClipping: {
+                    ...svgClipping,
+                    ...newSVGClipping
+                }
+            })
+        );
+    },
+
+    clippingSelectedSVGModel: (headType, svgClippingOption) => (dispatch, getState) => {
+        const { modelGroup, progressStatesManager } = getState()[headType];
+
+        const selectedModels = modelGroup.getSelectedModelArray();
+        if (selectedModels.length < 1) {
+            return;
+        }
+
+        const taskInfos = selectedModels.map(v => v.getTaskInfo());
+
+        if (!progressStatesManager.inProgress()) {
+            progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_SVG_CLIPPING, [1]);
+        } else {
+            progressStatesManager.startNextStep();
+        }
+
+        dispatch(
+            baseActions.updateState(headType, {
+                stage: STEP_STAGE.CNC_LASER_SVG_CLIPPING,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_SVG_CLIPPING, 0.01)
+            })
+        );
+
+        dispatch(actions.resetProcessState(headType));
+
+        controller.commitSVGClipping({
+            taskId: uuid(),
+            headType: headType,
+            data: {
+                config: svgClippingOption,
+                modelInfos: taskInfos
+            }
         });
     },
 
@@ -1307,8 +1376,19 @@ export const actions = {
             }
         }
 
-        model.updateProcessImageName(processImageName);
+        if (model.resource.processedFile && model.resource.processedFile.name) {
+            const operation = new UpdateHrefOperation2D({
+                target: model,
+                svgActions: SVGActions,
+                fromHref: model.resource.processedFile.name,
+                toHref: processImageName
+            });
+            const operations = new CompoundOperation();
+            operations.push(operation);
+            dispatch(operationHistoryActions.setOperations(headType, operations));
+        }
 
+        model.updateProcessImageName(processImageName);
         SVGActions.updateSvgModelImage(model, processImageName);
 
         dispatch(baseActions.resetCalculatedState(headType));
@@ -1318,6 +1398,76 @@ export const actions = {
             baseActions.updateState(headType, {
                 stage: STEP_STAGE.CNC_LASER_PROCESSING_IMAGE,
                 progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_PROCESSING_IMAGE, 1)
+            })
+        );
+        progressStatesManager.finishProgress(true);
+    },
+
+    /**
+     * Callback function trigger by event when image processed.
+     *
+     * @param headType
+     * @param taskResult
+     * @returns {Function}
+     */
+    onReceiveSVGClippingTaskResult: (headType, taskResult) => async (dispatch, getState) => {
+        // const { SVGActions, modelGroup, progressStatesManager, materials } = getState()[headType];
+        const { progressStatesManager, history } = getState()[headType];
+        // const { machine } = getState();
+
+        const { config } = taskResult.data;
+
+        const { result } = taskResult;
+        if (!result || result.length <= 0) {
+            return;
+        }
+
+        let historyCount = 0;
+
+        if (config.type === SVGClippingType.Union || config.type === SVGClippingType.Clip) {
+            dispatch(actions.removeSelectedModel(headType));
+            historyCount++;
+        }
+
+        for (let i = 0; i < result.length; i++) {
+            const res = result[i];
+
+            // const { modelID, resultType, sourceWidth, sourceHeight, baseWidth, baseHeight, transformation, filename } = res;
+            const { resultType, sourceWidth, sourceHeight, transformation, filename } = res;
+
+            if (resultType === SVGClippingResultType.Add) {
+                dispatch(actions.generateModel(headType, {
+                    originalName: filename,
+                    uploadName: filename,
+                    sourceWidth,
+                    sourceHeight,
+                    mode: 'vector',
+                    sourceType: 'svg',
+                    transformation: {
+                        ...transformation
+                    }
+                }));
+            }
+        }
+
+        historyCount += result.length;
+
+        const operations = new CompoundOperation();
+        for (let i = 0; i < historyCount; i++) {
+            const pop = history.pop();
+            operations.push(pop);
+        }
+        dispatch(operationHistoryActions.setOperations(headType, operations));
+
+        dispatch(actions.clearSelection(headType));
+
+        dispatch(baseActions.resetCalculatedState(headType));
+        dispatch(baseActions.render(headType));
+
+        dispatch(
+            baseActions.updateState(headType, {
+                stage: STEP_STAGE.CNC_LASER_SVG_CLIPPING,
+                progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_SVG_CLIPPING, 1)
             })
         );
         progressStatesManager.finishProgress(true);
@@ -2659,7 +2809,7 @@ export const actions = {
                 page: PAGE_EDITOR
             })
         );
-    },
+    }
 };
 
 export default function reducer() {

@@ -24,7 +24,7 @@ import { ConnectionType } from '../../../flux/workspace/state';
 import { handleClipPath, handleMask } from '../../SVGEditor/lib/ImageSvgCompose';
 import modal from '../../../lib/modal';
 
-function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setShowWorkspace }) {
+function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setShowWorkspace, onChangeSVGClippingMode }) {
     const unSaved = useSelector(state => state?.project[headType]?.unSaved, shallowEqual);
     const canRedo = useSelector(state => state[headType]?.history?.canRedo, shallowEqual);
     const canUndo = useSelector(state => state[headType]?.history?.canUndo, shallowEqual);
@@ -250,6 +250,15 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             name: 'MainToolbarBottom',
             action: () => {
                 dispatch(editorActions.sendSelectedModelToBack(headType));
+            }
+        },
+        {
+            title: i18n._('key-CncLaser/MainToolBar-SVG Clipping'),
+            type: 'button',
+            disabled: headType !== 'laser',
+            name: 'ToolVector',
+            action: () => {
+                dispatch(onChangeSVGClippingMode);
             }
         }
     ];

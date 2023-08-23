@@ -536,8 +536,8 @@ class SVGActionsFactory {
                     elemConfig['font-family'] = res.body.family;
                 }
                 textSize = computeTransformationSizeForTextVector(newConfig.text, newConfig['font-size'], newConfig['line-height'], {
-                    width: res.body?.width,
-                    height: res.body?.height
+                    width: res.body?.sourceWidth,
+                    height: res.body?.sourceHeight
                 });
             } else {
                 const blob = new Blob([content], { type: 'image/svg+xml' });
@@ -547,7 +547,7 @@ class SVGActionsFactory {
                 formData.append('image', file);
                 res = await api.uploadImage(formData);
             }
-            const { originalName, uploadName, width, height } = res.body;
+            const { originalName, uploadName, sourceWidth, sourceHeight } = res.body;
             const sourceType = 'svg';
             const mode = 'vector';
             let { config, gcodeConfig } = generateModelDefaultConfigs(headType, sourceType, mode, isRotate);
@@ -562,8 +562,8 @@ class SVGActionsFactory {
                 mode,
                 originalName,
                 uploadName,
-                sourceWidth: width,
-                sourceHeight: height,
+                sourceWidth: sourceWidth,
+                sourceHeight: sourceHeight,
                 width: isText ? textSize.width : dataWidth,
                 height: isText ? textSize.height : dataHeight,
                 transformation,
@@ -580,6 +580,42 @@ class SVGActionsFactory {
             console.error(e);
             return null;
         }
+    }
+
+    updateElementToImage(element, options) {
+        if (element.nodeName === 'image') {
+            return;
+        }
+        const model = this.getSVGModelByElement(element);
+
+        const transformList = SvgModel.getTransformList(element);
+        const scaleX = transformList.getItem(2).matrix.a;
+        const scaleY = transformList.getItem(2).matrix.d;
+        const angle = transformList.getItem(1).angle;
+
+        this.svgContentGroup.deleteElement(element);
+        const { x, y, width, height } = coordGmModelToSvg(this.size, options.transformation);
+        const newElement = this.svgContentGroup.addSVGElement({
+            element: 'image',
+            attr: {
+                id: model.modelID,
+                x: x,
+                y: y,
+                width: width,
+                height: height,
+                href: `${DATA_PREFIX}/${options.processImageName}`,
+            }
+        });
+
+        SvgModel.recalculateElementTransformList(newElement, {
+            x: 0,
+            y: 0,
+            scaleX,
+            scaleY,
+            angle
+        });
+
+        model.elem = newElement;
     }
 
     selectAllElements(isRotate = false) {
@@ -1436,15 +1472,15 @@ class SVGActionsFactory {
 
         api.convertTextToSvg(newConfig)
             .then(async (res) => {
-                const { originalName, uploadName, width, height } = res.body;
+                const { originalName, uploadName, sourceWidth, sourceHeight } = res.body;
                 const textSize = computeTransformationSizeForTextVector(newConfig.text, newConfig['font-size'], newConfig['line-height'], {
-                    width,
-                    height
+                    width: sourceWidth,
+                    height: sourceHeight
                 });
 
                 const baseUpdateData = {
-                    sourceWidth: width,
-                    sourceHeight: height,
+                    sourceWidth: sourceWidth,
+                    sourceHeight: sourceHeight,
                     width: textSize.width,
                     height: textSize.height,
                     originalName,

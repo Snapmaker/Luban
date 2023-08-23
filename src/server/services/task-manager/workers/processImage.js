@@ -1,7 +1,7 @@
 import { processMode } from '../../../lib/ProcessMode';
 import sendMessage from '../utils/sendMessage';
 
-const processImage = (modelInfo) => {
+const processImage = async (modelInfo) => {
     const onProgress = (num) => {
         sendMessage({ status: 'progress', value: num });
     };
@@ -13,13 +13,11 @@ const processImage = (modelInfo) => {
 
     return new Promise((resolve, reject) => {
         processMode(modelInfo, onProgress).then((ret) => {
-            resolve(
-                sendMessage({ status: 'complete', value: ret })
-            );
+            sendMessage({ status: 'complete', value: ret });
+            resolve();
         }).catch((e) => {
-            reject(
-                sendMessage({ status: 'fail', value: e })
-            );
+            sendMessage({ status: 'fail', value: e });
+            reject();
         });
     });
 };
