@@ -464,7 +464,11 @@ export const LASER_PRESENT_CONFIG_GROUP = [
     },
     {
         name: 'key-Laser/ToolpathParameters-Power',
-        fields: ['fixed_power', 'fixed_min_power']
+        fields: ['fixed_power', 'half_diode_mode']
+    },
+    {
+        name: 'key-Laser/ToolpathParameters-Auxiliary Gas',
+        fields: ['auxiliary_air_pump']
     }
 ];
 
