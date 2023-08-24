@@ -1,4 +1,8 @@
 import { isEqual } from '../utils';
+import { PolygonsUtils } from '../math/PolygonsUtils';
+import { Vector2 } from '../math/Vector2';
+import { polyOffset, recursivePolyUnion } from '../clipper/cLipper-adapter';
+import * as ClipperLib from '../clipper/clipper';
 
 class GridProjection {
     data = [];
@@ -151,6 +155,9 @@ class GridProjection {
         const direction = [[0, 1], [-1, 0], [1, 0], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
 
         for (let i = 0; i < this.data.length; i++) {
+            if (!this.data[i]) {
+                this.data[i] = [];
+            }
             for (let j = 0; j < this.data[i].length; j++) {
                 if (!this.data[i][j]) {
                     continue;
@@ -181,7 +188,14 @@ class GridProjection {
             }
             outlinePolygons.push(outlinePolygon);
         }
-        return outlinePolygons;
+
+        if (outlinePolygons.length === 1) {
+            return outlinePolygons;
+        }
+
+        const polyTree = PolygonsUtils.getPolygonssByPolyTree(outlinePolygons);
+
+        return this.connectedPolyTree(polyTree);
     }
 
     getOutlinePolygon() {
@@ -271,6 +285,48 @@ class GridProjection {
                     y: v.y * this.interval + this.min.y
                 };
             });
+    }
+
+    connectedPolyTree(polyTree) {
+        if (polyTree.length === 1) {
+            return polyTree[0];
+        }
+        const res = [...polyTree];
+        for (let i = 1; i < polyTree.length; i++) {
+            const line = this.getPolygonsDistanceLine(polyTree[0], polyTree[i]);
+            const linePolygons = polyOffset([line], this.interval / 2, ClipperLib.JoinType.jtSquare, ClipperLib.EndType.etOpenSquare);
+            res.push(linePolygons);
+        }
+        return recursivePolyUnion(res);
+        // let s = '[';
+        // for (let i = 0; i < resUnion.length; i++) {
+        //     s += '[';
+        //     for (let j = 0; j < resUnion[i].length; j++) {
+        //         s += `${resUnion[i][j].x},${resUnion[i][j].y}`;
+        //         if (j !== resUnion[i].length - 1) {
+        //             s += ',';
+        //         }
+        //     }
+        //     s += '],';
+        // }
+        // s += '[]]';
+        // console.log('recursivePolyUnion', s, res, resUnion);
+    }
+
+    getPolygonsDistanceLine(polygons1, polygons2) {
+        const line = [polygons1[0][0], polygons2[0][0]];
+        let len2 = Vector2.length2(polygons1[0][0], polygons2[0][0]);
+        PolygonsUtils.forEachPoint(polygons1, (p1) => {
+            PolygonsUtils.forEachPoint(polygons2, (p2) => {
+                const nLen2 = Vector2.length2(p1, p2);
+                if (nLen2 < len2) {
+                    len2 = nLen2;
+                    line[0] = p1;
+                    line[1] = p2;
+                }
+            });
+        });
+        return line;
     }
 }
 
