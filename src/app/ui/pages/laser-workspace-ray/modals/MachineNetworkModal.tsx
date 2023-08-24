@@ -2,12 +2,11 @@ import { EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
 import { IPObtain, NetworkConfiguration, NetworkMode, NetworkStationState } from '@snapmaker/snapmaker-sacp-sdk/dist/models';
 import { Alert, Input, Select, Space } from 'antd';
 import classNames from 'classnames';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import ControllerEvent from '../../../../connection/controller-events';
 import { RootState } from '../../../../flux/index.def';
-import { ConnectionType } from '../../../../flux/workspace/state';
 import controller from '../../../../lib/controller';
 import i18n from '../../../../lib/i18n';
 import log from '../../../../lib/log';
@@ -24,61 +23,70 @@ interface MachineNetworkModalProps {
  */
 const MachineNetworkModal: React.FC<MachineNetworkModalProps> = (props) => {
     const isConnected = useSelector((state: RootState) => state.workspace.isConnected);
-    const connectionType = useSelector((state: RootState) => state.workspace.connectionType);
     const isMounted = useMountedState();
 
-
-    const isConnectedViaSerialport = useMemo(() => {
-        return isConnected && connectionType === ConnectionType.Serial;
-    }, [isConnected, connectionType]);
 
     // Current network
     const [currentNetworkLoading, setCurrentNetworkLoading] = useState(false);
     const [currentNetwork, setCurrentNetwork] = useState('');
     const [currentNetworkIP, setCurrentNetworkIP] = useState('');
 
+    const loadCurrentNetwork = useCallback(() => {
+        setCurrentNetworkLoading(true);
+
+        controller
+            .emitEvent(ControllerEvent.GetMachineNetworkConfiguration)
+            .once(ControllerEvent.GetMachineNetworkConfiguration, (networkConfiguration: NetworkConfiguration) => {
+                setCurrentNetworkLoading(false);
+                if (networkConfiguration.networkMode === NetworkMode.Station) {
+                    setCurrentNetwork(networkConfiguration.stationSSID);
+
+                    controller
+                        .emitEvent(ControllerEvent.GetMachineNetworkStationState)
+                        .once(ControllerEvent.GetMachineNetworkStationState, (networkStationState: NetworkStationState) => {
+                            if (networkStationState.stationState === 3) {
+                                setCurrentNetworkIP(networkStationState.stationIP);
+                            } else {
+                                setCurrentNetworkIP('');
+                            }
+                        });
+                } else {
+                    // other network mode not supported currently
+                    setCurrentNetwork('');
+                    setCurrentNetworkIP('');
+                }
+            });
+
+        setTimeout(() => {
+            if (isMounted()) {
+                setCurrentNetworkLoading(false);
+            }
+        }, 2000);
+    }, [isMounted]);
+
+    const checkCurrentNetwork = useCallback((count = 5) => {
+        if (count === 0) {
+            return;
+        }
+
+        loadCurrentNetwork();
+
+        // try again in 3 seconds
+        setTimeout(() => checkCurrentNetwork(count - 1), 3000);
+    }, [loadCurrentNetwork]);
+
     useEffect(() => {
         if (isConnected) {
-            setCurrentNetworkLoading(true);
-
-            controller
-                .emitEvent(ControllerEvent.GetMachineNetworkConfiguration)
-                .once(ControllerEvent.GetMachineNetworkConfiguration, (networkConfiguration: NetworkConfiguration) => {
-                    setCurrentNetworkLoading(false);
-                    if (networkConfiguration.networkMode === NetworkMode.Station) {
-                        // setCurrentNetworkConfigured(true);
-                        setCurrentNetwork(networkConfiguration.stationSSID);
-                        controller
-                            .emitEvent(ControllerEvent.GetMachineNetworkStationState)
-                            .once(ControllerEvent.GetMachineNetworkStationState, (networkStationState: NetworkStationState) => {
-                                if (networkStationState.stationState === 3) {
-                                    setCurrentNetworkIP(networkStationState.stationIP);
-                                } else {
-                                    setCurrentNetworkIP('');
-                                }
-                            });
-                    } else {
-                        // other network mode not supported currently
-                        // setCurrentNetworkConfigured(false);
-                        setCurrentNetwork('');
-                        setCurrentNetworkIP('');
-                    }
-                });
-
-            setTimeout(() => {
-                if (isMounted()) {
-                    setCurrentNetworkLoading(false);
-                }
-            }, 3000);
+            loadCurrentNetwork();
         }
-    }, [isConnected, isMounted]);
+    }, [isConnected, loadCurrentNetwork]);
 
     // Network options
     const [networkOptions, setNetworkOptions] = useState([]);
     const [networkLoading, setNetworkLoading] = useState(false);
 
     useEffect(() => {
-        if (isConnectedViaSerialport) {
+        if (isConnected) {
             setNetworkLoading(true);
 
             controller
@@ -92,7 +100,7 @@ const MachineNetworkModal: React.FC<MachineNetworkModalProps> = (props) => {
                     setNetworkOptions(options);
                 });
         }
-    }, [isConnectedViaSerialport]);
+    }, [isConnected]);
 
     // selected SSID
     const [selectedNetwork, setSelecetdNetwork] = useState('');
@@ -126,7 +134,14 @@ const MachineNetworkModal: React.FC<MachineNetworkModalProps> = (props) => {
                 stationPassword: selectedNetworkPassword,
                 stationIP: '0.0.0.0',
             });
-    }, [selectedNetwork, selectedNetworkPassword]);
+
+        // update current network
+        setCurrentNetwork(selectedNetwork);
+        setCurrentNetworkIP('');
+
+        // check current network 1s later
+        setTimeout(checkCurrentNetwork, 1000);
+    }, [selectedNetwork, selectedNetworkPassword, checkCurrentNetwork]);
 
     return (
         <Modal size="sm" onClose={props?.onClose}>
@@ -150,14 +165,19 @@ const MachineNetworkModal: React.FC<MachineNetworkModalProps> = (props) => {
                                 {
                                     currentNetwork && (
                                         <>
-                                            <span>{currentNetwork}</span>
+                                            <span className="margin-right-4">{currentNetwork}</span>
                                             {
                                                 currentNetworkIP && (
                                                     <span>({currentNetworkIP})</span>
                                                 )
                                             }
                                             {
-                                                !currentNetworkIP && (
+                                                !currentNetworkIP && currentNetworkLoading && (
+                                                    <span>({i18n._('Loading...')})</span>
+                                                )
+                                            }
+                                            {
+                                                !currentNetworkIP && !currentNetworkLoading && !currentNetworkIP && (
                                                     <span>({i18n._('Not Connected')})</span>
                                                 )
                                             }
@@ -165,12 +185,12 @@ const MachineNetworkModal: React.FC<MachineNetworkModalProps> = (props) => {
                                     )
                                 }
                                 {
-                                    currentNetworkLoading && (
+                                    !currentNetwork && currentNetworkLoading && (
                                         <span>{i18n._('Loading...')}</span>
                                     )
                                 }
                                 {
-                                    !currentNetworkLoading && !currentNetwork && (
+                                    !currentNetwork && !currentNetworkLoading && (
                                         <span>{i18n._('Not Configured')}</span>
                                     )
                                 }
@@ -179,7 +199,7 @@ const MachineNetworkModal: React.FC<MachineNetworkModalProps> = (props) => {
                     )
                 }
                 {
-                    isConnectedViaSerialport && (
+                    isConnected && (
                         <div
                             className={
                                 classNames('width-percent-100', 'sm-flex', {
@@ -204,6 +224,7 @@ const MachineNetworkModal: React.FC<MachineNetworkModalProps> = (props) => {
                                     <Input.Password
                                         width={300}
                                         disabled={!isConnected}
+                                        minLength={8}
                                         value={selectedNetworkPassword}
                                         onChange={onChangePassword}
                                         placeholder={i18n._('key-Workspace/Input password')}
@@ -218,7 +239,7 @@ const MachineNetworkModal: React.FC<MachineNetworkModalProps> = (props) => {
             </Modal.Body>
             <Modal.Footer>
                 {
-                    isConnectedViaSerialport && (
+                    isConnected && (
                         <Button
                             type="primary"
                             className="align-r"
@@ -231,7 +252,7 @@ const MachineNetworkModal: React.FC<MachineNetworkModalProps> = (props) => {
                     )
                 }
                 {
-                    !isConnectedViaSerialport && (
+                    !isConnected && (
                         <Button
                             type="primary"
                             className="align-r"

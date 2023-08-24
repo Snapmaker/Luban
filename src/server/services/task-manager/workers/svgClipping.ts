@@ -11,6 +11,9 @@ import { svgToString } from '../../../../shared/lib/SVGParser/SvgToString';
 import sendMessage from '../utils/sendMessage';
 import * as ClipperLib from '../../../../shared/lib/clipper/clipper';
 import { EPSILON4 } from '../../../../shared/lib/utils';
+import logger from '../../../lib/logger';
+
+const log = logger('svgClippping');
 
 enum SVGClippingType {
     Offset = 'offset',
@@ -307,7 +310,7 @@ const svgModelOffset = async (modelInfo, offset, onProgress) => {
             rotationZ: modelInfo.transformation.rotationZ
         });
     } catch (e) {
-        console.log(e);
+        log.error(e);
         throw new Error();
     }
 };

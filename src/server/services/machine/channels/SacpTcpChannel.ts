@@ -72,13 +72,16 @@ class SacpTcpChannel extends SacpChannelBase implements FileChannelInterface {
 
                 this.sacpClient = new SacpClient('tcp', this.client);
 
-                this.emit(ChannelEvent.Connected);
-
                 const hostName = os.hostname();
                 log.info(`os hostname: ${hostName}`);
                 setTimeout(async () => {
+                    // Connecting
+                    this.emit(ChannelEvent.Connecting, { requireAuth: true });
+
                     try {
                         const { response } = await this.sacpClient.wifiConnection(hostName, 'Luban', options.token, () => {
+                            // disconnected
+
                             this.client.destroy();
                             if (this.client.destroyed) {
                                 log.info('TCP manually closed');
@@ -93,6 +96,8 @@ class SacpTcpChannel extends SacpChannelBase implements FileChannelInterface {
                         });
 
                         if (response.result === 0) {
+                            this.emit(ChannelEvent.Connected);
+
                             // Connected
                             this.sacpClient.setLogger(log);
                             this.sacpClient.wifiConnectionHeartBeat();

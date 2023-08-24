@@ -59,7 +59,6 @@ declare interface WorkspaceConnectionState {
     connectionType: string;
     connectionStatus: string;
     connectionTimeout: number;
-    connectLoading: boolean;
 }
 
 // interface to put everything nowhere to put
@@ -129,7 +128,6 @@ export const initialState: WorkspaceState = {
     connectionType: ConnectionType.WiFi,
     connectionStatus: CONNECTION_STATUS_IDLE,
     connectionTimeout: 3000,
-    connectLoading: false,
 
     manualIp: '',
 

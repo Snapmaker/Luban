@@ -11,6 +11,7 @@ import {
     CONNECTION_HEAD_BEGIN_WORK,
     CONNECTION_STATUS_CONNECTED,
     CONNECTION_STATUS_IDLE,
+    CONNECTION_STATUS_REQUIRE_AUTH,
     EPSILON,
     HEAD_CNC,
     HEAD_LASER,
@@ -94,11 +95,15 @@ export const actions = {
     __initRemoteEvents: () => (dispatch, getState) => {
         const controllerEvents = {
             // connecting state from remote
-            'connection:connecting': (options: { isConnecting: boolean }) => {
-                const { isConnecting } = options;
-                dispatch(baseActions.updateState({
-                    connectLoading: isConnecting,
-                }));
+            [ControllerEvent.ConnectionConnecting]: (options: { requireAuth?: boolean }) => {
+                const { requireAuth = false } = options;
+
+                if (requireAuth) {
+                    // from connecting to require auth
+                    dispatch(baseActions.updateState({
+                        connectionStatus: CONNECTION_STATUS_REQUIRE_AUTH,
+                    }));
+                }
             },
 
             'connection:connected': ({ state, err: _err, connectionType }) => {
@@ -124,7 +129,6 @@ export const actions = {
                 dispatch(baseActions.updateState({
                     isHomed: isHomed,
                     isMoving,
-                    connectLoading: false
                 }));
 
                 log.debug('DEBUG series =', series, 'seriesSize =', seriesSize);
