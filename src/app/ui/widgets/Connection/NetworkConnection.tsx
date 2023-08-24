@@ -26,9 +26,9 @@ import {
 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
 import { actions as workspaceActions } from '../../../flux/workspace';
+import { MachineAgent } from '../../../flux/workspace/MachineAgent';
 import connectActions from '../../../flux/workspace/actions-connect';
 import discoverActions from '../../../flux/workspace/actions-discover';
-import { MachineAgent } from '../../../flux/workspace/MachineAgent';
 import { ConnectionType } from '../../../flux/workspace/state';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
@@ -39,12 +39,12 @@ import ModalSmall from '../../components/Modal/ModalSmall';
 import ModalSmallInput from '../../components/Modal/ModalSmallInput';
 import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
+import useThrottle from '../../utils/useThrottle';
 import MachineModuleStatusBadge from './components/MachineModuleStatusBadge';
 import LaserLockModal from './modals/LaserLockModal';
 import MismatchModal from './modals/MismatchModal';
 import MismatchNozzleModal from './modals/MismatchNozzleModal';
 import styles from './styles.styl';
-import useThrottle from '../../utils/useThrottle';
 
 
 const ICON_COLOR_GREEN = '#4CB518';
