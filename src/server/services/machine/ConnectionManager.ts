@@ -3,7 +3,7 @@ import fs from 'fs';
 import { includes } from 'lodash';
 import path from 'path';
 
-import ControllerEvent from '../../../app/connection/controller-events';
+import ControllerEvent, { ConnectionConnectingOptions } from '../../../app/connection/controller-events';
 import { AUTO_STRING } from '../../../app/constants';
 import { SnapmakerArtisanMachine, SnapmakerJ1Machine, SnapmakerRayMachine } from '../../../app/machines';
 import DataStorage from '../../DataStorage';
@@ -114,16 +114,21 @@ class ConnectionManager {
         return protocolDetector.detectSerialPortProtocol(port, baudRate);
     }
 
-    private onChannelConnecting = () => {
+    private onChannelConnecting = (options: ConnectionConnectingOptions) => {
         log.info('channel: Connecting');
 
-        this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
+        this.socket && this.socket.emit(ControllerEvent.ConnectionConnecting, {
+            requireAuth: options?.requireAuth || false,
+        });
     };
 
     private onChannelConnected = () => {
         log.info('channel: Connected');
 
-        this.socket && this.socket.emit(ControllerEvent.ConnectionOpen, {});
+        this.socket && this.socket.emit(ControllerEvent.ConnectionOpen, {
+            code: 200,
+            msg: '',
+        });
     };
 
     private onChannelReady = async (data: { machineIdentifier?: string }) => {

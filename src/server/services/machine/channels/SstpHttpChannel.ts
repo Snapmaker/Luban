@@ -19,6 +19,7 @@ import workerManager from '../../task-manager/workerManager';
 import { EventOptions } from '../types';
 import Channel, { CncChannelInterface, FileChannelInterface, GcodeChannelInterface, UploadFileOptions } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
+import ControllerEvent from '../../../../app/connection/controller-events';
 
 let waitConfirm: boolean;
 const log = logger('machine:channel:SstpHttpChannel');
@@ -46,7 +47,7 @@ interface Result {
     text?: string;
     data?: object;
 }
-const _getResult = (err, res): Result => {
+const _getResult = (err, res: request.Response): Result => {
     if (err) {
         if (res && isJSON(res.text) && JSON.parse(res.text).code === 202) {
             return {
@@ -71,6 +72,7 @@ const _getResult = (err, res): Result => {
             };
         }
     }
+
     const code = res.status;
     if (code !== 200 && code !== 204 && code !== 203) {
         return {
@@ -78,6 +80,7 @@ const _getResult = (err, res): Result => {
             msg: res && res.text
         };
     }
+
     return {
         code,
         msg: '',
@@ -149,7 +152,7 @@ class SstpHttpChannel extends Channel implements
         this.token = token;
         this.init();
 
-        this.emit(ChannelEvent.Connecting);
+        this.emit(ChannelEvent.Connecting, { requireAuth: false });
 
         log.debug(`wifi host="${this.host}" : token=${this.token}`);
         return new Promise((resolve) => {
@@ -166,16 +169,21 @@ class SstpHttpChannel extends Channel implements
                     const result = _getResult(err, res);
                     if (err) {
                         log.debug(`err="${err}"`);
-                        this.socket && this.socket.emit('connection:open', result);
+                        this.socket && this.socket.emit(ControllerEvent.ConnectionOpen, result);
                         resolve(false);
                         return;
                     }
 
+                    // wait for authentication
                     const { data } = result;
                     if (!data) {
+                        this.socket && this.socket.emit(ChannelEvent.Connecting, {
+                            requireAuth: true,
+                        });
                         resolve(false);
                         return;
                     }
+
                     const { series } = data;
                     const seriesValue = valueOf(MACHINE_SERIES, 'alias', series);
                     this.state.series = seriesValue ? seriesValue.value : null;

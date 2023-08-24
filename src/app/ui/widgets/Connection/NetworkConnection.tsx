@@ -9,6 +9,7 @@ import {
     CONNECTION_STATUS_CONNECTED,
     CONNECTION_STATUS_CONNECTING,
     CONNECTION_STATUS_IDLE,
+    CONNECTION_STATUS_REQUIRE_AUTH,
     CUSTOM_SERVER_NAME,
     HEAD_CNC,
     HEAD_LASER,
@@ -31,6 +32,7 @@ import { MachineAgent } from '../../../flux/workspace/MachineAgent';
 import { ConnectionType } from '../../../flux/workspace/state';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
+import log from '../../../lib/log';
 import { L20WLaserToolModule, L40WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
 import { Button } from '../../components/Buttons';
 import ModalSmall from '../../components/Modal/ModalSmall';
@@ -47,6 +49,61 @@ import useThrottle from '../../utils/useThrottle';
 
 const ICON_COLOR_GREEN = '#4CB518';
 const ICON_COLOR_RED = '#FF4D4F';
+
+interface ConnectionMessage {
+    text: string;
+    title: string;
+    img: string;
+    iconColor: string;
+    showCloseButton: boolean;
+    onCancel: () => void;
+    onConfirm: () => void;
+    onClose: () => void;
+}
+
+const useConnectionMessages = (): [
+    (show: boolean) => void,
+    (message: ConnectionMessage) => void,
+    () => React.ReactElement,
+] => {
+    const [showMessage, setShowMessage] = useState(false);
+
+    const [connectionMessage, setConnectionMessage] = useState({
+        text: '',
+        title: '',
+        img: IMAGE_WIFI_WAITING,
+        iconColor: ICON_COLOR_GREEN,
+        showCloseButton: false,
+        onCancel: null,
+        onConfirm: null,
+        onClose: null,
+    });
+
+    const renderMessage: () => React.ReactElement = useCallback(() => {
+        if (!showMessage) {
+            return null;
+        }
+
+        return (
+            <ModalSmall
+                showCloseButton={connectionMessage.showCloseButton}
+                img={connectionMessage.img}
+                iconColor={connectionMessage?.iconColor}
+                text={connectionMessage.text}
+                title={connectionMessage.title}
+                onClose={connectionMessage.onClose}
+                onCancel={connectionMessage.onCancel}
+                onConfirm={connectionMessage.onConfirm}
+            />
+        );
+    }, [showMessage, connectionMessage]);
+
+    return [
+        setShowMessage,
+        setConnectionMessage,
+        renderMessage,
+    ];
+};
 
 
 interface ModuleBriefStatus {
@@ -107,17 +164,12 @@ const NetworkConnection: React.FC = () => {
     } = moduleStatusList;
 
     // Show connection modal
-    const [showConnectionMessage, setShowConnectionMessage] = useState(false);
-    const [connectionMessage, setConnectionMessage] = useState({
-        text: '',
-        title: '',
-        img: IMAGE_WIFI_WAITING,
-        iconColor: ICON_COLOR_GREEN,
-        showCloseButton: false,
-        onCancel: null,
-        onConfirm: null,
-        onClose: null,
-    });
+    const [
+        setShowMessage,
+
+        setConnectionMessage,
+        renderMessage,
+    ] = useConnectionMessages();
 
     // Show manual connection modal, user can input IP address of printer
     const [showManualWiFiModal, setShowManualWiFiModal] = useState(false);
@@ -151,7 +203,7 @@ const NetworkConnection: React.FC = () => {
     /**
      * Show Connection On-going.
      */
-    const showWifiConnecting = useCallback(() => {
+    const showRequireAuthMessage = useCallback(() => {
         setConnectionMessage({
             text: i18n._('key-Workspace/Connection-Confirm the Wi-Fi connection request on the Touchscreen.'),
             title: i18n._('key-Workspace/Connection-Screen Authorization Needed'),
@@ -161,18 +213,39 @@ const NetworkConnection: React.FC = () => {
             onConfirm: null,
             showCloseButton: true,
             onClose: () => {
-                setShowConnectionMessage(false);
+                setShowMessage(false);
 
                 forceCloseServer();
             },
         });
-        setShowConnectionMessage(true);
-    }, [forceCloseServer]);
+        setShowMessage(true);
+    }, [forceCloseServer, setShowMessage, setConnectionMessage]);
 
     /**
-     * Show Connection established.
+     * Show Connection On-going.
      */
-    const showWifiConnected = useCallback(() => {
+    const showConnectingMessage = useCallback(() => {
+        setConnectionMessage({
+            title: i18n._('Connecting'),
+            text: i18n._('Connecting to the machine...'),
+            img: 'WarningTipsTips',
+            iconColor: ICON_COLOR_GREEN,
+            onCancel: null,
+            onConfirm: null,
+            showCloseButton: true,
+            onClose: () => {
+                setShowMessage(false);
+
+                forceCloseServer();
+            },
+        });
+        setShowMessage(true);
+    }, [forceCloseServer, setShowMessage, setConnectionMessage]);
+
+    /**
+     * Show Connection success message.
+     */
+    const showConnectionSuccessMessage = useCallback(() => {
         setConnectionMessage({
             text: '',
             title: i18n._('key-Workspace/Connection-Connected'),
@@ -183,16 +256,16 @@ const NetworkConnection: React.FC = () => {
             showCloseButton: false,
             onClose: null,
         });
-        setShowConnectionMessage(true);
+        setShowMessage(true);
         setTimeout(() => {
-            setShowConnectionMessage(false);
+            setShowMessage(false);
         }, 1000);
-    }, []);
+    }, [setShowMessage, setConnectionMessage]);
 
     /**
-     * Show Connection disconnected.
+     * Show Connection disconnected message.
      */
-    const showWifiDisconnected = useCallback(() => {
+    const showDisconnectMessage = useCallback(() => {
         setConnectionMessage({
             text: i18n._(''),
             title: i18n._('key-Workspace/Connection-Disconnected'),
@@ -203,16 +276,17 @@ const NetworkConnection: React.FC = () => {
             showCloseButton: false,
             onClose: null,
         });
-        setShowConnectionMessage(true);
+        setShowMessage(true);
+
         setTimeout(() => {
-            setShowConnectionMessage(false);
+            setShowMessage(false);
         }, 1000);
-    }, []);
+    }, [setShowMessage, setConnectionMessage]);
 
     /**
      * Show Connection Error.
      */
-    const showWifiError = useCallback((code: number | string, msg: string) => {
+    const showConnectionErrorMessage = useCallback((code: number | string, msg: string) => {
         let actualText = '';
         switch (code) {
             case 'EHOSTDOWN':
@@ -235,6 +309,7 @@ const NetworkConnection: React.FC = () => {
                     actualText = i18n._(msg);
                 }
         }
+
         setConnectionMessage({
             text: actualText,
             title: i18n._('key-Workspace/Connection-Connection Failed'),
@@ -244,11 +319,11 @@ const NetworkConnection: React.FC = () => {
             onConfirm: null,
             showCloseButton: true,
             onClose: () => {
-                setShowConnectionMessage(false);
+                setShowMessage(false);
             },
         });
-        setShowConnectionMessage(true);
-    }, []);
+        setShowMessage(true);
+    }, [setConnectionMessage, setShowMessage]);
 
     /**
      * Connect to machine.
@@ -259,17 +334,24 @@ const NetworkConnection: React.FC = () => {
         }
 
         // connect to agent
-        const { code, msg } = await dispatch(
-            connectActions.connect(selectedAgent)
-        ) as unknown as { code: number | string; msg: string; };
+        try {
+            const { code, msg } = await dispatch(
+                connectActions.connect(selectedAgent)
+            ) as unknown as { code: number | string; msg: string; };
 
-        if (msg) {
-            // connection failed, clear saved state.
-            showWifiError(code, msg);
-            // setSavedServerAddressState('');
+            if (msg) {
+                // connection failed, clear saved state.
+                showConnectionErrorMessage(code, msg);
+            }
+        } catch (e) {
+            // connection cancelled
+            log.info(e);
         }
-    }, [dispatch, selectedAgent, showWifiError]);
+    }, [dispatch, selectedAgent, showConnectionErrorMessage]);
 
+    /**
+     * Disconnect from machine
+     */
     const disconnect = useCallback(() => {
         if (server) {
             dispatch(connectActions.disconnect(server));
@@ -309,15 +391,19 @@ const NetworkConnection: React.FC = () => {
                 });
 
                 // Try add new server
-                const verifiedServer = dispatch(discoverActions.addAgent(newServer));
+                // TODO: refactor this
+                const verifiedAgent: MachineAgent = dispatch(discoverActions.addAgent(newServer)) as unknown as MachineAgent;
 
                 // set state server and then open it
-                setSelectedAgent(verifiedServer);
-                connect();
+                setSelectedAgent(verifiedAgent);
+
+                // trigger connect
+                // connect();
+                // onClickConnect();
             }
         });
         setShowManualWiFiModal(true);
-    }, [dispatch, manualIp, onCloseManualWiFi, connect]);
+    }, [dispatch, manualIp, onCloseManualWiFi]);
 
     const onChangeAgentOption = useCallback((option) => {
         const found = machineAgents.find(v => v.name === option.name && v.address === option.address);
@@ -367,17 +453,34 @@ const NetworkConnection: React.FC = () => {
         }
 
         if (prevProps) {
+            // -> Connecting
             if (prevProps.connectionStatus !== CONNECTION_STATUS_CONNECTING && connectionStatus === CONNECTION_STATUS_CONNECTING) {
-                showWifiConnecting();
+                showConnectingMessage();
             }
+
+            if (prevProps.connectionStatus !== CONNECTION_STATUS_REQUIRE_AUTH && connectionStatus === CONNECTION_STATUS_REQUIRE_AUTH) {
+                showRequireAuthMessage();
+            }
+
+            // -> Connected
             if (prevProps.connectionStatus !== CONNECTION_STATUS_CONNECTED && connectionStatus === CONNECTION_STATUS_CONNECTED) {
-                showWifiConnected();
+                showConnectionSuccessMessage();
             }
+
+            // -> IDLE, Disconnected
             if (prevProps.connectionStatus !== CONNECTION_STATUS_IDLE && connectionStatus === CONNECTION_STATUS_IDLE) {
-                showWifiDisconnected();
+                showDisconnectMessage();
             }
         }
-    }, [connectionType, connectionStatus, showWifiConnecting, showWifiConnected, showWifiDisconnected]);
+    }, [
+        prevProps,
+        connectionType,
+        connectionStatus,
+        showConnectingMessage,
+        showRequireAuthMessage,
+        showConnectionSuccessMessage,
+        showDisconnectMessage
+    ]);
 
     // Machine
     const connectedMachine = useMemo<Machine | null>(() => {
@@ -641,19 +744,9 @@ const NetworkConnection: React.FC = () => {
                     <LaserLockModal />
                 )
             }
+            {/* Connection Message */}
             {
-                showConnectionMessage && (
-                    <ModalSmall
-                        showCloseButton={connectionMessage.showCloseButton}
-                        img={connectionMessage.img}
-                        iconColor={connectionMessage?.iconColor}
-                        text={connectionMessage.text}
-                        title={connectionMessage.title}
-                        onClose={connectionMessage.onClose}
-                        onCancel={connectionMessage.onCancel}
-                        onConfirm={connectionMessage.onConfirm}
-                    />
-                )
+                renderMessage()
             }
             {
                 showManualWiFiModal && (

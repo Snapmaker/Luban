@@ -13,6 +13,7 @@ enum ControllerEvent {
      * Connection
      */
     ConnectionOpen = 'connection:open',
+    ConnectionConnecting = 'connection:connecting',
     ConnectionClose = 'connection:close',
 
     /**
@@ -99,3 +100,7 @@ enum ControllerEvent {
 }
 
 export default ControllerEvent;
+
+export interface ConnectionConnectingOptions {
+    requireAuth?: boolean;
+}

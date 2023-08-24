@@ -43,7 +43,7 @@ class SerialPortClient {
 
         // Serial Port events
         'connection:connected': [],
-        'connection:connecting': [],
+        [ControllerEvent.ConnectionConnecting]: [],
         'connection:executeGcode': [],
         'serialport:emergencyStop': [],
         'serialport:read': [],

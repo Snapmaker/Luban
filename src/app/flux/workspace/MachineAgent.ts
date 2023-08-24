@@ -16,6 +16,11 @@ interface CreateOptions {
     protocol?: string;
 }
 
+export interface ConnectResult {
+    code: number | string;
+    msg: string;
+}
+
 /**
  * class for Networked Machine.
  *
@@ -80,7 +85,7 @@ export class MachineAgent extends EventEmitter {
         this.token = token;
     }
 
-    public async connect(): Promise<{ code: number | string; msg: string; }> {
+    public async connect(): Promise<ConnectResult> {
         if (this.isNetworkedMachine) {
             log.info(`Connecting to machine ${this.address}...`);
             log.info(`- protocol = ${this.protocol}`);
@@ -141,6 +146,7 @@ export class MachineAgent extends EventEmitter {
                         resolve(true);
                     });
 
+                log.info('Disconnected from machine.');
                 // Do not wait for machine response, disconnect from client side
                 resolve(true);
             });

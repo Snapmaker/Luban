@@ -66,6 +66,7 @@ export const COORDINATE_AXIS = {
 // Connection Status
 export const CONNECTION_STATUS_IDLE = 'idle';
 export const CONNECTION_STATUS_CONNECTING = 'connecting';
+export const CONNECTION_STATUS_REQUIRE_AUTH = 'require-auth';
 export const CONNECTION_STATUS_CONNECTED = 'connected';
 
 // G-code Macro
