@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { withRouter } from 'react-router-dom';
 import noop from 'lodash/noop';
 import * as THREE from 'three';
@@ -38,8 +38,8 @@ import { PageMode } from '../../pages/PageMode';
 import SVGClippingOverlay from '../../views/model-operation-overlay/SVGClippingOverlay';
 
 
-class Visualizer extends Component {
-    static propTypes = {
+class Visualizer extends React.Component {
+    public static propTypes = {
         ...withRouter.propTypes,
         series: PropTypes.string.isRequired,
         pathname: PropTypes.string,
@@ -134,25 +134,25 @@ class Visualizer extends Component {
         setPageMode: PropTypes.func.isRequired
     };
 
-    contextMenuRef = React.createRef();
+    private contextMenuRef = React.createRef();
 
-    visualizerRef = React.createRef();
+    private visualizerRef = React.createRef();
 
-    printableArea = null;
+    private printableArea = null;
 
-    svgCanvas = React.createRef();
+    private svgCanvas = React.createRef();
 
-    canvas = React.createRef();
+    private canvas = React.createRef();
 
-    fileInput = React.createRef();
+    private fileInput = React.createRef();
 
-    fileInfo = React.createRef();
+    private fileInfo = React.createRef();
 
-    uploadExts = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
+    private uploadExts = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 
-    allowedFiles = '';
+    private allowedFiles = '';
 
-    actions = {
+    public actions = {
         undo: () => {
             this.props.undo();
         },
@@ -346,7 +346,7 @@ class Visualizer extends Component {
         }
     };
 
-    constructor(props) {
+    public constructor(props) {
         super(props);
 
         const { size, materials, coordinateMode, origin } = props;
@@ -362,7 +362,7 @@ class Visualizer extends Component {
     //     ContextMenu.hide();
     // };
 
-    componentDidMount() {
+    public componentDidMount() {
         this.canvas.current.resizeWindow();
         // Set the origin to not occlude the model
         this.canvas.current.renderer.setSortObjects(false);
@@ -371,7 +371,7 @@ class Visualizer extends Component {
         UniApi.Event.on('appbar-menu:laser.import', this.actions.importFile);
     }
 
-    componentWillReceiveProps(nextProps) {
+    public componentWillReceiveProps(nextProps) {
         const { renderingTimestamp, isOverSize } = nextProps;
 
         if (!isEqual(nextProps.size, this.props.size)) {
@@ -429,17 +429,17 @@ class Visualizer extends Component {
         this.allowedFiles = (nextProps.materials.isRotate ? this.uploadExts : `${this.uploadExts}, .stl, .amf, .3mf`);
     }
 
-    componentWillUnmount() {
+    public componentWillUnmount() {
         this.props.clearOperationHistory();
         UniApi.Event.off('appbar-menu:laser.import', this.actions.importFile);
     }
 
-    getNotice() {
+    public getNotice() {
         const { stage } = this.props;
         return this.props.progressStatesManager.getNotice(stage);
     }
 
-    showContextMenu = (event) => {
+    public showContextMenu = (event) => {
         const model = this.props.SVGActions.getSVGModelByElement(event.target);
         if (this.props.modelGroup.selectedModelArray.length > 1 && this.props.modelGroup.selectedModelArray.includes(model)) {
             return;
@@ -451,7 +451,7 @@ class Visualizer extends Component {
         this.contextMenuRef.current.show(event);
     };
 
-    render() {
+    public render() {
         // const isModelSelected = !!this.props.selectedModelID;
         const isOnlySelectedOneModel = (this.props.selectedModelArray && this.props.selectedModelArray.length > 0);
         // const hasModel = this.props.hasModel;

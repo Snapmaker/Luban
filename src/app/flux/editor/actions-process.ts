@@ -96,32 +96,44 @@ export const processActions = {
             })
         );
 
+        // Re-calculate tool paths
         dispatch(processActions.recalculateAllToolPath(headType));
+
+        // Display
         dispatch(processActions.showToolPathGroupObject(headType));
+
         // Different models cannot be selected in process page
         SVGActions.clearSelection();
         dispatch(baseActions.render(headType));
     },
 
-    showToolPathGroupObject: headType => (dispatch, getState) => {
-        const { modelGroup, toolPathGroup, displayedType } = getState()[headType];
-        if (displayedType === DISPLAYED_TYPE_TOOLPATH) {
-            return;
-        }
-        if (toolPathGroup.toolPaths.length === 0) {
-            return;
-        }
-        modelGroup.hideAllModelsObj3D();
-        toolPathGroup.show();
-        toolPathGroup.showToolpathObjects(true, headType === HEAD_LASER);
-        dispatch(
-            baseActions.updateState(headType, {
-                displayedType: DISPLAYED_TYPE_TOOLPATH,
-                showToolPath: true,
-                showSimulation: false
-            })
-        );
-        dispatch(baseActions.render(headType));
+    showToolPathGroupObject: (headType) => {
+        return (dispatch, getState) => {
+            const { modelGroup, displayedType } = getState()[headType];
+
+            const toolPathGroup = getState()[headType].toolPathGroup as ToolPathGroup;
+
+            if (displayedType === DISPLAYED_TYPE_TOOLPATH) {
+                return;
+            }
+            if (toolPathGroup.toolPaths.length === 0) {
+                return;
+            }
+
+            modelGroup.hideAllModelsObj3D();
+            toolPathGroup.show();
+            toolPathGroup.showToolpathObjects(true, headType === HEAD_LASER);
+
+            dispatch(
+                baseActions.updateState(headType, {
+                    displayedType: DISPLAYED_TYPE_TOOLPATH,
+                    showToolPath: true,
+                    showSimulation: false
+                })
+            );
+
+            dispatch(baseActions.render(headType));
+        };
     },
 
     showModelGroupObject: headType => (dispatch, getState) => {

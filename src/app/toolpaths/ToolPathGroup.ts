@@ -75,7 +75,7 @@ class ToolPathGroup {
         this.simulationObjects.visible = false;
     }
 
-    public showToolpathObjects(show, showWood) {
+    public showToolpathObjects(show: boolean, showWood: boolean): void {
         this.toolPathObjects.visible = show;
         showWood && (this.simulationObjects.visible = show);
     }
