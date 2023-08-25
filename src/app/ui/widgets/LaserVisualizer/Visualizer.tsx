@@ -26,7 +26,8 @@ import {
     MAX_LASER_CNC_CANVAS_SCALE,
     MIN_LASER_CNC_CANVAS_SCALE, HEAD_LASER,
     PROCESS_MODE_VECTOR, PROCESS_MODE_GREYSCALE,
-    VISUALIZER_CAMERA_HEIGHT
+    VISUALIZER_CAMERA_HEIGHT,
+    Page
 } from '../../../constants';
 import SVGEditor from '../../SVGEditor';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
@@ -36,9 +37,21 @@ import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
 import { PageMode } from '../../pages/PageMode';
 import SVGClippingOverlay from '../../views/model-operation-overlay/SVGClippingOverlay';
+import { Origin } from '../../../constants/coordinate';
+
+interface VisualizerProps {
+    // page: editor or preview
+    page: Page;
+
+    // Origin
+    origin: Origin;
+
+    undo: () => void;
+    redo: () => void;
+}
 
 
-class Visualizer extends React.Component {
+class Visualizer extends React.Component<VisualizerProps> {
     public static propTypes = {
         ...withRouter.propTypes,
         series: PropTypes.string.isRequired,
@@ -142,7 +155,7 @@ class Visualizer extends React.Component {
 
     private svgCanvas = React.createRef();
 
-    private canvas = React.createRef();
+    private canvas = React.createRef<Canvas>();
 
     private fileInput = React.createRef();
 
@@ -406,14 +419,16 @@ class Visualizer extends React.Component {
             }
         }
 
-        if (nextProps.coordinateMode !== this.props.coordinateMode || !isEqual(nextProps.materials, this.props.materials)) {
-            const { size, materials, coordinateMode } = nextProps;
-            this.printableArea = new PrintablePlate(size, materials, coordinateMode);
-            this.actions.autoFocus();
-        }
-
-        if (nextProps.coordinateSize !== this.props.coordinateSize) {
-            this.printableArea = new PrintablePlate(nextProps.coordinateSize, nextProps.materials, nextProps.coordinateMode);
+        if (nextProps.coordinateMode !== this.props.coordinateMode
+            || nextProps.coordinateSize !== this.props.coordinateSize
+            || !isEqual(nextProps.materials, this.props.materials)
+            || !isEqual(nextProps.origin, this.props.origin)) {
+            this.printableArea = new PrintablePlate(
+                nextProps.coordinateSize,
+                nextProps.materials,
+                nextProps.origin,
+                nextProps.coordinateMode,
+            );
             this.actions.autoFocus();
         }
 
