@@ -1,47 +1,52 @@
-import React from 'react';
-import { withRouter } from 'react-router-dom';
-import noop from 'lodash/noop';
-import * as THREE from 'three';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
-import isEqual from 'lodash/isEqual';
-import path from 'path';
 import classNames from 'classnames';
+import isEqual from 'lodash/isEqual';
+import noop from 'lodash/noop';
+import path from 'path';
+import PropTypes from 'prop-types';
+import React from 'react';
+import { connect } from 'react-redux';
+import { withRouter } from 'react-router-dom';
+import * as THREE from 'three';
 
-import i18n from '../../../lib/i18n';
-import { humanReadableTime } from '../../../lib/time-utils';
-import ProgressBar from '../../components/ProgressBar';
-import Space from '../../components/Space';
-import ContextMenu from '../../components/ContextMenu';
-import Canvas from '../../components/SMCanvas';
-import PrintablePlate from '../CncLaserShared/PrintablePlate';
-import VisualizerBottomLeft from '../CncLaserShared/VisualizerBottomLeft';
-import { actions as editorActions } from '../../../flux/editor';
-import VisualizerTopRight from '../CncLaserTopRight/VisualizerTopRight';
-import styles from './styles.styl';
 import {
     DISPLAYED_TYPE_TOOLPATH,
-    PAGE_EDITOR,
-    SELECTEVENT,
+    HEAD_LASER,
     MAX_LASER_CNC_CANVAS_SCALE,
-    MIN_LASER_CNC_CANVAS_SCALE, HEAD_LASER,
-    PROCESS_MODE_VECTOR, PROCESS_MODE_GREYSCALE,
-    VISUALIZER_CAMERA_HEIGHT,
-    Page
+    MIN_LASER_CNC_CANVAS_SCALE,
+    PAGE_EDITOR,
+    PROCESS_MODE_GREYSCALE,
+    PROCESS_MODE_VECTOR,
+    Page,
+    SELECTEVENT,
+    VISUALIZER_CAMERA_HEIGHT
 } from '../../../constants';
-import SVGEditor from '../../SVGEditor';
+import { Origin } from '../../../constants/coordinate';
+import { actions as editorActions } from '../../../flux/editor';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
+import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
+import { humanReadableTime } from '../../../lib/time-utils';
 import UniApi from '../../../lib/uni-api';
-import Modal from '../../components/Modal';
+import ModelGroup from '../../../models/ModelGroup';
+import SVGEditor from '../../SVGEditor';
 import { Button } from '../../components/Buttons';
+import ContextMenu from '../../components/ContextMenu';
+import Modal from '../../components/Modal';
+import ProgressBar from '../../components/ProgressBar';
+import Canvas from '../../components/SMCanvas';
+import Space from '../../components/Space';
 import { PageMode } from '../../pages/PageMode';
 import SVGClippingOverlay from '../../views/model-operation-overlay/SVGClippingOverlay';
-import { Origin } from '../../../constants/coordinate';
+import PrintablePlate from '../CncLaserShared/PrintablePlate';
+import VisualizerBottomLeft from '../CncLaserShared/VisualizerBottomLeft';
+import VisualizerTopRight from '../CncLaserTopRight/VisualizerTopRight';
+import styles from './styles.styl';
 
 interface VisualizerProps {
     // page: editor or preview
     page: Page;
+
+    modelGroup: ModelGroup;
 
     // Origin
     origin: Origin;
