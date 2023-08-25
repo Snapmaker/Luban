@@ -19,7 +19,7 @@ import {
 */
 
 export const machine: Machine = {
-    identifier: 'A250',
+    identifier: 'Snapmaker 2.0 A250',
 
     fullName: 'Snapmaker 2.0 A250/A250T/F250',
     machineType: MachineType.MultiFuncionPrinter,

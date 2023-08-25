@@ -1,3 +1,14 @@
+import {
+    SnapmakerOriginalMachine,
+    SnapmakerOriginalExtendedMachine,
+    SnapmakerA150Machine,
+    SnapmakerA250Machine,
+    SnapmakerA350Machine,
+    SnapmakerJ1Machine,
+    SnapmakerArtisanMachine,
+    SnapmakerRayMachine,
+} from '../../app/machines';
+
 // IP_WHITELIST
 export const IP_WHITELIST = [
     // IPv4 reserved space
@@ -122,6 +133,27 @@ export const MACHINE_SERIES = {
         alias: ['Custom']
     }
 };
+
+export function findMachine(identifier) {
+    const availableMachines = [
+        SnapmakerOriginalMachine,
+        SnapmakerOriginalExtendedMachine,
+        SnapmakerA150Machine,
+        SnapmakerA250Machine,
+        SnapmakerA350Machine,
+        SnapmakerArtisanMachine,
+        SnapmakerJ1Machine,
+        SnapmakerRayMachine,
+    ];
+
+    for (const machine of availableMachines) {
+        if (machine.identifier === identifier) {
+            return machine;
+        }
+    }
+
+    return null;
+}
 
 // export const SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL = 'singleExtruderToolheadForOriginal';
 export const SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 = 'singleExtruderToolheadForSM2';

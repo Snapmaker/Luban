@@ -1,32 +1,34 @@
 import _, { cloneDeep, uniq } from 'lodash';
 
+import setting from '../../config/settings';
 import {
     HEAD_CNC,
     HEAD_LASER,
-    HEAD_PRINTING, LEFT_EXTRUDER,
+    HEAD_PRINTING,
+    LEFT_EXTRUDER,
     RIGHT_EXTRUDER,
 } from '../../constants';
 import {
-    findMachineByName,
-    getMachineToolOptions,
     LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
     MACHINE_SERIES,
     MACHINE_TOOL_HEADS,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
-    STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL
+    STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
+    findMachineByName,
+    getMachineToolOptions
 } from '../../constants/machines';
-import setting from '../../config/settings';
-import log from '../../lib/log';
 import { valueOf } from '../../lib/contants-utils';
 import { controller } from '../../lib/controller';
 import i18n from '../../lib/i18n';
+import log from '../../lib/log';
+import { SnapmakerOriginalMachine } from '../../machines';
+import { PresetModel } from '../../preset-model';
 import { machineStore, printingStore } from '../../store/local-storage';
 import { actions as editorActions } from '../editor';
-import { PresetModel } from '../../preset-model';
 import { actions as printingActions } from '../printing';
 import { actions as widgetActions } from '../widget';
-
 import baseActions, { ACTION_UPDATE_STATE } from './action-base';
+
 /* eslint-disable import/no-cycle */
 import definitionManager from '../manager/DefinitionManager';
 
@@ -38,7 +40,7 @@ const INITIAL_STATE = {
     },
 
     // Machine Info
-    series: MACHINE_SERIES.ORIGINAL.identifier,
+    series: SnapmakerOriginalMachine.identifier,
     toolHead: {
         printingToolhead:
             MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
@@ -202,9 +204,11 @@ export const actions = {
         } = machineStore.get('machine') || {};
 
         let machine = findMachineByName(series);
+        let machineIdentifier = series;
         if (!machine) {
             // warning?
-            machine = MACHINE_SERIES.A350;
+            machineIdentifier = SnapmakerOriginalMachine.identifier;
+            machine = SnapmakerOriginalMachine;
         }
 
         for (const headType of [HEAD_PRINTING, HEAD_LASER, HEAD_CNC]) {
@@ -224,7 +228,7 @@ export const actions = {
 
         dispatch(
             baseActions.updateState({
-                series: series,
+                series: machineIdentifier,
                 size: machine.metadata.size,
                 toolHead,
                 modules,
