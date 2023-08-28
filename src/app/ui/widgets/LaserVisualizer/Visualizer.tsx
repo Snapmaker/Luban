@@ -426,6 +426,7 @@ class Visualizer extends React.Component<VisualizerProps> {
             || !isEqual(nextProps.materials, this.props.materials)
             || !isEqual(nextProps.origin, this.props.origin)) {
             const { coordinateSize, coordinateMode, origin, materials } = nextProps;
+
             this.printableArea = new PrintablePlate(
                 coordinateSize,
                 materials,

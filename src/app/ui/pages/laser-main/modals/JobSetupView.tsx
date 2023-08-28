@@ -181,7 +181,7 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
         }
     }, [updateWorkpiece, workpiece.shape]);
 
-    // job type state FIXME
+    // Use materials to update local workpiece state
     useEffect(() => {
         const shape: WorkpieceShape = !materials.isRotate ? WorkpieceShape.Rectangle : WorkpieceShape.Cylinder;
 
@@ -206,7 +206,6 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
 
         // new
         setWorkpieceShape, setWorkpieceSize,
-        // workpiece.shape,
     ]);
 
     /**
@@ -338,7 +337,7 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
 
                 const targetOption = originReferenceOptions.find(option => option.value === selectedOrigin.reference);
 
-                // TODO
+                // FIXME
                 if (workpiece.shape === WorkpieceShape.Rectangle) {
                     dispatch(editorActions.changeCoordinateMode(
                         HEAD_LASER,
