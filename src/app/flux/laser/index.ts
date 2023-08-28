@@ -181,10 +181,10 @@ export const actions = {
 
         // Set machine size into coordinate default size
         const { size } = getState().machine;
-        const { materials, useBackground } = getState().laser;
+        const { materials, useBackground, coordinateSize } = getState().laser;
         const { isRotate } = materials; // Get default material from flux state
         if (!isRotate) {
-            if (size/* && coordinateSize.x === 0 && coordinateSize.y === 0*/) {
+            if (coordinateSize.x === 0 && coordinateSize.y === 0 && size) {
                 dispatch(editorActions.updateState(HEAD_LASER, {
                     coordinateSize: size
                 }));

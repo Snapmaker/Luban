@@ -392,13 +392,6 @@ class Visualizer extends React.Component<VisualizerProps> {
     public componentWillReceiveProps(nextProps) {
         const { renderingTimestamp, isOverSize } = nextProps;
 
-        if (!isEqual(nextProps.size, this.props.size)) {
-            const { size, materials, origin } = nextProps;
-            this.printableArea.updateSize(this.props.series, size, materials, origin);
-            this.canvas.current.setCamera(new THREE.Vector3(0, 0, VISUALIZER_CAMERA_HEIGHT), new THREE.Vector3());
-            this.actions.autoFocus();
-        }
-
         // const { model } = nextProps;
         const { selectedToolPathModelArray } = nextProps;
         // todo, selectedModelId nof found
@@ -424,15 +417,20 @@ class Visualizer extends React.Component<VisualizerProps> {
             }
         }
 
+        if (!isEqual(nextProps.size, this.props.size)) {
+            this.canvas.current.setCamera(new THREE.Vector3(0, 0, VISUALIZER_CAMERA_HEIGHT), new THREE.Vector3());
+        }
+
         if (nextProps.coordinateMode !== this.props.coordinateMode
             || nextProps.coordinateSize !== this.props.coordinateSize
             || !isEqual(nextProps.materials, this.props.materials)
             || !isEqual(nextProps.origin, this.props.origin)) {
+            const { coordinateSize, coordinateMode, origin, materials } = nextProps;
             this.printableArea = new PrintablePlate(
-                nextProps.coordinateSize,
-                nextProps.materials,
-                nextProps.origin,
-                nextProps.coordinateMode,
+                coordinateSize,
+                materials,
+                origin,
+                coordinateMode,
             );
             this.actions.autoFocus();
         }
@@ -743,6 +741,7 @@ const mapStateToProps = (state, ownProps) => {
         coordinateMode, coordinateSize, origin,
         enableShortcut, isOverSize, SVGCanvasMode, SVGCanvasExt,
     } = state.laser;
+
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedToolPathModelArray = modelGroup.getSelectedToolPathModels();
 

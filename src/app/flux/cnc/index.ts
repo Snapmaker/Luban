@@ -166,10 +166,10 @@ export const actions = {
 
         // Set machine size into coordinate default size
         const { size } = getState().machine;
-        const { materials } = getState().cnc;
+        const { materials, coordinateSize } = getState().cnc;
         const { isRotate } = materials;
         if (!isRotate) {
-            if (size/* && coordinateSize.x === 0 && coordinateSize.y === 0*/) {
+            if (coordinateSize.x === 0 && coordinateSize.y === 0 && size) {
                 dispatch(editorActions.updateState(HEAD_CNC, {
                     coordinateSize: size
                 }));
