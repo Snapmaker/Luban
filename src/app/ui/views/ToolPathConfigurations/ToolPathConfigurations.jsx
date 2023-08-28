@@ -297,7 +297,7 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
         <React.Fragment>
             <Modal
                 className={classNames(styles['manager-body'])}
-                style={{ width: '468px', height: '660px', paddingBottom: '0px' }}
+                style={{ width: '468px' }}
                 size="lg"
                 onClose={actions.cancelUpdateToolPath}
             >
@@ -306,7 +306,7 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                     {i18n._('key-unused-Toolpath Settings')}
                     {/* </Modal.Title> */}
                 </Modal.Header>
-                <Modal.Body>
+                <Modal.Body style={{ height: '540px', overflow: 'initial' }}>
                     {headType === HEAD_CNC && (
                         <CncParameters
                             toolPath={toolPath}

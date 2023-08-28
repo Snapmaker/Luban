@@ -131,7 +131,6 @@ export const actions = {
                     isMoving,
                 }));
 
-                log.debug('DEBUG series =', series, 'seriesSize =', seriesSize);
                 if (!isNil(seriesSize)) {
                     machineSeries = valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`)
                         ? valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`).value

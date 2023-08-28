@@ -89,6 +89,10 @@ export const STAGE_GENERATED = 4;
 
 export const PAGE_EDITOR = 'editor';
 export const PAGE_PROCESS = 'process';
+export enum Page {
+    Editor = 'editor',
+    Preview = 'process',
+}
 
 // for dual extruder
 export const LEFT_EXTRUDER = 'left';

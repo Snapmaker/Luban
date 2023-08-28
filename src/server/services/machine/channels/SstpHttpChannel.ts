@@ -1,7 +1,9 @@
 import { isEqual, isNil } from 'lodash';
 import request from 'superagent';
 
+import ControllerEvent from '../../../../app/connection/controller-events';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, } from '../../../../app/constants/machines';
+import { L20WLaserToolModule, L40WLaserToolModule } from '../../../../app/machines/snapmaker-2-toolheads';
 import {
     CONNECTION_TYPE_WIFI,
     HEAD_CNC,
@@ -9,17 +11,15 @@ import {
     HEAD_PRINTING,
     LEVEL_ONE_POWER_LASER_FOR_SM2,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
-    MACHINE_SERIES,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
-    STANDARD_CNC_TOOLHEAD_FOR_SM2
+    STANDARD_CNC_TOOLHEAD_FOR_SM2,
+    findMachine
 } from '../../../constants';
-import { valueOf } from '../../../lib/contants-utils';
 import logger from '../../../lib/logger';
 import workerManager from '../../task-manager/workerManager';
 import { EventOptions } from '../types';
 import Channel, { CncChannelInterface, FileChannelInterface, GcodeChannelInterface, UploadFileOptions } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
-import ControllerEvent from '../../../../app/connection/controller-events';
 
 let waitConfirm: boolean;
 const log = logger('machine:channel:SstpHttpChannel');
@@ -185,8 +185,8 @@ class SstpHttpChannel extends Channel implements
                     }
 
                     const { series } = data;
-                    const seriesValue = valueOf(MACHINE_SERIES, 'alias', series);
-                    this.state.series = seriesValue ? seriesValue.value : null;
+                    const machine = findMachine(series);
+                    this.state.series = machine ? machine.identifier : null;
 
                     let headType = data.headType;
                     let toolHead: string;
@@ -210,6 +210,14 @@ class SstpHttpChannel extends Channel implements
                         case 5:
                             headType = HEAD_PRINTING;
                             toolHead = DUAL_EXTRUDER_TOOLHEAD_FOR_SM2;
+                            break;
+                        case 6:
+                            headType = HEAD_LASER;
+                            toolHead = L20WLaserToolModule.identifier;
+                            break;
+                        case 7:
+                            headType = HEAD_LASER;
+                            toolHead = L40WLaserToolModule.identifier;
                             break;
                         default:
                             headType = HEAD_PRINTING;
@@ -291,10 +299,12 @@ class SstpHttpChannel extends Channel implements
                 return;
             }
             const { data, code } = _getResult(null, result.res);
+
             // No Content
             if (Object.keys(data).length === 0 || code === 204) {
                 return;
             }
+
             const state = {
                 ...data,
                 ...this.state,

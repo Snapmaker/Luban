@@ -5,7 +5,14 @@ import path from 'path';
 
 import ControllerEvent, { ConnectionConnectingOptions } from '../../../app/connection/controller-events';
 import { AUTO_STRING } from '../../../app/constants';
-import { SnapmakerArtisanMachine, SnapmakerJ1Machine, SnapmakerRayMachine } from '../../../app/machines';
+import {
+    SnapmakerA150Machine,
+    SnapmakerA250Machine,
+    SnapmakerA350Machine,
+    SnapmakerArtisanMachine,
+    SnapmakerJ1Machine,
+    SnapmakerRayMachine
+} from '../../../app/machines';
 import DataStorage from '../../DataStorage';
 import {
     CONNECTION_TYPE_WIFI,
@@ -28,7 +35,7 @@ import { sacpTcpChannel } from './channels/SacpTcpChannel';
 import { sacpUdpChannel } from './channels/SacpUdpChannel';
 import { sstpHttpChannel } from './channels/SstpHttpChannel';
 import TextSerialChannel, { textSerialChannel } from './channels/TextSerialChannel';
-import { ArtisanMachineInstance, J1MachineInstance, MachineInstance, RayMachineInstance } from './instances';
+import { ArtisanMachineInstance, J1MachineInstance, MachineInstance, RayMachineInstance, SM2Instance } from './instances';
 
 const log = logger('lib:ConnectionManager');
 
@@ -140,6 +147,19 @@ class ConnectionManager {
 
         // configure machine instance
         this.machineInstance = null;
+
+        if (includes(
+            [
+                SnapmakerA150Machine.identifier,
+                SnapmakerA250Machine.identifier,
+                SnapmakerA350Machine.identifier,
+            ],
+            machineIdentifier
+        )) {
+            this.machineInstance = new SM2Instance();
+            this.machineInstance.setChannel(this.channel);
+            this.machineInstance.setSocket(this.socket);
+        }
 
         if (machineIdentifier === SnapmakerJ1Machine.identifier) {
             this.machineInstance = new J1MachineInstance();
