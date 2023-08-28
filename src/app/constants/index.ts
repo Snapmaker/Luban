@@ -1074,7 +1074,7 @@ export const COORDINATE_MODE_BOTTOM_CENTER = {
 // Laser | CNC canvas min | max scale rate
 export const VISUALIZER_CAMERA_HEIGHT = 300;
 export const MAX_LASER_CNC_CANVAS_SCALE = 5;
-export const MIN_LASER_CNC_CANVAS_SCALE = 0.5;
+export const MIN_LASER_CNC_CANVAS_SCALE = 0.25;
 export const SOFTWARE_MANUAL = 'https://support.snapmaker.com/hc/en-us/articles/4406229926935';
 export const FORUM_URL = 'https://forum.snapmaker.com/';
 export const SUPPORT_ZH_URL = 'https://snapmaker.cn/support-cn/home';
