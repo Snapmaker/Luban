@@ -152,7 +152,7 @@ export interface AirPurifierChannelInterface extends Channel {
 
     /**
      * Set Air purifier strength.
-     * 
+     *
      * @param strength 1-3 (low / medium / high)
      */
     setAirPurifierStrength(strength: 1 | 2 | 3): Promise<boolean>;

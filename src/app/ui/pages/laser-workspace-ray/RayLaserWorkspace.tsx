@@ -29,7 +29,7 @@ import ConnectionControlWidget from '../../widgets/ConnectionControl';
 import ConnectionFileTransferWidget from '../../widgets/ConnectionFileTransfer';
 import EnclosureWidget from '../../widgets/Enclosure';
 import JobStatusWidget from '../../widgets/JobStatusWidget';
-import RayMachiningWidget from '../../widgets/RayMachiningWidget';
+import RayMachiningWidget from '../../widgets/RaySetOriginWidget';
 import RayUploadWidget from '../../widgets/RayUploadWidget';
 import VisualizerWidget from '../../widgets/WorkspaceVisualizer';
 import VisualizerOverlay from './VisualizerOverlay';

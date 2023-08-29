@@ -258,7 +258,7 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
      * Run Boundary Mode
      */
     const jobOffsetMode: JobOffsetMode = useSelector((state: RootState) => state.laser.jobOffsetMode);
-    const [selectedRunBoundaryMode, setSelectedRunBoundaryMode] = useState(jobOffsetMode);
+    const [selectedJobOffsetMode, setSelectedJobOffsetMode] = useState(jobOffsetMode);
 
     const runBoundaryModeOptions = useMemo(() => {
         // hard-coded for ray machine
@@ -286,14 +286,14 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
     useEffect(() => {
         const targetOption = runBoundaryModeOptions.find(option => option.value === jobOffsetMode);
         if (targetOption) {
-            setSelectedRunBoundaryMode(jobOffsetMode);
+            setSelectedJobOffsetMode(jobOffsetMode);
         } else {
-            setSelectedRunBoundaryMode(runBoundaryModeOptions[0].value);
+            setSelectedJobOffsetMode(runBoundaryModeOptions[0].value);
         }
     }, [jobOffsetMode, runBoundaryModeOptions]);
 
-    const onChangeRunBoundaryMode = useCallback((option) => {
-        setSelectedRunBoundaryMode(option.value);
+    const onChangeJobOffsetMode = useCallback((option) => {
+        setSelectedJobOffsetMode(option.value);
     }, []);
 
     /**
@@ -333,7 +333,7 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
                 ));
 
                 // Run Boudanry Mode
-                dispatch(editorActions.setJobOffsetMode(selectedRunBoundaryMode));
+                dispatch(editorActions.setJobOffsetMode(selectedJobOffsetMode));
 
                 const targetOption = originReferenceOptions.find(option => option.value === selectedOrigin.reference);
 
@@ -371,7 +371,7 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
 
         selectedOrigin,
 
-        selectedRunBoundaryMode,
+        selectedJobOffsetMode,
     ]);
 
     return (
@@ -574,17 +574,17 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
             </div>
             <div className="margin-top-24">
                 <div className="margin-bottom-16 font-weight-bold">
-                    {i18n._('Run Boundary Mode')}
+                    {i18n._('Job Offset')}
                 </div>
                 <div className="sm-flex height-32">
                     <span className="width-144 margin-right-8 text-overflow-ellipsis">
-                        {i18n._('Mode')}
+                        {i18n._('Job Offset Mode')}
                     </span>
                     <Select
                         className="width-120"
                         options={runBoundaryModeOptions}
-                        value={selectedRunBoundaryMode}
-                        onChange={onChangeRunBoundaryMode}
+                        value={selectedJobOffsetMode}
+                        onChange={onChangeJobOffsetMode}
                     />
                 </div>
             </div>
