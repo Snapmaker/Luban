@@ -59,11 +59,18 @@ enum ControllerEvent {
     SetSpindleSpeed = 'connection:set-spindle-speed',
 
     /**
-     * Enclosure
+     * Module: Enclosure
      */
+    GetEnclosureInfo = 'connection:get-enclosure-info',
     SetEnclosureLight = 'connection:setEnclosureLight',
     SetEnclosureFan = 'connection:setEnclosureFan',
     SetEnclosureDoorDetection = 'connection:setDoorDetection',
+
+    /**
+     * Module: Air Purifier
+     */
+    SetAirPurifierSwitch = 'connection:setFilterSwitch',
+    SetAirPurifierStrength = 'connection:setFilterWorkSpeed',
 
     /**
      * File

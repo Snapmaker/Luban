@@ -1,14 +1,22 @@
-import PropTypes from 'prop-types';
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
+
+import { RootState } from '../../../flux/index.def';
 import i18n from '../../../lib/i18n';
 import Enclosure from './Enclosure';
 
-function EnclosureDisplay({ widgetActions }) {
+interface EnclosureWidgetProps {
+    widgetActions: {
+        setTitle: (n: string) => void;
+        setDisplay: (display: boolean) => void;
+    }
+}
+
+const EnclosureDisplay: React.FC<EnclosureWidgetProps> = ({ widgetActions }) => {
     const {
         isConnected,
         enclosureOnline,
-    } = useSelector(state => state.workspace);
+    } = useSelector((state: RootState) => state.workspace);
 
     useEffect(() => {
         widgetActions.setTitle(i18n._('key-Workspace/Enclosure-Enclosure'));
@@ -34,9 +42,6 @@ function EnclosureDisplay({ widgetActions }) {
     return (
         <Enclosure />
     );
-}
-EnclosureDisplay.propTypes = {
-    widgetActions: PropTypes.object.isRequired
 };
 
 export default EnclosureDisplay;

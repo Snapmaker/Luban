@@ -133,7 +133,7 @@ const FirmwareUpgradeModal: React.FC<FirmwareUpgradeModalProps> = (props) => {
             <Modal.Header>
                 {i18n._('Machine Firmware')}
             </Modal.Header>
-            <Modal.Body className="width-400">
+            <Modal.Body className="width-432">
                 {
                     !isConnected && (
                         <Alert

@@ -4,8 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { shallowEqual, useSelector } from 'react-redux';
 
 import {
-    CONNECTION_FILTER_SWITCH,
-    CONNECTION_FILTER_WORKSPEED,
     SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
@@ -15,6 +13,7 @@ import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import Switch from '../../components/Switch';
 import styles from './styles.styl';
+import ControllerEvent from '../../../connection/controller-events';
 
 function Purifier({ widgetActions }) {
     const {
@@ -36,14 +35,14 @@ function Purifier({ widgetActions }) {
     const actions = {
         onHandleFilterEnabled: () => {
             setIsFilterEnable(!isFilterEnable);
-            controller.emitEvent(CONNECTION_FILTER_SWITCH, {
+            controller.emitEvent(ControllerEvent.SetAirPurifierSwitch, {
                 enable: !isFilterEnable,
                 value: workSpeed
             });
         },
         onChangeFilterSpeed: (_workSpeed) => {
             setWorkSpeed(_workSpeed);
-            controller.emitEvent(CONNECTION_FILTER_WORKSPEED, {
+            controller.emitEvent(ControllerEvent.SetAirPurifierStrength, {
                 value: _workSpeed
             });
         }

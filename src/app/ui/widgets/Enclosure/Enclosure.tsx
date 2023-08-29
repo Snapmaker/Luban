@@ -3,19 +3,20 @@ import React, { useEffect, useState } from 'react';
 import { shallowEqual, useSelector } from 'react-redux';
 
 import ControllerEvent from '../../../connection/controller-events';
+import { RootState } from '../../../flux/index.def';
 import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import Switch from '../../components/Switch';
 
-function Enclosure() {
-    const {
-        isConnected,
+const Enclosure: React.FC = () => {
+    const { isConnected } = useSelector((state: RootState) => state.workspace);
 
+    const {
         enclosureLight,
         enclosureFan,
         isDoorEnabled: doorEnabled,
-    } = useSelector(state => state.workspace, shallowEqual);
+    } = useSelector((state: RootState) => state.workspace, shallowEqual);
 
     const [isLedReady, setIsLedReady] = useState(true);
     const [isFanReady, setIsFanReady] = useState(true);
@@ -76,7 +77,7 @@ function Enclosure() {
                         disabled={(!isLedReady) || !isConnected}
                     />
                 </div>
-                <div className="sm-flex justify-space-between margin-vertical-8 ">
+                <div className="sm-flex justify-space-between margin-vertical-8">
                     <span>{i18n._('key-Workspace/Enclosure-Exhaust Fan')}</span>
                     <Switch
                         onClick={actions.onHandleCoolingFans}
@@ -90,7 +91,8 @@ function Enclosure() {
                         title={i18n._('key-Workspace/Enclosure-Door Detection')}
                         content={(
                             <div>
-                                <p>{i18n._('key-Workspace/Enclosure-If you disable the Door Detection feature, your job will not pause when one of both of the enclosure panels is/are opened.')}</p>
+                                <p>{i18n._('key-Workspace/Enclosure-If you disable the Door Detection feature,
+ your job will not pause when one of both of the enclosure panels is/are opened.')}</p>
                             </div>
                         )}
                     >
@@ -108,9 +110,6 @@ function Enclosure() {
             </div>
         </div>
     );
-}
-
-Enclosure.propTypes = {
 };
 
 export default Enclosure;

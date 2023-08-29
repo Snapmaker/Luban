@@ -40,7 +40,7 @@ class TextSerialChannel extends Channel implements
             controller = new MarlinController({
                 port,
                 dataSource: this.dataSource,
-                baudrate: baudRate,
+                baudRate: baudRate,
                 connectionTimeout: connectionTimeout
             });
 

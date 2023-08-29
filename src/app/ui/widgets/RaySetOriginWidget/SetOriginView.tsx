@@ -25,7 +25,7 @@ enum SetupCoordinateMethod {
 }
 
 /**
- * Machining View for Ray.
+ * Set Origin View for Ray.
  *
  * With this view, you can calibrate the coordinate system for the job to be done.
  *
@@ -35,11 +35,11 @@ enum SetupCoordinateMethod {
  * Note that the work process is designed for the Ray machine (GRBL), it's not a
  * general purpose work process.
  */
-interface MachiningViewProps {
+interface SetOriginViewProps {
     setDisplay: (display: boolean) => void;
 }
 
-const MachiningView: React.FC<MachiningViewProps> = (props) => {
+const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
     const { setDisplay } = props;
 
     // G-code
@@ -57,6 +57,9 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
             // TODO: job is done, but workflow is IDLE => not display
             setDisplay(false);
         }
+
+        // DEBUG
+        setDisplay(true);
     }, [setDisplay, isConnected, workflowStatus]);
 
     // setup coordinate method
@@ -67,6 +70,7 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
     }, []);
 
     // run boundary state
+    const [runBoundaryUploading, setRunBoundaryUploading] = useState(false);
     const [runBoundaryReady, setRunBoundaryReady] = useState(false);
     const jobOffsetMode: JobOffsetMode = useSelector((state: RootState) => state.laser.jobOffsetMode);
 
@@ -133,20 +137,24 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
 
         const gcodeFileObject: GCodeFileObject = await dispatch(gcodeActions.uploadGcodeFile(file));
 
+        setRunBoundaryUploading(true);
         controller
             .emitEvent(ControllerEvent.CompressUploadFile, {
                 filePath: gcodeFileObject.uploadName,
                 targetFilename: 'boundary.nc',
             })
             .once(ControllerEvent.CompressUploadFile, ({ err, text }) => {
+                setRunBoundaryUploading(false);
+
                 if (err) {
                     log.error('Unable to upload G-code to execute.');
                     log.error(err);
                     log.error(`Reason: ${text}`);
-                } else {
-                    log.info('Uploaded boundary G-code.');
-                    setRunBoundaryReady(true);
+                    return;
                 }
+
+                log.info('Uploaded boundary G-code.');
+                setRunBoundaryReady(true);
             });
     }, [dispatch, boundingBox, jobOffsetMode]);
 
@@ -160,12 +168,12 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
                 <Radio.Group onChange={onChangeCoordinateMode} value={setupCoordinateMethod}>
                     <Space direction="vertical">
                         <Radio value={SetupCoordinateMethod.Manually}>
-                            <span className="display-block font-weight-bold">{i18n._('Use origin by move tool head manually')}</span>
-                            <span className="display-block color-black-3">{i18n._('In this mode, steppers will be disabled. You will need to move the tool head to align light spot to desired origin.')}</span>
+                            <span className="display-block font-weight-bold">{i18n._('Manual Mode')}</span>
+                            <span className="display-block color-black-3">{i18n._('You need to manually move the toolhead to the desired XY work origin.')}</span>
                         </Radio>
                         <Radio value={SetupCoordinateMethod.ByControlPanel}>
-                            <span className="display-block font-weight-bold">{i18n._('Use origin set by control panel')}</span>
-                            <span className="display-block color-black-3">{i18n._('In this mode, you will need to set origin using the control pad. Use the control panel to move the tool head to align light spot to desired origin. Then set it as origin of your job.')}</span>
+                            <span className="display-block font-weight-bold">{i18n._('Control Mode')}</span>
+                            <span className="display-block color-black-3">{i18n._('You need to use the Control panel to move the toolhead to the desired XY work origin.')}</span>
                         </Radio>
                     </Space>
                 </Radio.Group>
@@ -176,8 +184,9 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
                         <div className="width-percent-100">
                             <Button
                                 type="default"
-                                style={{ width: '100%' }}
+                                style={{ width: '100%', borderRadius: '4px' }}
                                 disabled={!boundingBox}
+                                loading={runBoundaryUploading}
                                 onClick={async () => runBoundary({
                                     useCurrentPosition: true,
                                 })}
@@ -194,7 +203,7 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
 
             {
                 setupCoordinateMethod === SetupCoordinateMethod.ByControlPanel && (
-                    <div className="margin-top-8">
+                    <div className="margin-top-16">
                         <ControlPanel
                             executeGCode={executeGCode}
                             runBoundary={async () => runBoundary({
@@ -214,4 +223,4 @@ const MachiningView: React.FC<MachiningViewProps> = (props) => {
     );
 };
 
-export default MachiningView;
+export default SetOriginView;

@@ -42,7 +42,7 @@ const ExportLogModal: React.FC<ExportLogModalProps> = (props) => {
             <Modal.Header>
                 {i18n._('Machine Log')}
             </Modal.Header>
-            <Modal.Body className="width-400">
+            <Modal.Body className="width-432">
                 {
                     !isConnected && (
                         <Alert
@@ -79,6 +79,4 @@ const ExportLogModal: React.FC<ExportLogModalProps> = (props) => {
     );
 };
 
-
 export default ExportLogModal;
-

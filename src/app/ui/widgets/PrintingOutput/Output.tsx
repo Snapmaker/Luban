@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { noop } from 'lodash';
 import path from 'path';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
 import { HEAD_PRINTING } from '../../../constants';
@@ -67,11 +67,7 @@ const Output: React.FC = () => {
                 dispatch(printingActions.displayGcode());
             }
         },
-        onClickGenerateGcode: () => {
-            const gcodeThumbnail = thumbnail.current.getThumbnail(series);
-            dispatch(printingActions.generateGcode(gcodeThumbnail));
-            dispatch(printingActions.generateGrayModeObject());
-        },
+
         onClickLoadGcode: () => {
             if (isGcodeOverstepped) {
                 modal({
@@ -86,25 +82,38 @@ const Output: React.FC = () => {
             logGcodeExport(HEAD_PRINTING, 'workspace');
             window.scrollTo(0, 0);
         },
-        onClickExportGcode: () => {
-            if (isGcodeOverstepped) {
-                modal({
-                    title: 'Warning',
-                    body: 'Generated G-code overstepped out of the cube, please modify your model and re-generate G-code.'
-                });
-                return;
-            }
-            const filename = path.basename(gcodeFile?.name);
-            dispatch(projectActions.exportFile(filename, gcodeFile?.renderGcodeFileName));
-            logGcodeExport(HEAD_PRINTING, 'local');
-        }
+
     };
+    const onClickGenerateGcode = useCallback(() => {
+        const gcodeThumbnail = thumbnail.current.getThumbnail(series);
+        dispatch(printingActions.generateGcode(gcodeThumbnail));
+        dispatch(printingActions.generateGrayModeObject());
+    }, [dispatch, series]);
+
+    const onClickExportGcode = useCallback(() => {
+        if (isGcodeOverstepped) {
+            modal({
+                title: 'Warning',
+                body: 'Generated G-code overstepped out of the cube, please modify your model and re-generate G-code.'
+            });
+            return;
+        }
+
+        // export
+        const filename = path.basename(gcodeFile?.name);
+        dispatch(projectActions.exportFile(filename, gcodeFile?.renderGcodeFileName));
+
+        // log
+        logGcodeExport(HEAD_PRINTING, 'local');
+    }, [dispatch, isGcodeOverstepped, gcodeFile]);
+
     useEffect(() => {
-        UniApi.Event.on('appbar-menu:printing.export-gcode', actions.onClickExportGcode);
+        UniApi.Event.on('appbar-menu:printing.export-gcode', onClickExportGcode);
         return () => {
-            UniApi.Event.off('appbar-menu:printing.export-gcode', actions.onClickExportGcode);
+            UniApi.Event.off('appbar-menu:printing.export-gcode', onClickExportGcode);
         };
-    }, [isGcodeOverstepped, gcodeFile]);
+    }, [onClickExportGcode]);
+
 
     const toastRef = useRef();
     useEffect(() => {
@@ -143,7 +152,7 @@ const Output: React.FC = () => {
             <Menu.Item
                 key="Export G-code to File"
                 disabled={!gcodeFile}
-                onClick={actions.onClickExportGcode}
+                onClick={onClickExportGcode}
             >
                 <div className={classNames('align-c', 'padding-vertical-4')}>
                     {i18n._('key-Printing/G-codeAction-Export G-code to File')}
@@ -160,7 +169,7 @@ const Output: React.FC = () => {
                         <Button
                             type="primary"
                             priority="level-one"
-                            onClick={actions.onClickGenerateGcode}
+                            onClick={onClickGenerateGcode}
                             disabled={!hasAnyModelVisible || isSlicing || isAnyModelOverstepped || leftBarOverlayVisible}
                         >
                             {i18n._('key-Printing/G-codeAction-Generate G-code')}

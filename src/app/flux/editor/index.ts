@@ -9,6 +9,7 @@ import { isEqual, round, whetherTransformed } from '../../../shared/lib/utils';
 import api from '../../api';
 import {
     COORDINATE_MODE_BOTTOM_CENTER,
+    // COORDINATE_MODE_CENTER,
     COORDINATE_MODE_CENTER,
     DATA_PREFIX,
     DISPLAYED_TYPE_MODEL,
@@ -66,7 +67,7 @@ import { actions as operationHistoryActions } from '../operation-history';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as projectActions } from '../project';
 /* eslint-disable-next-line import/no-cycle */
-import { HeadType } from '../../../server/services/machine/sacp/SacpClient';
+// import { HeadType } from '../../../server/services/machine/sacp/SacpClient';
 import { actions as appGlobalActions } from '../app-global';
 import { SVGClippingResultType, SVGClippingType } from '../../constants/clipping';
 import UpdateHrefOperation2D from '../operation-history/UpdateHrefOperation2D';
@@ -544,19 +545,9 @@ export const actions = {
     },
 
     onSizeUpdated: (headType, size) => (dispatch, getState) => {
-        const { SVGActions, materials, coordinateMode } = getState()[headType];
+        const { SVGActions } = getState()[headType];
 
         SVGActions.updateSize(size);
-
-        const isRotate = materials.isRotate;
-        const newMode = coordinateMode ?? (isRotate ? COORDINATE_MODE_BOTTOM_CENTER : COORDINATE_MODE_CENTER);
-        const newSize = !isRotate
-            ? size
-            : {
-                x: materials.diameter * Math.PI,
-                y: materials.length
-            };
-        dispatch(actions.changeCoordinateMode(headType, newMode, newSize));
     },
 
     /**
@@ -2159,6 +2150,142 @@ export const actions = {
         model.onUpdate();
     },
 
+    /**
+     * Switch to another page.
+     *
+     * @param headType
+     * @param page
+     */
+    switchToPage: (headType, page) => (dispatch, getState) => {
+        const { toolPathGroup, autoPreviewEnabled } = getState()[headType];
+        if (!includes([PAGE_EDITOR, PAGE_PROCESS], page)) {
+            return;
+        }
+        // switch to `page`
+        dispatch(baseActions.updateState(headType, { page }));
+
+        // when switching to "Process" page, we need to
+        // trigger preview of all images
+        if (page === PAGE_PROCESS) {
+            toolPathGroup.checkoutToolPathStatus();
+            if (autoPreviewEnabled) {
+                dispatch(actions.preview(headType));
+            }
+        }
+
+        dispatch(baseActions.render(headType));
+    },
+
+    /**
+     * Initialize workpiece for new project.
+     *
+     * Set default workpiece.
+     */
+    initializeWorkpiece: (headType: HeadType, options: { isRotate: boolean }) => {
+        return async (dispatch, getState) => {
+            const isRotate = options.isRotate;
+
+            const activeMachine: Machine = getState().machine.activeMachine;
+            if (!isRotate) {
+                await dispatch(actions.setWorkpiece(
+                    headType,
+                    WorkpieceShape.Rectangle,
+                    {
+                        x: activeMachine.metadata.size.x,
+                        y: activeMachine.metadata.size.y,
+                        z: activeMachine.metadata.size.z,
+                    }
+                ));
+                await dispatch(actions.updateWorkpieceObject(headType));
+
+                await dispatch(actions.changeCoordinateMode(
+                    headType,
+                    COORDINATE_MODE_CENTER,
+                    {
+                        x: activeMachine.metadata.size.x,
+                        y: activeMachine.metadata.size.y,
+                    }
+                ));
+            } else {
+                await dispatch(actions.setWorkpiece(
+                    headType,
+                    WorkpieceShape.Rectangle,
+                    {
+                        diameter: 40,
+                        length: 70,
+                    }
+                ));
+                await dispatch(actions.updateWorkpieceObject(headType));
+
+                await dispatch(actions.changeCoordinateMode(
+                    headType,
+                    COORDINATE_MODE_BOTTOM_CENTER,
+                    {
+                        x: 40 * Math.PI,
+                        y: 75,
+                    },
+                ));
+            }
+        };
+    },
+
+    /**
+     * Change Coordinate Mode
+     *
+     * @param headType
+     * @param coordinateMode
+     * @param coordinateSize
+     */
+    changeCoordinateMode: (headType, coordinateMode = null, coordinateSize = null) => (dispatch, getState) => {
+        console.log('changeCoordinateMode');
+
+        // deal with default coordinate size
+        if (!coordinateSize) {
+            const activeMachine = getState().machine.activeMachine as Machine;
+            coordinateSize = coordinateSize ?? {
+                x: activeMachine.metadata.size.x,
+                y: activeMachine.metadata.size.y,
+            };
+        }
+
+        // deal with default coordinate mode
+        const oldCoordinateMode = getState()[headType].coordinateMode;
+        coordinateMode = coordinateMode ?? oldCoordinateMode;
+
+        if (coordinateMode.value !== oldCoordinateMode.value) {
+            // move all elements
+            const coorDelta = {
+                dx: 0,
+                dy: 0,
+            };
+            if (oldCoordinateMode.value !== COORDINATE_MODE_BOTTOM_CENTER.value) {
+                coorDelta.dx -= (coordinateSize.x / 2) * oldCoordinateMode.setting.sizeMultiplyFactor.x;
+                coorDelta.dy += (coordinateSize.y / 2) * oldCoordinateMode.setting.sizeMultiplyFactor.y;
+            }
+
+            if (coordinateMode.value !== COORDINATE_MODE_BOTTOM_CENTER.value) {
+                coorDelta.dx += (coordinateSize.x / 2) * coordinateMode.setting.sizeMultiplyFactor.x;
+                coorDelta.dy -= (coordinateSize.y / 2) * coordinateMode.setting.sizeMultiplyFactor.y;
+            }
+
+            const SVGActions = getState()[headType].SVGActions as SVGActionsFactory;
+            const elements = SVGActions.getAllModelElements();
+            SVGActions.moveElementsStart(elements);
+            SVGActions.moveElements(elements, coorDelta);
+            SVGActions.moveElementsFinish(elements);
+            SVGActions.clearSelection();
+            dispatch(baseActions.render(headType));
+        }
+
+        dispatch(actions.resetProcessState(headType));
+        dispatch(
+            actions.updateState(headType, {
+                coordinateMode,
+                coordinateSize,
+            })
+        );
+    },
+
     updateMaterials: (headType, newMaterials) => (dispatch, getState) => {
         const { materials, modelGroup, toolPathGroup } = getState()[headType];
         const allMaterials = {
@@ -2228,87 +2355,6 @@ export const actions = {
                 })
             );
         };
-    },
-
-    /**
-     * Switch to another page.
-     *
-     * @param headType
-     * @param page
-     */
-    switchToPage: (headType, page) => (dispatch, getState) => {
-        const { toolPathGroup, autoPreviewEnabled } = getState()[headType];
-        if (!includes([PAGE_EDITOR, PAGE_PROCESS], page)) {
-            return;
-        }
-        // switch to `page`
-        dispatch(baseActions.updateState(headType, { page }));
-
-        // when switching to "Process" page, we need to
-        // trigger preview of all images
-        if (page === PAGE_PROCESS) {
-            toolPathGroup.checkoutToolPathStatus();
-            if (autoPreviewEnabled) {
-                dispatch(actions.preview(headType));
-            }
-        }
-
-        dispatch(baseActions.render(headType));
-    },
-
-    /**
-     * Change Coordinate Mode
-     *
-     * @param headType
-     * @param coordinateMode
-     * @param coordinateSize
-     */
-    changeCoordinateMode: (headType, coordinateMode = null, coordinateSize = null) => (dispatch, getState) => {
-        // deal with default coordinate mode
-        const oldCoordinateMode = getState()[headType].coordinateMode;
-        coordinateMode = coordinateMode ?? oldCoordinateMode;
-
-        // deal with default coordinate size
-        if (!coordinateSize) {
-            const activeMachine = getState().machine.activeMachine as Machine;
-            coordinateSize = coordinateSize ?? {
-                x: activeMachine.metadata.size.x,
-                y: activeMachine.metadata.size.y,
-            };
-        }
-
-        if (coordinateMode.value !== oldCoordinateMode.value) {
-            // move all elements
-            const coorDelta = {
-                dx: 0,
-                dy: 0,
-            };
-            if (oldCoordinateMode.value !== COORDINATE_MODE_BOTTOM_CENTER.value) {
-                coorDelta.dx -= (coordinateSize.x / 2) * oldCoordinateMode.setting.sizeMultiplyFactor.x;
-                coorDelta.dy += (coordinateSize.y / 2) * oldCoordinateMode.setting.sizeMultiplyFactor.y;
-            }
-
-            if (coordinateMode.value !== COORDINATE_MODE_BOTTOM_CENTER.value) {
-                coorDelta.dx += (coordinateSize.x / 2) * coordinateMode.setting.sizeMultiplyFactor.x;
-                coorDelta.dy -= (coordinateSize.y / 2) * coordinateMode.setting.sizeMultiplyFactor.y;
-            }
-
-            const SVGActions = getState()[headType].SVGActions as SVGActionsFactory;
-            const elements = SVGActions.getAllModelElements();
-            SVGActions.moveElementsStart(elements);
-            SVGActions.moveElements(elements, coorDelta);
-            SVGActions.moveElementsFinish(elements);
-            SVGActions.clearSelection();
-            dispatch(baseActions.render(headType));
-        }
-
-        dispatch(actions.resetProcessState(headType));
-        dispatch(
-            actions.updateState(headType, {
-                coordinateMode,
-                coordinateSize,
-            })
-        );
     },
 
     /**

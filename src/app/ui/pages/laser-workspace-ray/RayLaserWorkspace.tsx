@@ -29,7 +29,7 @@ import ConnectionControlWidget from '../../widgets/ConnectionControl';
 import ConnectionFileTransferWidget from '../../widgets/ConnectionFileTransfer';
 import EnclosureWidget from '../../widgets/Enclosure';
 import JobStatusWidget from '../../widgets/JobStatusWidget';
-import RayMachiningWidget from '../../widgets/RayMachiningWidget';
+import RayMachiningWidget from '../../widgets/RaySetOriginWidget';
 import RayUploadWidget from '../../widgets/RayUploadWidget';
 import VisualizerWidget from '../../widgets/WorkspaceVisualizer';
 import VisualizerOverlay from './VisualizerOverlay';
@@ -37,6 +37,7 @@ import FirmwareUpgradeModal from './modals/FirmwareUpgradeModal';
 import MachineLogModal from './modals/MachineLogModal';
 import MachineNetworkModal from './modals/MachineNetworkModal';
 import MachineSettingsModal from './modals/MachineSettingsModal';
+import MachineControlModal from './modals/MachineControlModal';
 
 
 const allWidgets = {
@@ -110,6 +111,7 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
     const [showMachineSettingsModal, setShowMachineSettingsModal] = useState(false);
     const [showFirmwareUpgradeModal, setShowFirmwareUpgradeModal] = useState(false);
     const [showMachineNetworkModal, setShowMachineNetworkModal] = useState(false);
+    const [showMachineControlModal, setShowMachineControlModal] = useState(false);
     const [showMachineLogModal, setShowMachineLogModal] = useState(false);
 
     const [leftItems, setLeftItems] = useState([
@@ -147,6 +149,14 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
             name: 'MainToolbarMachinewifi',
             action: () => {
                 setShowMachineNetworkModal(true);
+            },
+        },
+        {
+            title: i18n._('Control'),
+            type: 'button',
+            name: 'MainToolbarMachinecontrol',
+            action: () => {
+                setShowMachineControlModal(true);
             },
         },
         {
@@ -354,6 +364,15 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
                     )
                 }
 
+                {/* Firmware Upgrade */}
+                {
+                    showFirmwareUpgradeModal && (
+                        <FirmwareUpgradeModal
+                            onClose={() => setShowFirmwareUpgradeModal(false)}
+                        />
+                    )
+                }
+
                 {/* Machine Network */}
                 {
                     showMachineNetworkModal && (
@@ -363,20 +382,20 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
                     )
                 }
 
+                {/* Machine Control */}
+                {
+                    showMachineControlModal && (
+                        <MachineControlModal
+                            onClose={() => setShowMachineControlModal(false)}
+                        />
+                    )
+                }
+
                 {/* Machine Log */}
                 {
                     showMachineLogModal && (
                         <MachineLogModal
                             onClose={() => setShowMachineLogModal(false)}
-                        />
-                    )
-                }
-
-                {/* Firmware Upgrade */}
-                {
-                    showFirmwareUpgradeModal && (
-                        <FirmwareUpgradeModal
-                            onClose={() => setShowFirmwareUpgradeModal(false)}
                         />
                     )
                 }

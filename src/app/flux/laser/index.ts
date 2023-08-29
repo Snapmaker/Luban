@@ -183,6 +183,8 @@ export const actions = {
         const { size } = getState().machine;
         const { materials, useBackground, coordinateSize } = getState().laser;
         const { isRotate } = materials; // Get default material from flux state
+
+        console.log('init(), coordinateSize', coordinateSize);
         if (!isRotate) {
             if (coordinateSize.x === 0 && coordinateSize.y === 0 && size) {
                 dispatch(editorActions.updateState(HEAD_LASER, {

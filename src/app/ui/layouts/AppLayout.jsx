@@ -10,11 +10,7 @@ import { withRouter } from 'react-router-dom';
 import { Group } from 'three';
 
 import {
-    COORDINATE_MODE_BOTTOM_CENTER,
-    COORDINATE_MODE_CENTER,
     FORUM_URL,
-    HEAD_CNC,
-    HEAD_LASER,
     HEAD_TYPE_ENV_NAME,
     MARKET_EN_URL,
     MARKET_ZH_URL,
@@ -65,8 +61,7 @@ class AppLayout extends React.PureComponent {
         currentModalPath: PropTypes.string,
         updateCurrentModalPath: PropTypes.func.isRequired,
         startProject: PropTypes.func.isRequired,
-        changeCoordinateMode: PropTypes.func.isRequired,
-        updateMaterials: PropTypes.func.isRequired,
+        initializeWorkpiece: PropTypes.func.isRequired,
         initRecoverService: PropTypes.func.isRequired,
         save: PropTypes.func.isRequired,
         saveAndClose: PropTypes.func.isRequired,
@@ -801,31 +796,11 @@ class AppLayout extends React.PureComponent {
                 const { toolHead, series } = this.props.machineInfo;
                 await this.props.startProject(oldPathname, `/${headType}`, history, isRotate);
                 await this.props.updateMachineToolHead(toolHead, series, headType);
-                if (headType === HEAD_CNC || headType === HEAD_LASER) {
-                    if (!isRotate) {
-                        const { materials } = this.props.store?.[headType];
-                        await this.props.changeCoordinateMode(headType, COORDINATE_MODE_CENTER);
 
-                        // Update materials
-                        if (materials.isRotate) {
-                            await this.props.updateMaterials(headType, { isRotate });
-                        }
-                    } else {
-                        const { SVGActions, materials } = this.props.store?.[headType];
-                        if (materials.isRotate !== isRotate) {
-                            await this.props.changeCoordinateMode(
-                                headType,
-                                COORDINATE_MODE_BOTTOM_CENTER,
-                                {
-                                    x: 40 * Math.PI,
-                                    y: 75,
-                                },
-                                !SVGActions.svgContentGroup
-                            );
-                            await this.props.updateMaterials(headType, { isRotate });
-                        }
-                    }
-                }
+                // initialize workpiece now
+                await this.props.initializeWorkpiece(headType, {
+                    isRotate: isRotate,
+                });
             });
             UniApi.Event.on('appbar-menu:clear-recent-files', () => {
                 this.actions.updateRecentFile([], 'reset');
@@ -1067,8 +1042,7 @@ const mapDispatchToProps = (dispatch) => {
         openProject: (file, history) => dispatch(projectActions.openProject(file, history)),
         startProject: (from, to, history, isRotate) => dispatch(projectActions.startProject(from, to, history, false, isRotate)),
         updateRecentProject: (arr, type) => dispatch(projectActions.updateRecentFile(arr, type)),
-        changeCoordinateMode: (headType, coordinateMode, coordinateSize) => dispatch(editorActions.changeCoordinateMode(headType, coordinateMode, coordinateSize)),
-        updateMaterials: (headType, newMaterials) => dispatch(editorActions.updateMaterials(headType, newMaterials)),
+        initializeWorkpiece: (headType, options) => dispatch(editorActions.initializeWorkpiece(headType, options)),
         loadCase: (pathConfig, history) => dispatch(projectActions.openProject(pathConfig, history)),
         updateCurrentModalPath: (pathName) => dispatch(menuActions.updateCurrentModalPath(pathName)),
         updateMenu: () => dispatch(menuActions.updateMenu()),

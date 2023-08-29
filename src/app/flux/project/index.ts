@@ -667,6 +667,7 @@ export const actions = {
             isGuideTours = machineStore.get('guideTours')?.guideTours3dp;
         }
         logModuleVisit(newHeadType, isRotate);
+
         history.push({
             pathname: to,
             state: {
@@ -675,6 +676,7 @@ export const actions = {
                 isRotate: isRotate
             }
         });
+
         dispatch(printingActions.displayModel());
         // clear operation history
         dispatch(operationHistoryActions.clear(newHeadType));
