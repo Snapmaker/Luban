@@ -156,7 +156,7 @@ class SerialConnection extends EventEmitter {
 
         this.port = new SerialPort({
             path: port,
-            baudRate: this.options.baudRate,
+            baudRate: this.settings.baudRate,
             autoOpen: false,
         });
         if (this.isScreenProtocol) {

@@ -148,7 +148,7 @@ const MachineNetworkModal: React.FC<MachineNetworkModalProps> = (props) => {
             <Modal.Header>
                 {i18n._('key-Workspace/MainToolBar-Machine Network')}
             </Modal.Header>
-            <Modal.Body className="width-400">
+            <Modal.Body className="width-432">
                 {
                     !isConnected && (
                         <Alert

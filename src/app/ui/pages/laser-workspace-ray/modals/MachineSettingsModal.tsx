@@ -85,7 +85,7 @@ const MachineSettingsModal: React.FC<MachineNetworkModalProps> = (props) => {
             <Modal.Header>
                 {i18n._('key-Workspace/MainToolBar-Machine Network')}
             </Modal.Header>
-            <Modal.Body className="width-400">
+            <Modal.Body className="width-432">
                 {
                     !isConnected && (
                         <Alert
@@ -100,7 +100,7 @@ const MachineSettingsModal: React.FC<MachineNetworkModalProps> = (props) => {
                             <div
                                 className={classNames(
                                     'sm-flex justify-space-between',
-                                    'width-400',
+                                    'width-432',
                                 )}
                             >
                                 <span className="line-height-32">{i18n._('Crosshair Offset')}</span>

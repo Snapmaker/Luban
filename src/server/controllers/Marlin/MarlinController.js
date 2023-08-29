@@ -238,6 +238,7 @@ class MarlinController extends EventEmitter {
             baudRate,
             connectionTimeout
         };
+
         // Event Trigger
         this.event = new EventTrigger((event, trigger, commands) => {
             log.debug(`EventTrigger: event="${event}", trigger="${trigger}", commands="${commands}"`);
@@ -695,6 +696,7 @@ class MarlinController extends EventEmitter {
             log.error(`Cannot open serial port "${port}/${dataSource}"`);
             return;
         }
+
         this.serialport = new SerialConnection({
             ...this.options,
             isScreenProtocol: false,

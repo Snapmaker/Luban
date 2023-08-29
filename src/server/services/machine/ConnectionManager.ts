@@ -28,14 +28,28 @@ import ScheduledTasks from '../../lib/ScheduledTasks';
 import SocketServer from '../../lib/SocketManager';
 import logger from '../../lib/logger';
 import ProtocolDetector, { NetworkProtocol, SerialPortProtocol } from './ProtocolDetector';
-import Channel, { CncChannelInterface, FileChannelInterface, GcodeChannelInterface, LaserChannelInterface, NetworkServiceChannelInterface, SystemChannelInterface } from './channels/Channel';
+import Channel, {
+    CncChannelInterface,
+    EnclosureChannelInterface,
+    FileChannelInterface,
+    GcodeChannelInterface,
+    LaserChannelInterface,
+    NetworkServiceChannelInterface,
+    SystemChannelInterface
+} from './channels/Channel';
 import { ChannelEvent } from './channels/ChannelEvent';
 import { sacpSerialChannel } from './channels/SacpSerialChannel';
 import { sacpTcpChannel } from './channels/SacpTcpChannel';
 import { sacpUdpChannel } from './channels/SacpUdpChannel';
 import { sstpHttpChannel } from './channels/SstpHttpChannel';
 import TextSerialChannel, { textSerialChannel } from './channels/TextSerialChannel';
-import { ArtisanMachineInstance, J1MachineInstance, MachineInstance, RayMachineInstance, SM2Instance } from './instances';
+import {
+    ArtisanMachineInstance,
+    J1MachineInstance,
+    MachineInstance,
+    RayMachineInstance,
+    SM2Instance
+} from './instances';
 
 const log = logger('lib:ConnectionManager');
 
@@ -432,8 +446,8 @@ class ConnectionManager {
     };
 
     public compressUploadFile = async (socket: SocketServer, options: UploadFileOptions) => {
-        // If using relative path, we assuem it's in tmp directory
-        if (!options.filePath.startsWith('/')) {
+        // If it's relative path, we assuem it's in tmp directory
+        if (!path.isAbsolute(options.filePath)) {
             options.filePath = path.resolve(`${DataStorage.tmpDir}/${options.filePath}`);
         }
 
@@ -888,8 +902,39 @@ M3`;
         }
     };
 
-    public setEnclosureLight = (socket, options) => {
-        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+    /**
+     * Get Enclosure Info.
+     */
+    public getEnclosureInfo = async (socket: SocketServer) => {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const enclosureInfo = await (this.channel as EnclosureChannelInterface).getEnclosreInfo();
+
+            if (enclosureInfo) {
+                socket.emit(ControllerEvent.GetEnclosureInfo, {
+                    err: 0,
+                    status: enclosureInfo.moduleStatus === 2, // 2: normal state
+                    light: enclosureInfo.ledValue,
+                    fan: enclosureInfo.fanlevel,
+                });
+            } else {
+                socket.emit(ControllerEvent.GetEnclosureInfo, {
+                    err: 1,
+                });
+            }
+        } else {
+            // unsupported
+            socket.emit(ControllerEvent.GetEnclosureInfo, {
+                err: 2,
+            });
+        }
+    };
+
+    public setEnclosureLight = async (socket: SocketServer, options) => {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const success = await (this.channel as EnclosureChannelInterface).setEnclosureLight(options.value);
+
+            socket.emit(ControllerEvent.SetEnclosureLight, { err: !success });
+        } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
             this.channel.setEnclosureLight(options);
         } else {
             const { value, eventName } = options;
@@ -902,7 +947,9 @@ M3`;
     };
 
     public setEnclosureFan = (socket, options) => {
-        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            this.channel.setEnclosureFan(options);
+        } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
             this.channel.setEnclosureFan(options);
         } else {
             const { value, eventName } = options;

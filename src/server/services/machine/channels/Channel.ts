@@ -1,5 +1,5 @@
+import { EnclosureInfo, NetworkConfiguration, NetworkOptions, NetworkStationState } from '@snapmaker/snapmaker-sacp-sdk/dist/models';
 import { EventEmitter } from 'events';
-import { NetworkConfiguration, NetworkStationState, NetworkOptions } from '@snapmaker/snapmaker-sacp-sdk/dist/models';
 
 import SocketServer from '../../../lib/SocketManager';
 
@@ -117,4 +117,22 @@ export interface CncChannelInterface extends Channel {
     setSpindleSpeedPercentage(percent: number): Promise<boolean>;
     spindleOn(): Promise<boolean>;
     spindleOff(): Promise<boolean>;
+}
+
+
+export interface EnclosureChannelInterface extends Channel {
+    getEnclosreInfo(): Promise<EnclosureInfo>;
+
+    /**
+     * Set enclosure light intensity.
+     *
+     * @param intensity 0-100
+     */
+    setEnclosureLight(intensity: number): Promise<boolean>;
+
+    /**
+     * Set enclosure fan strength.
+     * @param strength 0-100
+     */
+    setEnclosureFan(strength: number): Promise<boolean>;
 }

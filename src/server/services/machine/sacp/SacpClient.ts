@@ -26,6 +26,7 @@ import {
     NetworkConfiguration,
     NetworkOptions,
     NetworkStationState,
+    EnclosureInfo,
 } from '@snapmaker/snapmaker-sacp-sdk/dist/models';
 import {
     Serializable
@@ -1227,6 +1228,20 @@ export default class SacpClient extends Dispatcher {
             this.log.info('close response');
             return { response, packet };
         });
+    }
+
+    public async getEnclousreInfo(key: number) {
+        const buffer = Buffer.alloc(1, key);
+        const { response, packet } = await this.send(0x15, 0x02, PeerId.CONTROLLER, buffer);
+
+        this.log.info(`Get Enclosure Info: ${response.result}`);
+        if (response.result === 0) {
+            const enclosureInfo = new EnclosureInfo();
+            enclosureInfo.fromBuffer(response.data);
+            return { response, packet, data: enclosureInfo };
+        } else {
+            return { response, packet };
+        }
     }
 
     public async setEnclosureLight(key, value) {
