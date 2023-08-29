@@ -200,7 +200,11 @@ function registerApis(app) {
     app.get(urljoin(settings.route, 'api/parameter-document/:category/:key'), api.profileDefinitions.getParameterDoc);
 
     // case resources
-    app.get(urljoin(settings.route, 'api/case-resources/case-list'), api.caseResrouces.getCaseList);
+    app.get(urljoin(settings.route, 'api/case-resources/case-list'), api.onlineResourcesService.getCaseList);
+
+    // svg shape library
+    app.get(urljoin(settings.route, 'api/svg-shape/list'), api.onlineResourcesService.getSvgShapeList);
+    app.get(urljoin(settings.route, 'api/svg-shape-label/list'), api.onlineResourcesService.getSvgShapeLabelList);
 }
 
 export {

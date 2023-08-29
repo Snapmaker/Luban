@@ -281,6 +281,9 @@ const getCaseResourcesList = (() => {
     };
 })();
 
+const getSvgShapeList = defaultAPIFactory((options) => request.get('/api/svg-shape/list').query(options));
+const getSvgShapeLabelList = defaultAPIFactory((options) => request.get('/api/svg-shape-label/list').query(options));
+
 export default {
     // version
     getLatestVersion,
@@ -338,6 +341,8 @@ export default {
     macros,
     watch, // Watch Directory
 
-    //
+    // online-service
     getCaseResourcesList,
+    getSvgShapeList,
+    getSvgShapeLabelList
 };

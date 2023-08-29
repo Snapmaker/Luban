@@ -1,0 +1,100 @@
+.svg-shape-wrapper
+    height: 100vh;
+    background-color: white
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+
+    .svg-shape-maintoolbar {
+        flex: 0 0 auto;
+    }
+    .svg-shape-content {
+        flex: 1 1 100vh;
+        display: flex
+        flex-direction: row
+        flex-wrap: nowrap
+        background-color: #F5F5F7;
+    }
+    .svg-shape-leftside {
+        flex: 0 0 157px;
+        margin: 36px
+    }
+    .svg-shape-checkbox-group {
+        display: flex;
+        flex-direction: column;
+    }
+    .svg-shape-checkbox {
+        margin: 5px 0;
+    }
+    .svg-shape-rightside {
+        flex: 1 1 100vw;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .svg-shape-container{
+        padding-right: 36px;
+        width: 100%
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-content: baseline;
+        flex: 1 1 100%;
+        height: 100%
+    }
+    .pagination {
+        flex: 0 0 auto;
+        margin-block: 24px;
+        display: flex;
+        justify-content: center;
+
+        .anticon {
+            vertical-align: 0;
+        }
+    }
+
+
+    .svg-shape-item1 {
+        margin-top: 10px;
+        padding-right: 10px
+
+        svg, img {
+            border-radius: 10px;
+            background: white
+        }
+    }
+    $colNum = 5
+    .svg-shape-item {
+        width: 'calc((100% - 10px * (%s - 1)) / %s)' % ($colNum $colNum) //calc((100% - 10px * ($colNum - 1)) / $colNum);
+        background-color: white;
+        border-radius: 10px;
+        margin-top: 10px;
+        overflow: hidden;
+    }
+    for $i in (1..($colNum - 1))
+        .svg-shape-item:last-child:nth-child({$colNum}n-{$i})
+            margin-right: 'calc((100% - 10px * (%s - 1)) / %s * %s + 10px * %s)' % ($colNum $colNum $i $i);
+
+
+    // $colNum = 5
+    // .svg-shape-item {
+    //     width 'calc((100% - 10px * (%s - 1)) / %s)' % ($colNum $colNum)
+    //     background-color: white
+    //     border-radius: 10px
+    //     margin-top: 10px
+    // }
+    // .svg-shape-item:last-child:nth-child(5n-1) {
+    //     margin-right: 'calc((100% - 10px * (%s - 1)) / %s) + 10px' % ($colNum $colNum)
+    // }
+    // .svg-shape-item:last-child:nth-child(5n-2) {
+    //     margin-right: 'calc((100% - 10px * (%s - 1)) / %s * 2 + 10px * 2)' % ($colNum $colNum)
+    // }
+    // .svg-shape-item:last-child:nth-child(5n-3) {
+    //     margin-right: 'calc((100% - 10px * (%s - 1)) / %s * 3 + 10px * 3)' % ($colNum $colNum)
+    // }
+    // .svg-shape-item:last-child:nth-child(5n-4) {
+    //     margin-right: 'calc((100% - 10px * (%s - 1)) / %s * 4 + 10px * 4)' % ($colNum $colNum)
+    // }
+
+

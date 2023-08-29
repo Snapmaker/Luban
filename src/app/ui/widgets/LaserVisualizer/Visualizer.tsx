@@ -541,6 +541,8 @@ class Visualizer extends React.Component<VisualizerProps> {
                         fileInput={this.fileInput}
                         allowedFiles={this.allowedFiles}
                         headType={HEAD_LASER}
+                        showSVGShapeLibrary={this.props.showSVGShapeLibrary}
+                        updateEditorState={this.props.updateEditorState}
                     />
                 </div>
                 <div
@@ -757,6 +759,7 @@ const mapStateToProps = (state, ownProps) => {
     const workpiece: Workpiece = state.laser.workpiece;
     const origin: Origin = state.laser.origin;
 
+    const { showSVGShapeLibrary } = state.editor;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedToolPathModelArray = modelGroup.getSelectedToolPathModels();
 
@@ -794,7 +797,8 @@ const mapStateToProps = (state, ownProps) => {
         progress,
         isOverSize,
         SVGCanvasMode,
-        SVGCanvasExt
+        SVGCanvasExt,
+        showSVGShapeLibrary
     };
 };
 
@@ -845,6 +849,7 @@ const mapDispatchToProps = (dispatch) => {
         onDrawComplete: (elem) => dispatch(editorActions.drawComplete('laser', elem)),
         onBoxSelect: (bbox, onlyContainSelect) => dispatch(editorActions.boxSelect('laser', bbox, onlyContainSelect)),
         setMode: (mode, ext) => dispatch(editorActions.setCanvasMode('laser', mode, ext)),
+        updateEditorState: (state) => dispatch(editorActions.updateEditorState(state)),
 
         elementActions: {
             moveElementsStart: (elements) => dispatch(editorActions.moveElementsStart('laser', elements)),
