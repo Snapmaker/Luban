@@ -255,7 +255,6 @@ class ConnectionManager {
         } else {
             const { port, baudRate } = options;
             const detectedProtocol = await this.inspectSerialPortProtocol(port, baudRate);
-            log.info(`Detected protocol: ${protocol}`);
             this.protocol = detectedProtocol;
 
             if (this.protocol === SerialPortProtocol.SacpOverSerialPort) {
@@ -264,6 +263,8 @@ class ConnectionManager {
                 this.channel = textSerialChannel;
             }
         }
+
+        log.info(`Detected protocol: ${this.protocol}`);
 
         this.socket = socket;
 
@@ -907,24 +908,29 @@ M3`;
      */
     public getEnclosureInfo = async (socket: SocketServer) => {
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            log.info('Get enclosure info');
             const enclosureInfo = await (this.channel as EnclosureChannelInterface).getEnclosreInfo();
 
             if (enclosureInfo) {
                 socket.emit(ControllerEvent.GetEnclosureInfo, {
                     err: 0,
-                    status: enclosureInfo.moduleStatus === 2, // 2: normal state
-                    light: enclosureInfo.ledValue,
-                    fan: enclosureInfo.fanlevel,
+                    enclosureInfo: {
+                        status: enclosureInfo.moduleStatus === 2, // 2: normal state
+                        light: enclosureInfo.ledValue,
+                        fan: enclosureInfo.fanlevel,
+                    }
                 });
             } else {
                 socket.emit(ControllerEvent.GetEnclosureInfo, {
                     err: 1,
+                    msg: 'Can not get enclosure module info',
                 });
             }
         } else {
             // unsupported
             socket.emit(ControllerEvent.GetEnclosureInfo, {
                 err: 2,
+                msg: 'Unsupported event',
             });
         }
     };

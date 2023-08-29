@@ -12,6 +12,7 @@ import {
     GcodeCurrentLine,
     GetHotBed,
     LaserTubeState,
+    MachineInfo,
     ModuleInfo,
     NetworkConfiguration,
     NetworkOptions,
@@ -40,7 +41,7 @@ import {
     EMERGENCY_STOP_BUTTON,
     ENCLOSURE_FOR_ARTISAN,
     ENCLOSURE_FOR_SM2,
-    ENCLOSURE_MODULES,
+    ENCLOSURE_MODULE_IDS,
     isDualExtruder,
     LASER_HEAD_MODULE_IDS,
     LEVEL_ONE_POWER_LASER_FOR_SM2,
@@ -140,24 +141,29 @@ class SacpChannelBase extends Channel implements
      * Get laser module info.
      */
     private getLaserToolHeadModule(): ModuleInfo | null {
-        let targetModule: ModuleInfo = null;
         for (const key of Object.keys(this.moduleInfos)) {
             const module = this.moduleInfos[key];
             if (module && module instanceof ModuleInfo) {
                 if (includes(LASER_HEAD_MODULE_IDS, module.moduleId)) {
-                    targetModule = module;
-                    break;
+                    return module;
                 }
             }
         }
 
-        return targetModule;
+        return null;
     }
 
     private getEnclosureModule(): ModuleInfo | null {
-        const module = this.moduleInfos && (this.moduleInfos[ENCLOSURE_FOR_ARTISAN] || this.moduleInfos[ENCLOSURE_FOR_SM2]);
+        for (const key of Object.keys(this.moduleInfos)) {
+            const module = this.moduleInfos[key];
+            if (module && module instanceof ModuleInfo) {
+                if (includes(ENCLOSURE_MODULE_IDS, module.moduleId)) {
+                    return module;
+                }
+            }
+        }
 
-        return module;
+        return null;
     }
 
     // interface: GcodeChannelInterface
@@ -188,6 +194,15 @@ class SacpChannelBase extends Channel implements
     // interface: SystemChannelInterface
 
     /**
+     * Get Machine info.
+     */
+    public async getMachineInfo(): Promise<MachineInfo> {
+        const { data: machineInfo } = await this.sacpClient.getMachineInfo();
+
+        return machineInfo;
+    }
+
+    /**
      * Export Log in machine to external storage.
      */
     public async exportLogToExternalStorage(): Promise<boolean> {
@@ -195,7 +210,7 @@ class SacpChannelBase extends Channel implements
     }
 
     public async getFirmwareVersion(): Promise<string> {
-        const { data: machineInfo } = await this.sacpClient.getMachineInfo();
+        const machineInfo = await this.getMachineInfo();
 
         const version = machineInfo.masterControlFirmwareVersion;
         log.info(`Get firmware version: ${version}`);
@@ -546,7 +561,7 @@ class SacpChannelBase extends Channel implements
                 if (includes(EMERGENCY_STOP_BUTTON, module.moduleId)) {
                     moduleStatusList.emergencyStopButton = true;
                 }
-                if (includes(ENCLOSURE_MODULES, module.moduleId)) {
+                if (includes(ENCLOSURE_MODULE_IDS, module.moduleId)) {
                     moduleStatusList.enclosure = true;
                 }
                 if (includes(ROTARY_MODULES, module.moduleId)) {
@@ -854,10 +869,6 @@ class SacpChannelBase extends Channel implements
             log.info(`handlerResumePrintreturn, ${data}`);
             this.resumeGcodeCallback && this.resumeGcodeCallback({ msg: data, code: data });
         });
-    };
-
-    public getMachineInfo = async () => {
-        return this.sacpClient.getMachineInfo();
     };
 
     public getModuleInfo = async () => {

@@ -76,9 +76,9 @@ class SacpSerialChannel extends SacpChannelBase implements FileChannelInterface 
                 // Then we get machine info, this is required to detect the machine
                 setTimeout(async () => {
                     // Get Machine Info
-                    const { data: machineInfos } = await this.getMachineInfo();
-                    const machineIdentifier = SACP_TYPE_SERIES_MAP[machineInfos.type];
-                    log.debug(`Get machine info, type = ${machineInfos.type}`);
+                    const machineInfo = await this.getMachineInfo();
+                    const machineIdentifier = SACP_TYPE_SERIES_MAP[machineInfo.type];
+                    log.debug(`Get machine info, type = ${machineInfo.type}`);
                     log.debug(`Get machine info, machine identifier = ${machineIdentifier}`);
 
                     // Machine detected

@@ -20,12 +20,19 @@ const EnclosureSection: React.FC = () => {
     const updateEnclosureInfo = useCallback(() => {
         controller
             .emitEvent(ControllerEvent.GetEnclosureInfo)
-            .once(ControllerEvent.GetEnclosureInfo, (enclosureInfo: {
+            .once(ControllerEvent.GetEnclosureInfo, (response: {
                 err: number;
-                status: boolean;
-                light: number;
-                fan: number;
+                enclosureInfo: {
+                    status: boolean;
+                    light: number;
+                    fan: number;
+                }
             }) => {
+                if (response.err) {
+                    return;
+                }
+
+                const enclosureInfo = response.enclosureInfo;
                 // TODO:
                 console.log('enclosureInfo =', enclosureInfo);
 
@@ -115,6 +122,27 @@ const EnclosureSection: React.FC = () => {
     );
 };
 
+const FilterSection: React.FC = () => {
+    const lightIntensity = 0;
+    const lightPending = false;
+
+    return (
+        <div className="width-432">
+            <div className="font-size-middle font-weight-middle">{i18n._('Enclosure')}</div>
+            <div className="margin-top-8">
+                <div className="sm-flex justify-space-between margin-vertical-8">
+                    <span>{i18n._('key-Workspace/Enclosure-LED Strips')}</span>
+                    <Switch
+                        onClick={null}
+                        checked={Boolean(lightIntensity)}
+                        disabled={lightPending}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+};
+
 interface MachineControlModalProps {
     onClose?: () => void;
 }
@@ -143,6 +171,7 @@ const MachineControlModal: React.FC<MachineControlModalProps> = (props) => {
                         <div>
                             <Space direction="vertical" size={8}>
                                 <EnclosureSection />
+                                <FilterSection />
                             </Space>
                         </div>
                     )

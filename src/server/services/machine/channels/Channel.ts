@@ -1,4 +1,4 @@
-import { EnclosureInfo, NetworkConfiguration, NetworkOptions, NetworkStationState } from '@snapmaker/snapmaker-sacp-sdk/dist/models';
+import { EnclosureInfo, MachineInfo, NetworkConfiguration, NetworkOptions, NetworkStationState } from '@snapmaker/snapmaker-sacp-sdk/dist/models';
 import { EventEmitter } from 'events';
 
 import SocketServer from '../../../lib/SocketManager';
@@ -76,6 +76,8 @@ export interface UpgradeFirmwareOptions {
 }
 
 export interface SystemChannelInterface extends Channel {
+    getMachineInfo(): Promise<MachineInfo>;
+
     // log
     exportLogToExternalStorage(): Promise<boolean>;
 
@@ -135,4 +137,23 @@ export interface EnclosureChannelInterface extends Channel {
      * @param strength 0-100
      */
     setEnclosureFan(strength: number): Promise<boolean>;
+}
+
+export interface AirPurifierChannelInterface extends Channel {
+    /**
+     * Turn on
+     */
+    turnOnAirPurifier(): Promise<boolean>;
+
+    /**
+     * Turn off
+     */
+    turnOffAirPurifier(): Promise<boolean>;
+
+    /**
+     * Set Air purifier strength.
+     * 
+     * @param strength 1-3 (low / medium / high)
+     */
+    setAirPurifierStrength(strength: 1 | 2 | 3): Promise<boolean>;
 }

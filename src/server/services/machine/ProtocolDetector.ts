@@ -154,16 +154,20 @@ class ProtocolDetector {
                 responseBuffer = Buffer.concat([responseBuffer, data]);
                 const m1006Response = responseBuffer.toString();
 
+                log.debug(`M1006 response: "${m1006Response}`);
+
                 // M1006 response: SACP V1 => SACP
                 if (m1006Response.match(/SACP/g)) {
                     protocol = SerialPortProtocol.SacpOverSerialPort;
                     trySerialConnect?.close();
-                }
 
-                // ok => plaintext protocol
-                if (m1006Response.match(/ok/g)) {
+                    resolve();
+                } else if (m1006Response.match(/ok/g)) {
+                    // ok => plaintext protocol
                     protocol = SerialPortProtocol.PlainText;
                     trySerialConnect?.close();
+
+                    resolve();
                 }
             });
             trySerialConnect.on('close', () => {

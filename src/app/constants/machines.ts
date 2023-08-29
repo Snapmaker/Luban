@@ -126,7 +126,11 @@ export const CNC_HEAD_MODULE_IDS = [
     15, // High Power CNC Module
 ];
 export const EMERGENCY_STOP_BUTTON = [8, 517];
-export const ENCLOSURE_MODULES = [5, 16];
+export const ENCLOSURE_MODULE_IDS = [
+    5, // Enclosure for SM 2.0
+    16, // Enclosure for Artisan
+    518, // Enclosure for Ray
+];
 export const ROTARY_MODULES = [6];
 export const AIR_PURIFIER_MODULES = [7];
 
@@ -396,9 +400,9 @@ export function findMachineModule(identifier: string): MachineModule | null {
 }
 
 export const SACP_TYPE_SERIES_MAP = {
-    '0': 'A150',
-    '1': 'A250',
-    '2': 'A350',
+    '0': SnapmakerA150Machine.identifier,
+    '1': SnapmakerA250Machine.identifier,
+    '2': SnapmakerA350Machine.identifier,
     '3': SnapmakerArtisanMachine.identifier,
     '4': MACHINE_SERIES.J1.identifier,
     '5': SnapmakerRayMachine.identifier,

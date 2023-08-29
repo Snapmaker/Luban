@@ -30,13 +30,13 @@ class RayMachineInstance extends MachineInstance {
         // (this.channel as SocketSerialNew).startHeartbeat();
 
         // Get Machine Info
-        const { data: machineInfo } = await this.channel.getMachineInfo();
+        const machineInfo = await (this.channel as SacpChannelBase).getMachineInfo();
         log.info(`Machine Firmware Version: ${machineInfo.masterControlFirmwareVersion}`);
 
         state.series = SnapmakerRayMachine.identifier;
 
         // module info
-        const { data: moduleInfos } = await this.channel.getModuleInfo();
+        const { data: moduleInfos } = await (this.channel as SacpChannelBase).getModuleInfo();
 
         /*
         moduleInfos = [

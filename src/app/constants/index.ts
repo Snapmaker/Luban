@@ -13,8 +13,6 @@ export const CUSTOM_SERVER_NAME = 'Manual';
 export const EPSILON = 1e-6;
 export const CONNECTION_HEAD_BEGIN_WORK = 'connection:headBeginWork';
 export const CONNECTION_GET_GCODEFILE = 'connection:getGcodeFile';
-export const CONNECTION_FILTER_SWITCH = 'connection:setFilterSwitch';
-export const CONNECTION_FILTER_WORKSPEED = 'connection:setFilterWorkSpeed';
 export const CONNECTION_WIFI_STATUS_TEST = 'connection:wifiStatusTest';
 
 export const SVG_MOVE_MINI_DISTANCE = 1e-4;

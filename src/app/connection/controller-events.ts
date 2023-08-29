@@ -70,7 +70,7 @@ enum ControllerEvent {
      * Module: Air Purifier
      */
     SetAirPurifierSwitch = 'connection:setFilterSwitch',
-    SetAirPurifierStrength= 'connection:setFilterWorkSpeed',
+    SetAirPurifierStrength = 'connection:setFilterWorkSpeed',
 
     /**
      * File
