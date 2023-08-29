@@ -2,11 +2,16 @@ import superagent from 'superagent';
 import superagentUse from 'superagent-use';
 import logger from '../../lib/logger';
 
+let domain = 'http://localhost:8100';
+if (process.env.NODE_ENV === 'production') {
+    domain = 'https://api.snapmaker.com';
+}
+
 const log = logger('api:commands');
 
 const agent = superagentUse(superagent);
 const addPrefix = (prefix) => {
-    return (request) => {
+    return function (request) {
         if (request.url[0] === '/') {
             request.url = prefix + request.url;
         }
@@ -14,9 +19,8 @@ const addPrefix = (prefix) => {
         return request;
     };
 };
-
-const domain = 'https://api.snapmaker.com';
 agent.use(addPrefix(domain));
+
 
 export function getCaseList(req, res) {
     agent.get('/api/resource/sample/list/client')
@@ -35,6 +39,41 @@ export function getCaseList(req, res) {
             log.error('get case list err:', JSON.stringify(err));
         });
 }
+
+
+export function getSvgShapeList(req, res) {
+    agent.get('/api/resource/svg-shape-library/client/list')
+        .query({
+            page: 1,
+            pageSize: 10,
+            ...req.query
+        })
+        .then((result) => {
+            res.status(200).send({
+                ...result.body
+            });
+        }).catch((err) => {
+            log.error(`get svg shape libray list  with query: ${JSON.stringify(req.query)}, err:`, JSON.stringify(err));
+        });
+}
+
+
+export function getSvgShapeLabelList(req, res) {
+    agent.get('/api/resource/svg-shape-library/client/label/list')
+        .query({
+            page: 1,
+            pageSize: 10,
+            ...req.query
+        })
+        .then((result) => {
+            res.status(200).send({
+                ...result.body
+            });
+        }).catch((err) => {
+            log.error(`get svg shape libray list  with query: ${JSON.stringify(req.query)}, err:`, JSON.stringify(err));
+        });
+}
+
 
 export function getInformationFlowData(req, res) {
     const { lang } = req.query;
