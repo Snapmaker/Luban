@@ -106,7 +106,7 @@ export const MODULEID_MAP = {
     '514': SNAPMAKER_J1_LINEAR_MODULE,
     '515': A400_HEADT_BED_FOR_SM2,
     // 516: A400 Linear Module
-    // 518: Ray Enclosure
+    518: 'Snapmaker Ray - Enclosure',
     // 520: Ray Multi-Function Button
 };
 

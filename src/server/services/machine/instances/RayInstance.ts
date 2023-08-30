@@ -40,17 +40,6 @@ class RayMachineInstance extends MachineInstance {
 
         /*
         moduleInfos = [
-          ,
-          ModuleInfo {
-            key: 2,
-            moduleId: 518,
-            moduleIndex: 0,
-            moduleState: 2,
-            serialNumber: 524287,
-            hardwareVersion: 255,
-            moduleFirmwareVersion: 'v1.0.0',
-            byteLength: 18
-          },
           ModuleInfo {
             key: 3,
             moduleId: 520,

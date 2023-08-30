@@ -1232,7 +1232,7 @@ export default class SacpClient extends Dispatcher {
 
     public async getEnclousreInfo(key: number) {
         const buffer = Buffer.alloc(1, key);
-        const { response, packet } = await this.send(0x15, 0x02, PeerId.CONTROLLER, buffer);
+        const { response, packet } = await this.send(0x15, 0x01, PeerId.CONTROLLER, buffer);
 
         this.log.info(`Get Enclosure Info: ${response.result}`);
         if (response.result === 0) {
@@ -1244,14 +1244,13 @@ export default class SacpClient extends Dispatcher {
         }
     }
 
-    public async setEnclosureLight(key, value) {
+    public async setEnclosureLight(key: number, value: number) {
         const buffer = Buffer.alloc(2);
         writeUint8(buffer, 0, key);
         writeUint8(buffer, 1, value);
-        return this.send(0x15, 0x02, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
-            this.log.info(`set Enclosure light: ${response.result}`);
-            return { response, packet };
-        });
+        const { response, packet } = await this.send(0x15, 0x02, PeerId.CONTROLLER, buffer);
+        this.log.info(`Set enclosure light indensity: ${response.result}`);
+        return { response, packet };
     }
 
     public async setEnclosureDoorEnabled(key, value, headTypeKey) {
@@ -1265,14 +1264,13 @@ export default class SacpClient extends Dispatcher {
         });
     }
 
-    public async setEnclosureFan(key, value) {
+    public async setEnclosureFan(key: number, value: number) {
         const buffer = Buffer.alloc(2);
         writeUint8(buffer, 0, key);
         writeUint8(buffer, 1, value);
-        return this.send(0x15, 0x04, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
-            this.log.info(`set Enclosure fan: ${response.result}`);
-            return { response, packet };
-        });
+        const { response, packet } = await this.send(0x15, 0x04, PeerId.CONTROLLER, buffer);
+        this.log.info(`Set enclosure fan strength to ${value}, result = ${response.result}`);
+        return { response, packet };
     }
 
     public async setPurifierSpeed(key, speed) {

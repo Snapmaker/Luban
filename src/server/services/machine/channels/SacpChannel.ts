@@ -112,7 +112,7 @@ class SacpChannelBase extends Channel implements
 
     private filamentActionModule = null;
 
-    private moduleInfos: { [key: string]: ModuleInfo | ModuleInfo[] };
+    private moduleInfos: { [key: string]: ModuleInfo | ModuleInfo[] } = {};
 
     public currentWorkNozzle: number;
 
@@ -587,20 +587,21 @@ class SacpChannelBase extends Channel implements
                 }
 
                 const keys = Object.keys(MODULEID_MAP);
+                console.log('module ID =', module.moduleId);
                 if (includes(keys, String(module.moduleId))) {
-                    if (!this.moduleInfos) {
-                        this.moduleInfos = {};
-                    }
+                    console.log('map =', MODULEID_MAP[module.moduleId]);
+                    const moduleIDName = MODULEID_MAP[module.moduleId];
+
                     // TODO: Consider more than one tool head modules
-                    if (!this.moduleInfos[MODULEID_MAP[module.moduleId]]) {
-                        this.moduleInfos[MODULEID_MAP[module.moduleId]] = module;
+                    if (!this.moduleInfos[moduleIDName]) {
+                        this.moduleInfos[moduleIDName] = module;
                     } else {
-                        const modules = this.moduleInfos[MODULEID_MAP[module.moduleId]];
+                        const modules = this.moduleInfos[moduleIDName];
                         if (Array.isArray(modules)) {
                             modules.push(module);
                         } else {
                             // convert single item to list
-                            this.moduleInfos[MODULEID_MAP[module.moduleId]] = [modules, module];
+                            this.moduleInfos[moduleIDName] = [modules, module];
                         }
                     }
                 }

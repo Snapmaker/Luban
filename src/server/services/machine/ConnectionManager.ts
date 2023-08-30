@@ -952,9 +952,10 @@ M3`;
         }
     };
 
-    public setEnclosureFan = (socket, options) => {
+    public setEnclosureFan = async (socket: SocketServer, options) => {
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            this.channel.setEnclosureFan(options);
+            const success = await (this.channel as EnclosureChannelInterface).setEnclosureFan(options.value);
+            socket.emit(ControllerEvent.SetEnclosureFan, { err: !success });
         } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
             this.channel.setEnclosureFan(options);
         } else {

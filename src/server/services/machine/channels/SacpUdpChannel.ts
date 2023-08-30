@@ -77,7 +77,7 @@ class SacpUdpChannel extends SacpChannelBase implements FileChannelInterface {
         this.sacpClient.setLogger(log);
 
         // Get Machine Info
-        const { data: machineInfos } = await this.getMachineInfo();
+        const machineInfos = await this.getMachineInfo();
         const machineIdentifier = SACP_TYPE_SERIES_MAP[machineInfos.type];
         log.debug(`Get machine info, type = ${machineInfos.type}`);
         log.debug(`Get machine info, machine identifier = ${machineIdentifier}`);
