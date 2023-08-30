@@ -94,7 +94,7 @@ export const MODULEID_MAP = {
     '1': STANDARD_CNC_TOOLHEAD_FOR_SM2,
     '2': LEVEL_ONE_POWER_LASER_FOR_SM2,
     '5': ENCLOSURE_FOR_SM2,
-    '7': AIR_PURIFIER,
+    7: AIR_PURIFIER,
     '13': DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
     '14': LEVEL_TWO_POWER_LASER_FOR_SM2,
     '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
@@ -131,8 +131,12 @@ export const ENCLOSURE_MODULE_IDS = [
     16, // Enclosure for Artisan
     518, // Enclosure for Ray
 ];
-export const ROTARY_MODULES = [6];
-export const AIR_PURIFIER_MODULES = [7];
+export const ROTARY_MODULE_IDS = [
+    6 // Rotary Module
+];
+export const AIR_PURIFIER_MODULE_IDS = [
+    7, // Air Purifier
+];
 
 export const MODULEID_TOOLHEAD_MAP = {
     '0': SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,

@@ -132,7 +132,7 @@ const AirPurifierView: React.FC<AirPurifierViewProps> = (props) => {
                 <span
                     className={classNames(
                         'border-radius-8',
-                        styles.lifeLength
+                        styles['life-length'],
                     )}
                 >
                     <span

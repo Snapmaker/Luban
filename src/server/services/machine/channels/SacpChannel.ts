@@ -35,7 +35,7 @@ import {
 } from '../../../../app/constants';
 import {
     AIR_PURIFIER,
-    AIR_PURIFIER_MODULES,
+    AIR_PURIFIER_MODULE_IDS,
     CNC_HEAD_MODULE_IDS,
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
     EMERGENCY_STOP_BUTTON,
@@ -50,7 +50,7 @@ import {
     MODULEID_MAP,
     MODULEID_TOOLHEAD_MAP,
     PRINTING_HEAD_MODULE_IDS,
-    ROTARY_MODULES,
+    ROTARY_MODULE_IDS,
     SNAPMAKER_J1_HEATED_BED,
     STANDARD_CNC_TOOLHEAD_FOR_SM2,
 } from '../../../../app/constants/machines';
@@ -69,7 +69,8 @@ import Channel, {
     NetworkServiceChannelInterface,
     PrintJobChannelInterface,
     SystemChannelInterface,
-    UpgradeFirmwareOptions
+    UpgradeFirmwareOptions,
+    AirPurifierChannelInterface
 } from './Channel';
 
 const log = logger('machine:channels:SacpChannel');
@@ -81,7 +82,8 @@ class SacpChannelBase extends Channel implements
     PrintJobChannelInterface,
     LaserChannelInterface,
     CncChannelInterface,
-    EnclosureChannelInterface {
+    EnclosureChannelInterface,
+    AirPurifierChannelInterface {
     private heartbeatTimer;
 
     public sacpClient: SacpClient;
@@ -158,6 +160,19 @@ class SacpChannelBase extends Channel implements
             const module = this.moduleInfos[key];
             if (module && module instanceof ModuleInfo) {
                 if (includes(ENCLOSURE_MODULE_IDS, module.moduleId)) {
+                    return module;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private getAirPurifierModule(): ModuleInfo | null {
+        for (const key of Object.keys(this.moduleInfos)) {
+            const module = this.moduleInfos[key];
+            if (module && module instanceof ModuleInfo) {
+                if (includes(AIR_PURIFIER_MODULE_IDS, module.moduleId)) {
                     return module;
                 }
             }
@@ -390,6 +405,36 @@ class SacpChannelBase extends Channel implements
         });
     }
 
+    // interface: AirPurifierChannelInterface
+
+    public async getAirPurifierInfo(): Promise<AirPurifierInfo> {
+        const module = this.getAirPurifierModule();
+        if (!module) {
+            return null;
+        }
+
+        const { response, data: airPurifierInfo } = await this.sacpClient.getAirPurifierInfo(module.key);
+
+        if (response.result === 0) {
+            return airPurifierInfo;
+        } else {
+            return null;
+        }
+    }
+
+    public async turnOnAirPurifier(): Promise<boolean> {
+        return false;
+    }
+
+    public async turnOffAirPurifier(): Promise<boolean> {
+        return false;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async setAirPurifierStrength(strength: 1 | 2 | 3): Promise<boolean> {
+        return false;
+    }
+
     // interface: PrintJobChannelInterface
 
     private async getPrintJobFileInfo(): Promise<void> {
@@ -564,11 +609,11 @@ class SacpChannelBase extends Channel implements
                 if (includes(ENCLOSURE_MODULE_IDS, module.moduleId)) {
                     moduleStatusList.enclosure = true;
                 }
-                if (includes(ROTARY_MODULES, module.moduleId)) {
+                if (includes(ROTARY_MODULE_IDS, module.moduleId)) {
                     moduleStatusList.rotaryModule = true;
                 }
 
-                if (includes(AIR_PURIFIER_MODULES, module.moduleId)) {
+                if (includes(AIR_PURIFIER_MODULE_IDS, module.moduleId)) {
                     stateData.airPurifier = true;
                     // need to update airPurifier status
                 }
@@ -587,9 +632,7 @@ class SacpChannelBase extends Channel implements
                 }
 
                 const keys = Object.keys(MODULEID_MAP);
-                console.log('module ID =', module.moduleId);
                 if (includes(keys, String(module.moduleId))) {
-                    console.log('map =', MODULEID_MAP[module.moduleId]);
                     const moduleIDName = MODULEID_MAP[module.moduleId];
 
                     // TODO: Consider more than one tool head modules

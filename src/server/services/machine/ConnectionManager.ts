@@ -29,6 +29,7 @@ import SocketServer from '../../lib/SocketManager';
 import logger from '../../lib/logger';
 import ProtocolDetector, { NetworkProtocol, SerialPortProtocol } from './ProtocolDetector';
 import Channel, {
+    AirPurifierChannelInterface,
     CncChannelInterface,
     EnclosureChannelInterface,
     FileChannelInterface,
@@ -907,8 +908,8 @@ M3`;
      * Get Enclosure Info.
      */
     public getEnclosureInfo = async (socket: SocketServer) => {
+        log.info('Get enclosure info');
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            log.info('Get enclosure info');
             const enclosureInfo = await (this.channel as EnclosureChannelInterface).getEnclosreInfo();
 
             if (enclosureInfo) {
@@ -968,8 +969,44 @@ M3`;
         }
     };
 
-    public setFilterSwitch = (socket, options) => {
-        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+    public getAirPurifierInfo = async (socket: SocketServer) => {
+        log.info('Get air purifier info');
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const airPurifierInfo = await (this.channel as AirPurifierChannelInterface).getAirPurifierInfo();
+            if (airPurifierInfo) {
+                socket.emit(ControllerEvent.GetAirPurifierInfo, {
+                    err: 0,
+                    airPurifierInfo: {
+                        status: airPurifierInfo.moduleStatus === 2, // 2: normal state
+                        enabled: airPurifierInfo.airPurifierStatus.fanState, // true or false
+                        life: airPurifierInfo.airPurifierStatus.lifeLevel, // 0-2, 0: need replacement
+                        strength: airPurifierInfo.airPurifierStatus.speedLevel, // 1-3, low -> high
+                    }
+                });
+            } else {
+                socket.emit(ControllerEvent.GetAirPurifierInfo, {
+                    err: 1,
+                    msg: 'Can not get air purifier module info',
+                });
+            }
+        } else {
+            socket.emit(ControllerEvent.GetAirPurifierInfo, {
+                err: 2,
+                msg: 'Unsupported event',
+            });
+        }
+    };
+
+    public setFilterSwitch = async (socket: SocketServer, options) => {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            if (options.enable) {
+                const success = await (this.channel as AirPurifierChannelInterface).turnOnAirPurifier();
+                socket.emit(ControllerEvent.SetAirPurifierSwitch, { err: !success });
+            } else {
+                const success = await (this.channel as AirPurifierChannelInterface).turnOffAirPurifier();
+                socket.emit(ControllerEvent.SetAirPurifierSwitch, { err: !success });
+            }
+        } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
             this.channel.setFilterSwitch(options);
         } else {
             const { value, enable } = options;

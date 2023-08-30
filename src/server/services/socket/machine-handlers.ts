@@ -48,6 +48,7 @@ function register(socketServer: SocketServer): void {
         [ControllerEvent.SetEnclosureFan]: connectionManager.setEnclosureFan,
         [ControllerEvent.SetEnclosureDoorDetection]: connectionManager.setDoorDetection,
 
+        [ControllerEvent.GetAirPurifierInfo]: connectionManager.getAirPurifierInfo,
         [ControllerEvent.SetAirPurifierSwitch]: connectionManager.setFilterSwitch,
         [ControllerEvent.SetAirPurifierStrength]: connectionManager.setFilterWorkSpeed,
 

@@ -33,8 +33,6 @@ const EnclosureSection: React.FC = () => {
                 }
 
                 const enclosureInfo = response.enclosureInfo;
-                // TODO:
-                console.log('enclosureInfo =', enclosureInfo);
 
                 setLightIntensity(enclosureInfo.light);
                 setLightPending(false);
@@ -125,10 +123,47 @@ const EnclosureSection: React.FC = () => {
 const AirPurifierSection: React.FC = () => {
     const [enabled, setEnabled] = useState(false);
 
-    useEffect(() => {
-        // TODO: call controller
-        setEnabled(true);
+    const updateAirPurifierInfo = useCallback(() => {
+        controller
+            .emitEvent(ControllerEvent.GetAirPurifierInfo)
+            .once(ControllerEvent.GetAirPurifierInfo, (response: {
+                err: number;
+                airPurifierInfo: {
+                    status: number;
+                    enabled: boolean;
+                    life: number; // 0-2
+                    strength: number; // 1-3
+                }
+            }) => {
+                if (response.err) {
+                    return;
+                }
+
+                const airPurifierInfo = response.airPurifierInfo;
+
+                setEnabled(airPurifierInfo.enabled);
+            });
     }, []);
+
+    useEffect(() => {
+        updateAirPurifierInfo();
+    }, [updateAirPurifierInfo]);
+
+    /**
+     * Switch Filter on and off.
+     */
+    const onSwitchFilter = useCallback(() => {
+        const newEnabled = !enabled;
+        controller
+            .emitEvent(ControllerEvent.SetAirPurifierSwitch, { enable: newEnabled })
+            .once(ControllerEvent.SetAirPurifierSwitch, ({ err }) => {
+                if (err) {
+                    return;
+                }
+
+                setTimeout(updateAirPurifierInfo, 100);
+            });
+    }, [enabled, updateAirPurifierInfo]);
 
     return (
         <div className="width-432">
@@ -137,7 +172,7 @@ const AirPurifierSection: React.FC = () => {
                 <div className="sm-flex justify-space-between margin-vertical-8">
                     <span>{i18n._('key-Workspace/Purifier-Switch')}</span>
                     <Switch
-                        onClick={null}
+                        onClick={onSwitchFilter}
                         checked={enabled}
                     />
                 </div>
