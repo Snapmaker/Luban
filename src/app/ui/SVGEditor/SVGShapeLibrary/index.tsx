@@ -4,7 +4,6 @@ import { Checkbox, Spin, Pagination } from 'antd';
 import classNames from 'classnames';
 import _ from 'lodash';
 import { CheckboxChangeEvent } from 'antd/lib/checkbox';
-import 'react-virtualized/styles.css'; // only needs to be imported once
 import styles from './styles.styl';
 import api from '../../../api';
 import MainToolBar from '../../layouts/MainToolBar';

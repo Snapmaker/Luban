@@ -263,7 +263,7 @@ async function recordScaleActionsToHistory(scaleActionsFn, elements, SVGActions,
 
 const scaleExtname = ['.svg', '.dxf'];
 const DEFAULT_STATE = {
-    showSVGShapeLibrary: true
+    showSVGShapeLibrary: false
 };
 
 export const ACTION_UPDATE_STATE = 'editor/ACTION_UPDATE_STATE';
