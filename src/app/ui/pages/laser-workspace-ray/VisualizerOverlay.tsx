@@ -42,7 +42,7 @@ const VisualizerOverlay: React.FC = () => {
                 multiple={false}
                 onChange={onChangeFile}
             />
-            <div className="margin-top-8">
+            <div className="margin-top-16">
                 <Button
                     type="primary"
                     onClick={onUploadGCode}

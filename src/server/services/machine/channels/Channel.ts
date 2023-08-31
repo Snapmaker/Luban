@@ -1,4 +1,4 @@
-import { EnclosureInfo, MachineInfo, NetworkConfiguration, NetworkOptions, NetworkStationState } from '@snapmaker/snapmaker-sacp-sdk/dist/models';
+import { AirPurifierInfo, EnclosureInfo, MachineInfo, NetworkConfiguration, NetworkOptions, NetworkStationState } from '@snapmaker/snapmaker-sacp-sdk/dist/models';
 import { EventEmitter } from 'events';
 
 import SocketServer from '../../../lib/SocketManager';
@@ -140,6 +140,11 @@ export interface EnclosureChannelInterface extends Channel {
 }
 
 export interface AirPurifierChannelInterface extends Channel {
+    /**
+     * Get Air Purifier Info.
+     */
+    getAirPurifierInfo(): Promise<AirPurifierInfo>;
+
     /**
      * Turn on
      */

@@ -23,6 +23,7 @@ import MainToolBar from '../layouts/MainToolBar';
 import WorkspaceLayout from '../layouts/WorkspaceLayout';
 import styles from '../layouts/styles/workspace.styl';
 import { logPageView, renderWidgetList } from '../utils';
+import AirPurifierWidget from '../widgets/AirPurifierWidget';
 import CNCPathWidget from '../widgets/CNCPath';
 import ConnectionWidget from '../widgets/Connection';
 import ConnectionControlWidget from '../widgets/ConnectionControl';
@@ -37,7 +38,6 @@ import LaserTestFocusWidget from '../widgets/LaserTestFocus';
 import MachineSettingWidget from '../widgets/MachineSetting';
 import MacroWidget from '../widgets/Macro';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
-import PurifierWidget from '../widgets/Purifier';
 import WebcamWidget from '../widgets/Webcam';
 import VisualizerWidget from '../widgets/WorkspaceVisualizer';
 
@@ -48,7 +48,7 @@ const allWidgets = {
     'wifi-transport': ConnectionFileTransferWidget,
     'console': ConsoleWidget,
     'macro': MacroWidget,
-    'purifier': PurifierWidget,
+    'purifier': AirPurifierWidget,
     'marlin': ConnectionToolControlWidget,
     'visualizer': VisualizerWidget,
     'webcam': WebcamWidget,

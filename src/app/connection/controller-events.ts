@@ -69,6 +69,7 @@ enum ControllerEvent {
     /**
      * Module: Air Purifier
      */
+    GetAirPurifierInfo = 'connection:get-air-purifier-info',
     SetAirPurifierSwitch = 'connection:setFilterSwitch',
     SetAirPurifierStrength = 'connection:setFilterWorkSpeed',
 

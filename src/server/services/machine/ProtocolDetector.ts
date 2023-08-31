@@ -146,6 +146,7 @@ class ProtocolDetector {
 
                 // SACP => SACP
                 if (data[0].toString(16) === 'aa' && data[1].toString(16) === '55') {
+                    log.debug('SACP packet received');
                     protocol = SerialPortProtocol.SacpOverSerialPort;
                     trySerialConnect?.close();
                 }

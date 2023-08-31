@@ -1,33 +1,39 @@
 import classNames from 'classnames';
-import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
 import { shallowEqual, useSelector } from 'react-redux';
 
+import ControllerEvent from '../../../connection/controller-events';
 import {
     SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
 } from '../../../constants';
 import { MACHINE_SERIES } from '../../../constants/machines';
+import { RootState } from '../../../flux/index.def';
 import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import Switch from '../../components/Switch';
 import styles from './styles.styl';
-import ControllerEvent from '../../../connection/controller-events';
 
-function Purifier({ widgetActions }) {
+interface AirPurifierViewProps {
+    setDisplay: (display: boolean) => void;
+}
+
+const AirPurifierView: React.FC<AirPurifierViewProps> = (props) => {
+    const { setDisplay } = props;
+
     const {
         isConnected,
-    } = useSelector(state => state.workspace);
+    } = useSelector((state: RootState) => state.workspace);
 
     const {
         airPurifier,
         airPurifierSwitch,
         airPurifierFanSpeed,
         airPurifierFilterHealth,
-    } = useSelector(state => state.workspace, shallowEqual);
+    } = useSelector((state: RootState) => state.workspace, shallowEqual);
 
-    const series = useSelector(state => state.machine.series);
+    const series = useSelector((state: RootState) => state.machine.series);
     const [isFilterEnable, setIsFilterEnable] = useState(airPurifierSwitch);
     const [workSpeed, setWorkSpeed] = useState(airPurifierFanSpeed || SPEED_HIGH);
     const [filterLife, setFilterLife] = useState(2);
@@ -49,19 +55,12 @@ function Purifier({ widgetActions }) {
     };
 
     useEffect(() => {
-        widgetActions.setTitle(i18n._('key-Workspace/Purifier-Air Purifier'));
-        if (!isConnected) {
-            widgetActions.setDisplay(false);
-        }
-    }, []);
-
-    useEffect(() => {
         if (airPurifier && isConnected && series !== MACHINE_SERIES.ORIGINAL.identifier && series !== MACHINE_SERIES.ORIGINAL_LZ.identifier) {
-            widgetActions.setDisplay(true);
+            setDisplay(true);
         } else {
-            widgetActions.setDisplay(false);
+            setDisplay(false);
         }
-    }, [isConnected, airPurifier, series]);
+    }, [setDisplay, isConnected, airPurifier, series]);
 
     useEffect(() => {
         if (airPurifierSwitch !== isFilterEnable) {
@@ -133,7 +132,7 @@ function Purifier({ widgetActions }) {
                 <span
                     className={classNames(
                         'border-radius-8',
-                        styles.lifeLength
+                        styles['life-length'],
                     )}
                 >
                     <span
@@ -163,9 +162,6 @@ function Purifier({ widgetActions }) {
             )}
         </div>
     );
-}
-Purifier.propTypes = {
-    widgetActions: PropTypes.object.isRequired
 };
 
-export default Purifier;
+export default AirPurifierView;
