@@ -139,7 +139,9 @@ const CaseLibrary = (props) => {
         });
 
         Promise.all([accessTest(), loadData()])
-            .then(([accessedWeb, isShow]) => { isMounted && setShowCaseResource(accessedWeb === AccessResourceWebState.PASS && isShow); })
+            .then(([accessedWeb, isShow]) => {
+                isMounted && setShowCaseResource(accessedWeb === AccessResourceWebState.PASS && isShow);
+            })
             .catch(err => log.error(err))
             .finally(() => { setIsLoading(false); });
         return () => {

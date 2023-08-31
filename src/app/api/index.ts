@@ -282,11 +282,11 @@ const getCaseResourcesList = (() => {
 })();
 
 
-const getInformationFlow = (() => {
+const getInformationFlow = ((lang) => {
     // cache CaseResources data for once load
     let data;
     return async () => {
-        const getData = defaultAPIFactory(() => request.get('/api/information-flow'));
+        const getData = defaultAPIFactory(() => request.get('/api/information-flow').query({ lang }));
         if (!data) {
             data = getData();
         }

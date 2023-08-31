@@ -46,20 +46,20 @@ const MoreInfo = () => {
         }, carouselSeep / 100);
 
         lastSlidePagination = currSlidePagination;
+
         // timer over
         paginationTimeoutTimer = setTimeout(() => {
             clearInterval(paginationInterverTimer);
             carouselRef.current.next();
         }, carouselSeep);
-        // console.log(currSlidePagination, curr, carouselRef.current);
     };
+
     useEffect(() => {
         const init = async () => {
-            const { body: data } = await api.getInformationFlow();
+            const { body: data } = await api.getInformationFlow(lang);
             setInformationFlow(data);
         };
         init();
-
 
         const timer = setInterval(() => {
             if (carouselRef.current) {
@@ -92,7 +92,7 @@ const MoreInfo = () => {
                         {
                             informationFlow?.swiper?.map(swiper => {
                                 return (
-                                    <div className={styles['swiper-slide']} key={swiper.title}>
+                                    <div className={classNames(styles['swiper-slide'])} key={swiper.title}>
                                         <div className="sm-flex justify-space-between sm-flex-direction-c">
                                             <div style={{ marginRight: '27px' }}>
                                                 <div className={styles['swiper-title']}>{swiper.title}</div>
@@ -100,7 +100,9 @@ const MoreInfo = () => {
                                             </div>
                                             <a className={styles['swiper-a']} href={swiper.btn.href} target="_blank" rel="noopener noreferrer">{`${swiper.btn.text} >`} </a>
                                         </div>
-                                        <img className={styles['swiper-img']} src={swiper.imgSrc} alt={swiper.title} />
+                                        <div className={styles['swiper-img']}>
+                                            <img className="width-percent-100" src={swiper.imgSrc} alt={swiper.title} />
+                                        </div>
                                     </div>
                                 );
                             })
@@ -131,8 +133,10 @@ const MoreInfo = () => {
                             informationFlow?.blocks?.map(block => {
                                 return (
                                     <div className={styles['block-container']} key={block.title}>
-                                        <div className={styles['block-title']}>{block.title}</div>
-                                        <div className={styles['block-desc']}>{block.desc}</div>
+                                        <div>
+                                            <div className={styles['block-title']}>{block.title}</div>
+                                            <div className={styles['block-desc']}>{block.desc}</div>
+                                        </div>
                                         <a className={styles['block-a']} href={block?.btn?.href} target="_blank" rel="noopener noreferrer">{`${block?.btn?.text} >`} </a>
                                     </div>
                                 );

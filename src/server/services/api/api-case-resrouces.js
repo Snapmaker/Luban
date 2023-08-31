@@ -15,12 +15,7 @@ const addPrefix = (prefix) => {
     };
 };
 
-let domain = 'https://api.snapmaker.com';
-if (process.NODE_ENV === 'production') {
-    domain = 'https://api.snapmaker.com';
-} else {
-    domain = 'http://localhost:8008';
-}
+const domain = 'https://api.snapmaker.com';
 agent.use(addPrefix(domain));
 
 export function getCaseList(req, res) {
@@ -42,7 +37,8 @@ export function getCaseList(req, res) {
 }
 
 export function getInformationFlowData(req, res) {
-    agent.get('/v1/luban-information-flow')
+    const { lang } = req.query;
+    agent.get(`/v1/luban-information-flow?lang=${lang}`)
         .then((result) => {
             res.status(200).send({
                 ...result.body

@@ -28,8 +28,6 @@ interface HomePageProps {
 
 const HomePage: React.FC<HomePageProps> = (props) => { // Todo, what's the props ?
     const { isPopup = false, onClose = noop } = props;
-
-    const funcEntriesBlock = useRef();
     const resourcesBlock = useRef();
     const [modalShow, setModalShow] = useState(false);
 
@@ -99,7 +97,7 @@ const HomePage: React.FC<HomePageProps> = (props) => { // Todo, what's the props
                     />
                 )
             }
-            <StartProject ref={funcEntriesBlock} />
+            <StartProject />
             <div className={styles.secondLine} ref={resourcesBlock} id="second-line">
                 <CaseLibrary {...props} />
                 <MoreInfo />
