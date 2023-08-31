@@ -76,6 +76,7 @@ enum ControllerEvent {
     /**
      * File
      */
+    UploadFileProgress = 'connection:upload-file:progress',
     UploadFile = 'connection:uploadFile',
     CompressUploadFile = 'connection:compress-upload-file',
 

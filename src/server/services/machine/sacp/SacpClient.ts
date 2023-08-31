@@ -980,12 +980,13 @@ export default class SacpClient extends Dispatcher {
      * TODO: need option: chuckSize
      * TODO: need option: peerId
      */
-    public async uploadFileCompressed(filePath: string, renderName?: string): Promise<boolean> {
+    public async uploadFileCompressed(filePath: string, renderName?: string, onProgress?: (progress: number) => void): Promise<boolean> {
         if (!fs.existsSync(filePath)) {
             this.log.error(`File does not exist ${filePath}`);
             return false;
         }
 
+        // Prepare compresssed data
         let compressedData;
         try {
             compressedData = await new Promise<Buffer>((resolve, reject) => {
@@ -997,7 +998,7 @@ export default class SacpClient extends Dispatcher {
                 });
 
                 readStream.on('end', () => {
-                    zlib.deflate(fileData, { level: 1 }, (err, buffer) => {
+                    zlib.deflate(fileData, { level: zlib.constants.Z_BEST_SPEED }, (err, buffer) => {
                         if (err) {
                             reject(new Error(`Unable to compress target file: ${filePath}`));
                             return;
@@ -1019,6 +1020,12 @@ export default class SacpClient extends Dispatcher {
             return false;
         }
 
+        const uploadInfo = {
+            totalChucks: 0,
+            currentIndex: 0,
+            progress: 0,
+        };
+
         // const sizePerChunk = 968;
         const sizePerChunk = 960;
         this.setHandler(0xb0, 0x11, (data) => {
@@ -1031,6 +1038,15 @@ export default class SacpClient extends Dispatcher {
             // Log so we can see file transfer process
             if (index % 10 === 0) {
                 this.log.info(`request file chuck index = ${index}`);
+            }
+            uploadInfo.currentIndex = index;
+            const progress = index / uploadInfo.totalChucks;
+            if (Math.ceil(progress * 1000) > Math.ceil(uploadInfo.progress * 1000)) {
+                uploadInfo.progress = progress;
+
+                if (onProgress) {
+                    onProgress(progress);
+                }
             }
 
             const start = sizePerChunk * index;
@@ -1088,6 +1104,7 @@ export default class SacpClient extends Dispatcher {
             const chunksBuffer = Buffer.alloc(4, 0);
             const chunks = Math.ceil(compressedData.byteLength / sizePerChunk);
             writeUint32(chunksBuffer, 0, chunks);
+            uploadInfo.totalChucks = chunks;
 
             // md5
             const md5HexStr = hash.digest('hex');

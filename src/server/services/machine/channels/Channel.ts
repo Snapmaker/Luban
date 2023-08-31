@@ -62,6 +62,8 @@ export interface GcodeChannelInterface extends Channel {
 export interface UploadFileOptions {
     filePath: string;
     targetFilename?: string;
+
+    onProgress?: (progress: number) => void;
 }
 export interface FileChannelInterface extends Channel {
     uploadFile(options: UploadFileOptions): Promise<boolean>;

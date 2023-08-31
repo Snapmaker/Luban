@@ -459,7 +459,12 @@ class ConnectionManager {
 
         log.info(`Compress and upload file to controller... ${options.filePath} to ${options.targetFilename}`);
 
-        const success = await (this.channel as FileChannelInterface).compressUploadFile(options);
+        const success = await (this.channel as FileChannelInterface).compressUploadFile({
+            ...options,
+            onProgress: (progress) => {
+                socket.emit(ControllerEvent.UploadFileProgress, { progress });
+            }
+        });
         if (success) {
             socket.emit(ControllerEvent.CompressUploadFile, { err: null, text: '' });
         } else {

@@ -122,8 +122,9 @@ export const actions = {
 
         envObj.version = pkg?.version;
         if (headType === HEAD_CNC || headType === HEAD_LASER) {
-            const { materials, coordinateMode, coordinateSize } = editorState;
+            const { materials, coordinateMode, coordinateSize, origin } = editorState;
             envObj.materials = materials;
+            envObj.origin = origin;
             envObj.coordinateMode = coordinateMode;
             envObj.coordinateSize = coordinateSize;
         } else if (headType === HEAD_PRINTING) {
