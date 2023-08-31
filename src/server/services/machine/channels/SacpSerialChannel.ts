@@ -8,14 +8,13 @@ import { DEFAULT_BAUDRATE, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../
 import logger from '../../../lib/logger';
 import SacpClient from '../sacp/SacpClient';
 import { EventOptions } from '../types';
-import { FileChannelInterface, UploadFileOptions } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 import SacpChannelBase from './SacpChannel';
 
 const log = logger('machine:channel:SacpSerialChannel');
 
 
-class SacpSerialChannel extends SacpChannelBase implements FileChannelInterface {
+class SacpSerialChannel extends SacpChannelBase {
     private serialport: SerialPort;
 
     // public startTime: number;
@@ -141,22 +140,6 @@ class SacpSerialChannel extends SacpChannelBase implements FileChannelInterface 
             });
         });
     };
-
-    public async uploadFile(options: UploadFileOptions): Promise<boolean> {
-        const { filePath, targetFilename } = options;
-        log.info(`Upload file to controller... ${filePath}`);
-
-        const success = await this.sacpClient.uploadFile(filePath, targetFilename);
-        return success;
-    }
-
-    public async compressUploadFile(options: UploadFileOptions): Promise<boolean> {
-        const { filePath, targetFilename } = options;
-        log.info(`Compress and upload file to controller... ${filePath}`);
-
-        const success = await this.sacpClient.uploadFileCompressed(filePath, targetFilename);
-        return success;
-    }
 }
 
 const sacpSerialChannel = new SacpSerialChannel();

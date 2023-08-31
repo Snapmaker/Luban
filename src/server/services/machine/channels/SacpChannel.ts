@@ -70,7 +70,9 @@ import Channel, {
     PrintJobChannelInterface,
     SystemChannelInterface,
     UpgradeFirmwareOptions,
-    AirPurifierChannelInterface
+    AirPurifierChannelInterface,
+    FileChannelInterface,
+    UploadFileOptions
 } from './Channel';
 
 const log = logger('machine:channels:SacpChannel');
@@ -78,6 +80,7 @@ const log = logger('machine:channels:SacpChannel');
 class SacpChannelBase extends Channel implements
     GcodeChannelInterface,
     SystemChannelInterface,
+    FileChannelInterface,
     NetworkServiceChannelInterface,
     PrintJobChannelInterface,
     LaserChannelInterface,
@@ -241,6 +244,26 @@ class SacpChannelBase extends Channel implements
         log.info(`Upgrade firmware result = ${res.response.result}`);
 
         return res.response.result === 0;
+    }
+
+    // interface: FileChannelInterface
+
+    public async uploadFile(options: UploadFileOptions): Promise<boolean> {
+        const { filePath, targetFilename } = options;
+        log.info(`Upload file to controller... ${filePath}`);
+
+        return this.sacpClient.uploadFile(filePath, targetFilename);
+    }
+
+    public async compressUploadFile(options: UploadFileOptions): Promise<boolean> {
+        const { filePath, targetFilename, onProgress } = options;
+        log.info(`Compress and upload file to controller... ${filePath}`);
+
+        return this.sacpClient.uploadFileCompressed(
+            filePath,
+            targetFilename,
+            onProgress
+        );
     }
 
     // interface: LaserChannelInterface

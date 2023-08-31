@@ -70,6 +70,8 @@ class SerialPortClient {
         'machine:module-list': [],
         'machine:laser-status': [],
 
+        [ControllerEvent.UploadFileProgress]: [],
+
         'connection:getActiveExtruder': [],
         'connection:updateWorkNozzle': [],
 
@@ -227,18 +229,19 @@ class SerialPortClient {
     }
 
     // Note: 'on' and 'off' function must be registered during initialization
-    public on(eventName, callback) {
-        const callbacks = this.callbacks[eventName];
-        if (!callbacks) {
-            log.error('Undefined event name:', eventName);
+    public on(eventName: string, callback) {
+        if (!this.callbacks[eventName]) {
+            log.warn('Undefined event name:', eventName);
             return;
         }
+
+        const callbacks = this.callbacks[eventName];
         if (typeof callback === 'function') {
             callbacks.push(callback);
         }
     }
 
-    public off(eventName, callback) {
+    public off(eventName: string, callback) {
         const callbacks = this.callbacks[eventName];
         if (!callbacks) {
             log.error('Undefined event name:', eventName);

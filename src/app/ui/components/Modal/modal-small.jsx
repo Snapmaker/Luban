@@ -7,7 +7,7 @@ import SvgIcon from '../SvgIcon';
 import Modal from './index';
 import styles from './styles.styl';
 
-class ModalSmallHOC extends PureComponent {
+export class ModalSmallHOC extends PureComponent {
     static propTypes = {
         ...Modal.propTypes,
         container: PropTypes.object,

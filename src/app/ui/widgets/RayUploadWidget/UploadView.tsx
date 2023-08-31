@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import ControllerEvent from '../../../connection/controller-events';
@@ -8,7 +8,7 @@ import controller from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import { Button } from '../../components/Buttons';
-import modalSmallHOC from '../../components/Modal/modal-small';
+import modalSmallHOC, { ModalSmallHOC } from '../../components/Modal/modal-small';
 import styles from './styles.styl';
 
 export type LoadGcodeOptions = {
@@ -21,17 +21,32 @@ const UploadView: React.FC = () => {
     // const activeGcodeFile = useSelector((state: RootState) => state.workspace.activeGcodeFile);
     const gcodeFile = useSelector((state: RootState) => state.workspace.gcodeFile);
 
+    const [fileUploadProgress, setFileUploadProgress] = useState(0);
+
+    useEffect(() => {
+        const onProgress = ({ progress }) => {
+            setFileUploadProgress(progress);
+        };
+
+        controller.on(ControllerEvent.UploadFileProgress, onProgress);
+
+        return () => {
+            controller.off(ControllerEvent.UploadFileProgress, onProgress);
+        };
+    }, []);
+
+    const [showFileUploadProgressModal, setShowFileUploadProgressModal] = useState(false);
+
+    useEffect(() => {
+        if (fileUploadProgress > 0) {
+            setShowFileUploadProgressModal(true);
+        }
+    }, [fileUploadProgress]);
+
     const onClickUploadJob = useCallback(() => {
         if (!gcodeFile) {
             return;
         }
-
-        const sendingModal = modalSmallHOC({
-            title: i18n._('key-Workspace/WifiTransport-Sending File'),
-            text: i18n._('key-Workspace/WifiTransport-Sending file. Please wait…'),
-            iconColor: '#4CB518',
-            img: 'WarningTipsProgress'
-        }).ref;
 
         controller
             .emitEvent(ControllerEvent.CompressUploadFile, {
@@ -40,9 +55,8 @@ const UploadView: React.FC = () => {
             })
             .once(ControllerEvent.CompressUploadFile, ({ err, text }) => {
                 // close sending modal
-                if (sendingModal.current) {
-                    sendingModal.current.removeContainer();
-                }
+                // TODO
+                setShowFileUploadProgressModal(false);
 
                 // Deal with send result
                 if (err) {
@@ -77,6 +91,19 @@ const UploadView: React.FC = () => {
                     {i18n._('key-Workspace/Upload Job')}
                 </Button>
             </div>
+
+            {
+                showFileUploadProgressModal && (
+                    <ModalSmallHOC
+                        title={i18n._('key-Workspace/WifiTransport-Sending File')}
+                        text={i18n._('Sending file. Please wait… {{ progress }}%', {
+                            progress: (fileUploadProgress * 100).toFixed(1),
+                        })}
+                        iconColor="#4CB518"
+                        img="WarningTipsProgress"
+                    />
+                )
+            }
         </div>
     );
 };

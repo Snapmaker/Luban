@@ -6,13 +6,12 @@ import { WORKFLOW_STATUS_MAP } from '../../../../app/constants';
 import { SACP_TYPE_SERIES_MAP } from '../../../../app/constants/machines';
 import logger from '../../../lib/logger';
 import SacpClient from '../sacp/SacpClient';
-import { FileChannelInterface, UploadFileOptions } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 import SacpChannelBase from './SacpChannel';
 
 const log = logger('machine:channel:SacpUdpChannel');
 
-class SacpUdpChannel extends SacpChannelBase implements FileChannelInterface {
+class SacpUdpChannel extends SacpChannelBase {
     // private client: dgram.
     private socketClient = dgram.createSocket('udp4');
 
@@ -141,24 +140,6 @@ class SacpUdpChannel extends SacpChannelBase implements FileChannelInterface {
 
         const res = await this.sacpClient.unsubscribeHeartbeat(null);
         log.info(`Unsubscribe heartbeat, result = ${res.code}`);
-    }
-
-    // interface: FileChannelInterface
-
-    public async uploadFile(options: UploadFileOptions): Promise<boolean> {
-        const { filePath, targetFilename } = options;
-        log.info(`Upload file to controller... ${filePath}`);
-
-        const success = await this.sacpClient.uploadFile(filePath, targetFilename);
-        return success;
-    }
-
-    public async compressUploadFile(options: UploadFileOptions): Promise<boolean> {
-        const { filePath, targetFilename } = options;
-        log.info(`Compress and upload file to controller... ${filePath}`);
-
-        const success = await this.sacpClient.uploadFileCompressed(filePath, targetFilename);
-        return success;
     }
 }
 

@@ -17,4 +17,8 @@ export enum ChannelEvent {
 
     // channel disconnected
     Disconnected = 'disconnected',
+
+
+    // Upload file
+    UploadFileProgress = 'upload-progress',
 }
