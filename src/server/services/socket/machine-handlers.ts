@@ -50,7 +50,7 @@ function register(socketServer: SocketServer): void {
 
         [ControllerEvent.GetAirPurifierInfo]: connectionManager.getAirPurifierInfo,
         [ControllerEvent.SetAirPurifierSwitch]: connectionManager.setFilterSwitch,
-        [ControllerEvent.SetAirPurifierStrength]: connectionManager.setFilterWorkSpeed,
+        [ControllerEvent.SetAirPurifierStrength]: connectionManager.setAirPurifierFanStrength,
 
         // machine print G-code
         [ControllerEvent.StartGCode]: connectionManager.startGcode,

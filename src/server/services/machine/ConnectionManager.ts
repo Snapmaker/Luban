@@ -98,6 +98,10 @@ interface UpgradeFirmwareOptions {
     filename: string;
 }
 
+interface SetAirPurifierStrengthOptions {
+    value: 1 | 2 | 3;
+}
+
 /**
  * A singleton to manage devices connection.
  */
@@ -974,6 +978,9 @@ M3`;
         }
     };
 
+    /**
+     * Get air purifier info.
+     */
     public getAirPurifierInfo = async (socket: SocketServer) => {
         log.info('Get air purifier info');
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
@@ -1002,12 +1009,17 @@ M3`;
         }
     };
 
+    /**
+     * turn on or off air purifier.
+     */
     public setFilterSwitch = async (socket: SocketServer, options) => {
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             if (options.enable) {
+                log.info('Turn on air purifier...');
                 const success = await (this.channel as AirPurifierChannelInterface).turnOnAirPurifier();
                 socket.emit(ControllerEvent.SetAirPurifierSwitch, { err: !success });
             } else {
+                log.info('Turn off air purifier...');
                 const success = await (this.channel as AirPurifierChannelInterface).turnOffAirPurifier();
                 socket.emit(ControllerEvent.SetAirPurifierSwitch, { err: !success });
             }
@@ -1022,8 +1034,16 @@ M3`;
         }
     };
 
-    public setFilterWorkSpeed = (socket: SocketServer, options) => {
-        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+    /**
+     * Set air purifier fan strength.
+     *
+     * Strength from 1 to 3 (LOW to HIGH).
+     */
+    public setAirPurifierFanStrength = async (socket: SocketServer, options: SetAirPurifierStrengthOptions) => {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const success = await (this.channel as AirPurifierChannelInterface).setAirPurifierStrength(options.value);
+            socket.emit(ControllerEvent.SetAirPurifierStrength, { err: !success });
+        } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
             this.channel.setFilterWorkSpeed(options);
         } else {
             const { value } = options;
