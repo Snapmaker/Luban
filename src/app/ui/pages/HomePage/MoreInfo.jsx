@@ -80,7 +80,7 @@ const MoreInfo = () => {
             <div className={classNames('highlight-heading', 'margin-bottom-16')}>
                 {i18n._('key-HomePage/Begin-Help')}
             </div>
-            {informationFlow && (
+            {informationFlow.swiper && (
                 <div className={styles['information-flow']}>
                     {/* customPaging={renderPagination} */}
                     <Carousel
@@ -145,7 +145,7 @@ const MoreInfo = () => {
                     </div>
                 </div>
             )}
-            {!informationFlow && (
+            {!informationFlow.swiper && (
                 <div className={classNames(styles['resource-list'])}>
                     <a href="https://support.snapmaker.com/hc/en-us/articles/4406229926935" target="_blank" rel="noopener noreferrer" className={classNames(styles.listItem)}>
                         <span className={classNames('heading-3-normal-with-hover')}>
