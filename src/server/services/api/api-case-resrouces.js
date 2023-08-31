@@ -14,8 +14,14 @@ const addPrefix = (prefix) => {
         return request;
     };
 };
-agent.use(addPrefix('https://api.snapmaker.com'));
 
+let domain = 'https://api.snapmaker.com';
+if (process.NODE_ENV === 'production') {
+    domain = 'https://api.snapmaker.com';
+} else {
+    domain = 'http://localhost:8008';
+}
+agent.use(addPrefix(domain));
 
 export function getCaseList(req, res) {
     agent.get('/api/resource/sample/list/client')
@@ -26,6 +32,17 @@ export function getCaseList(req, res) {
             softWareId: 1,
             ...req.query
         })
+        .then((result) => {
+            res.status(200).send({
+                ...result.body
+            });
+        }).catch((err) => {
+            log.error('get case list err:', JSON.stringify(err));
+        });
+}
+
+export function getInformationFlowData(req, res) {
+    agent.get('/v1/luban-information-flow')
         .then((result) => {
             res.status(200).send({
                 ...result.body

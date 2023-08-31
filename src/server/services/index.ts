@@ -201,6 +201,8 @@ function registerApis(app) {
 
     // case resources
     app.get(urljoin(settings.route, 'api/case-resources/case-list'), api.caseResrouces.getCaseList);
+
+    app.get(urljoin(settings.route, 'api/information-flow'), api.caseResrouces.getInformationFlowData);
 }
 
 export {

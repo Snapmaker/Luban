@@ -281,6 +281,19 @@ const getCaseResourcesList = (() => {
     };
 })();
 
+
+const getInformationFlow = (() => {
+    // cache CaseResources data for once load
+    let data;
+    return async () => {
+        const getData = defaultAPIFactory(() => request.get('/api/information-flow'));
+        if (!data) {
+            data = getData();
+        }
+        return data;
+    };
+})();
+
 export default {
     // version
     getLatestVersion,
@@ -340,4 +353,5 @@ export default {
 
     //
     getCaseResourcesList,
+    getInformationFlow
 };
