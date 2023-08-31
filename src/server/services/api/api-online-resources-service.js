@@ -3,9 +3,10 @@ import superagentUse from 'superagent-use';
 import logger from '../../lib/logger';
 
 // let domain = 'http://localhost:8100';
-let domain = 'http://45.79.80.155:8000';
+let domain = 'http://45.79.80.155:8100';
 if (process.env.NODE_ENV === 'production') {
-    domain = 'https://api.snapmaker.com';
+    // domain = 'https://api.snapmaker.com';
+    domain = 'http://45.79.80.155:8100';
 }
 
 const log = logger('api:commands');
