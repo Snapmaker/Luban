@@ -92,7 +92,7 @@ const StartProject: React.FC = () => {
     }, [newRecentFile]);
 
     return (
-        <div className={classNames(styles['create-new-project'], 'tile-modal-homepage', 'homepage-widget-box-shadow')}>
+        <div id="start-project" className={classNames(styles['create-new-project'], 'tile-modal-homepage', 'homepage-widget-box-shadow')}>
             <div className={classNames(styles.beginPart)}>
                 <div className={classNames('position-re', styles.headingPart)}>
                     <Anchor

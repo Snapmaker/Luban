@@ -9,9 +9,10 @@
         width: 62.4vw;
 
         .case-list {
-            height: 24.7vw;
-            max-height: 339px;
-            min-height: 256px;
+            // height: 24.7vw;
+            max-height: 372px;
+            // min-height: 256px;
+            height: 100%
             overflow: auto;
             background: #fff;
             border-radius: 24px;
@@ -28,9 +29,10 @@
         width: 31.2vw;
 
         .resource-list {
-            height: 24.7vw;
+            height: 100%;
+            // height: 24.7vw;
             max-height: 339px;
-            min-height: 244px;
+            // min-height: 244px;
             overflow: auto;
             background: #fff;
             border-radius: 24px;
@@ -186,6 +188,8 @@
 }
 
 .quick-start-container {
+    display: flex;
+    flex-direction: column;
     .case-list {
         position: relative;
         padding: 2vw 3.33vw;
@@ -250,8 +254,14 @@
 }
 
 .more-info {
+    display: flex;
+    flex-direction: column;
     .information-flow {
         width: 100%;
+        overflow: auto;
+        height: 100%
+
+
         .swiper-container {
             padding-block: 2vw;
             padding-inline: 24px
@@ -259,7 +269,8 @@
             border-radius: 24px;
         }
         .swiper-slide {
-            display: flex;
+            display: flex !important;
+            justify-content: space-between
         }
         .swiper-title {
             color: #000;
@@ -270,30 +281,48 @@
             line-height: 20px; /* 125% */
         }
         .swiper-desc {
+            margin-top: 5px;
             color: #CBCBCB;
             font-family: Noto Sans SC;
-            font-size: 10px;
+            font-size: 12px;
             font-style: normal;
             font-weight: 400;
             line-height: normal;
         }
         .swiper-img {
-            width: 100%;
+            width: 50%;
             border-radius: 16px;
             max-width: 185px;
         }
         .swiper-a {
             color: #0C63E2;
             font-family: Noto Sans SC;
-            font-size: 10px;
+            font-size: 12px;
             font-style: normal;
             font-weight: 400;
             line-height: normal;
+            margin-top: 16px
+        }
+
+        :global(.ant-carousel .slick-dots li),:global(.ant-carousel .slick-dots li button) {
+            background-color: #D6D6D6;
+            width: 6px
+            height: 6px
+            border-radius: 6px;
+            overflow: hidden
+        }
+        :global(.ant-carousel .slick-dots li button) {
+            background-color: #0C63E2;
+            transition: none
+            width: 0
+        }
+        :global(.ant-carousel .slick-dots li.slick-active) {
+            width: 48px;
         }
 
         .blocks-wrapper {
             display: flex;
-            margin-block:  20px;
+            margin-top:  20px;
 
         }
         .block-container {
@@ -315,18 +344,20 @@
             line-height: 20px; /* 166.667% */
         }
         .block-desc {
+            margin-top: 5px;
             color: #000;
             font-family: Roboto;
-            font-size: 8px;
+            font-size: 12px;
             font-style: normal;
             font-weight: 400;
             line-height: normal;
             text-transform: capitalize;
         }
         .block-a {
+            margin-top: 16px
             color: #0C63E2;
             font-family: Noto Sans SC;
-            font-size: 10px;
+            font-size: 12px;
             font-style: normal;
             font-weight: 400;
             line-height: normal;
@@ -352,9 +383,10 @@
     width: 62.4vw;
 
     .case-list {
-        height: 24.7vw;
-        max-height: 339px;
-        min-height: 256px;
+        height: 100%;
+        // height: 24.7vw;
+        max-height: 372px;
+        // min-height: 256px;
         overflow: auto;
         background: #fff;
         border-radius: 24px;

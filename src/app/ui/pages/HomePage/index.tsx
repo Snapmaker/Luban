@@ -2,7 +2,7 @@ import i18next from 'i18next';
 import isElectron from 'is-electron';
 import { noop } from 'lodash';
 import PropTypes from 'prop-types';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { withRouter } from 'react-router-dom';
 
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
@@ -29,7 +29,18 @@ interface HomePageProps {
 const HomePage: React.FC<HomePageProps> = (props) => { // Todo, what's the props ?
     const { isPopup = false, onClose = noop } = props;
 
+    const funcEntriesBlock = useRef();
+    const resourcesBlock = useRef();
     const [modalShow, setModalShow] = useState(false);
+
+    const calcuHeightLayout = () => {
+        const startProjectBlock = document.querySelector('#start-project');
+        const style = window.getComputedStyle(startProjectBlock);
+        const removeUnit = (v) => parseFloat(v.slice(0, -2));
+        const height = removeUnit(style.height) + removeUnit(style.paddingBlock) + removeUnit(style.borderBlock) + removeUnit(style.marginBlock);
+        const bottomBlockHeight = window.innerHeight - height;
+        resourcesBlock.current && (resourcesBlock.current.style.height = `${bottomBlockHeight - 32}px`); // 32 is bottomBlock margin-top
+    };
 
     useEffect(() => {
         document.querySelector('body').setAttribute('style', 'height: calc(100vh - 82px); background: #f5f5f7;');
@@ -59,6 +70,14 @@ const HomePage: React.FC<HomePageProps> = (props) => { // Todo, what's the props
         }
     }, []);
 
+    useEffect(() => {
+        calcuHeightLayout();
+        window.addEventListener('resize', calcuHeightLayout);
+        return () => {
+            window.removeEventListener('resize', calcuHeightLayout);
+        };
+    });
+
     const printingModal = useRenderRecoveryModal(HEAD_PRINTING);
     const laserModal = useRenderRecoveryModal(HEAD_LASER);
     const cncModal = useRenderRecoveryModal(HEAD_CNC);
@@ -80,8 +99,8 @@ const HomePage: React.FC<HomePageProps> = (props) => { // Todo, what's the props
                     />
                 )
             }
-            <StartProject />
-            <div className={styles.secondLine}>
+            <StartProject ref={funcEntriesBlock} />
+            <div className={styles.secondLine} ref={resourcesBlock} id="second-line">
                 <CaseLibrary {...props} />
                 <MoreInfo />
             </div>
