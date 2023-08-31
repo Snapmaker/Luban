@@ -446,16 +446,41 @@ class SacpChannelBase extends Channel implements
     }
 
     public async turnOnAirPurifier(): Promise<boolean> {
-        return false;
+        const module = this.getAirPurifierModule();
+        if (!module) {
+            return false;
+        }
+        const { response } = await this.sacpClient.setPurifierSwitch(module.key, true);
+
+        return response.result === 0;
     }
 
     public async turnOffAirPurifier(): Promise<boolean> {
-        return false;
+        const module = this.getAirPurifierModule();
+        if (!module) {
+            return false;
+        }
+        const { response } = await this.sacpClient.setPurifierSwitch(module.key, false);
+
+        return response.result === 0;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public async setAirPurifierStrength(strength: 1 | 2 | 3): Promise<boolean> {
-        return false;
+        const module = this.getAirPurifierModule();
+        if (!module) {
+            return false;
+        }
+
+        const { response } = await this.sacpClient.setPurifierSpeed(module.key, strength);
+        return response.result === 0;
+    }
+
+    public async setFilterWorkSpeed(options) {
+        const moduleInfo = this.moduleInfos && this.moduleInfos[AIR_PURIFIER];
+        this.sacpClient.setPurifierSpeed(moduleInfo.key, options.value).then(({ response }) => {
+            log.info(`Update Purifier speed, ${response.result}, ${options.value}`);
+        });
     }
 
     // interface: PrintJobChannelInterface
@@ -1259,23 +1284,6 @@ class SacpChannelBase extends Channel implements
             y: 0,
             z: laserToolHeadInfo.laserFocalLength + laserToolHeadInfo.platformHeight + materialThickness,
             isRotate
-        });
-    }
-
-    public async setFilterSwitch(options) {
-        const moduleInfo = this.moduleInfos && this.moduleInfos[AIR_PURIFIER];
-        options.enable && this.sacpClient.setPurifierSpeed(moduleInfo.key, options.value).then(({ response }) => {
-            log.info(`Update Purifier speed, ${response.result}, ${options.value}`);
-        });
-        this.sacpClient.setPurifierSwitch(moduleInfo.key, options.enable).then(({ response }) => {
-            log.info(`Switch Purifier update, ${response.result}`);
-        });
-    }
-
-    public async setFilterWorkSpeed(options) {
-        const moduleInfo = this.moduleInfos && this.moduleInfos[AIR_PURIFIER];
-        this.sacpClient.setPurifierSpeed(moduleInfo.key, options.value).then(({ response }) => {
-            log.info(`Update Purifier speed, ${response.result}, ${options.value}`);
         });
     }
 

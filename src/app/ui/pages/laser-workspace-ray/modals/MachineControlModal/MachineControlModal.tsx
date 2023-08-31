@@ -1,14 +1,18 @@
 import { Alert, Space } from 'antd';
+import classNames from 'classnames';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import ControllerEvent from '../../../../connection/controller-events';
-import { RootState } from '../../../../flux/index.def';
-import controller from '../../../../lib/controller';
-import i18n from '../../../../lib/i18n';
-import { Button } from '../../../components/Buttons';
-import Modal from '../../../components/Modal';
-import Switch from '../../../components/Switch';
+import ControllerEvent from '../../../../../connection/controller-events';
+import { SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH } from '../../../../../constants';
+import { RootState } from '../../../../../flux/index.def';
+import controller from '../../../../../lib/controller';
+import i18n from '../../../../../lib/i18n';
+import { Button } from '../../../../components/Buttons';
+import Modal from '../../../../components/Modal';
+import Switch from '../../../../components/Switch';
+import styles from './styles.styl';
+
 
 const EnclosureSection: React.FC = () => {
     const [lightIntensity, setLightIntensity] = useState(0);
@@ -122,6 +126,8 @@ const EnclosureSection: React.FC = () => {
 
 const AirPurifierSection: React.FC = () => {
     const [enabled, setEnabled] = useState(false);
+    const [filterLife, setFilterLife] = useState(0); // 0-2
+    const [fanStrength, setFanStrength] = useState(0); // 1-3
 
     const updateAirPurifierInfo = useCallback(() => {
         controller
@@ -141,7 +147,11 @@ const AirPurifierSection: React.FC = () => {
 
                 const airPurifierInfo = response.airPurifierInfo;
 
+                console.log('airPurifierInfo =', airPurifierInfo);
+
                 setEnabled(airPurifierInfo.enabled);
+                setFilterLife(airPurifierInfo.life);
+                setFanStrength(airPurifierInfo.strength);
             });
     }, []);
 
@@ -161,13 +171,34 @@ const AirPurifierSection: React.FC = () => {
                     return;
                 }
 
-                setTimeout(updateAirPurifierInfo, 100);
+                setTimeout(updateAirPurifierInfo, 500); // air purifier is slower
+            });
+    }, [enabled, updateAirPurifierInfo]);
+
+    /**
+     * Set strength.
+     *
+     * works only when air purifier is enabled.
+     */
+    const setAirPurifierFanStrength = useCallback((strength: number) => {
+        if (!enabled) {
+            return;
+        }
+
+        controller
+            .emitEvent(ControllerEvent.SetAirPurifierStrength, { value: strength })
+            .once(ControllerEvent.SetAirPurifierStrength, ({ err }) => {
+                if (err) {
+                    return;
+                }
+
+                setTimeout(updateAirPurifierInfo, 500); // air purifier is slower
             });
     }, [enabled, updateAirPurifierInfo]);
 
     return (
         <div className="width-432">
-            <div className="font-size-middle font-weight-middle">{i18n._('Enclosure')}</div>
+            <div className="font-size-middle font-weight-middle">{i18n._('key-Workspace/Purifier-Air Purifier')}</div>
             <div className="margin-top-8">
                 <div className="sm-flex justify-space-between margin-vertical-8">
                     <span>{i18n._('key-Workspace/Purifier-Switch')}</span>
@@ -176,6 +207,87 @@ const AirPurifierSection: React.FC = () => {
                         checked={enabled}
                     />
                 </div>
+                <div className="sm-flex justify-space-between margin-vertical-8">
+                    <span className="max-width-132 text-overflow-ellipsis line-height-32">{i18n._('key-Workspace/Purifier-Fan Speed')}</span>
+                    <span
+                        className={classNames(
+                            'border-radius-8',
+                            styles['btn-3btns'],
+                            {
+                                [styles['disabled-btns']]: !enabled
+                            }
+                        )}
+                    >
+                        <button
+                            type="button"
+                            className={classNames(
+                                (fanStrength === SPEED_LOW) ? styles.active : styles.passive,
+                            )}
+                            onClick={() => setAirPurifierFanStrength(SPEED_LOW)}
+                        >
+                            {i18n._('key-Workspace/Purifier-Low')}
+                        </button>
+                        <button
+                            type="button"
+                            className={classNames(
+                                (fanStrength === SPEED_MEDIUM) ? styles.active : styles.passive,
+                            )}
+                            onClick={() => setAirPurifierFanStrength(SPEED_MEDIUM)}
+                        >
+                            {i18n._('key-Workspace/Purifier-Medium')}
+                        </button>
+                        <button
+                            type="button"
+                            className={classNames(
+                                (fanStrength === SPEED_HIGH) ? styles.active : styles.passive,
+                            )}
+                            onClick={() => setAirPurifierFanStrength(SPEED_HIGH)}
+                        >
+                            {i18n._('key-Workspace/Purifier-High')}
+                        </button>
+                    </span>
+                </div>
+                <div className="sm-flex justify-space-between margin-vertical-8">
+                    <span>{i18n._('key-Workspace/Purifier-Filter Life')}</span>
+                    <span
+                        className={classNames(
+                            'border-radius-8',
+                            styles['life-length'],
+                        )}
+                    >
+                        <span
+                            className={classNames(
+                                'space',
+                                {
+                                    [styles.active]: filterLife >= 0
+                                }
+                            )}
+                        />
+                        <span
+                            className={classNames(
+                                'space',
+                                {
+                                    [styles.active]: filterLife >= 1
+                                }
+                            )}
+                        />
+                        <span
+                            className={classNames(
+                                'space',
+                                {
+                                    [styles.active]: filterLife >= 2
+                                }
+                            )}
+                        />
+                    </span>
+                </div>
+                {
+                    filterLife === 0 && (
+                        <div className="margin-top-8">
+                            <Alert type="warning" showIcon message={i18n._('key-Workspace/Purifier-You should replace the filter cartridge.')} />
+                        </div>
+                    )
+                }
             </div>
         </div>
     );
@@ -193,7 +305,7 @@ const MachineControlModal: React.FC<MachineControlModalProps> = (props) => {
     return (
         <Modal size="sm" onClose={props?.onClose}>
             <Modal.Header>
-                {i18n._('Machine Log')}
+                {i18n._('Machine Control')}
             </Modal.Header>
             <Modal.Body className="width-432">
                 {
@@ -205,7 +317,7 @@ const MachineControlModal: React.FC<MachineControlModalProps> = (props) => {
                     )
                 }
                 {
-                    (true || isConnected) && (
+                    isConnected && (
                         <div>
                             <Space direction="vertical" size={8}>
                                 <EnclosureSection />
