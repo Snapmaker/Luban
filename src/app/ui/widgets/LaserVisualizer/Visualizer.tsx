@@ -7,6 +7,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import * as THREE from 'three';
+import { Group } from 'three';
 
 import {
     DISPLAYED_TYPE_TOOLPATH,
@@ -20,7 +21,7 @@ import {
     SELECTEVENT,
     VISUALIZER_CAMERA_HEIGHT
 } from '../../../constants';
-import { Origin } from '../../../constants/coordinate';
+import { Origin, convertMaterialsToWorkpiece } from '../../../constants/coordinate';
 import { actions as editorActions } from '../../../flux/editor';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import i18n from '../../../lib/i18n';
@@ -41,16 +42,28 @@ import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import VisualizerBottomLeft from '../CncLaserShared/VisualizerBottomLeft';
 import VisualizerTopRight from '../CncLaserTopRight/VisualizerTopRight';
 import styles from './styles.styl';
+import ToolPathGroup from '../../../toolpaths/ToolPathGroup';
 
 interface VisualizerProps {
     // page: editor or preview
     page: Page;
+    pageMode: PageMode;
+    setPageMode: (pageMode: PageMode) => void;
 
+    // objects and models
     modelGroup: ModelGroup;
+    toolPathGroup: ToolPathGroup;
+    printableArea: PrintablePlate;
+
+    // a `Group` contains background objects
+    backgroundGroup: Group;
+
+    updateTarget: (target) => void;
 
     // Origin
     origin: Origin;
 
+    // actions
     undo: () => void;
     redo: () => void;
 }
@@ -368,7 +381,8 @@ class Visualizer extends React.Component<VisualizerProps> {
         super(props);
 
         const { size, materials, coordinateMode, origin } = props;
-        this.printableArea = new PrintablePlate(size, materials, origin, coordinateMode);
+        const workpiece = convertMaterialsToWorkpiece(materials);
+        this.printableArea = new PrintablePlate(size, workpiece, origin, coordinateMode);
         this.state = {
             limitPicModalShow: false,
             file: null,
@@ -427,9 +441,11 @@ class Visualizer extends React.Component<VisualizerProps> {
             || !isEqual(nextProps.origin, this.props.origin)) {
             const { coordinateSize, coordinateMode, origin, materials } = nextProps;
 
+            const workpiece = convertMaterialsToWorkpiece(materials);
+
             this.printableArea = new PrintablePlate(
                 coordinateSize,
-                materials,
+                workpiece,
                 origin,
                 coordinateMode,
             );
@@ -545,9 +561,8 @@ class Visualizer extends React.Component<VisualizerProps> {
                     <Canvas
                         ref={this.canvas}
                         canOperateModel={false}
-                        size={this.props.size}
-                        backgroundGroup={this.props.backgroundGroup}
                         modelGroup={this.props.modelGroup}
+                        backgroundGroup={this.props.backgroundGroup}
                         toolPathGroupObject={this.props.toolPathGroup.object}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new THREE.Vector3(0, 0, VISUALIZER_CAMERA_HEIGHT)}
@@ -560,8 +575,6 @@ class Visualizer extends React.Component<VisualizerProps> {
                         maxScale={MAX_LASER_CNC_CANVAS_SCALE}
                         scaleSize={VISUALIZER_CAMERA_HEIGHT}
                         target={this.props.target}
-                        coordinateMode={this.props.coordinateMode}
-                        coordinateSize={this.props.coordinateSize}
                         updateTarget={this.props.updateTarget}
                         updateScale={this.props.updateScale}
                         transformSourceType="2D"
@@ -735,9 +748,16 @@ class Visualizer extends React.Component<VisualizerProps> {
 const mapStateToProps = (state, ownProps) => {
     const { size, series } = state.machine;
     const { currentModalPath, menuDisabledCount } = state.appbarMenu;
-    const { background, progressStatesManager } = state.laser;
+
+    // objects or models
+    const modelGroup: ModelGroup = state.laser.modelGroup;
+    const toolPathGroup: ToolPathGroup = state.laser.toolPathGroup;
+
+    const background: { enabled: boolean; group: Group} = state.laser.background;
+
+    const { progressStatesManager } = state.laser;
     const {
-        SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType,
+        SVGActions, scale, target, materials, page, selectedModelID, svgModelGroup, displayedType,
         isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress,
         coordinateMode, coordinateSize, origin,
         enableShortcut, isOverSize, SVGCanvasMode, SVGCanvasExt,

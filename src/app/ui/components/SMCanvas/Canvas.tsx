@@ -47,6 +47,9 @@ interface CanvasProps {
     minScale?: number;
     maxScale?: number;
 
+    backgroundGroup: Object3D;
+
+
     onSceneCreated?: (canvas: Canvas) => void;
 }
 

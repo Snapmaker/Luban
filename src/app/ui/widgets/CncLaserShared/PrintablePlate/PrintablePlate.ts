@@ -5,7 +5,6 @@ import {
     Mesh,
     MeshBasicMaterial,
     Object3D,
-    PlaneGeometry,
     ShapeGeometry,
     Math as ThreeMath
 } from 'three';
@@ -13,7 +12,7 @@ import {
 import TargetPoint from '../../../../scene/three-extensions/TargetPoint';
 import TextSprite from '../../../../scene/three-extensions/TextSprite';
 import { COORDINATE_MODE_CENTER, DEFAULT_LUBAN_HOST } from '../../../../constants';
-import { Materials, Origin, OriginType, RectangleWorkpieceReference } from '../../../../constants/coordinate';
+import { Origin, OriginType, RectangleWorkpieceReference, Workpiece, WorkpieceShape } from '../../../../constants/coordinate';
 import SVGLoader from '../../../../scene/three-extensions/SVGLoader';
 import GridLine from './GridLine';
 
@@ -23,15 +22,17 @@ const METRIC_GRID_BIG_SPACING = 50;
 
 class PrintablePlate extends Object3D {
     private coordinateSystem: Group = null;
+
+    private workpiece: Workpiece;
     private size: { x: number; y: number };
-    private materials: Materials;
+    // private materials: Materials;
     private origin: Origin;
     private coordinateMode;
     private coorDelta: { dx: number; dy: number };
 
     private targetPoint = null;
 
-    public constructor(size, materials, origin, coordinateMode) {
+    public constructor(size, workpiece: Workpiece, origin, coordinateMode) {
         super();
 
         this.type = 'PrintPlane';
@@ -39,17 +40,16 @@ class PrintablePlate extends Object3D {
         this.targetPoint = null;
         // this.coordinateVisible = true;
         this.coordinateSystem = null;
+        this.workpiece = workpiece;
         this.size = size;
-        this.materials = {
-            ...materials
-        };
         this.origin = origin || {
             type: OriginType.Workpiece,
             reference: RectangleWorkpieceReference.Center,
             referenceMetadata: {},
         };
 
-        if (materials && materials.isRotate) {
+        // Move this function into _setup(), maybe?
+        if (workpiece.shape === WorkpieceShape.Cylinder) {
             return;
         }
 
@@ -64,10 +64,16 @@ class PrintablePlate extends Object3D {
         this._setup();
     }
 
-    public updateSize(series, size = this.size, materials = this.materials, origin: Origin = null) {
-        // this.series = series;
-        this.size = size;
-        this.materials = materials;
+    public updateSize(series, size = null, workpiece = null, origin: Origin = null) {
+        console.log('PrintablePlate.updateSize()');
+        if (size) {
+            this.size = size;
+        }
+
+        if (workpiece) {
+            this.workpiece = workpiece;
+        }
+
         if (origin) {
             this.origin = origin;
         }
@@ -162,6 +168,7 @@ class PrintablePlate extends Object3D {
         this.targetPoint.visible = true;
         this.add(this.targetPoint);
 
+        // Draw locking block if we have one
         if (this.origin.type === OriginType.CNCLockingBlock) {
             new SVGLoader().load(`${DEFAULT_LUBAN_HOST}/resources/images/cnc/locking-block-red.svg`, (data) => {
                 const paths = data.paths;
@@ -193,31 +200,9 @@ class PrintablePlate extends Object3D {
                 this.add(svgGroup);
             });
         }
-        // this._setMaterialsRect();
     }
 
-    public _setMaterialsRect() {
-        // eslint-disable-next-line no-unused-vars
-        const { x = 0, y = 0, fixtureLength = 20 } = this.materials;
-
-        if (!x && !y) {
-            return;
-        }
-
-        const editableAreaGeometry = new PlaneGeometry(x, y, 1, 1);
-        const editableAreaMesh = new Mesh(editableAreaGeometry, new MeshBasicMaterial({ color: '#fff', opacity: 0.5, side: DoubleSide }));
-        editableAreaMesh.position.y = y / 2 + 0.1;
-
-        const nonEditableAreaGeometry = new PlaneGeometry(x, Math.min(fixtureLength, y), 1, 1);
-        const nonEditableAreaMesh = new Mesh(nonEditableAreaGeometry, new MeshBasicMaterial({ color: '#FFFBFB', opacity: 0.5, side: DoubleSide }));
-        nonEditableAreaMesh.position.y = y + 0.1 - fixtureLength / 2;
-
-        this.add(editableAreaMesh);
-        this.add(nonEditableAreaMesh);
-    }
-
-    public changeCoordinateVisibility(value) {
-        // this.coordinateVisible = value;
+    public changeCoordinateVisibility(value: boolean) {
         this.coordinateSystem && (this.coordinateSystem.visible = value);
     }
 }

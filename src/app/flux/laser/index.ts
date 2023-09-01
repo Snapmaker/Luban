@@ -1,5 +1,6 @@
 import { cloneDeep, noop } from 'lodash';
 import * as THREE from 'three';
+import { Group } from 'three';
 
 import { timestamp } from '../../../shared/lib/random-utils';
 import {
@@ -117,7 +118,7 @@ const INITIAL_STATE = {
     // boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()), // bbox of selected model
     background: {
         enabled: false,
-        group: new THREE.Group()
+        group: new Group(),
     },
     useBackground: false,
 

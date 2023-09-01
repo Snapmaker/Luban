@@ -24,7 +24,6 @@ import { actions as machineActions } from '../../../flux/machine';
 import { actions as editorActions } from '../../../flux/editor';
 import styles from './styles.styl';
 import VisualizerTopRight from '../CncLaserTopRight/VisualizerTopRight';
-// eslint-disable-next-line no-unused-vars
 import {
     DISPLAYED_TYPE_TOOLPATH, HEAD_CNC, MAX_LASER_CNC_CANVAS_SCALE, MIN_LASER_CNC_CANVAS_SCALE,
     PAGE_EDITOR,
@@ -35,9 +34,9 @@ import { actions as operationHistoryActions } from '../../../flux/operation-hist
 import modal from '../../../lib/modal';
 import UniApi from '../../../lib/uni-api';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
-
 import { repairModelPopup } from '../../views/repair-model/repair-model-popup';
 import ModelGroup from '../../../models/ModelGroup';
+import { convertMaterialsToWorkpiece } from '../../../constants/coordinate';
 
 
 interface VisualizerProps {
@@ -425,7 +424,9 @@ class Visualizer extends React.Component<VisualizerProps> {
         super(props);
 
         const { coordinateSize, materials, origin, coordinateMode } = props;
-        this.printableArea = new PrintablePlate(coordinateSize, materials, origin, coordinateMode);
+
+        const workpiece = convertMaterialsToWorkpiece(materials);
+        this.printableArea = new PrintablePlate(coordinateSize, workpiece, origin, coordinateMode);
         this.state = {
             limitPicModalShow: false,
             file: null,
@@ -447,7 +448,8 @@ class Visualizer extends React.Component<VisualizerProps> {
 
         if (!isEqual(nextProps.size, this.props.size)) {
             const { size, materials, origin } = nextProps;
-            this.printableArea.updateSize(this.props.series, size, materials, origin);
+            const workpiece = convertMaterialsToWorkpiece(materials);
+            this.printableArea.updateSize(this.props.series, size, workpiece, origin);
             this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(size.z, VISUALIZER_CAMERA_HEIGHT)), new THREE.Vector3());
             this.actions.autoFocus();
         }
@@ -484,13 +486,15 @@ class Visualizer extends React.Component<VisualizerProps> {
 
         if (nextProps.coordinateMode !== this.props.coordinateMode || !isEqual(nextProps.materials, this.props.materials)) {
             const { coordinateSize, materials, origin, coordinateMode } = nextProps;
-            this.printableArea = new PrintablePlate(coordinateSize, materials, origin, coordinateMode);
+            const workpiece = convertMaterialsToWorkpiece(materials);
+            this.printableArea = new PrintablePlate(coordinateSize, workpiece, origin, coordinateMode);
             this.actions.autoFocus();
         }
 
         if (nextProps.coordinateSize !== this.props.coordinateSize) {
             const { coordinateSize, materials, origin, coordinateMode } = nextProps;
-            this.printableArea = new PrintablePlate(coordinateSize, materials, origin, coordinateMode);
+            const workpiece = convertMaterialsToWorkpiece(materials);
+            this.printableArea = new PrintablePlate(coordinateSize, workpiece, origin, coordinateMode);
             this.actions.autoFocus();
         }
         if (isOverSize !== this.props.isOverSize) {
