@@ -52,6 +52,32 @@ export type Workpiece = {
 };
 
 /**
+ * Help function that convert Materials to Workpiece.
+ *
+ * Remove this function when we migrated data from materials to workpiece.
+ */
+export function convertMaterialsToWorkpiece(materials: Materials): Workpiece {
+    if (!materials.isRotate) {
+        return {
+            shape: WorkpieceShape.Rectangle,
+            size: {
+                x: materials.x,
+                y: materials.y,
+                z: materials.z,
+            },
+        };
+    } else {
+        return {
+            shape: WorkpieceShape.Cylinder,
+            size: {
+                diameter: materials.diameter,
+                length: materials.length,
+            },
+        };
+    }
+}
+
+/**
  * Origin Definitions.
  */
 export enum OriginType {

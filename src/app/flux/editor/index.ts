@@ -2209,7 +2209,7 @@ export const actions = {
             } else {
                 await dispatch(actions.setWorkpiece(
                     headType,
-                    WorkpieceShape.Rectangle,
+                    WorkpieceShape.Cylinder,
                     {
                         diameter: 40,
                         length: 70,
@@ -2237,8 +2237,6 @@ export const actions = {
      * @param coordinateSize
      */
     changeCoordinateMode: (headType, coordinateMode = null, coordinateSize = null) => (dispatch, getState) => {
-        console.log('changeCoordinateMode');
-
         // deal with default coordinate size
         if (!coordinateSize) {
             const activeMachine = getState().machine.activeMachine as Machine;
@@ -2362,6 +2360,14 @@ export const actions = {
      */
     setWorkpiece: (headType: HeadType, shape: WorkpieceShape, size: RectangleWorkpieceSize | CylinderWorkpieceSize) => {
         return (dispatch) => {
+            // Update workpiece object, without further validation
+            dispatch(actions.updateState(headType, {
+                workpiece: {
+                    shape: shape,
+                    size: size,
+                }
+            }));
+
             dispatch(actions.updateState(headType, {
                 materials: {
                     isRotate: shape === WorkpieceShape.Cylinder,
