@@ -30,7 +30,7 @@ jobs:
               with:
                   node-version: 16
 
-            - run: npm install -g npm@latest
+            - run: npm install -g npm@^9
             - run: npm install
 
             - run: npm run build
@@ -69,7 +69,7 @@ jobs:
               with:
                   node-version: 16
 
-            - run: npm install -g npm@latest
+            - run: npm install -g npm@^9
             - run: npm install
 
             - run: npm run build
@@ -129,7 +129,7 @@ jobs:
               with:
                   node-version: 16
 
-            - run: npm install -g npm@latest
+            - run: npm install -g npm@^9
             - run: npm install
 
             - run: npm run build
