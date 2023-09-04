@@ -24,13 +24,13 @@ import api from '../../../api';
 const MoreInfo = () => {
     const lang = i18next.language;
     const [informationFlow, setInformationFlow] = useState({});
-    const carouselRef = useRef();
-    const carouselSeep = 5 * 1000;
 
     const supportURL = lang === 'zh-CN' ? SUPPORT_ZH_URL : SUPPORT_EN_URL;
     const websiteURL = lang === 'zh-CN' ? OFFICIAL_SITE_ZH_URL : OFFICIAL_SITE_EN_URL;
     const shopURL = lang === 'zh-CN' ? MARKET_ZH_URL : MARKET_EN_URL;
 
+    const carouselRef = useRef();
+    const carouselSleep = 5 * 1000;
     let lastSlidePagination = null;
     let paginationInterverTimer = null;
     let paginationTimeoutTimer = null;
@@ -42,8 +42,8 @@ const MoreInfo = () => {
         let currProgress = 0;
         paginationInterverTimer = setInterval(() => {
             currProgress += 1;
-            lastSlidePagination && (currSlidePagination.style.width = `${currProgress}%`);
-        }, carouselSeep / 100);
+            currSlidePagination && (currSlidePagination.style.width = `${currProgress}%`);
+        }, carouselSleep / 100);
 
         lastSlidePagination = currSlidePagination;
 
@@ -51,7 +51,7 @@ const MoreInfo = () => {
         paginationTimeoutTimer = setTimeout(() => {
             clearInterval(paginationInterverTimer);
             carouselRef.current.next();
-        }, carouselSeep);
+        }, carouselSleep);
     };
 
     useEffect(() => {
@@ -82,7 +82,6 @@ const MoreInfo = () => {
             </div>
             {informationFlow.swiper && (
                 <div className={styles['information-flow']}>
-                    {/* customPaging={renderPagination} */}
                     <Carousel
                         ref={carouselRef}
                         draggable
@@ -108,26 +107,6 @@ const MoreInfo = () => {
                             })
                         }
                     </Carousel>
-
-
-                    {/* <swiper-container pagination spaceBetween="24" class={styles['swiper-container']}>
-                    {
-                        informationFlow?.swiper?.map(swiper => {
-                            return (
-                                <swiper-slide class={styles['swiper-slide']}>
-                                    <div className="sm-flex justify-space-between sm-flex-direction-c">
-                                        <div>
-                                            <div className={styles['swiper-title']}>{swiper.title}</div>
-                                            <div className={styles['swiper-desc']}>{swiper.desc}</div>
-                                        </div>
-                                        <a className={styles['swiper-a']} href={swiper.btn.href} target="_blank" rel="noopener noreferrer">{`${swiper.btn.text} >`} </a>
-                                    </div>
-                                    <img className={styles['swiper-img']} src={swiper.imgSrc} alt={swiper.title} />
-                                </swiper-slide>
-                            );
-                        })
-                    }
-                </swiper-container> */}
                     <div className={styles['blocks-wrapper']}>
                         {
                             informationFlow?.blocks?.map(block => {
