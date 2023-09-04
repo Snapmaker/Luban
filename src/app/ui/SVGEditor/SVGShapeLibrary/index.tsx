@@ -10,9 +10,8 @@ import MainToolBar from '../../layouts/MainToolBar';
 import i18n from '../../../lib/i18n';
 import { IMG_RESOURCE_BASE_URL } from '../../../constants/downloadManager';
 
+
 const SVGShapeLibrary = (props) => {
-    // const [colCount, setColCount] = useState(5);
-    // const colCount = 5;
     const [svgShapeCount, setSvgShapeCount] = useState(0);
     const [pageSize, setPageSize] = useState(20);
     const [page, setPage] = useState(1);
@@ -27,38 +26,36 @@ const SVGShapeLibrary = (props) => {
 
     const getLabelList = async (query?: {labelIds?: number[]}) => {
         const res = (await api.getSvgShapeLabelList(query)) as any;
-        console.log('res', res);
         if (!res.body || !res.body.data || !Array.isArray(res.body.data)) {
             return [];
         }
         const data = res.body.data;
-        console.log(data);
         setLabelList(data);
         return data;
     };
+
     const getSvgList = async (query?: {labelIds?: number[], pageSize?: number, page?:number, start?: number, size?: number}) => {
         setIsLoading(true);
         if (query && Array.isArray(query.labelIds) && query.labelIds.includes(0)) query = null;
         const res = (await api.getSvgShapeList(query)) as any;
-        // console.log('res', res);
         if (!res.body || !res.body.data || !Array.isArray(res.body.data)) {
             return [];
         }
         const data = res.body.data;
         res.body.total > 0 && setSvgShapeCount(res.body.total);
         svgList.concat(data);
-        console.log(`total: ${svgShapeCount}`);
-        // setSvgList(pre => [...pre, ...data]);
         setSvgList(data);
         setIsLoading(false);
         return data;
     };
+
     const onCheckAllChange = (e: CheckboxChangeEvent) => {
         setSelectedLabelList(e.target.checked ? labelList.map(v => v.id) : []);
         setIndeterminate(false);
         setCheckAll(e.target.checked);
         getSvgList({ labelIds: e.target.checked ? labelList.map(v => v.id) : [], pageSize, page });
     };
+
     const onClickSvg = (svgShape) => {
         setIsLoading(true);
         if (svgShape.pathData) {
@@ -67,24 +64,45 @@ const SVGShapeLibrary = (props) => {
         } else {
             fetch(IMG_RESOURCE_BASE_URL + svgShape.fileInfo.file.uploadPath)
                 .then(async response => response.blob())
-                .then(svgBlob => {
-                    const svgFile = new File([svgBlob], `${svgShape.name}.svg`, { type: 'image/svg+xml' });
-                    console.log('$svgFile', svgFile);
-                    props.onChangeFile({ target: { files: [svgFile] } });
-                    setIsLoading(false);
+                .then(async svgBlob => {
+                    // set width and height
+                    const svgString = await svgBlob.text();
+                    const parser = new DOMParser();
+                    const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
+                    const svgElement = svgDoc.documentElement;
+                    if (svgElement.hasAttribute('viewBox')) {
+                        const w = parseFloat(svgElement.getAttribute('width'));
+                        const h = parseFloat(svgElement.getAttribute('height'));
+                        console.log(w, h);
+                        if (h > w) {
+                            const scaled = 100 * (w / h);
+                            svgElement.setAttribute('width', scaled.toString());
+                            svgElement.setAttribute('height', '100');
+                            // changeHeight(100);
+                        } else {
+                            const scaled = 100 * (h / w);
+                            svgElement.setAttribute('width', '100');
+                            svgElement.setAttribute('height', scaled.toString());
+                            // changeWidth(100);
+                        }
+                    }
+                    const blob = new Blob([new XMLSerializer().serializeToString(svgElement)]);
+
+                    const svgFile = new File([blob], `${svgShape.name}.svg`, { type: 'image/svg+xml' });
+                    await props.onChangeFile({ target: { files: [svgFile] } });
+
+                    // setIsLoading(false);
                 });
         }
         props.onClose();
     };
 
-    // CheckboxValueType
     const onChange = (checkedValues: number[]) => {
         if (checkedValues.includes(0)) {
             setSelectedLabelList(labelList);
         }
         const sortedCheckedValues = checkedValues.sort((a, b) => a - b);
         if (_.isEqual(selectedLabelList, sortedCheckedValues)) return;
-        console.log('checked = ', sortedCheckedValues, selectedLabelList);
         setIndeterminate(!!sortedCheckedValues.length && sortedCheckedValues.length < labelList.length);
         setSelectedLabelList(sortedCheckedValues);
         getSvgList({ labelIds: checkedValues, pageSize: pageSize });
@@ -92,7 +110,6 @@ const SVGShapeLibrary = (props) => {
     };
 
     const onPageChange = (toPage: number, toPageSize: number) => {
-        console.log('$', page, pageSize);
         setPage(toPage);
         setPageSize(toPageSize);
         getSvgList({ labelIds: selectedLabelList, page: toPage, pageSize: toPageSize });
@@ -103,7 +120,6 @@ const SVGShapeLibrary = (props) => {
 
         // get total svgshape
         getSvgList({ pageSize, page });
-        console.log(setPageSize, setPage);
     }, []);
 
     return (
@@ -113,7 +129,7 @@ const SVGShapeLibrary = (props) => {
                     wrapID={mainToolBarId}
                     leftItems={[
                         {
-                            title: i18n._('key-CaseResource/Page-Back'),
+                            title: i18n._('key-SvgShapeLibrary/Page-Back'),
                             name: 'MainToolbarBack',
                             action: () => (props?.isPopup ? props.onClose() : props.history.push('/home')),
                         },
@@ -124,9 +140,9 @@ const SVGShapeLibrary = (props) => {
                 />
                 <div id="svg-shape-library" className={styles['svg-shape-content']}>
                     <div className={styles['svg-shape-leftside']}>
-                        <h1>Category</h1>
+                        <h1>{i18n._('key-SvgShapeLibrary/Category')}</h1>
                         <Checkbox indeterminate={indeterminate} onChange={onCheckAllChange} checked={checkAll}>
-                            All
+                            {i18n._('key-SvgShapeLibrary/All')}
                         </Checkbox>
                         <Checkbox.Group style={{ width: '100%' }} className={styles['svg-shape-checkbox-group']} onChange={onChange} value={selectedLabelList}>
                             {
@@ -140,7 +156,6 @@ const SVGShapeLibrary = (props) => {
                         <div className={styles['svg-shape-container']}>
                             {
                                 svgList.map(v => {
-                                    console.log(v);
                                     if (v.pathData) {
                                         return (
                                             <div className={styles['svg-shape-item']} key={v.id}>
@@ -155,7 +170,6 @@ const SVGShapeLibrary = (props) => {
                                                         classNames('background-transparent',
                                                             'padding-horizontal-4', 'position-re',
                                                             styles['btn-center-ext'],)
-                                                        // { [styles.selected]: extShape === key }
                                                     }
                                                 >
                                                     <path stroke="black" fill="none" strokeWidth="6.25" fillRule="evenodd" clipRule="evenodd" d={v.pathData} />

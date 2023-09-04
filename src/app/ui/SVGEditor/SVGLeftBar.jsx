@@ -82,6 +82,11 @@ const SVGLeftBar = forwardRef((props, ref) => {
         stopDraw: () => {
             props.onStopDraw(true);
         },
+
+        openSvgShapeLibrary: () => {
+            props.updateIsShowSVGShapeLibrary(true);
+            actions.setMode('select');
+        }
     };
 
     useImperativeHandle(ref, () => ({
@@ -291,8 +296,8 @@ const SVGLeftBar = forwardRef((props, ref) => {
                                 <span
                                     tabIndex={0}
                                     role="button"
-                                    onClick={() => props.updateIsShowSVGShapeLibrary(true)}
-                                    onKeyDown={() => props.updateIsShowSVGShapeLibrary(true)}
+                                    onClick={() => actions.openSvgShapeLibrary()}
+                                    onKeyDown={() => actions.openSvgShapeLibrary()}
                                     className={classNames(styles['blue-text'])}
                                 > {i18n._('key-Laser/LeftBar-Online Libary')}
                                 </span>
