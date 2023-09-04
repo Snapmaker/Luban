@@ -34,6 +34,7 @@ type SVGEditorProps = {
     origin: object;
     editable: boolean;
 
+    headType: string;
     menuDisabledCount: number;
     SVGCanvasMode: string;
     SVGCanvasExt: object;
@@ -330,6 +331,7 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
                     isPopup
                     key="svg-shape-library-popup"
                     onClose={onClose}
+                    headType={props.headType}
                     createSvgModelByDData={createSvgModelByDData}
                     onChangeFile={props.onChangeFile}
                 />
