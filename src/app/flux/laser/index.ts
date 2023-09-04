@@ -18,6 +18,7 @@ import {
     Origin,
     OriginType,
     RectangleWorkpieceReference,
+    Workpiece,
     WorkpieceShape,
 } from '../../constants/coordinate';
 import { getMachineSeriesWithToolhead } from '../../constants/machines';
@@ -39,6 +40,15 @@ import { SVGClippingOperation, SVGClippingType } from '../../constants/clipping'
 
 const initModelGroup = new ModelGroup2D('laser');
 const operationHistory = new OperationHistory();
+
+const initialWorkpiece: Workpiece = {
+    shape: WorkpieceShape.Rectangle,
+    size: {
+        x: 0,
+        y: 0,
+        z: 0,
+    }
+};
 
 const initialOrigin: Origin = {
     type: OriginType.Workpiece,
@@ -62,6 +72,7 @@ const INITIAL_STATE = {
     // Coordinate
     coordinateMode: COORDINATE_MODE_CENTER,
     coordinateSize: { x: 0, y: 0 },
+    workpiece: initialWorkpiece,
     origin: initialOrigin,
 
     // laser run boundary mode

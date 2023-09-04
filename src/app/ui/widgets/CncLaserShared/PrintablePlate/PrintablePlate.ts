@@ -9,11 +9,18 @@ import {
     Math as ThreeMath
 } from 'three';
 
+import { DEFAULT_LUBAN_HOST } from '../../../../constants';
+import {
+    Origin,
+    OriginType,
+    RectangleWorkpieceReference,
+    RectangleWorkpieceSize,
+    Workpiece,
+    WorkpieceShape
+} from '../../../../constants/coordinate';
+import SVGLoader from '../../../../scene/three-extensions/SVGLoader';
 import TargetPoint from '../../../../scene/three-extensions/TargetPoint';
 import TextSprite from '../../../../scene/three-extensions/TextSprite';
-import { COORDINATE_MODE_CENTER, DEFAULT_LUBAN_HOST } from '../../../../constants';
-import { Origin, OriginType, RectangleWorkpieceReference, Workpiece, WorkpieceShape } from '../../../../constants/coordinate';
-import SVGLoader from '../../../../scene/three-extensions/SVGLoader';
 import GridLine from './GridLine';
 
 const METRIC_GRID_SPACING = 10; // 10 mm
@@ -23,16 +30,22 @@ const METRIC_GRID_BIG_SPACING = 50;
 class PrintablePlate extends Object3D {
     private coordinateSystem: Group = null;
 
-    private workpiece: Workpiece;
-    private size: { x: number; y: number };
-    // private materials: Materials;
+    private workpiece: Workpiece
     private origin: Origin;
-    private coordinateMode;
+
+    /**
+     * Canvas size
+     */
+    private canvasSize: { x: number; y: number };
+
+    /**
+     * Canvas coordinate offset
+     */
     private coorDelta: { dx: number; dy: number };
 
     private targetPoint = null;
 
-    public constructor(size, workpiece: Workpiece, origin, coordinateMode) {
+    public constructor(workpiece: Workpiece, origin: Origin) {
         super();
 
         this.type = 'PrintPlane';
@@ -40,8 +53,8 @@ class PrintablePlate extends Object3D {
         this.targetPoint = null;
         // this.coordinateVisible = true;
         this.coordinateSystem = null;
+
         this.workpiece = workpiece;
-        this.size = size;
         this.origin = origin || {
             type: OriginType.Workpiece,
             reference: RectangleWorkpieceReference.Center,
@@ -53,33 +66,50 @@ class PrintablePlate extends Object3D {
             return;
         }
 
-        this.coordinateMode = coordinateMode ?? COORDINATE_MODE_CENTER;
+
+        this.calculateCoordinateOffset();
+        this._setup();
+    }
+
+    private calculateCoordinateOffset(): void {
+        // canvas size
+        if (this.workpiece.shape === WorkpieceShape.Rectangle) {
+            const size = (this.workpiece.size as RectangleWorkpieceSize);
+
+            this.canvasSize = size;
+        }
+
+        // coordinate offset
         this.coorDelta = {
             dx: 0,
             dy: 0
         };
-        this.coorDelta.dx += this.size.x / 2 * this.coordinateMode.setting.sizeMultiplyFactor.x;
-        this.coorDelta.dy += this.size.y / 2 * this.coordinateMode.setting.sizeMultiplyFactor.y;
 
-        this._setup();
-    }
-
-    public updateSize(series, size = null, workpiece = null, origin: Origin = null) {
-        console.log('PrintablePlate.updateSize()');
-        if (size) {
-            this.size = size;
+        if (this.workpiece.shape === WorkpieceShape.Rectangle) {
+            const size = (this.workpiece.size as RectangleWorkpieceSize);
+            if (this.origin.type === OriginType.Workpiece || this.origin.type === OriginType.Object) {
+                switch (this.origin.reference) {
+                    case RectangleWorkpieceReference.BottomLeft: {
+                        this.coorDelta = { dx: size.x / 2, dy: size.y / 2 };
+                        break;
+                    }
+                    case RectangleWorkpieceReference.BottomRight: {
+                        this.coorDelta = { dx: -size.x / 2, dy: size.y / 2 };
+                        break;
+                    }
+                    case RectangleWorkpieceReference.TopLeft: {
+                        this.coorDelta = { dx: size.x / 2, dy: -size.y / 2 };
+                        break;
+                    }
+                    case RectangleWorkpieceReference.TopRight: {
+                        this.coorDelta = { dx: -size.x / 2, dy: -size.y / 2 };
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
         }
-
-        if (workpiece) {
-            this.workpiece = workpiece;
-        }
-
-        if (origin) {
-            this.origin = origin;
-        }
-
-        this.remove(...this.children);
-        this._setup();
     }
 
     public _setup() {
@@ -100,11 +130,11 @@ class PrintablePlate extends Object3D {
         { // Coordinate Grid
             // Todo: cause twice
             const gridLine = new GridLine(
-                -this.size.x / 2 + this.coorDelta?.dx,
-                this.size.x / 2 + this.coorDelta?.dx,
+                -this.canvasSize.x / 2 + this.coorDelta.dx,
+                this.canvasSize.x / 2 + this.coorDelta.dx,
                 gridSpacing,
-                -this.size.y / 2 + this.coorDelta?.dy,
-                this.size.y / 2 + this.coorDelta?.dy,
+                -this.canvasSize.y / 2 + this.coorDelta.dy,
+                this.canvasSize.y / 2 + this.coorDelta.dy,
                 gridSpacing,
                 0XFFFFFF - 0xF500F7 // grid
             );
@@ -119,10 +149,10 @@ class PrintablePlate extends Object3D {
 
         { // Axis Labels
             const textSize = (10 / 3);
-            const minX = Math.ceil((-this.size.x / 2 + this.coorDelta?.dx) / METRIC_GRID_BIG_SPACING) * METRIC_GRID_BIG_SPACING;
-            const minY = Math.ceil((-this.size.y / 2 + this.coorDelta?.dy) / METRIC_GRID_BIG_SPACING) * METRIC_GRID_BIG_SPACING;
-            const maxX = Math.floor((this.size.x / 2 + this.coorDelta?.dx) / METRIC_GRID_BIG_SPACING) * METRIC_GRID_BIG_SPACING;
-            const maxY = Math.floor((this.size.y / 2 + this.coorDelta?.dy) / METRIC_GRID_BIG_SPACING) * METRIC_GRID_BIG_SPACING;
+            const minX = Math.ceil((-this.canvasSize.x / 2 + this.coorDelta.dx) / METRIC_GRID_BIG_SPACING) * METRIC_GRID_BIG_SPACING;
+            const minY = Math.ceil((-this.canvasSize.y / 2 + this.coorDelta.dy) / METRIC_GRID_BIG_SPACING) * METRIC_GRID_BIG_SPACING;
+            const maxX = Math.floor((this.canvasSize.x / 2 + this.coorDelta.dx) / METRIC_GRID_BIG_SPACING) * METRIC_GRID_BIG_SPACING;
+            const maxY = Math.floor((this.canvasSize.y / 2 + this.coorDelta.dy) / METRIC_GRID_BIG_SPACING) * METRIC_GRID_BIG_SPACING;
 
             for (let x = minX; x <= maxX; x += METRIC_GRID_BIG_SPACING) {
                 if (x !== 0) {

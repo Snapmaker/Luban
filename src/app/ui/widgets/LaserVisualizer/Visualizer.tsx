@@ -21,7 +21,7 @@ import {
     SELECTEVENT,
     VISUALIZER_CAMERA_HEIGHT
 } from '../../../constants';
-import { Origin, convertMaterialsToWorkpiece } from '../../../constants/coordinate';
+import { Origin, Workpiece, WorkpieceShape, convertMaterialsToWorkpiece } from '../../../constants/coordinate';
 import { actions as editorActions } from '../../../flux/editor';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
 import i18n from '../../../lib/i18n';
@@ -61,6 +61,7 @@ interface VisualizerProps {
     updateTarget: (target) => void;
 
     // Origin
+    workpiece: Workpiece;
     origin: Origin;
 
     // actions
@@ -380,9 +381,9 @@ class Visualizer extends React.Component<VisualizerProps> {
     public constructor(props) {
         super(props);
 
-        const { size, materials, coordinateMode, origin } = props;
+        const { materials, origin } = props;
         const workpiece = convertMaterialsToWorkpiece(materials);
-        this.printableArea = new PrintablePlate(size, workpiece, origin, coordinateMode);
+        this.printableArea = new PrintablePlate(workpiece, origin);
         this.state = {
             limitPicModalShow: false,
             file: null,
@@ -435,20 +436,10 @@ class Visualizer extends React.Component<VisualizerProps> {
             this.canvas.current.setCamera(new THREE.Vector3(0, 0, VISUALIZER_CAMERA_HEIGHT), new THREE.Vector3());
         }
 
-        if (nextProps.coordinateMode !== this.props.coordinateMode
-            || nextProps.coordinateSize !== this.props.coordinateSize
-            || !isEqual(nextProps.materials, this.props.materials)
-            || !isEqual(nextProps.origin, this.props.origin)) {
-            const { coordinateSize, coordinateMode, origin, materials } = nextProps;
+        if (!isEqual(nextProps.workpiece, this.props.workpiece) || !isEqual(nextProps.origin, this.props.origin)) {
+            const { workpiece, origin } = nextProps;
 
-            const workpiece = convertMaterialsToWorkpiece(materials);
-
-            this.printableArea = new PrintablePlate(
-                coordinateSize,
-                workpiece,
-                origin,
-                coordinateMode,
-            );
+            this.printableArea = new PrintablePlate(workpiece, origin);
             this.actions.autoFocus();
         }
 
@@ -461,7 +452,7 @@ class Visualizer extends React.Component<VisualizerProps> {
             }
         }
 
-        this.allowedFiles = (nextProps.materials.isRotate ? this.uploadExts : `${this.uploadExts}, .stl, .amf, .3mf`);
+        this.allowedFiles = (nextProps.workpiece.shape === WorkpieceShape.Cylinder ? this.uploadExts : `${this.uploadExts}, .stl, .amf, .3mf`);
     }
 
     public componentWillUnmount() {
@@ -753,15 +744,18 @@ const mapStateToProps = (state, ownProps) => {
     const modelGroup: ModelGroup = state.laser.modelGroup;
     const toolPathGroup: ToolPathGroup = state.laser.toolPathGroup;
 
-    const background: { enabled: boolean; group: Group} = state.laser.background;
+    const background: { enabled: boolean; group: Group } = state.laser.background;
 
     const { progressStatesManager } = state.laser;
     const {
         SVGActions, scale, target, materials, page, selectedModelID, svgModelGroup, displayedType,
         isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress,
-        coordinateMode, coordinateSize, origin,
+        coordinateMode, coordinateSize,
         enableShortcut, isOverSize, SVGCanvasMode, SVGCanvasExt,
     } = state.laser;
+
+    const workpiece: Workpiece = state.laser.workpiece;
+    const origin: Origin = state.laser.origin;
 
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedToolPathModelArray = modelGroup.getSelectedToolPathModels();
@@ -781,6 +775,7 @@ const mapStateToProps = (state, ownProps) => {
         series,
         coordinateMode,
         coordinateSize,
+        workpiece,
         origin,
         materials,
         hasModel: modelGroup.hasModel(),

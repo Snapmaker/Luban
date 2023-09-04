@@ -36,7 +36,7 @@ import UniApi from '../../../lib/uni-api';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import { repairModelPopup } from '../../views/repair-model/repair-model-popup';
 import ModelGroup from '../../../models/ModelGroup';
-import { convertMaterialsToWorkpiece } from '../../../constants/coordinate';
+import { Origin, convertMaterialsToWorkpiece } from '../../../constants/coordinate';
 
 
 interface VisualizerProps {
@@ -45,6 +45,8 @@ interface VisualizerProps {
     page: string;
 
     materials: object;
+    origin: Origin;
+
     stage: number;
     progress: number;
     showSimulation: boolean;
@@ -423,10 +425,10 @@ class Visualizer extends React.Component<VisualizerProps> {
     public constructor(props) {
         super(props);
 
-        const { coordinateSize, materials, origin, coordinateMode } = props;
+        const { materials, origin } = props;
 
         const workpiece = convertMaterialsToWorkpiece(materials);
-        this.printableArea = new PrintablePlate(coordinateSize, workpiece, origin, coordinateMode);
+        this.printableArea = new PrintablePlate(workpiece, origin);
         this.state = {
             limitPicModalShow: false,
             file: null,
@@ -447,9 +449,7 @@ class Visualizer extends React.Component<VisualizerProps> {
         const { renderingTimestamp, isOverSize } = nextProps;
 
         if (!isEqual(nextProps.size, this.props.size)) {
-            const { size, materials, origin } = nextProps;
-            const workpiece = convertMaterialsToWorkpiece(materials);
-            this.printableArea.updateSize(this.props.series, size, workpiece, origin);
+            const { size } = nextProps;
             this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(size.z, VISUALIZER_CAMERA_HEIGHT)), new THREE.Vector3());
             this.actions.autoFocus();
         }
@@ -484,19 +484,15 @@ class Visualizer extends React.Component<VisualizerProps> {
             }
         }
 
-        if (nextProps.coordinateMode !== this.props.coordinateMode || !isEqual(nextProps.materials, this.props.materials)) {
-            const { coordinateSize, materials, origin, coordinateMode } = nextProps;
+        if (!isEqual(nextProps.materials, this.props.materials)
+            || !isEqual(nextProps.origin, this.props.origin)
+        ) {
+            const { materials, origin } = nextProps;
             const workpiece = convertMaterialsToWorkpiece(materials);
-            this.printableArea = new PrintablePlate(coordinateSize, workpiece, origin, coordinateMode);
+            this.printableArea = new PrintablePlate(workpiece, origin);
             this.actions.autoFocus();
         }
 
-        if (nextProps.coordinateSize !== this.props.coordinateSize) {
-            const { coordinateSize, materials, origin, coordinateMode } = nextProps;
-            const workpiece = convertMaterialsToWorkpiece(materials);
-            this.printableArea = new PrintablePlate(coordinateSize, workpiece, origin, coordinateMode);
-            this.actions.autoFocus();
-        }
         if (isOverSize !== this.props.isOverSize) {
             this.setState({
                 limitPicModalShow: isOverSize
