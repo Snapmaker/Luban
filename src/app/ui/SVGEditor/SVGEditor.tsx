@@ -347,6 +347,10 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         }
     }, [props.showSVGShapeLibrary]);
 
+    useEffect(() => {
+        updateIsShowSVGShapeLibrary(true);
+    }, []);
+
     return (
         <React.Fragment>
             <div className={styles['laser-table']} style={{ position: 'relative' }}>
