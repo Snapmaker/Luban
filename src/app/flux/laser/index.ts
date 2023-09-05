@@ -14,10 +14,12 @@ import {
     PAGE_EDITOR
 } from '../../constants';
 import {
+    CylinderWorkpieceSize,
     JobOffsetMode,
     Origin,
     OriginType,
     RectangleWorkpieceReference,
+    RectangleWorkpieceSize,
     Workpiece,
     WorkpieceShape,
 } from '../../constants/coordinate';
@@ -192,16 +194,17 @@ export const actions = {
         }));
 
         // Set machine size into coordinate default size
-        const { size } = getState().machine;
-        const { materials, useBackground, coordinateSize } = getState().laser;
-        const { isRotate } = materials; // Get default material from flux state
+        const { useBackground, coordinateSize } = getState().laser;
+        const workpiece: Workpiece = getState().laser.workpiece;
 
-        if (!isRotate) {
-            if (coordinateSize.x === 0 && coordinateSize.y === 0 && size) {
-                dispatch(editorActions.updateState(HEAD_LASER, {
-                    coordinateSize: size
-                }));
+        console.log('workpiece =', workpiece);
+        console.log('coordinateSize =', coordinateSize);
 
+        if (workpiece.shape === WorkpieceShape.Rectangle) {
+            const workpieceSize = (workpiece.size as RectangleWorkpieceSize);
+
+            const { size } = getState().machine;
+            if ((workpieceSize.x === 0 || workpieceSize.y === 0) && size) {
                 dispatch(editorActions.setWorkpiece(
                     HEAD_LASER,
                     WorkpieceShape.Rectangle,
@@ -211,28 +214,30 @@ export const actions = {
                     }
                 ));
 
-                const newCoordinateSize = {
+                dispatch(editorActions.changeCoordinateMode(HEAD_LASER, COORDINATE_MODE_CENTER, {
                     x: size.x,
                     y: size.y,
-                };
-                dispatch(editorActions.changeCoordinateMode(HEAD_LASER, COORDINATE_MODE_CENTER, newCoordinateSize));
+                }));
             }
         } else {
-            dispatch(editorActions.setWorkpiece(
-                HEAD_LASER,
-                WorkpieceShape.Cylinder,
-                {
-                    diameter: 40,
-                    length: 75,
-                }
-            ));
+            const workpieceSize = (workpiece.size as CylinderWorkpieceSize);
+            if (workpieceSize.diameter === 0 || workpieceSize.length === 0) {
+                dispatch(editorActions.setWorkpiece(
+                    HEAD_LASER,
+                    WorkpieceShape.Cylinder,
+                    {
+                        diameter: 40,
+                        length: 75,
+                    }
+                ));
 
-            const newCoordinateSize = {
-                x: 40 * Math.PI,
-                y: 75,
-            };
-            dispatch(editorActions.changeCoordinateMode(HEAD_LASER, COORDINATE_MODE_BOTTOM_CENTER, newCoordinateSize));
+                dispatch(editorActions.changeCoordinateMode(HEAD_LASER, COORDINATE_MODE_BOTTOM_CENTER, {
+                    x: 40 * Math.PI,
+                    y: 75,
+                }));
+            }
         }
+
         if (useBackground) {
             dispatch(actions.removeBackgroundImage());
         }

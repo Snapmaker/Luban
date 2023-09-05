@@ -9,9 +9,10 @@ import {
     PAGE_EDITOR,
 } from '../../constants';
 import {
-    OriginType,
     Origin,
+    OriginType,
     RectangleWorkpieceReference,
+    Workpiece,
     WorkpieceShape,
 } from '../../constants/coordinate';
 import { getMachineToolHeadConfigPath } from '../../constants/machines';
@@ -36,6 +37,15 @@ const ACTION_CHANGE_TOOL_PARAMS = 'cnc/ACTION_CHANGE_TOOL_PARAMS';
 const initModelGroup = new ModelGroup2D('cnc');
 const operationHistory = new OperationHistory();
 
+const initialWorkpiece: Workpiece = {
+    shape: WorkpieceShape.Rectangle,
+    size: {
+        x: 0,
+        y: 0,
+        z: 0,
+    }
+};
+
 const initialOrigin: Origin = {
     type: OriginType.Workpiece,
     reference: RectangleWorkpieceReference.Center,
@@ -56,6 +66,7 @@ const INITIAL_STATE = {
     // Coordinate
     coordinateMode: COORDINATE_MODE_CENTER,
     coordinateSize: { x: 0, y: 0 },
+    workpiece: initialWorkpiece,
     origin: initialOrigin,
     lockingBlockPosition: 'A',
 
