@@ -95,6 +95,7 @@ const SVGShapeLibrary = (props) => {
                 });
         }
         props.onClose();
+        setIsLoading(false);
     };
 
     const onChange = (checkedValues: number[]) => {
