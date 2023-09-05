@@ -2212,7 +2212,7 @@ export const actions = {
                     WorkpieceShape.Cylinder,
                     {
                         diameter: 40,
-                        length: 70,
+                        length: 75,
                     }
                 ));
                 await dispatch(actions.updateWorkpieceObject(headType));
