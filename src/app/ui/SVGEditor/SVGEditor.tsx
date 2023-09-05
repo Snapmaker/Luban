@@ -80,6 +80,8 @@ type SVGEditorProps = {
 };
 
 const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
+    const [isFirstShow, setIsFirstShow] = useState(false);
+
     const canvas = useRef(null);
     const leftBarRef = useRef(null);
     const extRef = useRef(props.SVGCanvasExt);
@@ -328,6 +330,7 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
                 onClose={onClose}
             >
                 <SVGShapeLibrary
+                    style={{ display: props.showSVGShapeLibrary }}
                     isPopup
                     key="svg-shape-library-popup"
                     onClose={onClose}
@@ -338,6 +341,11 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
             </Modal>
         );
     };
+    useEffect(() => {
+        if (props.showSVGShapeLibrary) {
+            setIsFirstShow(true);
+        }
+    }, [props.showSVGShapeLibrary]);
 
     return (
         <React.Fragment>
@@ -400,7 +408,7 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
                         updateIsShowSVGShapeLibrary={updateIsShowSVGShapeLibrary}
                     />
                 </div>
-                {props.showSVGShapeLibrary && renderSVGShapeLibrary()}
+                {isFirstShow && renderSVGShapeLibrary()}
             </div>
         </React.Fragment>
     );
