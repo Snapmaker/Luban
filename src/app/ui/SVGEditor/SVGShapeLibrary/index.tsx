@@ -128,6 +128,7 @@ const SVGShapeLibrary = (props) => {
             const row = Math.floor(height / itemHeight);
             const currPageSize = col * row;
             const currpage = Math.floor((pageSize * page) / currPageSize);
+            setPageSize(currPageSize);
             getSvgList({ labelIds: selectedLabelList, page: currpage || 1, pageSize: currPageSize });
             return currPageSize;
         }, 500);
