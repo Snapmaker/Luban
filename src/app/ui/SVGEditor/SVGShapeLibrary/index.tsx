@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import i18next from 'i18next';
 import { Checkbox, Spin, Pagination } from 'antd';
 import classNames from 'classnames';
@@ -12,8 +12,9 @@ import { IMG_RESOURCE_BASE_URL } from '../../../constants/downloadManager';
 
 
 const SVGShapeLibrary = (props) => {
+    const rightSideBlock = useRef();
     const [svgShapeCount, setSvgShapeCount] = useState(0);
-    const [pageSize, setPageSize] = useState(20);
+    const [pageSize, setPageSize] = useState(4 * 5);
     const [page, setPage] = useState(1);
     const mainToolBarId = 'svg-shape-library-main-tool-bar';
     const [isLoading, setIsLoading] = useState(true);
@@ -43,7 +44,7 @@ const SVGShapeLibrary = (props) => {
         }
         const data = res.body.data;
         res.body.total > 0 && setSvgShapeCount(res.body.total);
-        svgList.concat(data);
+        // svgList.concat(data);
         setSvgList(data);
         setIsLoading(false);
         return data;
@@ -115,12 +116,32 @@ const SVGShapeLibrary = (props) => {
         setPageSize(toPageSize);
         getSvgList({ labelIds: selectedLabelList, page: toPage, pageSize: toPageSize });
     };
+    const handleResize = (() => {
+        return _.debounce(() => {
+            if (!window || !rightSideBlock?.current) return window.innerWidth >= 1920 ? 8 * 4 : 5 * 4;
+            const width = rightSideBlock?.current?.clientWidth;
+            // const height = rightSideBlock?.current.clientHeight;
+            const height = window.innerHeight - 26 - 68 - 80; // menu-bar(26) and modal-bar(68) and pagination(80)
+            const col = window.innerWidth >= 1920 ? 8 : 5;
+            const itemWidth = (width - col * 10) / col;
+            const itemHeight = itemWidth;
+            const row = Math.floor(height / itemHeight);
+            const currPageSize = col * row;
+            const currpage = Math.floor((pageSize * page) / currPageSize);
+            getSvgList({ labelIds: selectedLabelList, page: currpage || 1, pageSize: currPageSize });
+            return currPageSize;
+        }, 500);
+    })();
 
     useEffect(() => {
         getLabelList();
 
-        // get total svgshape
-        getSvgList({ pageSize, page });
+        handleResize();
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
     }, []);
 
     return (
@@ -139,75 +160,77 @@ const SVGShapeLibrary = (props) => {
                     lang={i18next.language}
                     className={styles['svg-shape-maintoolbar']}
                 />
-                <div id="svg-shape-library" className={styles['svg-shape-content']}>
-                    <div className={styles['svg-shape-leftside']}>
-                        <h1>{i18n._('key-SvgShapeLibrary/Category')}</h1>
-                        <Checkbox indeterminate={indeterminate} onChange={onCheckAllChange} checked={checkAll}>
-                            {i18n._('key-SvgShapeLibrary/All')}
-                        </Checkbox>
-                        <Checkbox.Group style={{ width: '100%' }} className={styles['svg-shape-checkbox-group']} onChange={onChange} value={selectedLabelList}>
-                            {
-                                labelList.map(label => {
-                                    return (<Checkbox key={label.id} value={label.id} className={styles['svg-shape-checkbox']}>{label.name}</Checkbox>);
-                                })
-                            }
-                        </Checkbox.Group>
-                    </div>
-                    <div className={styles['svg-shape-rightside']}>
-                        <div className={styles['svg-shape-container']}>
-                            {
-                                svgList.map(v => {
-                                    if (v.pathData) {
-                                        return (
-                                            <div className={styles['svg-shape-item']} key={v.id}>
-                                                <svg
-                                                    onClick={() => onClickSvg(v)}
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    role="button"
-                                                    viewBox="0 0 300 300"
-                                                    style={{ background: 'transparent', 'borderBottom': 0 }}
-                                                    fill="#545659"
-                                                    className={
-                                                        classNames('background-transparent',
-                                                            'padding-horizontal-4', 'position-re',
-                                                            styles['btn-center-ext'],)
-                                                    }
-                                                >
-                                                    <path stroke="black" fill="none" strokeWidth="6.25" fillRule="evenodd" clipRule="evenodd" d={v.pathData} />
-                                                </svg>
-                                            </div>
-                                        );
-                                    } else {
-                                        return (
-                                            <div
-                                                tabIndex={0}
-                                                className={styles['svg-shape-item']}
-                                                key={v.id}
-                                                role="button"
-                                                onKeyDown={() => onClickSvg(v)}
-                                                onClick={() => onClickSvg(v)}
-                                            >
-                                                <img
-                                                    className="width-percent-100"
-                                                    src={IMG_RESOURCE_BASE_URL + v.fileInfo.file.uploadPath}
-                                                    alt=""
-                                                />
-                                            </div>
-                                        );
-                                    }
-                                })
-                            }
-
+                <div className={styles['svg-shape-content-wrapper']}>
+                    <div id="svg-shape-library" className={styles['svg-shape-content']}>
+                        <div className={styles['svg-shape-leftside']}>
+                            <h1>{i18n._('key-SvgShapeLibrary/Category')}</h1>
+                            <Checkbox indeterminate={indeterminate} onChange={onCheckAllChange} checked={checkAll}>
+                                {i18n._('key-SvgShapeLibrary/All')}
+                            </Checkbox>
+                            <Checkbox.Group style={{ width: '100%' }} className={styles['svg-shape-checkbox-group']} onChange={onChange} value={selectedLabelList}>
+                                {
+                                    labelList.map(label => {
+                                        return (<Checkbox key={`label${label.id}`} value={label.id} className={styles['svg-shape-checkbox']}>{label.name}</Checkbox>);
+                                    })
+                                }
+                            </Checkbox.Group>
                         </div>
-                        <Pagination
-                            className={styles.pagination}
-                            defaultCurrent={page}
-                            total={svgShapeCount}
-                            showSizeChanger={false}
-                            defaultPageSize={pageSize}
-                            onChange={onPageChange}
-                            current={page}
-                        />
+                        <div className={styles['svg-shape-rightside']} ref={rightSideBlock}>
+                            <div className={styles['svg-shape-container']}>
+                                {
+                                    svgList.map(v => {
+                                        if (v.pathData) {
+                                            return (
+                                                <div className={styles['svg-shape-item']}>
+                                                    <svg
+                                                        onClick={() => onClickSvg(v)}
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        role="button"
+                                                        viewBox="0 0 300 300"
+                                                        style={{ background: 'transparent', 'borderBottom': 0 }}
+                                                        fill="#545659"
+                                                        className={
+                                                            classNames('background-transparent',
+                                                                'padding-horizontal-4', 'position-re',
+                                                                styles['btn-center-ext'],)
+                                                        }
+                                                    >
+                                                        <path stroke="black" fill="none" strokeWidth="6.25" fillRule="evenodd" clipRule="evenodd" d={v.pathData} />
+                                                    </svg>
+                                                </div>
+                                            );
+                                        } else {
+                                            return (
+                                                <div
+                                                    tabIndex={0}
+                                                    className={styles['svg-shape-item']}
+                                                    role="button"
+                                                    onKeyDown={() => onClickSvg(v)}
+                                                    onClick={() => onClickSvg(v)}
+                                                >
+                                                    <img
+                                                        className="width-percent-100"
+                                                        src={IMG_RESOURCE_BASE_URL + v.fileInfo.file.uploadPath}
+                                                        alt=""
+                                                    />
+                                                </div>
+                                            );
+                                        }
+                                    })
+                                }
+
+                            </div>
+                            <Pagination
+                                className={styles.pagination}
+                                defaultCurrent={page}
+                                total={svgShapeCount}
+                                showSizeChanger={false}
+                                defaultPageSize={pageSize}
+                                pageSize={pageSize}
+                                onChange={onPageChange}
+                                current={page}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
