@@ -92,9 +92,6 @@ class GcodeGenerator {
                     item.S !== undefined && (line += `P${floatFixed3(item.S)}`);
                 }
             } else if (item.M !== undefined) {
-                if (item.M === 3) {
-                    item.M = 4;
-                }
                 cmd = `M${item.M}`;
                 line += `${cmd} `;
 

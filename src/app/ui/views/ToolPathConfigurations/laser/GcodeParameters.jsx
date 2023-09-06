@@ -130,7 +130,7 @@ class GcodeParameters extends PureComponent {
         }
 
         // Session Power
-        const laserDefinitionPowerKeys = ['fixedPower', 'halfDiodeMode'];
+        const laserDefinitionPowerKeys = ['fixedPower', 'constantPowerMode', 'halfDiodeMode'];
         // if (pathType === 'fill' && movementMode === 'greyscale-variable-line') {
         //     laserDefinitionPowerKeys.push('fixedMinPower');
         // laserDefinitionPowerKeys.push('powerLevelDivisions');

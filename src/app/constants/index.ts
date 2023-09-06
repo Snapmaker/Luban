@@ -467,7 +467,7 @@ export const LASER_PRESENT_CONFIG_GROUP = [
     },
     {
         name: 'key-Laser/ToolpathParameters-Power',
-        fields: ['fixed_power', 'half_diode_mode']
+        fields: ['fixed_power', 'constant_power_mode', 'half_diode_mode']
     },
     {
         name: 'key-Laser/ToolpathParameters-Auxiliary Gas',
@@ -751,6 +751,12 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         default_value: false,
         label: 'Half Diode Mode',
         description: 'For lasers that use multiple diode combining technology and support independent control of different groups of diodes, finer power control and smaller spot sizes can be achieved by turning on only one group of diodes.',
+        type: 'bool'
+    },
+    constantPowerMode: {
+        default_value: true,
+        label: 'Constant Power Mode',
+        description: 'In constant power mode, the laser does not change with speed and is recommended to be turned on when cutting. And it is recommended to turn it off when picture engraving.',
         type: 'bool'
     },
     movementMode: {
