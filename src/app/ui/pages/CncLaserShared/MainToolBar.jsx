@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import React, { useState, useEffect, useRef } from 'react';
 import i18next from 'i18next';
 import { includes } from 'lodash';
+import { message } from 'antd';
 import Menu from '../../components/Menu';
 import SvgIcon from '../../components/SvgIcon';
 import i18n from '../../../lib/i18n';
@@ -21,10 +22,10 @@ import ModalSmall from '../../components/Modal/ModalSmall';
 import SelectCaptureMode, { MODE_THICKNESS_COMPENSATION } from '../../widgets/LaserCameraAidBackground/SelectCaptureMode';
 import MaterialThicknessInput from '../../widgets/LaserCameraAidBackground/MaterialThicknessInput';
 import { ConnectionType } from '../../../flux/workspace/state';
-import { handleClipPath, handleMask } from '../../SVGEditor/lib/ImageSvgCompose';
-import modal from '../../../lib/modal';
+import { calculateElemsBoundingbox, handleClipPath, handleMask } from '../../SVGEditor/lib/ImageSvgCompose';
 
 function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setShowWorkspace, onChangeSVGClippingMode }) {
+    const size = useSelector(state => state?.machine?.size);
     const unSaved = useSelector(state => state?.project[headType]?.unSaved, shallowEqual);
     const canRedo = useSelector(state => state[headType]?.history?.canRedo, shallowEqual);
     const canUndo = useSelector(state => state[headType]?.history?.canUndo, shallowEqual);
@@ -52,6 +53,10 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
     const { connectionType, isConnected } = useSelector(state => state.workspace, shallowEqual);
     const series = useSelector(state => state?.machine?.series, shallowEqual);
     const LaserSelectedModelArray = useSelector(state => state[HEAD_LASER]?.modelGroup?.selectedModelArray);
+    const models = useSelector(state => state[headType]?.modelGroup?.models);
+    const [currentAdjustedTargetModel, setCurrentAdjustedTargetModel] = useState(null);
+    const SVGActions = useSelector(state => state[headType]?.SVGActions);
+
 
 
     const [cameraCaptureInfo, setCameraCaptureInfo] = useState({
@@ -69,6 +74,42 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         });
     };
     const isOriginalSeries = (series === MACHINE_SERIES.ORIGINAL?.value || series === MACHINE_SERIES.ORIGINAL_LZ?.value);
+
+    // set result image position and size
+    const onChangeLogicalX = (newLogicalX) => {
+        const elements = SVGActions.getSelectedElements();
+        const newX = newLogicalX + size.x;
+        dispatch(editorActions.moveElementsImmediately(headType, elements, { newX }));
+    };
+    const onChangeLogicalY = (newLogicalY) => {
+        const elements = SVGActions.getSelectedElements();
+        const newY = -newLogicalY + size.y;
+        dispatch(editorActions.moveElementsImmediately(headType, elements, { newY }));
+    };
+    const onChangeWidth = (newWidth, width, height, scaleX, scaleY) => {
+        const transformation = modelGroup.getSelectedModelTransformation();
+        const elements = SVGActions.getSelectedElements();
+
+        if (elements.length === 1) {
+            if (transformation.uniformScalingState) {
+                const newHeight = height * Math.abs(scaleY) * (newWidth / width / Math.abs(scaleX));
+                dispatch(editorActions.resizeElementsImmediately(headType, elements, { newWidth, newHeight }));
+            } else {
+                dispatch(editorActions.resizeElementsImmediately(headType, elements, { newWidth }));
+            }
+        }
+    };
+    useEffect(() => {
+        if (currentAdjustedTargetModel) {
+            setCurrentAdjustedTargetModel(null);
+            setTimeout(() => {
+                const { width, height, scaleX, scaleY } = SVGActions?.getSelectedElementsTransformation();
+                onChangeWidth(currentAdjustedTargetModel.width || 0, width, height, scaleX, scaleY);
+                onChangeLogicalX(currentAdjustedTargetModel.x || 0);
+                onChangeLogicalY(currentAdjustedTargetModel.y || 0);
+            }, 0);
+        }
+    }, [models]);
 
     // cnc
     const selectedModelArray = useSelector(state => state?.cnc?.modelGroup?.selectedModelArray);
@@ -315,34 +356,48 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             {
                 title: i18n._('key-CncLaser/MainToolBar-Mask'),
                 type: 'button',
-                name: 'MainToolbarMask',
+                name: 'MainToolbarInversemask',
                 action: async () => {
                     const svgs = LaserSelectedModelArray.filter(v => v.sourceType === 'svg' && v.mode === PROCESS_MODE_VECTOR);
                     const imgs = LaserSelectedModelArray.filter(v => v.sourceType !== 'svg' || v.mode === PROCESS_MODE_GREYSCALE);
+                    if (svgs.length < 1 || imgs.length < 1) {
+                        message.error(i18n._('Please select a vector and an image at the same time.'));
+                        return;
+                    }
                     const clipSvgTag = await handleClipPath(svgs, imgs);
+                    const bbox = calculateElemsBoundingbox(svgs);
+                    setCurrentAdjustedTargetModel({
+                        name: clipSvgTag.name,
+                        x: bbox.viewboxX + bbox.viewWidth / 2 - size.x,
+                        y: -(bbox.viewboxY + bbox.viewHeight / 2 - size.y),
+                        width: bbox.viewWidth
+                    });
                     dispatch(editorActions.uploadImage(HEAD_LASER, clipSvgTag, PROCESS_MODE_GREYSCALE, () => {
-                        modal({
-                            cancelTitle: i18n._('key-Laser/Edit/ContextMenu-Close'),
-                            title: i18n._('key-Laser/Edit/ContextMenu-Import Error'),
-                            body: i18n._('Imgae create failed.')
-                        });
+                        message.error(i18n._('Imgae create failed.'));
                     }, true));
                 }
             },
             {
                 title: i18n._('key-CncLaser/MainToolBar-Inverse Mask'),
                 type: 'button',
-                name: 'MainToolbarInversemask',
+                name: 'MainToolbarMask',
                 action: async () => {
                     const svgs = LaserSelectedModelArray.filter(v => v.sourceType === 'svg' && v.mode === PROCESS_MODE_VECTOR);
                     const imgs = LaserSelectedModelArray.filter(v => v.sourceType !== 'svg' || v.mode === PROCESS_MODE_GREYSCALE);
+                    if (svgs.length < 1 || imgs.length < 1) {
+                        message.error(i18n._('Please select a vector and an image at the same time.'));
+                        return;
+                    }
                     const maskSvgTag = await handleMask(svgs, imgs);
+                    const bbox = calculateElemsBoundingbox(imgs);
+                    setCurrentAdjustedTargetModel({
+                        name: maskSvgTag.name,
+                        x: bbox.viewboxX + bbox.viewWidth / 2 - size.x,
+                        y: -(bbox.viewboxY + bbox.viewHeight / 2 - size.y),
+                        width: bbox.viewWidth
+                    });
                     dispatch(editorActions.uploadImage(HEAD_LASER, maskSvgTag, PROCESS_MODE_GREYSCALE, () => {
-                        modal({
-                            cancelTitle: i18n._('key-Laser/Edit/ContextMenu-Close'),
-                            title: i18n._('key-Laser/Edit/ContextMenu-Import Error'),
-                            body: i18n._('Imgae create failed.')
-                        });
+                        message.error(i18n._('Imgae create failed.'));
                     }, true));
                 }
             },
