@@ -440,8 +440,10 @@ const svgModelUnion = async (modelInfo, onProgress) => {
 
     calculateSVGViewBox(svg);
 
+    console.log('svg.shapes', svg.shapes);
+
     onProgress && onProgress(1);
-    return writeSVG(svg, modelInfo.modelID, modelInfo.uploadName, SVGClippingResultType.Update, {
+    return writeSVG(svg, modelInfo.modelID, modelInfo.uploadName, SVGClippingResultType.Add, {
         positionX: modelInfo.transformation.positionX,
         positionY: modelInfo.transformation.positionY,
         rotationZ: modelInfo.transformation.rotationZ
