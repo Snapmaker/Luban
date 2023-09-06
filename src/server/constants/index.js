@@ -120,18 +120,6 @@ export const MACHINE_SERIES = {
         },
         alias: ['SM2-L', 'Snapmaker A400']
     },
-    CUSTOM: {
-        value: 'Custom',
-        label: 'key-Luban/Machine/MachineSeries-Custom',
-        setting: {
-            size: {
-                x: 125,
-                y: 125,
-                z: 125
-            },
-        },
-        alias: ['Custom']
-    }
 };
 
 export function findMachine(identifier) {

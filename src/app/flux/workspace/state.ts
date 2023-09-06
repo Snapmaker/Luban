@@ -1,6 +1,7 @@
 import type { Machine, MachineToolHeadOptions, ToolHead } from '@snapmaker/luban-platform';
 import { WorkflowStatus } from '@snapmaker/luban-platform';
 import * as THREE from 'three';
+import { Box3 } from 'three';
 
 import {
     CONNECTION_STATUS_IDLE,
@@ -70,7 +71,7 @@ declare interface WorkspaceOtherState {
     gcodeFile: object | null;
     activeGcodeFile: object | null;
 
-    boundingBox: object;
+    boundingBox: Box3;
     previewBoundingBox: object;
 
     gcodeFiles: object[];

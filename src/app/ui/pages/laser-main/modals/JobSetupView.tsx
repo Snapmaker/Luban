@@ -30,6 +30,7 @@ import { toFixed } from '../../../../lib/numeric-utils';
 import { SnapmakerRayMachine } from '../../../../machines';
 import { NumberInput as Input } from '../../../components/Input';
 import Select from '../../../components/Select';
+import TipTrigger from '../../../components/TipTrigger';
 
 
 type OriginTypeOption = {
@@ -503,22 +504,27 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
                                 alt="3 Axis"
                             />
                             <div className="margin-left-16">
-                                <div className="height-32 sm-flex">
-                                    <span className="width-144 margin-right-8 text-overflow-ellipsis">
-                                        {i18n._('key-CncLaser/JobSetup-Origin Mode')}
-                                    </span>
-                                    <Select
-                                        backspaceRemoves={false}
-                                        size="120px"
-                                        clearable={false}
-                                        options={originTypeOptions}
-                                        isGroup={false}
-                                        placeholder={i18n._('key-CncLaser/JobSetup-Choose font')}
-                                        value={selectedOrigin.type}
-                                        onChange={onChangeOriginType}
-                                        disabled={inProgress || settingSizeDisabled}
-                                    />
-                                </div>
+                                <TipTrigger
+                                    title={i18n._('key-CncLaser/JobSetup-Origin Mode')}
+                                    content={i18n._('Taking the object as the origin will take a certain location of the object as the origin. With the workpiece as the origin, a certain position of the workpiece will be used as the origin, and the relative position of the origin from the object will affect the final processing position.')}
+                                >
+                                    <div className="height-32 sm-flex">
+                                        <span className="width-144 margin-right-8 text-overflow-ellipsis">
+                                            {i18n._('key-CncLaser/JobSetup-Origin Mode')}
+                                        </span>
+                                        <Select
+                                            backspaceRemoves={false}
+                                            size="120px"
+                                            clearable={false}
+                                            options={originTypeOptions}
+                                            isGroup={false}
+                                            placeholder={i18n._('key-CncLaser/JobSetup-Choose font')}
+                                            value={selectedOrigin.type}
+                                            onChange={onChangeOriginType}
+                                            disabled={inProgress || settingSizeDisabled}
+                                        />
+                                    </div>
+                                </TipTrigger>
                                 <div className="height-32 margin-top-16 sm-flex">
                                     <span className="width-144 margin-right-8 text-overflow-ellipsis">{i18n._('key-CncLaser/JobSetup-Origin Position')}</span>
                                     <Select

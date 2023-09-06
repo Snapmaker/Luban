@@ -27,7 +27,7 @@ export default function renderWidgetList(
             className={classNames(
                 'scroll-bar-none',
                 'overflow-y-auto',
-                `${widgetProps.headType}-widget-list-intro`,
+                'widget-list-intro',
             )}
             style={{
                 height: 'auto'

@@ -34,15 +34,13 @@ i18n._('key-Luban/Machine/MachineSeries-Snapmaker Original with Z-axis Extension
 i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A150');
 i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A250');
 i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A350');
-i18n._('key-Luban/Machine/MachineSeries-Custom');
-i18n._('key-Luban/Machine/MachineSeries-Snapmaker 2.0 A400');
+i18n._('key-Luban/Machine/MachineSeries-Snapmaker Artisan');
 
 // machine name without brand
 i18n._('key-Luban/Machine/MachineSeries-Original');
 i18n._('key-Luban/Machine/MachineSeries-A150');
 i18n._('key-Luban/Machine/MachineSeries-A250');
 i18n._('key-Luban/Machine/MachineSeries-A350');
-i18n._('key-Luban/Machine/MachineSeries-A400');
 
 // machine brand
 i18n._('key-Luban/Machine/Brand-Original');

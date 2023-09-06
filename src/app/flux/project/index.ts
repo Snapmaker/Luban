@@ -293,8 +293,6 @@ export const actions = {
                 coordinateSize = currentSize;
             }
 
-            console.log('coordinateSize =', coordinateSize);
-
             if (coordinateMode) {
                 dispatch(editorActions.updateState(envHeadType, {
                     coordinateMode: coordinateMode,
