@@ -5,8 +5,16 @@ import {
     LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
     LEVEL_TWO_POWER_LASER_FOR_ORIGINAL,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
-    MACHINE_SERIES
 } from '../constants/machines';
+import {
+    SnapmakerA150Machine,
+    SnapmakerA250Machine,
+    SnapmakerA350Machine,
+    SnapmakerArtisanMachine,
+    SnapmakerJ1Machine,
+    SnapmakerOriginalExtendedMachine,
+    SnapmakerOriginalMachine
+} from '../machines';
 
 import {
     CaseConfigA150CncStandard,
@@ -43,8 +51,8 @@ export const getCaseList = (series, toolHead) => {
     const isDual = isDualExtruder(printingToolhead);
 
     switch (series) {
-        case MACHINE_SERIES.ORIGINAL.identifier:
-        case MACHINE_SERIES.ORIGINAL_LZ.identifier:
+        case SnapmakerOriginalMachine.identifier:
+        case SnapmakerOriginalExtendedMachine.identifier:
             caseList = CaseConfigOriginalPrintingSingle;
             if (laserToolhead === LEVEL_ONE_POWER_LASER_FOR_ORIGINAL) {
                 caseList = caseList.concat(CaseConfigOriginalLaserPowerOne);
@@ -54,7 +62,7 @@ export const getCaseList = (series, toolHead) => {
             }
             caseList = caseList.concat(CaseConfigOriginalCncStandard);
             break;
-        case MACHINE_SERIES.A150.identifier:
+        case SnapmakerA150Machine.identifier:
             if (!isDual) {
                 caseList = caseList.concat(CaseConfigA150PrintingSingle);
             }
@@ -69,7 +77,7 @@ export const getCaseList = (series, toolHead) => {
             }
             caseList = caseList.concat(CaseConfigA150CncStandard);
             break;
-        case MACHINE_SERIES.A250.identifier:
+        case SnapmakerA250Machine.identifier:
             if (!isDual) {
                 caseList = caseList.concat(CaseConfigA250PrintingSingle);
             }
@@ -86,7 +94,7 @@ export const getCaseList = (series, toolHead) => {
             caseListFourAxis = caseListFourAxis.concat(CaseConfigA250CncFourAxis);
             caseListFourAxis = caseListFourAxis.concat(CaseConfigA250LaserFourAxis);
             break;
-        case MACHINE_SERIES.A350.identifier:
+        case SnapmakerA350Machine.identifier:
             if (!isDual) {
                 caseList = caseList.concat(CaseConfigA350PrintingSingle);
             }
@@ -103,7 +111,7 @@ export const getCaseList = (series, toolHead) => {
             caseListFourAxis = caseListFourAxis.concat(CaseConfigA350CncFourAxis);
             caseListFourAxis = caseListFourAxis.concat(CaseConfigA350LaserFourAxis);
             break;
-        case MACHINE_SERIES.A400.identifier:
+        case SnapmakerArtisanMachine.identifier:
             if (!isDual) {
                 caseList = caseList.concat(CaseConfigA350PrintingSingle);
             }
@@ -125,7 +133,7 @@ export const getCaseList = (series, toolHead) => {
             caseListFourAxis = caseListFourAxis.concat(CaseConfigA350LaserFourAxis);
             break;
 
-        case MACHINE_SERIES.J1.identifier: {
+        case SnapmakerJ1Machine.identifier: {
             caseList.push(CaseConfigGimbal);
             caseList.push(CaseConfigPenHolder);
             break;

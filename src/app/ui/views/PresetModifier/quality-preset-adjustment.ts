@@ -838,7 +838,7 @@ export function getQualityPresetAdjustments(machine: Machine, presetFilters: Qua
         if (presetFilters.materialType === 'abs') {
             if (machine.identifier === MACHINE_SERIES.J1.identifier) {
                 return cloneDeep(DEFAULT_PARAMS_FAST);
-            } else if (machine.identifier === MACHINE_SERIES.A400.identifier) {
+            } else if (machine.identifier === SnapmakerArtisanMachine.identifier) {
                 return cloneDeep(DEFAULT_PARAMS_MEDIUM);
             } else {
                 return cloneDeep(DEFAULE_PARAMS_FOR_OTHERS);

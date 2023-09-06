@@ -291,6 +291,17 @@ export const actions = {
         dispatch(editorActions.updateState(HEAD_LASER, {
             useBackground: true
         }));
+
+        // Force origin mode to be workpiece bottom left
+        const origin: Origin = getState().laser.origin;
+        if (origin.type !== OriginType.Workpiece) {
+            dispatch(editorActions.setOrigin(HEAD_LASER, {
+                type: OriginType.Workpiece,
+                reference: RectangleWorkpieceReference.BottomLeft,
+                referenceMetadata: {},
+            }));
+        }
+
         dispatch(editorActions.render('laser'));
     },
 
