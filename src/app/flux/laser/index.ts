@@ -194,11 +194,8 @@ export const actions = {
         }));
 
         // Set machine size into coordinate default size
-        const { useBackground, coordinateSize } = getState().laser;
+        const { useBackground } = getState().laser;
         const workpiece: Workpiece = getState().laser.workpiece;
-
-        console.log('workpiece =', workpiece);
-        console.log('coordinateSize =', coordinateSize);
 
         if (workpiece.shape === WorkpieceShape.Rectangle) {
             const workpieceSize = (workpiece.size as RectangleWorkpieceSize);

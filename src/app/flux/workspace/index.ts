@@ -33,16 +33,17 @@ import { controller } from '../../lib/controller';
 import { logGcodeExport } from '../../lib/gaEvent';
 import log from '../../lib/log';
 import workerManager from '../../lib/manager/workerManager';
+import { SnapmakerOriginalMachine } from '../../machines';
 import ThreeUtils from '../../scene/three-extensions/ThreeUtils';
 import { machineStore } from '../../store/local-storage';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
+import { MachineAgent } from './MachineAgent';
 import baseActions, { ACTION_UPDATE_STATE } from './actions-base';
 import connectActions from './actions-connect';
 import discoverActions from './actions-discover';
 import { GCodeFileObject } from './actions-gcode';
 import type { MachineStateUpdateOptions } from './state';
-import { WORKSPACE_STAGE, initialState } from './state';
-import { SnapmakerOriginalMachine } from '../../machines';
+import { ConnectionType, WORKSPACE_STAGE, initialState } from './state';
 
 
 export { WORKSPACE_STAGE } from './state';
@@ -1066,14 +1067,21 @@ export const actions = {
      * @returns {Promise}
      */
     loadGcode: (gcodeFile = null) => async (dispatch, getState) => {
-        const { connectionStatus, server } = getState().workspace;
+        const { connectionStatus } = getState().workspace;
+        const connectionType: ConnectionType = getState().workspace.connectionType;
+
         gcodeFile = gcodeFile || getState().workspace.gcodeFile;
-        if (
-            connectionStatus !== CONNECTION_STATUS_CONNECTED
-            || gcodeFile === null
-        ) {
+
+        if (connectionType === ConnectionType.WiFi) {
+            // Actually only with serial port plaintext protocol need to load G-code
             return;
         }
+
+        if (connectionStatus !== CONNECTION_STATUS_CONNECTED || gcodeFile === null) {
+            return;
+        }
+
+        const server: MachineAgent = getState().workspace.server;
 
         dispatch(actions.updateState({ uploadState: 'uploading' }));
         try {
