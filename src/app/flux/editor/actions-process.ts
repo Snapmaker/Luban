@@ -1,6 +1,7 @@
 import { Machine } from '@snapmaker/luban-platform';
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
+import { Box3, Vector3 } from 'three';
 
 import { timestamp } from '../../../shared/lib/random-utils';
 import api from '../../api';
@@ -477,19 +478,23 @@ export const processActions = {
         const { gcodeFile } = taskResult;
         modelGroup.estimatedTime = gcodeFile.estimatedTime;
         toolPathGroup.showSimulationObject(false);
+
+        const boundingBox = new Box3(
+            new Vector3(gcodeFile.boundingBox.min.x, gcodeFile.boundingBox.min.y, gcodeFile.boundingBox.min.z),
+            new Vector3(gcodeFile.boundingBox.max.x, gcodeFile.boundingBox.max.y, gcodeFile.boundingBox.max.z),
+        );
+
         dispatch(baseActions.updateState(headType, {
             isChangedAfterGcodeGenerating: false,
             gcodeFile: {
-                boundingBox: gcodeFile.boundingBox,
                 name: gcodeFile.name,
                 uploadName: gcodeFile.name,
-                estimatedTime: gcodeFile.estimatedTime,
                 size: gcodeFile.size,
                 lastModified: gcodeFile.lastModified,
+                boundingBox: boundingBox,
+                estimatedTime: gcodeFile.estimatedTime,
                 thumbnail: gcodeFile.thumbnail,
                 renderGcodeFileName: renderGcodeFileName,
-
-
                 type: gcodeFile.header[';header_type'],
                 work_speed: gcodeFile.header[';work_speed(mm/minute)'],
                 estimated_time: gcodeFile.header[';estimated_time(s)'],

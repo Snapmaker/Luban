@@ -5,7 +5,7 @@ import { WidgetProps } from '../widget-definitions';
 import SetOriginView from './SetOriginView';
 
 
-const RaySetOriginWiget: React.FC<WidgetProps> = (props) => {
+const RaySetOriginWidget: React.FC<WidgetProps> = React.memo((props) => {
     const widgetActions = props.widgetActions;
 
     useEffect(() => {
@@ -17,6 +17,6 @@ const RaySetOriginWiget: React.FC<WidgetProps> = (props) => {
             setDisplay={widgetActions.setDisplay}
         />
     );
-};
+});
 
-export default RaySetOriginWiget;
+export default RaySetOriginWidget;

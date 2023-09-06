@@ -324,7 +324,6 @@ const Cnc: React.FC<CNCMainPageProps> = ({ location }) => {
                 tooltipClass: 'cnc-draw-intro',
                 position: 'right'
             }, {
-                // element: '.laser-intro-edit-panel',
                 element: '.widget-list-intro',
                 title: `${i18n._('key-Cnc/Page-Edit Panel')} (4/8)`,
                 intro: laserCncIntroStepTwo(i18n._('key-Cnc/Page-The Edit panel shows the property related to object. When an object is selected, Luban displays this panel where you can transform the object, switch the Processing Mode, or enter the Process Panel.')),
@@ -332,7 +331,7 @@ const Cnc: React.FC<CNCMainPageProps> = ({ location }) => {
                 tooltipClass: 'cnc-edit-panel-intro',
                 position: 'left'
             }, {
-                element: '.cnc-widget-list-intro',
+                element: '.widget-list-intro',
                 title: `${i18n._('key-Cnc/Page-Process Panel')} (5/8)`,
                 intro: laserCncIntroStepFive(
                     i18n._('key-Cnc/Page-The Process panel shows the Toolpath List and the relevant property of the toolpath.'),

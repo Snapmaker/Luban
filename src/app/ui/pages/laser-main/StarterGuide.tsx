@@ -6,6 +6,14 @@ import { HEAD_LASER, PAGE_PROCESS } from '../../../constants';
 import { actions as editorActions } from '../../../flux/editor';
 import { actions as projectActions } from '../../../flux/project';
 import i18n from '../../../lib/i18n';
+import {
+    SnapmakerA150Machine,
+    SnapmakerA250Machine,
+    SnapmakerA350Machine,
+    SnapmakerArtisanMachine,
+    SnapmakerOriginalExtendedMachine,
+    SnapmakerOriginalMachine
+} from '../../../machines';
 import Steps from '../../components/Steps';
 import {
     laser4AxisStepOne,
@@ -77,7 +85,7 @@ const getSteps = (series: string, isRotate: boolean): StepItem[] => {
             position: 'left'
         },
         {
-            element: '.laser-widget-list-intro',
+            element: '.widget-list-intro',
             title: `${i18n._('key-Laser/Page-Process Panel')} (5/8)`,
             intro: laserCncIntroStepFive(
                 i18n._('key-Laser/Page-The Process panel shows the Toolpath List and the relevant property of the toolpath.'),
@@ -127,7 +135,7 @@ const getShowCaseProject = (machineIdentifier: string, isRotate: boolean = false
     let pathConfig = {};
     if (isRotate) {
         switch (machineIdentifier) {
-            case 'A250':
+            case SnapmakerA250Machine.identifier:
                 pathConfig = {
                     path: './UserCase/laser/a250_1600mw/laser_4th_a250a350_1600mW.snaplzr',
                     name: 'laser_4th_a250a350_1600mW.snaplzr'
@@ -142,32 +150,32 @@ const getShowCaseProject = (machineIdentifier: string, isRotate: boolean = false
         }
     } else {
         switch (machineIdentifier) {
-            case 'Original Long Z-axis':
-            case 'Original':
+            case SnapmakerOriginalMachine.identifier:
+            case SnapmakerOriginalExtendedMachine.identifier:
                 pathConfig = {
                     path: './UserCase/laser/original_200mw/laser_original_200mW.snaplzr',
                     name: 'laser_original_200mW.snaplzr'
                 };
                 break;
-            case 'A150':
+            case SnapmakerA150Machine.identifier:
                 pathConfig = {
                     path: './UserCase/laser/a150_1600mw/laser_a150_1600mW.snaplzr',
                     name: 'laser_a150_1600mW.snaplzr'
                 };
                 break;
-            case 'A250':
+            case SnapmakerA250Machine.identifier:
                 pathConfig = {
                     path: './UserCase/laser/a250_1600mw/laser_a250_1600mW.snaplzr',
                     name: 'laser_a250_1600mW.snaplzr'
                 };
                 break;
-            case 'A350':
+            case SnapmakerA350Machine.identifier:
                 pathConfig = {
                     path: './UserCase/laser/a350_1600mw/laser_a350_1600mW.snaplzr',
                     name: 'laser_a350_1600mW.snaplzr'
                 };
                 break;
-            case 'A400':
+            case SnapmakerArtisanMachine.identifier:
                 pathConfig = {
                     path: './UserCase/laser/a350_10w/wooden_ruler.snaplzr',
                     name: 'wooden_ruler.snaplzr',

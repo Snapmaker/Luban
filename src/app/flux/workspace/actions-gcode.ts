@@ -1,3 +1,5 @@
+import { Box3, Vector3 } from 'three';
+
 import api from '../../api';
 
 export type GCodeFileObject = {
@@ -8,10 +10,7 @@ export type GCodeFileObject = {
     lastModified: number;
 
     // job metadata
-    boundingBox: {
-        min: { x: number; y: number; z: number; }
-        max: { x: number; y: number; z: number; }
-    },
+    boundingBox: Box3,
     estimatedTime?: number;
     // eslint-disable-next-line camelcase
     estimated_time?: number;
@@ -66,27 +65,27 @@ const uploadGcodeFile = (file: File) => {
         const response = res.body;
         const header = response.gcodeHeader;
 
-        const gcodeFile = {
+        const gcodeFile: GCodeFileObject = {
             name: file.name,
             uploadName: response.uploadName,
             size: file.size,
             lastModified: +file.lastModified,
             thumbnail: header[';thumbnail'] || '',
             renderGcodeFileName: file.renderGcodeFileName || file.name,
-            boundingBox: {
-                max: {
-                    x: header[';max_x(mm)'],
-                    y: header[';max_y(mm)'],
-                    z: header[';max_z(mm)'],
-                    b: header[';max_b(mm)'],
-                },
-                min: {
-                    x: header[';min_x(mm)'],
-                    y: header[';min_y(mm)'],
-                    z: header[';min_z(mm)'],
-                    b: header[';min_b(mm)']
-                }
-            },
+            boundingBox: new Box3(
+                new Vector3(
+                    header[';min_x(mm)'],
+                    header[';min_y(mm)'],
+                    header[';min_z(mm)'],
+                    // b: header[';min_b(mm)']
+                ),
+                new Vector3(
+                    header[';max_x(mm)'],
+                    header[';max_y(mm)'],
+                    header[';max_z(mm)'],
+                    // b: header[';max_b(mm)'],
+                ),
+            ),
 
             type: header[';header_type'],
             tool_head: header[';tool_head'],
