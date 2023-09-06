@@ -315,7 +315,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             {
                 title: i18n._('key-CncLaser/MainToolBar-Mask'),
                 type: 'button',
-                name: 'MainToolbarInversemask',
+                name: 'MainToolbarMask',
                 action: async () => {
                     const svgs = LaserSelectedModelArray.filter(v => v.sourceType === 'svg' && v.mode === PROCESS_MODE_VECTOR);
                     const imgs = LaserSelectedModelArray.filter(v => v.sourceType !== 'svg' || v.mode === PROCESS_MODE_GREYSCALE);
@@ -332,7 +332,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             {
                 title: i18n._('key-CncLaser/MainToolBar-Inverse Mask'),
                 type: 'button',
-                name: 'MainToolbarMask',
+                name: 'MainToolbarInverseMask',
                 action: async () => {
                     const svgs = LaserSelectedModelArray.filter(v => v.sourceType === 'svg' && v.mode === PROCESS_MODE_VECTOR);
                     const imgs = LaserSelectedModelArray.filter(v => v.sourceType !== 'svg' || v.mode === PROCESS_MODE_GREYSCALE);

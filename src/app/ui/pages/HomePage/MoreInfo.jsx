@@ -77,9 +77,9 @@ const MoreInfo = () => {
 
     return (
         <div className={styles['more-info']}>
-            <div className={classNames('highlight-heading', 'margin-bottom-16')}>
+            {/* <div className={classNames('highlight-heading', 'margin-bottom-16')}>
                 {i18n._('key-HomePage/Begin-Help')}
-            </div>
+            </div> */}
             {informationFlow.swiper && (
                 <div className={styles['information-flow']}>
                     <Carousel
@@ -97,7 +97,7 @@ const MoreInfo = () => {
                                                 <div className={styles['swiper-title']}>{swiper.title}</div>
                                                 <div className={styles['swiper-desc']}>{swiper.desc}</div>
                                             </div>
-                                            <a className={styles['swiper-a']} href={swiper.btn.href} target="_blank" rel="noopener noreferrer">{`${swiper.btn.text} >`} </a>
+                                            <a className={styles['swiper-a']} href={swiper.btn.href} target="_blank" rel="noopener noreferrer">{`${swiper.btn.text}`} </a>
                                         </div>
                                         <div className={styles['swiper-img']}>
                                             <img className="width-percent-100" src={swiper.imgSrc} alt={swiper.title} />
@@ -111,13 +111,13 @@ const MoreInfo = () => {
                         {
                             informationFlow?.blocks?.map(block => {
                                 return (
-                                    <div className={styles['block-container']} key={block.title}>
+                                    <a className={styles['block-container']} key={block.title} href={block?.btn?.href} target="_blank" rel="noopener noreferrer">
                                         <div>
                                             <div className={styles['block-title']}>{block.title}</div>
                                             <div className={styles['block-desc']}>{block.desc}</div>
                                         </div>
-                                        <a className={styles['block-a']} href={block?.btn?.href} target="_blank" rel="noopener noreferrer">{`${block?.btn?.text} >`} </a>
-                                    </div>
+                                        <div className={styles['block-a']}>{`${block?.btn?.text}`} </div>
+                                    </a>
                                 );
                             })
                         }

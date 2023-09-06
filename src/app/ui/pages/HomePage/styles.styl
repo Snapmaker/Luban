@@ -10,12 +10,16 @@
 
         .case-list {
             // height: 24.7vw;
-            max-height: 372px;
+            max-height: 440px;
             // min-height: 256px;
             height: 100%
             overflow: auto;
             background: #fff;
             border-radius: 24px;
+
+            @media (min-height: 700px) {
+                margin-bottom: 20px
+            }
         }
 
         .case-resource {
@@ -31,7 +35,7 @@
         .resource-list {
             height: 100%;
             // height: 24.7vw;
-            max-height: 339px;
+            max-height: 372px;
             // min-height: 244px;
             overflow: auto;
             background: #fff;
@@ -257,9 +261,16 @@
     display: flex;
     flex-direction: column;
     .information-flow {
+        max-height: 440px;
         width: 100%;
         overflow: auto;
         height: 100%
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        @media (min-height: 700px) {
+            margin-bottom: 20px
+        }
 
 
         .swiper-container {
@@ -271,6 +282,7 @@
         .swiper-slide {
             display: flex !important;
             justify-content: space-between
+            cursor: grab;
         }
         .swiper-title {
             color: #000;
@@ -293,6 +305,8 @@
             width: 50%;
             border-radius: 16px;
             max-width: 185px;
+            display: flex;
+            align-items: center
         }
         .swiper-a {
             color: #0C63E2;
@@ -386,10 +400,16 @@
 .resources-container {
     width: 62.4vw;
 
+    :global(.ant-spin-nested-loading), :global(.ant-spin-container) {
+        height: 100%
+    }
+    :global(.ant-spin-container) {
+        padding-bottom: 20px;
+    }
     .case-list {
         height: 100%;
         // height: 24.7vw;
-        max-height: 372px;
+        max-height: 440px;
         // min-height: 256px;
         overflow: auto;
         background: #fff;
@@ -399,6 +419,9 @@
         flex-wrap: wrap;
         justify-content: flex-start;
         align-content: flex-start;
+        @media (min-height: 700px) {
+            margin-bottom: 20px
+        }
 
         .case-item {
             position: relative;
