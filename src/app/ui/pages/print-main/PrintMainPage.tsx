@@ -319,10 +319,10 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
         const isCaseResourceMachine = (currSeries, currToolHead) => {
             const isDual = isDualExtruder(currToolHead.printingToolhead);
             if (
-                (currSeries === MACHINE_SERIES.A150.identifier && isDual)
-                || (currSeries === MACHINE_SERIES.A250.identifier && isDual)
-                || (currSeries === MACHINE_SERIES.A350.identifier && isDual)
-                || currSeries === MACHINE_SERIES.A400.identifier || currSeries === MACHINE_SERIES.J1.identifier
+                (currSeries === SnapmakerA150Machine.identifier && isDual)
+                || (currSeries === SnapmakerA250Machine.identifier && isDual)
+                || (currSeries === SnapmakerA350Machine.identifier && isDual)
+                || currSeries === SnapmakerArtisanMachine.identifier || currSeries === MACHINE_SERIES.J1.identifier
             ) {
                 return true;
             } else {
@@ -375,7 +375,7 @@ function getStarterProject(series, isDual) {
     let pathConfig;
     if ([MACHINE_SERIES.ORIGINAL.identifier, MACHINE_SERIES.ORIGINAL_LZ.identifier].includes(series)) {
         pathConfig = pathConfigForOriginal;
-    } else if (series === MACHINE_SERIES.A400.identifier) {
+    } else if (series === SnapmakerArtisanMachine.identifier) {
         pathConfig = CaseConfigPenHolder.pathConfig;
     } else if (series === MACHINE_SERIES.J1.identifier) {
         pathConfig = CaseConfigGimbal.pathConfig;
@@ -383,17 +383,17 @@ function getStarterProject(series, isDual) {
         // SM 2.0
         if (isDual) {
             pathConfig = CaseConfigSM2Gimbal.pathConfig;
-        } else if (series === MACHINE_SERIES.A150.identifier) {
+        } else if (series === SnapmakerA150Machine.identifier) {
             pathConfig = {
                 path: './UserCase/printing/a150_single/3dp_a150_single.snap3dp',
                 name: '3dp_a150_single.snap3dp'
             };
-        } else if (series === MACHINE_SERIES.A250.identifier) {
+        } else if (series === SnapmakerA250Machine.identifier) {
             pathConfig = {
                 path: './UserCase/printing/a250_single/3dp_a250_single.snap3dp',
                 name: '3dp_a250_single.snap3dp'
             };
-        } else if (series === MACHINE_SERIES.A350.identifier) {
+        } else if (series === SnapmakerA350Machine.identifier) {
             pathConfig = {
                 path: './UserCase/printing/a350_single/3dp_a350_single.snap3dp',
                 name: '3dp_a350_single.snap3dp'

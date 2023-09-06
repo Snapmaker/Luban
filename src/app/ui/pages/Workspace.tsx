@@ -40,6 +40,12 @@ import MacroWidget from '../widgets/Macro';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
 import WebcamWidget from '../widgets/Webcam';
 import VisualizerWidget from '../widgets/WorkspaceVisualizer';
+import {
+    SnapmakerA150Machine,
+    SnapmakerA250Machine,
+    SnapmakerA350Machine,
+    SnapmakerArtisanMachine,
+} from '../../machines';
 
 
 const allWidgets = {
@@ -77,7 +83,7 @@ let workspaceVisualizerRef = null;
 function getUnsupportedWidgets(machineIdentifier, toolHead) {
     if (!machineIdentifier) return [];
 
-    if ([MACHINE_SERIES.A150.identifier, MACHINE_SERIES.A250.identifier, MACHINE_SERIES.A350.identifier].includes(machineIdentifier)) {
+    if ([SnapmakerA150Machine.identifier, SnapmakerA250Machine.identifier, SnapmakerA350Machine.identifier].includes(machineIdentifier)) {
         if (toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
             return [];
         }
@@ -89,7 +95,7 @@ function getUnsupportedWidgets(machineIdentifier, toolHead) {
         return ['control', 'macro'];
     }
 
-    if (machineIdentifier === MACHINE_SERIES.A400.identifier) {
+    if (machineIdentifier === SnapmakerArtisanMachine.identifier) {
         return [];
     }
 

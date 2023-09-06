@@ -4,10 +4,11 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import ControllerEvent from '../../../connection/controller-events';
-import { LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, MACHINE_SERIES } from '../../../constants/machines';
+import { LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
 import { controller } from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
+import { SnapmakerArtisanMachine } from '../../../machines';
 import EditComponent from '../../components/EditComponent';
 import Switch from '../../components/Switch';
 import WorkSpeed from './WorkSpeed';
@@ -36,7 +37,7 @@ const CNC: React.FC = () => {
             speed: cncTargetSpindleSpeed,
             toolHead,
         });
-        if (series !== MACHINE_SERIES.A400.identifier) {
+        if (series !== SnapmakerArtisanMachine.identifier) {
             setIsHeadOn((prev) => !prev);
         }
     }, [isHeadOn, cncTargetSpindleSpeed, toolHead, series]);
