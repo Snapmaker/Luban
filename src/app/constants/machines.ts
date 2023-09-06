@@ -61,8 +61,8 @@ export const DEFAULT_MACHINE_ORIGINAL_LONG_Z_AXIS = 'Original Long Z-axis';
 export const MACHINE_SERIES = {
     ORIGINAL: SnapmakerOriginalMachine,
     ORIGINAL_LZ: SnapmakerOriginalExtendedMachine,
-    A150: SnapmakerA150Machine,
-    A250: SnapmakerA250Machine,
+    [SnapmakerA150Machine.identifier]: SnapmakerA150Machine,
+    [SnapmakerA250Machine.identifier]: SnapmakerA250Machine,
     A350: SnapmakerA350Machine,
     A400: SnapmakerArtisanMachine,
     J1: SnapmakerJ1Machine,
@@ -172,11 +172,11 @@ export function findMachineByName(name: string): Machine | null {
 
 function getMachineList() {
     const machineKeys = [
-        MACHINE_SERIES.ORIGINAL.identifier,
-        MACHINE_SERIES.ORIGINAL_LZ.identifier,
-        MACHINE_SERIES.A150.identifier,
-        MACHINE_SERIES.A250.identifier,
-        MACHINE_SERIES.A350.identifier,
+        SnapmakerOriginalMachine.identifier,
+        SnapmakerOriginalExtendedMachine.identifier,
+        SnapmakerA150Machine.identifier,
+        SnapmakerA250Machine.identifier,
+        SnapmakerA350Machine.identifier,
         SnapmakerArtisanMachine.identifier,
         SnapmakerJ1Machine.identifier,
         SnapmakerRayMachine.identifier,
@@ -408,10 +408,59 @@ export const SACP_TYPE_SERIES_MAP = {
     '1': SnapmakerA250Machine.identifier,
     '2': SnapmakerA350Machine.identifier,
     '3': SnapmakerArtisanMachine.identifier,
-    '4': MACHINE_SERIES.J1.identifier,
+    '4': SnapmakerJ1Machine.identifier,
     '5': SnapmakerRayMachine.identifier,
 };
 
+// Baud rate to connect to the machines via serial port
 export const DEFAULT_BAUDRATE = 115200;
+
+export const LASER_10W_TAKE_PHOTO_POSITION = {
+    [SnapmakerA150Machine.identifier]: {
+        x: 155,
+        y: 82,
+        z: 150
+    },
+    [SnapmakerA250Machine.identifier]: {
+        x: 186,
+        y: 130,
+        z: 230
+    },
+    [SnapmakerA350Machine.identifier]: {
+        x: 232,
+        y: 178,
+        z: 290
+    },
+    [SnapmakerArtisanMachine.identifier]: {
+        // TODO: need to test
+        x: 265,
+        y: 205,
+        z: 330
+    },
+};
+
+export const LASER_1600MW_CALIBRATION_POSITION = {
+    [SnapmakerA150Machine.identifier]: {
+        x: 155,
+        y: 82,
+        z: 150
+    },
+    [SnapmakerA250Machine.identifier]: {
+        x: 186,
+        y: 130,
+        z: 230
+    },
+    [SnapmakerA350Machine.identifier]: {
+        x: 192,
+        y: 170,
+        z: 170
+    },
+    [SnapmakerArtisanMachine.identifier]: {
+        x: 265,
+        y: 205,
+        z: 330
+    },
+};
+
 
 export default {};

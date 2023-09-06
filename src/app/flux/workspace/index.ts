@@ -41,6 +41,7 @@ import discoverActions from './actions-discover';
 import { GCodeFileObject } from './actions-gcode';
 import type { MachineStateUpdateOptions } from './state';
 import { WORKSPACE_STAGE, initialState } from './state';
+import { SnapmakerOriginalMachine } from '../../machines';
 
 
 export { WORKSPACE_STAGE } from './state';
@@ -1153,7 +1154,7 @@ export const actions = {
     // Execute G54 based on series and headType
     executeGcodeG54: (series, headType) => (dispatch) => {
         if (
-            series !== MACHINE_SERIES.ORIGINAL.identifier
+            series !== SnapmakerOriginalMachine.identifier
             && (headType === HEAD_LASER || headType === HEAD_CNC)
         ) {
             dispatch(actions.executeGcode('G54'));

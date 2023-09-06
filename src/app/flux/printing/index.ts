@@ -38,7 +38,7 @@ import {
     RIGHT_EXTRUDER_MAP_NUMBER,
     WHITE_COLOR
 } from '../../constants';
-import { getMachineToolHeadConfigPath, isDualExtruder, MACHINE_SERIES } from '../../constants/machines';
+import { getMachineToolHeadConfigPath, isDualExtruder } from '../../constants/machines';
 import { isQualityPresetVisible, PRESET_CATEGORY_CUSTOM } from '../../constants/preset';
 
 import { controller } from '../../lib/controller';
@@ -86,6 +86,7 @@ import { actions as appGlobalActions } from '../app-global';
 import { actions as operationHistoryActions } from '../operation-history';
 // eslint-disable-next-line import/no-cycle
 import SimplifyModelOperation from '../../scene/operations/SimplifyModelOperation';
+import { SnapmakerOriginalExtendedMachine, SnapmakerOriginalMachine } from '../../machines';
 
 
 let initEventFlag = false;
@@ -107,8 +108,8 @@ const isDefaultQualityDefinition = (definitionId) => {
 };
 
 const getRealSeries = series => {
-    if (series === MACHINE_SERIES.ORIGINAL_LZ.identifier) {
-        series = MACHINE_SERIES.ORIGINAL.identifier;
+    if (series === SnapmakerOriginalExtendedMachine.identifier) {
+        series = SnapmakerOriginalMachine.identifier;
     }
     return series;
 };

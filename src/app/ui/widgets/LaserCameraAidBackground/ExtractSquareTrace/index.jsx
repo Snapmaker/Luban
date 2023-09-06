@@ -1,11 +1,17 @@
 import { InputNumber, Spin } from 'antd';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import React, { PureComponent } from 'react';
+import React from 'react';
 import { connect } from 'react-redux';
+
 import api from '../../../../api';
-import { LASER_10W_TAKE_PHOTO_POSITION } from '../../../../constants';
-import { findToolHead, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES, } from '../../../../constants/machines';
+import {
+    findToolHead,
+    LASER_10W_TAKE_PHOTO_POSITION,
+    LEVEL_ONE_POWER_LASER_FOR_SM2,
+    LEVEL_TWO_POWER_LASER_FOR_SM2,
+    MACHINE_SERIES,
+} from '../../../../constants/machines';
 import { actions as workspaceActions } from '../../../../flux/workspace';
 
 import i18n from '../../../../lib/i18n';
@@ -22,7 +28,7 @@ const PANEL_MANUAL_CALIBRATION = 2;
 const PANEL_PICK_OBJECT = 3;
 const DefaultBgiName = '../../../../resources/images/camera-aid/Loading.gif';
 
-class ExtractSquareTrace extends PureComponent {
+class ExtractSquareTrace extends React.PureComponent {
     static propTypes = {
         // machine
         series: PropTypes.string.isRequired,
@@ -249,6 +255,8 @@ class ExtractSquareTrace extends PureComponent {
                     z = 140;
                 }
             } else if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                console.log('series =', this.props.series);
+
                 const defaultPos = LASER_10W_TAKE_PHOTO_POSITION[this.props.series];
                 z = defaultPos.z;
                 position[0].x = defaultPos.x;
