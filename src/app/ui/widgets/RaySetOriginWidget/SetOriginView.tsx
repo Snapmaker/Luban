@@ -42,10 +42,10 @@ interface SetOriginViewProps {
 const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
     const { setDisplay } = props;
 
+    const isConnected = useSelector((state: RootState) => state.workspace.isConnected);
+
     // G-code
     const boundingBox = useSelector((state: RootState) => state.workspace.boundingBox);
-
-    const isConnected = useSelector((state: RootState) => state.workspace.isConnected);
     const workflowStatus = useSelector((state: RootState) => state.workspace.workflowStatus);
 
     // display of widget

@@ -1,6 +1,7 @@
 import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { includes, isEmpty, isNil, isUndefined } from 'lodash';
 import * as THREE from 'three';
+import { Box3, Vector3 } from 'three';
 import { v4 as uuid } from 'uuid';
 
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
@@ -622,6 +623,7 @@ export const actions = {
         switch (status) {
             case 'succeed': {
                 const { modelGroup, previewModelGroup } = getState().workspace;
+                const boundingBox: Box3 = getState().workspace.boundingBox;
                 const { positions, colors, index, indexColors } = value;
                 const bufferGeometry = new THREE.BufferGeometry();
                 const positionAttribute = new THREE.Float32BufferAttribute(
@@ -660,6 +662,7 @@ export const actions = {
                 // object3D.material.uniforms.u_visible_index_count.value = 20000;
                 object3D.name = `${gcodeFilename}-${uuid()}`;
 
+                // Add object3D to one of group
                 if (isPreview) {
                     previewModelGroup.add(object3D);
                 } else {
@@ -667,23 +670,39 @@ export const actions = {
                 }
                 object3D.position.copy(new THREE.Vector3());
 
-                if (isDone) {
-                    const boundingBox = ThreeUtils.computeBoundingBox(object3D);
+                // calculate bounding box of G-code objects
+                const objectBBox = ThreeUtils.computeBoundingBox(object3D);
 
+                const newBoundingBox = new Box3().copy(boundingBox);
+                newBoundingBox.expandByPoint(objectBBox.min);
+                newBoundingBox.expandByPoint(objectBBox.max);
+
+                if (isPreview) {
+                    dispatch(
+                        actions.updateState({
+                            previewBoundingBox: newBoundingBox,
+                        })
+                    );
+                } else {
+                    dispatch(
+                        actions.updateState({
+                            boundingBox: newBoundingBox,
+                        })
+                    );
+                }
+
+                if (isDone) {
                     if (isPreview) {
                         dispatch(
                             actions.updateState({
                                 previewRenderState: 'rendered',
-                                previewBoundingBox: boundingBox,
-                                previewStage:
-                                    WORKSPACE_STAGE.LOAD_GCODE_SUCCEED,
+                                previewStage: WORKSPACE_STAGE.LOAD_GCODE_SUCCEED,
                             })
                         );
                     } else {
                         dispatch(
                             actions.updateState({
                                 renderState: 'rendered',
-                                boundingBox: boundingBox,
                                 stage: WORKSPACE_STAGE.LOAD_GCODE_SUCCEED,
                             })
                         );
@@ -755,28 +774,27 @@ export const actions = {
             .then((res) => {
                 const response = res.body;
                 const header = response.gcodeHeader;
-                const gcodeFile = {
+                const gcodeFile: GCodeFileObject = {
                     name: file.name,
                     uploadName: response.uploadName,
                     size: file.size,
                     lastModified: file.lastModified,
                     thumbnail: header[';thumbnail'] || '',
                     renderGcodeFileName: file.renderGcodeFileName || file.name,
-                    boundingBox: {
-                        max: {
-                            x: header[';max_x(mm)'],
-                            y: header[';max_y(mm)'],
-                            z: header[';max_z(mm)'],
-                            b: header[';max_b(mm)'],
-                        },
-                        min: {
-                            x: header[';min_x(mm)'],
-                            y: header[';min_y(mm)'],
-                            z: header[';min_z(mm)'],
-                            b: header[';min_b(mm)']
-                        }
-                    },
-
+                    boundingBox: new Box3(
+                        new Vector3(
+                            header[';min_x(mm)'],
+                            header[';min_y(mm)'],
+                            header[';min_z(mm)'],
+                            // b: header[';min_b(mm)']
+                        ),
+                        new Vector3(
+                            header[';max_x(mm)'],
+                            header[';max_y(mm)'],
+                            header[';max_z(mm)'],
+                            // b: header[';max_b(mm)'],
+                        ),
+                    ),
                     type: header[';header_type'],
                     tool_head: header[';tool_head'],
                     nozzle_temperature: header[';nozzle_temperature(°C)'],
@@ -844,7 +862,7 @@ export const actions = {
             actions.updateState({
                 renderState: 'idle',
                 gcodeFile: null,
-                boundingBox: null,
+                boundingBox: new Box3(),
                 stage: WORKSPACE_STAGE.EMPTY,
                 progress: 0,
             })
@@ -925,19 +943,29 @@ export const actions = {
             logGcodeExport(headType, 'workspace', isRotate);
 
             workerManager.gcodeToArraybufferGeometry(
-                { func: 'WORKSPACE', gcodeFilename: gcodeFile.uploadName },
+                {
+                    func: 'WORKSPACE',
+                    gcodeFilename: gcodeFile.uploadName
+                },
                 (data) => {
+                    // Note this callback can be called multiple times.
                     dispatch(actions.gcodeToArraybufferGeometryCallback(data));
                 }
             );
         } else {
             shouldAutoPreviewGcode
                 && dispatch(actions.renderPreviewGcodeFile(gcodeFile));
-            await dispatch(
-                actions.updateState({
-                    boundingBox: gcodeFile?.boundingBox,
-                })
-            );
+
+            if (gcodeFile?.boundingBox) {
+                await dispatch(
+                    actions.updateState({
+                        boundingBox: new Box3(
+                            new Vector3().fromArray(gcodeFile.boundingBox.min),
+                            new Vector3().fromArray(gcodeFile.boundingBox.max),
+                        ),
+                    })
+                );
+            }
         }
     },
 
@@ -979,9 +1007,13 @@ export const actions = {
             }
             i++;
         }
+
         dispatch(
             actions.updateState({
-                boundingBox: fileInfo.boundingBox,
+                boundingBox: new Box3(
+                    new Vector3().fromArray(fileInfo.boundingBox.min),
+                    new Vector3().fromArray(fileInfo.boundingBox.max),
+                ),
                 gcodeFiles: files,
             })
         );
