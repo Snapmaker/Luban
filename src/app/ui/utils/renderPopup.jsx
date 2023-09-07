@@ -1,15 +1,17 @@
 import React from 'react';
+
 import Modal from '../components/Modal/tileModal';
+import log from '../../lib/log';
 
 
 export default function renderPopup(options) {
     const { onClose, component: Component, key, onCallBack } = options;
 
     if (!onClose) {
-        console.error('Popup need close action');
+        log.error('Popup need close action');
     }
     if (!Component) {
-        console.error('Popup need component to render');
+        log.error('Popup need component to render');
     }
 
     return (

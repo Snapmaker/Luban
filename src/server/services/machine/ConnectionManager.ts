@@ -467,7 +467,13 @@ class ConnectionManager {
             ...options,
             onProgress: (progress) => {
                 socket.emit(ControllerEvent.UploadFileProgress, { progress });
-            }
+            },
+            onCompressing: () => {
+                socket.emit(ControllerEvent.UploadFileCompressing);
+            },
+            onDecompressing: () => {
+                socket.emit(ControllerEvent.UploadFileDecompressing);
+            },
         });
         if (success) {
             socket.emit(ControllerEvent.CompressUploadFile, { err: null, text: '' });

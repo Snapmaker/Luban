@@ -81,6 +81,7 @@ const WorkspaceRightView: React.FC<WorkspaceRightViewProps> = (props) => {
                 className={classNames(
                     'sm-flex-width',
                     'margin-bottom-8',
+                    'overflow-y-auto',
                 )}
             >
                 {renderWidgetList('workspace', 'right', rightWidgetNames, allWidgets, listActions, {}, controlActions)}

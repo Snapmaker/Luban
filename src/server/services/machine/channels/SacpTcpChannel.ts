@@ -80,7 +80,6 @@ class SacpTcpChannel extends SacpChannelBase {
                     try {
                         const { response } = await this.sacpClient.wifiConnection(hostName, 'Luban', options.token, () => {
                             // disconnected
-
                             this.client.destroy();
                             if (this.client.destroyed) {
                                 log.info('TCP manually closed');
@@ -241,9 +240,13 @@ class SacpTcpChannel extends SacpChannelBase {
     }
 
     public async startHeartbeat(): Promise<void> {
-        await this.startHeartbeatBase(this.sacpClient, undefined);
+        await this.startHeartbeatLegacy(this.sacpClient, undefined);
 
         this.setROTSubscribeApi();
+    }
+
+    public async stopHeartbeat(): Promise<void> {
+        await super.stopHeartbeat();
     }
 
     public takePhoto = async (params: RequestPhotoInfo, callback: (result: { status: boolean }) => void) => {

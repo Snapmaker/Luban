@@ -64,6 +64,8 @@ export interface UploadFileOptions {
     targetFilename?: string;
 
     onProgress?: (progress: number) => void;
+    onCompressing?: () => void;
+    onDecompressing?: () => void;
 }
 export interface FileChannelInterface extends Channel {
     uploadFile(options: UploadFileOptions): Promise<boolean>;

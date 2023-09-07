@@ -1,8 +1,9 @@
+import SocketServer from '../../../lib/SocketManager';
 import Channel from '../channels/Channel';
 
 class MachineInstance {
     protected channel: Channel;
-    protected socket;
+    protected socket: SocketServer;
 
     // state
     private isReady: boolean = false;
@@ -11,11 +12,11 @@ class MachineInstance {
         this.isReady = false;
     }
 
-    public setChannel(channel): void {
+    public setChannel<T extends Channel>(channel: T): void {
         this.channel = channel;
     }
 
-    public setSocket(socket): void {
+    public setSocket(socket: SocketServer): void {
         this.socket = socket;
     }
 

@@ -71,6 +71,8 @@ class SerialPortClient {
         'machine:laser-status': [],
 
         [ControllerEvent.UploadFileProgress]: [],
+        [ControllerEvent.UploadFileCompressing]: [],
+        [ControllerEvent.UploadFileDecompressing]: [],
 
         'connection:getActiveExtruder': [],
         'connection:updateWorkNozzle': [],
