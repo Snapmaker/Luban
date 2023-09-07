@@ -1956,7 +1956,7 @@
     "key-Workspace/Enclosure-Door Detection": "开关门检测",
     "key-Workspace/Enclosure-Enclosure": "外罩",
     "key-Workspace/Enclosure-Exhaust Fan": "排气扇",
-    "key-Workspace/Enclosure-If you disable the Door Detection feature,\nyour job will not pause when one of both of the enclosure panels is/are opened.": "",
+    "key-Workspace/Enclosure-If you disable the Door Detection feature,\nyour job will not pause when one of both of the enclosure panels is/are opened.": "If you disable the Door Detection feature,\nyour job will not pause when one of both of the enclosure panels is/are opened.",
     "key-Workspace/Enclosure-LED Strips": "LED 灯条",
     "key-Workspace/Fine-tuneWorkOrigin-Close": "关闭",
     "key-Workspace/Fine-tuneWorkOrigin-Determines how fast the machine moves when it’s working.": "确定机器工作时的移动速度。",
