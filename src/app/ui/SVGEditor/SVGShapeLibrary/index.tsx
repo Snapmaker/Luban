@@ -118,11 +118,11 @@ const SVGShapeLibrary = (props) => {
     };
     const handleResize = (() => {
         return _.debounce(() => {
-            if (!window || !rightSideBlock?.current) return window.innerWidth >= 1920 ? 8 * 4 : 5 * 4;
+            if (!window || !rightSideBlock?.current) return window.innerWidth >= 1440 ? 8 * 4 : 5 * 4;
             const width = rightSideBlock?.current?.clientWidth;
             // const height = rightSideBlock?.current.clientHeight;
             const height = window.innerHeight - 26 - 68 - 80; // menu-bar(26) and modal-bar(68) and pagination(80)
-            const col = window.innerWidth >= 1920 ? 8 : 5;
+            const col = window.innerWidth >= 1440 ? 8 : 5;
             const itemWidth = (width - col * 10) / col;
             const itemHeight = itemWidth;
             const row = Math.floor(height / itemHeight);
