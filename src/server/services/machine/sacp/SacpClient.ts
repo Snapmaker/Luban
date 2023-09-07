@@ -95,6 +95,14 @@ export enum ToolHeadType {
     LASER1600mW, LASER10000mW
 }
 
+interface CompressUploadFileOptions {
+    renderName?: string;
+
+    onProgress?: (progress: number) => void;
+    onCompressing?: () => void;
+    onDecompressing?: () => void;
+}
+
 export default class SacpClient extends Dispatcher {
     private log: Logger = console;
 
@@ -980,10 +988,14 @@ export default class SacpClient extends Dispatcher {
      * TODO: need option: chuckSize
      * TODO: need option: peerId
      */
-    public async uploadFileCompressed(filePath: string, renderName?: string, onProgress?: (progress: number) => void): Promise<boolean> {
+    public async uploadFileCompressed(filePath: string, options?: CompressUploadFileOptions): Promise<boolean> {
         if (!fs.existsSync(filePath)) {
             this.log.error(`File does not exist ${filePath}`);
             return false;
+        }
+
+        if (options?.onCompressing) {
+            options.onCompressing();
         }
 
         // Prepare compresssed data
@@ -1036,16 +1048,25 @@ export default class SacpClient extends Dispatcher {
             const index = readUint32(data.param, nextOffset);
 
             // Log so we can see file transfer process
-            if (index % 10 === 0) {
+            if (index % 50 === 0) {
                 this.log.info(`request file chuck index = ${index}`);
             }
             uploadInfo.currentIndex = index;
-            const progress = index / uploadInfo.totalChucks;
-            if (Math.ceil(progress * 1000) > Math.ceil(uploadInfo.progress * 1000)) {
-                uploadInfo.progress = progress;
 
-                if (onProgress) {
-                    onProgress(progress);
+            if (index + 1 === uploadInfo.totalChucks) {
+                // final chunk, assume that we are starting decompressing (on the controller end)
+                if (options?.onDecompressing) {
+                    options.onDecompressing();
+                }
+            } else {
+                // still uploading, progress precises to 0.1 for better performance
+                const progress = (index + 1) / uploadInfo.totalChucks;
+                if (Math.ceil(progress * 1000) > Math.ceil(uploadInfo.progress * 1000)) {
+                    uploadInfo.progress = progress;
+
+                    if (options?.onProgress) {
+                        options.onProgress(progress);
+                    }
                 }
             }
 
@@ -1093,7 +1114,7 @@ export default class SacpClient extends Dispatcher {
 
             // file name
             const filename = path.basename(filePath);
-            const filenameBuffer = renderName ? stringToBuffer(renderName) : stringToBuffer(filename);
+            const filenameBuffer = options?.renderName ? stringToBuffer(options.renderName) : stringToBuffer(filename);
 
             // file length
             const fileLengthBuffer = Buffer.alloc(4, 0);

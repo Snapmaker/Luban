@@ -15,33 +15,63 @@ export type LoadGcodeOptions = {
     renderImmediately?: boolean;
 };
 
+enum UploadFileModalType {
+    None,
+    Progress,
+    Compressing,
+    Decompressing,
+}
+
 const UploadView: React.FC = () => {
-    // const activeMachine = useSelector((state: RootState) => state.machine.activeMachine);
     const isConnected = useSelector((state: RootState) => state.workspace.isConnected);
     // const activeGcodeFile = useSelector((state: RootState) => state.workspace.activeGcodeFile);
     const gcodeFile = useSelector((state: RootState) => state.workspace.gcodeFile);
 
     const [fileUploadProgress, setFileUploadProgress] = useState(0);
+    const [fileUploadIsCompressing, setFileUploadIsCompressing] = useState(false);
+    const [fileUploadIsDecompressing, setFileUploadIsDecompressing] = useState(false);
 
     useEffect(() => {
         const onProgress = ({ progress }) => {
             setFileUploadProgress(progress);
+            setFileUploadIsCompressing(false);
+            setFileUploadIsDecompressing(false);
+        };
+        const onCompressing = () => {
+            setFileUploadProgress(0);
+            setFileUploadIsCompressing(true);
+            setFileUploadIsDecompressing(false);
+        };
+        const onDecompressing = () => {
+            setFileUploadProgress(0);
+            setFileUploadIsCompressing(false);
+            setFileUploadIsDecompressing(true);
         };
 
         controller.on(ControllerEvent.UploadFileProgress, onProgress);
+        controller.on(ControllerEvent.UploadFileCompressing, onCompressing);
+        controller.on(ControllerEvent.UploadFileDecompressing, onDecompressing);
 
         return () => {
             controller.off(ControllerEvent.UploadFileProgress, onProgress);
+            controller.off(ControllerEvent.UploadFileCompressing, onCompressing);
+            controller.off(ControllerEvent.UploadFileDecompressing, onDecompressing);
         };
     }, []);
 
-    const [showFileUploadProgressModal, setShowFileUploadProgressModal] = useState(false);
+    const [uploadFileModalType, setUploadFileModalType] = useState<UploadFileModalType>(UploadFileModalType.None);
 
     useEffect(() => {
-        if (fileUploadProgress > 0) {
-            setShowFileUploadProgressModal(true);
+        if (fileUploadIsCompressing) {
+            setUploadFileModalType(UploadFileModalType.Compressing);
+        } else if (fileUploadIsDecompressing) {
+            setUploadFileModalType(UploadFileModalType.Decompressing);
+        } else if (fileUploadProgress > 0) {
+            setUploadFileModalType(UploadFileModalType.Progress);
+        } else {
+            setUploadFileModalType(UploadFileModalType.None);
         }
-    }, [fileUploadProgress]);
+    }, [fileUploadProgress, fileUploadIsCompressing, fileUploadIsDecompressing]);
 
     const onClickUploadJob = useCallback(() => {
         if (!gcodeFile) {
@@ -54,9 +84,8 @@ const UploadView: React.FC = () => {
                 targetFilename: 'ray.nc',
             })
             .once(ControllerEvent.CompressUploadFile, ({ err, text }) => {
-                // close sending modal
-                // TODO
-                setShowFileUploadProgressModal(false);
+                // close modal
+                setUploadFileModalType(UploadFileModalType.None);
 
                 // Deal with send result
                 if (err) {
@@ -93,7 +122,29 @@ const UploadView: React.FC = () => {
             </div>
 
             {
-                showFileUploadProgressModal && (
+                uploadFileModalType === UploadFileModalType.Compressing && (
+                    <ModalSmallHOC
+                        title={i18n._('key-Workspace/WifiTransport-Sending File')}
+                        text={i18n._('Compressing file. Please wait…')}
+                        iconColor="#4CB518"
+                        img="WarningTipsProgress"
+                        showCloseButton={false}
+                    />
+                )
+            }
+            {
+                uploadFileModalType === UploadFileModalType.Decompressing && (
+                    <ModalSmallHOC
+                        title={i18n._('key-Workspace/WifiTransport-Sending File')}
+                        text={i18n._('Decompressing file. Please wait…')}
+                        iconColor="#4CB518"
+                        img="WarningTipsProgress"
+                        showCloseButton={false}
+                    />
+                )
+            }
+            {
+                uploadFileModalType === UploadFileModalType.Progress && (
                     <ModalSmallHOC
                         title={i18n._('key-Workspace/WifiTransport-Sending File')}
                         text={i18n._('Sending file. Please wait… {{ progress }}%', {
@@ -101,6 +152,7 @@ const UploadView: React.FC = () => {
                         })}
                         iconColor="#4CB518"
                         img="WarningTipsProgress"
+                        showCloseButton={false}
                     />
                 )
             }
