@@ -13,8 +13,6 @@ export const CUSTOM_SERVER_NAME = 'Manual';
 export const EPSILON = 1e-6;
 export const CONNECTION_HEAD_BEGIN_WORK = 'connection:headBeginWork';
 export const CONNECTION_GET_GCODEFILE = 'connection:getGcodeFile';
-export const CONNECTION_FILTER_SWITCH = 'connection:setFilterSwitch';
-export const CONNECTION_FILTER_WORKSPEED = 'connection:setFilterWorkSpeed';
 export const CONNECTION_WIFI_STATUS_TEST = 'connection:wifiStatusTest';
 
 export const SVG_MOVE_MINI_DISTANCE = 1e-4;
@@ -66,6 +64,7 @@ export const COORDINATE_AXIS = {
 // Connection Status
 export const CONNECTION_STATUS_IDLE = 'idle';
 export const CONNECTION_STATUS_CONNECTING = 'connecting';
+export const CONNECTION_STATUS_REQUIRE_AUTH = 'require-auth';
 export const CONNECTION_STATUS_CONNECTED = 'connected';
 
 // G-code Macro
@@ -88,6 +87,10 @@ export const STAGE_GENERATED = 4;
 
 export const PAGE_EDITOR = 'editor';
 export const PAGE_PROCESS = 'process';
+export enum Page {
+    Editor = 'editor',
+    Preview = 'process',
+}
 
 // for dual extruder
 export const LEFT_EXTRUDER = 'left';
@@ -464,7 +467,11 @@ export const LASER_PRESENT_CONFIG_GROUP = [
     },
     {
         name: 'key-Laser/ToolpathParameters-Power',
-        fields: ['fixed_power', 'fixed_min_power']
+        fields: ['fixed_power', 'constant_power_mode', 'half_diode_mode']
+    },
+    {
+        name: 'key-Laser/ToolpathParameters-Auxiliary Gas',
+        fields: ['auxiliary_air_pump']
     }
 ];
 
@@ -744,6 +751,12 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         default_value: false,
         label: 'Half Diode Mode',
         description: 'For lasers that use multiple diode combining technology and support independent control of different groups of diodes, finer power control and smaller spot sizes can be achieved by turning on only one group of diodes.',
+        type: 'bool'
+    },
+    constantPowerMode: {
+        default_value: true,
+        label: 'Constant Power Mode',
+        description: 'In constant power mode, the laser does not change with speed and is recommended to be turned on when cutting. And it is recommended to turn it off when picture engraving.',
         type: 'bool'
     },
     movementMode: {
@@ -1065,7 +1078,7 @@ export const COORDINATE_MODE_BOTTOM_CENTER = {
 // Laser | CNC canvas min | max scale rate
 export const VISUALIZER_CAMERA_HEIGHT = 300;
 export const MAX_LASER_CNC_CANVAS_SCALE = 5;
-export const MIN_LASER_CNC_CANVAS_SCALE = 0.5;
+export const MIN_LASER_CNC_CANVAS_SCALE = 0.25;
 export const SOFTWARE_MANUAL = 'https://support.snapmaker.com/hc/en-us/articles/4406229926935';
 export const FORUM_URL = 'https://forum.snapmaker.com/';
 export const SUPPORT_ZH_URL = 'https://snapmaker.cn/support-cn/home';
@@ -1080,54 +1093,6 @@ export const MYMINIFACTORY_URL = 'https://www.myminifactory.com/';
 // Project and Menu
 // once you change this number, make sure the number in `electron-app/Menu.js` also changed
 export const MAX_RECENT_FILES_LENGTH = 12;
-
-
-export const LASER_10W_TAKE_PHOTO_POSITION = {
-    A400: {
-        // TODO: need to test
-        x: 265,
-        y: 205,
-        z: 330
-    },
-    A350: {
-        x: 232,
-        y: 178,
-        z: 290
-    },
-    A250: {
-        x: 186,
-        y: 130,
-        z: 230
-    },
-    A150: {
-        x: 155,
-        y: 82,
-        z: 150
-    }
-};
-
-export const LASER_1600MW_CALIBRATION_POSITION = {
-    A400: {
-        x: 265,
-        y: 205,
-        z: 330
-    },
-    A350: {
-        x: 192,
-        y: 170,
-        z: 170
-    },
-    A250: {
-        x: 186,
-        y: 130,
-        z: 230
-    },
-    A150: {
-        x: 155,
-        y: 82,
-        z: 150
-    }
-};
 
 
 export const NOZZLE_SIZE_DEFAULT_OPTIONS = [

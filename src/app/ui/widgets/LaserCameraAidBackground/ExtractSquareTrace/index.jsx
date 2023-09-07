@@ -1,15 +1,25 @@
 import { InputNumber, Spin } from 'antd';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import React, { PureComponent } from 'react';
+import React from 'react';
 import { connect } from 'react-redux';
-import api from '../../../../api';
-import { LASER_10W_TAKE_PHOTO_POSITION } from '../../../../constants';
-import { findToolHead, LEVEL_ONE_POWER_LASER_FOR_SM2, LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES, } from '../../../../constants/machines';
-import { actions as workspaceActions } from '../../../../flux/workspace';
 
+import api from '../../../../api';
+import {
+    findToolHead,
+    LASER_10W_TAKE_PHOTO_POSITION,
+    LEVEL_ONE_POWER_LASER_FOR_SM2,
+    LEVEL_TWO_POWER_LASER_FOR_SM2,
+} from '../../../../constants/machines';
+import { actions as workspaceActions } from '../../../../flux/workspace';
 import i18n from '../../../../lib/i18n';
 import { getCurrentHeadType } from '../../../../lib/url-utils';
+import {
+    SnapmakerA150Machine,
+    SnapmakerA250Machine,
+    SnapmakerA350Machine,
+    SnapmakerArtisanMachine,
+} from '../../../../machines';
 import { Button } from '../../../components/Buttons';
 import Modal from '../../../components/Modal';
 import ManualCalibration from '../ManualCalibration';
@@ -22,7 +32,7 @@ const PANEL_MANUAL_CALIBRATION = 2;
 const PANEL_PICK_OBJECT = 3;
 const DefaultBgiName = '../../../../resources/images/camera-aid/Loading.gif';
 
-class ExtractSquareTrace extends PureComponent {
+class ExtractSquareTrace extends React.PureComponent {
     static propTypes = {
         // machine
         series: PropTypes.string.isRequired,
@@ -140,7 +150,7 @@ class ExtractSquareTrace extends PureComponent {
             if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
                 cameraOffsetX = 20;
                 cameraOffsetY = -8.5;
-                if (this.props.series === MACHINE_SERIES.A150.identifier) {
+                if (this.props.series === SnapmakerA150Machine.identifier) {
                     centerDis = 80;
 
                     [1, 2, 4, 3].forEach((item) => {
@@ -152,9 +162,9 @@ class ExtractSquareTrace extends PureComponent {
                     });
                     length = 4;
                 } else {
-                    if (this.props.series === MACHINE_SERIES.A250.identifier) {
+                    if (this.props.series === SnapmakerA250Machine.identifier) {
                         centerDis = 90;
-                    } else if (this.props.series === MACHINE_SERIES.A350.identifier) {
+                    } else if (this.props.series === SnapmakerA350Machine.identifier) {
                         centerDis = 106;
                     } else {
                         centerDis = 110;
@@ -212,7 +222,7 @@ class ExtractSquareTrace extends PureComponent {
                 this.props.executeGcodeG54(this.props.series, this.props.headType);
 
                 if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
-                    if (this.props.series !== MACHINE_SERIES.A150.identifier) {
+                    if (this.props.series !== SnapmakerA150Machine.identifier) {
                         this.swapItem(this.state.imageNames, 3, 5);
                     } else {
                         this.swapItem(this.state.imageNames, 2, 3);
@@ -249,6 +259,8 @@ class ExtractSquareTrace extends PureComponent {
                     z = 140;
                 }
             } else if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                console.log('series =', this.props.series);
+
                 const defaultPos = LASER_10W_TAKE_PHOTO_POSITION[this.props.series];
                 z = defaultPos.z;
                 position[0].x = defaultPos.x;
@@ -316,7 +328,7 @@ class ExtractSquareTrace extends PureComponent {
                                 const workRangeX = this.props.workRange.max[0];
                                 const workRangeY = this.props.workRange.max[1];
                                 if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
-                                    if (this.props.series === MACHINE_SERIES.A150.identifier) {
+                                    if (this.props.series === SnapmakerA150Machine.identifier) {
                                         this.state.xSize[task.index] = workRangeX / 2;
                                         this.state.ySize[task.index] = workRangeY / 2;
                                     } else {
@@ -414,9 +426,9 @@ class ExtractSquareTrace extends PureComponent {
             }));
         },
         updateStitchEach: async () => {
-            if (this.props.series === MACHINE_SERIES.A350.identifier) {
+            if (this.props.series === SnapmakerA350Machine.identifier) {
                 this.multiple = 1.5;
-            } else if (this.props.series === MACHINE_SERIES.A150.identifier) {
+            } else if (this.props.series === SnapmakerA150Machine.identifier) {
                 this.setState({
                     options: {
                         ...this.state.options,
@@ -555,7 +567,7 @@ class ExtractSquareTrace extends PureComponent {
         if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
             picAmount = 1;
         } else if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
-            picAmount = this.props.series === MACHINE_SERIES.A150.identifier ? 4 : 9;
+            picAmount = this.props.series === SnapmakerA150Machine.identifier ? 4 : 9;
         }
         // Set initial photo quality
         let photoQuality = 255;
@@ -624,9 +636,9 @@ class ExtractSquareTrace extends PureComponent {
         const workRangeX = this.props.workRange.max[0];
         const workRangeY = this.props.workRange.max[1];
 
-        if (this.props.series === MACHINE_SERIES.A400.identifier) {
+        if (this.props.series === SnapmakerArtisanMachine.identifier) {
             this.multiple = 1.25;
-        } else if (this.props.series === MACHINE_SERIES.A350.identifier) {
+        } else if (this.props.series === SnapmakerA350Machine.identifier) {
             this.multiple = 1.5;
         } else {
             this.multiple = 2;

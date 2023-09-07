@@ -207,14 +207,76 @@ export class PolygonsUtils {
         return polygons.map(polygon => PolygonUtils.move(polygon, offset));
     }
 
-    static sort(polygons, clockwise) {
-        for (let i = 0; i < polygons.length; i++) {
-            PolygonUtils.sort(polygons[i], clockwise);
-            clockwise = !clockwise;
-        }
-    }
-
     static simplify(polygons, limit) {
         return polygons.map(polygon => PolygonUtils.simplify(polygon, limit));
+    }
+
+    /**
+     * Separate into multiple disjoint polygons with holes or not
+     *
+     * If polygons intersect, it will cause an exception !!!
+     * Ignore polygon orientation
+     *
+     * @returns {*[Polygons, ...]}
+     */
+    static getPolygonssByPolyTree(polygons) {
+        const polygonss = [];
+        // Only large area polygons can contain small ones
+        const polygonAreasIndex = polygons
+            .map((polygon, index) => {
+                return { area: PolygonUtils.area(polygon), index: index };
+            })
+            .sort((o1, o2) => (Math.abs(o1.area) > Math.abs(o2.area) ? -1 : 1));
+
+        while (polygonAreasIndex.length > 0) {
+            const newPolygons = [];
+            const outerPolygonAreaIndex = polygonAreasIndex.splice(0, 1)[0];
+            const outerPolygon = polygons[outerPolygonAreaIndex.index];
+            if (outerPolygonAreaIndex.area < 0) {
+                outerPolygon.reverse();
+            }
+            newPolygons.push(outerPolygon);
+
+            let i = 0;
+            while (i < polygonAreasIndex.length) {
+                const innerPolygonAreaIndex = polygonAreasIndex[i];
+                const innerPolygon = polygons[innerPolygonAreaIndex.index];
+                const innerP0 = innerPolygon[0];
+                const innerP1 = innerPolygon[parseInt(innerPolygon.length / 2, 10)];
+                if (PolygonUtils.isPointInPolygon(innerP0, outerPolygon)
+                    && PolygonUtils.isPointInPolygon(innerP1, outerPolygon)) {
+                    let inInnerPolygon = false;
+                    if (newPolygons.length >= 2) {
+                        for (let j = 1; j < newPolygons.length; j++) {
+                            if (PolygonUtils.isPointInPolygon(innerP0, newPolygons[j]) && PolygonUtils.isPointInPolygon(innerP1, newPolygons[j])) {
+                                inInnerPolygon = true;
+                            }
+                        }
+                    }
+                    if (!inInnerPolygon) {
+                        polygonAreasIndex.splice(i, 1);
+                        if (innerPolygonAreaIndex.area > 0) {
+                            innerPolygon.reverse();
+                        }
+                        newPolygons.push(innerPolygon);
+                    } else {
+                        i++;
+                    }
+                } else {
+                    i++;
+                }
+            }
+            polygonss.push(newPolygons);
+        }
+
+        return polygonss;
+    }
+
+    static forEachPoint(polygons, callback) {
+        for (let i = 0; i < polygons.length; i++) {
+            for (let j = 0; j < polygons[i].length; j++) {
+                callback(polygons[i][j], i, j);
+            }
+        }
     }
 }

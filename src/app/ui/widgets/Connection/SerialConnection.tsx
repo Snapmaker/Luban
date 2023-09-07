@@ -5,6 +5,7 @@ import { includes, isObject, map } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
+import { CONNECTION_STATUS_CONNECTING } from '../../../constants';
 import {
     HEAD_CNC,
     HEAD_LASER,
@@ -32,15 +33,16 @@ let loadingTimer = null;
 
 const SerialConnection: React.FC = () => {
     // connection
-    const machineAgents = useSelector((state: RootState) => state.workspace.machineAgents) as MachineAgent[];
+    const machineAgents: MachineAgent[] = useSelector((state: RootState) => state.workspace.machineAgents);
     const agent: MachineAgent = useSelector((state: RootState) => state.workspace.server);
 
     const {
-        connectLoading,
+        connectionStatus,
 
         isOpen,
         isConnected,
     } = useSelector((state: RootState) => state.workspace);
+    const connectLoading = connectionStatus === CONNECTION_STATUS_CONNECTING;
 
     const {
         toolHead,

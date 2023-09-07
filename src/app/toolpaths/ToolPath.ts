@@ -20,6 +20,14 @@ import {
 } from './utils';
 import SvgModel from '../models/SvgModel';
 
+interface GenerateToolPathTask {
+    taskId: string;
+    modelId: string;
+    headType: 'laser' | 'cnc';
+    visible: boolean;
+    data: object;
+}
+
 class ToolPath {
     public id: string;
 
@@ -51,6 +59,7 @@ class ToolPath {
 
     public materials;
     private origin: Origin;
+    private referenceBox: Box2;
 
     public lastConfigJson = '';
 
@@ -196,6 +205,12 @@ class ToolPath {
         this.checkoutToolPathStatus();
     }
 
+    public setReferenceBox(box: Box2): void {
+        this.referenceBox = box;
+
+        this.checkoutToolPathStatus();
+    }
+
     private _getModels(): SvgModel[] {
         const models = this.modelGroup.getModels<SvgModel>();
         return models.filter((model) => {
@@ -214,10 +229,25 @@ class ToolPath {
         this.modelMap.delete(modelId);
     }
 
+    public getBoundingBox(): Box2 {
+        const bbox = new Box2();
+
+        const selectModels = this._getModels();
+
+        for (const model of selectModels) {
+            model.computeBoundingBox();
+
+            bbox.expandByPoint(model.boundingBox.min);
+            bbox.expandByPoint(model.boundingBox.max);
+        }
+
+        return bbox;
+    }
+
     /**
      * Generate toolpath task to server, need to call `commitToolPathTaskArray`
      */
-    public commitGenerateToolPath() {
+    public getGenerateToolPathTask(): GenerateToolPathTask | null {
         if (this.status === FAILED) {
             this.clearModelObjects();
             return null;
@@ -288,6 +318,7 @@ class ToolPath {
                     uploadName: info.uploadName,
                     transformation: info.transformation,
                     config: info.config,
+                    processImageName: info.processImageName
                 };
             });
 
@@ -298,42 +329,34 @@ class ToolPath {
         const modelInfos = this._getModelTaskInfos();
 
         // Deal with origin, if origin type is object, we add offsets to the model transformation here
-        if (this.origin.type === OriginType.Object) {
-            const selectModels = this._getModels();
-
-            const bbox = new Box2();
-            for (const model of selectModels) {
-                model.computeBoundingBox();
-
-                bbox.expandByPoint(model.boundingBox.min);
-                bbox.expandByPoint(model.boundingBox.max);
-            }
+        if (this.referenceBox && this.origin.type === OriginType.Object) {
+            const box = this.referenceBox;
 
             for (const modelInfo of modelInfos) {
                 switch (this.origin.reference) {
                     case ObjectReference.Center: {
-                        modelInfo.transformation.positionX -= (bbox.min.x + bbox.max.x) * 0.5;
-                        modelInfo.transformation.positionY -= (bbox.min.y + bbox.max.y) * 0.5;
+                        modelInfo.transformation.positionX -= (box.min.x + box.max.x) * 0.5;
+                        modelInfo.transformation.positionY -= (box.min.y + box.max.y) * 0.5;
                         break;
                     }
                     case ObjectReference.BottomLeft: {
-                        modelInfo.transformation.positionX -= bbox.min.x;
-                        modelInfo.transformation.positionY -= bbox.min.y;
+                        modelInfo.transformation.positionX -= box.min.x;
+                        modelInfo.transformation.positionY -= box.min.y;
                         break;
                     }
                     case ObjectReference.BottomRight: {
-                        modelInfo.transformation.positionX -= bbox.max.x;
-                        modelInfo.transformation.positionY -= bbox.min.y;
+                        modelInfo.transformation.positionX -= box.max.x;
+                        modelInfo.transformation.positionY -= box.min.y;
                         break;
                     }
                     case ObjectReference.TopLeft: {
-                        modelInfo.transformation.positionX -= bbox.min.x;
-                        modelInfo.transformation.positionY -= bbox.max.y;
+                        modelInfo.transformation.positionX -= box.min.x;
+                        modelInfo.transformation.positionY -= box.max.y;
                         break;
                     }
                     case ObjectReference.TopRight: {
-                        modelInfo.transformation.positionX -= bbox.max.x;
-                        modelInfo.transformation.positionY -= bbox.max.y;
+                        modelInfo.transformation.positionX -= box.max.x;
+                        modelInfo.transformation.positionY -= box.max.y;
                         break;
                     }
                     default:

@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 
 import ThreeUtils from '../../../scene/three-extensions/ThreeUtils';
 import WebGLRendererWrapper from '../../../scene/three-extensions/WebGLRendererWrapper';
+import { SnapmakerArtisanMachine } from '../../../machines';
 
 class Thumbnail extends PureComponent {
     static propTypes = {
@@ -76,7 +77,7 @@ class Thumbnail extends PureComponent {
     // }
 
     getThumbnail(series) {
-        if (series === 'A400') {
+        if (series === SnapmakerArtisanMachine.identifier) {
             this.camera.aspect = 600 / 600;
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(600, 600);

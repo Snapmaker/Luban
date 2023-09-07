@@ -11,12 +11,19 @@ import { timestamp } from '../../../../shared/lib/random-utils';
 import styles from './styles.styl';
 import QuickStart from './QuickStart';
 import api from '../../../api';
-import { MACHINE_SERIES, isDualExtruder } from '../../../constants/machines';
+import { isDualExtruder } from '../../../constants/machines';
 import { actions as appGlobalActions } from '../../../flux/app-global';
 import { CaseConfigQuickStart } from './CaseConfig';
 import { renderModal } from '../../utils';
 import { DetailModalState, resourcesDomain, IMG_RESOURCE_BASE_URL, AccessResourceWebState } from '../../../constants/downloadManager';
 import { RootState } from '../../../flux/index.def';
+import {
+    SnapmakerA150Machine,
+    SnapmakerA250Machine,
+    SnapmakerA350Machine,
+    SnapmakerArtisanMachine,
+    SnapmakerJ1Machine
+} from '../../../machines';
 
 const CaseLibrary = (props) => {
     // useState
@@ -48,11 +55,14 @@ const CaseLibrary = (props) => {
     const loadData = async () => {
         const isCaseResourceMachine = (currSeries, currToolHead) => {
             const isDual = isDualExtruder(currToolHead.printingToolhead);
+
+            // TODO: Replace this with dual tool heads check only
             if (
-                (currSeries === MACHINE_SERIES.A150.identifier && isDual)
-                || (currSeries === MACHINE_SERIES.A250.identifier && isDual)
-                || (currSeries === MACHINE_SERIES.A350.identifier && isDual)
-                || currSeries === MACHINE_SERIES.A400.identifier || currSeries === MACHINE_SERIES.J1.identifier
+                (currSeries === SnapmakerA150Machine.identifier && isDual)
+                || (currSeries === SnapmakerA250Machine.identifier && isDual)
+                || (currSeries === SnapmakerA350Machine.identifier && isDual)
+                || currSeries === SnapmakerArtisanMachine.identifier
+                || currSeries === SnapmakerJ1Machine.identifier
             ) {
                 return true;
             } else {

@@ -18,7 +18,7 @@
   "dependencies": {
     "@babel/runtime": "7.12.18",
     "@electron/remote": "2.0.8",
-    "@snapmaker/snapmaker-lunar": "1.4.1-alpha.3",
+    "@snapmaker/snapmaker-lunar": "1.4.1-alpha.5",
     "@snapmaker/snapmaker-sacp-sdk": "0.1.1",
     "@xmldom/xmldom": "^0.8.2",
     "bcrypt-nodejs": "0.0.3",
@@ -79,7 +79,7 @@
     "socketio-jwt": "4.5.1",
     "spawn-default-shell": "2.0.0",
     "static-eval": "2.0.5",
-    "superagent": "8.0.3",
+    "superagent": "8.1.2",
     "superagent-use": "0.1.0",
     "svgpath": "^2.5.0",
     "tar": "6.1.11",

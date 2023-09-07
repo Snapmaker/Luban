@@ -6,13 +6,12 @@ import { WORKFLOW_STATUS_MAP } from '../../../../app/constants';
 import { SACP_TYPE_SERIES_MAP } from '../../../../app/constants/machines';
 import logger from '../../../lib/logger';
 import SacpClient from '../sacp/SacpClient';
-import { FileChannelInterface, UploadFileOptions } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 import SacpChannelBase from './SacpChannel';
 
 const log = logger('machine:channel:SacpUdpChannel');
 
-class SacpUdpChannel extends SacpChannelBase implements FileChannelInterface {
+class SacpUdpChannel extends SacpChannelBase {
     // private client: dgram.
     private socketClient = dgram.createSocket('udp4');
 
@@ -72,14 +71,14 @@ class SacpUdpChannel extends SacpChannelBase implements FileChannelInterface {
         this.sacpClient = new SacpClient('udp', {
             socket: this.socketClient,
             host: options.address,
-            port: 2016, // 8889
+            port: 8889,
         });
         this.sacpClient.setLogger(log);
 
         // Get Machine Info
-        const { data: machineInfos } = await this.getMachineInfo();
-        const machineIdentifier = SACP_TYPE_SERIES_MAP[machineInfos.type];
-        log.debug(`Get machine info, type = ${machineInfos.type}`);
+        const machineInfo = await this.getMachineInfo();
+        const machineIdentifier = SACP_TYPE_SERIES_MAP[machineInfo.type];
+        log.debug(`Get machine info, type = ${machineInfo.type}`);
         log.debug(`Get machine info, machine identifier = ${machineIdentifier}`);
 
         // Once responsed, it's connected
@@ -133,32 +132,15 @@ class SacpUdpChannel extends SacpChannelBase implements FileChannelInterface {
     };
 
     public async stopHeartbeat(): Promise<void> {
+        // Remove heartbeat timeout check
         if (this.heartbeatTimer2) {
             clearTimeout(this.heartbeatTimer2);
-
             this.heartbeatTimer2 = null;
         }
 
+        // Cancel subscription of heartbeat
         const res = await this.sacpClient.unsubscribeHeartbeat(null);
         log.info(`Unsubscribe heartbeat, result = ${res.code}`);
-    }
-
-    // interface: FileChannelInterface
-
-    public async uploadFile(options: UploadFileOptions): Promise<boolean> {
-        const { filePath, targetFilename } = options;
-        log.info(`Upload file to controller... ${filePath}`);
-
-        const success = await this.sacpClient.uploadFile(filePath, targetFilename);
-        return success;
-    }
-
-    public async compressUploadFile(options: UploadFileOptions): Promise<boolean> {
-        const { filePath, targetFilename } = options;
-        log.info(`Compress and upload file to controller... ${filePath}`);
-
-        const success = await this.sacpClient.uploadFileCompressed(filePath, targetFilename);
-        return success;
     }
 }
 

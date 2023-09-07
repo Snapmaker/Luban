@@ -27,6 +27,7 @@ export const STEP_STAGE = {
     CNC_LASER_GENERATE_TOOLPATH_AND_PREVIEW: 21,
     CNC_LASER_RENDER_VIEWPATH: 22,
     CNC_LASER_REPAIRING_MODEL: 23,
+    CNC_LASER_SVG_CLIPPING: 52,
 
     // laser
     LASER_CUTTING_STL: 34,
@@ -74,6 +75,7 @@ export const PROCESS_STAGE = {
     CNC_LASER_UPLOAD_IMAGE: 2, // upload and process
     CNC_LASER_PROCESS_IMAGE: 3,
     CNC_LASER_VIEW_PATH: 4, // simulation
+    CNC_LASER_SVG_CLIPPING: 15,
 
     // laser
     LASER_CUT_STL: 8, // cut stl
@@ -308,6 +310,16 @@ export function getProgressStateManagerInstance(): ProgressStatesManager {
         'key-Progress/LaserCNC-Processing object {{progress}}%',
         'key-Progress/LaserCNC-Processed object successfully.',
         'key-Progress/LaserCNC-Failed to process object.');
+    manager.push(PROCESS_STAGE.CNC_LASER_SVG_CLIPPING,
+        [
+            {
+                stageID: STEP_STAGE.CNC_LASER_SVG_CLIPPING,
+                percent: 1
+            }
+        ],
+        'key-Progress/LaserCNC-SVG clipping {{progress}}%',
+        'key-Progress/LaserCNC-SVG clipping successfully.',
+        'key-Progress/LaserCNC-Failed to SVG clipping.');
     manager.push(PROCESS_STAGE.CNC_LASER_VIEW_PATH,
         [
             {

@@ -9,16 +9,17 @@ import {
     PAGE_EDITOR,
 } from '../../constants';
 import {
-    OriginType,
     Origin,
+    OriginType,
     RectangleWorkpieceReference,
+    Workpiece,
     WorkpieceShape,
 } from '../../constants/coordinate';
 import { getMachineToolHeadConfigPath } from '../../constants/machines';
 import OperationHistory from '../../core/OperationHistory';
 import i18n from '../../lib/i18n';
 import { STEP_STAGE, getProgressStateManagerInstance } from '../../lib/manager/ProgressManager';
-import ModelGroup from '../../models/ModelGroup';
+import ModelGroup2D from '../../models/ModelGroup2D';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
 import ToolPathGroup from '../../toolpaths/ToolPathGroup';
 import {
@@ -33,8 +34,17 @@ import definitionManager from '../manager/DefinitionManager';
 // eslint-disable-next-line import/no-cycle
 const ACTION_CHANGE_TOOL_PARAMS = 'cnc/ACTION_CHANGE_TOOL_PARAMS';
 
-const initModelGroup = new ModelGroup('cnc');
+const initModelGroup = new ModelGroup2D('cnc');
 const operationHistory = new OperationHistory();
+
+const initialWorkpiece: Workpiece = {
+    shape: WorkpieceShape.Rectangle,
+    size: {
+        x: 0,
+        y: 0,
+        z: 0,
+    }
+};
 
 const initialOrigin: Origin = {
     type: OriginType.Workpiece,
@@ -56,6 +66,7 @@ const INITIAL_STATE = {
     // Coordinate
     coordinateMode: COORDINATE_MODE_CENTER,
     coordinateSize: { x: 0, y: 0 },
+    workpiece: initialWorkpiece,
     origin: initialOrigin,
     lockingBlockPosition: 'A',
 
@@ -166,10 +177,10 @@ export const actions = {
 
         // Set machine size into coordinate default size
         const { size } = getState().machine;
-        const { materials } = getState().cnc;
+        const { materials, coordinateSize } = getState().cnc;
         const { isRotate } = materials;
         if (!isRotate) {
-            if (size/* && coordinateSize.x === 0 && coordinateSize.y === 0*/) {
+            if (coordinateSize.x === 0 && coordinateSize.y === 0 && size) {
                 dispatch(editorActions.updateState(HEAD_CNC, {
                     coordinateSize: size
                 }));

@@ -2,7 +2,7 @@ import request from 'superagent';
 import sendMessage from '../utils/sendMessage';
 import logger from '../../../lib/logger';
 
-const log = logger('service:heartBeat');
+const log = logger('service:worker:heartBeat');
 
 
 type IParam = { token: string, host: string, stop?: boolean }
@@ -73,7 +73,7 @@ const heartBeat = async (param: IParam) => {
         }
         beat();
         clearInterval(intervalHandle);
-        intervalHandle = setInterval(beat, 1000);
+        intervalHandle = setInterval(beat, 2000);
     });
 };
 

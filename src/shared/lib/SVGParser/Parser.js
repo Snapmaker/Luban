@@ -151,8 +151,8 @@ class SVGParser {
 
     async parseObject(node, element = SVG_TAG_SVG) {
         const initialAttributes = {
-            fill: '#000000',
-            stroke: null,
+            fill: 'none',
+            stroke: '#000000',
             strokeWidth: 1,
             fontSize: 16,
             // fontFamily: 'auto',

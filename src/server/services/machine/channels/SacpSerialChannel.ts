@@ -4,17 +4,17 @@ import { SerialPort } from 'serialport';
 
 import { SACP_TYPE_SERIES_MAP } from '../../../../app/constants/machines';
 import DataStorage from '../../../DataStorage';
-import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
+import { DEFAULT_BAUDRATE, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 import logger from '../../../lib/logger';
 import SacpClient from '../sacp/SacpClient';
 import { EventOptions } from '../types';
-import { FileChannelInterface, UploadFileOptions } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 import SacpChannelBase from './SacpChannel';
 
 const log = logger('machine:channel:SacpSerialChannel');
 
-class SacpSerialChannel extends SacpChannelBase implements FileChannelInterface {
+
+class SacpSerialChannel extends SacpChannelBase {
     private serialport: SerialPort;
 
     // public startTime: number;
@@ -23,8 +23,9 @@ class SacpSerialChannel extends SacpChannelBase implements FileChannelInterface 
 
     // public total: number;
 
-    public async connectionOpen(options: { port: string }): Promise<boolean> {
+    public async connectionOpen(options: { port: string, baudRate: number }): Promise<boolean> {
         const port = options.port;
+        const baudRate = options.baudRate || DEFAULT_BAUDRATE;
 
         if (!port) {
             return false;
@@ -36,7 +37,7 @@ class SacpSerialChannel extends SacpChannelBase implements FileChannelInterface 
         return new Promise((resolve) => {
             this.serialport = new SerialPort({
                 path: port,
-                baudRate: 115200,
+                baudRate,
                 autoOpen: false,
             });
             this.sacpClient = new SacpClient('serialport', this.serialport);
@@ -74,9 +75,9 @@ class SacpSerialChannel extends SacpChannelBase implements FileChannelInterface 
                 // Then we get machine info, this is required to detect the machine
                 setTimeout(async () => {
                     // Get Machine Info
-                    const { data: machineInfos } = await this.getMachineInfo();
-                    const machineIdentifier = SACP_TYPE_SERIES_MAP[machineInfos.type];
-                    log.debug(`Get machine info, type = ${machineInfos.type}`);
+                    const machineInfo = await this.getMachineInfo();
+                    const machineIdentifier = SACP_TYPE_SERIES_MAP[machineInfo.type];
+                    log.debug(`Get machine info, type = ${machineInfo.type}`);
                     log.debug(`Get machine info, machine identifier = ${machineIdentifier}`);
 
                     // Machine detected
@@ -139,22 +140,6 @@ class SacpSerialChannel extends SacpChannelBase implements FileChannelInterface 
             });
         });
     };
-
-    public async uploadFile(options: UploadFileOptions): Promise<boolean> {
-        const { filePath, targetFilename } = options;
-        log.info(`Upload file to controller... ${filePath}`);
-
-        const success = await this.sacpClient.uploadFile(filePath, targetFilename);
-        return success;
-    }
-
-    public async compressUploadFile(options: UploadFileOptions): Promise<boolean> {
-        const { filePath, targetFilename } = options;
-        log.info(`Compress and upload file to controller... ${filePath}`);
-
-        const success = await this.sacpClient.uploadFileCompressed(filePath, targetFilename);
-        return success;
-    }
 }
 
 const sacpSerialChannel = new SacpSerialChannel();

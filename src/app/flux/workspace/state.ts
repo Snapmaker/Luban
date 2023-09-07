@@ -1,6 +1,7 @@
 import type { Machine, MachineToolHeadOptions, ToolHead } from '@snapmaker/luban-platform';
 import { WorkflowStatus } from '@snapmaker/luban-platform';
 import * as THREE from 'three';
+import { Box3 } from 'three';
 
 import {
     CONNECTION_STATUS_IDLE,
@@ -59,7 +60,6 @@ declare interface WorkspaceConnectionState {
     connectionType: string;
     connectionStatus: string;
     connectionTimeout: number;
-    connectLoading: boolean;
 }
 
 // interface to put everything nowhere to put
@@ -71,7 +71,7 @@ declare interface WorkspaceOtherState {
     gcodeFile: object | null;
     activeGcodeFile: object | null;
 
-    boundingBox: object;
+    boundingBox: Box3;
     previewBoundingBox: object;
 
     gcodeFiles: object[];
@@ -129,7 +129,6 @@ export const initialState: WorkspaceState = {
     connectionType: ConnectionType.WiFi,
     connectionStatus: CONNECTION_STATUS_IDLE,
     connectionTimeout: 3000,
-    connectLoading: false,
 
     manualIp: '',
 

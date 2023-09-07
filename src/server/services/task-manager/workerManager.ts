@@ -15,7 +15,8 @@ export enum WorkerMethods {
     heartBeat = 'heartBeat',
     loadSize = 'loadSize',
     processImage = 'processImage',
-    imageRemap = 'imageRemap'
+    imageRemap = 'imageRemap',
+    svgClipping = 'svgClipping'
     // LUBAN worker methods END
 }
 

@@ -1,3 +1,14 @@
+import {
+    SnapmakerOriginalMachine,
+    SnapmakerOriginalExtendedMachine,
+    SnapmakerA150Machine,
+    SnapmakerA250Machine,
+    SnapmakerA350Machine,
+    SnapmakerJ1Machine,
+    SnapmakerArtisanMachine,
+    SnapmakerRayMachine,
+} from '../../app/machines';
+
 // IP_WHITELIST
 export const IP_WHITELIST = [
     // IPv4 reserved space
@@ -109,19 +120,28 @@ export const MACHINE_SERIES = {
         },
         alias: ['SM2-L', 'Snapmaker A400']
     },
-    CUSTOM: {
-        value: 'Custom',
-        label: 'key-Luban/Machine/MachineSeries-Custom',
-        setting: {
-            size: {
-                x: 125,
-                y: 125,
-                z: 125
-            },
-        },
-        alias: ['Custom']
-    }
 };
+
+export function findMachine(identifier) {
+    const availableMachines = [
+        SnapmakerOriginalMachine,
+        SnapmakerOriginalExtendedMachine,
+        SnapmakerA150Machine,
+        SnapmakerA250Machine,
+        SnapmakerA350Machine,
+        SnapmakerArtisanMachine,
+        SnapmakerJ1Machine,
+        SnapmakerRayMachine,
+    ];
+
+    for (const machine of availableMachines) {
+        if (machine.identifier === identifier) {
+            return machine;
+        }
+    }
+
+    return null;
+}
 
 // export const SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL = 'singleExtruderToolheadForOriginal';
 export const SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 = 'singleExtruderToolheadForSM2';
@@ -195,6 +215,8 @@ export const KEY_DEFAULT_CATEGORY_DEFAULT = 'key-default_category-Default';
 
 export const PORT_SCREEN_HTTP = 8080;
 export const PORT_SCREEN_SACP = 8888;
+export const DEFAULT_BAUDRATE = 115200;
+
 export const PRINTING_MANAGER_TYPE_MATERIAL = 'material';
 export const PRINTING_MANAGER_TYPE_QUALITY = 'quality';
 export const MATERIAL_TYPE_ARRAY = [
@@ -210,3 +232,4 @@ export const MATERIAL_TYPE_ARRAY = [
     'Nylon',
     'Other'
 ];
+

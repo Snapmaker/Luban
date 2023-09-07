@@ -43,7 +43,7 @@ class SerialPortClient {
 
         // Serial Port events
         'connection:connected': [],
-        'connection:connecting': [],
+        [ControllerEvent.ConnectionConnecting]: [],
         'connection:executeGcode': [],
         'serialport:emergencyStop': [],
         'serialport:read': [],
@@ -70,6 +70,10 @@ class SerialPortClient {
         'machine:module-list': [],
         'machine:laser-status': [],
 
+        [ControllerEvent.UploadFileProgress]: [],
+        [ControllerEvent.UploadFileCompressing]: [],
+        [ControllerEvent.UploadFileDecompressing]: [],
+
         'connection:getActiveExtruder': [],
         'connection:updateWorkNozzle': [],
 
@@ -82,9 +86,11 @@ class SerialPortClient {
         'taskProgress:generateToolPath': [],
         'taskProgress:generateGcode': [],
         'taskProgress:processImage': [],
+        'taskProgress:svgClipping': [],
         'taskCompleted:generateToolPath': [],
         'taskCompleted:generateGcode': [],
         'taskCompleted:processImage': [],
+        'taskCompleted:svgClipping': [],
         'taskProgress:generateViewPath': [],
         'taskCompleted:generateViewPath': [],
         'taskProgress:cutModel': [],
@@ -225,18 +231,19 @@ class SerialPortClient {
     }
 
     // Note: 'on' and 'off' function must be registered during initialization
-    public on(eventName, callback) {
-        const callbacks = this.callbacks[eventName];
-        if (!callbacks) {
-            log.error('Undefined event name:', eventName);
+    public on(eventName: string, callback) {
+        if (!this.callbacks[eventName]) {
+            log.warn('Undefined event name:', eventName);
             return;
         }
+
+        const callbacks = this.callbacks[eventName];
         if (typeof callback === 'function') {
             callbacks.push(callback);
         }
     }
 
-    public off(eventName, callback) {
+    public off(eventName: string, callback) {
         const callbacks = this.callbacks[eventName];
         if (!callbacks) {
             log.error('Undefined event name:', eventName);
@@ -311,6 +318,10 @@ class SerialPortClient {
 
     public commitProcessImage(task) {
         socketController.emit('taskCommit:processImage', task);
+    }
+
+    public commitSVGClipping(task) {
+        socketController.emit('taskCommit:svgClipping', task);
     }
 
     public commitCutModelTask(task) {

@@ -106,6 +106,7 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                 if (newSettings.power_level_divisions) newSettings.power_level_divisions.default_value = gcodeConfig?.powerLevelDivisions;
                 if (newSettings.auxiliary_air_pump) newSettings.auxiliary_air_pump.default_value = gcodeConfig?.auxiliaryAirPump;
                 if (newSettings.half_diode_mode) newSettings.half_diode_mode.default_value = gcodeConfig?.halfDiodeMode;
+                if (newSettings.constant_power_mode) newSettings.constant_power_mode.default_value = gcodeConfig?.constantPowerMode;
             }
         }
 
@@ -297,7 +298,7 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
         <React.Fragment>
             <Modal
                 className={classNames(styles['manager-body'])}
-                style={{ width: '468px', height: '660px', paddingBottom: '0px' }}
+                style={{ width: '468px' }}
                 size="lg"
                 onClose={actions.cancelUpdateToolPath}
             >
@@ -306,7 +307,7 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                     {i18n._('key-unused-Toolpath Settings')}
                     {/* </Modal.Title> */}
                 </Modal.Header>
-                <Modal.Body>
+                <Modal.Body style={{ height: '540px', overflow: 'initial' }}>
                     {headType === HEAD_CNC && (
                         <CncParameters
                             toolPath={toolPath}

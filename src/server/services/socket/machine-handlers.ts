@@ -43,11 +43,14 @@ function register(socketServer: SocketServer): void {
         [ControllerEvent.SwitchCNC]: connectionManager.switchCNC, // CNC, FOR NOW
 
         // modules services
-        'connection:setEnclosureLight': connectionManager.setEnclosureLight,
-        'connection:setEnclosureFan': connectionManager.setEnclosureFan,
-        'connection:setDoorDetection': connectionManager.setDoorDetection,
-        'connection:setFilterSwitch': connectionManager.setFilterSwitch,
-        'connection:setFilterWorkSpeed': connectionManager.setFilterWorkSpeed,
+        [ControllerEvent.GetEnclosureInfo]: connectionManager.getEnclosureInfo,
+        [ControllerEvent.SetEnclosureLight]: connectionManager.setEnclosureLight,
+        [ControllerEvent.SetEnclosureFan]: connectionManager.setEnclosureFan,
+        [ControllerEvent.SetEnclosureDoorDetection]: connectionManager.setDoorDetection,
+
+        [ControllerEvent.GetAirPurifierInfo]: connectionManager.getAirPurifierInfo,
+        [ControllerEvent.SetAirPurifierSwitch]: connectionManager.setFilterSwitch,
+        [ControllerEvent.SetAirPurifierStrength]: connectionManager.setAirPurifierFanStrength,
 
         // machine print G-code
         [ControllerEvent.StartGCode]: connectionManager.startGcode,

@@ -13,6 +13,7 @@ enum ControllerEvent {
      * Connection
      */
     ConnectionOpen = 'connection:open',
+    ConnectionConnecting = 'connection:connecting',
     ConnectionClose = 'connection:close',
 
     /**
@@ -58,16 +59,27 @@ enum ControllerEvent {
     SetSpindleSpeed = 'connection:set-spindle-speed',
 
     /**
-     * Enclosure
+     * Module: Enclosure
      */
+    GetEnclosureInfo = 'connection:get-enclosure-info',
     SetEnclosureLight = 'connection:setEnclosureLight',
     SetEnclosureFan = 'connection:setEnclosureFan',
     SetEnclosureDoorDetection = 'connection:setDoorDetection',
 
     /**
+     * Module: Air Purifier
+     */
+    GetAirPurifierInfo = 'connection:get-air-purifier-info',
+    SetAirPurifierSwitch = 'connection:setFilterSwitch',
+    SetAirPurifierStrength = 'connection:setFilterWorkSpeed',
+
+    /**
      * File
      */
+    UploadFileProgress = 'connection:upload-file:progress',
     UploadFile = 'connection:uploadFile',
+    UploadFileCompressing = 'connection:upload-file:compressing', // file is compressing
+    UploadFileDecompressing = 'connection:upload-file:decompressing', // file is decompressing
     CompressUploadFile = 'connection:compress-upload-file',
 
     /**
@@ -99,3 +111,7 @@ enum ControllerEvent {
 }
 
 export default ControllerEvent;
+
+export interface ConnectionConnectingOptions {
+    requireAuth?: boolean;
+}

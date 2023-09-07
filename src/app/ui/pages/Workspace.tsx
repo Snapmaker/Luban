@@ -23,6 +23,7 @@ import MainToolBar from '../layouts/MainToolBar';
 import WorkspaceLayout from '../layouts/WorkspaceLayout';
 import styles from '../layouts/styles/workspace.styl';
 import { logPageView, renderWidgetList } from '../utils';
+import AirPurifierWidget from '../widgets/AirPurifierWidget';
 import CNCPathWidget from '../widgets/CNCPath';
 import ConnectionWidget from '../widgets/Connection';
 import ConnectionControlWidget from '../widgets/ConnectionControl';
@@ -37,9 +38,14 @@ import LaserTestFocusWidget from '../widgets/LaserTestFocus';
 import MachineSettingWidget from '../widgets/MachineSetting';
 import MacroWidget from '../widgets/Macro';
 import PrintingVisualizer from '../widgets/PrintingVisualizer';
-import PurifierWidget from '../widgets/Purifier';
 import WebcamWidget from '../widgets/Webcam';
 import VisualizerWidget from '../widgets/WorkspaceVisualizer';
+import {
+    SnapmakerA150Machine,
+    SnapmakerA250Machine,
+    SnapmakerA350Machine,
+    SnapmakerArtisanMachine,
+} from '../../machines';
 
 
 const allWidgets = {
@@ -48,7 +54,7 @@ const allWidgets = {
     'wifi-transport': ConnectionFileTransferWidget,
     'console': ConsoleWidget,
     'macro': MacroWidget,
-    'purifier': PurifierWidget,
+    'purifier': AirPurifierWidget,
     'marlin': ConnectionToolControlWidget,
     'visualizer': VisualizerWidget,
     'webcam': WebcamWidget,
@@ -77,7 +83,7 @@ let workspaceVisualizerRef = null;
 function getUnsupportedWidgets(machineIdentifier, toolHead) {
     if (!machineIdentifier) return [];
 
-    if ([MACHINE_SERIES.A150.identifier, MACHINE_SERIES.A250.identifier, MACHINE_SERIES.A350.identifier].includes(machineIdentifier)) {
+    if ([SnapmakerA150Machine.identifier, SnapmakerA250Machine.identifier, SnapmakerA350Machine.identifier].includes(machineIdentifier)) {
         if (toolHead === DUAL_EXTRUDER_TOOLHEAD_FOR_SM2) {
             return [];
         }
@@ -89,7 +95,7 @@ function getUnsupportedWidgets(machineIdentifier, toolHead) {
         return ['control', 'macro'];
     }
 
-    if (machineIdentifier === MACHINE_SERIES.A400.identifier) {
+    if (machineIdentifier === SnapmakerArtisanMachine.identifier) {
         return [];
     }
 

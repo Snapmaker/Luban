@@ -47,6 +47,9 @@ interface CanvasProps {
     minScale?: number;
     maxScale?: number;
 
+    backgroundGroup: Object3D;
+
+
     onSceneCreated?: (canvas: Canvas) => void;
 }
 
@@ -113,7 +116,7 @@ class Canvas extends React.PureComponent<CanvasProps> {
 
     // otehrs
     private node = React.createRef<HTMLDivElement>();
-    private controls = null;
+    public controls = null;
     private animationCount = 0;
     private targetObject: Object3D | null = null;
 

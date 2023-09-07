@@ -1,15 +1,21 @@
-import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import * as THREE from 'three';
-import { DATA_PREFIX, DEFAULT_LUBAN_HOST, LASER_10W_TAKE_PHOTO_POSITION, LASER_1600MW_CALIBRATION_POSITION } from '../../../../constants';
-import { LEVEL_TWO_POWER_LASER_FOR_SM2, MACHINE_SERIES } from '../../../../constants/machines';
-import ManualCalibrationControls from '../../../../scene/three-extensions/ManualCalibrationControls';
-import RectangleGridHelper from '../../../../scene/objects/RectangleGridHelper';
-import WebGLRendererWrapper from '../../../../scene/three-extensions/WebGLRendererWrapper';
-import Detector from '../../../../scene/three-extensions/Detector';
-import styles from '../styles.styl';
+
 import api from '../../../../api';
+import { DATA_PREFIX, DEFAULT_LUBAN_HOST } from '../../../../constants';
+import {
+    LASER_10W_TAKE_PHOTO_POSITION,
+    LASER_1600MW_CALIBRATION_POSITION,
+    LEVEL_TWO_POWER_LASER_FOR_SM2,
+    MACHINE_SERIES
+} from '../../../../constants/machines';
 import i18n from '../../../../lib/i18n';
+import RectangleGridHelper from '../../../../scene/objects/RectangleGridHelper';
+import Detector from '../../../../scene/three-extensions/Detector';
+import ManualCalibrationControls from '../../../../scene/three-extensions/ManualCalibrationControls';
+import WebGLRendererWrapper from '../../../../scene/three-extensions/WebGLRendererWrapper';
+import styles from '../styles.styl';
 
 export const CALIBRATION_MODE = 1;
 export const CUTOUT_MODE = 2;

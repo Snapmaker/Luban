@@ -18,6 +18,7 @@ export const TASK_TYPE_GENERATE_VIEWPATH = 'generateViewPath';
 export const TASK_TYPE_GENERATE_GCODE = 'generateGcode';
 export const TASK_TYPE_PROCESS_IMAGE = 'processImage';
 export const TASK_TYPE_CUT_MODEL = 'cutModel';
+export const TASK_TYPE_CLIPPING_SVG = 'svgClipping';
 
 /**
  * Task Type to Runner name (i.e. Runner file name).
@@ -28,6 +29,7 @@ const TASK_TYPE_RUNNER_MAP = {
     [TASK_TYPE_GENERATE_VIEWPATH]: 'generateViewPath',
     [TASK_TYPE_PROCESS_IMAGE]: 'processImage',
     [TASK_TYPE_CUT_MODEL]: 'cutModel',
+    [TASK_TYPE_CLIPPING_SVG]: 'svgClipping',
 };
 
 type TPayload = {
@@ -207,6 +209,10 @@ const addCutModelTask = (socket, task) => {
     manager.addTask(new Task(task.taskId, socket, task.data, TASK_TYPE_CUT_MODEL, task.headType));
 };
 
+const addSVGClipping = (socket, task) => {
+    manager.addTask(new Task(task.taskId, socket, task.data, TASK_TYPE_CLIPPING_SVG, task.headType));
+};
+
 const cancelTask = (socket, taskId) => {
     manager.cancelTask(taskId);
 };
@@ -217,5 +223,6 @@ export default {
     addProcessImageTask,
     addCutModelTask,
     addGenerateViewPathTask,
-    cancelTask
+    cancelTask,
+    addSVGClipping
 };

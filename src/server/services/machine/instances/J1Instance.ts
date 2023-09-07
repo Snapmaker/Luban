@@ -6,7 +6,7 @@ import {
     LASER_HEAD_MODULE_IDS,
     MODULEID_TOOLHEAD_MAP,
     PRINTING_HEAD_MODULE_IDS,
-    ROTARY_MODULES,
+    ROTARY_MODULE_IDS,
 } from '../../../../app/constants/machines';
 import { SnapmakerJ1Machine } from '../../../../app/machines';
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
@@ -63,7 +63,7 @@ class J1MachineInstance extends MachineInstance {
                 state.headType = HEAD_CNC;
                 toolHeadModules.push(module);
             }
-            if (includes(ROTARY_MODULES, module.moduleId)) {
+            if (includes(ROTARY_MODULE_IDS, module.moduleId)) {
                 moduleListStatus.rotaryModule = true;
             }
             if (includes(EMERGENCY_STOP_BUTTON, module.moduleId)) {

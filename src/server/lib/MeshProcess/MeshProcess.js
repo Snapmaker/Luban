@@ -353,6 +353,7 @@ export class MeshProcess {
     }
 
     convertToImage() {
+        console.log('convertToImage');
         this.outputFilename = `${pathWithRandomSuffix(this.uploadName).replace('.stl', '')}.png`;
 
         this.mesh.resize({

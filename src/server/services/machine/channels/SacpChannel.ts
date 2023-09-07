@@ -12,6 +12,7 @@ import {
     GcodeCurrentLine,
     GetHotBed,
     LaserTubeState,
+    MachineInfo,
     ModuleInfo,
     NetworkConfiguration,
     NetworkOptions,
@@ -34,13 +35,13 @@ import {
 } from '../../../../app/constants';
 import {
     AIR_PURIFIER,
-    AIR_PURIFIER_MODULES,
+    AIR_PURIFIER_MODULE_IDS,
     CNC_HEAD_MODULE_IDS,
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
     EMERGENCY_STOP_BUTTON,
     ENCLOSURE_FOR_ARTISAN,
     ENCLOSURE_FOR_SM2,
-    ENCLOSURE_MODULES,
+    ENCLOSURE_MODULE_IDS,
     isDualExtruder,
     LASER_HEAD_MODULE_IDS,
     LEVEL_ONE_POWER_LASER_FOR_SM2,
@@ -49,7 +50,7 @@ import {
     MODULEID_MAP,
     MODULEID_TOOLHEAD_MAP,
     PRINTING_HEAD_MODULE_IDS,
-    ROTARY_MODULES,
+    ROTARY_MODULE_IDS,
     SNAPMAKER_J1_HEATED_BED,
     STANDARD_CNC_TOOLHEAD_FOR_SM2,
 } from '../../../../app/constants/machines';
@@ -62,12 +63,16 @@ import SacpClient, { CoordinateType } from '../sacp/SacpClient';
 import { MarlinStateData } from '../types';
 import Channel, {
     CncChannelInterface,
+    EnclosureChannelInterface,
     GcodeChannelInterface,
     LaserChannelInterface,
     NetworkServiceChannelInterface,
     PrintJobChannelInterface,
     SystemChannelInterface,
-    UpgradeFirmwareOptions
+    UpgradeFirmwareOptions,
+    AirPurifierChannelInterface,
+    FileChannelInterface,
+    UploadFileOptions
 } from './Channel';
 
 const log = logger('machine:channels:SacpChannel');
@@ -75,11 +80,15 @@ const log = logger('machine:channels:SacpChannel');
 class SacpChannelBase extends Channel implements
     GcodeChannelInterface,
     SystemChannelInterface,
+    FileChannelInterface,
     NetworkServiceChannelInterface,
     PrintJobChannelInterface,
     LaserChannelInterface,
-    CncChannelInterface {
+    CncChannelInterface,
+    EnclosureChannelInterface,
+    AirPurifierChannelInterface {
     private heartbeatTimer;
+    private shuttingDown: boolean = false;
 
     public sacpClient: SacpClient;
 
@@ -109,7 +118,7 @@ class SacpChannelBase extends Channel implements
 
     private filamentActionModule = null;
 
-    private moduleInfos: { [key: string]: ModuleInfo | ModuleInfo[] };
+    private moduleInfos: { [key: string]: ModuleInfo | ModuleInfo[] } = {};
 
     public currentWorkNozzle: number;
 
@@ -134,22 +143,65 @@ class SacpChannelBase extends Channel implements
         }
     }
 
+    public async startHeartbeat(): Promise<void> {
+        // TODO: refactor startHeartbeatLegacy()
+        return super.startHeartbeat();
+    }
+
+    public async stopHeartbeat(): Promise<void> {
+        this.shuttingDown = true;
+
+        // Remove heartbeat timeout check
+        if (this.heartbeatTimer) {
+            clearTimeout(this.heartbeatTimer);
+            this.heartbeatTimer = null;
+        }
+
+        // Cancel subscription of heartbeat
+        const res = await this.sacpClient.unsubscribeHeartbeat(null);
+        log.info(`Unsubscribe heartbeat, result = ${res.code}`);
+    }
+
     /**
      * Get laser module info.
      */
     private getLaserToolHeadModule(): ModuleInfo | null {
-        let targetModule: ModuleInfo = null;
         for (const key of Object.keys(this.moduleInfos)) {
             const module = this.moduleInfos[key];
             if (module && module instanceof ModuleInfo) {
                 if (includes(LASER_HEAD_MODULE_IDS, module.moduleId)) {
-                    targetModule = module;
-                    break;
+                    return module;
                 }
             }
         }
 
-        return targetModule;
+        return null;
+    }
+
+    private getEnclosureModule(): ModuleInfo | null {
+        for (const key of Object.keys(this.moduleInfos)) {
+            const module = this.moduleInfos[key];
+            if (module && module instanceof ModuleInfo) {
+                if (includes(ENCLOSURE_MODULE_IDS, module.moduleId)) {
+                    return module;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private getAirPurifierModule(): ModuleInfo | null {
+        for (const key of Object.keys(this.moduleInfos)) {
+            const module = this.moduleInfos[key];
+            if (module && module instanceof ModuleInfo) {
+                if (includes(AIR_PURIFIER_MODULE_IDS, module.moduleId)) {
+                    return module;
+                }
+            }
+        }
+
+        return null;
     }
 
     // interface: GcodeChannelInterface
@@ -180,6 +232,15 @@ class SacpChannelBase extends Channel implements
     // interface: SystemChannelInterface
 
     /**
+     * Get Machine info.
+     */
+    public async getMachineInfo(): Promise<MachineInfo> {
+        const { data: machineInfo } = await this.sacpClient.getMachineInfo();
+
+        return machineInfo;
+    }
+
+    /**
      * Export Log in machine to external storage.
      */
     public async exportLogToExternalStorage(): Promise<boolean> {
@@ -187,7 +248,7 @@ class SacpChannelBase extends Channel implements
     }
 
     public async getFirmwareVersion(): Promise<string> {
-        const { data: machineInfo } = await this.sacpClient.getMachineInfo();
+        const machineInfo = await this.getMachineInfo();
 
         const version = machineInfo.masterControlFirmwareVersion;
         log.info(`Get firmware version: ${version}`);
@@ -203,6 +264,30 @@ class SacpChannelBase extends Channel implements
         log.info(`Upgrade firmware result = ${res.response.result}`);
 
         return res.response.result === 0;
+    }
+
+    // interface: FileChannelInterface
+
+    public async uploadFile(options: UploadFileOptions): Promise<boolean> {
+        const { filePath, targetFilename } = options;
+        log.info(`Upload file to controller... ${filePath}`);
+
+        return this.sacpClient.uploadFile(filePath, targetFilename);
+    }
+
+    public async compressUploadFile(options: UploadFileOptions): Promise<boolean> {
+        const { filePath, targetFilename, onProgress, onCompressing, onDecompressing } = options;
+        log.info(`Compress and upload file to controller... ${filePath}`);
+
+        return this.sacpClient.uploadFileCompressed(
+            filePath,
+            {
+                renderName: targetFilename,
+                onProgress,
+                onCompressing,
+                onDecompressing,
+            }
+        );
     }
 
     // interface: LaserChannelInterface
@@ -303,6 +388,125 @@ class SacpChannelBase extends Channel implements
         return response.result === 0;
     }
 
+    // interface: EnclosureChannelInterface
+
+    public async getEnclosreInfo(): Promise<EnclosureInfo | null> {
+        const module = this.getEnclosureModule();
+        if (!module) {
+            return null;
+        }
+
+        const { response, data: enclosureInfo } = await this.sacpClient.getEnclousreInfo(module.key);
+
+        if (response.result === 0) {
+            return enclosureInfo;
+        } else {
+            return null;
+        }
+    }
+
+    public async setEnclosureLight(intensity: number): Promise<boolean> {
+        const module = this.getEnclosureModule();
+        if (!module) {
+            return false;
+        }
+
+        const { response } = await this.sacpClient.setEnclosureLight(module.key, intensity);
+
+        log.info(`Set enclosure light to ${intensity}, result = ${response.result}`);
+
+        return response.result === 0;
+    }
+
+    public async setEnclosureFan(strength: number): Promise<boolean> {
+        const module = this.getEnclosureModule();
+        if (!module) {
+            return false;
+        }
+
+        const { response } = await this.sacpClient.setEnclosureFan(module.key, strength);
+
+        log.info(`Set enclosure fan to ${strength}, result = ${response.result}`);
+
+        return response.result === 0;
+    }
+
+    public async setDoorDetection(options) {
+        const moduleInfo = this.moduleInfos && (this.moduleInfos[ENCLOSURE_FOR_ARTISAN] || this.moduleInfos[ENCLOSURE_FOR_SM2]);
+        let headTypeKey = 0;
+        switch (this.headType) {
+            case HEAD_PRINTING:
+                headTypeKey = 0;
+                break;
+            case HEAD_LASER:
+                headTypeKey = 1;
+                break;
+            case HEAD_CNC:
+                headTypeKey = 2;
+                break;
+            default:
+                break;
+        }
+        this.sacpClient.setEnclosureDoorEnabled(moduleInfo.key, options.enable ? 1 : 0, headTypeKey).then(({ response }) => {
+            log.info(`Update enclosure door enabled: ${response.result}`);
+        });
+    }
+
+    // interface: AirPurifierChannelInterface
+
+    public async getAirPurifierInfo(): Promise<AirPurifierInfo> {
+        const module = this.getAirPurifierModule();
+        if (!module) {
+            return null;
+        }
+
+        const { response, data: airPurifierInfo } = await this.sacpClient.getAirPurifierInfo(module.key);
+
+        if (response.result === 0) {
+            return airPurifierInfo;
+        } else {
+            return null;
+        }
+    }
+
+    public async turnOnAirPurifier(): Promise<boolean> {
+        const module = this.getAirPurifierModule();
+        if (!module) {
+            return false;
+        }
+        const { response } = await this.sacpClient.setPurifierSwitch(module.key, true);
+
+        return response.result === 0;
+    }
+
+    public async turnOffAirPurifier(): Promise<boolean> {
+        const module = this.getAirPurifierModule();
+        if (!module) {
+            return false;
+        }
+        const { response } = await this.sacpClient.setPurifierSwitch(module.key, false);
+
+        return response.result === 0;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async setAirPurifierStrength(strength: 1 | 2 | 3): Promise<boolean> {
+        const module = this.getAirPurifierModule();
+        if (!module) {
+            return false;
+        }
+
+        const { response } = await this.sacpClient.setPurifierSpeed(module.key, strength);
+        return response.result === 0;
+    }
+
+    public async setFilterWorkSpeed(options) {
+        const moduleInfo = this.moduleInfos && this.moduleInfos[AIR_PURIFIER];
+        this.sacpClient.setPurifierSpeed(moduleInfo.key, options.value).then(({ response }) => {
+            log.info(`Update Purifier speed, ${response.result}, ${options.value}`);
+        });
+    }
+
     // interface: PrintJobChannelInterface
 
     private async getPrintJobFileInfo(): Promise<void> {
@@ -320,7 +524,7 @@ class SacpChannelBase extends Channel implements
     public async subscribeGetPrintCurrentLineNumber(): Promise<boolean> {
         // Subscribe to line number
         const callback: ResponseCallback = ({ response }) => {
-            if (!this.totalLine) {
+            if (!this.totalLine && includes([WorkflowStatus.Running, WorkflowStatus.Paused], this.machineStatus)) {
                 this.getPrintJobFileInfo();
             }
 
@@ -379,14 +583,11 @@ class SacpChannelBase extends Channel implements
         return res.code === 0;
     }
 
-
-
     // old heartbeat base, refactor needed
-    public startHeartbeatBase = async (sacpClient: SacpClient, client?: net.Socket) => {
+    public startHeartbeatLegacy = async (sacpClient: SacpClient, client?: net.Socket) => {
         this.sacpClient = sacpClient;
 
         let stateData: MarlinStateData = {};
-        let statusKey = 0;
 
         const moduleStatusList = {
             rotaryModule: false,
@@ -431,7 +632,12 @@ class SacpChannelBase extends Channel implements
         });
 
         this.subscribeHeartCallback = async (data) => {
-            statusKey = readUint8(data.response.data, 0);
+            // In case receiving heartbeat during shutting down process
+            if (this.shuttingDown) {
+                return;
+            }
+
+            const statusKey = readUint8(data.response.data, 0);
 
             if (this.heartbeatTimer) {
                 clearTimeout(this.heartbeatTimer);
@@ -458,6 +664,7 @@ class SacpChannelBase extends Channel implements
         };
 
         // Subscribe heart beat
+        this.shuttingDown = false;
         this.sacpClient.subscribeHeartbeat({ interval: 1000 }, this.subscribeHeartCallback).then((res) => {
             log.info(`subscribe heartbeat success: ${res.code}`);
         });
@@ -474,14 +681,14 @@ class SacpChannelBase extends Channel implements
                 if (includes(EMERGENCY_STOP_BUTTON, module.moduleId)) {
                     moduleStatusList.emergencyStopButton = true;
                 }
-                if (includes(ENCLOSURE_MODULES, module.moduleId)) {
+                if (includes(ENCLOSURE_MODULE_IDS, module.moduleId)) {
                     moduleStatusList.enclosure = true;
                 }
-                if (includes(ROTARY_MODULES, module.moduleId)) {
+                if (includes(ROTARY_MODULE_IDS, module.moduleId)) {
                     moduleStatusList.rotaryModule = true;
                 }
 
-                if (includes(AIR_PURIFIER_MODULES, module.moduleId)) {
+                if (includes(AIR_PURIFIER_MODULE_IDS, module.moduleId)) {
                     stateData.airPurifier = true;
                     // need to update airPurifier status
                 }
@@ -501,19 +708,18 @@ class SacpChannelBase extends Channel implements
 
                 const keys = Object.keys(MODULEID_MAP);
                 if (includes(keys, String(module.moduleId))) {
-                    if (!this.moduleInfos) {
-                        this.moduleInfos = {};
-                    }
+                    const moduleIDName = MODULEID_MAP[module.moduleId];
+
                     // TODO: Consider more than one tool head modules
-                    if (!this.moduleInfos[MODULEID_MAP[module.moduleId]]) {
-                        this.moduleInfos[MODULEID_MAP[module.moduleId]] = module;
+                    if (!this.moduleInfos[moduleIDName]) {
+                        this.moduleInfos[moduleIDName] = module;
                     } else {
-                        const modules = this.moduleInfos[MODULEID_MAP[module.moduleId]];
+                        const modules = this.moduleInfos[moduleIDName];
                         if (Array.isArray(modules)) {
                             modules.push(module);
                         } else {
                             // convert single item to list
-                            this.moduleInfos[MODULEID_MAP[module.moduleId]] = [modules, module];
+                            this.moduleInfos[moduleIDName] = [modules, module];
                         }
                     }
                 }
@@ -782,10 +988,6 @@ class SacpChannelBase extends Channel implements
             log.info(`handlerResumePrintreturn, ${data}`);
             this.resumeGcodeCallback && this.resumeGcodeCallback({ msg: data, code: data });
         });
-    };
-
-    public getMachineInfo = async () => {
-        return this.sacpClient.getMachineInfo();
     };
 
     public getModuleInfo = async () => {
@@ -1109,59 +1311,6 @@ class SacpChannelBase extends Channel implements
             y: 0,
             z: laserToolHeadInfo.laserFocalLength + laserToolHeadInfo.platformHeight + materialThickness,
             isRotate
-        });
-    }
-
-    // set enclosure light status
-    public async setEnclosureLight(options) {
-        const moduleInfo = this.moduleInfos && (this.moduleInfos[ENCLOSURE_FOR_ARTISAN] || this.moduleInfos[ENCLOSURE_FOR_SM2]);
-        this.sacpClient.setEnclosureLight(moduleInfo.key, options.value).then(({ response }) => {
-            log.info(`Update enclosure light result, ${response.result}`);
-        });
-    }
-
-    public async setEnclosureFan(options) {
-        const moduleInfo = this.moduleInfos && (this.moduleInfos[ENCLOSURE_FOR_ARTISAN] || this.moduleInfos[ENCLOSURE_FOR_SM2]);
-        this.sacpClient.setEnclosureFan(moduleInfo.key, options.value).then(({ response }) => {
-            log.info(`Update enclosure fan result, ${response.result}`);
-        });
-    }
-
-    public async setDoorDetection(options) {
-        const moduleInfo = this.moduleInfos && (this.moduleInfos[ENCLOSURE_FOR_ARTISAN] || this.moduleInfos[ENCLOSURE_FOR_SM2]);
-        let headTypeKey = 0;
-        switch (this.headType) {
-            case HEAD_PRINTING:
-                headTypeKey = 0;
-                break;
-            case HEAD_LASER:
-                headTypeKey = 1;
-                break;
-            case HEAD_CNC:
-                headTypeKey = 2;
-                break;
-            default:
-                break;
-        }
-        this.sacpClient.setEnclosureDoorEnabled(moduleInfo.key, options.enable ? 1 : 0, headTypeKey).then(({ response }) => {
-            log.info(`Update enclosure door enabled: ${response.result}`);
-        });
-    }
-
-    public async setFilterSwitch(options) {
-        const moduleInfo = this.moduleInfos && this.moduleInfos[AIR_PURIFIER];
-        options.enable && this.sacpClient.setPurifierSpeed(moduleInfo.key, options.value).then(({ response }) => {
-            log.info(`Update Purifier speed, ${response.result}, ${options.value}`);
-        });
-        this.sacpClient.setPurifierSwitch(moduleInfo.key, options.enable).then(({ response }) => {
-            log.info(`Switch Purifier update, ${response.result}`);
-        });
-    }
-
-    public async setFilterWorkSpeed(options) {
-        const moduleInfo = this.moduleInfos && this.moduleInfos[AIR_PURIFIER];
-        this.sacpClient.setPurifierSpeed(moduleInfo.key, options.value).then(({ response }) => {
-            log.info(`Update Purifier speed, ${response.result}, ${options.value}`);
         });
     }
 

@@ -23,6 +23,7 @@ import STLLoader from '../../../scene/three-extensions/STLLoader';
 import SVGLoader from '../../../scene/three-extensions/SVGLoader';
 import ThreeUtils from '../../../scene/three-extensions/ThreeUtils';
 import Rectangle from '../../../scene/objects/Rectangle';
+import { SnapmakerArtisanMachine } from '../../../machines';
 // import i18n from '../../../lib/i18n';
 
 class PrintableCube extends Object3D {
@@ -255,7 +256,7 @@ class PrintableCube extends Object3D {
 
         this.createSeries();
 
-        if (this.series === 'A400') {
+        if (this.series === SnapmakerArtisanMachine.identifier) {
             const hotArea = this.roundedRectShape(-130, -130, 260, 260, 10);
             const geometry = new ShapeGeometry(hotArea);
             const mesh = new Line(geometry, new LineBasicMaterial({
@@ -384,7 +385,7 @@ class PrintableCube extends Object3D {
     // Check if point is in hot area
     isPointInShape(point) {
         // only Artisan contains hot area
-        if (this.series !== 'A400') {
+        if (this.series !== SnapmakerArtisanMachine.identifier) {
             return true;
         }
 

@@ -4,7 +4,6 @@ import includes from 'lodash/includes';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-import { DATA_PREFIX } from '../../constants';
 import { Origin } from '../../constants/coordinate';
 import SvgModel from '../../models/SvgModel';
 import Workpiece2d from '../../scene2d/Workpiece2d';
@@ -20,14 +19,11 @@ import {
 } from './element-utils';
 import { library } from './lib/ext-shapes';
 import { NS } from './lib/namespaces';
-import sanitize from './lib/sanitize';
 import SVGContentGroup from './svg-content/SVGContentGroup';
 
 const STEP_COUNT = 10;
 const THRESHOLD_DIST = 0.8;
 const ZOOM_RATE = 2.15;
-
-const visElems = 'a,circle,ellipse,foreignObject,g,image,line,path,polygon,polyline,rect,svg,text,tspan,use'.split(',');
 
 function toDecimal(num, d) {
     const pow = 10 ** d;
@@ -1688,78 +1684,6 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
     public selectOnly(elements) {
         this.clearSelection();
         this.addToSelection(elements);
-    }
-
-    public loadImageFile(file) {
-        const { width, height, uploadName } = file;
-        const uploadPath = `${DATA_PREFIX}/${uploadName}`;
-        this.svgContentGroup.addSVGElement({
-            element: 'image',
-            attr: {
-                x: 0,
-                y: 0,
-                width: width,
-                height: height,
-                href: uploadPath,
-                preserveAspectRatio: 'none'
-            }
-        });
-    }
-
-    public loadSVGString(xmlString) {
-        // create new document (text2xml)
-        const parser = new DOMParser();
-        parser.async = false;
-        const newDoc = parser.parseFromString(xmlString, 'text/xml');
-
-        sanitize(newDoc);
-
-        // Remove old SVG content and append new
-        this.svgContainer.removeChild(this.svgContent);
-
-        this.svgContent = document.adoptNode(newDoc.documentElement);
-        this.svgContainer.append(this.svgContent);
-
-        // ignored: process <image>, <svg>, <use> children
-        // ignored: convert linear gradient
-
-        const attrs = {
-            id: 'svgcontent',
-            overflow: 'visible'
-        };
-
-        if (this.svgContent.getAttribute('viewBox')) {
-            const vb = this.svgContent.getAttribute('viewBox').split(' ');
-            attrs.width = vb[2];
-            attrs.height = vb[3];
-        } else {
-            attrs.width = this.svgContent.getAttribute('width');
-            attrs.height = this.svgContent.getAttribute('height');
-        }
-
-        this.identifyGroup();
-
-        // Give id for any visible children
-        for (const child of this.svgContentGroup.getChildNodes()) {
-            if (visElems.includes(child.nodeName)) {
-                if (!child.id) {
-                    child.id = this.getNextId();
-                }
-            }
-        }
-
-        if (attrs.width <= 0) {
-            attrs.width = 100;
-        }
-        if (attrs.height <= 0) {
-            attrs.height = 199;
-        }
-
-        setAttributes(this.svgContent, attrs);
-
-        this.clearSelection();
-
-        this.onResize(); // update canvas
     }
 
     public identifyGroup() {

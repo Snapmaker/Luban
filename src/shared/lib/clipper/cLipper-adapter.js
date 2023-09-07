@@ -106,8 +106,11 @@ const polyUnion = (subPaths, clipPaths) => {
 
 
 const polyDiff = (subPaths, clipPaths) => {
-    if (!subPaths || !subPaths[0] || !clipPaths || !clipPaths[0]) {
+    if (!subPaths || !subPaths[0]) {
         return [];
+    }
+    if (!clipPaths || !clipPaths[0]) {
+        return subPaths;
     }
 
     const type = checkPathsType(subPaths);

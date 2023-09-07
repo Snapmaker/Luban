@@ -9,20 +9,19 @@ import readline from 'readline';
 import CalibrationInfo from '@snapmaker/snapmaker-sacp-sdk/dist/models/CalibrationInfo';
 import CoordinateInfo, { Direction } from '@snapmaker/snapmaker-sacp-sdk/dist/models/CoordinateInfo';
 import MovementInstruction, { MoveDirection } from '@snapmaker/snapmaker-sacp-sdk/dist/models/MovementInstruction';
+import { SACP_TYPE_SERIES_MAP, } from '../../../../app/constants/machines';
+import { SnapmakerArtisanMachine, SnapmakerJ1Machine } from '../../../../app/machines';
 import DataStorage from '../../../DataStorage';
 import { CONNECTION_TYPE_WIFI, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 import logger from '../../../lib/logger';
 import SacpClient, { CoordinateType, RequestPhotoInfo, ToolHeadType } from '../sacp/SacpClient';
 import { EventOptions } from '../types';
-import { SACP_TYPE_SERIES_MAP, } from '../../../../app/constants/machines';
-import { SnapmakerArtisanMachine, SnapmakerJ1Machine } from '../../../../app/machines';
 import { ChannelEvent } from './ChannelEvent';
 import SacpChannelBase from './SacpChannel';
-import { FileChannelInterface, UploadFileOptions } from './Channel';
 
 const log = logger('machine:channel:SacpTcpChannel');
 
-class SacpTcpChannel extends SacpChannelBase implements FileChannelInterface {
+class SacpTcpChannel extends SacpChannelBase {
     private client: net.Socket;
 
     private laserFocalLength = 0;
@@ -72,13 +71,15 @@ class SacpTcpChannel extends SacpChannelBase implements FileChannelInterface {
 
                 this.sacpClient = new SacpClient('tcp', this.client);
 
-                this.emit(ChannelEvent.Connected);
-
                 const hostName = os.hostname();
                 log.info(`os hostname: ${hostName}`);
                 setTimeout(async () => {
+                    // Connecting
+                    this.emit(ChannelEvent.Connecting, { requireAuth: true });
+
                     try {
                         const { response } = await this.sacpClient.wifiConnection(hostName, 'Luban', options.token, () => {
+                            // disconnected
                             this.client.destroy();
                             if (this.client.destroyed) {
                                 log.info('TCP manually closed');
@@ -93,6 +94,8 @@ class SacpTcpChannel extends SacpChannelBase implements FileChannelInterface {
                         });
 
                         if (response.result === 0) {
+                            this.emit(ChannelEvent.Connected);
+
                             // Connected
                             this.sacpClient.setLogger(log);
                             this.sacpClient.wifiConnectionHeartBeat();
@@ -237,23 +240,13 @@ class SacpTcpChannel extends SacpChannelBase implements FileChannelInterface {
     }
 
     public async startHeartbeat(): Promise<void> {
-        await this.startHeartbeatBase(this.sacpClient, undefined);
+        await this.startHeartbeatLegacy(this.sacpClient, undefined);
 
         this.setROTSubscribeApi();
     }
 
-    // interface: FileChannelInterface
-
-    public async uploadFile(options: UploadFileOptions): Promise<boolean> {
-        const { filePath, targetFilename } = options;
-
-        return this.sacpClient.uploadFile(filePath, targetFilename);
-    }
-
-    public async compressUploadFile(options: UploadFileOptions): Promise<boolean> {
-        const { filePath, targetFilename } = options;
-
-        return this.sacpClient.uploadFileCompressed(filePath, targetFilename);
+    public async stopHeartbeat(): Promise<void> {
+        await super.stopHeartbeat();
     }
 
     public takePhoto = async (params: RequestPhotoInfo, callback: (result: { status: boolean }) => void) => {

@@ -24,7 +24,7 @@ import { ConnectionType } from '../../../flux/workspace/state';
 import { handleClipPath, handleMask } from '../../SVGEditor/lib/ImageSvgCompose';
 import modal from '../../../lib/modal';
 
-function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setShowWorkspace }) {
+function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setShowWorkspace, onChangeSVGClippingMode }) {
     const unSaved = useSelector(state => state?.project[headType]?.unSaved, shallowEqual);
     const canRedo = useSelector(state => state[headType]?.history?.canRedo, shallowEqual);
     const canUndo = useSelector(state => state[headType]?.history?.canUndo, shallowEqual);
@@ -251,6 +251,15 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             action: () => {
                 dispatch(editorActions.sendSelectedModelToBack(headType));
             }
+        },
+        {
+            title: i18n._('key-CncLaser/MainToolBar-SVG Clipping'),
+            type: 'button',
+            disabled: headType !== 'laser',
+            name: 'ToolVector',
+            action: () => {
+                dispatch(onChangeSVGClippingMode);
+            }
         }
     ];
     if (headType === HEAD_CNC) {
@@ -306,7 +315,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             {
                 title: i18n._('key-CncLaser/MainToolBar-Mask'),
                 type: 'button',
-                name: 'MainToolbarInversemask',
+                name: 'MainToolbarMask',
                 action: async () => {
                     const svgs = LaserSelectedModelArray.filter(v => v.sourceType === 'svg' && v.mode === PROCESS_MODE_VECTOR);
                     const imgs = LaserSelectedModelArray.filter(v => v.sourceType !== 'svg' || v.mode === PROCESS_MODE_GREYSCALE);
@@ -323,7 +332,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             {
                 title: i18n._('key-CncLaser/MainToolBar-Inverse Mask'),
                 type: 'button',
-                name: 'MainToolbarMask',
+                name: 'MainToolbarInversemask',
                 action: async () => {
                     const svgs = LaserSelectedModelArray.filter(v => v.sourceType === 'svg' && v.mode === PROCESS_MODE_VECTOR);
                     const imgs = LaserSelectedModelArray.filter(v => v.sourceType !== 'svg' || v.mode === PROCESS_MODE_GREYSCALE);

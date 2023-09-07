@@ -5,11 +5,11 @@ import isInteger from 'lodash/isInteger';
 import ControllerEvent from '../../connection/controller-events';
 import {
     CONNECTION_STATUS_CONNECTING,
-    CONNECTION_STATUS_IDLE,
+    CONNECTION_STATUS_IDLE
 } from '../../constants';
 import controller from '../../lib/controller';
 import { machineStore } from '../../store/local-storage';
-import { MachineAgent } from './MachineAgent';
+import { ConnectResult, MachineAgent } from './MachineAgent';
 import baseActions from './actions-base';
 import { ConnectionType } from './state';
 
@@ -106,7 +106,6 @@ const resetMachineState = (connectionType = ConnectionType.WiFi) => {
             isConnected: false,
             connectionStatus: CONNECTION_STATUS_IDLE,
             isHomed: null,
-            connectLoading: false,
             // TODO: unify?
             workflowStatus: connectionType === ConnectionType.WiFi ? WorkflowStatus.Unknown : WorkflowStatus.Idle,
             laserFocalLength: null,
@@ -128,10 +127,16 @@ const resetMachineState = (connectionType = ConnectionType.WiFi) => {
     };
 };
 
+/**
+ * Connect to machine.
+ */
 const connect = (agent: MachineAgent) => {
     return async (dispatch, getState) => {
-        // Update selected
-        dispatch(setSelectedAgent(agent));
+        // Update selected agent
+        const oldAgent: MachineAgent = getState().workspace.server;
+        if (!isEqual(agent, oldAgent)) {
+            dispatch(setSelectedAgent(agent));
+        }
 
         // Re-use saved token if possible
         const savedServerName = getState().workspace.savedServerName;
@@ -145,14 +150,25 @@ const connect = (agent: MachineAgent) => {
             agent.setToken(savedServerToken);
         }
 
-        const { code, msg } = await agent.connect();
+        // update connection status
+        dispatch(baseActions.updateState({
+            connectionStatus: CONNECTION_STATUS_CONNECTING,
+        }));
+
+        const { code, msg }: ConnectResult = await agent.connect();
+
+        const connectionStatus = getState().workspace.connectionStatus;
+        if (connectionStatus !== CONNECTION_STATUS_CONNECTING) {
+            // connection has been reset
+            throw new Error('Connection cancelled');
+        }
 
         // success
         if (!msg) {
+            // save
             if (agent.isNetworkedMachine) {
                 dispatch(baseActions.updateState({
                     isOpen: true,
-                    connectionStatus: CONNECTION_STATUS_CONNECTING,
                 }));
 
                 dispatch(setServerName(agent.name));
@@ -164,6 +180,10 @@ const connect = (agent: MachineAgent) => {
                 machineStore.set('port', agent.port);
                 dispatch(setMachineSerialPort(agent.port));
             }
+        } else {
+            dispatch(baseActions.updateState({
+                connectionStatus: CONNECTION_STATUS_IDLE,
+            }));
         }
 
         return { code, msg };

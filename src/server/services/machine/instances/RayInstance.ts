@@ -30,27 +30,16 @@ class RayMachineInstance extends MachineInstance {
         // (this.channel as SocketSerialNew).startHeartbeat();
 
         // Get Machine Info
-        const { data: machineInfo } = await this.channel.getMachineInfo();
+        const machineInfo = await (this.channel as SacpChannelBase).getMachineInfo();
         log.info(`Machine Firmware Version: ${machineInfo.masterControlFirmwareVersion}`);
 
         state.series = SnapmakerRayMachine.identifier;
 
         // module info
-        const { data: moduleInfos } = await this.channel.getModuleInfo();
+        const { data: moduleInfos } = await (this.channel as SacpChannelBase).getModuleInfo();
 
         /*
         moduleInfos = [
-          ,
-          ModuleInfo {
-            key: 2,
-            moduleId: 518,
-            moduleIndex: 0,
-            moduleState: 2,
-            serialNumber: 524287,
-            hardwareVersion: 255,
-            moduleFirmwareVersion: 'v1.0.0',
-            byteLength: 18
-          },
           ModuleInfo {
             key: 3,
             moduleId: 520,
@@ -111,7 +100,6 @@ class RayMachineInstance extends MachineInstance {
         log.info('On closing connection...');
 
         log.info('Stop heartbeat.');
-        log.debug(`channel = ${this.channel.constructor.name}`);
         await this.channel.stopHeartbeat();
     }
 }

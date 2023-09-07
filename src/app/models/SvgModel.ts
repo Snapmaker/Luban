@@ -13,7 +13,7 @@ import { checkIsImageSuffix } from '../../shared/lib/utils';
 import Resource from './Resource';
 import { SOURCE_TYPE, SVG_MOVE_MINI_DISTANCE } from '../constants';
 import BaseModel, { ModelTransformation, ModelInfo, TSize, SvgModelElement, TMode } from './BaseModel';
-import ModelGroup from './ModelGroup';
+import ModelGroup2D from './ModelGroup2D';
 
 type TElementAttributes = {
     x: number;
@@ -100,8 +100,8 @@ class SvgModel extends BaseModel {
     public vertexPoints: TVertexPoint[] = [];
     public geometry: THREE.PlaneGeometry;
 
-    public constructor(modelInfo: ModelInfo, modelGroup: ModelGroup) {
-        super(modelInfo, modelGroup);
+    public constructor(modelInfo: ModelInfo, modelGroup2D: ModelGroup2D) {
+        super(modelInfo, modelGroup2D);
         const { elem, size } = modelInfo;
         this.elem = elem;
         this.size = size;
@@ -867,8 +867,14 @@ class SvgModel extends BaseModel {
                 break;
             }
             case 'image': {
-                const originalWidth = Math.abs(transformation.width / transformation.scaleX);
-                const originalHeight = Math.abs(transformation.height / transformation.scaleY);
+                let originalWidth, originalHeight;
+                if (transformation.width && transformation.height) {
+                    originalWidth = Math.abs(transformation.width / transformation.scaleX);
+                    originalHeight = Math.abs(transformation.height / transformation.scaleY);
+                } else {
+                    originalWidth = width;
+                    originalHeight = height;
+                }
                 elem.setAttribute('x', `${x - originalWidth / 2}`);
                 elem.setAttribute('y', `${y - originalHeight / 2}`);
                 elem.setAttribute('width', `${originalWidth}`);
@@ -1078,7 +1084,7 @@ class SvgModel extends BaseModel {
             }
 
             this.mode = mode;
-            this.resource.processedFile.update(null);
+            // this.resource.processedFile.update(null);
         }
         this.generateProcessObject3D();
     }
@@ -1137,6 +1143,7 @@ class SvgModel extends BaseModel {
 
             sourceHeight: this.sourceHeight,
             sourceWidth: this.sourceWidth,
+
             scale: this.scale,
             originalName: this.originalName,
             uploadName: this.resource.originalFile.name,
@@ -1224,7 +1231,7 @@ class SvgModel extends BaseModel {
      *
      * @returns {ThreeModel}
      */
-    public clone(modelGroup: ModelGroup) {
+    public clone(modelGroup: ModelGroup2D) {
         const clone = new SvgModel({ ...this } as unknown as ModelInfo, modelGroup);
         clone.originModelID = this.modelID;
         const specialPrefix = this.isDrawGraphic() ? 'graph-' : '';
@@ -1247,6 +1254,12 @@ class SvgModel extends BaseModel {
             ...config
         };
         this.processMode(this.mode, this.config);
+    }
+
+    // Update original name
+    public updateOriginalName(originalName: string) {
+        // this.processMode(this.mode, this.config, processImageName);
+        this.resource.originalFile.update(originalName);
     }
 
     public updateProcessImageName(processImageName: string) {

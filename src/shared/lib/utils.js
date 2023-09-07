@@ -1,7 +1,7 @@
 import _ from 'lodash';
-import { SVG_MOVE_MINI_DISTANCE } from '../../app/constants';
 
 export const EPSILON = 1e-6;
+export const EPSILON4 = 1e-4;
 
 export const isZero = (x) => {
     return Math.abs(x) < EPSILON;
@@ -73,7 +73,7 @@ export const checkIsImageSuffix = (filePath) => {
 export const whetherTransformed = (objValue, othValue) => {
     const res = Object.keys(objValue).some((key) => {
         if (typeof objValue[key] === 'number') {
-            return Math.abs(objValue[key] - othValue[key]) > SVG_MOVE_MINI_DISTANCE;
+            return Math.abs(objValue[key] - othValue[key]) > EPSILON4;
         } else {
             return objValue[key] !== othValue[key];
         }

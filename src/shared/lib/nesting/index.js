@@ -14,7 +14,6 @@ const generateSTLToPolygon = (faces, options) => {
     } = options;
 
     const gridProjection = new GridProjection({
-
         interval: interval,
         min: boundingBox.min,
         max: boundingBox.max

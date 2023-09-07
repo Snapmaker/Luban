@@ -1,12 +1,13 @@
 import * as THREE from 'three';
+import { Box2 } from 'three';
 
 import { DATA_PREFIX, DEFAULT_LUBAN_HOST, HEAD_LASER } from '../constants';
+import { Origin } from '../constants/coordinate';
 import { ViewPathRenderer } from '../lib/renderer/ViewPathRenderer';
 import { generateModelDefaultConfigs } from '../models/ModelInfoUtils';
 import ThreeModel from '../models/ThreeModel';
 import ToolPath from './ToolPath';
 import { SUCCESS, createToolPathNameByType, getModelsByToolPathType, getToolPathType } from './utils';
-import { Origin } from '../constants/coordinate';
 
 class ToolPathGroup {
     public toolPaths: ToolPath[] = [];
@@ -30,6 +31,8 @@ class ToolPathGroup {
     public materialsObject = null;
 
     public thumbnail = '';
+
+    private origin: Origin;
 
     public constructor(modelGroup, headType) {
         this.modelGroup = modelGroup;
@@ -72,7 +75,7 @@ class ToolPathGroup {
         this.simulationObjects.visible = false;
     }
 
-    public showToolpathObjects(show, showWood) {
+    public showToolpathObjects(show: boolean, showWood: boolean): void {
         this.toolPathObjects.visible = show;
         showWood && (this.simulationObjects.visible = show);
     }
@@ -234,7 +237,7 @@ class ToolPathGroup {
             this.selectToolPathById(toolPath.id);
         }
         if (shouldCommitGenerate) {
-            toolPath.commitGenerateToolPath();
+            toolPath.getGenerateToolPathTask();
         }
         return toolPath;
     }
@@ -379,14 +382,37 @@ class ToolPathGroup {
         this._updated();
     }
 
-    public commitToolPath(toolPathId) {
-        let res = null;
+    /**
+     * Reference Box is the box tool paths resides in.
+     *
+     * Tool path use reference box & origin settings to calculate origin point.
+     */
+    public computeReferenceBox(): void {
+        const toolPaths = this.toolPaths.filter(toolpath => toolpath.visible);
+
+        // compute bounding box of all visible tool paths
+        const bbox = new Box2();
+        for (const toolPath of toolPaths) {
+            const bbox2 = toolPath.getBoundingBox();
+
+            bbox.expandByPoint(bbox2.min);
+            bbox.expandByPoint(bbox2.max);
+        }
+
+        // set bbox as reference box of each tool path
+        for (const toolPath of toolPaths) {
+            toolPath.setReferenceBox(bbox);
+        }
+    }
+
+    public getGenerateToolPathTask(toolPathId: string) {
+        let task = null;
         const toolPath = this._getToolPath(toolPathId);
         if (toolPath) {
-            res = toolPath.commitGenerateToolPath();
+            task = toolPath.getGenerateToolPathTask();
         }
         this._updated();
-        return res;
+        return task;
     }
 
     public async commitToolPathPromise(toolPathId) {
@@ -394,7 +420,7 @@ class ToolPathGroup {
             let res = null;
             const toolPath = this._getToolPath(toolPathId);
             if (toolPath) {
-                res = toolPath.commitGenerateToolPath();
+                res = toolPath.getGenerateToolPathTask();
             }
             this._updated();
             resolve(res);
@@ -434,8 +460,6 @@ class ToolPathGroup {
     }
 
     public updateMaterials(materials) {
-        console.log('ToolPathGroup updateMaterials', materials);
-
         for (const toolPath of this.toolPaths) {
             toolPath.updateState({ materials });
         }
@@ -446,6 +470,8 @@ class ToolPathGroup {
     }
 
     public setOrigin(origin: Origin): void {
+        this.origin = origin;
+
         for (const toolPath of this.toolPaths) {
             toolPath.setOrigin(origin);
         }

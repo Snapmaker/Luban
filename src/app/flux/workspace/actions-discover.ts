@@ -1,11 +1,13 @@
 import { isEqualWith } from 'lodash';
 
+import { LaserMachineMetadata, Machine, MachineType } from '@snapmaker/luban-platform';
+import { CUSTOM_SERVER_NAME } from '../../constants';
+import { DEFAULT_BAUDRATE } from '../../constants/machines';
 import { controller } from '../../lib/controller';
-import { NetworkedMachineInfo } from './NetworkedMachine';
 import { MachineAgent } from './MachineAgent';
+import { NetworkedMachineInfo } from './NetworkedMachine';
 import baseActions from './actions-base';
 import { ConnectionType } from './state';
-import { CUSTOM_SERVER_NAME } from '../../constants';
 // import { CUSTOM_SERVER_NAME } from '../../constants/index';
 
 
@@ -68,6 +70,13 @@ const init = () => (dispatch, getState) => {
         },
         'machine:serial-discover': ({ machines }) => {
             // Note that we may receive this event many times.
+            const activeMachine: Machine = getState().machine.activeMachine;
+
+            let baudRate = DEFAULT_BAUDRATE;
+            if (activeMachine?.machineType === MachineType.Laser) {
+                baudRate = (activeMachine?.metadata as LaserMachineMetadata).serialPortBaudRate || DEFAULT_BAUDRATE;
+            }
+
             const { connectionType } = getState().workspace;
 
             const machineAgents = getState().workspace.machineAgents as MachineAgent[];
@@ -80,13 +89,14 @@ const init = () => (dispatch, getState) => {
                         return v.port === object.port;
                     });
                     if (!find) {
-                        const server = MachineAgent.createAgent({
+                        const agent = MachineAgent.createAgent({
                             name: object.port,
                             address: '',
                             port: object.port,
+                            baudRate,
                             protocol: object.protocol,
                         });
-                        resultServers.unshift(server);
+                        resultServers.unshift(agent);
                     }
                 }
                 if (!isEqualWith(resultServers, machineAgents)) {

@@ -88,13 +88,10 @@ class GcodeGenerator {
                 } else if ([4].includes(item.G)) {
                     // Marlin G4 P:milliseconds S:seconds
                     // Grbl G4 S:milliseconds P:seconds
-                    item.P !== undefined && (line += `S${floatFixed3(item.P)}`);
+                    item.P !== undefined && (line += `P${floatFixed3(item.P) / 1000}`);
                     item.S !== undefined && (line += `P${floatFixed3(item.S)}`);
                 }
             } else if (item.M !== undefined) {
-                if (item.M === 3) {
-                    item.M = 4;
-                }
                 cmd = `M${item.M}`;
                 line += `${cmd} `;
 

@@ -26,6 +26,8 @@ import {
     NetworkConfiguration,
     NetworkOptions,
     NetworkStationState,
+    EnclosureInfo,
+    AirPurifierInfo,
 } from '@snapmaker/snapmaker-sacp-sdk/dist/models';
 import {
     Serializable
@@ -91,6 +93,14 @@ export type RequestPhotoInfo = {
 
 export enum ToolHeadType {
     LASER1600mW, LASER10000mW
+}
+
+interface CompressUploadFileOptions {
+    renderName?: string;
+
+    onProgress?: (progress: number) => void;
+    onCompressing?: () => void;
+    onDecompressing?: () => void;
 }
 
 export default class SacpClient extends Dispatcher {
@@ -978,12 +988,17 @@ export default class SacpClient extends Dispatcher {
      * TODO: need option: chuckSize
      * TODO: need option: peerId
      */
-    public async uploadFileCompressed(filePath: string, renderName?: string): Promise<boolean> {
+    public async uploadFileCompressed(filePath: string, options?: CompressUploadFileOptions): Promise<boolean> {
         if (!fs.existsSync(filePath)) {
             this.log.error(`File does not exist ${filePath}`);
             return false;
         }
 
+        if (options?.onCompressing) {
+            options.onCompressing();
+        }
+
+        // Prepare compresssed data
         let compressedData;
         try {
             compressedData = await new Promise<Buffer>((resolve, reject) => {
@@ -995,7 +1010,7 @@ export default class SacpClient extends Dispatcher {
                 });
 
                 readStream.on('end', () => {
-                    zlib.deflate(fileData, { level: 1 }, (err, buffer) => {
+                    zlib.deflate(fileData, { level: zlib.constants.Z_BEST_SPEED }, (err, buffer) => {
                         if (err) {
                             reject(new Error(`Unable to compress target file: ${filePath}`));
                             return;
@@ -1017,6 +1032,12 @@ export default class SacpClient extends Dispatcher {
             return false;
         }
 
+        const uploadInfo = {
+            totalChucks: 0,
+            currentIndex: 0,
+            progress: 0,
+        };
+
         // const sizePerChunk = 968;
         const sizePerChunk = 960;
         this.setHandler(0xb0, 0x11, (data) => {
@@ -1027,8 +1048,26 @@ export default class SacpClient extends Dispatcher {
             const index = readUint32(data.param, nextOffset);
 
             // Log so we can see file transfer process
-            if (index % 10 === 0) {
+            if (index % 50 === 0) {
                 this.log.info(`request file chuck index = ${index}`);
+            }
+            uploadInfo.currentIndex = index;
+
+            if (index + 1 === uploadInfo.totalChucks) {
+                // final chunk, assume that we are starting decompressing (on the controller end)
+                if (options?.onDecompressing) {
+                    options.onDecompressing();
+                }
+            } else {
+                // still uploading, progress precises to 0.1 for better performance
+                const progress = (index + 1) / uploadInfo.totalChucks;
+                if (Math.ceil(progress * 1000) > Math.ceil(uploadInfo.progress * 1000)) {
+                    uploadInfo.progress = progress;
+
+                    if (options?.onProgress) {
+                        options.onProgress(progress);
+                    }
+                }
             }
 
             const start = sizePerChunk * index;
@@ -1075,7 +1114,7 @@ export default class SacpClient extends Dispatcher {
 
             // file name
             const filename = path.basename(filePath);
-            const filenameBuffer = renderName ? stringToBuffer(renderName) : stringToBuffer(filename);
+            const filenameBuffer = options?.renderName ? stringToBuffer(options.renderName) : stringToBuffer(filename);
 
             // file length
             const fileLengthBuffer = Buffer.alloc(4, 0);
@@ -1086,6 +1125,7 @@ export default class SacpClient extends Dispatcher {
             const chunksBuffer = Buffer.alloc(4, 0);
             const chunks = Math.ceil(compressedData.byteLength / sizePerChunk);
             writeUint32(chunksBuffer, 0, chunks);
+            uploadInfo.totalChucks = chunks;
 
             // md5
             const md5HexStr = hash.digest('hex');
@@ -1229,14 +1269,27 @@ export default class SacpClient extends Dispatcher {
         });
     }
 
-    public async setEnclosureLight(key, value) {
+    public async getEnclousreInfo(key: number) {
+        const buffer = Buffer.alloc(1, key);
+        const { response, packet } = await this.send(0x15, 0x01, PeerId.CONTROLLER, buffer);
+
+        this.log.info(`Get enclosure info: ${response.result}`);
+        if (response.result === 0) {
+            const enclosureInfo = new EnclosureInfo();
+            enclosureInfo.fromBuffer(response.data);
+            return { response, packet, data: enclosureInfo };
+        } else {
+            return { response, packet };
+        }
+    }
+
+    public async setEnclosureLight(key: number, value: number) {
         const buffer = Buffer.alloc(2);
         writeUint8(buffer, 0, key);
         writeUint8(buffer, 1, value);
-        return this.send(0x15, 0x02, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
-            this.log.info(`set Enclosure light: ${response.result}`);
-            return { response, packet };
-        });
+        const { response, packet } = await this.send(0x15, 0x02, PeerId.CONTROLLER, buffer);
+        this.log.info(`Set enclosure light indensity: ${response.result}`);
+        return { response, packet };
     }
 
     public async setEnclosureDoorEnabled(key, value, headTypeKey) {
@@ -1250,14 +1303,27 @@ export default class SacpClient extends Dispatcher {
         });
     }
 
-    public async setEnclosureFan(key, value) {
+    public async setEnclosureFan(key: number, value: number) {
         const buffer = Buffer.alloc(2);
         writeUint8(buffer, 0, key);
         writeUint8(buffer, 1, value);
-        return this.send(0x15, 0x04, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
-            this.log.info(`set Enclosure fan: ${response.result}`);
+        const { response, packet } = await this.send(0x15, 0x04, PeerId.CONTROLLER, buffer);
+        this.log.info(`Set enclosure fan strength to ${value}, result = ${response.result}`);
+        return { response, packet };
+    }
+
+    public async getAirPurifierInfo(key: number) {
+        const buffer = Buffer.alloc(1, key);
+        const { response, packet } = await this.send(0x17, 0x01, PeerId.CONTROLLER, buffer);
+
+        this.log.info(`Get air purifier info, result = ${response.result}`);
+        if (response.result === 0) {
+            const airPurifierInfo = new AirPurifierInfo();
+            airPurifierInfo.fromBuffer(response.data);
+            return { response, packet, data: airPurifierInfo };
+        } else {
             return { response, packet };
-        });
+        }
     }
 
     public async setPurifierSpeed(key, speed) {

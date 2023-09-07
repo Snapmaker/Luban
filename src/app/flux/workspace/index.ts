@@ -1,6 +1,7 @@
 import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { includes, isEmpty, isNil, isUndefined } from 'lodash';
 import * as THREE from 'three';
+import { Box3, Vector3 } from 'three';
 import { v4 as uuid } from 'uuid';
 
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
@@ -11,6 +12,7 @@ import {
     CONNECTION_HEAD_BEGIN_WORK,
     CONNECTION_STATUS_CONNECTED,
     CONNECTION_STATUS_IDLE,
+    CONNECTION_STATUS_REQUIRE_AUTH,
     EPSILON,
     HEAD_CNC,
     HEAD_LASER,
@@ -31,15 +33,17 @@ import { controller } from '../../lib/controller';
 import { logGcodeExport } from '../../lib/gaEvent';
 import log from '../../lib/log';
 import workerManager from '../../lib/manager/workerManager';
+import { SnapmakerOriginalMachine } from '../../machines';
 import ThreeUtils from '../../scene/three-extensions/ThreeUtils';
 import { machineStore } from '../../store/local-storage';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
+import { MachineAgent } from './MachineAgent';
 import baseActions, { ACTION_UPDATE_STATE } from './actions-base';
 import connectActions from './actions-connect';
 import discoverActions from './actions-discover';
 import { GCodeFileObject } from './actions-gcode';
 import type { MachineStateUpdateOptions } from './state';
-import { WORKSPACE_STAGE, initialState } from './state';
+import { ConnectionType, WORKSPACE_STAGE, initialState } from './state';
 
 
 export { WORKSPACE_STAGE } from './state';
@@ -94,11 +98,15 @@ export const actions = {
     __initRemoteEvents: () => (dispatch, getState) => {
         const controllerEvents = {
             // connecting state from remote
-            'connection:connecting': (options: { isConnecting: boolean }) => {
-                const { isConnecting } = options;
-                dispatch(baseActions.updateState({
-                    connectLoading: isConnecting,
-                }));
+            [ControllerEvent.ConnectionConnecting]: (options: { requireAuth?: boolean }) => {
+                const { requireAuth = false } = options;
+
+                if (requireAuth) {
+                    // from connecting to require auth
+                    dispatch(baseActions.updateState({
+                        connectionStatus: CONNECTION_STATUS_REQUIRE_AUTH,
+                    }));
+                }
             },
 
             'connection:connected': ({ state, err: _err, connectionType }) => {
@@ -124,10 +132,8 @@ export const actions = {
                 dispatch(baseActions.updateState({
                     isHomed: isHomed,
                     isMoving,
-                    connectLoading: false
                 }));
 
-                log.debug('DEBUG series =', series, 'seriesSize =', seriesSize);
                 if (!isNil(seriesSize)) {
                     machineSeries = valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`)
                         ? valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`).value
@@ -618,6 +624,7 @@ export const actions = {
         switch (status) {
             case 'succeed': {
                 const { modelGroup, previewModelGroup } = getState().workspace;
+                const boundingBox: Box3 = getState().workspace.boundingBox;
                 const { positions, colors, index, indexColors } = value;
                 const bufferGeometry = new THREE.BufferGeometry();
                 const positionAttribute = new THREE.Float32BufferAttribute(
@@ -656,6 +663,7 @@ export const actions = {
                 // object3D.material.uniforms.u_visible_index_count.value = 20000;
                 object3D.name = `${gcodeFilename}-${uuid()}`;
 
+                // Add object3D to one of group
                 if (isPreview) {
                     previewModelGroup.add(object3D);
                 } else {
@@ -663,23 +671,39 @@ export const actions = {
                 }
                 object3D.position.copy(new THREE.Vector3());
 
-                if (isDone) {
-                    const boundingBox = ThreeUtils.computeBoundingBox(object3D);
+                // calculate bounding box of G-code objects
+                const objectBBox = ThreeUtils.computeBoundingBox(object3D);
 
+                const newBoundingBox = new Box3().copy(boundingBox);
+                newBoundingBox.expandByPoint(objectBBox.min);
+                newBoundingBox.expandByPoint(objectBBox.max);
+
+                if (isPreview) {
+                    dispatch(
+                        actions.updateState({
+                            previewBoundingBox: newBoundingBox,
+                        })
+                    );
+                } else {
+                    dispatch(
+                        actions.updateState({
+                            boundingBox: newBoundingBox,
+                        })
+                    );
+                }
+
+                if (isDone) {
                     if (isPreview) {
                         dispatch(
                             actions.updateState({
                                 previewRenderState: 'rendered',
-                                previewBoundingBox: boundingBox,
-                                previewStage:
-                                    WORKSPACE_STAGE.LOAD_GCODE_SUCCEED,
+                                previewStage: WORKSPACE_STAGE.LOAD_GCODE_SUCCEED,
                             })
                         );
                     } else {
                         dispatch(
                             actions.updateState({
                                 renderState: 'rendered',
-                                boundingBox: boundingBox,
                                 stage: WORKSPACE_STAGE.LOAD_GCODE_SUCCEED,
                             })
                         );
@@ -751,28 +775,27 @@ export const actions = {
             .then((res) => {
                 const response = res.body;
                 const header = response.gcodeHeader;
-                const gcodeFile = {
+                const gcodeFile: GCodeFileObject = {
                     name: file.name,
                     uploadName: response.uploadName,
                     size: file.size,
                     lastModified: file.lastModified,
                     thumbnail: header[';thumbnail'] || '',
                     renderGcodeFileName: file.renderGcodeFileName || file.name,
-                    boundingBox: {
-                        max: {
-                            x: header[';max_x(mm)'],
-                            y: header[';max_y(mm)'],
-                            z: header[';max_z(mm)'],
-                            b: header[';max_b(mm)'],
-                        },
-                        min: {
-                            x: header[';min_x(mm)'],
-                            y: header[';min_y(mm)'],
-                            z: header[';min_z(mm)'],
-                            b: header[';min_b(mm)']
-                        }
-                    },
-
+                    boundingBox: new Box3(
+                        new Vector3(
+                            header[';min_x(mm)'],
+                            header[';min_y(mm)'],
+                            header[';min_z(mm)'],
+                            // b: header[';min_b(mm)']
+                        ),
+                        new Vector3(
+                            header[';max_x(mm)'],
+                            header[';max_y(mm)'],
+                            header[';max_z(mm)'],
+                            // b: header[';max_b(mm)'],
+                        ),
+                    ),
                     type: header[';header_type'],
                     tool_head: header[';tool_head'],
                     nozzle_temperature: header[';nozzle_temperature(°C)'],
@@ -840,7 +863,7 @@ export const actions = {
             actions.updateState({
                 renderState: 'idle',
                 gcodeFile: null,
-                boundingBox: null,
+                boundingBox: new Box3(),
                 stage: WORKSPACE_STAGE.EMPTY,
                 progress: 0,
             })
@@ -921,19 +944,29 @@ export const actions = {
             logGcodeExport(headType, 'workspace', isRotate);
 
             workerManager.gcodeToArraybufferGeometry(
-                { func: 'WORKSPACE', gcodeFilename: gcodeFile.uploadName },
+                {
+                    func: 'WORKSPACE',
+                    gcodeFilename: gcodeFile.uploadName
+                },
                 (data) => {
+                    // Note this callback can be called multiple times.
                     dispatch(actions.gcodeToArraybufferGeometryCallback(data));
                 }
             );
         } else {
             shouldAutoPreviewGcode
                 && dispatch(actions.renderPreviewGcodeFile(gcodeFile));
-            await dispatch(
-                actions.updateState({
-                    boundingBox: gcodeFile?.boundingBox,
-                })
-            );
+
+            if (gcodeFile?.boundingBox) {
+                await dispatch(
+                    actions.updateState({
+                        boundingBox: new Box3(
+                            new Vector3().fromArray(gcodeFile.boundingBox.min),
+                            new Vector3().fromArray(gcodeFile.boundingBox.max),
+                        ),
+                    })
+                );
+            }
         }
     },
 
@@ -975,9 +1008,13 @@ export const actions = {
             }
             i++;
         }
+
         dispatch(
             actions.updateState({
-                boundingBox: fileInfo.boundingBox,
+                boundingBox: new Box3(
+                    new Vector3().fromArray(fileInfo.boundingBox.min),
+                    new Vector3().fromArray(fileInfo.boundingBox.max),
+                ),
                 gcodeFiles: files,
             })
         );
@@ -1030,14 +1067,21 @@ export const actions = {
      * @returns {Promise}
      */
     loadGcode: (gcodeFile = null) => async (dispatch, getState) => {
-        const { connectionStatus, server } = getState().workspace;
+        const { connectionStatus } = getState().workspace;
+        const connectionType: ConnectionType = getState().workspace.connectionType;
+
         gcodeFile = gcodeFile || getState().workspace.gcodeFile;
-        if (
-            connectionStatus !== CONNECTION_STATUS_CONNECTED
-            || gcodeFile === null
-        ) {
+
+        if (connectionType === ConnectionType.WiFi) {
+            // Actually only with serial port plaintext protocol need to load G-code
             return;
         }
+
+        if (connectionStatus !== CONNECTION_STATUS_CONNECTED || gcodeFile === null) {
+            return;
+        }
+
+        const server: MachineAgent = getState().workspace.server;
 
         dispatch(actions.updateState({ uploadState: 'uploading' }));
         try {
@@ -1150,7 +1194,7 @@ export const actions = {
     // Execute G54 based on series and headType
     executeGcodeG54: (series, headType) => (dispatch) => {
         if (
-            series !== MACHINE_SERIES.ORIGINAL.identifier
+            series !== SnapmakerOriginalMachine.identifier
             && (headType === HEAD_LASER || headType === HEAD_CNC)
         ) {
             dispatch(actions.executeGcode('G54'));

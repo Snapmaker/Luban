@@ -81,7 +81,7 @@ export const L20WLaserToolModule: ToolHead = {
     identifier: '20W Laser Module',
 
     label: '20W Laser Module',
-    image: '/resources/images/machine/coming_soon.png', // temporarily used
+    image: '/resources/images/machine/20w_laser_module.jpeg',
 
     metadata: {
         headType: ToolHeadType.Laser,
@@ -92,7 +92,7 @@ export const L40WLaserToolModule: ToolHead = {
     identifier: '40W Laser Module',
 
     label: '40W Laser Module',
-    image: '/resources/images/machine/coming_soon.png', // temporarily used
+    image: '/resources/images/machine/40w_laser_module.jpeg',
 
     metadata: {
         headType: ToolHeadType.Laser,
@@ -123,7 +123,7 @@ export const highPower200WCNCToolHead: ToolHead = {
     identifier: LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
 
     label: 'key-App/Settings/MachineSettings-High CNC',
-    image: '/resources/images/machine/coming_soon.png',
+    image: '/resources/images/machine/200w_cnc_module.jpeg',
 
     metadata: {
         headType: ToolHeadType.CNC,

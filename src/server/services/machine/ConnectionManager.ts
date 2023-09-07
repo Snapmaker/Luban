@@ -3,9 +3,16 @@ import fs from 'fs';
 import { includes } from 'lodash';
 import path from 'path';
 
-import ControllerEvent from '../../../app/connection/controller-events';
+import ControllerEvent, { ConnectionConnectingOptions } from '../../../app/connection/controller-events';
 import { AUTO_STRING } from '../../../app/constants';
-import { SnapmakerArtisanMachine, SnapmakerJ1Machine, SnapmakerRayMachine } from '../../../app/machines';
+import {
+    SnapmakerA150Machine,
+    SnapmakerA250Machine,
+    SnapmakerA350Machine,
+    SnapmakerArtisanMachine,
+    SnapmakerJ1Machine,
+    SnapmakerRayMachine
+} from '../../../app/machines';
 import DataStorage from '../../DataStorage';
 import {
     CONNECTION_TYPE_WIFI,
@@ -21,14 +28,29 @@ import ScheduledTasks from '../../lib/ScheduledTasks';
 import SocketServer from '../../lib/SocketManager';
 import logger from '../../lib/logger';
 import ProtocolDetector, { NetworkProtocol, SerialPortProtocol } from './ProtocolDetector';
-import Channel, { CncChannelInterface, FileChannelInterface, GcodeChannelInterface, LaserChannelInterface, NetworkServiceChannelInterface, SystemChannelInterface } from './channels/Channel';
+import Channel, {
+    AirPurifierChannelInterface,
+    CncChannelInterface,
+    EnclosureChannelInterface,
+    FileChannelInterface,
+    GcodeChannelInterface,
+    LaserChannelInterface,
+    NetworkServiceChannelInterface,
+    SystemChannelInterface
+} from './channels/Channel';
 import { ChannelEvent } from './channels/ChannelEvent';
 import { sacpSerialChannel } from './channels/SacpSerialChannel';
 import { sacpTcpChannel } from './channels/SacpTcpChannel';
 import { sacpUdpChannel } from './channels/SacpUdpChannel';
 import { sstpHttpChannel } from './channels/SstpHttpChannel';
 import TextSerialChannel, { textSerialChannel } from './channels/TextSerialChannel';
-import { ArtisanMachineInstance, J1MachineInstance, MachineInstance, RayMachineInstance } from './instances';
+import {
+    ArtisanMachineInstance,
+    J1MachineInstance,
+    MachineInstance,
+    RayMachineInstance,
+    SM2Instance
+} from './instances';
 
 const log = logger('lib:ConnectionManager');
 
@@ -47,6 +69,7 @@ interface ConnectionOpenOptions {
     connectionType: ConnectionType;
     address: string;
     port?: string;
+    baudRate?: number;
     protocol?: NetworkProtocol | SerialPortProtocol;
 }
 
@@ -73,6 +96,10 @@ interface UploadFileOptions {
 
 interface UpgradeFirmwareOptions {
     filename: string;
+}
+
+interface SetAirPurifierStrengthOptions {
+    value: 1 | 2 | 3;
 }
 
 /**
@@ -108,21 +135,26 @@ class ConnectionManager {
         return protocolDetector.detectNetworkProtocol(host);
     }
 
-    private async inspectSerialPortProtocol(port: string): Promise<SerialPortProtocol> {
+    private async inspectSerialPortProtocol(port: string, baudRate: number): Promise<SerialPortProtocol> {
         const protocolDetector = new ProtocolDetector();
-        return protocolDetector.detectSerialPortProtocol(port);
+        return protocolDetector.detectSerialPortProtocol(port, baudRate);
     }
 
-    private onChannelConnecting = () => {
+    private onChannelConnecting = (options: ConnectionConnectingOptions) => {
         log.info('channel: Connecting');
 
-        this.socket && this.socket.emit('connection:connecting', { isConnecting: true });
+        this.socket && this.socket.emit(ControllerEvent.ConnectionConnecting, {
+            requireAuth: options?.requireAuth || false,
+        });
     };
 
     private onChannelConnected = () => {
         log.info('channel: Connected');
 
-        this.socket && this.socket.emit(ControllerEvent.ConnectionOpen, {});
+        this.socket && this.socket.emit(ControllerEvent.ConnectionOpen, {
+            code: 200,
+            msg: '',
+        });
     };
 
     private onChannelReady = async (data: { machineIdentifier?: string }) => {
@@ -134,6 +166,19 @@ class ConnectionManager {
 
         // configure machine instance
         this.machineInstance = null;
+
+        if (includes(
+            [
+                SnapmakerA150Machine.identifier,
+                SnapmakerA250Machine.identifier,
+                SnapmakerA350Machine.identifier,
+            ],
+            machineIdentifier
+        )) {
+            this.machineInstance = new SM2Instance();
+            this.machineInstance.setChannel(this.channel);
+            this.machineInstance.setSocket(this.socket);
+        }
 
         if (machineIdentifier === SnapmakerJ1Machine.identifier) {
             this.machineInstance = new J1MachineInstance();
@@ -190,11 +235,12 @@ class ConnectionManager {
             this.channel = null;
         }
 
-        const { connectionType, protocol, address } = options;
+        const { connectionType, protocol } = options;
 
         this.connectionType = connectionType;
 
         if (connectionType === CONNECTION_TYPE_WIFI) {
+            const { address } = options;
             if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, NetworkProtocol.HTTP], protocol)) {
                 this.protocol = protocol;
             } else {
@@ -212,8 +258,8 @@ class ConnectionManager {
                 this.channel = sstpHttpChannel;
             }
         } else {
-            const detectedProtocol = await this.inspectSerialPortProtocol(options.port);
-            log.info(`Detected protocol: ${protocol}`);
+            const { port, baudRate } = options;
+            const detectedProtocol = await this.inspectSerialPortProtocol(port, baudRate);
             this.protocol = detectedProtocol;
 
             if (this.protocol === SerialPortProtocol.SacpOverSerialPort) {
@@ -222,6 +268,8 @@ class ConnectionManager {
                 this.channel = textSerialChannel;
             }
         }
+
+        log.info(`Detected protocol: ${this.protocol}`);
 
         this.socket = socket;
 
@@ -404,8 +452,8 @@ class ConnectionManager {
     };
 
     public compressUploadFile = async (socket: SocketServer, options: UploadFileOptions) => {
-        // If using relative path, we assuem it's in tmp directory
-        if (!options.filePath.startsWith('/')) {
+        // If it's relative path, we assuem it's in tmp directory
+        if (!path.isAbsolute(options.filePath)) {
             options.filePath = path.resolve(`${DataStorage.tmpDir}/${options.filePath}`);
         }
 
@@ -415,7 +463,18 @@ class ConnectionManager {
 
         log.info(`Compress and upload file to controller... ${options.filePath} to ${options.targetFilename}`);
 
-        const success = await (this.channel as FileChannelInterface).compressUploadFile(options);
+        const success = await (this.channel as FileChannelInterface).compressUploadFile({
+            ...options,
+            onProgress: (progress) => {
+                socket.emit(ControllerEvent.UploadFileProgress, { progress });
+            },
+            onCompressing: () => {
+                socket.emit(ControllerEvent.UploadFileCompressing);
+            },
+            onDecompressing: () => {
+                socket.emit(ControllerEvent.UploadFileDecompressing);
+            },
+        });
         if (success) {
             socket.emit(ControllerEvent.CompressUploadFile, { err: null, text: '' });
         } else {
@@ -860,8 +919,44 @@ M3`;
         }
     };
 
-    public setEnclosureLight = (socket, options) => {
-        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+    /**
+     * Get Enclosure Info.
+     */
+    public getEnclosureInfo = async (socket: SocketServer) => {
+        log.info('Get enclosure info');
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const enclosureInfo = await (this.channel as EnclosureChannelInterface).getEnclosreInfo();
+
+            if (enclosureInfo) {
+                socket.emit(ControllerEvent.GetEnclosureInfo, {
+                    err: 0,
+                    enclosureInfo: {
+                        status: enclosureInfo.moduleStatus === 2, // 2: normal state
+                        light: enclosureInfo.ledValue,
+                        fan: enclosureInfo.fanlevel,
+                    }
+                });
+            } else {
+                socket.emit(ControllerEvent.GetEnclosureInfo, {
+                    err: 1,
+                    msg: 'Can not get enclosure module info',
+                });
+            }
+        } else {
+            // unsupported
+            socket.emit(ControllerEvent.GetEnclosureInfo, {
+                err: 2,
+                msg: 'Unsupported event',
+            });
+        }
+    };
+
+    public setEnclosureLight = async (socket: SocketServer, options) => {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const success = await (this.channel as EnclosureChannelInterface).setEnclosureLight(options.value);
+
+            socket.emit(ControllerEvent.SetEnclosureLight, { err: !success });
+        } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
             this.channel.setEnclosureLight(options);
         } else {
             const { value, eventName } = options;
@@ -873,8 +968,11 @@ M3`;
         }
     };
 
-    public setEnclosureFan = (socket, options) => {
-        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+    public setEnclosureFan = async (socket: SocketServer, options) => {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const success = await (this.channel as EnclosureChannelInterface).setEnclosureFan(options.value);
+            socket.emit(ControllerEvent.SetEnclosureFan, { err: !success });
+        } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
             this.channel.setEnclosureFan(options);
         } else {
             const { value, eventName } = options;
@@ -886,8 +984,52 @@ M3`;
         }
     };
 
-    public setFilterSwitch = (socket, options) => {
-        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+    /**
+     * Get air purifier info.
+     */
+    public getAirPurifierInfo = async (socket: SocketServer) => {
+        log.info('Get air purifier info');
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const airPurifierInfo = await (this.channel as AirPurifierChannelInterface).getAirPurifierInfo();
+            if (airPurifierInfo) {
+                socket.emit(ControllerEvent.GetAirPurifierInfo, {
+                    err: 0,
+                    airPurifierInfo: {
+                        status: airPurifierInfo.moduleStatus === 2, // 2: normal state
+                        enabled: airPurifierInfo.airPurifierStatus.fanState, // true or false
+                        life: airPurifierInfo.airPurifierStatus.lifeLevel, // 0-2, 0: need replacement
+                        strength: airPurifierInfo.airPurifierStatus.speedLevel, // 1-3, low -> high
+                    }
+                });
+            } else {
+                socket.emit(ControllerEvent.GetAirPurifierInfo, {
+                    err: 1,
+                    msg: 'Can not get air purifier module info',
+                });
+            }
+        } else {
+            socket.emit(ControllerEvent.GetAirPurifierInfo, {
+                err: 2,
+                msg: 'Unsupported event',
+            });
+        }
+    };
+
+    /**
+     * turn on or off air purifier.
+     */
+    public setFilterSwitch = async (socket: SocketServer, options) => {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            if (options.enable) {
+                log.info('Turn on air purifier...');
+                const success = await (this.channel as AirPurifierChannelInterface).turnOnAirPurifier();
+                socket.emit(ControllerEvent.SetAirPurifierSwitch, { err: !success });
+            } else {
+                log.info('Turn off air purifier...');
+                const success = await (this.channel as AirPurifierChannelInterface).turnOffAirPurifier();
+                socket.emit(ControllerEvent.SetAirPurifierSwitch, { err: !success });
+            }
+        } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
             this.channel.setFilterSwitch(options);
         } else {
             const { value, enable } = options;
@@ -898,8 +1040,16 @@ M3`;
         }
     };
 
-    public setFilterWorkSpeed = (socket: SocketServer, options) => {
-        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+    /**
+     * Set air purifier fan strength.
+     *
+     * Strength from 1 to 3 (LOW to HIGH).
+     */
+    public setAirPurifierFanStrength = async (socket: SocketServer, options: SetAirPurifierStrengthOptions) => {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const success = await (this.channel as AirPurifierChannelInterface).setAirPurifierStrength(options.value);
+            socket.emit(ControllerEvent.SetAirPurifierStrength, { err: !success });
+        } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
             this.channel.setFilterWorkSpeed(options);
         } else {
             const { value } = options;

@@ -61,8 +61,8 @@ export const DEFAULT_MACHINE_ORIGINAL_LONG_Z_AXIS = 'Original Long Z-axis';
 export const MACHINE_SERIES = {
     ORIGINAL: SnapmakerOriginalMachine,
     ORIGINAL_LZ: SnapmakerOriginalExtendedMachine,
-    A150: SnapmakerA150Machine,
-    A250: SnapmakerA250Machine,
+    [SnapmakerA150Machine.identifier]: SnapmakerA150Machine,
+    [SnapmakerA250Machine.identifier]: SnapmakerA250Machine,
     A350: SnapmakerA350Machine,
     A400: SnapmakerArtisanMachine,
     J1: SnapmakerJ1Machine,
@@ -94,7 +94,7 @@ export const MODULEID_MAP = {
     '1': STANDARD_CNC_TOOLHEAD_FOR_SM2,
     '2': LEVEL_ONE_POWER_LASER_FOR_SM2,
     '5': ENCLOSURE_FOR_SM2,
-    '7': AIR_PURIFIER,
+    7: AIR_PURIFIER,
     '13': DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
     '14': LEVEL_TWO_POWER_LASER_FOR_SM2,
     '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
@@ -106,7 +106,7 @@ export const MODULEID_MAP = {
     '514': SNAPMAKER_J1_LINEAR_MODULE,
     '515': A400_HEADT_BED_FOR_SM2,
     // 516: A400 Linear Module
-    // 518: Ray Enclosure
+    518: 'Snapmaker Ray - Enclosure',
     // 520: Ray Multi-Function Button
 };
 
@@ -126,9 +126,17 @@ export const CNC_HEAD_MODULE_IDS = [
     15, // High Power CNC Module
 ];
 export const EMERGENCY_STOP_BUTTON = [8, 517];
-export const ENCLOSURE_MODULES = [5, 16];
-export const ROTARY_MODULES = [6];
-export const AIR_PURIFIER_MODULES = [7];
+export const ENCLOSURE_MODULE_IDS = [
+    5, // Enclosure for SM 2.0
+    16, // Enclosure for Artisan
+    518, // Enclosure for Ray
+];
+export const ROTARY_MODULE_IDS = [
+    6 // Rotary Module
+];
+export const AIR_PURIFIER_MODULE_IDS = [
+    7, // Air Purifier
+];
 
 export const MODULEID_TOOLHEAD_MAP = {
     '0': SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
@@ -164,11 +172,11 @@ export function findMachineByName(name: string): Machine | null {
 
 function getMachineList() {
     const machineKeys = [
-        MACHINE_SERIES.ORIGINAL.identifier,
-        MACHINE_SERIES.ORIGINAL_LZ.identifier,
-        MACHINE_SERIES.A150.identifier,
-        MACHINE_SERIES.A250.identifier,
-        MACHINE_SERIES.A350.identifier,
+        SnapmakerOriginalMachine.identifier,
+        SnapmakerOriginalExtendedMachine.identifier,
+        SnapmakerA150Machine.identifier,
+        SnapmakerA250Machine.identifier,
+        SnapmakerA350Machine.identifier,
         SnapmakerArtisanMachine.identifier,
         SnapmakerJ1Machine.identifier,
         SnapmakerRayMachine.identifier,
@@ -396,12 +404,63 @@ export function findMachineModule(identifier: string): MachineModule | null {
 }
 
 export const SACP_TYPE_SERIES_MAP = {
-    '0': 'A150',
-    '1': 'A250',
-    '2': 'A350',
+    '0': SnapmakerA150Machine.identifier,
+    '1': SnapmakerA250Machine.identifier,
+    '2': SnapmakerA350Machine.identifier,
     '3': SnapmakerArtisanMachine.identifier,
-    '4': MACHINE_SERIES.J1.identifier,
+    '4': SnapmakerJ1Machine.identifier,
     '5': SnapmakerRayMachine.identifier,
 };
+
+// Baud rate to connect to the machines via serial port
+export const DEFAULT_BAUDRATE = 115200;
+
+export const LASER_10W_TAKE_PHOTO_POSITION = {
+    [SnapmakerA150Machine.identifier]: {
+        x: 155,
+        y: 82,
+        z: 150
+    },
+    [SnapmakerA250Machine.identifier]: {
+        x: 186,
+        y: 130,
+        z: 230
+    },
+    [SnapmakerA350Machine.identifier]: {
+        x: 232,
+        y: 178,
+        z: 290
+    },
+    [SnapmakerArtisanMachine.identifier]: {
+        // TODO: need to test
+        x: 265,
+        y: 205,
+        z: 330
+    },
+};
+
+export const LASER_1600MW_CALIBRATION_POSITION = {
+    [SnapmakerA150Machine.identifier]: {
+        x: 155,
+        y: 82,
+        z: 150
+    },
+    [SnapmakerA250Machine.identifier]: {
+        x: 186,
+        y: 130,
+        z: 230
+    },
+    [SnapmakerA350Machine.identifier]: {
+        x: 192,
+        y: 170,
+        z: 170
+    },
+    [SnapmakerArtisanMachine.identifier]: {
+        x: 265,
+        y: 205,
+        z: 330
+    },
+};
+
 
 export default {};

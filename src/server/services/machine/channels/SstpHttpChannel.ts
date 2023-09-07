@@ -1,7 +1,9 @@
 import { isEqual, isNil } from 'lodash';
 import request from 'superagent';
 
+import ControllerEvent from '../../../../app/connection/controller-events';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, } from '../../../../app/constants/machines';
+import { L20WLaserToolModule, L40WLaserToolModule } from '../../../../app/machines/snapmaker-2-toolheads';
 import {
     CONNECTION_TYPE_WIFI,
     HEAD_CNC,
@@ -9,11 +11,10 @@ import {
     HEAD_PRINTING,
     LEVEL_ONE_POWER_LASER_FOR_SM2,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
-    MACHINE_SERIES,
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
-    STANDARD_CNC_TOOLHEAD_FOR_SM2
+    STANDARD_CNC_TOOLHEAD_FOR_SM2,
+    findMachine
 } from '../../../constants';
-import { valueOf } from '../../../lib/contants-utils';
 import logger from '../../../lib/logger';
 import workerManager from '../../task-manager/workerManager';
 import { EventOptions } from '../types';
@@ -44,9 +45,9 @@ interface Result {
     code: number;
     msg: string;
     text?: string;
-    data?: string;
+    data?: object;
 }
-const _getResult = (err, res): Result => {
+const _getResult = (err, res: request.Response): Result => {
     if (err) {
         if (res && isJSON(res.text) && JSON.parse(res.text).code === 202) {
             return {
@@ -71,6 +72,7 @@ const _getResult = (err, res): Result => {
             };
         }
     }
+
     const code = res.status;
     if (code !== 200 && code !== 204 && code !== 203) {
         return {
@@ -78,6 +80,7 @@ const _getResult = (err, res): Result => {
             msg: res && res.text
         };
     }
+
     return {
         code,
         msg: '',
@@ -95,10 +98,10 @@ export type StateOptions = {
 };
 
 export type GcodeResult = {
-    text?: string,
-    data?: any,
-    msg?: string,
-    code?: number
+    text?: string;
+    data?: string;
+    msg?: string;
+    code?: number;
 };
 
 interface GCodeQueueItem {
@@ -149,7 +152,7 @@ class SstpHttpChannel extends Channel implements
         this.token = token;
         this.init();
 
-        this.emit(ChannelEvent.Connecting);
+        this.emit(ChannelEvent.Connecting, { requireAuth: false });
 
         log.debug(`wifi host="${this.host}" : token=${this.token}`);
         return new Promise((resolve) => {
@@ -166,19 +169,24 @@ class SstpHttpChannel extends Channel implements
                     const result = _getResult(err, res);
                     if (err) {
                         log.debug(`err="${err}"`);
-                        this.socket && this.socket.emit('connection:open', result);
+                        this.socket && this.socket.emit(ControllerEvent.ConnectionOpen, result);
                         resolve(false);
                         return;
                     }
 
+                    // wait for authentication
                     const { data } = result;
                     if (!data) {
+                        this.socket && this.socket.emit(ChannelEvent.Connecting, {
+                            requireAuth: true,
+                        });
                         resolve(false);
                         return;
                     }
+
                     const { series } = data;
-                    const seriesValue = valueOf(MACHINE_SERIES, 'alias', series);
-                    this.state.series = seriesValue ? seriesValue.value : null;
+                    const machine = findMachine(series);
+                    this.state.series = machine ? machine.identifier : null;
 
                     let headType = data.headType;
                     let toolHead: string;
@@ -202,6 +210,14 @@ class SstpHttpChannel extends Channel implements
                         case 5:
                             headType = HEAD_PRINTING;
                             toolHead = DUAL_EXTRUDER_TOOLHEAD_FOR_SM2;
+                            break;
+                        case 6:
+                            headType = HEAD_LASER;
+                            toolHead = L20WLaserToolModule.identifier;
+                            break;
+                        case 7:
+                            headType = HEAD_LASER;
+                            toolHead = L40WLaserToolModule.identifier;
                             break;
                         default:
                             headType = HEAD_PRINTING;
@@ -275,7 +291,7 @@ class SstpHttpChannel extends Channel implements
         this.heartBeatWorker = workerManager.heartBeat([{
             host: this.host,
             token: this.token
-        }], (result: any) => {
+        }], (result: object) => {
             if (result.status === 'offline') {
                 log.info(`[wifi connection offline]: msg=${result.msg}`);
                 clearInterval(intervalHandle);
@@ -283,10 +299,12 @@ class SstpHttpChannel extends Channel implements
                 return;
             }
             const { data, code } = _getResult(null, result.res);
+
             // No Content
             if (Object.keys(data).length === 0 || code === 204) {
                 return;
             }
+
             const state = {
                 ...data,
                 ...this.state,

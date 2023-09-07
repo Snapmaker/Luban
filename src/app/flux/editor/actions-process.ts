@@ -1,6 +1,7 @@
 import { Machine } from '@snapmaker/luban-platform';
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
+import { Box3, Vector3 } from 'three';
 
 import { timestamp } from '../../../shared/lib/random-utils';
 import api from '../../api';
@@ -42,16 +43,14 @@ export const processActions = {
             })
         );
 
+        toolPathGroup.computeReferenceBox();
+
         // start generate toolpath
         const toolPathTasks = toolPathGroup.toolPaths
+            .filter(toolPath => toolPath.visible)
             .map(toolPath => {
-                return toolPathGroup.commitToolPath(toolPath?.id);
-            })
-            .filter(task => !!task && task.visible);
-
-        for (const task of toolPathTasks) {
-            console.log(task);
-        }
+                return toolPathGroup.getGenerateToolPathTask(toolPath.id);
+            });
 
         // TODO: This hardcode is used for backward compatibility of Snapmaker Original, remove this later.
         toolPathTasks.forEach(task => { task.identifier = activeMachine?.identifier; });
@@ -98,32 +97,44 @@ export const processActions = {
             })
         );
 
+        // Re-calculate tool paths
         dispatch(processActions.recalculateAllToolPath(headType));
+
+        // Display
         dispatch(processActions.showToolPathGroupObject(headType));
+
         // Different models cannot be selected in process page
         SVGActions.clearSelection();
         dispatch(baseActions.render(headType));
     },
 
-    showToolPathGroupObject: headType => (dispatch, getState) => {
-        const { modelGroup, toolPathGroup, displayedType } = getState()[headType];
-        if (displayedType === DISPLAYED_TYPE_TOOLPATH) {
-            return;
-        }
-        if (toolPathGroup.toolPaths.length === 0) {
-            return;
-        }
-        modelGroup.hideAllModelsObj3D();
-        toolPathGroup.show();
-        toolPathGroup.showToolpathObjects(true, headType === HEAD_LASER);
-        dispatch(
-            baseActions.updateState(headType, {
-                displayedType: DISPLAYED_TYPE_TOOLPATH,
-                showToolPath: true,
-                showSimulation: false
-            })
-        );
-        dispatch(baseActions.render(headType));
+    showToolPathGroupObject: (headType) => {
+        return (dispatch, getState) => {
+            const { modelGroup, displayedType } = getState()[headType];
+
+            const toolPathGroup = getState()[headType].toolPathGroup as ToolPathGroup;
+
+            if (displayedType === DISPLAYED_TYPE_TOOLPATH) {
+                return;
+            }
+            if (toolPathGroup.toolPaths.length === 0) {
+                return;
+            }
+
+            modelGroup.hideAllModelsObj3D();
+            toolPathGroup.show();
+            toolPathGroup.showToolpathObjects(true, headType === HEAD_LASER);
+
+            dispatch(
+                baseActions.updateState(headType, {
+                    displayedType: DISPLAYED_TYPE_TOOLPATH,
+                    showToolPath: true,
+                    showSimulation: false
+                })
+            );
+
+            dispatch(baseActions.render(headType));
+        };
     },
 
     showModelGroupObject: headType => (dispatch, getState) => {
@@ -364,8 +375,11 @@ export const processActions = {
     },
 
     commitGenerateToolPath: (headType, toolPathId) => (dispatch, getState) => {
-        const { toolPathGroup, materials, progressStatesManager } = getState()[headType];
-        if (toolPathGroup.commitToolPath(toolPathId, { materials })) {
+        const { progressStatesManager } = getState()[headType];
+
+        const toolPathGroup = getState()[headType].toolPathGroup as ToolPathGroup;
+
+        if (toolPathGroup.getGenerateToolPathTask(toolPathId)) {
             dispatch(
                 baseActions.updateState(headType, {
                     stage: STEP_STAGE.CNC_LASER_GENERATING_TOOLPATH,
@@ -464,19 +478,23 @@ export const processActions = {
         const { gcodeFile } = taskResult;
         modelGroup.estimatedTime = gcodeFile.estimatedTime;
         toolPathGroup.showSimulationObject(false);
+
+        const boundingBox = new Box3(
+            new Vector3(gcodeFile.boundingBox.min.x, gcodeFile.boundingBox.min.y, gcodeFile.boundingBox.min.z),
+            new Vector3(gcodeFile.boundingBox.max.x, gcodeFile.boundingBox.max.y, gcodeFile.boundingBox.max.z),
+        );
+
         dispatch(baseActions.updateState(headType, {
             isChangedAfterGcodeGenerating: false,
             gcodeFile: {
-                boundingBox: gcodeFile.boundingBox,
                 name: gcodeFile.name,
                 uploadName: gcodeFile.name,
-                estimatedTime: gcodeFile.estimatedTime,
                 size: gcodeFile.size,
                 lastModified: gcodeFile.lastModified,
+                boundingBox: boundingBox,
+                estimatedTime: gcodeFile.estimatedTime,
                 thumbnail: gcodeFile.thumbnail,
                 renderGcodeFileName: renderGcodeFileName,
-
-
                 type: gcodeFile.header[';header_type'],
                 work_speed: gcodeFile.header[';work_speed(mm/minute)'],
                 estimated_time: gcodeFile.header[';estimated_time(s)'],

@@ -122,8 +122,9 @@ export const actions = {
 
         envObj.version = pkg?.version;
         if (headType === HEAD_CNC || headType === HEAD_LASER) {
-            const { materials, coordinateMode, coordinateSize } = editorState;
+            const { materials, coordinateMode, coordinateSize, origin } = editorState;
             envObj.materials = materials;
+            envObj.origin = origin;
             envObj.coordinateMode = coordinateMode;
             envObj.coordinateSize = coordinateSize;
         } else if (headType === HEAD_PRINTING) {
@@ -278,14 +279,20 @@ export const actions = {
             if (materials) {
                 dispatch(editorActions.updateMaterials(envHeadType, materials));
             }
+
+            // origin
             if (origin) {
                 dispatch(editorActions.setOrigin(envHeadType, origin));
             }
+
             const isRotate = materials ? materials.isRotate : false;
             const oversize = some(keys(coordinateSize), (key) => {
                 return currentSize[key] < coordinateSize[key];
             });
-            if (oversize) coordinateSize = currentSize;
+            if (oversize) {
+                coordinateSize = currentSize;
+            }
+
             if (coordinateMode) {
                 dispatch(editorActions.updateState(envHeadType, {
                     coordinateMode: coordinateMode,
@@ -302,6 +309,7 @@ export const actions = {
         }
         models = bubbleSortByAttribute(models, ['transformation', 'positionZ']);
 
+        // Recover models
         // Compatible with mesh mode
         for (const model of models) {
             if (model.sourceType === SOURCE_TYPE.IMAGE3D) {
@@ -321,7 +329,6 @@ export const actions = {
                 toolPathGroup.saveToolPath(toolpaths[k], { materials, origin }, false);
             }
             toolPathGroup.selectToolPathById(null);
-            dispatch(modActions.updateState(envHeadType, toolPathGroup));
         }
 
         // Recover selected presets
@@ -550,7 +557,10 @@ export const actions = {
             const oldHeadType = getCurrentHeadType(history?.location?.pathname) || headType;
             if (!isGuideTours) {
                 await dispatch(actions.save(oldHeadType, {
-                    message: i18n._('key-Project/Save-Save the changes you made in the {{headType}} G-code Generator? Your changes will be lost if you don’t save them.', { headType: i18n._(HEAD_TYPE_ENV_NAME[oldHeadType]) })
+                    message: i18n._(
+                        'key-Project/Save-Save the changes you made in the {{headType}} G-code Generator? Your changes will be lost if you don’t save them.',
+                        { headType: i18n._(HEAD_TYPE_ENV_NAME[oldHeadType]) }
+                    )
                 }));
             }
 
@@ -656,6 +666,7 @@ export const actions = {
             isGuideTours = machineStore.get('guideTours')?.guideTours3dp;
         }
         logModuleVisit(newHeadType, isRotate);
+
         history.push({
             pathname: to,
             state: {
@@ -664,6 +675,7 @@ export const actions = {
                 isRotate: isRotate
             }
         });
+
         dispatch(printingActions.displayModel());
         // clear operation history
         dispatch(operationHistoryActions.clear(newHeadType));

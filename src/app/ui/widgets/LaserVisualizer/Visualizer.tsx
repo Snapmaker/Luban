@@ -1,43 +1,77 @@
-import React, { Component } from 'react';
-import { withRouter } from 'react-router-dom';
-import noop from 'lodash/noop';
-import * as THREE from 'three';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
-import isEqual from 'lodash/isEqual';
-import path from 'path';
 import classNames from 'classnames';
+import isEqual from 'lodash/isEqual';
+import noop from 'lodash/noop';
+import path from 'path';
+import PropTypes from 'prop-types';
+import React from 'react';
+import { connect } from 'react-redux';
+import { withRouter } from 'react-router-dom';
+import * as THREE from 'three';
+import { Group } from 'three';
 
-import i18n from '../../../lib/i18n';
-import { humanReadableTime } from '../../../lib/time-utils';
-import ProgressBar from '../../components/ProgressBar';
-import Space from '../../components/Space';
-import ContextMenu from '../../components/ContextMenu';
-import Canvas from '../../components/SMCanvas';
-import PrintablePlate from '../CncLaserShared/PrintablePlate';
-import VisualizerBottomLeft from '../CncLaserShared/VisualizerBottomLeft';
-import { actions as editorActions } from '../../../flux/editor';
-import VisualizerTopRight from '../CncLaserTopRight/VisualizerTopRight';
-import styles from './styles.styl';
 import {
     DISPLAYED_TYPE_TOOLPATH,
-    PAGE_EDITOR,
-    SELECTEVENT,
+    HEAD_LASER,
     MAX_LASER_CNC_CANVAS_SCALE,
-    MIN_LASER_CNC_CANVAS_SCALE, HEAD_LASER,
-    PROCESS_MODE_VECTOR, PROCESS_MODE_GREYSCALE,
+    MIN_LASER_CNC_CANVAS_SCALE,
+    PAGE_EDITOR,
+    PROCESS_MODE_GREYSCALE,
+    PROCESS_MODE_VECTOR,
+    Page,
+    SELECTEVENT,
     VISUALIZER_CAMERA_HEIGHT
 } from '../../../constants';
-import SVGEditor from '../../SVGEditor';
+import { Origin, Workpiece, WorkpieceShape, convertMaterialsToWorkpiece } from '../../../constants/coordinate';
+import { actions as editorActions } from '../../../flux/editor';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
+import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
+import { humanReadableTime } from '../../../lib/time-utils';
 import UniApi from '../../../lib/uni-api';
-import Modal from '../../components/Modal';
+import ModelGroup from '../../../models/ModelGroup';
+import SVGEditor from '../../SVGEditor';
 import { Button } from '../../components/Buttons';
+import ContextMenu from '../../components/ContextMenu';
+import Modal from '../../components/Modal';
+import ProgressBar from '../../components/ProgressBar';
+import Canvas from '../../components/SMCanvas';
+import Space from '../../components/Space';
+import { PageMode } from '../../pages/PageMode';
+import SVGClippingOverlay from '../../views/model-operation-overlay/SVGClippingOverlay';
+import PrintablePlate from '../CncLaserShared/PrintablePlate';
+import VisualizerBottomLeft from '../CncLaserShared/VisualizerBottomLeft';
+import VisualizerTopRight from '../CncLaserTopRight/VisualizerTopRight';
+import styles from './styles.styl';
+import ToolPathGroup from '../../../toolpaths/ToolPathGroup';
+
+interface VisualizerProps {
+    // page: editor or preview
+    page: Page;
+    pageMode: PageMode;
+    setPageMode: (pageMode: PageMode) => void;
+
+    // objects and models
+    modelGroup: ModelGroup;
+    toolPathGroup: ToolPathGroup;
+    printableArea: PrintablePlate;
+
+    // a `Group` contains background objects
+    backgroundGroup: Group;
+
+    updateTarget: (target) => void;
+
+    // Origin
+    workpiece: Workpiece;
+    origin: Origin;
+
+    // actions
+    undo: () => void;
+    redo: () => void;
+}
 
 
-class Visualizer extends Component {
-    static propTypes = {
+class Visualizer extends React.Component<VisualizerProps> {
+    public static propTypes = {
         ...withRouter.propTypes,
         series: PropTypes.string.isRequired,
         pathname: PropTypes.string,
@@ -126,28 +160,31 @@ class Visualizer extends Component {
             isPointInSelectArea: PropTypes.func.isRequired,
             getMouseTargetByCoordinate: PropTypes.func.isRequired,
             isSelectedAllVisible: PropTypes.func.isRequired
-        })
+        }),
+
+        pageMode: PropTypes.string.isRequired,
+        setPageMode: PropTypes.func.isRequired
     };
 
-    contextMenuRef = React.createRef();
+    private contextMenuRef = React.createRef();
 
-    visualizerRef = React.createRef();
+    private visualizerRef = React.createRef();
 
-    printableArea = null;
+    private printableArea = null;
 
-    svgCanvas = React.createRef();
+    private svgCanvas = React.createRef();
 
-    canvas = React.createRef();
+    private canvas = React.createRef<Canvas>();
 
-    fileInput = React.createRef();
+    private fileInput = React.createRef();
 
-    fileInfo = React.createRef();
+    private fileInfo = React.createRef();
 
-    uploadExts = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
+    private uploadExts = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 
-    allowedFiles = '';
+    private allowedFiles = '';
 
-    actions = {
+    public actions = {
         undo: () => {
             this.props.undo();
         },
@@ -341,11 +378,12 @@ class Visualizer extends Component {
         }
     };
 
-    constructor(props) {
+    public constructor(props) {
         super(props);
 
-        const { size, materials, coordinateMode, origin } = props;
-        this.printableArea = new PrintablePlate(size, materials, origin, coordinateMode);
+        const { materials, origin } = props;
+        const workpiece = convertMaterialsToWorkpiece(materials);
+        this.printableArea = new PrintablePlate(workpiece, origin);
         this.state = {
             limitPicModalShow: false,
             file: null,
@@ -357,7 +395,7 @@ class Visualizer extends Component {
     //     ContextMenu.hide();
     // };
 
-    componentDidMount() {
+    public componentDidMount() {
         this.canvas.current.resizeWindow();
         // Set the origin to not occlude the model
         this.canvas.current.renderer.setSortObjects(false);
@@ -366,15 +404,8 @@ class Visualizer extends Component {
         UniApi.Event.on('appbar-menu:laser.import', this.actions.importFile);
     }
 
-    componentWillReceiveProps(nextProps) {
+    public componentWillReceiveProps(nextProps) {
         const { renderingTimestamp, isOverSize } = nextProps;
-
-        if (!isEqual(nextProps.size, this.props.size)) {
-            const { size, materials, origin } = nextProps;
-            this.printableArea.updateSize(this.props.series, size, materials, origin);
-            this.canvas.current.setCamera(new THREE.Vector3(0, 0, VISUALIZER_CAMERA_HEIGHT), new THREE.Vector3());
-            this.actions.autoFocus();
-        }
 
         // const { model } = nextProps;
         const { selectedToolPathModelArray } = nextProps;
@@ -401,14 +432,14 @@ class Visualizer extends Component {
             }
         }
 
-        if (nextProps.coordinateMode !== this.props.coordinateMode || !isEqual(nextProps.materials, this.props.materials)) {
-            const { size, materials, coordinateMode } = nextProps;
-            this.printableArea = new PrintablePlate(size, materials, coordinateMode);
-            this.actions.autoFocus();
+        if (!isEqual(nextProps.size, this.props.size)) {
+            this.canvas.current.setCamera(new THREE.Vector3(0, 0, VISUALIZER_CAMERA_HEIGHT), new THREE.Vector3());
         }
 
-        if (nextProps.coordinateSize !== this.props.coordinateSize) {
-            this.printableArea = new PrintablePlate(nextProps.coordinateSize, nextProps.materials, nextProps.coordinateMode);
+        if (!isEqual(nextProps.workpiece, this.props.workpiece) || !isEqual(nextProps.origin, this.props.origin)) {
+            const { workpiece, origin } = nextProps;
+
+            this.printableArea = new PrintablePlate(workpiece, origin);
             this.actions.autoFocus();
         }
 
@@ -421,20 +452,20 @@ class Visualizer extends Component {
             }
         }
 
-        this.allowedFiles = (nextProps.materials.isRotate ? this.uploadExts : `${this.uploadExts}, .stl, .amf, .3mf`);
+        this.allowedFiles = (nextProps.workpiece.shape === WorkpieceShape.Cylinder ? this.uploadExts : `${this.uploadExts}, .stl, .amf, .3mf`);
     }
 
-    componentWillUnmount() {
+    public componentWillUnmount() {
         this.props.clearOperationHistory();
         UniApi.Event.off('appbar-menu:laser.import', this.actions.importFile);
     }
 
-    getNotice() {
+    public getNotice() {
         const { stage } = this.props;
         return this.props.progressStatesManager.getNotice(stage);
     }
 
-    showContextMenu = (event) => {
+    public showContextMenu = (event) => {
         const model = this.props.SVGActions.getSVGModelByElement(event.target);
         if (this.props.modelGroup.selectedModelArray.length > 1 && this.props.modelGroup.selectedModelArray.includes(model)) {
             return;
@@ -446,7 +477,7 @@ class Visualizer extends Component {
         this.contextMenuRef.current.show(event);
     };
 
-    render() {
+    public render() {
         // const isModelSelected = !!this.props.selectedModelID;
         const isOnlySelectedOneModel = (this.props.selectedModelArray && this.props.selectedModelArray.length > 0);
         // const hasModel = this.props.hasModel;
@@ -521,9 +552,8 @@ class Visualizer extends Component {
                     <Canvas
                         ref={this.canvas}
                         canOperateModel={false}
-                        size={this.props.size}
-                        backgroundGroup={this.props.backgroundGroup}
                         modelGroup={this.props.modelGroup}
+                        backgroundGroup={this.props.backgroundGroup}
                         toolPathGroupObject={this.props.toolPathGroup.object}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new THREE.Vector3(0, 0, VISUALIZER_CAMERA_HEIGHT)}
@@ -536,8 +566,6 @@ class Visualizer extends Component {
                         maxScale={MAX_LASER_CNC_CANVAS_SCALE}
                         scaleSize={VISUALIZER_CAMERA_HEIGHT}
                         target={this.props.target}
-                        coordinateMode={this.props.coordinateMode}
-                        coordinateSize={this.props.coordinateSize}
                         updateTarget={this.props.updateTarget}
                         updateScale={this.props.updateScale}
                         transformSourceType="2D"
@@ -693,6 +721,16 @@ class Visualizer extends Component {
                         </Modal.Footer>
                     </Modal>
                 )}
+
+                {/* Simplify Model */
+                    this.props.pageMode === PageMode.SVGClipping && (
+                        <div className={styles['visualizer-Overlay-left']}>
+                            <SVGClippingOverlay
+                                onClose={() => { this.props.setPageMode(PageMode.Default); }}
+                            />
+                        </div>
+                    )
+                }
             </div>
         );
     }
@@ -701,13 +739,24 @@ class Visualizer extends Component {
 const mapStateToProps = (state, ownProps) => {
     const { size, series } = state.machine;
     const { currentModalPath, menuDisabledCount } = state.appbarMenu;
-    const { background, progressStatesManager } = state.laser;
+
+    // objects or models
+    const modelGroup: ModelGroup = state.laser.modelGroup;
+    const toolPathGroup: ToolPathGroup = state.laser.toolPathGroup;
+
+    const background: { enabled: boolean; group: Group } = state.laser.background;
+
+    const { progressStatesManager } = state.laser;
     const {
-        SVGActions, scale, target, materials, page, selectedModelID, modelGroup, svgModelGroup, toolPathGroup, displayedType,
+        SVGActions, scale, target, materials, page, selectedModelID, svgModelGroup, displayedType,
         isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress,
-        coordinateMode, coordinateSize, origin,
+        coordinateMode, coordinateSize,
         enableShortcut, isOverSize, SVGCanvasMode, SVGCanvasExt,
     } = state.laser;
+
+    const workpiece: Workpiece = state.laser.workpiece;
+    const origin: Origin = state.laser.origin;
+
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedToolPathModelArray = modelGroup.getSelectedToolPathModels();
 
@@ -726,6 +775,7 @@ const mapStateToProps = (state, ownProps) => {
         series,
         coordinateMode,
         coordinateSize,
+        workpiece,
         origin,
         materials,
         hasModel: modelGroup.hasModel(),

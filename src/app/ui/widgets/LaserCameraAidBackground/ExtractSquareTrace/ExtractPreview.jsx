@@ -1,15 +1,15 @@
-import React, { Component } from 'react';
-// import PropTypes from 'prop-types';
+import React from 'react';
 import PropTypes from 'prop-types';
+
 import { DATA_PREFIX } from '../../../../constants';
 import {
     LEVEL_ONE_POWER_LASER_FOR_SM2,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
-    MACHINE_SERIES
 } from '../../../../constants/machines';
+import { SnapmakerA150Machine } from '../../../../machines';
 import styles from '../styles.styl';
 
-class ExtractPreview extends Component {
+class ExtractPreview extends React.Component {
     static propTypes = {
         size: PropTypes.object.isRequired,
         series: PropTypes.string.isRequired,
@@ -34,7 +34,7 @@ class ExtractPreview extends Component {
             this.calcuStyle(index, width, height, 1, multiple);
         }
         if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
-            if (this.props.series === MACHINE_SERIES.A150.identifier) {
+            if (this.props.series === SnapmakerA150Machine.identifier) {
                 this.calcuStyle(index, width, height, 2, multiple);
             } else {
                 this.calcuStyle(index, width, height, 3, multiple);

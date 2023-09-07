@@ -107,6 +107,10 @@ class ToolPath {
         diameter: 0,
 
         layer: 0,
+
+        maxPower: 0,
+
+        power: 0
     };
 
     offsetG92 = (pos) => {
@@ -162,6 +166,12 @@ class ToolPath {
         ';renderMethod': (param) => {
             if (param !== undefined && param !== null) {
                 this.fn.addHeader({ renderMethod: param });
+            }
+        },
+
+        ';max_power': (param) => {
+            if (param !== undefined && param !== null) {
+                this.modal.maxPower = param;
             }
         },
 
@@ -236,6 +246,10 @@ class ToolPath {
         'G1': (params) => {
             if (this.modal.motion !== 'G1') {
                 this.setModal({ motion: 'G1' });
+            }
+
+            if (params.S !== undefined) {
+                this.setModal({ power: params.S });
             }
 
             const v1 = {
@@ -671,9 +685,15 @@ class ToolPath {
         },
         // Spindle Control
         // M3: Start the spindle turning clockwise at the currently programmed speed
-        'M3': () => {
+        'M3': (params) => {
             if (this.modal.spindle !== 'M3') {
                 this.setModal({ spindle: 'M3' });
+            }
+            if (params.S !== undefined) {
+                this.setModal({ power: params.S });
+            }
+            if (params.P !== undefined) {
+                this.setModal({ power: params.P / 100 * 255 });
             }
         },
         // M4: Start the spindle turning counterclockwise at the currently programmed speed

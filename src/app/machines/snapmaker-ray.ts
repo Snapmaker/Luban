@@ -8,7 +8,7 @@ export const machine: Machine = {
     fullName: 'Snapmaker Ray',
     machineType: MachineType.Laser,
 
-    img: '/resources/images/machine/coming_soon.png',
+    img: '/resources/images/machine/snapmaker_ray.jpeg',
 
     metadata: {
         size: { x: 600, y: 400, z: 30 },
@@ -29,5 +29,7 @@ export const machine: Machine = {
         gcodeFlavor: MachineGcodeFlavor.GRBL,
 
         disableWorkflowControl: true,
+
+        serialPortBaudRate: 460800,
     },
 };

@@ -82,7 +82,7 @@ class ProtocolDetector {
      * Try connect to machine via SACP over UDP.
      */
     private tryConnectSacpUdp = async (host: string) => {
-        const port = 2016;
+        const port = 8889;
         log.debug(`Try connect to ${host} via SACP over UDP channel...`);
         try {
             const result = await sacpUdpChannel.test(host, port);
@@ -122,13 +122,13 @@ class ProtocolDetector {
     /**
      * Detect serial port protocol.
      */
-    public async detectSerialPortProtocol(port: string): Promise<SerialPortProtocol> {
+    public async detectSerialPortProtocol(port: string, baudRate: number): Promise<SerialPortProtocol> {
         let protocol: SerialPortProtocol = SerialPortProtocol.PlainText;
         let hasData = false;
 
         const trySerialConnect = new SerialPort({
             path: port,
-            baudRate: 115200,
+            baudRate: baudRate,
             autoOpen: false,
         });
 
@@ -139,13 +139,14 @@ class ProtocolDetector {
             }
         }, 1000);
 
-        await new Promise((resolve) => {
+        await new Promise<void>((resolve) => {
             let responseBuffer = Buffer.alloc(0);
             trySerialConnect.on('data', (data) => {
                 hasData = true;
 
                 // SACP => SACP
                 if (data[0].toString(16) === 'aa' && data[1].toString(16) === '55') {
+                    log.debug('SACP packet received');
                     protocol = SerialPortProtocol.SacpOverSerialPort;
                     trySerialConnect?.close();
                 }
@@ -154,20 +155,24 @@ class ProtocolDetector {
                 responseBuffer = Buffer.concat([responseBuffer, data]);
                 const m1006Response = responseBuffer.toString();
 
+                log.debug(`M1006 response: "${m1006Response}`);
+
                 // M1006 response: SACP V1 => SACP
                 if (m1006Response.match(/SACP/g)) {
                     protocol = SerialPortProtocol.SacpOverSerialPort;
                     trySerialConnect?.close();
-                }
 
-                // ok => plaintext protocol
-                if (m1006Response.match(/ok/g)) {
+                    resolve();
+                } else if (m1006Response.match(/ok/g)) {
+                    // ok => plaintext protocol
                     protocol = SerialPortProtocol.PlainText;
                     trySerialConnect?.close();
+
+                    resolve();
                 }
             });
             trySerialConnect.on('close', () => {
-                resolve(true);
+                resolve();
             });
             trySerialConnect.on('error', (err) => {
                 log.error(`error = ${err}`);

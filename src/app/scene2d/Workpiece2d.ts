@@ -80,18 +80,26 @@ class Workpiece2d {
 
     public updateScale(state) {
         const { size, materials, scale, origin } = state;
+
+
         if (Math.abs(this.scale - scale) > EPSILON) {
+            const drawAxis = !(this.origin && this.origin.type === OriginType.Object);
+
             this.scale = scale;
             for (const child of this.printableAreaGroup.childNodes) {
                 if (child.getAttribute('stroke-width') !== '0') {
                     let realStrokeWidth = 1 / scale;
-                    if (child.getAttribute('virtualX') === '0' || child.getAttribute('virtualY') === '0') {
+
+                    if (drawAxis && (child.getAttribute('virtualX') === '0' || child.getAttribute('virtualY') === '0')) {
                         realStrokeWidth = 4 / scale;
                     }
+
                     child.setAttribute('stroke-width', realStrokeWidth);
                 }
             }
         }
+
+        // Check size change or material change => re-draw workpiece
         const sizeChange = size && (!isEqual(this.size.x, size.x) || !isEqual(this.size.y, size.y));
         const materialsChange = materials && (
             !isEqual(this.materials.x, materials.x)

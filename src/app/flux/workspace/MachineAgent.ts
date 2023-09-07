@@ -12,7 +12,13 @@ interface CreateOptions {
     name: string;
     address: string;
     port?: string;
+    baudRate?: number;
     protocol?: string;
+}
+
+export interface ConnectResult {
+    code: number | string;
+    msg: string;
 }
 
 /**
@@ -27,13 +33,15 @@ export class MachineAgent extends EventEmitter {
     public name: string;
 
     public address: string; // for networked machine, it's IP address
-    public port: string; // for serial machine, it's serial port path
 
     private token?: string; // possible token for authentication
 
     private model?: string; // indicates which machine
     private protocol?: string; // which protocol to use
     private addByUser: boolean = false;
+
+    public port: string; // for serial machine, it's serial port path
+    public baudRate: number = 0;
 
     // TODO: creation methods
 
@@ -43,6 +51,7 @@ export class MachineAgent extends EventEmitter {
         agent.name = options.name;
         agent.address = options.address;
         agent.port = options.port;
+        agent.baudRate = options?.baudRate;
         agent.protocol = options?.protocol || ''; // unknown protocol
 
         return agent;
@@ -76,7 +85,7 @@ export class MachineAgent extends EventEmitter {
         this.token = token;
     }
 
-    public async connect(): Promise<{ code: number | string; msg: string; }> {
+    public async connect(): Promise<ConnectResult> {
         if (this.isNetworkedMachine) {
             log.info(`Connecting to machine ${this.address}...`);
             log.info(`- protocol = ${this.protocol}`);
@@ -93,6 +102,7 @@ export class MachineAgent extends EventEmitter {
                     address: this.address,
                     token: this.token,
                     port: this.port,
+                    baudRate: this.baudRate,
                     protocol: this.protocol,
                     addByUser: this.addByUser,
                 })
@@ -136,6 +146,7 @@ export class MachineAgent extends EventEmitter {
                         resolve(true);
                     });
 
+                log.info('Disconnected from machine.');
                 // Do not wait for machine response, disconnect from client side
                 resolve(true);
             });

@@ -1,5 +1,6 @@
 import { cloneDeep, noop } from 'lodash';
 import * as THREE from 'three';
+import { Group } from 'three';
 
 import { timestamp } from '../../../shared/lib/random-utils';
 import {
@@ -13,18 +14,21 @@ import {
     PAGE_EDITOR
 } from '../../constants';
 import {
+    CylinderWorkpieceSize,
     JobOffsetMode,
     Origin,
     OriginType,
     RectangleWorkpieceReference,
+    RectangleWorkpieceSize,
+    Workpiece,
     WorkpieceShape,
 } from '../../constants/coordinate';
 import { getMachineSeriesWithToolhead } from '../../constants/machines';
+import ModelGroup2D from '../../models/ModelGroup2D';
 import OperationHistory from '../../core/OperationHistory';
 import { logToolBarOperation } from '../../lib/gaEvent';
 import i18n from '../../lib/i18n';
 import { STEP_STAGE, getProgressStateManagerInstance } from '../../lib/manager/ProgressManager';
-import ModelGroup from '../../models/ModelGroup';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
 import ToolPathGroup from '../../toolpaths/ToolPathGroup';
 import {
@@ -34,9 +38,19 @@ import {
 import { actions as editorActions } from '../editor';
 import { actions as machineActions } from '../machine';
 import definitionManager from '../manager/DefinitionManager';
+import { SVGClippingOperation, SVGClippingType } from '../../constants/clipping';
 
-const initModelGroup = new ModelGroup('laser');
+const initModelGroup = new ModelGroup2D('laser');
 const operationHistory = new OperationHistory();
+
+const initialWorkpiece: Workpiece = {
+    shape: WorkpieceShape.Rectangle,
+    size: {
+        x: 0,
+        y: 0,
+        z: 0,
+    }
+};
 
 const initialOrigin: Origin = {
     type: OriginType.Workpiece,
@@ -60,6 +74,7 @@ const INITIAL_STATE = {
     // Coordinate
     coordinateMode: COORDINATE_MODE_CENTER,
     coordinateSize: { x: 0, y: 0 },
+    workpiece: initialWorkpiece,
     origin: initialOrigin,
 
     // laser run boundary mode
@@ -116,7 +131,7 @@ const INITIAL_STATE = {
     // boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()), // bbox of selected model
     background: {
         enabled: false,
-        group: new THREE.Group()
+        group: new Group(),
     },
     useBackground: false,
 
@@ -152,7 +167,13 @@ const INITIAL_STATE = {
     },
 
     enableShortcut: true,
-    projectFileOversize: false
+    projectFileOversize: false,
+
+    svgClipping: {
+        type: SVGClippingType.Offset,
+        operation: SVGClippingOperation.Merged,
+        offset: 4
+    }
 };
 
 const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';
@@ -173,15 +194,14 @@ export const actions = {
         }));
 
         // Set machine size into coordinate default size
-        const { size } = getState().machine;
-        const { materials, useBackground } = getState().laser;
-        const { isRotate } = materials; // Get default material from flux state
-        if (!isRotate) {
-            if (size/* && coordinateSize.x === 0 && coordinateSize.y === 0*/) {
-                dispatch(editorActions.updateState(HEAD_LASER, {
-                    coordinateSize: size
-                }));
+        const { useBackground } = getState().laser;
+        const workpiece: Workpiece = getState().laser.workpiece;
 
+        if (workpiece.shape === WorkpieceShape.Rectangle) {
+            const workpieceSize = (workpiece.size as RectangleWorkpieceSize);
+
+            const { size } = getState().machine;
+            if ((workpieceSize.x === 0 || workpieceSize.y === 0) && size) {
                 dispatch(editorActions.setWorkpiece(
                     HEAD_LASER,
                     WorkpieceShape.Rectangle,
@@ -191,28 +211,30 @@ export const actions = {
                     }
                 ));
 
-                const newCoordinateSize = {
+                dispatch(editorActions.changeCoordinateMode(HEAD_LASER, COORDINATE_MODE_CENTER, {
                     x: size.x,
                     y: size.y,
-                };
-                dispatch(editorActions.changeCoordinateMode(HEAD_LASER, COORDINATE_MODE_CENTER, newCoordinateSize));
+                }));
             }
         } else {
-            dispatch(editorActions.setWorkpiece(
-                HEAD_LASER,
-                WorkpieceShape.Cylinder,
-                {
-                    diameter: 40,
-                    length: 75,
-                }
-            ));
+            const workpieceSize = (workpiece.size as CylinderWorkpieceSize);
+            if (workpieceSize.diameter === 0 || workpieceSize.length === 0) {
+                dispatch(editorActions.setWorkpiece(
+                    HEAD_LASER,
+                    WorkpieceShape.Cylinder,
+                    {
+                        diameter: 40,
+                        length: 75,
+                    }
+                ));
 
-            const newCoordinateSize = {
-                x: 40 * Math.PI,
-                y: 75,
-            };
-            dispatch(editorActions.changeCoordinateMode(HEAD_LASER, COORDINATE_MODE_BOTTOM_CENTER, newCoordinateSize));
+                dispatch(editorActions.changeCoordinateMode(HEAD_LASER, COORDINATE_MODE_BOTTOM_CENTER, {
+                    x: 40 * Math.PI,
+                    y: 75,
+                }));
+            }
         }
+
         if (useBackground) {
             dispatch(actions.removeBackgroundImage());
         }
@@ -266,6 +288,17 @@ export const actions = {
         dispatch(editorActions.updateState(HEAD_LASER, {
             useBackground: true
         }));
+
+        // Force origin mode to be workpiece bottom left
+        const origin: Origin = getState().laser.origin;
+        if (origin.type !== OriginType.Workpiece) {
+            dispatch(editorActions.setOrigin(HEAD_LASER, {
+                type: OriginType.Workpiece,
+                reference: RectangleWorkpieceReference.BottomLeft,
+                referenceMetadata: {},
+            }));
+        }
+
         dispatch(editorActions.render('laser'));
     },
 
