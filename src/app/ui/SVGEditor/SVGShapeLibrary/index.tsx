@@ -1,24 +1,27 @@
 import React, { useEffect, useRef, useState } from 'react';
 import i18next from 'i18next';
-import { Checkbox, Spin, Pagination } from 'antd';
+import { Checkbox, Spin } from 'antd';
 import classNames from 'classnames';
 import _ from 'lodash';
 import { CheckboxChangeEvent } from 'antd/lib/checkbox';
+import { VariableSizeList as List } from 'react-window';
+import InfiniteLoader from 'react-window-infinite-loader';
+import AutoSizer from 'react-virtualized-auto-sizer';
 import styles from './styles.styl';
 import api from '../../../api';
 import MainToolBar from '../../layouts/MainToolBar';
 import i18n from '../../../lib/i18n';
 import { IMG_RESOURCE_BASE_URL } from '../../../constants/downloadManager';
 
-
 const SVGShapeLibrary = (props) => {
     const rightSideBlock = useRef();
     const [svgShapeCount, setSvgShapeCount] = useState(0);
-    const [pageSize, setPageSize] = useState(4 * 5);
-    const [page, setPage] = useState(1);
+    const [rowCount, setRowCount] = useState(8);
     const mainToolBarId = 'svg-shape-library-main-tool-bar';
     const [isLoading, setIsLoading] = useState(true);
     const [svgList, setSvgList] = useState([]);
+    const svgListMap = useRef({});
+
     const [labelList, setLabelList] = useState([]);
     const [selectedLabelList, setSelectedLabelList] = useState([]);
 
@@ -44,8 +47,17 @@ const SVGShapeLibrary = (props) => {
         }
         const data = res.body.data;
         res.body.total > 0 && setSvgShapeCount(res.body.total);
-        // svgList.concat(data);
-        setSvgList(data);
+        setSvgList(pre => {
+            const newData = [];
+            data.forEach(item => {
+                if (svgListMap.current[item.id]) {
+                    return;
+                }
+                newData.push(item);
+                svgListMap.current[item.id] = true;
+            });
+            return pre.concat(newData);
+        });
         setIsLoading(false);
         return data;
     };
@@ -73,9 +85,7 @@ const SVGShapeLibrary = (props) => {
                     const svgElement = svgDoc.documentElement;
                     if (svgElement.hasAttribute('viewBox')) {
                         const w = parseFloat(svgElement.getAttribute('width'));
-                        const h = parseFloat(svgElement.getAttribute('height'));
-                        console.log(w, h);
-                        if (h > w) {
+                        const h = parseFloat(svgElement.getAttribute('height')); if (h > w) {
                             const scaled = 100 * (w / h);
                             svgElement.setAttribute('width', scaled.toString());
                             svgElement.setAttribute('height', '100');
@@ -111,39 +121,80 @@ const SVGShapeLibrary = (props) => {
         setCheckAll(sortedCheckedValues.length === labelList.length);
     };
 
-    const onPageChange = (toPage: number, toPageSize: number) => {
-        setPage(toPage);
-        setPageSize(toPageSize);
-        getSvgList({ labelIds: selectedLabelList, page: toPage, pageSize: toPageSize });
-    };
     const handleResize = (() => {
         return _.debounce(() => {
-            if (!window || !rightSideBlock?.current) return window.innerWidth >= 1440 ? 8 * 4 : 5 * 4;
-            const width = rightSideBlock?.current?.clientWidth;
-            // const height = rightSideBlock?.current.clientHeight;
-            const height = window.innerHeight - 26 - 68 - 80; // menu-bar(26) and modal-bar(68) and pagination(80)
-            const col = window.innerWidth >= 1440 ? 8 : 5;
-            const itemWidth = (width - col * 10) / col;
-            const itemHeight = itemWidth;
-            const row = Math.floor(height / itemHeight);
-            const currPageSize = col * row;
-            const currpage = Math.floor((pageSize * page) / currPageSize);
-            setPageSize(currPageSize);
-            getSvgList({ labelIds: selectedLabelList, page: currpage || 1, pageSize: currPageSize });
-            return currPageSize;
+            return window.innerWidth > 1280 ? setRowCount(8) : setRowCount(5);
         }, 500);
     })();
 
     useEffect(() => {
         getLabelList();
+        getSvgList({ pageSize: 1 });
 
+        window.document.body.style.overflow = 'hidden';
         handleResize();
         window.addEventListener('resize', handleResize);
 
         return () => {
+            window.document.body.style.overflow = '';
             window.removeEventListener('resize', handleResize);
         };
     }, []);
+
+
+    const isItemLoaded = index => {
+        if (svgShapeCount > 0 && index * rowCount > svgShapeCount) {
+            index = svgShapeCount - 1;
+        }
+        return !!svgList[index * rowCount];
+    };
+    const loadMoreItems = async (startIndex, stopIndex) => {
+        return getSvgList({ start: startIndex * rowCount, size: (stopIndex - startIndex) * rowCount });
+    };
+
+    const renderSvgShape = (row, col) => {
+        const v = svgList[row * rowCount + col];
+        // console.log('render', row, col, rowCount, row * rowCount + col);
+        if (!v) return ('');
+        if (v.pathData) {
+            return (
+                <div className={styles['svg-shape-item']} key={v.id}>
+                    <svg
+                        onClick={() => onClickSvg(v)}
+                        xmlns="http://www.w3.org/2000/svg"
+                        role="button"
+                        viewBox="0 0 300 300"
+                        style={{ background: 'transparent', 'borderBottom': 0 }}
+                        fill="#545659"
+                        className={
+                            classNames('background-transparent',
+                                'padding-horizontal-4', 'position-re',
+                                styles['btn-center-ext'],)
+                        }
+                    >
+                        <path stroke="black" fill="none" strokeWidth="6.25" fillRule="evenodd" clipRule="evenodd" d={v.pathData} />
+                    </svg>
+                </div>
+            );
+        } else {
+            return (
+                <div
+                    key={v.id}
+                    tabIndex={0}
+                    className={styles['svg-shape-item']}
+                    role="button"
+                    onKeyDown={() => onClickSvg(v)}
+                    onClick={() => onClickSvg(v)}
+                >
+                    <img
+                        className="width-percent-100"
+                        src={IMG_RESOURCE_BASE_URL + v.fileInfo.file.uploadPath}
+                        alt=""
+                    />
+                </div>
+            );
+        }
+    };
 
     return (
         <Spin spinning={isLoading}>
@@ -177,60 +228,38 @@ const SVGShapeLibrary = (props) => {
                             </Checkbox.Group>
                         </div>
                         <div className={styles['svg-shape-rightside']} ref={rightSideBlock}>
-                            <div className={styles['svg-shape-container']}>
-                                {
-                                    svgList.map(v => {
-                                        if (v.pathData) {
-                                            return (
-                                                <div className={styles['svg-shape-item']}>
-                                                    <svg
-                                                        onClick={() => onClickSvg(v)}
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        role="button"
-                                                        viewBox="0 0 300 300"
-                                                        style={{ background: 'transparent', 'borderBottom': 0 }}
-                                                        fill="#545659"
-                                                        className={
-                                                            classNames('background-transparent',
-                                                                'padding-horizontal-4', 'position-re',
-                                                                styles['btn-center-ext'],)
-                                                        }
+                            <AutoSizer>
+                                {({ height, width }) => (
+                                    <InfiniteLoader
+                                        isItemLoaded={isItemLoaded}
+                                        itemCount={Math.ceil(svgShapeCount / rowCount) || 1000 / rowCount}
+                                        loadMoreItems={loadMoreItems}
+                                    >
+                                        {({ onItemsRendered, ref }) => (
+                                            <List
+                                                className="List"
+                                                height={height || 648}
+                                                itemCount={Math.ceil(svgShapeCount / rowCount) || 1000 / rowCount}
+                                                itemSize={() => width / rowCount || 100}
+                                                onItemsRendered={onItemsRendered}
+                                                ref={ref}
+                                                width={width || 768}
+                                            >
+                                                {({ index, style }) => (
+                                                    <div
+                                                        key={new Array(rowCount).fill(1).map((v, columnIndex) => svgList[index * rowCount + columnIndex] && svgList[index * rowCount + columnIndex].id).join('-')}
+                                                        data-key={new Array(rowCount).fill(1).map((v, columnIndex) => svgList[index * rowCount + columnIndex] && svgList[index * rowCount + columnIndex].id).join('-')}
+                                                        style={{ ...style, display: 'flex', justifyContent: 'space-between' }}
                                                     >
-                                                        <path stroke="black" fill="none" strokeWidth="6.25" fillRule="evenodd" clipRule="evenodd" d={v.pathData} />
-                                                    </svg>
-                                                </div>
-                                            );
-                                        } else {
-                                            return (
-                                                <div
-                                                    tabIndex={0}
-                                                    className={styles['svg-shape-item']}
-                                                    role="button"
-                                                    onKeyDown={() => onClickSvg(v)}
-                                                    onClick={() => onClickSvg(v)}
-                                                >
-                                                    <img
-                                                        className="width-percent-100"
-                                                        src={IMG_RESOURCE_BASE_URL + v.fileInfo.file.uploadPath}
-                                                        alt=""
-                                                    />
-                                                </div>
-                                            );
-                                        }
-                                    })
-                                }
+                                                        {new Array(rowCount).fill(1).map((v, columnIndex) => renderSvgShape(index, columnIndex))}
+                                                    </div>
 
-                            </div>
-                            <Pagination
-                                className={styles.pagination}
-                                defaultCurrent={page}
-                                total={svgShapeCount}
-                                showSizeChanger={false}
-                                defaultPageSize={pageSize}
-                                pageSize={pageSize}
-                                onChange={onPageChange}
-                                current={page}
-                            />
+                                                )}
+                                            </List>
+                                        )}
+                                    </InfiniteLoader>
+                                )}
+                            </AutoSizer>
                         </div>
                     </div>
                 </div>
