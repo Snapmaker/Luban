@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import React, { useEffect, useRef, useState } from 'react';
 import { withRouter } from 'react-router-dom';
 
+import classNames from 'classnames';
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 import { machineStore } from '../../../store/local-storage';
 import MainToolBar from '../../layouts/MainToolBar';
@@ -36,7 +37,7 @@ const HomePage: React.FC<HomePageProps> = (props) => { // Todo, what's the props
         const style = window.getComputedStyle(startProjectBlock);
         const removeUnit = (v) => parseFloat(v.slice(0, -2));
         const height = removeUnit(style.height) + removeUnit(style.paddingBlock) + removeUnit(style.borderBlock) + removeUnit(style.marginBlock);
-        const bottomBlockHeight = window.innerHeight - height;
+        const bottomBlockHeight = window.innerHeight - height - (isPopup ? 66 + 26 : 0);
         resourcesBlock.current && (resourcesBlock.current.style.height = `${bottomBlockHeight - 32}px`); // 32 is bottomBlock margin-top
     };
 
@@ -98,7 +99,7 @@ const HomePage: React.FC<HomePageProps> = (props) => { // Todo, what's the props
                 )
             }
             <StartProject />
-            <div className={styles.secondLine} ref={resourcesBlock} id="second-line">
+            <div className={classNames(styles.secondLine, isPopup ? styles.popup : '')} ref={resourcesBlock} id="second-line">
                 <CaseLibrary {...props} />
                 <MoreInfo />
             </div>
