@@ -21,19 +21,6 @@ const log = logger('machine:instance:ArtisanInstance');
 
 
 class ArtisanMachineInstance extends MachineInstance {
-    public async onPrepare(): Promise<void> {
-        log.info('onPrepare');
-
-        if (this.channel instanceof SacpSerialChannel) {
-            await this._onMachineReadySACP();
-        } else if (this.channel instanceof SacpTcpChannel) {
-            await this._onMachineReadySACP();
-        }
-        if (this.channel instanceof TextSerialChannel) {
-            // Not implemented
-        }
-    }
-
     private async _onMachineReadySACP() {
         // TO DO: Need to get seriesSize for 'connection:connected' event
         const state: ConnectedData = {};
@@ -93,6 +80,26 @@ class ArtisanMachineInstance extends MachineInstance {
 
         // Start heartbeat
         await this.channel.startHeartbeat();
+    }
+
+    public async onPrepare(): Promise<void> {
+        log.info('onPrepare');
+
+        if (this.channel instanceof SacpSerialChannel) {
+            await this._onMachineReadySACP();
+        } else if (this.channel instanceof SacpTcpChannel) {
+            await this._onMachineReadySACP();
+        }
+        if (this.channel instanceof TextSerialChannel) {
+            // Not implemented
+        }
+    }
+
+    public async onClosing(): Promise<void> {
+        log.info('On closing connection...');
+
+        log.info('Stop heartbeat.');
+        await this.channel.stopHeartbeat();
     }
 }
 

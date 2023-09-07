@@ -88,6 +88,7 @@ class SacpChannelBase extends Channel implements
     EnclosureChannelInterface,
     AirPurifierChannelInterface {
     private heartbeatTimer;
+    private shuttingDown: boolean = false;
 
     public sacpClient: SacpClient;
 
@@ -140,6 +141,25 @@ class SacpChannelBase extends Channel implements
         if (this.sacpClient) {
             this.sacpClient.setFilePeerId(peerId);
         }
+    }
+
+    public async startHeartbeat(): Promise<void> {
+        // TODO: refactor startHeartbeatLegacy()
+        return super.startHeartbeat();
+    }
+
+    public async stopHeartbeat(): Promise<void> {
+        this.shuttingDown = true;
+
+        // Remove heartbeat timeout check
+        if (this.heartbeatTimer) {
+            clearTimeout(this.heartbeatTimer);
+            this.heartbeatTimer = null;
+        }
+
+        // Cancel subscription of heartbeat
+        const res = await this.sacpClient.unsubscribeHeartbeat(null);
+        log.info(`Unsubscribe heartbeat, result = ${res.code}`);
     }
 
     /**
@@ -563,14 +583,11 @@ class SacpChannelBase extends Channel implements
         return res.code === 0;
     }
 
-
-
     // old heartbeat base, refactor needed
-    public startHeartbeatBase = async (sacpClient: SacpClient, client?: net.Socket) => {
+    public startHeartbeatLegacy = async (sacpClient: SacpClient, client?: net.Socket) => {
         this.sacpClient = sacpClient;
 
         let stateData: MarlinStateData = {};
-        let statusKey = 0;
 
         const moduleStatusList = {
             rotaryModule: false,
@@ -615,7 +632,12 @@ class SacpChannelBase extends Channel implements
         });
 
         this.subscribeHeartCallback = async (data) => {
-            statusKey = readUint8(data.response.data, 0);
+            // In case receiving heartbeat during shutting down process
+            if (this.shuttingDown) {
+                return;
+            }
+
+            const statusKey = readUint8(data.response.data, 0);
 
             if (this.heartbeatTimer) {
                 clearTimeout(this.heartbeatTimer);
@@ -642,6 +664,7 @@ class SacpChannelBase extends Channel implements
         };
 
         // Subscribe heart beat
+        this.shuttingDown = false;
         this.sacpClient.subscribeHeartbeat({ interval: 1000 }, this.subscribeHeartCallback).then((res) => {
             log.info(`subscribe heartbeat success: ${res.code}`);
         });

@@ -100,7 +100,6 @@ class RayMachineInstance extends MachineInstance {
         log.info('On closing connection...');
 
         log.info('Stop heartbeat.');
-        log.debug(`channel = ${this.channel.constructor.name}`);
         await this.channel.stopHeartbeat();
     }
 }
