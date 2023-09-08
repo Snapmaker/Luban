@@ -8,6 +8,15 @@ enum SvgImageCombineType {
     mask,
     clipPath
 }
+
+interface CombineResult {
+    file: File
+    viewboxX: number
+    viewboxY: number
+    viewWidth: number
+    viewHeight: number
+}
+
 /**
  * Flattens nested <g> elements in an SVG by extracting and applying transformations to <path> elements.
  * @param {SVGSVGElement} svgRoot - The root SVG element to process.
@@ -747,7 +756,7 @@ const createSvgStr = (
 
 
     // canvgjs need a integer (don't know why)
-    const svgTag = `<svg xmlns="http://www.w3.org/2000/svg" width="${viewWidth}" height="${viewHeight}" viewBox="${0} ${0} ${viewWidth} ${viewHeight}">
+    const svgTag = `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.floor(viewWidth)}" height="${Math.floor(viewHeight)}" viewBox="${0} ${0} ${Math.floor(viewWidth)} ${Math.floor(viewHeight)}">
         ${wrapperSvgContent + gSvgContent + imgsSvgContent + otherSvgsContent}
         </svg>
         `;
@@ -761,7 +770,7 @@ const createSvgStr = (
  * @param holeSvg default false, finall result need holeSvg or just the part of svgs inside images
  * @returns The SVG string with the clip path applied.
  */
-const handleClipPath = async (svgs: SvgModel[], imgs: SvgModel[], holeSvg: boolean = false): Promise<File> => {
+const handleClipPath = async (svgs: SvgModel[], imgs: SvgModel[], holeSvg: boolean = false): Promise<CombineResult> => {
     const [viewboxX, viewboxY, viewWidth, viewHeight] = getCombineBoundingBox(svgs, imgs, SvgImageCombineType.clipPath);
     const widthRatio = imgs[0].sourceWidth / imgs[0].width;
     const heightRatio = imgs[0].sourceHeight / imgs[0].height;
@@ -823,7 +832,7 @@ const handleClipPath = async (svgs: SvgModel[], imgs: SvgModel[], holeSvg: boole
 
     const canvas = await svgToCanvas(svgTag, viewWidth, viewHeight);
     const img = await canvasToImage(canvas);
-    return img;
+    return { file: img, viewboxX, viewboxY, viewWidth, viewHeight };
 };
 
 /**
@@ -832,7 +841,7 @@ const handleClipPath = async (svgs: SvgModel[], imgs: SvgModel[], holeSvg: boole
  * @param imgs The images to handle.
  * @returns The SVG string with the mask applied.
  */
-const handleMask = async (svgs: SvgModel[], imgs: SvgModel[]): Promise<File> => {
+const handleMask = async (svgs: SvgModel[], imgs: SvgModel[]): Promise<CombineResult> => {
     const [viewboxX, viewboxY, viewWidth, viewHeight] = getCombineBoundingBox(svgs, imgs, SvgImageCombineType.mask);
     const widthRatio = imgs[0].sourceWidth / imgs[0].width;
     const heightRatio = imgs[0].sourceHeight / imgs[0].height;
@@ -899,7 +908,7 @@ const handleMask = async (svgs: SvgModel[], imgs: SvgModel[]): Promise<File> => 
     );
     const canvas = await svgToCanvas(svgTag, viewWidth, viewHeight);
     const img = await canvasToImage(canvas);
-    return img;
+    return { file: img, viewboxX, viewboxY, viewWidth, viewHeight };
 };
 
 export {

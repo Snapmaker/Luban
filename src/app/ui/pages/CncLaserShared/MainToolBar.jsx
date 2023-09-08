@@ -104,7 +104,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             setCurrentAdjustedTargetModel(null);
             setTimeout(() => {
                 const { width, height, scaleX, scaleY } = SVGActions?.getSelectedElementsTransformation();
-                onChangeWidth(currentAdjustedTargetModel.width || 0, width, height, scaleX, scaleY);
+                currentAdjustedTargetModel.width && onChangeWidth(currentAdjustedTargetModel.width || 0, width, height, scaleX, scaleY);
                 onChangeLogicalX(currentAdjustedTargetModel.x || 0);
                 onChangeLogicalY(currentAdjustedTargetModel.y || 0);
             }, 0);
@@ -364,13 +364,13 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                         message.error(i18n._('Please select a vector and an image at the same time.'));
                         return;
                     }
-                    const clipSvgTag = await handleClipPath(svgs, imgs);
+                    const { file: clipSvgTag, viewWidth, viewHeight } = await handleClipPath(svgs, imgs);
                     const bbox = calculateElemsBoundingbox(svgs);
                     setCurrentAdjustedTargetModel({
                         name: clipSvgTag.name,
                         x: bbox.viewboxX + bbox.viewWidth / 2 - size.x,
                         y: -(bbox.viewboxY + bbox.viewHeight / 2 - size.y),
-                        width: bbox.viewWidth
+                        width: (viewWidth / viewHeight).toFixed(2) === (bbox.viewWidth / bbox.viewHeight).toFixed(2) ? bbox.viewWidth : 0
                     });
                     dispatch(editorActions.uploadImage(HEAD_LASER, clipSvgTag, PROCESS_MODE_GREYSCALE, () => {
                         message.error(i18n._('Imgae create failed.'));
@@ -388,7 +388,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                         message.error(i18n._('Please select a vector and an image at the same time.'));
                         return;
                     }
-                    const maskSvgTag = await handleMask(svgs, imgs);
+                    const { file: maskSvgTag } = await handleMask(svgs, imgs);
                     const bbox = calculateElemsBoundingbox(imgs);
                     setCurrentAdjustedTargetModel({
                         name: maskSvgTag.name,
