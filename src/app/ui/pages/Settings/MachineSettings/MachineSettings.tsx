@@ -112,6 +112,8 @@ const MachineSettings: React.FC = () => {
             }
 
             setMachineModuleOptions(options);
+        } else {
+            setMachineModuleOptions([]);
         }
     }, [machine]);
 
