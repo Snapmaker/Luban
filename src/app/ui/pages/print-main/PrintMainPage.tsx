@@ -34,6 +34,12 @@ import Workspace from '../Workspace';
 import SceneInitialization from './SceneInitialization';
 import StarterGuide from './StarterGuide';
 import { AccessResourceWebState } from '../../../constants/downloadManager';
+import {
+    SnapmakerA150Machine,
+    SnapmakerA250Machine,
+    SnapmakerA350Machine,
+    SnapmakerArtisanMachine,
+} from '../../../machines';
 
 export const openFolder = () => {
     if (isElectron()) {

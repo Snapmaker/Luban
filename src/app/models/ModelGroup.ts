@@ -57,6 +57,8 @@ import ThreeGroup from './ThreeGroup';
 import ThreeModel, { BYTE_COUNT_SUPPORT_CLEAR_MASK } from './ThreeModel';
 import { ModelEvents } from './events';
 
+const MINIMUM_SCALE = 0.0001; // 0.01%
+
 function getFacesInSphere(mesh: Mesh, faceIndex: number, brushPosition: Vector3, radius: number): number[] {
     const targetFaces = [faceIndex];
 
@@ -1440,9 +1442,9 @@ class ModelGroup extends EventEmitter {
 
     public shouldApplyScaleToObjects(scaleX: number, scaleY: number, scaleZ: number) {
         return this.selectedGroup.children.every((meshObject) => {
-            if (Math.abs(scaleX * meshObject.scale.x) < 0.01
-                || Math.abs(scaleY * meshObject.scale.y) < 0.01
-                || Math.abs(scaleZ * meshObject.scale.z) < 0.01
+            if (Math.abs(scaleX * meshObject.scale.x) < MINIMUM_SCALE
+                || Math.abs(scaleY * meshObject.scale.y) < MINIMUM_SCALE
+                || Math.abs(scaleZ * meshObject.scale.z) < MINIMUM_SCALE
             ) {
                 return false; // should disable
             }
@@ -1496,30 +1498,29 @@ class ModelGroup extends EventEmitter {
         if (shouldUniformScale) {
             if (scaleX !== undefined) {
                 const { x, y, z } = this.selectedGroup.scale;
-                if (this.shouldApplyScaleToObjects(scaleX, scaleX * y / x, scaleX * z / x)) {
+                const shouldApply = this.shouldApplyScaleToObjects(scaleX, scaleX * y / x, scaleX * z / x);
+                if (shouldApply) {
                     this.selectedGroup.scale.set(scaleX, scaleX * y / x, scaleX * z / x);
                 }
             }
             if (scaleY !== undefined) {
                 const { x, y, z } = this.selectedGroup.scale;
-                if (this.shouldApplyScaleToObjects(scaleY * x / y, scaleY, scaleY * z / y)) {
+                const shouldApply = this.shouldApplyScaleToObjects(scaleY * x / y, scaleY, scaleY * z / y);
+                if (shouldApply) {
                     this.selectedGroup.scale.set(scaleY * x / y, scaleY, scaleY * z / y);
                 }
             }
             if (scaleZ !== undefined) {
                 const { x, y, z } = this.selectedGroup.scale;
-                if (this.shouldApplyScaleToObjects(scaleZ * x / z, scaleZ * y / z, scaleZ)) {
+                const shouldApply = this.shouldApplyScaleToObjects(scaleZ * x / z, scaleZ * y / z, scaleZ);
+                if (shouldApply) {
                     this.selectedGroup.scale.set(scaleZ * x / z, scaleZ * y / z, scaleZ);
                 }
             }
         } else {
             if (scaleX !== undefined) {
                 const shouldApplyScaleToObjects = this.selectedGroup.children.every((meshObject) => {
-                    if (Math.abs(scaleX * meshObject.scale.x) < 0.01
-                    ) {
-                        return false; // should disable
-                    }
-                    return true;
+                    return (Math.abs(scaleX * meshObject.scale.x) >= MINIMUM_SCALE);
                 });
                 if (shouldApplyScaleToObjects) {
                     this.selectedGroup.scale.setX(scaleX);
@@ -1527,11 +1528,7 @@ class ModelGroup extends EventEmitter {
             }
             if (scaleY !== undefined) {
                 const shouldApplyScaleToObjects = this.selectedGroup.children.every((meshObject) => {
-                    if (Math.abs(scaleY * meshObject.scale.y) < 0.01
-                    ) {
-                        return false; // should disable
-                    }
-                    return true;
+                    return (Math.abs(scaleY * meshObject.scale.y) >= MINIMUM_SCALE);
                 });
                 if (shouldApplyScaleToObjects) {
                     this.selectedGroup.scale.setY(scaleY);
@@ -1539,11 +1536,7 @@ class ModelGroup extends EventEmitter {
             }
             if (scaleZ !== undefined) {
                 const shouldApplyScaleToObjects = this.selectedGroup.children.every((meshObject) => {
-                    if (Math.abs(scaleZ * meshObject.scale.z) < 0.01
-                    ) {
-                        return false; // should disable
-                    }
-                    return true;
+                    return (Math.abs(scaleZ * meshObject.scale.z) >= MINIMUM_SCALE);
                 });
                 if (shouldApplyScaleToObjects) {
                     this.selectedGroup.scale.setZ(scaleZ);
