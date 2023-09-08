@@ -1,6 +1,9 @@
-import { includes } from 'lodash';
+import { includes, cloneDeep } from 'lodash';
+import { Machine } from '@snapmaker/luban-platform';
+
 import log from '../lib/log';
-import type { QualityPresetFilters, QualityPresetModel } from '../preset-model';
+import type { QualityPresetModel } from '../preset-model';
+import { L20WLaserToolModule, L40WLaserToolModule } from '../machines/snapmaker-2-toolheads';
 
 // export const STACK_LEFT = 'left';
 // export const STACK_RIGHT = 'right';
@@ -137,3 +140,66 @@ export function getUsedExtruderNumber(
     }
 }
 
+export interface LaserPresetGroup {
+    name: string;
+    fields: string[];
+}
+
+const LASER_PRESENT_CONFIG_GROUP: LaserPresetGroup[] = [
+    {
+        name: 'key-Laser/ToolpathParameters-Method',
+        fields: ['path_type']
+    },
+    {
+        name: 'key-Laser/ToolpathParameters-Fill',
+        fields: ['movement_mode', 'direction', 'fill_interval']
+    },
+    {
+        name: 'key-Laser/ToolpathParameters-Speed',
+        fields: ['jog_speed', 'work_speed', 'dwell_time']
+    },
+    {
+        name: 'key-Laser/ToolpathParameters-Repetition',
+        fields: ['initial_height_offset', 'multi_passes', 'multi_pass_depth']
+    },
+    {
+        name: 'key-Laser/ToolpathParameters-Power',
+        fields: ['fixed_power', 'constant_power_mode', 'half_diode_mode']
+    },
+    {
+        name: 'key-Laser/ToolpathParameters-Auxiliary Gas',
+        fields: ['auxiliary_air_pump']
+    }
+];
+
+export function getLaserPresetGroups(machine: Machine | null, toolHeadIdentifier: string): LaserPresetGroup[] {
+    if (!machine) {
+        return [];
+    }
+
+    // Check availability of tool head
+    let avaialble = false;
+    for (const toolHeadOptions of machine.metadata.toolHeads) {
+        if (toolHeadOptions.identifier === toolHeadIdentifier) {
+            avaialble = true;
+            break;
+        }
+    }
+    if (!avaialble) {
+        return [];
+    }
+
+    const presetGroups = cloneDeep(LASER_PRESENT_CONFIG_GROUP);
+
+    console.log('remove?');
+
+    // Remove auxiliary gas group if not using 20W module or 40W module
+    if (!includes([L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], toolHeadIdentifier)) {
+        const index = presetGroups.findIndex((group) => group.name === 'key-Laser/ToolpathParameters-Auxiliary Gas');
+        if (index !== -1) {
+            presetGroups.splice(index, 1);
+        }
+    }
+
+    return presetGroups;
+}

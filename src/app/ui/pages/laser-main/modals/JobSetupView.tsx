@@ -582,17 +582,23 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
                 <div className="margin-bottom-16 font-weight-bold">
                     {i18n._('Job Offset')}
                 </div>
-                <div className="sm-flex height-32">
-                    <span className="width-144 margin-right-8 text-overflow-ellipsis">
-                        {i18n._('Job Offset Mode')}
-                    </span>
-                    <Select
-                        className="width-120"
-                        options={runBoundaryModeOptions}
-                        value={selectedJobOffsetMode}
-                        onChange={onChangeJobOffsetMode}
-                    />
-                </div>
+                <TipTrigger
+                    title={i18n._('Job Offset Mode')}
+                    content={i18n._('Crosshair mode uses the crosshair for positioning, while Laser shot mode uses the working laser for positioning.')}
+                >
+                    <div className="sm-flex justify-space-between height-32">
+                        <span className="width-144 margin-right-8 text-overflow-ellipsis">
+
+                            {i18n._('Job Offset Mode')}
+                        </span>
+                        <Select
+                            className="width-120"
+                            options={runBoundaryModeOptions}
+                            value={selectedJobOffsetMode}
+                            onChange={onChangeJobOffsetMode}
+                        />
+                    </div>
+                </TipTrigger>
             </div>
         </div>
     );

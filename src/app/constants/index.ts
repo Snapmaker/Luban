@@ -448,33 +448,6 @@ export const DEFAULT_LASER_CONFIG_IDS = [
     'present.default_PathEngrave'
 ];
 
-export const LASER_PRESENT_CONFIG_GROUP = [
-    {
-        name: 'key-Laser/ToolpathParameters-Method',
-        fields: ['path_type']
-    },
-    {
-        name: 'key-Laser/ToolpathParameters-Fill',
-        fields: ['movement_mode', 'direction', 'fill_interval']
-    },
-    {
-        name: 'key-Laser/ToolpathParameters-Speed',
-        fields: ['jog_speed', 'work_speed', 'dwell_time']
-    },
-    {
-        name: 'key-Laser/ToolpathParameters-Repetition',
-        fields: ['initial_height_offset', 'multi_passes', 'multi_pass_depth']
-    },
-    {
-        name: 'key-Laser/ToolpathParameters-Power',
-        fields: ['fixed_power', 'constant_power_mode', 'half_diode_mode']
-    },
-    {
-        name: 'key-Laser/ToolpathParameters-Auxiliary Gas',
-        fields: ['auxiliary_air_pump']
-    }
-];
-
 export const CNC_TOOL_CONFIG_GROUP = [
     {
         name: 'Carving Tool',

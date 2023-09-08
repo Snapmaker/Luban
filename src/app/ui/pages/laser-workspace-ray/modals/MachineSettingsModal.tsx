@@ -177,7 +177,7 @@ const MachineSettingsModal: React.FC<MachineNetworkModalProps> = (props) => {
     return (
         <Modal size="sm" onClose={props?.onClose}>
             <Modal.Header>
-                {i18n._('key-Workspace/MainToolBar-Machine Settings')}
+                {i18n._('Machine Settings')}
             </Modal.Header>
             <Modal.Body className="width-432">
                 {

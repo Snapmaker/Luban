@@ -19,7 +19,8 @@ class GcodeParameters extends PureComponent {
         setCurrentToolDefinition: PropTypes.func.isRequired,
         isModifiedDefinition: PropTypes.bool.isRequired,
         setCurrentValueAsProfile: PropTypes.func.isRequired,
-        isModel: PropTypes.bool
+        isModel: PropTypes.bool,
+        auxiliaryAirPumpEnabled: PropTypes.bool,
     };
 
     state = {
@@ -29,7 +30,7 @@ class GcodeParameters extends PureComponent {
     };
 
     render() {
-        const { toolPath, activeToolDefinition } = this.props;
+        const { toolPath, activeToolDefinition, auxiliaryAirPumpEnabled } = this.props;
 
         const { type, gcodeConfig } = toolPath;
 
@@ -252,23 +253,27 @@ class GcodeParameters extends PureComponent {
                         />
                     </div>
                 )}
-                <div>
-                    <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
-                        <SvgIcon
-                            name="TitleSetting"
-                            type={['static']}
-                            size={24}
-                        />
-                        <span>{i18n._('key-Laser/ToolpathParameters-Auxiliary Gas')}</span>
-                    </div>
-                    <ToolParameters
-                        settings={laserDefinitionAuxiliary}
-                        updateToolConfig={this.props.updateToolConfig}
-                        updateGcodeConfig={this.props.updateGcodeConfig}
-                        toolPath={this.props.toolPath}
-                        styleSize="large"
-                    />
-                </div>
+                {
+                    auxiliaryAirPumpEnabled && (
+                        <div>
+                            <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
+                                <SvgIcon
+                                    name="TitleSetting"
+                                    type={['static']}
+                                    size={24}
+                                />
+                                <span>{i18n._('key-Laser/ToolpathParameters-Auxiliary Gas')}</span>
+                            </div>
+                            <ToolParameters
+                                settings={laserDefinitionAuxiliary}
+                                updateToolConfig={this.props.updateToolConfig}
+                                updateGcodeConfig={this.props.updateGcodeConfig}
+                                toolPath={this.props.toolPath}
+                                styleSize="large"
+                            />
+                        </div>
+                    )
+                }
             </React.Fragment>
         );
     }
