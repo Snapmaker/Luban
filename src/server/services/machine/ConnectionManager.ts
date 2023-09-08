@@ -1,4 +1,4 @@
-import { WorkflowStatus } from '@snapmaker/luban-platform';
+import { ToolHeadType, WorkflowStatus } from '@snapmaker/luban-platform';
 import fs from 'fs';
 import { includes } from 'lodash';
 import path from 'path';
@@ -390,7 +390,7 @@ class ConnectionManager {
 
     public setCrosshairOffset = async (socket: SocketServer, options: SetCrosshairOffsetOptions) => {
         const x = options.x;
-        const y = options.x;
+        const y = options.y;
         log.info(`Set crosshair offset: (${x}, ${y})`);
 
         try {
@@ -934,6 +934,23 @@ M3`;
                         status: enclosureInfo.moduleStatus === 2, // 2: normal state
                         light: enclosureInfo.ledValue,
                         fan: enclosureInfo.fanlevel,
+                        doorDetectionSettings: enclosureInfo.testStatus.map(status => {
+                            // 0: 3dp, 1: laser, 2: cnc
+                            let headType = ToolHeadType.Laser;
+
+                            if (status.workType === 0) {
+                                headType = ToolHeadType.Print;
+                            } else if (status.workType === 1) {
+                                headType = ToolHeadType.Laser;
+                            } else {
+                                headType = ToolHeadType.CNC;
+                            }
+
+                            return {
+                                headType,
+                                enabled: status.State
+                            };
+                        }),
                     }
                 });
             } else {
@@ -981,6 +998,17 @@ M3`;
                 { gcode: `M1010 S4 P${value};` }
             );
             socket && socket.emit(eventName);
+        }
+    };
+
+    public setEnclosureDoorDetection = async (socket: SocketServer, options) => {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const success = await (this.channel as EnclosureChannelInterface).setEnclosureDoorDetection(options.enable);
+            socket.emit(ControllerEvent.SetEnclosureDoorDetection, { err: !success });
+        } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
+            this.channel.setDoorDetection(options.enable);
+        } else {
+            // unsupported
         }
     };
 
@@ -1061,12 +1089,6 @@ M3`;
     };
 
     // only for Wifi
-    public setDoorDetection = (socket, options) => {
-        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            this.channel.setDoorDetection(options);
-        }
-    };
-
     public startHeartbeat = () => {
         log.info('Start heartbeat');
         this.channel.startHeartbeat();

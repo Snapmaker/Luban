@@ -39,8 +39,6 @@ import {
     CNC_HEAD_MODULE_IDS,
     DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
     EMERGENCY_STOP_BUTTON,
-    ENCLOSURE_FOR_ARTISAN,
-    ENCLOSURE_FOR_SM2,
     ENCLOSURE_MODULE_IDS,
     isDualExtruder,
     LASER_HEAD_MODULE_IDS,
@@ -52,7 +50,7 @@ import {
     PRINTING_HEAD_MODULE_IDS,
     ROTARY_MODULE_IDS,
     SNAPMAKER_J1_HEATED_BED,
-    STANDARD_CNC_TOOLHEAD_FOR_SM2,
+    STANDARD_CNC_TOOLHEAD_FOR_SM2
 } from '../../../../app/constants/machines';
 import {
     COMPLUTE_STATUS,
@@ -62,16 +60,16 @@ import logger from '../../../lib/logger';
 import SacpClient, { CoordinateType } from '../sacp/SacpClient';
 import { MarlinStateData } from '../types';
 import Channel, {
+    AirPurifierChannelInterface,
     CncChannelInterface,
     EnclosureChannelInterface,
+    FileChannelInterface,
     GcodeChannelInterface,
     LaserChannelInterface,
     NetworkServiceChannelInterface,
     PrintJobChannelInterface,
     SystemChannelInterface,
     UpgradeFirmwareOptions,
-    AirPurifierChannelInterface,
-    FileChannelInterface,
     UploadFileOptions
 } from './Channel';
 
@@ -431,8 +429,12 @@ class SacpChannelBase extends Channel implements
         return response.result === 0;
     }
 
-    public async setDoorDetection(options) {
-        const moduleInfo = this.moduleInfos && (this.moduleInfos[ENCLOSURE_FOR_ARTISAN] || this.moduleInfos[ENCLOSURE_FOR_SM2]);
+    public async setEnclosureDoorDetection(enabled: boolean): Promise<boolean> {
+        const module = this.getEnclosureModule();
+        if (!module) {
+            return false;
+        }
+
         let headTypeKey = 0;
         switch (this.headType) {
             case HEAD_PRINTING:
@@ -447,9 +449,10 @@ class SacpChannelBase extends Channel implements
             default:
                 break;
         }
-        this.sacpClient.setEnclosureDoorEnabled(moduleInfo.key, options.enable ? 1 : 0, headTypeKey).then(({ response }) => {
-            log.info(`Update enclosure door enabled: ${response.result}`);
-        });
+
+        const { response } = await this.sacpClient.setEnclosureDoorEnabled(module.key, headTypeKey, enabled);
+        log.info(`Set enclosure door detection to ${enabled}, result = ${response.result}`);
+        return response.result === 0;
     }
 
     // interface: AirPurifierChannelInterface
