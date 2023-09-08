@@ -4,8 +4,7 @@ import logger from '../../lib/logger';
 
 let domain = 'http://localhost:8100';
 if (process.env.NODE_ENV === 'production') {
-    // domain = 'https://api.snapmaker.com';
-    domain = 'http://45.79.80.155:8100';
+    domain = 'https://api.snapmaker.com';
 }
 
 const log = logger('api:commands');
