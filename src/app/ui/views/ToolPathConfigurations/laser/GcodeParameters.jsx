@@ -20,6 +20,7 @@ class GcodeParameters extends PureComponent {
         isModifiedDefinition: PropTypes.bool.isRequired,
         setCurrentValueAsProfile: PropTypes.func.isRequired,
         isModel: PropTypes.bool,
+        zOffsetEnabled: PropTypes.bool,
         auxiliaryAirPumpEnabled: PropTypes.bool,
     };
 
@@ -30,7 +31,7 @@ class GcodeParameters extends PureComponent {
     };
 
     render() {
-        const { toolPath, activeToolDefinition, auxiliaryAirPumpEnabled } = this.props;
+        const { toolPath, activeToolDefinition, zOffsetEnabled = true, auxiliaryAirPumpEnabled = false } = this.props;
 
         const { type, gcodeConfig } = toolPath;
 
@@ -56,12 +57,12 @@ class GcodeParameters extends PureComponent {
         const multiPasses = allDefinition.multiPasses.default_value;
         const fixedPowerEnabled = allDefinition.fixedPowerEnabled.default_value;
 
-        // Session Method
+        // section Method
         const laserDefinitionMethod = {
             'pathType': allDefinition.pathType
         };
 
-        // Session Fill
+        // section Fill
         const laserDefinitionFillKeys = [];
         const laserDefinitionFill = {};
         if (pathType === 'fill') {
@@ -97,7 +98,7 @@ class GcodeParameters extends PureComponent {
             }
         });
 
-        // Session Speed
+        // section Speed
         const laserDefinitionSpeedKeys = ['jogSpeed'];
         if (pathType === 'fill' && movementMode !== 'greyscale-dot') {
             laserDefinitionSpeedKeys.push('workSpeed');
@@ -114,13 +115,15 @@ class GcodeParameters extends PureComponent {
             }
         });
 
-        // Session Pass
+        // section Pass
         const laserDefinitionRepetitionKeys = [];
         const laserDefinitionRepetition = {};
         if (pathType === 'path') {
-            laserDefinitionRepetitionKeys.push('initialHeightOffset');
+            if (zOffsetEnabled) {
+                laserDefinitionRepetitionKeys.push('initialHeightOffset');
+            }
             laserDefinitionRepetitionKeys.push('multiPasses');
-            if (multiPasses > 1) {
+            if (zOffsetEnabled && multiPasses > 1) {
                 laserDefinitionRepetitionKeys.push('multiPassDepth');
             }
             laserDefinitionRepetitionKeys.forEach((key) => {
@@ -130,7 +133,7 @@ class GcodeParameters extends PureComponent {
             });
         }
 
-        // Session Power
+        // section Power
         const laserDefinitionPowerKeys = ['fixedPower', 'constantPowerMode', 'halfDiodeMode'];
         // if (pathType === 'fill' && movementMode === 'greyscale-variable-line') {
         //     laserDefinitionPowerKeys.push('fixedMinPower');
@@ -143,7 +146,7 @@ class GcodeParameters extends PureComponent {
             }
         });
 
-        // Session Auxiliary Gas
+        // section Auxiliary Gas
         const laserDefinitionAuxiliaryGasKeys = ['auxiliaryAirPump'];
         const laserDefinitionAuxiliary = {};
         laserDefinitionAuxiliaryGasKeys.forEach((key) => {

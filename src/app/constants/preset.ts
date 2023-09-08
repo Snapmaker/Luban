@@ -1,9 +1,9 @@
-import { includes, cloneDeep } from 'lodash';
 import { Machine } from '@snapmaker/luban-platform';
+import { includes } from 'lodash';
 
 import log from '../lib/log';
-import type { QualityPresetModel } from '../preset-model';
 import { L20WLaserToolModule, L40WLaserToolModule } from '../machines/snapmaker-2-toolheads';
+import type { QualityPresetModel } from '../preset-model';
 
 // export const STACK_LEFT = 'left';
 // export const STACK_RIGHT = 'right';
@@ -145,33 +145,6 @@ export interface LaserPresetGroup {
     fields: string[];
 }
 
-const LASER_PRESENT_CONFIG_GROUP: LaserPresetGroup[] = [
-    {
-        name: 'key-Laser/ToolpathParameters-Method',
-        fields: ['path_type']
-    },
-    {
-        name: 'key-Laser/ToolpathParameters-Fill',
-        fields: ['movement_mode', 'direction', 'fill_interval']
-    },
-    {
-        name: 'key-Laser/ToolpathParameters-Speed',
-        fields: ['jog_speed', 'work_speed', 'dwell_time']
-    },
-    {
-        name: 'key-Laser/ToolpathParameters-Repetition',
-        fields: ['initial_height_offset', 'multi_passes', 'multi_pass_depth']
-    },
-    {
-        name: 'key-Laser/ToolpathParameters-Power',
-        fields: ['fixed_power', 'constant_power_mode', 'half_diode_mode']
-    },
-    {
-        name: 'key-Laser/ToolpathParameters-Auxiliary Gas',
-        fields: ['auxiliary_air_pump']
-    }
-];
-
 export function getLaserPresetGroups(machine: Machine | null, toolHeadIdentifier: string): LaserPresetGroup[] {
     if (!machine) {
         return [];
@@ -189,16 +162,47 @@ export function getLaserPresetGroups(machine: Machine | null, toolHeadIdentifier
         return [];
     }
 
-    const presetGroups = cloneDeep(LASER_PRESENT_CONFIG_GROUP);
+    const presetGroups = [];
 
-    console.log('remove?');
+    presetGroups.push({
+        name: 'key-Laser/ToolpathParameters-Method',
+        fields: ['path_type']
+    });
+
+    presetGroups.push({
+        name: 'key-Laser/ToolpathParameters-Fill',
+        fields: ['movement_mode', 'direction', 'fill_interval']
+    });
+
+    presetGroups.push({
+        name: 'key-Laser/ToolpathParameters-Speed',
+        fields: ['jog_speed', 'work_speed', 'dwell_time']
+    });
+
+    if (machine.metadata.size.z > 0) {
+        presetGroups.push({
+            name: 'key-Laser/ToolpathParameters-Repetition',
+            fields: ['initial_height_offset', 'multi_passes', 'multi_pass_depth']
+        });
+    } else {
+        // unable to move z
+        presetGroups.push({
+            name: 'key-Laser/ToolpathParameters-Repetition',
+            fields: ['multi_passes']
+        });
+    }
+
+    presetGroups.push({
+        name: 'key-Laser/ToolpathParameters-Power',
+        fields: ['fixed_power', 'constant_power_mode', 'half_diode_mode']
+    });
 
     // Remove auxiliary gas group if not using 20W module or 40W module
-    if (!includes([L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], toolHeadIdentifier)) {
-        const index = presetGroups.findIndex((group) => group.name === 'key-Laser/ToolpathParameters-Auxiliary Gas');
-        if (index !== -1) {
-            presetGroups.splice(index, 1);
-        }
+    if (includes([L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], toolHeadIdentifier)) {
+        presetGroups.push({
+            name: 'key-Laser/ToolpathParameters-Auxiliary Gas',
+            fields: ['auxiliary_air_pump']
+        });
     }
 
     return presetGroups;

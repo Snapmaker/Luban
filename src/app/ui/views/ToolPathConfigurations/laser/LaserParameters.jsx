@@ -26,6 +26,8 @@ class LaserParameters extends PureComponent {
         multipleEngine: PropTypes.bool.isRequired,
         materials: PropTypes.object.isRequired,
         isModel: PropTypes.bool,
+
+        activeMachine: PropTypes.object,
         toolHeadIdentifier: PropTypes.string,
     };
 
@@ -102,9 +104,11 @@ class LaserParameters extends PureComponent {
     };
 
     render() {
-        const { toolPath, multipleEngine, toolHeadIdentifier } = this.props;
+        const { toolPath, multipleEngine, activeMachine, toolHeadIdentifier } = this.props;
 
         const { useLegacyEngine, name } = toolPath;
+
+        const zOffsetEnabled = activeMachine.metadata.size.z > 0;
         const auxiliaryAirPumpEnabled = includes([L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], toolHeadIdentifier);
 
         return (
@@ -147,6 +151,7 @@ class LaserParameters extends PureComponent {
                         setCurrentToolDefinition={this.props.setCurrentToolDefinition}
                         setCurrentValueAsProfile={this.props.setCurrentValueAsProfile}
                         isModel={this.props.isModel}
+                        zOffsetEnabled={zOffsetEnabled}
                         auxiliaryAirPumpEnabled={auxiliaryAirPumpEnabled}
                     />
                 </div>
@@ -156,11 +161,13 @@ class LaserParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
+    const activeMachine = state.machine.activeMachine;
     const { multipleEngine, toolHead } = state.machine;
     const { materials } = state.laser;
     return {
         multipleEngine,
         materials,
+        activeMachine,
         toolHeadIdentifier: toolHead.laserToolhead,
     };
 };
