@@ -36,7 +36,6 @@ import { logLubanQuit } from '../../lib/gaEvent';
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
 import { getCurrentHeadType } from '../../lib/url-utils';
-
 import Anchor from '../components/Anchor';
 import { Button } from '../components/Buttons';
 import Checkbox from '../components/Checkbox';
@@ -45,7 +44,7 @@ import Space from '../components/Space';
 import SvgIcon from '../components/SvgIcon';
 import CaseResource from '../pages/CaseResource/index';
 import FirmwareTool from '../pages/global-modals/FirmwareTool';
-import Settings from '../pages/global-modals/settings-modal/Settings';
+import Settings from '../pages/global-modals/settings-modal';
 import SoftwareUpdate from '../pages/global-modals/SoftwareUpdate';
 import DownloadUpdate from '../pages/global-modals/SoftwareUpdate/DownloadUpdate';
 import { renderModal } from '../utils';

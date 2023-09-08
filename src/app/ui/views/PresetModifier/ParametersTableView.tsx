@@ -248,31 +248,31 @@ const ParametersTableView: React.FC<TProps> = (props) => {
     }
 
     // For displaying parameter description
-    const [selectProfile, setSelectProfile] = useState('');
-    const [selectCategory, setSelectCategory] = useState('');
+    const [selectedProfile, setSelectedProfile] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('');
     const [mdContent, setMdContent] = useState('');
     const [imgPath, setImgPath] = useState('');
 
     const handleUpdateProfileKey = (category: string, profileKey: string) => {
-        setSelectCategory(category);
-        setSelectProfile(profileKey);
+        setSelectedCategory(category);
+        setSelectedProfile(profileKey);
     };
 
     useEffect(() => {
-        setSelectCategory('');
-        setSelectProfile('');
+        setSelectedCategory('');
+        setSelectedProfile('');
     }, [filters]);
 
     // Fetch description of parameter
     // @ts-ignore
     useEffect(async () => {
         const lang = i18next.language;
-        if (selectCategory && selectProfile) {
+        if (selectedCategory && selectedProfile) {
             try {
                 const res = await api.getParameterDocument({
                     lang,
-                    category: selectCategory,
-                    key: selectProfile,
+                    category: selectedCategory,
+                    key: selectedProfile,
                 });
                 setMdContent(res.body?.content);
                 setImgPath(res.body?.imagePath);
@@ -281,7 +281,7 @@ const ParametersTableView: React.FC<TProps> = (props) => {
                 setMdContent('');
             }
         }
-    }, [selectCategory, selectProfile]);
+    }, [selectedCategory, selectedProfile]);
 
     const displayConfigsGroups = calculateDisplayConfigsGroups(
         flatten ? ParametersViewType.ListView : ParametersViewType.TreeView,

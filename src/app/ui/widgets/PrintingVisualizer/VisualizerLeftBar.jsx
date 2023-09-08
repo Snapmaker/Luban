@@ -330,10 +330,10 @@ function VisualizerLeftBar(
                                     className={classNames(
                                         'padding-horizontal-4',
                                         {
-                                            [styles.selected]: (!supportDisabled && pageMode === PageMode.Support)
+                                            [styles.selected]: (pageMode === PageMode.Support)
                                         },
                                     )}
-                                    type={[`${!supportDisabled && pageMode === PageMode.Support ? 'hoverNoBackground' : 'hoverSpecial'}`, 'pressSpecial']}
+                                    type={[`${pageMode === PageMode.Support ? 'hoverNoBackground' : 'hoverSpecial'}`, 'pressSpecial']}
                                     size={48}
                                     onClick={() => setPageMode(PageMode.Support)}
                                     disabled={supportDisabled}
