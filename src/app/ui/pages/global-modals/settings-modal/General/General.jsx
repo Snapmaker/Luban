@@ -6,14 +6,14 @@ import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import FacebookLoading from 'react-facebook-loading';
 // import { connect } from 'react-redux';
 // import settings from '../../../../config/settings';
-import i18n from '../../../../lib/i18n';
-import Checkbox from '../../../components/Checkbox';
-import { Button } from '../../../components/Buttons';
-import SvgIcon from '../../../components/SvgIcon';
-import Select from '../../../components/Select';
+import i18n from '../../../../../lib/i18n';
+import Checkbox from '../../../../components/Checkbox';
+import { Button } from '../../../../components/Buttons';
+import SvgIcon from '../../../../components/SvgIcon';
+import Select from '../../../../components/Select';
 // import styles from './index.styl';
-import UniApi from '../../../../lib/uni-api';
-import { actions as machineActions } from '../../../../flux/machine';
+import UniApi from '../../../../../lib/uni-api';
+import { actions as machineActions } from '../../../../../flux/machine';
 import SubMenuitemWrapper from './SubMenuItemWrapper';
 
 

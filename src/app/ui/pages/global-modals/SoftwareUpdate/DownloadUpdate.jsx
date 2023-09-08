@@ -3,7 +3,7 @@ import React, { useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import ReactMarkdown from 'react-markdown';
 import i18n from '../../../../lib/i18n';
-import styles from './index.styl';
+import styles from './styles.styl';
 
 function DownloadUpdate({ releaseNotes, releaseChangeLog, prevVersion, version }) {
     const notesRef = useRef('');

@@ -9,7 +9,7 @@ import Anchor from '../../../components/Anchor';
 import Checkbox from '../../../components/Checkbox';
 import { Button } from '../../../components/Buttons';
 import Space from '../../../components/Space';
-import styles from './index.styl';
+import styles from './styles.styl';
 import UniApi from '../../../../lib/uni-api';
 import { actions as machineActions } from '../../../../flux/machine';
 
