@@ -38,7 +38,7 @@ const SVGShapeLibrary = (props) => {
         return data;
     };
 
-    const getSvgList = async (query?: {labelIds?: number[], pageSize?: number, page?:number, start?: number, size?: number}) => {
+    const getSvgList = async (query?: {labelIds?: number[], pageSize?: number, page?:number, start?: number, size?: number}, isRefresh: boolean = false) => {
         setIsLoading(true);
         if (query && Array.isArray(query.labelIds) && query.labelIds.includes(0)) query = null;
         const res = (await api.getSvgShapeList(query)) as any;
@@ -47,17 +47,23 @@ const SVGShapeLibrary = (props) => {
         }
         const data = res.body.data;
         res.body.total > 0 && setSvgShapeCount(res.body.total);
-        setSvgList(pre => {
-            const newData = [];
-            data.forEach(item => {
-                if (svgListMap.current[item.id]) {
-                    return;
-                }
-                newData.push(item);
-                svgListMap.current[item.id] = true;
+
+        if (isRefresh) {
+            setSvgList(data);
+            svgListMap.current = {};
+        } else {
+            setSvgList(pre => {
+                const newData = [];
+                data.forEach(item => {
+                    if (svgListMap.current[item.id]) {
+                        return;
+                    }
+                    newData.push(item);
+                    svgListMap.current[item.id] = true;
+                });
+                return pre.concat(newData);
             });
-            return pre.concat(newData);
-        });
+        }
         setIsLoading(false);
         return data;
     };
@@ -66,7 +72,7 @@ const SVGShapeLibrary = (props) => {
         setSelectedLabelList(e.target.checked ? labelList.map(v => v.id) : []);
         setIndeterminate(false);
         setCheckAll(e.target.checked);
-        getSvgList({ labelIds: e.target.checked ? labelList.map(v => v.id) : [], pageSize, page });
+        getSvgList({ labelIds: e.target.checked ? labelList.map(v => v.id) : [], pageSize: 100 }, true);
     };
 
     const onClickSvg = (svgShape) => {
@@ -117,7 +123,7 @@ const SVGShapeLibrary = (props) => {
         if (_.isEqual(selectedLabelList, sortedCheckedValues)) return;
         setIndeterminate(!!sortedCheckedValues.length && sortedCheckedValues.length < labelList.length);
         setSelectedLabelList(sortedCheckedValues);
-        getSvgList({ labelIds: checkedValues, pageSize: pageSize });
+        getSvgList({ labelIds: checkedValues, pageSize: 100 }, true);
         setCheckAll(sortedCheckedValues.length === labelList.length);
     };
 
@@ -129,7 +135,8 @@ const SVGShapeLibrary = (props) => {
 
     useEffect(() => {
         getLabelList();
-        getSvgList({ pageSize: 1 });
+        // get svgshape count
+        getSvgList({ pageSize: 100 });
 
         window.document.body.style.overflow = 'hidden';
         handleResize();
@@ -149,7 +156,7 @@ const SVGShapeLibrary = (props) => {
         return !!svgList[index * rowCount];
     };
     const loadMoreItems = async (startIndex, stopIndex) => {
-        return getSvgList({ start: startIndex * rowCount, size: (stopIndex - startIndex) * rowCount });
+        return !isLoading && getSvgList({ labelIds: selectedLabelList, start: startIndex * rowCount, size: (stopIndex - startIndex) * rowCount });
     };
 
     const renderSvgShape = (row, col) => {
