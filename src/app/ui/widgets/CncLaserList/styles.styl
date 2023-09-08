@@ -1,3 +1,5 @@
+@import '../../../styles/global-var.styl';
+
 .object-list-box {
     max-height: 176px;
     overflow-y: auto;
@@ -9,7 +11,7 @@
     padding: 4px 0;
 
     &.selected {
-        background-color: #E7F3FF;
+        background-color: $background-color-selected;
     }
 
     &:not(.selected):hover {

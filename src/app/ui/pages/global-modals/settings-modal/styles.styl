@@ -1,9 +1,11 @@
+@import '../../../../styles/global-var.styl';
+
 .manager-wrapper {
-    height: 530px
+    height: 530px;
 
     .manager-grouplist {
-        width: 220px
-        height: 100%
+        width: 220px;
+        height: 100%;
         border: 1px solid #c8c8c8;
         margin-right: 10px;
         padding: 1px;
@@ -16,17 +18,17 @@
             width: 100%;
             line-height: 32px;
             padding: 0 10px;
-        }
 
-        .selected {
-            background: #E6F2FD;
+            &.selected {
+                background: $background-color-selected;
+            }
         }
     }
 
     .manager-details {
         border-radius: 8px;
-        width: 420px
-        height: 100%
+        width: 420px;
+        height: 100%;
         overflow-y: auto;
         border: 1px solid #c8c8c8;
         padding: 10px 10px 20px;
@@ -37,7 +39,6 @@
 .container {
     display: table;
     width: 100%;
-
     // https://www.w3.org/TR/CSS21/visudet.html#min-max-heights
     // In CSS 2.1, the effect of 'min-height' and 'max-height' on tables, inline tables, table cells, table rows, and row groups is undefined.
     height: 400px;
@@ -79,43 +80,40 @@
             white-space: nowrap;
         }
 
-        > span:focus,
-        > span:hover {
+        > span:focus, > span:hover {
             color: #cc0000;
         }
     }
 
     > li.active {
-        > span,
-        > span:focus,
-        > span:hover {
+        > span, > span:focus, > span:hover {
             color: #fff;
             background-color: #999;
         }
     }
 }
 
-//
+// 
 // Left Pane
-//
+// 
 .sidenav {
     width: 200px;
     background-color: #f5f5f5;
 }
 
-//
+// 
 // Splitter
-//
+// 
 .splitter {
-    width: (5 + 2) px;
-    min-width: (5 + 2) px;
+    width: 5 + 2 px;
+    min-width: 5 + 2 px;
     border-left: 1px solid #ccc;
     border-right: 1px solid #ccc;
 }
 
-//
+// 
 // Right Pane
-//
+// 
 .section {
     vertical-align: top;
     min-width: 375px;

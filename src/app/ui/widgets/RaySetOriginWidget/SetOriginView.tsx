@@ -168,10 +168,14 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
                             <span className="display-block font-weight-bold">{i18n._('Manual Mode')}</span>
                             <span className="display-block color-black-3">{i18n._('You need to manually move the toolhead to the desired XY work origin.')}</span>
                         </Radio>
-                        <Radio value={SetupCoordinateMethod.ByControlPanel}>
-                            <span className="display-block font-weight-bold">{i18n._('Control Mode')}</span>
-                            <span className="display-block color-black-3">{i18n._('You need to use the Control panel to move the toolhead to the desired XY work origin.')}</span>
-                        </Radio>
+                        {/* Hide by control panel method */
+                            false && (
+                                <Radio value={SetupCoordinateMethod.ByControlPanel}>
+                                    <span className="display-block font-weight-bold">{i18n._('Control Mode')}</span>
+                                    <span className="display-block color-black-3">{i18n._('You need to use the Control panel to move the toolhead to the desired XY work origin.')}</span>
+                                </Radio>
+                            )
+                        }
                     </Space>
                 </Radio.Group>
             </div>

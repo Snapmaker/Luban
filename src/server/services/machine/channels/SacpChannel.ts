@@ -176,6 +176,22 @@ class SacpChannelBase extends Channel implements
         return null;
     }
 
+    /**
+     * Get CNC module info.
+     */
+    private getCncToolHeadModule(): ModuleInfo | null {
+        for (const key of Object.keys(this.moduleInfos)) {
+            const module = this.moduleInfos[key];
+            if (module && module instanceof ModuleInfo) {
+                if (includes(CNC_HEAD_MODULE_IDS, module.moduleId)) {
+                    return module;
+                }
+            }
+        }
+
+        return null;
+    }
+
     private getEnclosureModule(): ModuleInfo | null {
         for (const key of Object.keys(this.moduleInfos)) {
             const module = this.moduleInfos[key];
@@ -1016,6 +1032,16 @@ class SacpChannelBase extends Channel implements
                     }
                 }
             }
+        }
+
+        const laserModule = this.getLaserToolHeadModule();
+        if (laserModule) {
+            this.headType = HEAD_LASER;
+        }
+
+        const cncModule = this.getCncToolHeadModule();
+        if (cncModule) {
+            this.headType = HEAD_CNC;
         }
 
         return res;

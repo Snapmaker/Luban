@@ -1,25 +1,44 @@
-import React from 'react';
-// import { shallowEqual, useSelector, useDispatch } from 'react-redux';
-import { useSelector, useDispatch, shallowEqual } from 'react-redux';
-import PropTypes from 'prop-types';
+import React, { useMemo } from 'react';
+import { Machine } from '@snapmaker/luban-platform';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+import { actions as editorActions } from '../../../flux/editor';
 import { actions as laserActions } from '../../../flux/laser';
 import { actions as projectActions } from '../../../flux/project';
-import { actions as editorActions } from '../../../flux/editor';
 
-import { LASER_PRESENT_CONFIG_GROUP, HEAD_LASER } from '../../../constants';
-import ProfileManager from '../ProfileManagerForLaserCnc';
-import i18n from '../../../lib/i18n';
+import { HEAD_LASER } from '../../../constants';
 import { getMachineSeriesWithToolhead } from '../../../constants/machines';
+import { getLaserPresetGroups } from '../../../constants/preset';
+import { RootState } from '../../../flux/index.def';
+import i18n from '../../../lib/i18n';
+import ProfileManager from '../ProfileManagerForLaserCnc';
 
 function isOfficialDefinition(activeToolList) {
     return !!activeToolList.isDefault;
 }
 
-function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, saveToolPath, setCurrentToolDefinition }) {
+interface LaserPresentManagerProps {
+    shouldSaveToolpath: boolean;
+    saveToolPath: (definition) => void;
+    setCurrentToolDefinition: (definition) => void;
+    closeToolManager: () => void;
+}
+
+const LaserPresentManager: React.FC<LaserPresentManagerProps> = (
+    {
+        closeToolManager,
+        shouldSaveToolpath = false,
+        saveToolPath,
+        setCurrentToolDefinition
+    }
+) => {
     const toolDefinitions = useSelector(state => state?.laser?.toolDefinitions);
     const activeToolListDefinition = useSelector(state => state?.laser?.activeToolListDefinition, shallowEqual);
+    const activeMachine: Machine = useSelector((state: RootState) => state.machine.activeMachine);
     const series = useSelector(state => state?.machine?.series);
     const toolHead = useSelector(state => state?.machine?.toolHead);
+
+    const toolHeadIdentifier = toolHead.laserToolhead;
+
     const dispatch = useDispatch();
 
     const actions = {
@@ -110,22 +129,21 @@ function LaserPresentManager({ closeToolManager, shouldSaveToolpath = false, sav
         }
     };
 
+    const laserPresetGroups = useMemo(() => {
+        return getLaserPresetGroups(activeMachine, toolHeadIdentifier);
+    }, [activeMachine, toolHeadIdentifier]);
+
     return (
         <ProfileManager
             outsideActions={actions}
             isOfficialDefinition={isOfficialDefinition}
-            optionConfigGroup={LASER_PRESENT_CONFIG_GROUP}
+            optionConfigGroup={laserPresetGroups}
             allDefinitions={toolDefinitions}
             managerTitle="key-Laser/PresetManager-Preset Settings"
             activeDefinitionID={activeToolListDefinition.definitionId}
             managerType={HEAD_LASER}
         />
     );
-}
-LaserPresentManager.propTypes = {
-    shouldSaveToolpath: PropTypes.bool,
-    saveToolPath: PropTypes.func,
-    setCurrentToolDefinition: PropTypes.func,
-    closeToolManager: PropTypes.func.isRequired
 };
+
 export default LaserPresentManager;

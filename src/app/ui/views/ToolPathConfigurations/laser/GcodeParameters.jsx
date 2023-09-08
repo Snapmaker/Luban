@@ -19,7 +19,10 @@ class GcodeParameters extends PureComponent {
         setCurrentToolDefinition: PropTypes.func.isRequired,
         isModifiedDefinition: PropTypes.bool.isRequired,
         setCurrentValueAsProfile: PropTypes.func.isRequired,
-        isModel: PropTypes.bool
+        isModel: PropTypes.bool,
+        zOffsetEnabled: PropTypes.bool,
+        halfDiodeModeEnabled: PropTypes.bool,
+        auxiliaryAirPumpEnabled: PropTypes.bool,
     };
 
     state = {
@@ -30,6 +33,11 @@ class GcodeParameters extends PureComponent {
 
     render() {
         const { toolPath, activeToolDefinition } = this.props;
+        const {
+            zOffsetEnabled = true,
+            halfDiodeModeEnabled = false,
+            auxiliaryAirPumpEnabled = false,
+        } = this.props;
 
         const { type, gcodeConfig } = toolPath;
 
@@ -55,12 +63,12 @@ class GcodeParameters extends PureComponent {
         const multiPasses = allDefinition.multiPasses.default_value;
         const fixedPowerEnabled = allDefinition.fixedPowerEnabled.default_value;
 
-        // Session Method
+        // section Method
         const laserDefinitionMethod = {
             'pathType': allDefinition.pathType
         };
 
-        // Session Fill
+        // section Fill
         const laserDefinitionFillKeys = [];
         const laserDefinitionFill = {};
         if (pathType === 'fill') {
@@ -96,7 +104,7 @@ class GcodeParameters extends PureComponent {
             }
         });
 
-        // Session Speed
+        // section Speed
         const laserDefinitionSpeedKeys = ['jogSpeed'];
         if (pathType === 'fill' && movementMode !== 'greyscale-dot') {
             laserDefinitionSpeedKeys.push('workSpeed');
@@ -113,13 +121,15 @@ class GcodeParameters extends PureComponent {
             }
         });
 
-        // Session Pass
+        // section Pass
         const laserDefinitionRepetitionKeys = [];
         const laserDefinitionRepetition = {};
         if (pathType === 'path') {
-            laserDefinitionRepetitionKeys.push('initialHeightOffset');
+            if (zOffsetEnabled) {
+                laserDefinitionRepetitionKeys.push('initialHeightOffset');
+            }
             laserDefinitionRepetitionKeys.push('multiPasses');
-            if (multiPasses > 1) {
+            if (zOffsetEnabled && multiPasses > 1) {
                 laserDefinitionRepetitionKeys.push('multiPassDepth');
             }
             laserDefinitionRepetitionKeys.forEach((key) => {
@@ -129,8 +139,12 @@ class GcodeParameters extends PureComponent {
             });
         }
 
-        // Session Power
-        const laserDefinitionPowerKeys = ['fixedPower', 'constantPowerMode', 'halfDiodeMode'];
+        // section Power
+        const laserDefinitionPowerKeys = ['fixedPower', 'constantPowerMode'];
+        if (halfDiodeModeEnabled) {
+            laserDefinitionPowerKeys.push('halfDiodeMode');
+        }
+
         // if (pathType === 'fill' && movementMode === 'greyscale-variable-line') {
         //     laserDefinitionPowerKeys.push('fixedMinPower');
         // laserDefinitionPowerKeys.push('powerLevelDivisions');
@@ -142,7 +156,7 @@ class GcodeParameters extends PureComponent {
             }
         });
 
-        // Session Auxiliary Gas
+        // section Auxiliary Gas
         const laserDefinitionAuxiliaryGasKeys = ['auxiliaryAirPump'];
         const laserDefinitionAuxiliary = {};
         laserDefinitionAuxiliaryGasKeys.forEach((key) => {
@@ -252,23 +266,27 @@ class GcodeParameters extends PureComponent {
                         />
                     </div>
                 )}
-                <div>
-                    <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
-                        <SvgIcon
-                            name="TitleSetting"
-                            type={['static']}
-                            size={24}
-                        />
-                        <span>{i18n._('key-Laser/ToolpathParameters-Auxiliary Gas')}</span>
-                    </div>
-                    <ToolParameters
-                        settings={laserDefinitionAuxiliary}
-                        updateToolConfig={this.props.updateToolConfig}
-                        updateGcodeConfig={this.props.updateGcodeConfig}
-                        toolPath={this.props.toolPath}
-                        styleSize="large"
-                    />
-                </div>
+                {
+                    auxiliaryAirPumpEnabled && (
+                        <div>
+                            <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
+                                <SvgIcon
+                                    name="TitleSetting"
+                                    type={['static']}
+                                    size={24}
+                                />
+                                <span>{i18n._('key-Laser/ToolpathParameters-Auxiliary Gas')}</span>
+                            </div>
+                            <ToolParameters
+                                settings={laserDefinitionAuxiliary}
+                                updateToolConfig={this.props.updateToolConfig}
+                                updateGcodeConfig={this.props.updateGcodeConfig}
+                                toolPath={this.props.toolPath}
+                                styleSize="large"
+                            />
+                        </div>
+                    )
+                }
             </React.Fragment>
         );
     }

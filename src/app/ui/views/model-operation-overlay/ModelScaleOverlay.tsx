@@ -84,9 +84,9 @@ const ModelScaleOverlay: React.FC<ModelScaleOverlayProps> = React.memo((props) =
                 scaledY: selectedModelBBoxDes.y / selectedGroup.scale.y,
                 scaledZ: selectedModelBBoxDes.z / selectedGroup.scale.z,
             };
-            setModelX(Number(selectedModelBBoxDes.x.toFixed(1)));
-            setModelY(Number(selectedModelBBoxDes.y.toFixed(1)));
-            setModelZ(Number(selectedModelBBoxDes.z.toFixed(1)));
+            setModelX(Number(selectedModelBBoxDes.x.toFixed(2)));
+            setModelY(Number(selectedModelBBoxDes.y.toFixed(2)));
+            setModelZ(Number(selectedModelBBoxDes.z.toFixed(2)));
             setModelSize(originModelSize);
         } else {
             const originModelSize = {
@@ -94,9 +94,9 @@ const ModelScaleOverlay: React.FC<ModelScaleOverlayProps> = React.memo((props) =
                 scaledY: selectedModelBBoxDes.y / selectedGroup.scale.y,
                 scaledZ: selectedModelBBoxDes.z / selectedGroup.scale.z,
             };
-            setModelX(Number(selectedModelBBoxDes.x.toFixed(1)));
-            setModelY(Number(selectedModelBBoxDes.y.toFixed(1)));
-            setModelZ(Number(selectedModelBBoxDes.z.toFixed(1)));
+            setModelX(Number(selectedModelBBoxDes.x.toFixed(2)));
+            setModelY(Number(selectedModelBBoxDes.y.toFixed(2)));
+            setModelZ(Number(selectedModelBBoxDes.z.toFixed(2)));
             setModelSize(originModelSize);
         }
 
@@ -312,7 +312,7 @@ const ModelScaleOverlay: React.FC<ModelScaleOverlayProps> = React.memo((props) =
                         percentageOptions: {
                             display: true,
                             value: scalePercentObj.x,
-                            min: 1,
+                            min: 0.01,
                             onChange: (value: number) => {
                                 if (isPrimeTowerSelected) {
                                     scalePrimeTower({ scaleX: value / 100 });
@@ -344,7 +344,7 @@ const ModelScaleOverlay: React.FC<ModelScaleOverlayProps> = React.memo((props) =
                         percentageOptions: {
                             display: true,
                             value: scalePercentObj.y,
-                            min: 1,
+                            min: 0.01,
                             onChange: (value: number) => {
                                 if (isPrimeTowerSelected) {
                                     scalePrimeTower({ scaleY: value / 100 });
@@ -373,7 +373,7 @@ const ModelScaleOverlay: React.FC<ModelScaleOverlayProps> = React.memo((props) =
                         percentageOptions: {
                             display: true,
                             value: scalePercentObj.z,
-                            min: 1,
+                            min: 0.01,
                             onChange: (value: number) => {
                                 onModelTransform({ scaleZ: value / 100 });
                                 onModelAfterTransform();

@@ -1,198 +1,231 @@
-@import "../widgets/styles.styl"
-@import "../../styles/global.styl"
+@import '../../styles/global-var.styl';
+@import '../widgets/styles.styl';
+@import '../../styles/global.styl';
 
-//
 // keep layout style the same as laser container
 // we will refactor them together later. 20190820
-//
+
 .laser-table {
     width: 100%;
-    height: 'calc(100vh - %s)' % (66px);
+    height: 'calc(100vh - %s)' % 66px;
 }
+
 [class~='appbar'] {
     .laser-table {
         width: 100%;
         height: calc(100vh - 90px);
     }
+
     .svg-content {
         height: calc(100vh - 90px);
     }
 }
+
 .laser-table-row {
 }
 
 .view-space {
-  position: relative;
+    position: relative;
 }
 
-.control-bar
-    display: table-cell
-    width: 360px
-    min-width: 360px
-    max-width: 360px
-    right: 0
-    padding: 10px 6px
-    background-color: #f6f7f8
+.control-bar {
+    display: table-cell;
+    width: 360px;
+    min-width: 360px;
+    max-width: 360px;
+    right: 0;
+    padding: 10px 6px;
+    background-color: #f6f7f8;
+}
 
-//
+// 
 // SVG Editor styles
-//
-.svg-content
-    background-color: #f5f5f7
-    position: relative
-    width: 100%
-    padding-left: 64px
+// 
+.svg-content {
+    background-color: #f5f5f7;
+    position: relative;
+    width: 100%;
+    padding-left: 64px;
     // height: 100%
-    height: calc(100vh - 66px)
+    height: calc(100vh - 66px);
+}
 
-.svg-control-bar
-    //position: relative
-    margin-bottom: 20px
+.svg-control-bar {
+    // position: relative
+    margin-bottom: 20px;
+}
 
-.palette-item
-    height: 20px
-    width: 20px
-    float: left
+.palette-item {
+    height: 20px;
+    width: 20px;
+    float: left;
+}
 
-.svg-left-bar
-    position: absolute
-    left: $px-grade-4
-    top: $px-grade-4
-    bottom: $px-grade-4
-    font-size: 16px
-    font-weight: bold
-    background-color: #fff!important;
+.svg-left-bar {
+    position: absolute;
+    left: $px-grade-4;
+    top: $px-grade-4;
+    bottom: $px-grade-4;
+    font-size: 16px;
+    font-weight: bold;
+    background-color: #fff !important;
     border-radius: $px-grade-4;
 
-    .online-libary
-        font-weight: 400
-        border-bottom: 1px $black-5 solid
-        svg
-            fill: #545659
+    .online-libary {
+        font-weight: 400;
+        border-bottom: 1px $black-5 solid;
 
-
-    .selected
-        background-color: #E7F3FF!important;
         svg {
-          fill: #1890ff;
-          background-color: #e6f2fd !important;
+            fill: #545659;
         }
-    .btn-round
-        background: url("../../resources/images/224x224/toolbar_round _unchecked_224x224.png") no-repeat 0 0
-        background-size: 100%
+    }
 
+    .selected {
+        background-color: $background-color-selected !important;
 
-    .center-tool
-        background-color: #fff
-        > button
-            background-color: #fff
-        > button:hover
+        svg {
+            fill: #1890ff;
+            // background-color: #e6f2fd !important;
+        }
+    }
+
+    .btn-round {
+        background: url('../../resources/images/224x224/toolbar_round _unchecked_224x224.png') no-repeat 0 0;
+        background-size: 100%;
+    }
+
+    .center-tool {
+        background-color: #fff;
+
+        > button {
+            background-color: #fff;
+        }
+
+        > button:hover {
             background: #EEEFF0;
+        }
+    }
 
-    //todo refactor
-    .center-tool,
-    .center-ext
-        .btn-center-ext,
-        .btn-center
-            display: block
-            position: relative
-            width: 56px
-            height: 56px
-            padding: 0
-            border: 0
-            background-color: $background-color
+    // todo refactor
+    .center-tool, .center-ext {
+        .btn-center-ext, .btn-center {
+            display: block;
+            position: relative;
+            width: 56px;
+            height: 56px;
+            padding: 0;
+            border: 0;
+            background-color: $background-color;
 
-            &.selected
-                background-color: #e6f2fd
+            &.selected {
+                background-color: #e6f2fd;
+            }
 
+            > i {
+                display: block;
+                height: 100%;
+                width: 100%;
+                background-size: 100%;
+            }
 
-            > i
-                display: block
-                height: 100%
-                width: 100%
-                background-size: 100%
+            .btn-ext {
+                background: url('../../resources/images/224x224/toolbar_add _unchecked_224x224.png') no-repeat 0 0;
+                background-size: 100%;
+            }
 
-            .btn-ext
-                background: url("../../resources/images/224x224/toolbar_add _unchecked_224x224.png") no-repeat 0 0
-                background-size: 100%
+            .btn-heart {
+                background: url('../../resources/images/svg-ext/small/heart.png') no-repeat 0 0;
+                background-size: 100%;
+            }
 
-            .btn-heart
-                background: url("../../resources/images/svg-ext/small/heart.png") no-repeat 0 0
-                background-size: 100%
+            .btn-pentagon {
+                background: url('../../resources/images/svg-ext/small/pentagon.png') no-repeat 0 0;
+                background-size: 100%;
+            }
 
-            .btn-pentagon
-                background: url("../../resources/images/svg-ext/small/pentagon.png") no-repeat 0 0
-                background-size: 100%
+            .btn-pentagram {
+                background: url('../../resources/images/svg-ext/small/pentagram.png') no-repeat 0 0;
+                background-size: 100%;
+            }
 
-            .btn-pentagram
-                background: url("../../resources/images/svg-ext/small/pentagram.png") no-repeat 0 0
-                background-size: 100%
+            .btn-trapezoid {
+                background: url('../../resources/images/svg-ext/small/trapezoid.png') no-repeat 0 0;
+                background-size: 100%;
+            }
 
-            .btn-trapezoid
-                background: url("../../resources/images/svg-ext/small/trapezoid.png") no-repeat 0 0
-                background-size: 100%
+            .btn-right_triangle {
+                background: url('../../resources/images/svg-ext/small/right_triangle.png') no-repeat 0 0;
+                background-size: 100%;
+            }
 
-            .btn-right_triangle
-                background: url("../../resources/images/svg-ext/small/right_triangle.png") no-repeat 0 0
-                background-size: 100%
+            .btn-diamond {
+                background: url('../../resources/images/svg-ext/small/diamond.png') no-repeat 0 0;
+                background-size: 100%;
+            }
 
-            .btn-diamond
-                background: url("../../resources/images/svg-ext/small/diamond.png") no-repeat 0 0
-                background-size: 100%
+            .btn-hexagon {
+                background: url('../../resources/images/svg-ext/small/hexagon.png') no-repeat 0 0;
+                background-size: 100%;
+            }
 
-            .btn-hexagon
-                background: url("../../resources/images/svg-ext/small/hexagon.png") no-repeat 0 0
-                background-size: 100%
+            .btn-ext-heart {
+                background: url('../../resources/images/svg-ext/big/heart.png') no-repeat 0 0;
+                background-size: 100%;
+            }
 
-            .btn-ext-heart
-                background: url("../../resources/images/svg-ext/big/heart.png") no-repeat 0 0
-                background-size: 100%
+            .btn-ext-pentagon {
+                background: url('../../resources/images/svg-ext/big/pentagon.png') no-repeat 0 0;
+                background-size: 100%;
+            }
 
-            .btn-ext-pentagon
-                background: url("../../resources/images/svg-ext/big/pentagon.png") no-repeat 0 0
-                background-size: 100%
+            .btn-ext-pentagram {
+                background: url('../../resources/images/svg-ext/big/pentagram.png') no-repeat 0 0;
+                background-size: 100%;
+            }
 
-            .btn-ext-pentagram
-                background: url("../../resources/images/svg-ext/big/pentagram.png") no-repeat 0 0
-                background-size: 100%
+            .btn-ext-trapezoid {
+                background: url('../../resources/images/svg-ext/big/trapezoid.png') no-repeat 0 0;
+                background-size: 100%;
+            }
 
-            .btn-ext-trapezoid
-                background: url("../../resources/images/svg-ext/big/trapezoid.png") no-repeat 0 0
-                background-size: 100%
+            .btn-ext-right_triangle {
+                background: url('../../resources/images/svg-ext/big/right_triangle.png') no-repeat 0 0;
+                background-size: 100%;
+            }
 
-            .btn-ext-right_triangle
-                background: url("../../resources/images/svg-ext/big/right_triangle.png") no-repeat 0 0
-                background-size: 100%
+            .btn-ext-diamond {
+                background: url('../../resources/images/svg-ext/big/diamond.png') no-repeat 0 0;
+                background-size: 100%;
+            }
 
-            .btn-ext-diamond
-                background: url("../../resources/images/svg-ext/big/diamond.png") no-repeat 0 0
-                background-size: 100%
+            .btn-ext-hexagon {
+                background: url('../../resources/images/svg-ext/big/hexagon.png') no-repeat 0 0;
+                background-size: 100%;
+            }
+        }
 
-            .btn-ext-hexagon
-                background: url("../../resources/images/svg-ext/big/hexagon.png") no-repeat 0 0
-                background-size: 100%
+        .btn-center-ext {
+            width: 64px;
+            height: 64px;
+            padding: 0;
+            margin: 4px;
+        }
+    }
 
-
-
-        .btn-center-ext
-            width: 64px
-            height: 64px
-            padding: 0
-            margin: 4px
-
-    .center-ext
-        display: flex
-        flex-wrap: wrap
-        background-color: $background-color
-        left: 66px
-        top: 112px
-        width: 100%
+    .center-ext {
+        display: flex;
+        flex-wrap: wrap;
+        background-color: $background-color;
+        left: 66px;
+        top: 112px;
+        width: 100%;
         // padding: 7px
-        background-color: #fff
-        border-radius: 0 0 8px 8px
+        background-color: #fff;
+        border-radius: 0 0 8px 8px;
+    }
 
     .center-pen {
-        height: 64px
+        height: 64px;
         padding: 16px;
 
         .center-pen-done {
@@ -205,13 +238,17 @@
             line-height: 30px;
         }
     }
+}
 
+.width-366 {
+    width: 366px;
+}
 
-.width-366
-    width: 366px
+.blue-text {
+    color: #1890FF;
+    text-decoration: underline;
+}
 
-.blue-text
-    color: #1890FF
-    text-decoration: underline
-.negative-ml-12
-    margin-left: -12px
+.negative-ml-12 {
+    margin-left: -12px;
+}

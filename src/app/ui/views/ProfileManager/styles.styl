@@ -1,3 +1,4 @@
+@import '../../../styles/global-var.styl';
 @import "../../../styles/variables.styl"
 
 .manager-body {
@@ -32,7 +33,7 @@
                     text-align: left;
 
                     &.selected {
-                        background: #E6F2FD;
+                        background-color: $background-color-selected;
                     }
 
                     .manager-btn-unfold {
@@ -138,7 +139,7 @@
     }
 
     .selected {
-        background: #E6F2FD;
+        background-color: $background-color-selected;
         border-radius: 4px;
     }
 }

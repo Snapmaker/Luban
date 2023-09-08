@@ -6,12 +6,12 @@ import PropTypes from 'prop-types';
 // import settings from '../../../../config/settings';
 import isElectron from 'is-electron';
 import { connect } from 'react-redux';
-import { actions as appGlobalActions } from '../../../../flux/app-global';
-import i18n from '../../../../lib/i18n';
-import SvgIcon from '../../../components/SvgIcon';
-import { TextInput } from '../../../components/Input';
-import UniApi from '../../../../lib/uni-api';
-import downloadManager from '../../../../lib/download-mananger';
+import { actions as appGlobalActions } from '../../../../../flux/app-global';
+import i18n from '../../../../../lib/i18n';
+import SvgIcon from '../../../../components/SvgIcon';
+import { TextInput } from '../../../../components/Input';
+import UniApi from '../../../../../lib/uni-api';
+import downloadManager from '../../../../../lib/download-mananger';
 
 function Download(props) {
     const [selectedFolder, setSelectedFolder] = useState(props.downloadManangerSavedPath);
