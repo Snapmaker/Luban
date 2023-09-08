@@ -46,7 +46,7 @@ function register(socketServer: SocketServer): void {
         [ControllerEvent.GetEnclosureInfo]: connectionManager.getEnclosureInfo,
         [ControllerEvent.SetEnclosureLight]: connectionManager.setEnclosureLight,
         [ControllerEvent.SetEnclosureFan]: connectionManager.setEnclosureFan,
-        [ControllerEvent.SetEnclosureDoorDetection]: connectionManager.setDoorDetection,
+        [ControllerEvent.SetEnclosureDoorDetection]: connectionManager.setEnclosureDoorDetection,
 
         [ControllerEvent.GetAirPurifierInfo]: connectionManager.getAirPurifierInfo,
         [ControllerEvent.SetAirPurifierSwitch]: connectionManager.setFilterSwitch,

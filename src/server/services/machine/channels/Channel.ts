@@ -141,6 +141,12 @@ export interface EnclosureChannelInterface extends Channel {
      * @param strength 0-100
      */
     setEnclosureFan(strength: number): Promise<boolean>;
+
+    /**
+     * Set enclosure enable / disable door detection.
+     * @param enabled
+     */
+    setEnclosureDoorDetection(enabled: boolean): Promise<boolean>;
 }
 
 export interface AirPurifierChannelInterface extends Channel {

@@ -483,7 +483,7 @@ export default class SacpClient extends Dispatcher {
     }
 
     public async setCrosshairOffset(key: number, x: number, y: number): Promise<boolean> {
-        const buffer = Buffer.alloc(3, 0);
+        const buffer = Buffer.alloc(9, 0);
         writeUint8(buffer, 0, key);
         writeFloat(buffer, 1, x);
         writeFloat(buffer, 5, y);
@@ -1273,7 +1273,7 @@ export default class SacpClient extends Dispatcher {
         const buffer = Buffer.alloc(1, key);
         const { response, packet } = await this.send(0x15, 0x01, PeerId.CONTROLLER, buffer);
 
-        this.log.info(`Get enclosure info: ${response.result}`);
+        this.log.info(`Get enclosure info, result = ${response.result}`);
         if (response.result === 0) {
             const enclosureInfo = new EnclosureInfo();
             enclosureInfo.fromBuffer(response.data);
@@ -1292,11 +1292,11 @@ export default class SacpClient extends Dispatcher {
         return { response, packet };
     }
 
-    public async setEnclosureDoorEnabled(key, value, headTypeKey) {
+    public async setEnclosureDoorEnabled(key: number, headTypeKey: number, value: boolean) {
         const buffer = Buffer.alloc(3);
         writeUint8(buffer, 0, key);
         writeInt8(buffer, 1, headTypeKey);
-        writeBool(buffer, 2, value);
+        writeBool(buffer, 2, value ? 1 : 0);
         return this.send(0x15, 0x03, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
             this.log.info(`set Enclosure door enabled: ${response.result}`);
             return { response, packet };

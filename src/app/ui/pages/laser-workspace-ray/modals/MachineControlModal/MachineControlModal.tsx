@@ -147,8 +147,6 @@ const AirPurifierSection: React.FC = () => {
 
                 const airPurifierInfo = response.airPurifierInfo;
 
-                console.log('airPurifierInfo =', airPurifierInfo);
-
                 setEnabled(airPurifierInfo.enabled);
                 setFilterLife(airPurifierInfo.life);
                 setFanStrength(airPurifierInfo.strength);
