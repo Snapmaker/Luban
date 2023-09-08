@@ -145,6 +145,9 @@ export interface LaserPresetGroup {
     fields: string[];
 }
 
+/**
+ * Dirty method to generate laser preset groups for specific machine and tool head.
+ */
 export function getLaserPresetGroups(machine: Machine | null, toolHeadIdentifier: string): LaserPresetGroup[] {
     if (!machine) {
         return [];
@@ -192,10 +195,18 @@ export function getLaserPresetGroups(machine: Machine | null, toolHeadIdentifier
         });
     }
 
-    presetGroups.push({
-        name: 'key-Laser/ToolpathParameters-Power',
-        fields: ['fixed_power', 'constant_power_mode', 'half_diode_mode']
-    });
+    if (includes([L40WLaserToolModule.identifier], toolHeadIdentifier)) {
+        // Half diode mode is only for 40W module
+        presetGroups.push({
+            name: 'key-Laser/ToolpathParameters-Power',
+            fields: ['fixed_power', 'constant_power_mode', 'half_diode_mode']
+        });
+    } else {
+        presetGroups.push({
+            name: 'key-Laser/ToolpathParameters-Power',
+            fields: ['fixed_power', 'constant_power_mode']
+        });
+    }
 
     // Remove auxiliary gas group if not using 20W module or 40W module
     if (includes([L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], toolHeadIdentifier)) {

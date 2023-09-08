@@ -21,6 +21,7 @@ class GcodeParameters extends PureComponent {
         setCurrentValueAsProfile: PropTypes.func.isRequired,
         isModel: PropTypes.bool,
         zOffsetEnabled: PropTypes.bool,
+        halfDiodeModeEnabled: PropTypes.bool,
         auxiliaryAirPumpEnabled: PropTypes.bool,
     };
 
@@ -31,7 +32,12 @@ class GcodeParameters extends PureComponent {
     };
 
     render() {
-        const { toolPath, activeToolDefinition, zOffsetEnabled = true, auxiliaryAirPumpEnabled = false } = this.props;
+        const { toolPath, activeToolDefinition } = this.props;
+        const {
+            zOffsetEnabled = true,
+            halfDiodeModeEnabled = false,
+            auxiliaryAirPumpEnabled = false,
+        } = this.props;
 
         const { type, gcodeConfig } = toolPath;
 
@@ -134,7 +140,11 @@ class GcodeParameters extends PureComponent {
         }
 
         // section Power
-        const laserDefinitionPowerKeys = ['fixedPower', 'constantPowerMode', 'halfDiodeMode'];
+        const laserDefinitionPowerKeys = ['fixedPower', 'constantPowerMode'];
+        if (halfDiodeModeEnabled) {
+            laserDefinitionPowerKeys.push('halfDiodeMode');
+        }
+
         // if (pathType === 'fill' && movementMode === 'greyscale-variable-line') {
         //     laserDefinitionPowerKeys.push('fixedMinPower');
         // laserDefinitionPowerKeys.push('powerLevelDivisions');
