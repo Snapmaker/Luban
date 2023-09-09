@@ -7,6 +7,7 @@ import pubsub from 'pubsub-js';
 import React from 'react';
 import { connect } from 'react-redux';
 import * as THREE from 'three';
+import { humanReadableTime } from '../../../lib/time-utils';
 
 import {
     CONNECTION_TYPE_SERIAL,
@@ -36,6 +37,7 @@ import Loading from './Loading';
 import PrintablePlate from './PrintablePlate';
 import Rendering from './Rendering';
 import ToolHead from './ToolHead';
+import { SnapmakerArtisanMachine, SnapmakerOriginalMachine } from '../../../machines';
 
 // import modal from '../../lib/modal';
 
@@ -87,8 +89,10 @@ class Visualizer extends React.PureComponent {
         onRef: PropTypes.func,
         preview: PropTypes.bool,
 
-        machineIdentifier: PropTypes.string.isRequired,
-        machineSize: PropTypes.object.isRequired, // size of connected machine
+        activeMachine: PropTypes.shape({
+            metadata: PropTypes.object,
+            identifier: PropTypes.string
+        })
     };
 
     previewPrintableArea = null;
@@ -271,8 +275,7 @@ class Visualizer extends React.PureComponent {
                 background,
                 workPosition,
                 originOffset,
-                machineIdentifier,
-                machineSize,
+                activeMachine
             } = this.props;
 
             if (workflowStatus === WorkflowStatus.Idle) {
@@ -289,8 +292,8 @@ class Visualizer extends React.PureComponent {
                     uploadName: gcodeFile.uploadName,
                     laserFocalLength,
                     background,
-                    series: machineIdentifier,
-                    size: machineSize,
+                    series: activeMachine.identifier,
+                    size: activeMachine.metadata.size,
                     workPosition,
                     originOffset,
                     renderName: gcodeFile?.renderGcodeFileName || gcodeFile.uploadName
@@ -329,7 +332,7 @@ class Visualizer extends React.PureComponent {
                     pause3dpStatus: this.props.pause3dpStatus,
                     pauseStatus: this.pauseStatus,
                     gcodeFile,
-                    sizeZ: this.props.machineSize.z
+                    sizeZ: this.props.activeMachine.metadata.size.z
                 }, ({ msg, code }) => {
                     if (msg) {
                         if (code === 202 || code === 222) {
@@ -389,7 +392,7 @@ class Visualizer extends React.PureComponent {
                         const pos = pause3dpStatus.pos;
                         // experience params for retraction: F3000, E->(E-5)
                         const targetE = Math.max(pos.e - 5, 0);
-                        const targetZ = Math.min(pos.z + 30, this.props.machineSize.z);
+                        const targetZ = Math.min(pos.z + 30, this.props.activeMachine.metadata.size.z);
                         const gcode = [
                             `G1 E${targetE}\n`,
                             `G1 Z${targetZ}\n`,
@@ -500,18 +503,18 @@ class Visualizer extends React.PureComponent {
         this.addControllerEvents();
         this.setupTargetPoint();
 
-        const machineSize = this.props.machineSize;
+        const activeMachine = this.props.activeMachine;
         this.previewPrintableArea = new PrintablePlate({
-            x: machineSize.x * 2,
-            y: machineSize.y * 2
+            x: activeMachine.metadata.size.x * 2,
+            y: activeMachine.metadata.size.y * 2
         });
 
         // In Async function, the componenet could be unmounted already
         if (this.isMounted.current) {
             this.setState({
                 printableArea: new PrintablePlate({
-                    x: machineSize.x * 2,
-                    y: machineSize.y * 2
+                    x: activeMachine.metadata.size.x * 2,
+                    y: activeMachine.metadata.size.y * 2
                 })
             });
         }
@@ -525,20 +528,20 @@ class Visualizer extends React.PureComponent {
      *  - Upload G-code to controller
      */
     componentWillReceiveProps(nextProps) {
-        if (!isEqual(nextProps.machineSize, this.props.machineSize) || !isEqual(nextProps.preview, this.props.preview)) {
-            const machineSize = nextProps.machineSize;
+        if (!isEqual(nextProps.activeMachine, this.props.activeMachine) || !isEqual(nextProps.preview, this.props.preview)) {
+            const activeMachine = nextProps.activeMachine;
             if (nextProps.preview) {
-                this.previewPrintableArea && this.previewPrintableArea.updateSize(this.props.machineIdentifier, {
-                    x: machineSize.x * 2,
-                    y: machineSize.y * 2
+                this.previewPrintableArea && this.previewPrintableArea.updateSize(this.props.activeMachine.identifier, {
+                    x: activeMachine.metadata.size.x * 2,
+                    y: activeMachine.metadata.size.y * 2
                 });
             } else {
-                this.state.printableArea && this.state.printableArea.updateSize(this.props.machineIdentifier, {
-                    x: machineSize.x * 2,
-                    y: machineSize.y * 2
+                this.state.printableArea && this.state.printableArea.updateSize(this.props.activeMachine.identifier, {
+                    x: activeMachine.metadata.size.x * 2,
+                    y: activeMachine.metadata.size.y * 2
                 });
             }
-            this.canvas.current && this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(machineSize.z * 2, 300)), new THREE.Vector3());
+            this.canvas.current && this.canvas.current.setCamera(new THREE.Vector3(0, 0, Math.min(activeMachine.metadata.size.z * 2, 300)), new THREE.Vector3());
         }
 
         if (this.props.workflowStatus !== WorkflowStatus.Idle && nextProps.workflowStatus === WorkflowStatus.Idle) {
@@ -762,6 +765,7 @@ class Visualizer extends React.PureComponent {
                 {gcodeFile !== null && (
                     <div className={styles['visualizer-info']}>
                         <p>{i18n._(gcodeFile?.renderGcodeFileName)}</p>
+                        <p>{humanReadableTime(gcodeFile?.estimated_time)}</p>
                     </div>
                 )}
                 <div className={styles['canvas-wrapper']}>
@@ -775,7 +779,7 @@ class Visualizer extends React.PureComponent {
                             ref={this.canvas}
                             modelGroup={this.visualizerGroup}
                             printableArea={this.state.printableArea}
-                            cameraInitialPosition={new THREE.Vector3(0, 0, Math.min(this.props.machineSize.z * 2, 300))}
+                            cameraInitialPosition={new THREE.Vector3(0, 0, Math.min(this.props.activeMachine.metadata.size.z * 2, 300))}
                             cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
                         />
                     )}
@@ -833,6 +837,8 @@ class Visualizer extends React.PureComponent {
 const mapStateToProps = (state) => {
     const workspace = state.workspace;
     const laser = state.laser;
+    const activeMachine = state.machine.activeMachine || SnapmakerOriginalMachine;
+    activeMachine.metadata.size.z = activeMachine.metadata.size.z || SnapmakerArtisanMachine.metadata.size.z;
 
     // connection
     const {
@@ -883,9 +889,7 @@ const mapStateToProps = (state) => {
         server,
         isConnected: workspace.isConnected,
 
-        // actual machine
-        machineIdentifier: workspace.machineIdentifier,
-        machineSize: workspace.machineSize,
+        activeMachine,
 
         // machine state
         workPosition: workspace.workPosition,

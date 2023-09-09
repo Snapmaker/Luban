@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Box2 } from 'three';
+import { Box2, Box3 } from 'three';
 
 import { DATA_PREFIX, DEFAULT_LUBAN_HOST, HEAD_LASER } from '../constants';
 import { Origin } from '../constants/coordinate';
@@ -380,6 +380,21 @@ class ToolPathGroup {
         this.selectToolPathById(null);
 
         this._updated();
+    }
+
+    /**
+     * get Bounding Box
+     */
+    public getBoundingBox() {
+        const toolPaths = this.toolPaths.filter(toolpath => toolpath.visible);
+
+        // compute bounding box of all visible tool paths
+        const bbox = new Box3();
+        for (const toolPath of toolPaths) {
+            bbox.expandByObject(toolPath.object);
+        }
+
+        return bbox;
     }
 
     /**
