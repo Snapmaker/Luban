@@ -217,8 +217,11 @@ export class MachineAgent extends EventEmitter {
     public pauseServerGcode(callback) {
         controller
             .emitEvent(ControllerEvent.PauseGCode)
-            .once(ControllerEvent.PauseGCode, (options) => {
-                callback && callback(options);
+            .once(ControllerEvent.PauseGCode, ({ err }) => {
+                // failed on serial
+                if (err) {
+                    callback && callback();
+                }
             });
     }
 

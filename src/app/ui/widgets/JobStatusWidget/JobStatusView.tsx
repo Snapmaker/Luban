@@ -1,4 +1,4 @@
-import { LaserMachineMetadata, Machine, MachineType, WorkflowStatus } from '@snapmaker/luban-platform';
+import { Machine, MachineType, WorkflowStatus } from '@snapmaker/luban-platform';
 import { Alert, Progress, Space } from 'antd';
 import { includes } from 'lodash';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -54,7 +54,8 @@ const JobStatusView: React.FC<JobStatusViewProps> = (props) => {
     // Whether can control machine workflow
     const canControlWorkflow = useMemo(() => {
         if (activeMachine && activeMachine.machineType === MachineType.Laser) {
-            return !(activeMachine.metadata as LaserMachineMetadata).disableWorkflowControl;
+            return true;
+            // return !(activeMachine.metadata as LaserMachineMetadata).disableWorkflowControl;
         }
 
         return true;

@@ -1096,27 +1096,28 @@ class SacpChannelBase extends Channel implements
         // to: only laser/cnc
     };
 
-    public stopGcode = () => {
-        this.sacpClient.stopPrint().then(res => {
-            log.info(`Stop Print: ${res}`);
-            // eventName && this.socket && this.socket.emit(eventName, {});
-        });
-    };
+    public async stopGcode(): Promise<boolean> {
+        const { response } = await this.sacpClient.stopPrint();
+        log.info(`Stop print job, result = ${response.result}`);
+        // eventName && this.socket && this.socket.emit(eventName, {});
+        return response.result === 0;
+    }
 
-    public pauseGcode = () => {
-        this.sacpClient.pausePrint().then(res => {
-            log.info(`Pause Print: ${res}`);
-            // eventName && this.socket && this.socket.emit(eventName, {});
-        });
-    };
+    public async pauseGcode(): Promise<boolean> {
+        const { response } = await this.sacpClient.pausePrint();
+        log.info(`Pause print job, result = ${response.result}`);
+        // eventName && this.socket && this.socket.emit(eventName, {});
+        return response.result === 0;
+    }
 
-    public resumeGcode = (options, callback) => {
+    public async resumeGcode(callback): Promise<boolean> {
         callback && (this.resumeGcodeCallback = callback);
-        this.sacpClient.resumePrint().then(res => {
-            log.info(`Resume Print: ${res}`);
-            // callback && callback({ msg: res.response.result, code: res.response.result });
-        });
-    };
+
+        const { response } = await this.sacpClient.resumePrint();
+        log.info(`Resume print job, result = ${response.result}`);
+        // callback && callback({ msg: res.response.result, code: res.response.result });
+        return response.result === 0;
+    }
 
     private getToolHeadModule(extruderIndex: number | string): { module: ModuleInfo, extruderIndex: number } {
         extruderIndex = Number(extruderIndex);
