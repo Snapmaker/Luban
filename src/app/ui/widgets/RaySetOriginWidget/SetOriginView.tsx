@@ -2,7 +2,7 @@ import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { Alert, Button, Radio, RadioChangeEvent, Space } from 'antd';
 import { includes } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { Box3 } from 'three';
 
 import ControllerEvent from '../../../connection/controller-events';
@@ -90,7 +90,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
 
     // G-code
     const boundingBox = useSelector((state: RootState) => state.workspace.boundingBox);
-    const workflowStatus = useSelector((state: RootState) => state.workspace.workflowStatus);
+    const workflowStatus = useSelector((state: RootState) => state.workspace.workflowStatus, shallowEqual);
 
     // display of widget
     // Only when machine is IDLE

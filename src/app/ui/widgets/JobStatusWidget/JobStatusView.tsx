@@ -1,5 +1,5 @@
 import { LaserMachineMetadata, Machine, MachineType, WorkflowStatus } from '@snapmaker/luban-platform';
-import { Progress } from 'antd';
+import { Alert, Progress, Space } from 'antd';
 import { includes } from 'lodash';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -12,6 +12,7 @@ import SvgIcon from '../../components/SvgIcon';
 import { formatDuration } from '../GCode/GCode';
 import Loading from './Loading';
 import StopJobConfirmModal from './modals/StopJobConfirmModal';
+import { SnapmakerRayMachine } from '../../../machines';
 
 const COMPLETE_STATUS = 'Complete';
 
@@ -160,6 +161,24 @@ const JobStatusView: React.FC<JobStatusViewProps> = (props) => {
                             />
                             <span className="height-24">{i18n._('key-Workspace/WorkflowControl-Stop')}</span>
                         </Button>
+                    </div>
+                )
+            }
+            {
+                activeMachine && activeMachine.identifier === SnapmakerRayMachine.identifier && (
+                    <div className="margin-top-8">
+                        <Space direction="vertical">
+                            <Alert
+                                type="warning"
+                                showIcon
+                                message={i18n._('Keep the device attended while it is in use!')}
+                            />
+                            <Alert
+                                type="info"
+                                showIcon
+                                message={i18n._('Press the button to pause/resume. Press and hold the button to stop.')}
+                            />
+                        </Space>
                     </div>
                 )
             }
