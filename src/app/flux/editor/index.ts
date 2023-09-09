@@ -295,7 +295,7 @@ export const actions = {
 
     __initEditorParameters: (headType: string) => {
         return (dispatch) => {
-            const originType = machineStore.get('origin.type', OriginType.Object);
+            const originType = machineStore.get(`${headType}.origin.type`, headType === HEAD_LASER ? OriginType.Object : OriginType.Workpiece);
             const originReference = machineStore.get('origin.reference', ObjectReference.BottomLeft);
 
             const origin: Origin = {
@@ -2387,7 +2387,7 @@ export const actions = {
                 origin,
             }));
 
-            machineStore.set('origin.type', origin.type);
+            machineStore.set(`${headType}.origin.type`, origin.type);
             machineStore.set('origin.reference', origin.reference);
 
             // Update origin of tool path object
