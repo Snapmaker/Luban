@@ -435,6 +435,15 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                 }
             }
         );
+        leftItems.splice(2, 0,
+            {
+                title: i18n._('key-CncLaser/MainToolBar-ShapeRepository'),
+                type: 'button',
+                name: 'MainToolbarShapeRepository',
+                action: () => {
+                    dispatch(editorActions.updateEditorState({ showSVGShapeLibrary: true }));
+                }
+            },);
     }
 
     const materialThickness = useRef(null);

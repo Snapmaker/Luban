@@ -15,6 +15,9 @@ import { IMG_RESOURCE_BASE_URL } from '../../../constants/downloadManager';
 
 const SVGShapeLibrary = (props) => {
     const rightSideBlock = useRef();
+    const [blockH, setBlockH] = useState(648);
+    const [blockW, setBlockW] = useState(768);
+
     const [svgShapeCount, setSvgShapeCount] = useState(0);
     const [rowCount, setRowCount] = useState(8);
     const mainToolBarId = 'svg-shape-library-main-tool-bar';
@@ -129,7 +132,11 @@ const SVGShapeLibrary = (props) => {
 
     const handleResize = (() => {
         return _.debounce(() => {
-            return window.innerWidth > 1280 ? setRowCount(8) : setRowCount(5);
+            if (!rightSideBlock.current) return;
+            const style = window.getComputedStyle(rightSideBlock.current);
+            setBlockW(parseFloat(style?.width.slice(0, -2)));
+            setBlockH(parseFloat(style?.height.slice(0, -2)));
+            setRowCount(window.innerWidth > 1280 ? 8 : 5);
         }, 500);
     })();
 
@@ -235,8 +242,8 @@ const SVGShapeLibrary = (props) => {
                             </Checkbox.Group>
                         </div>
                         <div className={styles['svg-shape-rightside']} ref={rightSideBlock}>
-                            <AutoSizer>
-                                {({ height, width }) => (
+                            <AutoSizer disableWidth disableHeight>
+                                {() => (
                                     <InfiniteLoader
                                         isItemLoaded={isItemLoaded}
                                         itemCount={Math.ceil(svgShapeCount / rowCount) || 1000 / rowCount}
@@ -245,12 +252,12 @@ const SVGShapeLibrary = (props) => {
                                         {({ onItemsRendered, ref }) => (
                                             <List
                                                 className="List"
-                                                height={height || 648}
+                                                height={blockH || 648}
                                                 itemCount={Math.ceil(svgShapeCount / rowCount) || 1000 / rowCount}
-                                                itemSize={() => width / rowCount || 100}
+                                                itemSize={() => blockW / rowCount || 100}
                                                 onItemsRendered={onItemsRendered}
                                                 ref={ref}
-                                                width={width || 768}
+                                                width={blockW || 768}
                                             >
                                                 {({ index, style }) => (
                                                     <div
