@@ -19,7 +19,7 @@ import { EventOptions } from '../types';
 import { ChannelEvent } from './ChannelEvent';
 import SacpChannelBase from './SacpChannel';
 
-const log = logger('machine:channel:SacpTcpChannel');
+const log = logger('machine:channels:SacpTcpChannel');
 
 class SacpTcpChannel extends SacpChannelBase {
     private client: net.Socket;

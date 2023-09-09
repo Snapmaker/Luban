@@ -100,7 +100,11 @@ class RayMachineInstance extends MachineInstance {
         log.info('On closing connection...');
 
         log.info('Stop heartbeat.');
-        await this.channel.stopHeartbeat();
+        // await this.channel.stopHeartbeat();
+        // Remove await temporarily, it blocks other unsubscribes
+        this.channel.stopHeartbeat();
+
+        await (this.channel as PrintJobChannelInterface).unsubscribeGetPrintCurrentLineNumber();
     }
 }
 

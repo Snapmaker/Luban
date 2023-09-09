@@ -525,3 +525,39 @@ export const CaseConfigQuickStart = {
         name: '',
     }
 };
+
+
+export const getLaserCaseConfigFor20WModule = () => {
+    return [
+        {
+            tag: 'laser',
+            tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
+            title: 'key-HomePage/CaseLibrary-wood rule',
+            mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
+            imgSrc: '../../resources/images/user-case/Laser-10w/wooden_ruler.png',
+            pathConfig: {
+                isDatastoragePath: true,
+                path: './UserCase/laser/20w_laser_module/wooden_ruler.snaplzr',
+                name: 'wooden_ruler.snaplzr'
+            }
+        },
+    ];
+};
+
+
+export const getLaserCaseConfigFor40WModule = () => {
+    return [
+        {
+            tag: 'laser',
+            tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
+            title: 'key-HomePage/CaseLibrary-wood rule',
+            mode: 'greyscale', // mode: 'vector','greyscale','bw','text','trace'
+            imgSrc: '../../resources/images/user-case/Laser-10w/wooden_ruler.png',
+            pathConfig: {
+                isDatastoragePath: true,
+                path: './UserCase/laser/40w_laser_module/wooden_ruler.snaplzr',
+                name: 'wooden_ruler.snaplzr'
+            }
+        },
+    ];
+};

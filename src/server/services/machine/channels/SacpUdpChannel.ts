@@ -1,3 +1,4 @@
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { ResponseCallback } from '@snapmaker/snapmaker-sacp-sdk';
 import { readUint8 } from '@snapmaker/snapmaker-sacp-sdk/dist/helper';
 import dgram from 'dgram';
@@ -9,7 +10,7 @@ import SacpClient from '../sacp/SacpClient';
 import { ChannelEvent } from './ChannelEvent';
 import SacpChannelBase from './SacpChannel';
 
-const log = logger('machine:channel:SacpUdpChannel');
+const log = logger('machine:channels:SacpUdpChannel');
 
 class SacpUdpChannel extends SacpChannelBase {
     // private client: dgram.
@@ -116,7 +117,15 @@ class SacpUdpChannel extends SacpChannelBase {
 
             const statusKey = readUint8(data.response.data, 0);
 
-            this.machineStatus = WORKFLOW_STATUS_MAP[statusKey];
+            const status = WORKFLOW_STATUS_MAP[statusKey];
+            if (status === WorkflowStatus.Running && this.machineStatus !== WorkflowStatus.Running) {
+                // -> running
+
+                // clear previous print job info
+                this.resetPrintJobInfo();
+            }
+
+            this.machineStatus = status;
             log.debug(`machine status = ${statusKey}, ${this.machineStatus}`);
 
             this.socket && this.socket.emit('Marlin:state', {

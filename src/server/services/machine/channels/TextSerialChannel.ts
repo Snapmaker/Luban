@@ -6,7 +6,7 @@ import store from '../../../store';
 import Channel, { CncChannelInterface, GcodeChannelInterface } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 
-const log = logger('machine:channel:TextSerialChannel');
+const log = logger('machine:channels:TextSerialChannel');
 
 const DEFAULT_BAUDRATE = 115200;
 class TextSerialChannel extends Channel implements
