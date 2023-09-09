@@ -27,25 +27,32 @@ const UploadView: React.FC = () => {
     // const activeGcodeFile = useSelector((state: RootState) => state.workspace.activeGcodeFile);
     const gcodeFile = useSelector((state: RootState) => state.workspace.gcodeFile);
 
+    const [isUploading, setIsUploading] = useState(false);
     const [fileUploadProgress, setFileUploadProgress] = useState(0);
     const [fileUploadIsCompressing, setFileUploadIsCompressing] = useState(false);
     const [fileUploadIsDecompressing, setFileUploadIsDecompressing] = useState(false);
 
     useEffect(() => {
         const onProgress = ({ progress }) => {
-            setFileUploadProgress(progress);
-            setFileUploadIsCompressing(false);
-            setFileUploadIsDecompressing(false);
+            if (isUploading) {
+                setFileUploadProgress(progress);
+                setFileUploadIsCompressing(false);
+                setFileUploadIsDecompressing(false);
+            }
         };
         const onCompressing = () => {
-            setFileUploadProgress(0);
-            setFileUploadIsCompressing(true);
-            setFileUploadIsDecompressing(false);
+            if (isUploading) {
+                setFileUploadProgress(0);
+                setFileUploadIsCompressing(true);
+                setFileUploadIsDecompressing(false);
+            }
         };
         const onDecompressing = () => {
-            setFileUploadProgress(0);
-            setFileUploadIsCompressing(false);
-            setFileUploadIsDecompressing(true);
+            if (isUploading) {
+                setFileUploadProgress(0);
+                setFileUploadIsCompressing(false);
+                setFileUploadIsDecompressing(true);
+            }
         };
 
         controller.on(ControllerEvent.UploadFileProgress, onProgress);
@@ -57,7 +64,7 @@ const UploadView: React.FC = () => {
             controller.off(ControllerEvent.UploadFileCompressing, onCompressing);
             controller.off(ControllerEvent.UploadFileDecompressing, onDecompressing);
         };
-    }, []);
+    }, [isUploading]);
 
     const [uploadFileModalType, setUploadFileModalType] = useState<UploadFileModalType>(UploadFileModalType.None);
 
@@ -78,12 +85,16 @@ const UploadView: React.FC = () => {
             return;
         }
 
+        setIsUploading(true);
+
         controller
             .emitEvent(ControllerEvent.CompressUploadFile, {
                 filePath: gcodeFile.uploadName,
                 targetFilename: 'ray.nc',
             })
             .once(ControllerEvent.CompressUploadFile, ({ err, text }) => {
+                setIsUploading(false);
+
                 // close modal
                 setUploadFileModalType(UploadFileModalType.None);
 
@@ -122,7 +133,7 @@ const UploadView: React.FC = () => {
             </div>
 
             {
-                uploadFileModalType === UploadFileModalType.Compressing && (
+                isUploading && uploadFileModalType === UploadFileModalType.Compressing && (
                     <ModalSmallHOC
                         title={i18n._('key-Workspace/WifiTransport-Sending File')}
                         text={i18n._('Compressing file. Please wait…')}
@@ -133,7 +144,7 @@ const UploadView: React.FC = () => {
                 )
             }
             {
-                uploadFileModalType === UploadFileModalType.Decompressing && (
+                isUploading && uploadFileModalType === UploadFileModalType.Decompressing && (
                     <ModalSmallHOC
                         title={i18n._('key-Workspace/WifiTransport-Sending File')}
                         text={i18n._('Decompressing file. Please wait…')}
@@ -144,7 +155,7 @@ const UploadView: React.FC = () => {
                 )
             }
             {
-                uploadFileModalType === UploadFileModalType.Progress && (
+                isUploading && uploadFileModalType === UploadFileModalType.Progress && (
                     <ModalSmallHOC
                         title={i18n._('key-Workspace/WifiTransport-Sending File')}
                         text={i18n._('Sending file. Please wait… {{ progress }}%', {
