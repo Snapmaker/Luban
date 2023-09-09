@@ -15,6 +15,7 @@ import {
     SnapmakerOriginalExtendedMachine,
     SnapmakerOriginalMachine
 } from '../machines';
+import { L20WLaserToolModule, L40WLaserToolModule } from '../machines/snapmaker-2-toolheads';
 
 import {
     CaseConfigA150CncStandard,
@@ -41,6 +42,8 @@ import {
     CaseConfigOriginalLaserPowerTwo,
     CaseConfigOriginalPrintingSingle,
     CaseConfigPenHolder,
+    getLaserCaseConfigFor20WModule,
+    getLaserCaseConfigFor40WModule,
 } from '../ui/pages/HomePage/CaseConfig';
 
 export const getCaseList = (series, toolHead) => {
@@ -111,7 +114,7 @@ export const getCaseList = (series, toolHead) => {
             caseListFourAxis = caseListFourAxis.concat(CaseConfigA350CncFourAxis);
             caseListFourAxis = caseListFourAxis.concat(CaseConfigA350LaserFourAxis);
             break;
-        case SnapmakerArtisanMachine.identifier:
+        case SnapmakerArtisanMachine.identifier: {
             if (!isDual) {
                 caseList = caseList.concat(CaseConfigA350PrintingSingle);
             }
@@ -131,8 +134,9 @@ export const getCaseList = (series, toolHead) => {
             caseList = caseList.concat(CaseConfigA350CncStandard);
             caseListFourAxis = caseListFourAxis.concat(CaseConfigA350CncFourAxis);
             caseListFourAxis = caseListFourAxis.concat(CaseConfigA350LaserFourAxis);
-            break;
 
+            break;
+        }
         case SnapmakerJ1Machine.identifier: {
             caseList.push(CaseConfigGimbal);
             caseList.push(CaseConfigPenHolder);
@@ -141,6 +145,19 @@ export const getCaseList = (series, toolHead) => {
         default:
             break;
     }
+
+    // 20W & 40W
+    switch (laserToolhead) {
+        case L20WLaserToolModule.identifier:
+            caseList = caseList.concat(getLaserCaseConfigFor20WModule());
+            break;
+        case L40WLaserToolModule.identifier:
+            caseList = caseList.concat(getLaserCaseConfigFor40WModule());
+            break;
+        default:
+            break;
+    }
+
     return {
         caseList,
         caseListFourAxis

@@ -48,10 +48,15 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
     const toolPathGroup = useSelector(state => state[HEAD_LASER]?.toolPathGroup, shallowEqual);
     useUnsavedTitle(pageHeadType);
     const page = useSelector(state => state[HEAD_LASER]?.page, shallowEqual);
+
     const activeMachine: Machine = useSelector((state: RootState) => state.machine.activeMachine);
+    const toolHead: string = useSelector((state: RootState) => state.machine.toolHead, shallowEqual);
+    const toolHeadIdentifier = toolHead.laserToolhead;
+
     // const series = useSelector((state: RootState) => state.machine.series, shallowEqual);
     const materials = useSelector(state => state[HEAD_LASER]?.materials, shallowEqual);
     const [isRotate, setIsRotate] = useState(materials?.isRotate);
+
 
     // state
     const [stackedModelModalDsiabled, setStackedModelModalDsiabled] = useState(false);
@@ -259,6 +264,7 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
                         showStarterGuide && (
                             <StarterGuide
                                 machineIdentifer={activeMachine?.identifier}
+                                toolHeadIdentifier={toolHeadIdentifier}
                                 isRotate={isRotate}
                                 toolPaths={toolPaths}
                                 onClose={onStarterGuideClose}

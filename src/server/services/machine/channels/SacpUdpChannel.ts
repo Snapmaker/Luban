@@ -1,3 +1,4 @@
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { ResponseCallback } from '@snapmaker/snapmaker-sacp-sdk';
 import { readUint8 } from '@snapmaker/snapmaker-sacp-sdk/dist/helper';
 import dgram from 'dgram';
@@ -8,7 +9,6 @@ import logger from '../../../lib/logger';
 import SacpClient from '../sacp/SacpClient';
 import { ChannelEvent } from './ChannelEvent';
 import SacpChannelBase from './SacpChannel';
-import { WorkflowStatus } from '@snapmaker/luban-platform';
 
 const log = logger('machine:channels:SacpUdpChannel');
 

@@ -22,6 +22,7 @@ import {
     laserCncIntroStepSix,
     laserCncIntroStepTwo
 } from '../introContent';
+import { L20WLaserToolModule, L40WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
 
 
 type TooltipPosition = 'top' | 'right' | 'bottom' | 'left' |
@@ -135,9 +136,24 @@ const getSteps = (series: string, isRotate: boolean): StepItem[] => {
 };
 
 
-const getShowCaseProject = (machineIdentifier: string, isRotate: boolean = false) => {
+const getShowCaseProject = (machineIdentifier: string, toolHeadIdentifier: string, isRotate: boolean = false) => {
     let pathConfig = {};
     if (isRotate) {
+        if (toolHeadIdentifier === L20WLaserToolModule.identifier) {
+            pathConfig = {
+                path: './UserCase/laser/20w_laser_module/guide-4axis.snaplzr',
+                name: 'guide-4axis.snaplzr'
+            };
+            return pathConfig;
+        } else if (toolHeadIdentifier === L40WLaserToolModule.identifier) {
+            // yes use 20w guide
+            pathConfig = {
+                path: './UserCase/laser/20w_laser_module/guide-4axis.snaplzr',
+                name: 'guide-4axis.snaplzr'
+            };
+            return pathConfig;
+        }
+
         switch (machineIdentifier) {
             case SnapmakerA250Machine.identifier:
                 pathConfig = {
@@ -199,13 +215,14 @@ const getShowCaseProject = (machineIdentifier: string, isRotate: boolean = false
 
 interface StarterGuideProps {
     machineIdentifer: string;
+    toolHeadIdentifier: string;
     isRotate: boolean;
     toolPaths: Array<{ id: string }>;
     onClose?: () => void;
 }
 
 const StarterGuide: React.FC<StarterGuideProps> = (props) => {
-    const { machineIdentifer, isRotate, toolPaths, onClose } = props;
+    const { machineIdentifer, toolHeadIdentifier, isRotate, toolPaths, onClose } = props;
 
     const steps = useMemo(() => {
         return getSteps(machineIdentifer, isRotate);
@@ -225,7 +242,7 @@ const StarterGuide: React.FC<StarterGuideProps> = (props) => {
     const history = useHistory();
     const onChange = useCallback((nextIndex: number) => {
         if (nextIndex === 1) {
-            const pathConfig = getShowCaseProject(machineIdentifer, isRotate);
+            const pathConfig = getShowCaseProject(machineIdentifer, toolHeadIdentifier, isRotate);
             dispatch(projectActions.openProject(pathConfig, history, true, true));
         }
     }, [
