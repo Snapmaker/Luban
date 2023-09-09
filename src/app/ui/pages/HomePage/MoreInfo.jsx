@@ -91,18 +91,18 @@ const MoreInfo = () => {
                         {
                             informationFlow?.swiper?.map(swiper => {
                                 return (
-                                    <div className={classNames(styles['swiper-slide'])} key={swiper.title}>
+                                    <a className={classNames(styles['swiper-slide'])} key={swiper.title} href={swiper.btn.href} target="_blank" rel="noopener noreferrer">
                                         <div className="sm-flex justify-space-between sm-flex-direction-c">
                                             <div style={{ marginRight: '27px' }}>
                                                 <div className={styles['swiper-title']}>{swiper.title}</div>
                                                 <div className={styles['swiper-desc']}>{swiper.desc}</div>
                                             </div>
-                                            <a className={styles['swiper-a']} href={swiper.btn.href} target="_blank" rel="noopener noreferrer">{`${swiper.btn.text}`} </a>
+                                            {/* <a className={styles['swiper-a']} href={swiper.btn.href} target="_blank" rel="noopener noreferrer">{`${swiper.btn.text}`} </a> */}
                                         </div>
                                         <div className={styles['swiper-img']}>
                                             <img className="width-percent-100" src={swiper.imgSrc} alt={swiper.title} />
                                         </div>
-                                    </div>
+                                    </a>
                                 );
                             })
                         }
