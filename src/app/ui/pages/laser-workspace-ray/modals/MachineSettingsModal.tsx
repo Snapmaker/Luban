@@ -21,6 +21,8 @@ interface MachineNetworkModalProps {
 }
 
 const MachineSettingsModal: React.FC<MachineNetworkModalProps> = (props) => {
+    const { onClose = null } = props;
+
     const isConnected = useSelector((state: RootState) => state.workspace.isConnected);
 
     // const dispatch = useDispatch();
@@ -169,9 +171,14 @@ const MachineSettingsModal: React.FC<MachineNetworkModalProps> = (props) => {
 
         // save fire sensor sensitivity
         await machineSetFireSensorSensitivity(fireSensorSensitivity);
+
+        // close the modal on save
+        onClose && onClose();
     }, [
         machineSetCrosshairOffset, crosshairOffset,
         machineSetFireSensorSensitivity, fireSensorSensitivity,
+
+        onClose,
     ]);
 
     return (

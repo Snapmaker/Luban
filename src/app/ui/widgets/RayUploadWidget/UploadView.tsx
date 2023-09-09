@@ -1,7 +1,8 @@
 import classNames from 'classnames';
 import React, { useCallback, useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
+import { JobOffsetMode } from '../../../constants/coordinate';
 import ControllerEvent from '../../../connection/controller-events';
 import { RootState } from '../../../flux/index.def';
 import controller from '../../../lib/controller';
@@ -9,7 +10,9 @@ import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import { Button } from '../../components/Buttons';
 import modalSmallHOC, { ModalSmallHOC } from '../../components/Modal/modal-small';
+import gcodeActions, { GCodeFileObject } from '../../../flux/workspace/actions-gcode';
 import styles from './styles.styl';
+import { getRunBoundayCode } from '../RaySetOriginWidget/SetOriginView';
 
 export type LoadGcodeOptions = {
     renderImmediately?: boolean;
@@ -25,27 +28,38 @@ enum UploadFileModalType {
 const UploadView: React.FC = () => {
     const isConnected = useSelector((state: RootState) => state.workspace.isConnected);
     // const activeGcodeFile = useSelector((state: RootState) => state.workspace.activeGcodeFile);
+
+    const boundingBox = useSelector((state: RootState) => state.workspace.boundingBox);
+    const jobOffsetMode: JobOffsetMode = useSelector((state: RootState) => state.laser.jobOffsetMode);
+
     const gcodeFile = useSelector((state: RootState) => state.workspace.gcodeFile);
 
+    const [isUploading, setIsUploading] = useState(false);
     const [fileUploadProgress, setFileUploadProgress] = useState(0);
     const [fileUploadIsCompressing, setFileUploadIsCompressing] = useState(false);
     const [fileUploadIsDecompressing, setFileUploadIsDecompressing] = useState(false);
 
     useEffect(() => {
         const onProgress = ({ progress }) => {
-            setFileUploadProgress(progress);
-            setFileUploadIsCompressing(false);
-            setFileUploadIsDecompressing(false);
+            if (isUploading) {
+                setFileUploadProgress(progress);
+                setFileUploadIsCompressing(false);
+                setFileUploadIsDecompressing(false);
+            }
         };
         const onCompressing = () => {
-            setFileUploadProgress(0);
-            setFileUploadIsCompressing(true);
-            setFileUploadIsDecompressing(false);
+            if (isUploading) {
+                setFileUploadProgress(0);
+                setFileUploadIsCompressing(true);
+                setFileUploadIsDecompressing(false);
+            }
         };
         const onDecompressing = () => {
-            setFileUploadProgress(0);
-            setFileUploadIsCompressing(false);
-            setFileUploadIsDecompressing(true);
+            if (isUploading) {
+                setFileUploadProgress(0);
+                setFileUploadIsCompressing(false);
+                setFileUploadIsDecompressing(true);
+            }
         };
 
         controller.on(ControllerEvent.UploadFileProgress, onProgress);
@@ -57,7 +71,7 @@ const UploadView: React.FC = () => {
             controller.off(ControllerEvent.UploadFileCompressing, onCompressing);
             controller.off(ControllerEvent.UploadFileDecompressing, onDecompressing);
         };
-    }, []);
+    }, [isUploading]);
 
     const [uploadFileModalType, setUploadFileModalType] = useState<UploadFileModalType>(UploadFileModalType.None);
 
@@ -73,40 +87,101 @@ const UploadView: React.FC = () => {
         }
     }, [fileUploadProgress, fileUploadIsCompressing, fileUploadIsDecompressing]);
 
-    const onClickUploadJob = useCallback(() => {
+    const dispatch = useDispatch();
+
+    const uploadBoundary = useCallback(async () => {
+        if (!boundingBox) {
+            return false;
+        }
+
+        log.info('Run Boundary... bbox =', boundingBox);
+
+        const gcode = getRunBoundayCode(boundingBox, jobOffsetMode);
+
+        const blob = new Blob([gcode], { type: 'text/plain' });
+        const file = new File([blob], 'boundary.nc');
+
+        const gcodeFileObject: GCodeFileObject = await dispatch(gcodeActions.uploadGcodeFile(file));
+
+        return new Promise<boolean>((resolve) => {
+            controller
+                .emitEvent(ControllerEvent.CompressUploadFile, {
+                    filePath: gcodeFileObject.uploadName,
+                    targetFilename: 'boundary.nc',
+                })
+                .once(ControllerEvent.CompressUploadFile, ({ err, text }) => {
+                    if (err) {
+                        log.error('Unable to upload G-code to execute.');
+                        log.error(err);
+                        log.error(`Reason: ${text}`);
+                        resolve(false);
+                        return;
+                    }
+
+                    log.info('Uploaded boundary G-code.');
+                    resolve(true);
+                });
+        });
+    }, [dispatch, boundingBox, jobOffsetMode]);
+
+    const uploadJob = useCallback(async () => {
         if (!gcodeFile) {
+            return false;
+        }
+
+        setIsUploading(true);
+
+        return new Promise<boolean>((resolve) => {
+            controller
+                .emitEvent(ControllerEvent.CompressUploadFile, {
+                    filePath: gcodeFile.uploadName,
+                    targetFilename: 'ray.nc',
+                })
+                .once(ControllerEvent.CompressUploadFile, ({ err, text }) => {
+                    setIsUploading(false);
+
+                    setFileUploadProgress(0);
+                    setFileUploadIsCompressing(false);
+                    setFileUploadIsDecompressing(false);
+
+                    // Deal with send result
+                    if (err) {
+                        log.error(err);
+                        log.error(`Reason: ${text}`);
+                        modalSmallHOC({
+                            title: i18n._('key-Workspace/WifiTransport-Failed to send file.'),
+                            text: text,
+                            iconColor: '#FF4D4F',
+                            img: 'WarningTipsError'
+                        });
+                        resolve(false);
+                    } else {
+                        modalSmallHOC({
+                            title: i18n._('key-Workspace/WifiTransport-File sent successfully.'),
+                            text: i18n._('File was successfully sent. Please long press the button on the machine to start the job.'),
+                            iconColor: '#4CB518',
+                            img: 'WarningTipsSuccess'
+                        });
+                        resolve(true);
+                    }
+                });
+        });
+    }, [gcodeFile]);
+
+    const onClickUploadJob = useCallback(async () => {
+        const success = await uploadBoundary();
+        if (!success) {
+            modalSmallHOC({
+                title: i18n._('key-Workspace/WifiTransport-Failed to send file.'),
+                text: i18n._('key-Workspace/WifiTransport-Failed to send file.'),
+                iconColor: '#FF4D4F',
+                img: 'WarningTipsError'
+            });
             return;
         }
 
-        controller
-            .emitEvent(ControllerEvent.CompressUploadFile, {
-                filePath: gcodeFile.uploadName,
-                targetFilename: 'ray.nc',
-            })
-            .once(ControllerEvent.CompressUploadFile, ({ err, text }) => {
-                // close modal
-                setUploadFileModalType(UploadFileModalType.None);
-
-                // Deal with send result
-                if (err) {
-                    log.error(err);
-                    log.error(`Reason: ${text}`);
-                    modalSmallHOC({
-                        title: i18n._('key-Workspace/WifiTransport-Failed to send file.'),
-                        text: text,
-                        iconColor: '#FF4D4F',
-                        img: 'WarningTipsError'
-                    });
-                } else {
-                    modalSmallHOC({
-                        title: i18n._('key-Workspace/WifiTransport-File sent successfully.'),
-                        text: i18n._('File was successfully sent. Please long press the button on the machine to start the job.'),
-                        iconColor: '#4CB518',
-                        img: 'WarningTipsSuccess'
-                    });
-                }
-            });
-    }, [gcodeFile]);
+        await uploadJob();
+    }, [uploadBoundary, uploadJob]);
 
     return (
         <div className={classNames('border-radius-8', 'background-color-white', styles['output-wrapper'])}>
@@ -122,7 +197,7 @@ const UploadView: React.FC = () => {
             </div>
 
             {
-                uploadFileModalType === UploadFileModalType.Compressing && (
+                isUploading && uploadFileModalType === UploadFileModalType.Compressing && (
                     <ModalSmallHOC
                         title={i18n._('key-Workspace/WifiTransport-Sending File')}
                         text={i18n._('Compressing file. Please wait…')}
@@ -133,7 +208,7 @@ const UploadView: React.FC = () => {
                 )
             }
             {
-                uploadFileModalType === UploadFileModalType.Decompressing && (
+                isUploading && uploadFileModalType === UploadFileModalType.Decompressing && (
                     <ModalSmallHOC
                         title={i18n._('key-Workspace/WifiTransport-Sending File')}
                         text={i18n._('Decompressing file. Please wait…')}
@@ -144,7 +219,7 @@ const UploadView: React.FC = () => {
                 )
             }
             {
-                uploadFileModalType === UploadFileModalType.Progress && (
+                isUploading && uploadFileModalType === UploadFileModalType.Progress && (
                     <ModalSmallHOC
                         title={i18n._('key-Workspace/WifiTransport-Sending File')}
                         text={i18n._('Sending file. Please wait… {{ progress }}%', {

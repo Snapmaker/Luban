@@ -474,11 +474,12 @@ class ConnectionManager {
             onDecompressing: () => {
                 socket.emit(ControllerEvent.UploadFileDecompressing);
             },
+            onFailed: (reason: string) => {
+                socket.emit(ControllerEvent.CompressUploadFile, { err: 'failed', text: reason });
+            }
         });
         if (success) {
             socket.emit(ControllerEvent.CompressUploadFile, { err: null, text: '' });
-        } else {
-            socket.emit(ControllerEvent.CompressUploadFile, { err: 'failed', text: 'Failed to upload file' });
         }
     };
 
@@ -659,8 +660,13 @@ G1 Z${pos.z}
         });
     };
 
-    public resumeGcode = (socket, options, callback) => {
+    public resumeGcode = async (socket: SocketServer, options, callback) => {
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const success = await this.channel.resumeGcode(callback);
+            if (success) {
+                // resumed?
+            }
+        } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
             this.channel.resumeGcode({ ...options, connectionType: this.connectionType }, callback);
         } else {
             const { headType, pause3dpStatus, pauseStatus, gcodeFile, sizeZ } = options;
@@ -722,8 +728,11 @@ M3`;
         }
     };
 
-    public pauseGcode = (socket, options) => {
-        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+    public pauseGcode = async (socket: SocketServer, options) => {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const success = await this.channel.pauseGcode();
+            socket.emit(ControllerEvent.PauseGCode, { err: !success });
+        } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
             this.channel.pauseGcode(options);
         } else {
             const { eventName } = options;
@@ -734,12 +743,13 @@ M3`;
         }
     };
 
-    public stopGcode = (socket, options) => {
-        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, NetworkProtocol.HTTP], this.protocol)) {
+    public stopGcode = async (socket: SocketServer, options) => {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const success = await this.channel.stopGcode(options);
+            socket && socket.emit(ControllerEvent.StopGCode, { err: !success });
+        } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
             this.channel.stopGcode(options);
             socket && socket.emit(options.eventName, {});
-        } else if (includes([SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            this.channel.stopGcode(options);
         } else {
             this.channel.command(socket, {
                 cmd: 'gcode:pause',

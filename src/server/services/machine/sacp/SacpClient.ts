@@ -101,6 +101,7 @@ interface CompressUploadFileOptions {
     onProgress?: (progress: number) => void;
     onCompressing?: () => void;
     onDecompressing?: () => void;
+    onFailed?: (reason: string) => void;
 }
 
 export default class SacpClient extends Dispatcher {
@@ -1053,6 +1054,7 @@ export default class SacpClient extends Dispatcher {
             }
             uploadInfo.currentIndex = index;
 
+            // report progress
             if (index + 1 === uploadInfo.totalChucks) {
                 // final chunk, assume that we are starting decompressing (on the controller end)
                 if (options?.onDecompressing) {
@@ -1070,6 +1072,7 @@ export default class SacpClient extends Dispatcher {
                 }
             }
 
+            // sending file
             const start = sizePerChunk * index;
             const end = sizePerChunk * (index + 1);
 
@@ -1102,6 +1105,16 @@ export default class SacpClient extends Dispatcher {
                     this.log.info('File upload successful.');
                 } else {
                     this.log.error(`File upload failed, result = ${result}`);
+                    if (options.onFailed) {
+                        switch (result) {
+                            case 12:
+                                options.onFailed('SD card unavailable.');
+                                break;
+                            default:
+                                options.onFailed('Failed to validate file.');
+                                break;
+                        }
+                    }
                 }
                 this.ack(0xb0, 0x02, data.packet, Buffer.alloc(1, 0));
 
@@ -1137,10 +1150,28 @@ export default class SacpClient extends Dispatcher {
                 chunksBuffer,
                 md5Buffer,
             ]);
-            this.log.info(`start large file transfer... file size = ${fileLength}, chuck count = ${chunks}`);
-            this.send(0xb0, 0x10, PeerId.CONTROLLER, buffer).catch(err => {
-                reject(err);
-            });
+            this.log.info(`Start file transfer... file size = ${fileLength}, chuck count = ${chunks}`);
+            this.send(0xb0, 0x10, PeerId.CONTROLLER, buffer)
+                .then(({ response }) => {
+                    if (response.result !== 0) {
+                        this.log.info(`Start file transfer failed, result = ${response.result}`);
+
+                        if (options.onFailed) {
+                            switch (response.result) {
+                                case 12:
+                                    options.onFailed('SD card unavailable.');
+                                    break;
+                                default:
+                                    options.onFailed('Failed to start file uploading.');
+                                    break;
+                            }
+                        }
+                        resolve(false);
+                    }
+                })
+                .catch(err => {
+                    reject(err);
+                });
         });
     }
 

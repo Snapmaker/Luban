@@ -415,6 +415,7 @@ class Visualizer extends React.PureComponent {
             }
             if (workflowStatus === WorkflowStatus.Running) {
                 server.pauseServerGcode(() => {
+                    // Refactor: serial + text?, unify api
                     if (connectionType === CONNECTION_TYPE_SERIAL) {
                         this.actions.tryPause();
                     }

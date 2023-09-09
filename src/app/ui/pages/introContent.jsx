@@ -59,7 +59,7 @@ const printIntroStepNine = (text1) => (
     </div>
 );
 
-const laserCncIntroStepOne = (text1, text2, text3) => {
+const laserCncIntroStepOne = (text1, text2, text3, text4, text5, text6, text7 = null) => {
     return (
         <div className="laser-intro-one-content">
             <div className="top-content">
@@ -69,8 +69,20 @@ const laserCncIntroStepOne = (text1, text2, text3) => {
             </div>
             <div className="bottom-content">
                 <div>{text3}</div>
+                <ol>
+                    <li>{text4}</li>
+                    <li>{text5}</li>
+                </ol>
+                <div>{text6}</div>
                 <img src="/resources/images/guide-tours/pic_job_setup_3aix_zero_102x102.png" alt="" className="width-102 job-setup-img" />
             </div>
+            {
+                text7 && (
+                    <div className="margin-top-8">
+                        <div>{text7}</div>
+                    </div>
+                )
+            }
         </div>
     );
 };
