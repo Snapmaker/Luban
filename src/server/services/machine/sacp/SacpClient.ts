@@ -1049,7 +1049,6 @@ export default class SacpClient extends Dispatcher {
             const index = readUint32(data.param, nextOffset);
 
             // Log so we can see file transfer process
-            this.log.info(`request file chuck index = ${index}`);
             if (index % 50 === 0) {
                 this.log.info(`request file chuck index = ${index}`);
             }
@@ -1112,7 +1111,8 @@ export default class SacpClient extends Dispatcher {
                                 options.onFailed('SD card unavailable.');
                                 break;
                             default:
-                                options.onFailed('Failed to start file uploading.');
+                                options.onFailed('Failed to validate file.');
+                                break;
                         }
                     }
                 }
@@ -1163,6 +1163,7 @@ export default class SacpClient extends Dispatcher {
                                     break;
                                 default:
                                     options.onFailed('Failed to start file uploading.');
+                                    break;
                             }
                         }
                         resolve(false);
