@@ -22,7 +22,7 @@ import Channel, { CncChannelInterface, FileChannelInterface, GcodeChannelInterfa
 import { ChannelEvent } from './ChannelEvent';
 
 let waitConfirm: boolean;
-const log = logger('machine:channel:SstpHttpChannel');
+const log = logger('machine:channels:SstpHttpChannel');
 
 
 const isJSON = (str: string) => {

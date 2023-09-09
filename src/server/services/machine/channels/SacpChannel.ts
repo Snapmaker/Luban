@@ -529,7 +529,13 @@ class SacpChannelBase extends Channel implements
 
     // interface: PrintJobChannelInterface
 
-    private async getPrintJobFileInfo(): Promise<void> {
+    protected resetPrintJobInfo(): void {
+        this.filename = '';
+        this.totalLine = 0;
+        this.estimatedTime = 0;
+    }
+
+    protected async getPrintJobFileInfo(): Promise<void> {
         const { data } = await this.sacpClient.getPrintingFileInfo();
 
         if (!data.totalLine) {
@@ -552,6 +558,8 @@ class SacpChannelBase extends Channel implements
             const currentLineNumberInfo = new GcodeCurrentLine().fromBuffer(response.data);
 
             const currentLine = currentLineNumberInfo.currentLine;
+
+            log.debug(`currentLine = ${currentLine}`);
 
             let progress;
             if (this.totalLine === 0) {
@@ -586,6 +594,9 @@ class SacpChannelBase extends Channel implements
             { interval: 2000 },
             callback
         );
+        this.subscribeGetCurrentGcodeLineCallback = callback;
+
+        log.info(`Subscribe line number, result = ${res.code}`);
 
         // Subscribe to print time
         const callback2: ResponseCallback = ({ response }) => {
@@ -599,8 +610,16 @@ class SacpChannelBase extends Channel implements
     }
 
     public async unsubscribeGetPrintCurrentLineNumber(): Promise<boolean> {
-        const res = await this.sacpClient.unSubscribeGetPrintCurrentLineNumber(null);
-        return res.code === 0;
+        if (this.subscribeGetCurrentGcodeLineCallback) {
+            const res = await this.sacpClient.unSubscribeGetPrintCurrentLineNumber(
+                this.subscribeGetCurrentGcodeLineCallback
+            );
+
+            log.info(`Unsubscribe line number, result = ${res.code}`);
+            return res.code === 0;
+        } else {
+            return true;
+        }
     }
 
     // old heartbeat base, refactor needed

@@ -11,7 +11,7 @@ import { EventOptions } from '../types';
 import { ChannelEvent } from './ChannelEvent';
 import SacpChannelBase from './SacpChannel';
 
-const log = logger('machine:channel:SacpSerialChannel');
+const log = logger('machine:channels:SacpSerialChannel');
 
 
 class SacpSerialChannel extends SacpChannelBase {
