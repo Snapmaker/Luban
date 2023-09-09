@@ -262,7 +262,11 @@ async function recordScaleActionsToHistory(scaleActionsFn, elements, SVGActions,
 }
 
 const scaleExtname = ['.svg', '.dxf'];
+const DEFAULT_STATE = {
+    showSVGShapeLibrary: false
+};
 
+export const ACTION_UPDATE_STATE = 'editor/ACTION_UPDATE_STATE';
 export const actions = {
     ...baseActions,
 
@@ -2861,9 +2865,22 @@ export const actions = {
                 page: PAGE_EDITOR
             })
         );
+    },
+
+    updateEditorState: (state) => {
+        return {
+            type: ACTION_UPDATE_STATE,
+            state
+        };
     }
 };
 
-export default function reducer() {
-    return {};
+export default function reducer(state = DEFAULT_STATE, action) {
+    switch (action.type) {
+        case ACTION_UPDATE_STATE: {
+            return Object.assign({}, state, action.state);
+        }
+        default: return state;
+    }
+    // return {};
 }

@@ -82,6 +82,11 @@ const SVGLeftBar = forwardRef((props, ref) => {
         stopDraw: () => {
             props.onStopDraw(true);
         },
+
+        openSvgShapeLibrary: () => {
+            props.updateIsShowSVGShapeLibrary(true);
+            actions.setMode('select');
+        }
     };
 
     useImperativeHandle(ref, () => ({
@@ -286,7 +291,16 @@ const SVGLeftBar = forwardRef((props, ref) => {
                                     />
                                 </span>
                                 {i18n._('key-Laser/LeftBar-Online Libary Tip')}
-                                <span className={classNames(styles['blue-text'])}> {i18n._('key-Laser/LeftBar-Online Libary')}</span>
+                                {/* <span className={classNames(styles['blue-text'])}> {i18n._('key-Laser/LeftBar-Online Libary')}</span> */}
+
+                                <span
+                                    tabIndex={0}
+                                    role="button"
+                                    onClick={() => actions.openSvgShapeLibrary()}
+                                    onKeyDown={() => actions.openSvgShapeLibrary()}
+                                    className={classNames(styles['blue-text'])}
+                                > {i18n._('key-Laser/LeftBar-Online Libary')}
+                                </span>
                             </div>
                             <div className="overflow-y-auto border-radius-8" style={{ height: 'calc(100% - 40px - 40px - 5vh)' }}>
                                 <div className="sm-flex">
@@ -296,6 +310,7 @@ const SVGLeftBar = forwardRef((props, ref) => {
                                         {_.map(library.use, (key) => {
                                             return (
                                                 <svg
+                                                    key={key}
                                                     onClick={() => actions.createExt(key)}
                                                     xmlns="http://www.w3.org/2000/svg"
                                                     role="button"
@@ -339,6 +354,7 @@ SVGLeftBar.propTypes = {
     onStartDraw: PropTypes.func.isRequired,
     onStopDraw: PropTypes.func.isRequired,
     createExt: PropTypes.func.isRequired,
+    updateIsShowSVGShapeLibrary: PropTypes.func.isRequired
 };
 
 

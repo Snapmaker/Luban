@@ -13,4 +13,4 @@ export * as profileDefinitions from './api-profile-definitions';
 export * as utils from './api-utils';
 export * as svg from './api-svg';
 export * as macros from './api-macros';
-export * as caseResrouces from './api-case-resrouces';
+export * as onlineResourcesService from './api-online-resources-service';
