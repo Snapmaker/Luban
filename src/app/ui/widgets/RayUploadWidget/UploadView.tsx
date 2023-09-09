@@ -95,8 +95,9 @@ const UploadView: React.FC = () => {
             .once(ControllerEvent.CompressUploadFile, ({ err, text }) => {
                 setIsUploading(false);
 
-                // close modal
-                setUploadFileModalType(UploadFileModalType.None);
+                setFileUploadProgress(0);
+                setFileUploadIsCompressing(false);
+                setFileUploadIsDecompressing(false);
 
                 // Deal with send result
                 if (err) {

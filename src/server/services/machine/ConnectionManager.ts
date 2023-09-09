@@ -474,11 +474,12 @@ class ConnectionManager {
             onDecompressing: () => {
                 socket.emit(ControllerEvent.UploadFileDecompressing);
             },
+            onFailed: (reason: string) => {
+                socket.emit(ControllerEvent.CompressUploadFile, { err: 'failed', text: reason });
+            }
         });
         if (success) {
             socket.emit(ControllerEvent.CompressUploadFile, { err: null, text: '' });
-        } else {
-            socket.emit(ControllerEvent.CompressUploadFile, { err: 'failed', text: 'Failed to upload file' });
         }
     };
 

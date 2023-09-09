@@ -290,7 +290,7 @@ class SacpChannelBase extends Channel implements
     }
 
     public async compressUploadFile(options: UploadFileOptions): Promise<boolean> {
-        const { filePath, targetFilename, onProgress, onCompressing, onDecompressing } = options;
+        const { filePath, targetFilename, onProgress, onCompressing, onDecompressing, onFailed } = options;
         log.info(`Compress and upload file to controller... ${filePath}`);
 
         return this.sacpClient.uploadFileCompressed(
@@ -300,6 +300,7 @@ class SacpChannelBase extends Channel implements
                 onProgress,
                 onCompressing,
                 onDecompressing,
+                onFailed,
             }
         );
     }
