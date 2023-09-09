@@ -300,7 +300,7 @@ const SVGLeftBar = forwardRef((props, ref) => {
                                                     xmlns="http://www.w3.org/2000/svg"
                                                     role="button"
                                                     viewBox="0 0 300 300"
-                                                    style={{ background: 'transparent', 'border-bottom': 0 }}
+                                                    style={{ background: 'transparent', 'borderBottom': 0 }}
                                                     fill="#545659"
                                                     className={
                                                         classNames('background-transparent',
