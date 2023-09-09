@@ -7,6 +7,7 @@ import pubsub from 'pubsub-js';
 import React from 'react';
 import { connect } from 'react-redux';
 import * as THREE from 'three';
+import { humanReadableTime } from '../../../lib/time-utils';
 
 import {
     CONNECTION_TYPE_SERIAL,
@@ -762,6 +763,7 @@ class Visualizer extends React.PureComponent {
                 {gcodeFile !== null && (
                     <div className={styles['visualizer-info']}>
                         <p>{i18n._(gcodeFile?.renderGcodeFileName)}</p>
+                        <p>{humanReadableTime(gcodeFile?.estimated_time)}</p>
                     </div>
                 )}
                 <div className={styles['canvas-wrapper']}>
