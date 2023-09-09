@@ -149,7 +149,9 @@ const CaseLibrary = (props) => {
         });
 
         Promise.all([accessTest(), loadData()])
-            .then(([accessedWeb, isShow]) => { isMounted && setShowCaseResource(accessedWeb === AccessResourceWebState.PASS && isShow); })
+            .then(([accessedWeb, isShow]) => {
+                isMounted && setShowCaseResource(accessedWeb === AccessResourceWebState.PASS && isShow);
+            })
             .catch(err => log.error(err))
             .finally(() => { setIsLoading(false); });
         return () => {
@@ -183,9 +185,9 @@ const CaseLibrary = (props) => {
             {showCaseResource
                 && (
                     <div className={styles['resources-container']}>
-                        <div className={classNames(styles['title-label'], 'highlight-heading', 'margin-bottom-16')}>
+                        {/* <div className={classNames(styles['title-label'], 'highlight-heading', 'margin-bottom-16')}>
                             {i18n._('key-HomePage/CaseLibrary')}
-                        </div>
+                        </div> */}
                         <Spin spinning={isLoading}>
                             <div className={classNames(styles['case-list'], styles.smallList)}>
                                 {caseConfig.map((caseItem, index) => {
@@ -224,7 +226,7 @@ const CaseLibrary = (props) => {
                         </Spin>
                     </div>
                 )}
-            {!showCaseResource && <QuickStart history={props.history} />}
+            {!showCaseResource && <QuickStart history={props.history} noTitle />}
             {showQuickStartModal && renderQuickStartModal()}
         </>
     );

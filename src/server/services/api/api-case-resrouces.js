@@ -14,8 +14,9 @@ const addPrefix = (prefix) => {
         return request;
     };
 };
-agent.use(addPrefix('https://api.snapmaker.com'));
 
+const domain = 'https://api.snapmaker.com';
+agent.use(addPrefix(domain));
 
 export function getCaseList(req, res) {
     agent.get('/api/resource/sample/list/client')
@@ -26,6 +27,18 @@ export function getCaseList(req, res) {
             softWareId: 1,
             ...req.query
         })
+        .then((result) => {
+            res.status(200).send({
+                ...result.body
+            });
+        }).catch((err) => {
+            log.error('get case list err:', JSON.stringify(err));
+        });
+}
+
+export function getInformationFlowData(req, res) {
+    const { lang } = req.query;
+    agent.get(`/v1/luban-information-flow?lang=${lang}`)
         .then((result) => {
             res.status(200).send({
                 ...result.body
