@@ -704,6 +704,7 @@ const createSvgStr = (
         cloneImgElem.setAttribute('y', (transformedY - viewboxY).toString());
         cloneImgElem.setAttribute('width', (transformedWidth).toString());
         cloneImgElem.setAttribute('height', (transformedHeight).toString());
+        cloneImgElem.removeAttribute('filter');
 
         // because we will scale img for keeping img dimensions of pixel.
         // so we need to handle img rotate after img scaled.
