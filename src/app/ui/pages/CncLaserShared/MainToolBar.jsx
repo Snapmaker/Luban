@@ -253,7 +253,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             }
         },
         {
-            title: i18n._('key-CncLaser/MainToolBar-SVG Clipping'),
+            title: i18n._('key-CncLaser/MainToolBar-Vector Tool'),
             type: 'button',
             disabled: headType !== 'laser',
             name: 'ToolVector',
