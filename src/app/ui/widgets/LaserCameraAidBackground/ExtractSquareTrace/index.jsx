@@ -13,6 +13,7 @@ import {
 } from '../../../../constants/machines';
 import { actions as workspaceActions } from '../../../../flux/workspace';
 import i18n from '../../../../lib/i18n';
+import log from '../../../../lib/log';
 import { getCurrentHeadType } from '../../../../lib/url-utils';
 import {
     SnapmakerA150Machine,
@@ -127,7 +128,12 @@ class ExtractSquareTrace extends React.PureComponent {
             });
             this.props.changeCanTakePhoto(false);
             const { address } = this.props.server;
+
             const resPro = await api.getCameraCalibration({ 'address': address, 'toolHead': this.props.toolHead.laserToolhead });
+            if (!resPro.body.res) {
+                log.error('Unable to get calibration matrix');
+                return;
+            }
             const resData = JSON.parse(resPro.body.res.text);
 
             this.setState({
