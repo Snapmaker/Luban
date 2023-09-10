@@ -527,6 +527,7 @@ class Visualizer extends React.Component<VisualizerProps> {
                         target={this.props.target}
                         coordinateMode={this.props.coordinateMode}
                         coordinateSize={this.props.coordinateSize}
+                        workpiece={this.props.workpiece}
                         origin={this.props.origin}
                         updateTarget={this.props.updateTarget}
                         updateScale={this.props.updateScale}

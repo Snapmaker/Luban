@@ -1,10 +1,11 @@
-import request from 'superagent';
 import Jimp from 'jimp';
-import { pathWithRandomSuffix } from './random-utils';
-import DataStorage from '../DataStorage';
+import request from 'superagent';
+
 import { LEVEL_TWO_POWER_LASER_FOR_SM2 } from '../../app/constants/machines';
-import { connectionManager } from '../services/machine/ConnectionManager';
+import DataStorage from '../DataStorage';
+import { connectionManager, isUsingSACP } from '../services/machine/ConnectionManager';
 import logger from './logger';
+import { pathWithRandomSuffix } from './random-utils';
 // import { remapImage } from './image-stitch';
 
 const fs = require('fs');
@@ -17,7 +18,7 @@ const log = logger('lib:camera_capture');
 export const takePhoto = (options) => {
     const { address, index, x, y, z, feedRate, photoQuality } = options;
     log.info(`takePhoto: index=${index}, x=${x}, y=${y}, z=${z}, feedRate=${feedRate}, photoQuality=${photoQuality}`);
-    if (connectionManager.protocol === 'SACP') {
+    if (isUsingSACP()) {
         return new Promise((resolve) => {
             const params = {
                 index, x: x, y: y, z: z, feedRate
@@ -54,7 +55,7 @@ export const takePhoto = (options) => {
 export const getCameraCalibration = (options) => {
     const { address, toolHead } = options;
     log.info(`getCameraCalibration: toolHead=${toolHead}`);
-    if (connectionManager.protocol === 'SACP') {
+    if (isUsingSACP()) {
         return new Promise(resolve => {
             connectionManager.getCameraCalibration((matrix) => {
                 resolve({
@@ -74,9 +75,10 @@ export const getCameraCalibration = (options) => {
 
         return new Promise((resolve) => {
             request.get(api).end((err, res) => {
-                log.debug(`request_10w_laser_camera_calibration: ${res}`);
+                log.debug(`request_10w_laser_camera_calibration, API=${api}, res = ${res}`);
                 resolve({
-                    res
+                    err: !res,
+                    res,
                 });
             });
         });
@@ -87,7 +89,7 @@ export const getCameraCalibration = (options) => {
 export const getPhoto = (options) => {
     const { index, address } = options;
     log.info(`getPhoto: index=${index}`);
-    if (connectionManager.protocol === 'SACP') {
+    if (isUsingSACP()) {
         return new Promise(resolve => {
             connectionManager.getPhoto((res) => {
                 if (res.success) {
@@ -126,7 +128,7 @@ export const getPhoto = (options) => {
 export const calibrationPhoto = (options) => {
     const { address, toolHead } = options;
     log.info(`calibrationPhoto: toolHead=${toolHead}`);
-    if (connectionManager.protocol === 'SACP') {
+    if (isUsingSACP()) {
         return new Promise(resolve => {
             connectionManager.getCalibrationPhoto((res) => {
                 if (res.success) {
@@ -180,7 +182,7 @@ export const calibrationPhoto = (options) => {
 export const setMatrix = (options) => {
     const { matrix, address, toolHead } = options;
     log.info(`setMatrix: matrix=${matrix}, toolHead=${toolHead}`);
-    if (connectionManager.protocol === 'SACP') {
+    if (isUsingSACP()) {
         return new Promise(resolve => {
             connectionManager.setMatrix({
                 matrix: JSON.parse(matrix)

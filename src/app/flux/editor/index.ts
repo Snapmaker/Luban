@@ -2288,39 +2288,6 @@ export const actions = {
         );
     },
 
-    updateMaterials: (headType, newMaterials) => (dispatch, getState) => {
-        const { materials, modelGroup, toolPathGroup } = getState()[headType];
-        const allMaterials = {
-            ...materials,
-            ...newMaterials
-        };
-
-        if (allMaterials.isRotate) {
-            allMaterials.x = round(allMaterials.diameter * Math.PI, 2);
-            allMaterials.y = allMaterials.length;
-        } else {
-            // allMaterials.x = 0;
-            // allMaterials.y = 0;
-        }
-        modelGroup.setMaterials(allMaterials);
-
-        toolPathGroup.updateMaterials(allMaterials);
-        toolPathGroup.showSimulationObject(false);
-
-        dispatch(
-            baseActions.updateState(headType, {
-                materials: {
-                    ...allMaterials
-                },
-                showSimulation: false
-            })
-        );
-
-        if (materials.isRotate !== allMaterials.isRotate) {
-            dispatch(actions.processSelectedModel(headType));
-        }
-    },
-
     /**
      * Configure Workpiece.
      *

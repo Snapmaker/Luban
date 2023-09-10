@@ -119,6 +119,10 @@ class ConnectionManager {
 
     private socket;
 
+    public getProtocol(): NetworkProtocol | SerialPortProtocol {
+        return this.protocol;
+    }
+
     public onConnection = (socket: SocketServer) => {
         sstpHttpChannel.onConnection();
         this.scheduledTasksHandle = new ScheduledTasks(socket);
@@ -1350,8 +1354,22 @@ M3`;
 
 const connectionManager = new ConnectionManager();
 
+export function isUsingSACP(protocol: NetworkProtocol | SerialPortProtocol = null): boolean {
+    if (!protocol) {
+        protocol = connectionManager.getProtocol();
+    }
+    return includes(
+        [
+            NetworkProtocol.SacpOverTCP,
+            NetworkProtocol.SacpOverUDP,
+            SerialPortProtocol.SacpOverSerialPort
+        ],
+        protocol,
+    );
+}
+
 export {
-    connectionManager
+    connectionManager,
 };
 
 // export default connectionManager;

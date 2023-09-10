@@ -50,7 +50,6 @@ const StartProject: React.FC = () => {
         if (activeMachine?.identifier === SnapmakerRayMachine.identifier) {
             component = LaserWorkspaceRay;
         }
-        console.log('mah =', activeMachine?.identifier);
 
         return renderPopup({
             onClose,

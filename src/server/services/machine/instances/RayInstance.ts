@@ -105,6 +105,8 @@ class RayMachineInstance extends MachineInstance {
         await this.channel.stopHeartbeat();
 
         await (this.channel as PrintJobChannelInterface).unsubscribeGetPrintCurrentLineNumber();
+
+        log.info('Closing, cleanup done.');
     }
 }
 

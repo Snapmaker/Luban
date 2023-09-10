@@ -14,7 +14,7 @@ import { createSVGElement } from '../ui/SVGEditor/element-utils';
 interface Workpiece2dOptions {
     size: Vector2;
     coordinateMode;
-    coordinateSize;
+    coordinateSize?;
     materials: Materials;
     scale: number;
     getRoot: () => Element;
