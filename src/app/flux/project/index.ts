@@ -28,12 +28,13 @@ import { bubbleSortByAttribute } from '../../lib/numeric-utils';
 import UniApi from '../../lib/uni-api';
 import { UniformToolpathConfig } from '../../lib/uniform-toolpath-config';
 import { getCurrentHeadType } from '../../lib/url-utils';
-import ThreeModel from '../../models/ThreeModel';
 import { machineStore } from '../../store/local-storage';
 import { actions as editorActions } from '../editor';
 import { actions as printingActions } from '../printing';
 import { synchronizeMeshFile } from '../printing/actions-mesh';
 import { actions as workspaceActions } from '../workspace';
+
+import ThreeModel from '../../models/ThreeModel';
 
 /* eslint-disable-next-line import/no-cycle */
 import { actions as appGlobalActions } from '../app-global';
