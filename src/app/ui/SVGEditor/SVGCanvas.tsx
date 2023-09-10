@@ -80,6 +80,7 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
         size: PropTypes.object,
         coordinateMode: PropTypes.object.isRequired,
         coordinateSize: PropTypes.object.isRequired,
+        workpiece: PropTypes.object.isRequired,
         origin: PropTypes.object.isRequired,
 
         onCreateElement: PropTypes.func.isRequired,
@@ -210,7 +211,11 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
             || nextProps.coordinateSize.y !== this.props.coordinateSize.y
             || nextProps.origin !== this.props.origin) {
             const printableArea = this.printableArea;
-            printableArea.updateCoordinateMode(nextProps.origin, nextProps.coordinateMode, nextProps.coordinateSize);
+            printableArea.updateCoordinateMode(
+                nextProps.origin,
+                nextProps.coordinateMode,
+                nextProps.coordinateSize,
+            );
 
             // const { coordinateSize, coordinateMode } = this.props;
             const coorDelta = {
@@ -404,8 +409,10 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
     public setupWorkpiece() {
         const getRoot = () => this.svgBackground;
 
+        const size = this.props.workpiece.size;
+
         this.printableArea = new Workpiece2d({
-            size: this.props.coordinateSize,
+            size: size,
             scale: this.scale,
             getRoot,
             coordinateMode: this.props.coordinateMode,

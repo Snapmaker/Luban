@@ -6,7 +6,7 @@ import styles from './styles.styl';
 import { SVG_EVENT_CONTEXTMENU } from './constants';
 import SVGCanvas from './SVGCanvas';
 import SVGLeftBar from './SVGLeftBar';
-import { Materials } from '../../constants/coordinate';
+import { Materials, Workpiece } from '../../constants/coordinate';
 import { library } from './lib/ext-shapes';
 import Modal from '../components/Modal/tileModal';
 import SVGShapeLibrary from './SVGShapeLibrary';
@@ -31,6 +31,7 @@ type SVGEditorProps = {
     target: object;
     coordinateMode: object;
     coordinateSize: object;
+    workpiece: Workpiece;
     origin: object;
     editable: boolean;
 
@@ -368,6 +369,7 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
                             updateTarget={props.updateTarget}
                             coordinateMode={props.coordinateMode}
                             coordinateSize={props.coordinateSize}
+                            workpiece={props.workpiece}
                             origin={props.origin}
                             ref={canvas}
                             onCreateElement={props.onCreateElement}
@@ -424,6 +426,7 @@ SVGEditor.propTypes = {
     target: PropTypes.object,
     coordinateMode: PropTypes.object.isRequired,
     coordinateSize: PropTypes.object.isRequired,
+    workpiece: PropTypes.object.isRequired,
     origin: PropTypes.object.isRequired,
     editable: PropTypes.bool,
     menuDisabledCount: PropTypes.number,

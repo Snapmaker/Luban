@@ -1,13 +1,11 @@
-import request from 'superagent';
 import Jimp from 'jimp';
-import { includes } from 'lodash';
+import request from 'superagent';
 
-import { pathWithRandomSuffix } from './random-utils';
-import DataStorage from '../DataStorage';
 import { LEVEL_TWO_POWER_LASER_FOR_SM2 } from '../../app/constants/machines';
+import DataStorage from '../DataStorage';
 import { connectionManager, isUsingSACP } from '../services/machine/ConnectionManager';
 import logger from './logger';
-import { NetworkProtocol, SerialPortProtocol } from '../services/machine/ProtocolDetector';
+import { pathWithRandomSuffix } from './random-utils';
 // import { remapImage } from './image-stitch';
 
 const fs = require('fs');
