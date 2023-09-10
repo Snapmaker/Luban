@@ -790,7 +790,7 @@
     "Temperature & Cooling": "Temperature & Cooling",
     "The camera hasn't been calibrated yet. Please go through the Camera Calibration procedures on touchscreen first.": "摄像头尚未校准。请先在触控屏上进行摄像头校准。",
     "There are two types of origin mode.": "原点模式有两种。",
-    "There are two types of origin offset modes: cross light mode and low light mode. In most cases we recommend using the cross light mode, it is safer and easier to use. The laser point mode is only recommended when full-stroke machining is required.": "原点偏移模式有十字光模式和弱光模式两种。在大多数情况下，我们建议使用十字光模式，它会更加安全和易用。激光点模式仅建议在需要全行程加工时被使用。",
+    "There are two types of origin offset modes: crosshair mode and low light mode. In most cases we recommend using the crosshair mode, it is safer and easier to use. The laser point mode is only recommended when full-stroke machining is required.": "原点偏移模式有十字光模式和弱光模式两种。在大多数情况下，我们建议使用十字光模式，它会更加安全和易用。激光点模式仅建议在需要全行程加工时被使用。",
     "This point (X0, Y0) is the origin of the design coordinate system, and the origin to be positioned or set on the machine needs to coincide with this point.": "该点(X0,Y0)是设计坐标系的原点，在机器上定位或设置的原点需要和该点重合。",
     "Tool Limiting": "加工效果",
     "Tool Type": "刀具类型",

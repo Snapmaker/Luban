@@ -790,7 +790,7 @@
     "Temperature & Cooling": "温度 & 冷却",
     "The camera hasn't been calibrated yet. Please go through the Camera Calibration procedures on touchscreen first.": "カメラはまだ校正されていません。まずタッチスクリーンのカメラ校正に進んでください。",
     "There are two types of origin mode.": "",
-    "There are two types of origin offset modes: cross light mode and low light mode. In most cases we recommend using the cross light mode, it is safer and easier to use. The laser point mode is only recommended when full-stroke machining is required.": "",
+    "There are two types of origin offset modes: crosshair mode and low light mode. In most cases we recommend using the crosshair mode, it is safer and easier to use. The laser point mode is only recommended when full-stroke machining is required.": "",
     "This point (X0, Y0) is the origin of the design coordinate system, and the origin to be positioned or set on the machine needs to coincide with this point.": "",
     "Tool Limiting": "ツール制限",
     "Tool Type": "ツールタイプ",
