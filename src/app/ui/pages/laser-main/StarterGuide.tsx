@@ -60,7 +60,7 @@ const getSteps = (series: string, isRotate: boolean): StepItem[] => {
                 i18n._('In object origin mode, the origin is at the corners or center of the object.'),
                 i18n._('In workpiece origin mode, the origin is at the corners or center of the workpiece.'),
                 i18n._('This point (X0, Y0) is the origin of the design coordinate system, and the origin to be positioned or set on the machine needs to coincide with this point.'),
-                i18n._('There are two types of origin offset modes: cross light mode and low light mode. In most cases we recommend using the cross light mode, it is safer and easier to use. The laser point mode is only recommended when full-stroke machining is required.')
+                i18n._('There are two types of origin offset modes: crosshair mode and low light mode. In most cases we recommend using the crosshair mode, it is safer and easier to use. The laser point mode is only recommended when full-stroke machining is required.')
             ),
             title: `${i18n._('key-Laser/Page-Job Setup')} (1/8)`
         },
@@ -169,44 +169,64 @@ const getShowCaseProject = (machineIdentifier: string, toolHeadIdentifier: strin
                 break;
         }
     } else {
-        switch (machineIdentifier) {
-            case SnapmakerOriginalMachine.identifier:
-            case SnapmakerOriginalExtendedMachine.identifier:
+        switch (toolHeadIdentifier) {
+            case L20WLaserToolModule.identifier: {
                 pathConfig = {
-                    path: './UserCase/laser/original_200mw/laser_original_200mW.snaplzr',
-                    name: 'laser_original_200mW.snaplzr'
-                };
-                break;
-            case SnapmakerA150Machine.identifier:
-                pathConfig = {
-                    path: './UserCase/laser/a150_1600mw/laser_a150_1600mW.snaplzr',
-                    name: 'laser_a150_1600mW.snaplzr'
-                };
-                break;
-            case SnapmakerA250Machine.identifier:
-                pathConfig = {
-                    path: './UserCase/laser/a250_1600mw/laser_a250_1600mW.snaplzr',
-                    name: 'laser_a250_1600mW.snaplzr'
-                };
-                break;
-            case SnapmakerA350Machine.identifier:
-                pathConfig = {
-                    path: './UserCase/laser/a350_1600mw/laser_a350_1600mW.snaplzr',
-                    name: 'laser_a350_1600mW.snaplzr'
-                };
-                break;
-            case SnapmakerArtisanMachine.identifier:
-                pathConfig = {
-                    path: './UserCase/laser/a350_10w/wooden_ruler.snaplzr',
+                    path: './UserCase/laser/20w_laser_module/wooden_ruler.snaplzr',
                     name: 'wooden_ruler.snaplzr',
                 };
                 break;
-            default:
+            }
+            case L40WLaserToolModule.identifier: {
                 pathConfig = {
-                    path: './UserCase/laser/original_200mw/laser_original_200mW.snaplzr',
-                    name: 'laser_original_200mW.snaplzr'
+                    path: './UserCase/laser/40w_laser_module/wooden_ruler.snaplzr',
+                    name: 'wooden_ruler.snaplzr',
                 };
                 break;
+            }
+            default: {
+                switch (machineIdentifier) {
+                    case SnapmakerOriginalMachine.identifier:
+                    case SnapmakerOriginalExtendedMachine.identifier:
+                        pathConfig = {
+                            path: './UserCase/laser/original_200mw/laser_original_200mW.snaplzr',
+                            name: 'laser_original_200mW.snaplzr'
+                        };
+                        break;
+                    case SnapmakerA150Machine.identifier:
+                        pathConfig = {
+                            path: './UserCase/laser/a150_1600mw/laser_a150_1600mW.snaplzr',
+                            name: 'laser_a150_1600mW.snaplzr'
+                        };
+                        break;
+                    case SnapmakerA250Machine.identifier:
+                        pathConfig = {
+                            path: './UserCase/laser/a250_1600mw/laser_a250_1600mW.snaplzr',
+                            name: 'laser_a250_1600mW.snaplzr'
+                        };
+                        break;
+                    case SnapmakerA350Machine.identifier:
+                        pathConfig = {
+                            path: './UserCase/laser/a350_1600mw/laser_a350_1600mW.snaplzr',
+                            name: 'laser_a350_1600mW.snaplzr'
+                        };
+                        break;
+                    case SnapmakerArtisanMachine.identifier:
+                        pathConfig = {
+                            path: './UserCase/laser/a350_10w/wooden_ruler.snaplzr',
+                            name: 'wooden_ruler.snaplzr',
+                        };
+                        break;
+                    default:
+                        pathConfig = {
+                            path: './UserCase/laser/original_200mw/laser_original_200mW.snaplzr',
+                            name: 'laser_original_200mW.snaplzr'
+                        };
+                        break;
+                }
+
+                break;
+            }
         }
     }
 

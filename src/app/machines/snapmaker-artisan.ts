@@ -52,7 +52,8 @@ export const machine: Machine = {
                 workRange: {
                     min: [0, 0, 0],
                     max: [410, 410, 0], // Correct this later
-                }
+                },
+                disableRemoteStartPrint: true,
             },
             {
                 identifier: L40WLaserToolModule.identifier,
@@ -60,7 +61,8 @@ export const machine: Machine = {
                 workRange: {
                     min: [0, 0, 0],
                     max: [410, 410, 0], // Correct this later
-                }
+                },
+                disableRemoteStartPrint: true,
             },
             {
                 identifier: highPower200WCNCToolHead.identifier,

@@ -240,6 +240,7 @@ i18n._('key-default_name-Cutting 1.5mm');
 i18n._('key-default_name-Cutting 3mm');
 i18n._('key-default_name-Cutting 5mm');
 i18n._('key-default_name-Cutting 8mm');
+i18n._('key-default_name-Cutting 10mm');
 i18n._('key-default_name-Dot-filled Engraving');
 i18n._('key-default_name-Line-filled Engraving');
 i18n._('key-default_name-Vector Engraving');

@@ -2,6 +2,7 @@ import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { ResponseCallback } from '@snapmaker/snapmaker-sacp-sdk';
 import { readUint8 } from '@snapmaker/snapmaker-sacp-sdk/dist/helper';
 import dgram from 'dgram';
+import { includes } from 'lodash';
 
 import { WORKFLOW_STATUS_MAP } from '../../../../app/constants';
 import { SACP_TYPE_SERIES_MAP } from '../../../../app/constants/machines';
@@ -118,11 +119,13 @@ class SacpUdpChannel extends SacpChannelBase {
             const statusKey = readUint8(data.response.data, 0);
 
             const status = WORKFLOW_STATUS_MAP[statusKey];
-            if (status === WorkflowStatus.Running && this.machineStatus !== WorkflowStatus.Running) {
+            if (includes([WorkflowStatus.Running], status) && this.machineStatus !== WorkflowStatus.Running) {
                 // -> running
 
                 // clear previous print job info
                 this.resetPrintJobInfo();
+
+                this.getPrintJobFileInfo();
             }
 
             this.machineStatus = status;

@@ -304,7 +304,7 @@ class ConnectionManager {
         log.info(`Closing connection... ${this.channel.constructor.name}`);
 
         if (this.machineInstance) {
-            this.machineInstance.onClosing();
+            await this.machineInstance.onClosing();
         }
 
         const force = options?.force || false;
@@ -336,7 +336,7 @@ class ConnectionManager {
 
         // destroy machine instance
         if (this.machineInstance) {
-            this.machineInstance.onClosed();
+            await this.machineInstance.onClosed();
 
             this.machineInstance = null;
         }

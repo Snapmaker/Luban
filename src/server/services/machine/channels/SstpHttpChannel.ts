@@ -177,9 +177,11 @@ class SstpHttpChannel extends Channel implements
                     // wait for authentication
                     const { data } = result;
                     if (!data) {
+                        /*
                         this.socket && this.socket.emit(ChannelEvent.Connecting, {
                             requireAuth: true,
                         });
+                        */
                         resolve(false);
                         return;
                     }
@@ -301,7 +303,11 @@ class SstpHttpChannel extends Channel implements
             const { data, code } = _getResult(null, result.res);
 
             // No Content
+            // wait for authentication
             if (Object.keys(data).length === 0 || code === 204) {
+                this.emit(ChannelEvent.Connecting, {
+                    requireAuth: true,
+                });
                 return;
             }
 

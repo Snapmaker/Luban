@@ -852,14 +852,14 @@ class SacpChannelBase extends Channel implements
                 x: currentCoordinate[0].value,
                 y: currentCoordinate[1].value,
                 z: currentCoordinate[2].value,
-                b: currentCoordinate[4].value,
+                b: currentCoordinate[4]?.value,
                 isFourAxis: moduleStatusList.rotaryModule
             };
             const originOffset = {
                 x: originCoordinate[0].value,
                 y: originCoordinate[1].value,
-                z: originCoordinate[2].value,
-                b: originCoordinate[4].value
+                z: originCoordinate[2]?.value,
+                b: originCoordinate[4]?.value
             };
             const isHomed = !(coordinateInfos?.homed); // 0: homed, 1: need to home
             stateData = {

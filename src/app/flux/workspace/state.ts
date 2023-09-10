@@ -56,6 +56,7 @@ declare interface WorkspaceMachineDiscoverState {
     savedServerName: string;
     savedServerToken: string;
 }
+
 declare interface WorkspaceConnectionState {
     connectionType: string;
     connectionStatus: string;

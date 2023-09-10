@@ -1,4 +1,4 @@
-import { WorkflowStatus } from '@snapmaker/luban-platform';
+import { MachineToolHeadOptions, WorkflowStatus } from '@snapmaker/luban-platform';
 import { Spin } from 'antd';
 import classNames from 'classnames';
 import _ from 'lodash';
@@ -55,6 +55,7 @@ interface PreviewModalProps {
     onStartToSendFile: () => void;
     onStartToPrint: () => void;
     canSend: boolean;
+    canStartPrint: boolean;
 }
 
 const PreviewModal: React.FC<PreviewModalProps> = (props) => {
@@ -65,6 +66,7 @@ const PreviewModal: React.FC<PreviewModalProps> = (props) => {
         onStartToSendFile,
         onStartToPrint,
         canSend,
+        canStartPrint,
     } = props;
 
     const {
@@ -173,13 +175,17 @@ const PreviewModal: React.FC<PreviewModalProps> = (props) => {
                                             <div className="align-c">{i18n._('key-Workspace/WifiTransport-Sending File')}</div>
                                         </Menu.Item>
                                     )}
-                                    <Menu.Item onClick={() => {
-                                        onStartToPrint();
-                                        closeModal();
-                                    }}
-                                    >
-                                        <div className="align-c">{i18n._('key-Workspace/Transport-Luban control print')}</div>
-                                    </Menu.Item>
+                                    {
+                                        canStartPrint && (
+                                            <Menu.Item onClick={() => {
+                                                onStartToPrint();
+                                                closeModal();
+                                            }}
+                                            >
+                                                <div className="align-c">{i18n._('Start on Luban')}</div>
+                                            </Menu.Item>
+                                        )
+                                    }
                                 </Menu>
                             )}
                             trigger="click"
@@ -206,7 +212,7 @@ const PreviewModal: React.FC<PreviewModalProps> = (props) => {
                                 closeModal();
                             }}
                         >
-                            <div className="align-c">{i18n._('key-Workspace/Transport-Luban control print')}</div>
+                            <div className="align-c">{i18n._('Start on Luban')}</div>
                         </Button>
                     )
                 }
@@ -223,6 +229,8 @@ declare interface FileTransferViewProps {
 const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
     const { widgetActions, controlActions } = props;
     const dispatch = useDispatch();
+
+    const activeMachineToolOptions: MachineToolHeadOptions = useSelector((state: RootState) => state.workspace.activeMachineToolOptions);
 
     // connection state
     const {
@@ -548,10 +556,33 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
 
     const hasFile = gcodeFiles.length > 0;
     const selectedFile = _.find(gcodeFiles, { uploadName: selectFileName });
+
     const isWifi = connectionType === ConnectionType.WiFi;
     // TODO: what is isSendedOnWifi?
     const isSended = isWifi ? isSendedOnWifi : true;
-    const canPlay = selectedFile && hasFile && isConnected && isSended && _.includes([workflowStatus.Idle], workflowStatus);
+    const canPlay = (() => {
+        if (!hasFile || !selectedFile) {
+            return false;
+        }
+
+        if (activeMachineToolOptions) {
+            const disabled = activeMachineToolOptions.disableRemoteStartPrint || false;
+            if (disabled) {
+                return false;
+            }
+        }
+
+        if (!isConnected) {
+            return false;
+        }
+
+        if (!isSended) {
+            return false;
+        }
+
+        // workflow status
+        return _.includes([workflowStatus.Idle], workflowStatus);
+    })();
     const canSend = hasFile && isConnected && isWifi && isSendedOnWifi;
 
     const selectedGCodeFile = gcodeFiles[selectFileIndex >= 0 ? selectFileIndex : 0];
@@ -665,7 +696,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                         disabled={!canPlay}
                         onClick={actions.onStartToPrint}
                     >
-                        {i18n._('key-Workspace/Transport-Start Print')}
+                        {i18n._('Start on Luban')}
                     </Button>
                 </div>
             </div>
@@ -684,6 +715,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                         gcodeFile={selectedGCodeFile}
                         onStartToSendFile={onStartToSendFile}
                         onStartToPrint={actions.onStartToPrint}
+                        canStartPrint={canPlay}
                         canSend={canSend}
                     />
                 )
