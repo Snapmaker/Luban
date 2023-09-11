@@ -6,7 +6,7 @@ import styles from './styles.styl';
 import { SVG_EVENT_CONTEXTMENU } from './constants';
 import SVGCanvas from './SVGCanvas';
 import SVGLeftBar from './SVGLeftBar';
-import { Materials, Workpiece } from '../../constants/coordinate';
+import { Materials, Origin, Workpiece } from '../../constants/coordinate';
 import { library } from './lib/ext-shapes';
 import Modal from '../components/Modal/tileModal';
 import SVGShapeLibrary from './SVGShapeLibrary';
@@ -32,7 +32,7 @@ type SVGEditorProps = {
     coordinateMode: object;
     coordinateSize: object;
     workpiece: Workpiece;
-    origin: object;
+    origin: Origin;
     editable: boolean;
 
     headType: string;
