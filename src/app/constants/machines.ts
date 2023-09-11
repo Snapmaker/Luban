@@ -380,6 +380,9 @@ export function getMachineSeriesWithToolhead(series: string, toolhead: { [key: s
 
 export function getMachineToolOptions(machineIdentifier: string, toolIdentifier: string): MachineToolHeadOptions | null {
     const machine: Machine | null = findMachineByName(machineIdentifier);
+    if (!machine) {
+        return null;
+    }
 
     const toolHeadOptions = machine.metadata.toolHeads.find(toolHeadOption => toolHeadOption.identifier === toolIdentifier);
     if (!toolHeadOptions) {

@@ -46,7 +46,8 @@ export const machine: Machine = {
                 workRange: {
                     min: [0, 0, 0],
                     max: [167, 165, 150],
-                }
+                },
+                supportCameraCapture: true,
             },
             {
                 identifier: highPower10WLaserToolHead.identifier,
@@ -54,7 +55,8 @@ export const machine: Machine = {
                 workRange: {
                     min: [0, 0, 0],
                     max: [167, 165, 120], // TODO: check data
-                }
+                },
+                supportCameraCapture: true,
             },
             {
                 identifier: standardCNCToolHead.identifier,

@@ -1,46 +1,55 @@
-import { shallowEqual, useDispatch, useSelector } from 'react-redux';
-import PropTypes from 'prop-types';
-import React, { useState, useEffect, useRef } from 'react';
+import { Machine } from '@snapmaker/luban-platform';
+import { message } from 'antd';
 import i18next from 'i18next';
 import { includes } from 'lodash';
-import { message } from 'antd';
-import Menu from '../../components/Menu';
-import SvgIcon from '../../components/SvgIcon';
-import i18n from '../../../lib/i18n';
-import { actions as projectActions } from '../../../flux/project';
-import { actions as editorActions } from '../../../flux/editor';
-import Dropdown from '../../components/Dropdown';
-import Cnc3DVisualizer from '../../views/Cnc3DVisualizer';
-import MainToolBar from '../../layouts/MainToolBar';
+import PropTypes from 'prop-types';
+import React, { useEffect, useState } from 'react';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+
 import { HEAD_CNC, HEAD_LASER, PROCESS_MODE_GREYSCALE, PROCESS_MODE_VECTOR, longLangWithType } from '../../../constants';
-import { MACHINE_SERIES } from '../../../constants/machines';
+import { getMachineToolOptions } from '../../../constants/machines';
+import { actions as editorActions } from '../../../flux/editor';
+import { RootState } from '../../../flux/index.def';
 import { actions as laserActions } from '../../../flux/laser';
-import { renderModal } from '../../utils';
-import LaserSetBackground from '../../widgets/LaserSetBackground';
-import LaserCameraAndBackground from '../../widgets/LaserCameraAidBackground';
-import ModalSmall from '../../components/Modal/ModalSmall';
-import SelectCaptureMode, { MODE_THICKNESS_COMPENSATION } from '../../widgets/LaserCameraAidBackground/SelectCaptureMode';
-import MaterialThicknessInput from '../../widgets/LaserCameraAidBackground/MaterialThicknessInput';
+import { actions as projectActions } from '../../../flux/project';
 import { ConnectionType } from '../../../flux/workspace/state';
+import i18n from '../../../lib/i18n';
+import { SnapmakerOriginalExtendedMachine, SnapmakerOriginalMachine } from '../../../machines';
 import { calculateElemsBoundingbox, handleClipPath, handleMask } from '../../SVGEditor/lib/ImageSvgCompose';
+import Dropdown from '../../components/Dropdown';
+import Menu from '../../components/Menu';
+import ModalSmall from '../../components/Modal/ModalSmall';
+import SvgIcon from '../../components/SvgIcon';
+import MainToolBar from '../../layouts/MainToolBar';
+import { renderModal } from '../../utils';
+import Cnc3DVisualizer from '../../views/Cnc3DVisualizer';
+import LaserCameraAndBackground from '../../widgets/LaserCameraAidBackground';
+import MaterialThicknessInput from '../../widgets/LaserCameraAidBackground/MaterialThicknessInput';
+import SelectCaptureMode, { MODE_THICKNESS_COMPENSATION } from '../../widgets/LaserCameraAidBackground/SelectCaptureMode';
+import LaserSetBackground from '../../widgets/LaserSetBackground';
 
 function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setShowWorkspace, onChangeSVGClippingMode }) {
-    const size = useSelector(state => state?.machine?.size);
-    const unSaved = useSelector(state => state?.project[headType]?.unSaved, shallowEqual);
-    const canRedo = useSelector(state => state[headType]?.history?.canRedo, shallowEqual);
-    const canUndo = useSelector(state => state[headType]?.history?.canUndo, shallowEqual);
+    const size = useSelector((state: RootState) => state.machine?.size);
+    const unSaved = useSelector((state: RootState) => state.project[headType]?.unSaved, shallowEqual);
     const isRotate = useSelector(state => state[headType]?.materials?.isRotate, shallowEqual);
     const modelGroup = useSelector(state => state[headType]?.modelGroup, shallowEqual);
 
+    const canRedo = useSelector(state => state[headType]?.history?.canRedo, shallowEqual);
+    const canUndo = useSelector(state => state[headType]?.history?.canUndo, shallowEqual);
+
+    // Machine
     const machineSeries = useSelector(state => state?.machine?.series);
     const machineToolHead = useSelector(state => state?.machine?.toolHead);
 
+    const activeMachine: Machine = useSelector((state: RootState) => state.machine.activeMachine);
+
+    // Workspace
     const {
         machineIdentifier: connectedMachineIdentifier,
         headType: workspaceHeadType,
         toolHead: workspaceToolHead,
         isRotate: workspaceIsRotate,
-    } = useSelector(state => state.workspace);
+    } = useSelector((state: RootState) => state.workspace);
 
     const dispatch = useDispatch();
 
@@ -51,12 +60,10 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
 
     // Laser
     const { connectionType, isConnected } = useSelector(state => state.workspace, shallowEqual);
-    const series = useSelector(state => state?.machine?.series, shallowEqual);
     const LaserSelectedModelArray = useSelector(state => state[HEAD_LASER]?.modelGroup?.selectedModelArray);
     const models = useSelector(state => state[headType]?.modelGroup?.models);
     const [currentAdjustedTargetModel, setCurrentAdjustedTargetModel] = useState(null);
     const SVGActions = useSelector(state => state[headType]?.SVGActions);
-
 
 
     const [cameraCaptureInfo, setCameraCaptureInfo] = useState({
@@ -73,7 +80,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             materialThickness: null
         });
     };
-    const isOriginalSeries = (series === MACHINE_SERIES.ORIGINAL?.value || series === MACHINE_SERIES.ORIGINAL_LZ?.value);
+    const isOriginalSeries = includes([SnapmakerOriginalMachine.identifier, SnapmakerOriginalExtendedMachine.identifier], activeMachine?.identifier);
 
     // set result image position and size
     const onChangeLogicalX = (newLogicalX) => {
@@ -117,105 +124,21 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         return model.sourceType === 'image3d';
     });
 
-    const [showStlModal, setShowStlModal] = useState(true);
     useEffect(() => {
         setMachineInfo({
-            series: machineSeries,
+            series: activeMachine?.identifier,
             toolHead: machineToolHead[`${headType}Toolhead`]
         });
-    }, [machineSeries, machineToolHead, headType]);
+    }, [activeMachine, machineToolHead, headType]);
+
+    const [showStlModal, setShowStlModal] = useState(true);
     function handleHideStlModal() {
         setShowStlModal(false);
     }
     function handleShowStlModal() {
         setShowStlModal(true);
     }
-    let menu;
-    if (headType === HEAD_CNC) {
-        menu = (
-            <Menu>
-                <Menu.Item
-                    onClick={handleShowStlModal}
-                    disabled={showStlModal}
-                >
-                    <div className="align-l width-168">
-                        <SvgIcon
-                            type={['static']}
-                            disabled={showStlModal}
-                            name="MainToolbarAddBackground"
-                        />
-                        <span
-                            className="margin-left-4 height-24 display-inline"
-                        >
-                            {i18n._('key-CncLaser/MainToolBar-Enable STL 3D View')}
-                        </span>
 
-                    </div>
-                </Menu.Item>
-                <Menu.Item
-                    onClick={handleHideStlModal}
-                    disabled={!showStlModal}
-                >
-                    <div className="align-l width-168">
-                        <SvgIcon
-                            type={['static']}
-                            disabled={!showStlModal}
-                            name="MainToolbarRemoverBackground"
-                        />
-                        <span
-                            className="margin-left-4 height-24 display-inline"
-                        >
-                            {i18n._('key-CncLaser/MainToolBar-Disable STL 3D View')}
-                        </span>
-                    </div>
-                </Menu.Item>
-            </Menu>
-        );
-    } else if (headType === HEAD_LASER) {
-        const cameraCaptureEnabled = (() => {
-            if (isOriginalSeries) {
-                return false;
-            }
-
-            return isConnected && connectionType === ConnectionType.WiFi;
-        })();
-        menu = (
-            <Menu>
-                <Menu.Item
-                    onClick={() => setShowCameraCapture(true)}
-                    disabled={!cameraCaptureEnabled}
-                >
-                    <div className="align-l width-168">
-                        <SvgIcon
-                            type={['static']}
-                            disabled={!cameraCaptureEnabled}
-                            name="MainToolbarAddBackground"
-                        />
-                        <span
-                            className="margin-left-4 height-24 display-inline"
-                        >
-                            {i18n._('key-CncLaser/MainToolBar-Add Background')}
-                        </span>
-                    </div>
-                </Menu.Item>
-                <Menu.Item
-                    onClick={() => dispatch(laserActions.removeBackgroundImage())}
-                >
-                    <div className="align-l width-168">
-                        <SvgIcon
-                            type={['static']}
-                            name="MainToolbarRemoverBackground"
-                        />
-                        <span
-                            className="margin-left-4 height-24 display-inline"
-                        >
-                            {i18n._('key-CncLaser/MainToolBar-Remove Background')}
-                        </span>
-                    </div>
-                </Menu.Item>
-            </Menu>
-        );
-    }
     const leftItems = [
         {
             title: i18n._('key-CncLaser/MainToolBar-Home'),
@@ -293,6 +216,14 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                 dispatch(editorActions.sendSelectedModelToBack(headType));
             }
         },
+
+    ];
+
+    // operation tools
+    leftItems.push(
+        {
+            type: 'separator',
+        },
         {
             title: i18n._('key-CncLaser/MainToolBar-Vector Tool'),
             type: 'button',
@@ -301,58 +232,57 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             action: () => {
                 dispatch(onChangeSVGClippingMode);
             }
-        }
-    ];
-    if (headType === HEAD_CNC) {
-        leftItems.push(
-            {
-                type: 'separator'
-            },
-            {
-                type: 'render',
-                customRender: function () {
-                    return (
-                        <Dropdown
-                            className="display-inline align-c padding-horizontal-2 height-50"
-                            overlay={menu}
-                        >
-                            <div
-                                className="display-inline font-size-0 v-align-t hover-normal-grey-2 border-radius-4 padding-top-4"
-                            >
-                                <SvgIcon
-                                    name="MainToolbarStl3dView"
-                                    type={['static']}
-                                >
-                                    <div className={`${includes(longLangWithType[i18next.language], headType) ? 'font-size-small' : 'font-size-base'} "color-black-3 height-16"`}>
-                                        {i18n._('key-CncLaser/MainToolBar-STL 3D View')}
-                                        <SvgIcon
-                                            type={['static']}
-                                            name="DropdownOpen"
-                                            size={20}
-                                        />
-                                    </div>
-                                </SvgIcon>
-                            </div>
-                        </Dropdown>
-                    );
-                }
-            },
-            {
-                title: i18n._('key-3DP/MainToolBar-Model repair'),
-                disabled: !selectedAllStl,
-                type: 'button',
-                name: 'MainToolbarFixModel',
-                action: () => {
-                    dispatch(editorActions.repairSelectedModels(headType));
-                }
-            }
-        );
-    }
+        },
+    );
+
+    // Laser specific tools
     if (headType === HEAD_LASER && !isRotate) {
+        const cameraCaptureEnabled = (() => {
+            if (isOriginalSeries) {
+                return false;
+            }
+
+            return isConnected && connectionType === ConnectionType.WiFi;
+        })();
+
+        const cameraCaptureMenu = (
+            <Menu>
+                <Menu.Item
+                    onClick={() => setShowCameraCapture(true)}
+                    disabled={!cameraCaptureEnabled}
+                >
+                    <div className="align-l width-168">
+                        <SvgIcon
+                            type={['static']}
+                            disabled={!cameraCaptureEnabled}
+                            name="MainToolbarAddBackground"
+                        />
+                        <span
+                            className="margin-left-4 height-24 display-inline"
+                        >
+                            {i18n._('key-CncLaser/MainToolBar-Add Background')}
+                        </span>
+                    </div>
+                </Menu.Item>
+                <Menu.Item
+                    onClick={() => dispatch(laserActions.removeBackgroundImage())}
+                >
+                    <div className="align-l width-168">
+                        <SvgIcon
+                            type={['static']}
+                            name="MainToolbarRemoverBackground"
+                        />
+                        <span
+                            className="margin-left-4 height-24 display-inline"
+                        >
+                            {i18n._('key-CncLaser/MainToolBar-Remove Background')}
+                        </span>
+                    </div>
+                </Menu.Item>
+            </Menu>
+        );
+
         leftItems.push(
-            {
-                type: 'separator'
-            },
             {
                 title: i18n._('key-CncLaser/MainToolBar-Mask'),
                 type: 'button',
@@ -404,14 +334,25 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             {
                 type: 'separator'
             },
+        );
+
+        // Camera Capture
+        leftItems.push(
             {
                 // MainToolbarCameraCapture
                 type: 'render',
-                customRender: function () {
+                customRender: () => {
+                    const toolIdentifer = machineToolHead.laserToolhead;
+                    const machineToolOptions = getMachineToolOptions(activeMachine?.identifier, toolIdentifer);
+                    if (!machineToolOptions?.supportCameraCapture) {
+                        console.log('unspported operation');
+
+                        return null;
+                    }
                     return (
                         <Dropdown
                             className="display-inline align-c padding-horizontal-2 height-50"
-                            overlay={menu}
+                            overlay={cameraCaptureMenu}
                         >
                             <div
                                 className="display-inline font-size-0 v-align-t hover-normal-grey-2 border-radius-4 padding-top-4"
@@ -433,8 +374,10 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                         </Dropdown>
                     );
                 }
-            }
+            },
         );
+
+        // Add shape repository
         leftItems.splice(2, 0,
             {
                 title: i18n._('key-CncLaser/MainToolBar-ShapeRepository'),
@@ -446,7 +389,92 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             },);
     }
 
-    const materialThickness = useRef(null);
+    // CNC specific tools
+    if (headType === HEAD_CNC) {
+        const showStlMenu = (
+            <Menu>
+                <Menu.Item
+                    onClick={handleShowStlModal}
+                    disabled={showStlModal}
+                >
+                    <div className="align-l width-168">
+                        <SvgIcon
+                            type={['static']}
+                            disabled={showStlModal}
+                            name="MainToolbarAddBackground"
+                        />
+                        <span
+                            className="margin-left-4 height-24 display-inline"
+                        >
+                            {i18n._('key-CncLaser/MainToolBar-Enable STL 3D View')}
+                        </span>
+
+                    </div>
+                </Menu.Item>
+                <Menu.Item
+                    onClick={handleHideStlModal}
+                    disabled={!showStlModal}
+                >
+                    <div className="align-l width-168">
+                        <SvgIcon
+                            type={['static']}
+                            disabled={!showStlModal}
+                            name="MainToolbarRemoverBackground"
+                        />
+                        <span
+                            className="margin-left-4 height-24 display-inline"
+                        >
+                            {i18n._('key-CncLaser/MainToolBar-Disable STL 3D View')}
+                        </span>
+                    </div>
+                </Menu.Item>
+            </Menu>
+        );
+
+        leftItems.push(
+            {
+                title: i18n._('key-3DP/MainToolBar-Model repair'),
+                disabled: !selectedAllStl,
+                type: 'button',
+                name: 'MainToolbarFixModel',
+                action: () => {
+                    dispatch(editorActions.repairSelectedModels(headType));
+                }
+            },
+            {
+                type: 'render',
+                customRender: () => {
+                    return (
+                        <Dropdown
+                            className="display-inline align-c padding-horizontal-2 height-50"
+                            overlay={showStlMenu}
+                        >
+                            <div
+                                className="display-inline font-size-0 v-align-t hover-normal-grey-2 border-radius-4 padding-top-4"
+                            >
+                                <SvgIcon
+                                    name="MainToolbarStl3dView"
+                                    type={['static']}
+                                >
+                                    <div className={`${includes(longLangWithType[i18next.language], headType) ? 'font-size-small' : 'font-size-base'} "color-black-3 height-16"`}>
+                                        {i18n._('key-CncLaser/MainToolBar-STL 3D View')}
+                                        <SvgIcon
+                                            type={['static']}
+                                            name="DropdownOpen"
+                                            size={20}
+                                        />
+                                    </div>
+                                </SvgIcon>
+                            </div>
+                        </Dropdown>
+                    );
+                }
+            },
+        );
+    }
+
+
+    const materialThickness = React.useRef(null);
     const setBackgroundModal = cameraCaptureInfo.display && (() => {
         const modalConfig = {
             title: '',
@@ -454,19 +482,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             actions: []
         };
         const content = (() => {
-            if (!isOriginalSeries && (connectedMachineIdentifier !== machineSeries || workspaceHeadType !== HEAD_LASER
-                || machineToolHead.laserToolhead !== workspaceToolHead || workspaceIsRotate)) {
-                // todo, ui
-                return (
-                    <ModalSmall
-                        title={i18n._('key-Laser/CameraCapture-diff_setting_error')}
-                        text={i18n._('key-Laser/CameraCapture-diff_setting_error_info')}
-                        img="WarningTipsWarning"
-                        iconColor="#FFA940"
-                        onClose={() => { setShowCameraCapture(false); }}
-                    />
-                );
-            }
+            // Original only support select background manually
             if (isOriginalSeries) {
                 return (
                     <div>
@@ -476,6 +492,22 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                             }}
                         />
                     </div>
+                );
+            }
+
+            // If selected machine and tool, not matching the machine connected
+            if ((connectedMachineIdentifier !== machineSeries
+                || workspaceHeadType !== HEAD_LASER
+                || machineToolHead.laserToolhead !== workspaceToolHead
+                || workspaceIsRotate)) {
+                return (
+                    <ModalSmall
+                        title={i18n._('key-Laser/CameraCapture-diff_setting_error')}
+                        text={i18n._('key-Laser/CameraCapture-diff_setting_error_info')}
+                        img="WarningTipsWarning"
+                        iconColor="#FFA940"
+                        onClose={() => { setShowCameraCapture(false); }}
+                    />
                 );
             }
 
