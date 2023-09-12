@@ -19,10 +19,13 @@ declare type ButtonProps = {
 
     minWidth?: string;
 
+    loading?: boolean | {
+        delay?: number;
+    };
+
     innerClassNames?: string; // class provide to antd
 
     children?: React.ReactNode;
-
 } & AntdButtonProps;
 
 const Button: React.FC<ButtonProps> = React.memo((props) => {
@@ -47,7 +50,14 @@ const Button: React.FC<ButtonProps> = React.memo((props) => {
                 )}
             >
                 <div className={classNames('position-re', styles['inside-button'])}>
-                    <div className={classNames(!!suffixIcon && styles['width-with-suffix-icon'], 'width-percent-100', 'text-overflow-ellipsis')}>{props.children}</div>
+                    <div
+                        className={classNames(
+                            !!suffixIcon && styles['width-with-suffix-icon'],
+                            'width-percent-100', 'text-overflow-ellipsis'
+                        )}
+                    >
+                        {props.children}
+                    </div>
                     {
                         !!suffixIcon && (priority === 'level-one' || priority === 'level-two') && (
                             <div className={classNames(styles['suffix-container'], 'position-absolute')}>
