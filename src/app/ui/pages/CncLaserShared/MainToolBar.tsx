@@ -345,8 +345,6 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                     const toolIdentifer = machineToolHead.laserToolhead;
                     const machineToolOptions = getMachineToolOptions(activeMachine?.identifier, toolIdentifer);
                     if (!machineToolOptions?.supportCameraCapture) {
-                        console.log('unspported operation');
-
                         return null;
                     }
                     return (

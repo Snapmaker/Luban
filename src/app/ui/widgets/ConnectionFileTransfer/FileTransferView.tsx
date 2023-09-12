@@ -1,7 +1,7 @@
 import { MachineToolHeadOptions, WorkflowStatus } from '@snapmaker/luban-platform';
 import { Spin } from 'antd';
 import classNames from 'classnames';
-import _ from 'lodash';
+import _, { includes } from 'lodash';
 // import { Trans } from 'react-i18next';
 import path from 'path';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -11,8 +11,6 @@ import * as THREE from 'three';
 import ControllerEvent from '../../../connection/controller-events';
 import {
     AUTO_MDOE,
-    CONNECTION_TYPE_SERIAL,
-    CONNECTION_TYPE_WIFI,
     HEAD_CNC,
     HEAD_LASER,
     HEAD_PRINTING,
@@ -148,7 +146,7 @@ const PreviewModal: React.FC<PreviewModalProps> = (props) => {
                     {i18n._('key-unused-Cancel')}
                 </Button>
                 {
-                    isConnected && (workflowStatus !== WorkflowStatus.Idle && connectionType === CONNECTION_TYPE_WIFI) && (
+                    connectionType === ConnectionType.WiFi && isConnected && workflowStatus !== WorkflowStatus.Idle && (
                         <Button
                             priority="level-two"
                             type="primary"
@@ -160,21 +158,23 @@ const PreviewModal: React.FC<PreviewModalProps> = (props) => {
                     )
                 }
                 {
-                    isConnected && (workflowStatus === WorkflowStatus.Idle && connectionType === CONNECTION_TYPE_WIFI) && (
+                    connectionType === ConnectionType.WiFi && isConnected && workflowStatus === WorkflowStatus.Idle && (
                         <Dropdown
                             className="display-inline"
                             overlay={() => (
                                 <Menu>
-                                    {canSend && (
-                                        <Menu.Item
-                                            onClick={() => {
-                                                onStartToSendFile();
-                                                closeModal();
-                                            }}
-                                        >
-                                            <div className="align-c">{i18n._('key-Workspace/WifiTransport-Sending File')}</div>
-                                        </Menu.Item>
-                                    )}
+                                    {
+                                        canSend && (
+                                            <Menu.Item
+                                                onClick={() => {
+                                                    onStartToSendFile();
+                                                    closeModal();
+                                                }}
+                                            >
+                                                <div className="align-c">{i18n._('key-Workspace/WifiTransport-Sending File')}</div>
+                                            </Menu.Item>
+                                        )
+                                    }
                                     {
                                         canStartPrint && (
                                             <Menu.Item onClick={() => {
@@ -202,7 +202,7 @@ const PreviewModal: React.FC<PreviewModalProps> = (props) => {
                     )
                 }
                 {
-                    isConnected && (workflowStatus === WorkflowStatus.Idle && connectionType === CONNECTION_TYPE_SERIAL) && (
+                    connectionType === ConnectionType.Serial && isConnected && workflowStatus === WorkflowStatus.Idle && (
                         <Button
                             priority="level-two"
                             type="primary"
@@ -234,10 +234,13 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
 
     // connection state
     const {
-        connectionType,
         isConnected,
         isSendedOnWifi,
     } = useSelector((state: RootState) => state.workspace, shallowEqual);
+
+    const connectionType: ConnectionType = useSelector((state: RootState) => state.workspace.connectionType);
+    const isNetworkConnected = connectionType === ConnectionType.WiFi;
+    const isSerialPortConnected = connectionType === ConnectionType.Serial;
 
     const {
         headType,
@@ -557,10 +560,10 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
     const hasFile = gcodeFiles.length > 0;
     const selectedFile = _.find(gcodeFiles, { uploadName: selectFileName });
 
-    const isWifi = connectionType === ConnectionType.WiFi;
     // TODO: what is isSendedOnWifi?
-    const isSended = isWifi ? isSendedOnWifi : true;
-    const canPlay = (() => {
+    const isSended = isNetworkConnected ? isSendedOnWifi : true;
+
+    const canStartPrint = useMemo(() => {
         if (!hasFile || !selectedFile) {
             return false;
         }
@@ -581,9 +584,10 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
         }
 
         // workflow status
-        return _.includes([workflowStatus.Idle], workflowStatus);
-    })();
-    const canSend = hasFile && isConnected && isWifi && isSendedOnWifi;
+        return includes([WorkflowStatus.Idle], workflowStatus);
+    }, [hasFile, selectedFile, isConnected, activeMachineToolOptions, isSended, workflowStatus]);
+
+    const canSend = hasFile && isConnected && isNetworkConnected && isSendedOnWifi;
 
     const selectedGCodeFile = gcodeFiles[selectFileIndex >= 0 ? selectFileIndex : 0];
 
@@ -693,7 +697,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                         type="primary"
                         priority="level-two"
                         width="144px"
-                        disabled={!canPlay}
+                        disabled={!canStartPrint}
                         onClick={actions.onStartToPrint}
                     >
                         {i18n._('Start on Luban')}
@@ -704,7 +708,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                 showStartModal={showStartModal}
                 isHeightPower={toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2}
                 isRotate={isRotate}
-                isSerialConnect={connectionType && connectionType === CONNECTION_TYPE_SERIAL}
+                isSerialConnect={isSerialPortConnected}
                 onClose={() => setShowStartModal(false)}
                 onConfirm={async (type) => onConfirm(type)}
             />
@@ -715,7 +719,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                         gcodeFile={selectedGCodeFile}
                         onStartToSendFile={onStartToSendFile}
                         onStartToPrint={actions.onStartToPrint}
-                        canStartPrint={canPlay}
+                        canStartPrint={canStartPrint}
                         canSend={canSend}
                     />
                 )
