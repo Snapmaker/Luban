@@ -5,10 +5,6 @@
  * @param {number} min - Minimum value
  * @param {number} max - Maximum value
  */
-const ensureRange = (value, min, max) => {
+export const ensureRange = (value: number, min: number, max: number): number => {
     return Math.max(min, Math.min(max, value));
-};
-
-export {
-    ensureRange
 };

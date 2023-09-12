@@ -16,6 +16,7 @@ import ConfigValueBox from './ConfigValueBox';
 import styles from './styles.styl';
 import { MaterialWithColor } from '../../widgets/PrintingMaterial/MaterialWithColor';
 import useSetState from '../../../lib/hooks/set-state';
+import { naturalSortKeys } from '../../../lib/numeric-utils';
 
 /**
  * Do category fields in different types of profiles have values, and multilingual support
@@ -47,6 +48,22 @@ function creatCateArray(optionList) {
             cates.push(eachCate);
         }
     });
+
+    // Sort items in category
+    for (const cate of cates) {
+        cate.items.sort((a, b) => {
+            const aKeys = naturalSortKeys(a.label);
+            const bKeys = naturalSortKeys(b.label);
+
+            for (let i = 0; i < aKeys.length; i++) {
+                if (aKeys[i] < bKeys[i]) return -1;
+                if (aKeys[i] > bKeys[i]) return 1;
+            }
+
+            return 0;
+        });
+    }
+
     return cates;
 }
 

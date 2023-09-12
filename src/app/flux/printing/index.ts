@@ -1,6 +1,7 @@
 import {
     applyParameterModifications,
     computeAdjacentFaces,
+    Machine,
     PrintMode,
     resolveParameterValues,
 } from '@snapmaker/luban-platform';
@@ -86,7 +87,7 @@ import { actions as appGlobalActions } from '../app-global';
 import { actions as operationHistoryActions } from '../operation-history';
 // eslint-disable-next-line import/no-cycle
 import SimplifyModelOperation from '../../scene/operations/SimplifyModelOperation';
-import { SnapmakerOriginalExtendedMachine, SnapmakerOriginalMachine } from '../../machines';
+import { SnapmakerArtisanMachine, SnapmakerOriginalExtendedMachine, SnapmakerOriginalMachine } from '../../machines';
 
 
 let initEventFlag = false;
@@ -714,8 +715,8 @@ export const actions = {
     updateBoundingBox: () => (dispatch, getState) => {
         const modules = getState().machine.modules as string[];
 
+        const modelGroup: ModelGroup = getState().printing.modelGroup;
         const {
-            modelGroup,
             printMode,
             qualityDefinitions,
             extruderLDefinition,
@@ -731,7 +732,8 @@ export const actions = {
             definitionId: activePresetIds[LEFT_EXTRUDER]
         }); // what if it doesn't exist?
 
-        const { size, activeMachine } = getState().machine;
+        const activeMachine: Machine = getState().machine.activeMachine;
+        const { size } = getState().machine;
 
         const printModes = activeMachine.metadata?.printModes || [];
 
@@ -810,6 +812,35 @@ export const actions = {
                 break;
         }
 
+        // Hard-coded logic for Artisan (work range optimization)
+        if (activeMachine && activeMachine.identifier === SnapmakerArtisanMachine.identifier) {
+            // Check only single extruder used
+            const checkLeftExtruder = (extruderNumber: string) => {
+                return extruderNumber === LEFT_EXTRUDER_MAP_NUMBER;
+            };
+
+            const models = modelGroup.getModels<ThreeModel>();
+            let useOnlyLeftExtruder = true;
+            for (const model of models) {
+                if (model.isColored) {
+                    useOnlyLeftExtruder = false;
+                    break;
+                }
+
+                if (!checkLeftExtruder(model.extruderConfig.infill)
+                    || !checkLeftExtruder(model.extruderConfig.shell)) {
+                    useOnlyLeftExtruder = false;
+                    break;
+                }
+            }
+
+            if (useOnlyLeftExtruder) {
+                // If use only left extruder, then right most 25 mm is unreachable
+                workRange.max.x -= 25;
+            }
+        }
+
+        // calculate bounding box
         const sceneZero = new Vector3(-size.x / 2, -size.y / 2, 0);
         const boundingBox = new Box3(
             new Vector3(
@@ -823,9 +854,12 @@ export const actions = {
                 sceneZero.z + workRange.max.z + EPSILON,
             ),
         );
+
+        // Update bounding box
         const modelState = modelGroup.updateBoundingBox(boundingBox);
         dispatch(actions.updateState(modelState));
 
+        // Update stop area
         const newStopArea = {
             left: boundingBox.min.x - sceneZero.x,
             right: size.x / 2 - boundingBox.max.x,
