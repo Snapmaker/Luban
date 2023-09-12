@@ -35,6 +35,8 @@ export declare type MachineToolHeadOptions = {
 
     goHomeOnConnection?: boolean;
 
+    supportCameraCapture?: boolean;
+
     // Allow start print remotely, defaults to false
     disableRemoteStartPrint?: boolean;
 };

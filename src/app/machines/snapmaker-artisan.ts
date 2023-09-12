@@ -44,7 +44,8 @@ export const machine: Machine = {
                 workRange: {
                     min: [0, 0, 0],
                     max: [410, 410, 420],
-                }
+                },
+                supportCameraCapture: true,
             },
             {
                 identifier: L20WLaserToolModule.identifier,

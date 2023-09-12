@@ -1,42 +1,42 @@
-import noop from 'lodash/noop';
+import classNames from 'classnames';
 import isEqual from 'lodash/isEqual';
+import noop from 'lodash/noop';
+import PropTypes from 'prop-types';
 import React from 'react';
-import * as THREE from 'three';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
-import PropTypes from 'prop-types';
-import classNames from 'classnames';
+import * as THREE from 'three';
 
 import path from 'path';
-import i18n from '../../../lib/i18n';
-import { controller } from '../../../lib/controller';
-import { humanReadableTime } from '../../../lib/time-utils';
-import { getUploadModeByFilename } from '../../../lib/units';
-import ProgressBar from '../../components/ProgressBar';
-import ContextMenu from '../../components/ContextMenu';
-import Space from '../../components/Space';
-import Modal from '../../components/Modal';
-import { Button } from '../../components/Buttons';
-import Canvas from '../../components/SMCanvas';
-import PrintablePlate from '../CncLaserShared/PrintablePlate';
-import VisualizerBottomLeft from '../CncLaserShared/VisualizerBottomLeft';
-import { actions as machineActions } from '../../../flux/machine';
-import { actions as editorActions } from '../../../flux/editor';
-import styles from './styles.styl';
-import VisualizerTopRight from '../CncLaserTopRight/VisualizerTopRight';
 import {
     DISPLAYED_TYPE_TOOLPATH, HEAD_CNC, MAX_LASER_CNC_CANVAS_SCALE, MIN_LASER_CNC_CANVAS_SCALE,
     PAGE_EDITOR,
     SELECTEVENT, VISUALIZER_CAMERA_HEIGHT
 } from '../../../constants';
-import SVGEditor from '../../SVGEditor';
+import { Origin, Workpiece, convertMaterialsToWorkpiece } from '../../../constants/coordinate';
+import { actions as editorActions } from '../../../flux/editor';
+import { actions as machineActions } from '../../../flux/machine';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
-import modal from '../../../lib/modal';
-import UniApi from '../../../lib/uni-api';
+import { controller } from '../../../lib/controller';
+import i18n from '../../../lib/i18n';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
-import { repairModelPopup } from '../../views/repair-model/repair-model-popup';
+import modal from '../../../lib/modal';
+import { humanReadableTime } from '../../../lib/time-utils';
+import UniApi from '../../../lib/uni-api';
+import { getUploadModeByFilename } from '../../../lib/units';
 import ModelGroup from '../../../models/ModelGroup';
-import { Origin, convertMaterialsToWorkpiece } from '../../../constants/coordinate';
+import SVGEditor from '../../SVGEditor';
+import { Button } from '../../components/Buttons';
+import ContextMenu from '../../components/ContextMenu';
+import Modal from '../../components/Modal';
+import ProgressBar from '../../components/ProgressBar';
+import Canvas from '../../components/SMCanvas';
+import Space from '../../components/Space';
+import { repairModelPopup } from '../../views/repair-model/repair-model-popup';
+import PrintablePlate from '../CncLaserShared/PrintablePlate';
+import VisualizerBottomLeft from '../CncLaserShared/VisualizerBottomLeft';
+import VisualizerTopRight from '../CncLaserTopRight/VisualizerTopRight';
+import styles from './styles.styl';
 
 
 interface VisualizerProps {
@@ -45,6 +45,7 @@ interface VisualizerProps {
     page: string;
 
     materials: object;
+    workpiece: Workpiece;
     origin: Origin;
 
     stage: number;
@@ -600,6 +601,7 @@ class Visualizer extends React.Component<VisualizerProps> {
                         target={this.props.target}
                         coordinateMode={this.props.coordinateMode}
                         coordinateSize={this.props.coordinateSize}
+                        workpiece={this.props.workpiece}
                         origin={this.props.origin}
                         updateTarget={this.props.updateTarget}
                         updateScale={this.props.updateScale}
@@ -819,8 +821,11 @@ const mapStateToProps = (state, ownProps) => {
         // coordinate
         coordinateMode,
         coordinateSize,
-        origin,
     } = state.cnc;
+
+    const workpiece: Workpiece = state.cnc.workpiece;
+    const origin: Origin = state.cnc.origin;
+
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedModelID = modelGroup.getSelectedModel().modelID;
     const selectedToolPathModels = modelGroup.getSelectedToolPathModels();
@@ -845,6 +850,7 @@ const mapStateToProps = (state, ownProps) => {
         size,
         coordinateMode,
         coordinateSize,
+        workpiece,
         origin,
         // model,
         modelGroup,
