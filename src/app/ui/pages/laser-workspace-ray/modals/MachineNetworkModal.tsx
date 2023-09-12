@@ -12,7 +12,6 @@ import i18n from '../../../../lib/i18n';
 import log from '../../../../lib/log';
 import { Button } from '../../../components/Buttons';
 import Modal from '../../../components/Modal';
-// import useMountedState from '../../../utils/useMountedState';
 
 
 enum NetworkStatus {
@@ -22,8 +21,6 @@ enum NetworkStatus {
 }
 interface NetworkStatusBadgeProps {
     networkStatus: NetworkStatus;
-    // moduleName: string;
-    // status: boolean;
 }
 
 const NetworkStatusBadge: React.FC<NetworkStatusBadgeProps> = (props) => {
@@ -80,8 +77,6 @@ interface MachineNetworkModalProps {
  */
 const MachineNetworkModal: React.FC<MachineNetworkModalProps> = (props) => {
     const isConnected = useSelector((state: RootState) => state.workspace.isConnected);
-    // const isMounted = useMountedState();
-
 
     // Current network
     const [currentNetwork, setCurrentNetwork] = useState('');
