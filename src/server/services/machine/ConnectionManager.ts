@@ -51,6 +51,7 @@ import {
     RayMachineInstance,
     SM2Instance
 } from './instances';
+import { ConnectionType } from '../../../app/flux/workspace/state';
 
 const log = logger('lib:ConnectionManager');
 
@@ -498,12 +499,13 @@ class ConnectionManager {
         this.channel.startGcode(options);
     };
 
-    public startGcode = async (socket, options) => {
+    public startGcode = async (socket: SocketServer, options) => {
         const {
             headType, isRotate, toolHead, isLaserPrintAutoMode, materialThickness, laserFocalLength, renderName, eventName, materialThicknessSource
         } = options;
-        if (this.connectionType === CONNECTION_TYPE_WIFI) {
-            const { uploadName, series, background, size, workPosition, originOffset } = options;
+
+        if (this.connectionType === ConnectionType.WiFi) {
+            const { uploadName, background, size, workPosition, originOffset } = options;
             const gcodeFilePath = `${DataStorage.tmpDir}/${uploadName}`;
             const promises = [];
 
@@ -530,7 +532,7 @@ class ConnectionManager {
                         { axis: 'Z', distance: 0 },
                     ];
                     await this.channel.coordinateMove({ moveOrders, jogSpeed, headType, beforeGcodeStart: true });
-                } else if (series !== MACHINE_SERIES.ORIGINAL.identifier) {
+                } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
                     // SM 2.0
 
                     // Both 1.6W & 10W laser can't work without a valid focal length
@@ -580,6 +582,7 @@ class ConnectionManager {
                 }
             }
 
+            // Move, Upload, Start
             Promise.all(promises)
                 .then(() => {
                     this.channel.uploadGcodeFile(gcodeFilePath, headType, renderName, (msg) => {
@@ -665,7 +668,7 @@ G1 Z${pos.z}
     };
 
     public resumeGcode = async (socket: SocketServer, options, callback) => {
-        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const success = await this.channel.resumeGcode(callback);
             if (success) {
                 // resumed?
