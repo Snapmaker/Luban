@@ -26,7 +26,8 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
         connectionType,
         isConnected,
 
-        port, server,
+        port,
+        server,
     } = useSelector(state => state.workspace, shallowEqual);
 
     const {

@@ -12,10 +12,10 @@ import MovementInstruction, { MoveDirection } from '@snapmaker/snapmaker-sacp-sd
 import { SACP_TYPE_SERIES_MAP, } from '../../../../app/constants/machines';
 import { SnapmakerArtisanMachine, SnapmakerJ1Machine } from '../../../../app/machines';
 import DataStorage from '../../../DataStorage';
-import { CONNECTION_TYPE_WIFI, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
+import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 import logger from '../../../lib/logger';
 import SacpClient, { CoordinateType, RequestPhotoInfo, ToolHeadType } from '../sacp/SacpClient';
-import { EventOptions } from '../types';
+import { ConnectionType, EventOptions } from '../types';
 import { ChannelEvent } from './ChannelEvent';
 import SacpChannelBase from './SacpChannel';
 
@@ -128,6 +128,7 @@ class SacpTcpChannel extends SacpChannelBase {
 
                                         log.debug(`laserToolHeadInfo.laserFocalLength, ${laserToolHeadInfo.laserFocalLength}`);
                                         this.socket && this.socket.emit('Marlin:state', {
+                                            type: ConnectionType.WiFi,
                                             state: {
                                                 temperature: {
                                                     t: 0,
@@ -149,7 +150,6 @@ class SacpTcpChannel extends SacpChannelBase {
                                                     z: 0,
                                                 }
                                             },
-                                            type: CONNECTION_TYPE_WIFI
                                         });
                                     });
 

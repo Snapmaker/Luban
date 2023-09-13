@@ -36,7 +36,7 @@ function caseConfigToMenuItems(caseConfig) {
     return caseConfig.map(item => {
         item.label = i18n._(item.title);
         item.enabled = true;
-        item.click = function () {
+        item.click = () => {
             UniApi.Event.emit('appbar-menu:get-started', item);
         };
         return item;

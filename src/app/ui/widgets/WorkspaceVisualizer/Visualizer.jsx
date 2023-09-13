@@ -27,9 +27,7 @@ import TargetPoint from '../../../scene/three-extensions/TargetPoint';
 import modalSmallHOC from '../../components/Modal/modal-small';
 import ModalSmall from '../../components/Modal/ModalSmall';
 import ProgressBar from '../../components/ProgressBar';
-// import { Button } from '@trendmicro/react-buttons';
 import Canvas from '../../components/SMCanvas';
-// import WorkflowControl from './WorkflowControl';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { loadTexture } from './helpers';
 import styles from './index.styl';
@@ -39,7 +37,6 @@ import Rendering from './Rendering';
 import ToolHead from './ToolHead';
 import { SnapmakerArtisanMachine, SnapmakerOriginalMachine } from '../../../machines';
 
-// import modal from '../../lib/modal';
 
 class Visualizer extends React.PureComponent {
     static propTypes = {

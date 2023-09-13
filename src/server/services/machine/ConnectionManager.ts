@@ -15,14 +15,12 @@ import {
 } from '../../../app/machines';
 import DataStorage from '../../DataStorage';
 import {
-    CONNECTION_TYPE_WIFI,
     HEAD_CNC,
     HEAD_LASER,
     HEAD_PRINTING,
     LEVEL_ONE_POWER_LASER_FOR_SM2,
     LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
-    LEVEL_TWO_POWER_LASER_FOR_SM2,
-    MACHINE_SERIES,
+    LEVEL_TWO_POWER_LASER_FOR_SM2
 } from '../../constants';
 import ScheduledTasks from '../../lib/ScheduledTasks';
 import SocketServer from '../../lib/SocketManager';
@@ -51,20 +49,13 @@ import {
     RayMachineInstance,
     SM2Instance
 } from './instances';
-import { ConnectionType } from '../../../app/flux/workspace/state';
+import { ConnectionType } from './types';
 
 const log = logger('lib:ConnectionManager');
 
 const ensureRange = (value, min, max) => {
     return Math.max(min, Math.min(max, value));
 };
-
-/**
- * Connection Type
- *
- * Type of connection, either via network or via serial port.
- */
-type ConnectionType = 'wifi' | 'serial';
 
 interface ConnectionOpenOptions {
     connectionType: ConnectionType;
@@ -107,7 +98,7 @@ interface SetAirPurifierStrengthOptions {
  * A singleton to manage devices connection.
  */
 class ConnectionManager {
-    private connectionType: ConnectionType = CONNECTION_TYPE_WIFI;
+    private connectionType: ConnectionType = ConnectionType.WiFi;
 
     // socket used to communicate
     private channel: Channel = null;
@@ -244,7 +235,7 @@ class ConnectionManager {
 
         this.connectionType = connectionType;
 
-        if (connectionType === CONNECTION_TYPE_WIFI) {
+        if (connectionType === ConnectionType.WiFi) {
             const { address } = options;
             if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, NetworkProtocol.HTTP], protocol)) {
                 this.protocol = protocol;
@@ -494,7 +485,7 @@ class ConnectionManager {
      * @param {*} options
      * Only for toolhead printing action (laser/cnc/3dp)
      */
-    public startGcodeAction = async (socket, options) => {
+    public startGcodeAction = async (socket: SocketServer, options) => {
         log.info('gcode action begin');
         this.channel.startGcode(options);
     };
@@ -771,7 +762,7 @@ M3`;
 
     // SSTP
     public getActiveExtruder = (socket, options) => {
-        if (this.connectionType === CONNECTION_TYPE_WIFI) {
+        if (this.connectionType === ConnectionType.WiFi) {
             this.channel.getActiveExtruder(options);
         }
     };
@@ -800,7 +791,7 @@ M3`;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.updateNozzleTemperature(extruderIndex, nozzleTemperatureValue);
         } else {
-            if (this.connectionType === CONNECTION_TYPE_WIFI) {
+            if (this.connectionType === ConnectionType.WiFi) {
                 this.channel.updateNozzleTemperature(options);
             } else {
                 this.channel.command(socket, {
@@ -816,7 +807,7 @@ M3`;
             this.channel.updateBedTemperature(0, heatedBedTemperatureValue);
             this.channel.updateBedTemperature(1, heatedBedTemperatureValue);
         } else {
-            if (this.connectionType === CONNECTION_TYPE_WIFI) {
+            if (this.connectionType === ConnectionType.WiFi) {
                 this.channel.updateBedTemperature(options);
             } else {
                 const { heatedBedTemperatureValue } = options;
@@ -845,7 +836,7 @@ M3`;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const { extruderIndex } = options;
             this.channel.unloadFilament(extruderIndex, eventName);
-        } else if (this.connectionType === CONNECTION_TYPE_WIFI) {
+        } else if (this.connectionType === ConnectionType.WiFi) {
             this.channel.unloadFilament(options);
         } else {
             this.channel.command(socket, {
@@ -860,7 +851,7 @@ M3`;
             const { toolHead, workSpeedValue, extruderIndex } = options;
             this.channel.updateWorkSpeed(toolHead, workSpeedValue, extruderIndex);
         } else {
-            if (this.connectionType === CONNECTION_TYPE_WIFI) {
+            if (this.connectionType === ConnectionType.WiFi) {
                 this.channel.updateWorkSpeedFactor(options);
             } else {
                 const { workSpeedValue } = options;
@@ -880,7 +871,7 @@ M3`;
         } else {
             const { isPrinting, laserPower, laserPowerOpen } = options;
             if (isPrinting) {
-                if (this.connectionType === CONNECTION_TYPE_WIFI) {
+                if (this.connectionType === ConnectionType.WiFi) {
                     this.channel.updateLaserPower({
                         ...options,
                         eventName: 'connection:executeGcode'
@@ -1165,7 +1156,8 @@ M3`;
 
             callback && callback();
 
-            if (this.connectionType === CONNECTION_TYPE_WIFI) {
+            // ?
+            if (this.connectionType === ConnectionType.WiFi) {
                 socket && socket.emit('move:status', { isHoming: true });
             }
             if (headType === HEAD_LASER || headType === HEAD_CNC) {
@@ -1231,8 +1223,8 @@ M3`;
         }
     };
 
-    public wifiStatusTest = (socket, options) => {
-        if (this.connectionType === CONNECTION_TYPE_WIFI) {
+    public wifiStatusTest = (socket: SocketServer, options) => {
+        if (this.connectionType === ConnectionType.WiFi) {
             sstpHttpChannel.wifiStatusTest(options);
         }
     }
@@ -1372,7 +1364,7 @@ export function isUsingSACP(protocol: NetworkProtocol | SerialPortProtocol = nul
 }
 
 export {
-    connectionManager,
+    connectionManager
 };
 
 // export default connectionManager;
