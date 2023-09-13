@@ -83,6 +83,6 @@ export function getInformationFlowData(req, res) {
                 ...result.body
             });
         }).catch((err) => {
-            log.error('get case list err:', JSON.stringify(err));
+            log.error('get information flow err:', JSON.stringify(err));
         });
 }
