@@ -453,7 +453,7 @@ const svgModelUnion = async (modelInfo, onProgress) => {
 
 const svgModelsUnion = async (modelInfos, onProgress) => {
     if (modelInfos.length < 2) {
-        throw new Error('SVG Clip model infos length < 2');
+        throw new Error('SVG Union model infos length < 2');
     }
 
     onProgress && onProgress(0.1);
@@ -467,11 +467,17 @@ const svgModelsUnion = async (modelInfos, onProgress) => {
 
         transforPolygonsStart(clipClosedPolygons, modelInfos[i]);
 
-        polygonss.push(clipClosedPolygons);
+        if (clipClosedPolygons.length !== 0) {
+            polygonss.push(clipClosedPolygons);
+        }
     }
     onProgress && onProgress(0.4);
     const result = recursivePolyUnion(polygonss);
     onProgress && onProgress(0.8);
+
+    if (result.length === 0) {
+        throw new Error('SVG Union model result is null');
+    }
 
     const resultSVG = createNewSVG(result);
 

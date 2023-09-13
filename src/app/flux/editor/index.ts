@@ -1410,6 +1410,17 @@ export const actions = {
         const { progressStatesManager, history } = getState()[headType];
         // const { machine } = getState();
 
+        if (taskResult.taskStatus === 'failed') {
+            dispatch(
+                baseActions.updateState(headType, {
+                    stage: STEP_STAGE.CNC_LASER_SVG_CLIPPING,
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_SVG_CLIPPING, 1)
+                })
+            );
+            progressStatesManager.finishProgress(false);
+            return;
+        }
+
         const { config } = taskResult.data;
 
         const { result } = taskResult;
