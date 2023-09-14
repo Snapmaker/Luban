@@ -240,13 +240,11 @@ class SacpTcpChannel extends SacpChannelBase {
     }
 
     public async startHeartbeat(): Promise<void> {
-        await this.startHeartbeatLegacy(this.sacpClient, undefined);
-
-        this.setROTSubscribeApi();
+        return super.startHeartbeat();
     }
 
     public async stopHeartbeat(): Promise<void> {
-        await super.stopHeartbeat();
+        return super.stopHeartbeat();
     }
 
     public takePhoto = async (params: RequestPhotoInfo, callback: (result: { status: boolean }) => void) => {

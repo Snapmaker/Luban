@@ -1,10 +1,5 @@
-import { WorkflowStatus } from '@snapmaker/luban-platform';
-import { ResponseCallback } from '@snapmaker/snapmaker-sacp-sdk';
-import { readUint8 } from '@snapmaker/snapmaker-sacp-sdk/dist/helper';
 import dgram from 'dgram';
-import { includes } from 'lodash';
 
-import { WORKFLOW_STATUS_MAP } from '../../../../app/constants';
 import { SACP_TYPE_SERIES_MAP } from '../../../../app/constants/machines';
 import logger from '../../../lib/logger';
 import SacpClient from '../sacp/SacpClient';
@@ -102,46 +97,9 @@ class SacpUdpChannel extends SacpChannelBase {
         return true;
     }
 
-    public startHeartbeat = async () => {
-        log.info('Start heartbeat.');
-
-        const subscribeHeartbeatCallback: ResponseCallback = (data) => {
-            if (this.heartbeatTimer2) {
-                clearTimeout(this.heartbeatTimer2);
-                this.heartbeatTimer2 = null;
-            }
-
-            this.heartbeatTimer2 = setTimeout(() => {
-                log.info('Lost heartbeat, close connection.');
-                this.socket && this.socket.emit('connection:close');
-            }, 10000);
-
-            const statusKey = readUint8(data.response.data, 0);
-
-            const status = WORKFLOW_STATUS_MAP[statusKey];
-            if (includes([WorkflowStatus.Running], status) && this.machineStatus !== WorkflowStatus.Running) {
-                // -> running
-
-                // clear previous print job info
-                this.resetPrintJobInfo();
-
-                this.getPrintJobFileInfo();
-            }
-
-            this.machineStatus = status;
-            log.debug(`machine status = ${statusKey}, ${this.machineStatus}`);
-
-            this.socket && this.socket.emit('Marlin:state', {
-                state: {
-                    status: this.machineStatus,
-                }
-            });
-        };
-
-        const res = await this.sacpClient.subscribeHeartbeat({ interval: 2000 }, subscribeHeartbeatCallback);
-
-        log.info(`Subscribe heartbeat, result = ${res.code}`);
-    };
+    public async startHeartbeat(): Promise<void> {
+        return super.startHeartbeat();
+    }
 
     public async stopHeartbeat(): Promise<void> {
         // Remove heartbeat timeout check

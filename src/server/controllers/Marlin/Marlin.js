@@ -64,6 +64,7 @@ class MarlinReplyParserSeries {
         if (!r) {
             return null;
         }
+
         return {
             type: MarlinReplyParserSeries,
             payload: {
