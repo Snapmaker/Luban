@@ -102,18 +102,18 @@ class ProtocolDetector {
      * Detect network protocol.
      */
     public async detectNetworkProtocol(host: string): Promise<NetworkProtocol> {
-        const [resSACP, resHTTP, sacpUdpResponse] = await Promise.allSettled([
+        const [sacpTcpResult, sacpUdpResult, httpResult] = await Promise.allSettled([
             this.tryConnectSacpTcp(host),
             this.tryConnectSacpUdp(host),
             this.tryConnectHTTP(host),
         ]);
 
-        if (resHTTP.status === 'fulfilled' && resHTTP.value) {
-            return NetworkProtocol.HTTP;
-        } else if (resSACP.status === 'fulfilled' && resSACP.value) {
+        if (sacpTcpResult.status === 'fulfilled' && sacpTcpResult.value) {
             return NetworkProtocol.SacpOverTCP;
-        } else if (sacpUdpResponse.status === 'fulfilled' && sacpUdpResponse.value) {
+        } else if (sacpUdpResult.status === 'fulfilled' && sacpUdpResult.value) {
             return NetworkProtocol.SacpOverUDP;
+        } else if (httpResult.status === 'fulfilled' && httpResult.value) {
+            return NetworkProtocol.HTTP;
         }
 
         return NetworkProtocol.Unknown;
