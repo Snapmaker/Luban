@@ -1,7 +1,9 @@
 import classNames from 'classnames';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { includes } from 'lodash';
 
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { JobOffsetMode } from '../../../constants/coordinate';
 import ControllerEvent from '../../../connection/controller-events';
 import { RootState } from '../../../flux/index.def';
@@ -27,7 +29,14 @@ enum UploadFileModalType {
 
 const UploadView: React.FC = () => {
     const isConnected = useSelector((state: RootState) => state.workspace.isConnected);
+
+    const {
+        workflowStatus,
+    } = useSelector((state: RootState) => state.workspace.workflowStatus);
     // const activeGcodeFile = useSelector((state: RootState) => state.workspace.activeGcodeFile);
+    const isWorking = includes([
+        WorkflowStatus.Running, WorkflowStatus.Pausing, WorkflowStatus.Paused, WorkflowStatus.Stopping, WorkflowStatus.Resuming
+    ], workflowStatus);
 
     const boundingBox = useSelector((state: RootState) => state.workspace.boundingBox);
     const jobOffsetMode: JobOffsetMode = useSelector((state: RootState) => state.laser.jobOffsetMode);
@@ -190,7 +199,7 @@ const UploadView: React.FC = () => {
                     type="primary"
                     priority="level-one"
                     onClick={onClickUploadJob}
-                    disabled={!isConnected}
+                    disabled={!isConnected || isWorking}
                 >
                     {i18n._('key-Workspace/Upload Job')}
                 </Button>
