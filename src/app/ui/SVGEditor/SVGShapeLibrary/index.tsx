@@ -31,7 +31,7 @@ const SVGShapeLibrary = (props) => {
     const [indeterminate, setIndeterminate] = useState(false);
     const [checkAll, setCheckAll] = useState(false);
 
-    const getLabelList = async (query?: {labelIds?: number[]}) => {
+    const getLabelList = async (query?: {labelIds?: number[], pageSize?: string}) => {
         const res = (await api.getSvgShapeLabelList(query)) as any;
         if (!res.body || !res.body.data || !Array.isArray(res.body.data)) {
             return [];
@@ -151,7 +151,7 @@ const SVGShapeLibrary = (props) => {
     })();
 
     useEffect(() => {
-        getLabelList();
+        getLabelList({ pageSize: 1000 });
         // get svgshape count
         getSvgList({ pageSize: 100 }).catch(error => {
             message.error(error);
@@ -248,7 +248,7 @@ const SVGShapeLibrary = (props) => {
                             <Checkbox indeterminate={indeterminate} onChange={onCheckAllChange} checked={checkAll}>
                                 {i18n._('key-SvgShapeLibrary/All')}
                             </Checkbox>
-                            <Checkbox.Group style={{ width: '100%' }} className={styles['svg-shape-checkbox-group']} onChange={onChange} value={selectedLabelList}>
+                            <Checkbox.Group style={{ width: '100%', height: `${labelList?.length * 32}px` }} className={styles['svg-shape-checkbox-group']} onChange={onChange} value={selectedLabelList}>
                                 {
                                     labelList.map(label => {
                                         return (<Checkbox key={`label${label.id}`} value={label.id} className={styles['svg-shape-checkbox']}>{label.name}</Checkbox>);

@@ -2,7 +2,7 @@ import superagent from 'superagent';
 import superagentUse from 'superagent-use';
 import logger from '../../lib/logger';
 
-let domain = 'http://localhost:8100';
+let domain = 'https://api.snapmaker.com';
 if (process.env.NODE_ENV === 'production') {
     domain = 'https://api.snapmaker.com';
 }
