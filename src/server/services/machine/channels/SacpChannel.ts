@@ -42,15 +42,11 @@ import {
     ENCLOSURE_MODULE_IDS,
     isDualExtruder,
     LASER_HEAD_MODULE_IDS,
-    LEVEL_ONE_POWER_LASER_FOR_SM2,
-    LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
-    LEVEL_TWO_POWER_LASER_FOR_SM2,
     MODULEID_MAP,
     MODULEID_TOOLHEAD_MAP,
     PRINTING_HEAD_MODULE_IDS,
     ROTARY_MODULE_IDS,
     SNAPMAKER_J1_HEATED_BED,
-    STANDARD_CNC_TOOLHEAD_FOR_SM2
 } from '../../../../app/constants/machines';
 import {
     COMPLUTE_STATUS,
@@ -182,6 +178,24 @@ class SacpChannelBase extends Channel implements
     }
 
     /**
+     * Get 3DP print module info.
+     *
+     * TODO: standardize use of extruder in APIs
+     */
+    private getPrintToolHeadModule(): ModuleInfo | null {
+        for (const key of Object.keys(this.moduleInfos)) {
+            const module = this.moduleInfos[key];
+            if (module && module instanceof ModuleInfo) {
+                if (includes(PRINTING_HEAD_MODULE_IDS, module.moduleId)) {
+                    return module;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Get laser module info.
      */
     private getLaserToolHeadModule(): ModuleInfo | null {
@@ -278,6 +292,8 @@ class SacpChannelBase extends Channel implements
             }
         }
 
+        // Infer head type from modules, this is needed when using APIs like `setEnclosureDoorDetection()`,
+        // the channel has to know which head type is used right now.
         const laserModule = this.getLaserToolHeadModule();
         if (laserModule) {
             this.headType = HEAD_LASER;
@@ -344,6 +360,20 @@ class SacpChannelBase extends Channel implements
 
     // interface: LaserChannelInterface
 
+    public async updateLaserPower(value: number): Promise<boolean> {
+        const module = this.getLaserToolHeadModule();
+        if (!module) {
+            log.error('Set laser power, no matched laser module.');
+            return false;
+        }
+
+        const { response } = await this.sacpClient.SetLaserPower(module.key, value);
+
+        log.info(`updateLaserPower, ${JSON.stringify(response)}`);
+
+        return response.result === 0;
+    }
+
     public async getCrosshairOffset(): Promise<{ x: number; y: number }> {
         const module = this.getLaserToolHeadModule();
         if (!module) {
@@ -393,50 +423,51 @@ class SacpChannelBase extends Channel implements
     // interface: CncChannelInterface
 
     public async setSpindleSpeed(speed: number): Promise<boolean> {
-        // Only supports level 2 CNC module
-        const toolhead = this.moduleInfos && this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2];
-        if (!toolhead) {
-            log.error(`no match ${LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2}, moduleInfos:${this.moduleInfos}`,);
+        const module = this.getCncToolHeadModule();
+
+        // Only supported by level 2 CNC module
+        if (!module || module.moduleId !== 15) {
+            log.error('Set spindle speed, no matched CNC module.');
             return false;
         }
 
         log.info(`Set spindle speed: ${speed} RPM`);
-        const { response } = await this.sacpClient.setToolHeadSpeed(toolhead.key, speed);
+        const { response } = await this.sacpClient.setToolHeadSpeed(module.key, speed);
         return response.result === 0;
     }
 
     public async setSpindleSpeedPercentage(percent: number): Promise<boolean> {
-        const toolhead = this.moduleInfos && (this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2] || this.moduleInfos[STANDARD_CNC_TOOLHEAD_FOR_SM2]);
-        if (!toolhead) {
-            log.error(`no match cnc tool head, moduleInfos:${JSON.stringify(this.moduleInfos)}`,);
+        const module = this.getCncToolHeadModule();
+        if (!module) {
+            log.error('Set spindle speed (%), no matched CNC module.');
             return false;
         }
 
         log.info(`Set spindle speed: ${percent}%`);
 
-        const { response } = await this.sacpClient.setCncPower(toolhead.key, percent);
+        const { response } = await this.sacpClient.setCncPower(module.key, percent);
         return response.result === 0;
     }
 
     public async spindleOn(): Promise<boolean> {
-        const toolhead = this.moduleInfos && (this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2] || this.moduleInfos[STANDARD_CNC_TOOLHEAD_FOR_SM2]);
-        if (!toolhead) {
-            log.error('No matched CNC module');
+        const module = this.getCncToolHeadModule();
+        if (!module) {
+            log.error('Spinde on, no matched CNC module.');
             return false;
         }
 
-        const { response } = await this.sacpClient.switchCNC(toolhead.key, true);
+        const { response } = await this.sacpClient.switchCNC(module.key, true);
         return response.result === 0;
     }
 
     public async spindleOff(): Promise<boolean> {
-        const toolhead = this.moduleInfos && (this.moduleInfos[LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2] || this.moduleInfos[STANDARD_CNC_TOOLHEAD_FOR_SM2]);
-        if (!toolhead) {
-            log.error('No matched CNC module');
+        const module = this.getCncToolHeadModule();
+        if (!module) {
+            log.error('Spindle off, no matched CNC module.');
             return false;
         }
 
-        const { response } = await this.sacpClient.switchCNC(toolhead.key, false);
+        const { response } = await this.sacpClient.switchCNC(module.key, false);
         return response.result === 0;
     }
 
@@ -1308,19 +1339,6 @@ class SacpChannelBase extends Channel implements
             log.info(`updateWorkSpeed rightResponse, ${JSON.stringify(rightResponse)}`);
         }
     }
-
-
-    public updateLaserPower = (value) => {
-        const laserLevelTwoHead = this.moduleInfos && (this.moduleInfos[LEVEL_TWO_POWER_LASER_FOR_SM2] || this.moduleInfos[LEVEL_ONE_POWER_LASER_FOR_SM2]); //
-        if (!laserLevelTwoHead) {
-            log.error(`non-eixst laserLevelHead, moduleInfos:${this.moduleInfos}`,);
-            return;
-        }
-
-        this.sacpClient.SetLaserPower(laserLevelTwoHead.key, value).then(({ response }) => {
-            log.info(`updateLaserPower, ${JSON.stringify(response)}`);
-        });
-    };
 
     public async setAbsoluteWorkOrigin({ z, isRotate = false }: {
         x: number, y: number, z: number, isRotate: boolean
