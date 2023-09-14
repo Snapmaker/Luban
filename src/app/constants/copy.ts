@@ -348,6 +348,10 @@ i18n._('key-Progress/LaserCNC-Failed to process object.');
 i18n._('key-Progress/LaserCNC-Generating simulation {{progress}}%');
 i18n._('key-Progress/LaserCNC-Generated simulation successfully.');
 i18n._('key-Progress/LaserCNC-Failed to generate simulation.');
+i18n._('key-Progress/LaserCNC-Processing SVG {{progress}}%');
+i18n._('key-Progress/LaserCNC-Processing SVG successfully.');
+i18n._('key-Progress/LaserCNC-Failed to process SVG.');
+
 
 i18n._('key-Progress/Laser-Loading model...');
 i18n._('key-Progress/Laser-Loaded model successfully.');

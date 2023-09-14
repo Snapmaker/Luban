@@ -15,5 +15,7 @@ npm-debug.log*
 
 # Development Env (Jetbrains, Vim, macOS)
 .idea/
+zjief/
+.vscode
 *.swp
 .DS_store
