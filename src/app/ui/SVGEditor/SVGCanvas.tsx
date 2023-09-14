@@ -242,7 +242,7 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
         this.svgContainer.removeEventListener('mousedown', this.onMouseDown, false);
         this.svgContainer.removeEventListener('mousemove', this.onMouseMove, false);
         this.svgContainer.removeEventListener('wheel', this.onMouseWheel, false);
-        this.svgContainer.removeEventListener('mouseup', this.onMouseUp, false);
+        window.removeEventListener('mouseup', this.onMouseUp, false);
         window.removeEventListener('resize', this.onResize, false);
         window.removeEventListener('hashchange', this.onResize, false);
         window.removeEventListener('dblclick', this.onDblClick, false);
@@ -381,19 +381,21 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
         this.svgContainer.addEventListener('mousemove', this.onMouseMove, false);
         this.svgContainer.addEventListener('wheel', this.onMouseWheel, false);
         // this.svgContainer.addEventListener('contextmenu', this.onContextmenu, false);
-        this.svgContainer.addEventListener('mouseup', this.onMouseUp, false);
-        this.svgContainer.addEventListener('mouseenter', () => {
-            this.svgContentGroup.drawGroup.onMouseenter();
-        });
-        this.svgContainer.addEventListener('mouseleave', (event) => {
-            this.svgContentGroup.drawGroup.onMouseleave();
-            const leftKeyPressed = event.which === 1;
-            if (leftKeyPressed && this.mode !== 'draw' && !(this.mode === 'select' && this.editingElem)) {
-                this.calculateSelectedModel(event, true);
-                this.currentDrawing.selectedTarget = null;
-                this.svgSelector.setVisible(false);
-            }
-        }, false);
+        window.addEventListener('mouseup', this.onMouseUp, false);
+        // this.svgContainer.addEventListener('mouseenter', () => {
+        //     console.log('mouseenter');
+        //     this.svgContentGroup.drawGroup.onMouseenter();
+        // });
+        // this.svgContainer.addEventListener('mouseleave', (event) => {
+        //     console.log('mouseleave');
+        //     this.svgContentGroup.drawGroup.onMouseleave();
+        //     const leftKeyPressed = event.which === 1;
+        //     if (leftKeyPressed && this.mode !== 'draw' && !(this.mode === 'select' && this.editingElem)) {
+        //         this.calculateSelectedModel(event, true);
+        //         this.currentDrawing.selectedTarget = null;
+        //         this.svgSelector.setVisible(false);
+        //     }
+        // }, false);
         window.addEventListener('resize', this.onResize, false);
         window.addEventListener('hashchange', this.onResize, false);
         window.addEventListener('dblclick', this.onDblClick, false);
