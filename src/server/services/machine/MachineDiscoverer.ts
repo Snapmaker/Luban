@@ -1,9 +1,9 @@
 import { SerialPort } from 'serialport';
 
-import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI } from '../../constants';
 import logger from '../../lib/logger';
 import { NetworkedMachineInfo } from './network-discover/NetworkedMachine';
 import networkedMachineFinder from './network-discover/NetworkedMachineFinder';
+import { ConnectionType } from './types';
 
 const log = logger('service:machine:MachineDiscoverer');
 
@@ -74,7 +74,7 @@ class MachineDiscoverer {
     }
 
     public subscribeDiscoverMachines(options: SubscribeOptions): void {
-        if (options.connectionType === CONNECTION_TYPE_WIFI) {
+        if (options.connectionType === ConnectionType.WiFi) {
             // In case has been subscribed
             if (this.networkTimer) {
                 clearInterval(this.networkTimer);
@@ -93,7 +93,7 @@ class MachineDiscoverer {
                     callback: options.callback,
                 });
             }, interval);
-        } else if (options.connectionType === CONNECTION_TYPE_SERIAL) {
+        } else if (options.connectionType === ConnectionType.Serial) {
             // In case has been subscribed
             if (this.serialPortTimer) {
                 clearInterval(this.serialPortTimer);
@@ -116,12 +116,12 @@ class MachineDiscoverer {
     }
 
     public unsubscribeDiscoverMachines(options: UnsubscribeOptions): void {
-        if (options.connectionType === CONNECTION_TYPE_WIFI) {
+        if (options.connectionType === ConnectionType.WiFi) {
             if (this.networkTimer) {
                 clearInterval(this.networkTimer);
                 this.networkTimer = null;
             }
-        } else if (options.connectionType === CONNECTION_TYPE_SERIAL) {
+        } else if (options.connectionType === ConnectionType.Serial) {
             if (this.serialPortTimer) {
                 clearInterval(this.serialPortTimer);
                 this.serialPortTimer = null;

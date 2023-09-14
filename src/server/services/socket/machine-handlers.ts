@@ -52,7 +52,7 @@ function register(socketServer: SocketServer): void {
         [ControllerEvent.SetAirPurifierSwitch]: connectionManager.setFilterSwitch,
         [ControllerEvent.SetAirPurifierStrength]: connectionManager.setAirPurifierFanStrength,
 
-        // machine print G-code
+        // machine print job
         [ControllerEvent.StartGCode]: connectionManager.startGcode,
         [ControllerEvent.PauseGCode]: connectionManager.pauseGcode,
         [ControllerEvent.ResumeGCode]: connectionManager.resumeGcode,

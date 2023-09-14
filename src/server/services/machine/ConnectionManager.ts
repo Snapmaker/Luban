@@ -15,14 +15,12 @@ import {
 } from '../../../app/machines';
 import DataStorage from '../../DataStorage';
 import {
-    CONNECTION_TYPE_WIFI,
     HEAD_CNC,
     HEAD_LASER,
     HEAD_PRINTING,
     LEVEL_ONE_POWER_LASER_FOR_SM2,
     LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
-    LEVEL_TWO_POWER_LASER_FOR_SM2,
-    MACHINE_SERIES,
+    LEVEL_TWO_POWER_LASER_FOR_SM2
 } from '../../constants';
 import ScheduledTasks from '../../lib/ScheduledTasks';
 import SocketServer from '../../lib/SocketManager';
@@ -33,7 +31,6 @@ import Channel, {
     CncChannelInterface,
     EnclosureChannelInterface,
     FileChannelInterface,
-    GcodeChannelInterface,
     LaserChannelInterface,
     NetworkServiceChannelInterface,
     SystemChannelInterface
@@ -51,19 +48,13 @@ import {
     RayMachineInstance,
     SM2Instance
 } from './instances';
+import { ConnectionType } from './types';
 
 const log = logger('lib:ConnectionManager');
 
 const ensureRange = (value, min, max) => {
     return Math.max(min, Math.min(max, value));
 };
-
-/**
- * Connection Type
- *
- * Type of connection, either via network or via serial port.
- */
-type ConnectionType = 'wifi' | 'serial';
 
 interface ConnectionOpenOptions {
     connectionType: ConnectionType;
@@ -106,44 +97,69 @@ interface SetAirPurifierStrengthOptions {
  * A singleton to manage devices connection.
  */
 class ConnectionManager {
-    private connectionType: ConnectionType = CONNECTION_TYPE_WIFI;
+    // current machine connection type
+    private connectionType: ConnectionType = ConnectionType.WiFi;
 
-    // socket used to communicate
+    // socket used by channel and manager to communicate with frontend client
+    private socket: SocketServer | null = null;
+
+    // protocol used by channel
+    private protocol: NetworkProtocol | SerialPortProtocol = NetworkProtocol.Unknown;
+
+    // channel used to communicate with machine
     private channel: Channel = null;
 
-    private protocol: NetworkProtocol | SerialPortProtocol = NetworkProtocol.Unknown;
+    // connected machine instance to handle life cycle
+    private machineInstance: MachineInstance = null;
 
     private scheduledTasksHandle;
 
-    private machineInstance: MachineInstance = null;
-
-    private socket;
-
+    /**
+     * Get protocol currently used.
+     */
     public getProtocol(): NetworkProtocol | SerialPortProtocol {
         return this.protocol;
     }
 
+    // TODO: Refactor this
     public onConnection = (socket: SocketServer) => {
         sstpHttpChannel.onConnection();
         this.scheduledTasksHandle = new ScheduledTasks(socket);
     };
 
+    // TODO: Refactor this
     public onDisconnection = (socket: SocketServer) => {
         sstpHttpChannel.onDisconnection();
         textSerialChannel.onDisconnection(socket);
         this.scheduledTasksHandle.cancelTasks();
     };
 
+    /**
+     * Inspect network protocol used by `host`.
+     *
+     * It might take 1-2 seconds.
+     */
     private async inspectNetworkProtocol(host: string): Promise<NetworkProtocol> {
         const protocolDetector = new ProtocolDetector();
         return protocolDetector.detectNetworkProtocol(host);
     }
 
+    /**
+     * Inpsect serial port protocol (plaintext or SACP) by given serial port and baud rate.
+     *
+     * It might take 1-2 seconds.
+     */
     private async inspectSerialPortProtocol(port: string, baudRate: number): Promise<SerialPortProtocol> {
         const protocolDetector = new ProtocolDetector();
         return protocolDetector.detectSerialPortProtocol(port, baudRate);
     }
 
+    /**
+     * Channel observer function, channel is connecting to the machine.
+     *
+     * Events:
+     * - ControllerEvent.ConnectionConnecting
+     */
     private onChannelConnecting = (options: ConnectionConnectingOptions) => {
         log.info('channel: Connecting');
 
@@ -152,6 +168,12 @@ class ConnectionManager {
         });
     };
 
+    /**
+     * Channel observer function, channel is connected to the machine.
+     *
+     * Events:
+     * - ControllerEvent.ConnectionOpen
+     */
     private onChannelConnected = () => {
         log.info('channel: Connected');
 
@@ -161,6 +183,16 @@ class ConnectionManager {
         });
     };
 
+    /**
+     * Channel observer function, channel is ready to start initialization of machine.
+     *
+     * "Ready" means the machine is identified by channel, and ready to start the initialization
+     * process of the connection. Conmon initialization process would be:
+     *
+     * 1. Get information of all modules and coordinates
+     * 2. Start heart beat (or subscribe to heart beat)
+     * 3. Subscribe to machine events
+     */
     private onChannelReady = async (data: { machineIdentifier?: string }) => {
         log.info('channel: Ready');
 
@@ -243,7 +275,8 @@ class ConnectionManager {
 
         this.connectionType = connectionType;
 
-        if (connectionType === CONNECTION_TYPE_WIFI) {
+        this.protocol = NetworkProtocol.Unknown;
+        if (connectionType === ConnectionType.WiFi) {
             const { address } = options;
             if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, NetworkProtocol.HTTP], protocol)) {
                 this.protocol = protocol;
@@ -275,9 +308,17 @@ class ConnectionManager {
 
         log.info(`Detected protocol: ${this.protocol}`);
 
+        if (this.protocol === NetworkProtocol.Unknown) {
+            this.socket && this.socket.emit(ControllerEvent.ConnectionOpen, {
+                code: 404,
+                msg: 'Unable to detect protocol of communication.',
+            });
+            return;
+        }
+
         this.socket = socket;
 
-        // initialize channel
+        // initialize channel, bind channel events
         this.unbindChannelEvents();
         this.bindChannelEvents();
 
@@ -355,7 +396,7 @@ class ConnectionManager {
         const { gcode } = options;
         log.info(`executeGcode: ${gcode}`);
 
-        const success = await (this.channel as GcodeChannelInterface).executeGcode(gcode);
+        const success = await this.channel.executeGcode(gcode);
         if (success) {
             socket.emit('connection:executeGcode', { msg: '', res: null });
         } else {
@@ -368,6 +409,8 @@ class ConnectionManager {
      *
      * For backward compatibility, this is only for serial port channel.
      * We will refactor this function later.
+     *
+     * TODO: refactor
      */
     public executeCmd = async (socket: SocketServer, options) => {
         const { gcode, context, cmd = 'gcode' } = options;
@@ -455,6 +498,18 @@ class ConnectionManager {
         }
     };
 
+    /**
+     * Compress and upload file.
+     *
+     * This is useful when transfering large size plain text file.
+     * For some machines (e.g. Ray), it implements this compress transfer instead of typical file upload.
+     *
+     * Events:
+     * - ControllerEvent.UploadFileProgress
+     * - ControllerEvent.UploadFileCompressing
+     * - ControllerEvent.UploadFileDecompressing
+     * - ControllerEvent.CompressUploadFile
+     */
     public compressUploadFile = async (socket: SocketServer, options: UploadFileOptions) => {
         // If it's relative path, we assuem it's in tmp directory
         if (!path.isAbsolute(options.filePath)) {
@@ -479,6 +534,7 @@ class ConnectionManager {
                 socket.emit(ControllerEvent.UploadFileDecompressing);
             },
             onFailed: (reason: string) => {
+                // Report failure result instead of API success
                 socket.emit(ControllerEvent.CompressUploadFile, { err: 'failed', text: reason });
             }
         });
@@ -488,22 +544,27 @@ class ConnectionManager {
     };
 
     /**
+     * Start print job (print G-code).
+     *
+     * This function is called followed move callback. Should be refactor later.
+     * TODO: fefactor
      *
      * @param {*} socket
      * @param {*} options
      * Only for toolhead printing action (laser/cnc/3dp)
      */
-    public startGcodeAction = async (socket, options) => {
+    public startGcodeAction = async (socket: SocketServer, options) => {
         log.info('gcode action begin');
         this.channel.startGcode(options);
     };
 
-    public startGcode = async (socket, options) => {
+    public startGcode = async (socket: SocketServer, options) => {
         const {
             headType, isRotate, toolHead, isLaserPrintAutoMode, materialThickness, laserFocalLength, renderName, eventName, materialThicknessSource
         } = options;
-        if (this.connectionType === CONNECTION_TYPE_WIFI) {
-            const { uploadName, series, background, size, workPosition, originOffset } = options;
+
+        if (this.connectionType === ConnectionType.WiFi) {
+            const { uploadName, background, size, workPosition, originOffset } = options;
             const gcodeFilePath = `${DataStorage.tmpDir}/${uploadName}`;
             const promises = [];
 
@@ -530,7 +591,7 @@ class ConnectionManager {
                         { axis: 'Z', distance: 0 },
                     ];
                     await this.channel.coordinateMove({ moveOrders, jogSpeed, headType, beforeGcodeStart: true });
-                } else if (series !== MACHINE_SERIES.ORIGINAL.identifier) {
+                } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
                     // SM 2.0
 
                     // Both 1.6W & 10W laser can't work without a valid focal length
@@ -542,17 +603,17 @@ class ConnectionManager {
                         if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
                             let promise;
                             if (materialThickness === -1) {
-                                promise = (this.channel as GcodeChannelInterface).executeGcode('G0 Z0 F1500;');
+                                promise = this.channel.executeGcode('G0 Z0 F1500;');
                             } else {
-                                promise = (this.channel as GcodeChannelInterface).executeGcode(`G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`);
+                                promise = this.channel.executeGcode(`G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`);
                             }
                             promises.push(promise);
                         } else {
                             let promise;
                             if (isLaserPrintAutoMode) {
-                                promise = (this.channel as GcodeChannelInterface).executeGcode(`G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`);
+                                promise = this.channel.executeGcode(`G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`);
                             } else {
-                                promise = (this.channel as GcodeChannelInterface).executeGcode('G0 Z0 F1500;');
+                                promise = this.channel.executeGcode('G0 Z0 F1500;');
                             }
                             promises.push(promise);
                         }
@@ -565,21 +626,22 @@ class ConnectionManager {
                             x = Math.max(0, Math.min(x, size.x - 20));
                             y = Math.max(0, Math.min(y, size.y - 20));
 
-                            const promise = (this.channel as GcodeChannelInterface).executeGcode(`G53;\nG0 X${x} Y${y};\nG54;\nG92 X${x} Y${y};`);
+                            const promise = this.channel.executeGcode(`G53;\nG0 X${x} Y${y};\nG54;\nG92 X${x} Y${y};`);
                             promises.push(promise);
                         }
                     } else {
                         // Rotary Module origin
-                        const promise = (this.channel as GcodeChannelInterface).executeGcode('G0 X0 Y0 B0 F1500;\nG0 Z0 F1500;');
+                        const promise = this.channel.executeGcode('G0 X0 Y0 B0 F1500;\nG0 Z0 F1500;');
                         promises.push(promise);
                     }
 
                     // Laser works on G54
-                    const promise = (this.channel as GcodeChannelInterface).executeGcode('G54;');
+                    const promise = this.channel.executeGcode('G54;');
                     promises.push(promise);
                 }
             }
 
+            // Move, Upload, Start
             Promise.all(promises)
                 .then(() => {
                     this.channel.uploadGcodeFile(gcodeFilePath, headType, renderName, (msg) => {
@@ -665,7 +727,7 @@ G1 Z${pos.z}
     };
 
     public resumeGcode = async (socket: SocketServer, options, callback) => {
-        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const success = await this.channel.resumeGcode(callback);
             if (success) {
                 // resumed?
@@ -768,7 +830,7 @@ M3`;
 
     // SSTP
     public getActiveExtruder = (socket, options) => {
-        if (this.connectionType === CONNECTION_TYPE_WIFI) {
+        if (this.connectionType === ConnectionType.WiFi) {
             this.channel.getActiveExtruder(options);
         }
     };
@@ -797,7 +859,7 @@ M3`;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.updateNozzleTemperature(extruderIndex, nozzleTemperatureValue);
         } else {
-            if (this.connectionType === CONNECTION_TYPE_WIFI) {
+            if (this.connectionType === ConnectionType.WiFi) {
                 this.channel.updateNozzleTemperature(options);
             } else {
                 this.channel.command(socket, {
@@ -813,7 +875,7 @@ M3`;
             this.channel.updateBedTemperature(0, heatedBedTemperatureValue);
             this.channel.updateBedTemperature(1, heatedBedTemperatureValue);
         } else {
-            if (this.connectionType === CONNECTION_TYPE_WIFI) {
+            if (this.connectionType === ConnectionType.WiFi) {
                 this.channel.updateBedTemperature(options);
             } else {
                 const { heatedBedTemperatureValue } = options;
@@ -842,7 +904,7 @@ M3`;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const { extruderIndex } = options;
             this.channel.unloadFilament(extruderIndex, eventName);
-        } else if (this.connectionType === CONNECTION_TYPE_WIFI) {
+        } else if (this.connectionType === ConnectionType.WiFi) {
             this.channel.unloadFilament(options);
         } else {
             this.channel.command(socket, {
@@ -857,7 +919,7 @@ M3`;
             const { toolHead, workSpeedValue, extruderIndex } = options;
             this.channel.updateWorkSpeed(toolHead, workSpeedValue, extruderIndex);
         } else {
-            if (this.connectionType === CONNECTION_TYPE_WIFI) {
+            if (this.connectionType === ConnectionType.WiFi) {
                 this.channel.updateWorkSpeedFactor(options);
             } else {
                 const { workSpeedValue } = options;
@@ -877,7 +939,7 @@ M3`;
         } else {
             const { isPrinting, laserPower, laserPowerOpen } = options;
             if (isPrinting) {
-                if (this.connectionType === CONNECTION_TYPE_WIFI) {
+                if (this.connectionType === ConnectionType.WiFi) {
                     this.channel.updateLaserPower({
                         ...options,
                         eventName: 'connection:executeGcode'
@@ -1162,7 +1224,8 @@ M3`;
 
             callback && callback();
 
-            if (this.connectionType === CONNECTION_TYPE_WIFI) {
+            // ?
+            if (this.connectionType === ConnectionType.WiFi) {
                 socket && socket.emit('move:status', { isHoming: true });
             }
             if (headType === HEAD_LASER || headType === HEAD_CNC) {
@@ -1228,8 +1291,8 @@ M3`;
         }
     };
 
-    public wifiStatusTest = (socket, options) => {
-        if (this.connectionType === CONNECTION_TYPE_WIFI) {
+    public wifiStatusTest = (socket: SocketServer, options) => {
+        if (this.connectionType === ConnectionType.WiFi) {
             sstpHttpChannel.wifiStatusTest(options);
         }
     }
@@ -1369,7 +1432,7 @@ export function isUsingSACP(protocol: NetworkProtocol | SerialPortProtocol = nul
 }
 
 export {
-    connectionManager,
+    connectionManager
 };
 
 // export default connectionManager;

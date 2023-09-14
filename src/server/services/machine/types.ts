@@ -68,3 +68,13 @@ export type MarlinStateData = {
     fanLevel?: number,
     isDoorEnable?: boolean
 };
+
+/**
+ * Connection Type
+ *
+ * Type of connection, either via network or via serial port.
+ */
+export enum ConnectionType {
+    Serial = 'serial',
+    WiFi = 'wifi',
+}

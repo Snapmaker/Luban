@@ -1,7 +1,7 @@
 import schedule from 'node-schedule';
 import EventEmitter from 'events';
-
 import { Socket } from 'socket.io';
+
 import logger from '../logger';
 
 const log = logger('service:schedule-task');

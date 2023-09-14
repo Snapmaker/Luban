@@ -16,13 +16,14 @@ import SacpTcpChannel from '../channels/SacpTcpChannel';
 import TextSerialChannel from '../channels/TextSerialChannel';
 import { ConnectedData } from '../types';
 import MachineInstance from './Instance';
+import SacpChannelBase from '../channels/SacpChannel';
 
 const log = logger('machine:instance:J1Instance');
 
 
 class J1MachineInstance extends MachineInstance {
     public async onPrepare(): Promise<void> {
-        log.info('onPrepare');
+        log.info('On preparing machine...');
 
         if (this.channel instanceof SacpSerialChannel) {
             await this._onMachineReadySACP();
@@ -42,7 +43,7 @@ class J1MachineInstance extends MachineInstance {
         state.series = SnapmakerJ1Machine.identifier;
 
         // module info
-        const { data: moduleInfos } = await (this.channel as SacpSerialChannel).getModuleInfo();
+        const moduleInfos = await (this.channel as SacpChannelBase).getModuleInfo();
 
         const moduleListStatus = {
             // airPurifier: false,

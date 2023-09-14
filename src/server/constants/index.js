@@ -162,10 +162,6 @@ export const RIGHT = 'right';
 export const TOP = 'top';
 export const BOTTOM = 'bottom';
 
-// Connection Type
-export const CONNECTION_TYPE_SERIAL = 'serial';
-export const CONNECTION_TYPE_WIFI = 'wifi';
-
 // Head Type
 export const HEAD_CNC = 'cnc';
 export const HEAD_LASER = 'laser';

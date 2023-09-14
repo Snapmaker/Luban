@@ -1081,12 +1081,12 @@ export const actions = {
             return;
         }
 
-        const server: MachineAgent = getState().workspace.server;
+        const machineAgent: MachineAgent = getState().workspace.server;
 
         dispatch(actions.updateState({ uploadState: 'uploading' }));
         try {
             await api.loadGCode({
-                port: server?.port,
+                port: machineAgent?.port,
                 dataSource: PROTOCOL_TEXT,
                 uploadName: gcodeFile.uploadName,
             });
@@ -1170,7 +1170,8 @@ export const actions = {
     },
 
     executeGcodeAutoHome: (hasHomingModel = false) => (dispatch, getState) => {
-        const { server, homingModal, isConnected } = getState().workspace;
+        const { homingModal, isConnected } = getState().workspace;
+        const machineAgent: MachineAgent = getState().workspace.server;
         const { headType } = getState().workspace;
         if (!isConnected) {
             if (homingModal) {
@@ -1182,7 +1183,7 @@ export const actions = {
             }
             return;
         }
-        server.goHome({ hasHomingModel, headType }, () => {
+        machineAgent.goHome({ hasHomingModel, headType }, () => {
             dispatch(
                 baseActions.updateState({
                     homingModal: false

@@ -132,11 +132,11 @@ const NetworkConnection: React.FC = () => {
         connectionType,
         connectionStatus,
 
-        server,
-
         isOpen,
         isConnected,
     } = useSelector((state: RootState) => state.workspace, shallowEqual);
+
+    const server: MachineAgent = useSelector((state: RootState) => state.workspace.server);
 
     // connected machine
     const {

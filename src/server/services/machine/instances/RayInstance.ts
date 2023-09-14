@@ -36,7 +36,7 @@ class RayMachineInstance extends MachineInstance {
         state.series = SnapmakerRayMachine.identifier;
 
         // module info
-        const { data: moduleInfos } = await (this.channel as SacpChannelBase).getModuleInfo();
+        const moduleInfos = await (this.channel as SacpChannelBase).getModuleInfo();
 
         /*
         moduleInfos = [
@@ -81,6 +81,8 @@ class RayMachineInstance extends MachineInstance {
     }
 
     public async onPrepare(): Promise<void> {
+        log.info('On preparing machine...');
+
         if (this.channel instanceof SacpSerialChannel) {
             await this._prepareMachineSACP();
         } else if (this.channel instanceof SacpUdpChannel) {

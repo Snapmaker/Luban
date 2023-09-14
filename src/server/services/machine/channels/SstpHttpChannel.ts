@@ -5,7 +5,6 @@ import ControllerEvent from '../../../../app/connection/controller-events';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, } from '../../../../app/constants/machines';
 import { L20WLaserToolModule, L40WLaserToolModule } from '../../../../app/machines/snapmaker-2-toolheads';
 import {
-    CONNECTION_TYPE_WIFI,
     HEAD_CNC,
     HEAD_LASER,
     HEAD_PRINTING,
@@ -17,8 +16,8 @@ import {
 } from '../../../constants';
 import logger from '../../../lib/logger';
 import workerManager from '../../task-manager/workerManager';
-import { EventOptions } from '../types';
-import Channel, { CncChannelInterface, FileChannelInterface, GcodeChannelInterface, UploadFileOptions } from './Channel';
+import { ConnectionType, EventOptions } from '../types';
+import Channel, { CncChannelInterface, FileChannelInterface, UploadFileOptions } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 
 let waitConfirm: boolean;
@@ -113,7 +112,6 @@ interface GCodeQueueItem {
  * A singleton to manage devices connection.
  */
 class SstpHttpChannel extends Channel implements
-    GcodeChannelInterface,
     FileChannelInterface,
     CncChannelInterface {
     private isGcodeExecuting = false;
@@ -337,7 +335,7 @@ class SstpHttpChannel extends Channel implements
                 this.socket && this.socket.emit('connection:connected', {
                     state,
                     err: state?.err,
-                    type: CONNECTION_TYPE_WIFI
+                    type: ConnectionType.WiFi,
                 });
             } else {
                 // this.socket && this.socket.emit('sender:status', {
@@ -345,7 +343,7 @@ class SstpHttpChannel extends Channel implements
                 // });
                 this.socket && this.socket.emit('Marlin:state', {
                     state,
-                    type: CONNECTION_TYPE_WIFI
+                    type: ConnectionType.WiFi,
                 });
             }
         });

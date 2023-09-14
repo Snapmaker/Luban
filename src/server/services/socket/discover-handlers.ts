@@ -1,9 +1,8 @@
 import ControllerEvent from '../../../app/connection/controller-events';
-
-import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI } from '../../constants';
 import type SocketServer from '../../lib/SocketManager';
 import logger from '../../lib/logger';
 import MachineDiscoverer from '../machine/MachineDiscoverer';
+import { ConnectionType } from '../machine/types';
 
 
 const log = logger('socket:discover-handlers');
@@ -16,7 +15,7 @@ const discoverMachine = (socket: SocketServer, options: DiscoverMachineOptions) 
     const { connectionType } = options;
 
     switch (connectionType) {
-        case CONNECTION_TYPE_WIFI: {
+        case ConnectionType.WiFi: {
             const discoverer = MachineDiscoverer.getInstance();
             discoverer.discoverNetworkedMachines({
                 callback: (discoverResult) => {
@@ -26,7 +25,7 @@ const discoverMachine = (socket: SocketServer, options: DiscoverMachineOptions) 
 
             break;
         }
-        case CONNECTION_TYPE_SERIAL: {
+        case ConnectionType.Serial: {
             const discoverer = MachineDiscoverer.getInstance();
             discoverer.discoverSerialPorts({
                 callback: (discoverResult) => {
@@ -46,19 +45,19 @@ interface SubscribeDiscoverMachineOptions {
 
 const subscribeDiscoverMachine = (socket: SocketServer, options: SubscribeDiscoverMachineOptions) => {
     log.info('Subscribe discover machines...');
-    if (options.connectionType === CONNECTION_TYPE_WIFI) {
+    if (options.connectionType === ConnectionType.WiFi) {
         const discoverer = MachineDiscoverer.getInstance();
         discoverer.subscribeDiscoverMachines({
-            connectionType: CONNECTION_TYPE_WIFI,
+            connectionType: ConnectionType.WiFi,
             interval: 5000,
             callback: (discoverResult) => {
                 socket.emit('machine:discover', discoverResult);
             },
         });
-    } else if (options.connectionType === CONNECTION_TYPE_SERIAL) {
+    } else if (options.connectionType === ConnectionType.Serial) {
         const discoverer = MachineDiscoverer.getInstance();
         discoverer.subscribeDiscoverMachines({
-            connectionType: CONNECTION_TYPE_SERIAL,
+            connectionType: ConnectionType.Serial,
             interval: 5000,
             callback: (discoverResult) => {
                 socket.emit('machine:serial-discover', discoverResult);
