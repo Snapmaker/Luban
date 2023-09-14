@@ -11,6 +11,7 @@ import {
 import { SnapmakerArtisanMachine } from '../../../../app/machines';
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 import logger from '../../../lib/logger';
+import SacpChannelBase from '../channels/SacpChannel';
 import SacpSerialChannel from '../channels/SacpSerialChannel';
 import SacpTcpChannel from '../channels/SacpTcpChannel';
 import TextSerialChannel from '../channels/TextSerialChannel';
@@ -29,7 +30,7 @@ class ArtisanMachineInstance extends MachineInstance {
         state.series = SnapmakerArtisanMachine.identifier;
 
         // module info
-        const { data: moduleInfos } = await this.channel.getModuleInfo();
+        const moduleInfos = await (this.channel as SacpChannelBase).getModuleInfo();
 
         const moduleListStatus = {
             // airPurifier: false,
@@ -83,7 +84,7 @@ class ArtisanMachineInstance extends MachineInstance {
     }
 
     public async onPrepare(): Promise<void> {
-        log.info('onPrepare');
+        log.info('On preparing machine...');
 
         if (this.channel instanceof SacpSerialChannel) {
             await this._onMachineReadySACP();

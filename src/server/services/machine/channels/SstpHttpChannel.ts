@@ -17,7 +17,7 @@ import {
 import logger from '../../../lib/logger';
 import workerManager from '../../task-manager/workerManager';
 import { ConnectionType, EventOptions } from '../types';
-import Channel, { CncChannelInterface, FileChannelInterface, GcodeChannelInterface, UploadFileOptions } from './Channel';
+import Channel, { CncChannelInterface, FileChannelInterface, UploadFileOptions } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 
 let waitConfirm: boolean;
@@ -112,7 +112,6 @@ interface GCodeQueueItem {
  * A singleton to manage devices connection.
  */
 class SstpHttpChannel extends Channel implements
-    GcodeChannelInterface,
     FileChannelInterface,
     CncChannelInterface {
     private isGcodeExecuting = false;

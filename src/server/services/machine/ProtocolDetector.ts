@@ -104,8 +104,8 @@ class ProtocolDetector {
     public async detectNetworkProtocol(host: string): Promise<NetworkProtocol> {
         const [resSACP, resHTTP, sacpUdpResponse] = await Promise.allSettled([
             this.tryConnectSacpTcp(host),
-            this.tryConnectHTTP(host),
             this.tryConnectSacpUdp(host),
+            this.tryConnectHTTP(host),
         ]);
 
         if (resHTTP.status === 'fulfilled' && resHTTP.value) {
@@ -132,12 +132,13 @@ class ProtocolDetector {
             autoOpen: false,
         });
 
+        // Timeout to default protocol to SACP
         setTimeout(() => {
             if (!hasData) {
                 protocol = SerialPortProtocol.SacpOverSerialPort;
                 trySerialConnect?.close();
             }
-        }, 1000);
+        }, 2000);
 
         await new Promise<void>((resolve) => {
             let responseBuffer = Buffer.alloc(0);

@@ -118,7 +118,7 @@ class SacpTcpChannel extends SacpChannelBase {
 
                             // TODO: Refactor this to ArtisanInstance
                             // Get module infos
-                            const { data: moduleInfos } = await this.sacpClient.getModuleInfo();
+                            const moduleInfos = await this.getModuleInfo();
 
                             moduleInfos.forEach(module => {
                                 // TODO: Hard-coded 10W laser head,
