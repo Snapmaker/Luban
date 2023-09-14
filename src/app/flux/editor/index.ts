@@ -1407,7 +1407,7 @@ export const actions = {
      */
     onReceiveSVGClippingTaskResult: (headType, taskResult) => async (dispatch, getState) => {
         // const { SVGActions, modelGroup, progressStatesManager, materials } = getState()[headType];
-        const { progressStatesManager, history } = getState()[headType];
+        const { progressStatesManager, history, toolPathGroup } = getState()[headType];
         // const { machine } = getState();
 
         if (taskResult.taskStatus === 'failed') {
@@ -1432,6 +1432,12 @@ export const actions = {
 
         if (config.type === SVGClippingType.Union || config.type === SVGClippingType.Clip) {
             dispatch(actions.removeSelectedModel(headType));
+            const toolPaths = toolPathGroup.getToolPaths();
+            toolPaths.forEach(item => {
+                if (item.modelMap.size === 0) {
+                    toolPathGroup.deleteToolPath(item.id);
+                }
+            });
             historyCount++;
         }
 

@@ -98,10 +98,12 @@ const checkoutAndClosedSVG = (svg) => {
 
 const standardizationSVG = (svg, modelInfo) => {
     const { width, height, scaleX, scaleY } = modelInfo.transformation;
-    const nScaleX = width / svg.width * scaleX;
-    const nScaleY = height / svg.height * scaleY;
-    const moveX = svg.viewBox[0] + svg.width / 2;
-    const moveY = svg.viewBox[1] + svg.height / 2;
+    const svgWidth = svg.viewBox[2];
+    const svgHeight = svg.viewBox[3];
+    const nScaleX = width / svgWidth * scaleX;
+    const nScaleY = height / svgHeight * scaleY;
+    const moveX = svg.viewBox[0] + svgWidth / 2;
+    const moveY = svg.viewBox[1] + svgHeight / 2;
 
     for (let i = 0; i < svg.shapes.length; i++) {
         for (let j = 0; j < svg.shapes[i].paths.length; j++) {
@@ -206,8 +208,8 @@ const writeSVG = async (svg, modelID, uploadName, type, transformation = {}) => 
     const outputFilename = pathWithRandomSuffix(`${uploadName}.svg`);
     const targetPath = `${process.env.Tmpdir}/${outputFilename}`;
 
-    const newWidth = svg.width;
-    const newHeight = svg.height;
+    const newWidth = svg.viewBox[2];
+    const newHeight = svg.viewBox[3];
 
     return new Promise((resolve) => {
         fs.writeFile(targetPath, svgToString(svg), () => {
