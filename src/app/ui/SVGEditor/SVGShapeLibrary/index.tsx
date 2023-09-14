@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import i18next from 'i18next';
-import { Checkbox, Spin } from 'antd';
+import { Checkbox, Spin, message } from 'antd';
 import classNames from 'classnames';
 import _ from 'lodash';
 import { CheckboxChangeEvent } from 'antd/lib/checkbox';
@@ -31,7 +31,7 @@ const SVGShapeLibrary = (props) => {
     const [indeterminate, setIndeterminate] = useState(false);
     const [checkAll, setCheckAll] = useState(false);
 
-    const getLabelList = async (query?: {labelIds?: number[]}) => {
+    const getLabelList = async (query?: {labelIds?: number[], pageSize?: string}) => {
         const res = (await api.getSvgShapeLabelList(query)) as any;
         if (!res.body || !res.body.data || !Array.isArray(res.body.data)) {
             return [];
@@ -46,6 +46,12 @@ const SVGShapeLibrary = (props) => {
         if (query && Array.isArray(query.labelIds) && query.labelIds.includes(0)) query = null;
         const res = (await api.getSvgShapeList(query)) as any;
         if (!res.body || !res.body.data || !Array.isArray(res.body.data)) {
+            setIsLoading(false);
+            if (res.body && res.body.code !== 200) {
+                message.error(res.body.msg);
+            } else {
+                message.error('get a null reslut, please try later.');
+            }
             return [];
         }
         const data = res.body.data;
@@ -75,7 +81,9 @@ const SVGShapeLibrary = (props) => {
         setSelectedLabelList(e.target.checked ? labelList.map(v => v.id) : []);
         setIndeterminate(false);
         setCheckAll(e.target.checked);
-        getSvgList({ labelIds: e.target.checked ? labelList.map(v => v.id) : [], pageSize: 100 }, true);
+        getSvgList({ labelIds: e.target.checked ? labelList.map(v => v.id) : [], pageSize: 100 }, true).catch(error => {
+            message.error(error);
+        });
     };
 
     const onClickSvg = (svgShape) => {
@@ -126,7 +134,9 @@ const SVGShapeLibrary = (props) => {
         if (_.isEqual(selectedLabelList, sortedCheckedValues)) return;
         setIndeterminate(!!sortedCheckedValues.length && sortedCheckedValues.length < labelList.length);
         setSelectedLabelList(sortedCheckedValues);
-        getSvgList({ labelIds: checkedValues, pageSize: 100 }, true);
+        getSvgList({ labelIds: checkedValues, pageSize: 100 }, true).catch(error => {
+            message.error(error);
+        });
         setCheckAll(sortedCheckedValues.length === labelList.length);
     };
 
@@ -141,9 +151,11 @@ const SVGShapeLibrary = (props) => {
     })();
 
     useEffect(() => {
-        getLabelList();
+        getLabelList({ pageSize: 1000 });
         // get svgshape count
-        getSvgList({ pageSize: 100 });
+        getSvgList({ pageSize: 100 }).catch(error => {
+            message.error(error);
+        });
 
         window.document.body.style.overflow = 'hidden';
         handleResize();
@@ -163,7 +175,10 @@ const SVGShapeLibrary = (props) => {
         return !!svgList[index * rowCount];
     };
     const loadMoreItems = async (startIndex, stopIndex) => {
-        return !isLoading && getSvgList({ labelIds: selectedLabelList, start: startIndex * rowCount, size: (stopIndex - startIndex) * rowCount });
+        return !isLoading && getSvgList({ labelIds: selectedLabelList, start: startIndex * rowCount, size: (stopIndex - startIndex) * rowCount })
+            .catch(error => {
+                message.error(error);
+            });
     };
 
     const renderSvgShape = (row, col) => {
@@ -211,29 +226,29 @@ const SVGShapeLibrary = (props) => {
     };
 
     return (
-        <Spin spinning={isLoading}>
-            <div className={styles['svg-shape-wrapper']}>
-                <MainToolBar
-                    wrapID={mainToolBarId}
-                    leftItems={[
-                        {
-                            title: i18n._('key-SvgShapeLibrary/Page-Back'),
-                            name: 'MainToolbarBack',
-                            action: () => (props?.isPopup ? props.onClose() : props.history.push('/home')),
-                        },
-                    ]}
-                    mainBarClassName="background-transparent"
-                    lang={i18next.language}
-                    className={styles['svg-shape-maintoolbar']}
-                />
-                <div className={styles['svg-shape-content-wrapper']}>
+        <div className={styles['svg-shape-wrapper']}>
+            <MainToolBar
+                wrapID={mainToolBarId}
+                leftItems={[
+                    {
+                        title: i18n._('key-SvgShapeLibrary/Page-Back'),
+                        name: 'MainToolbarBack',
+                        action: () => (props?.isPopup ? props.onClose() : props.history.push('/home')),
+                    },
+                ]}
+                mainBarClassName="background-transparent"
+                lang={i18next.language}
+                className={styles['svg-shape-maintoolbar']}
+            />
+            <div className={styles['svg-shape-content-wrapper']}>
+                <Spin spinning={isLoading}>
                     <div id="svg-shape-library" className={styles['svg-shape-content']}>
                         <div className={styles['svg-shape-leftside']}>
                             <h1>{i18n._('key-SvgShapeLibrary/Category')}</h1>
                             <Checkbox indeterminate={indeterminate} onChange={onCheckAllChange} checked={checkAll}>
                                 {i18n._('key-SvgShapeLibrary/All')}
                             </Checkbox>
-                            <Checkbox.Group style={{ width: '100%' }} className={styles['svg-shape-checkbox-group']} onChange={onChange} value={selectedLabelList}>
+                            <Checkbox.Group style={{ width: '100%', height: `${labelList?.length * 32}px` }} className={styles['svg-shape-checkbox-group']} onChange={onChange} value={selectedLabelList}>
                                 {
                                     labelList.map(label => {
                                         return (<Checkbox key={`label${label.id}`} value={label.id} className={styles['svg-shape-checkbox']}>{label.name}</Checkbox>);
@@ -276,9 +291,9 @@ const SVGShapeLibrary = (props) => {
                             </AutoSizer>
                         </div>
                     </div>
-                </div>
+                </Spin>
             </div>
-        </Spin>
+        </div>
     );
 };
 

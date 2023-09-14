@@ -294,13 +294,14 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                         message.error(i18n._('Please select a vector and an image at the same time.'));
                         return;
                     }
-                    const { file: clipSvgTag, viewWidth, viewHeight } = await handleClipPath(svgs, imgs);
+                    const widthRatio = imgs[0].sourceWidth / imgs[0].width;
+                    const { file: clipSvgTag, viewWidth } = await handleClipPath(svgs, imgs);
                     const bbox = calculateElemsBoundingbox(svgs);
                     setCurrentAdjustedTargetModel({
                         name: clipSvgTag.name,
                         x: bbox.viewboxX + bbox.viewWidth / 2 - size.x,
                         y: -(bbox.viewboxY + bbox.viewHeight / 2 - size.y),
-                        width: (viewWidth / viewHeight).toFixed(2) === (bbox.viewWidth / bbox.viewHeight).toFixed(2) ? bbox.viewWidth : 0
+                        width: viewWidth / widthRatio
                     });
                     dispatch(editorActions.uploadImage(HEAD_LASER, clipSvgTag, PROCESS_MODE_GREYSCALE, () => {
                         message.error(i18n._('Imgae create failed.'));

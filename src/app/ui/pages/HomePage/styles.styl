@@ -271,9 +271,9 @@
     flex-direction: column;
     .information-flow {
         max-height: 440px;
-@media (max-width: 1440px) {
-      max-height: 380px;
-}
+        @media (max-width: 1440px) {
+            max-height: 380px;
+        }
         width: 100%;
         overflow: auto;
         height: 100%
@@ -290,6 +290,7 @@
             padding-inline: 24px
             background-color: white;
             border-radius: 24px;
+            height: 100%
         }
         .swiper-slide {
             display: flex !important;
@@ -316,9 +317,10 @@
         .swiper-img {
             width: 50%;
             border-radius: 16px;
-            max-width: 185px;
+            max-width: 300px;
             display: flex;
             align-items: center
+            margin-right: 12px
         }
         .swiper-a {
             color: #0C63E2;
@@ -329,7 +331,9 @@
             line-height: normal;
             margin-top: 16px
         }
-
+        :global(.ant-carousel) {
+            flex: 1 1 auto;
+        }
         :global(.ant-carousel .slick-dots li),:global(.ant-carousel .slick-dots li button) {
             background-color: #D6D6D6;
             width: 6px
@@ -338,12 +342,16 @@
             overflow: hidden
         }
         :global(.ant-carousel .slick-dots li button) {
-            background-color: #0C63E2;
-            transition: none
-            width: 0
+            background-color: #D6D6D6;
+            transition: none;
+            width: 6px;
         }
-        :global(.ant-carousel .slick-dots li.slick-active) {
+        :global(.ant-carousel .slick-dots  li.slick-active) {
             width: 48px;
+        }
+        :global(.ant-carousel .slick-dots  li.slick-active button) {
+            width: 0;
+            background-color: #0C63E2;
         }
 
         .blocks-wrapper {
@@ -423,9 +431,9 @@
         height: 100%;
         // height: 24.7vw;
         max-height: 440px;
-@media (max-width: 1440px) {
-      max-height: 380px;
-}
+        @media (max-width: 1440px) {
+            max-height: 380px;
+        }
         // min-height: 256px;
         overflow: auto;
         background: #fff;
