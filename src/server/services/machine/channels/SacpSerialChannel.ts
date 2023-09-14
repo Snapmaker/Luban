@@ -111,6 +111,7 @@ class SacpSerialChannel extends SacpChannelBase {
 
         // await this.startHeartbeatBase(this.sacpClient);
         // this.setROTSubscribeApi();
+        await super.startHeartbeat();
     }
 
     public startGcode = async (options: EventOptions) => {

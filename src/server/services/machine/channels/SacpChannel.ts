@@ -79,6 +79,8 @@ class SacpChannelBase extends Channel implements
     CncChannelInterface,
     EnclosureChannelInterface,
     AirPurifierChannelInterface {
+    // heart beat
+    private heartbeatTimerLegacy;
     private heartbeatTimer;
     private shuttingDown: boolean = false;
 
@@ -136,8 +138,45 @@ class SacpChannelBase extends Channel implements
     }
 
     public async startHeartbeat(): Promise<void> {
-        // TODO: refactor startHeartbeatLegacy()
-        return super.startHeartbeat();
+        log.info('Start heartbeat.');
+
+        const subscribeHeartbeatCallback: ResponseCallback = (data) => {
+            if (this.heartbeatTimer) {
+                clearTimeout(this.heartbeatTimer);
+                this.heartbeatTimer = null;
+            }
+
+            this.heartbeatTimer = setTimeout(() => {
+                log.info('Lost heartbeat, close connection.');
+                this.socket && this.socket.emit('connection:close');
+            }, 10000);
+
+            const statusKey = readUint8(data.response.data, 0);
+
+            const status = WORKFLOW_STATUS_MAP[statusKey];
+
+            // Machine goes to running state
+            if (includes([WorkflowStatus.Unknown, WorkflowStatus.Idle, WorkflowStatus.Starting], this.machineStatus)
+                && includes([WorkflowStatus.Running], status)) {
+                // clear previous print job info
+                this.resetPrintJobInfo();
+
+                this.getPrintJobFileInfo();
+            }
+
+            this.machineStatus = status;
+            log.debug(`machine status = ${statusKey}, ${this.machineStatus}`);
+
+            this.socket && this.socket.emit('Marlin:state', {
+                state: {
+                    status: this.machineStatus,
+                }
+            });
+        };
+
+        const res = await this.sacpClient.subscribeHeartbeat({ interval: 2000 }, subscribeHeartbeatCallback);
+
+        log.info(`Subscribe heartbeat, result = ${res.code}`);
     }
 
     public async stopHeartbeat(): Promise<void> {
@@ -147,6 +186,10 @@ class SacpChannelBase extends Channel implements
         if (this.heartbeatTimer) {
             clearTimeout(this.heartbeatTimer);
             this.heartbeatTimer = null;
+        }
+        if (this.heartbeatTimerLegacy) {
+            clearTimeout(this.heartbeatTimerLegacy);
+            this.heartbeatTimerLegacy = null;
         }
 
         // Cancel subscription of heartbeat
@@ -606,6 +649,8 @@ class SacpChannelBase extends Channel implements
     protected async getPrintJobFileInfo(): Promise<void> {
         const { data } = await this.sacpClient.getPrintingFileInfo();
 
+        log.debug(`get file info: filename=${data.filename}, total lines=${data.totalLine}`);
+
         if (!data.totalLine) {
             return;
         }
@@ -690,7 +735,7 @@ class SacpChannelBase extends Channel implements
         }
     }
 
-    // old heartbeat base, refactor needed
+    // TODO: refactor startHeartbeatLegacy(), put subscriptions on machine instances.
     public startHeartbeatLegacy = async (sacpClient: SacpClient, client?: net.Socket) => {
         this.sacpClient = sacpClient;
 
@@ -746,12 +791,12 @@ class SacpChannelBase extends Channel implements
 
             const statusKey = readUint8(data.response.data, 0);
 
-            if (this.heartbeatTimer) {
-                clearTimeout(this.heartbeatTimer);
-                this.heartbeatTimer = null;
+            if (this.heartbeatTimerLegacy) {
+                clearTimeout(this.heartbeatTimerLegacy);
+                this.heartbeatTimerLegacy = null;
             }
 
-            this.heartbeatTimer = setTimeout(() => {
+            this.heartbeatTimerLegacy = setTimeout(() => {
                 client && client.destroy();
                 log.info('TCP close');
                 this.socket && this.socket.emit('connection:close');
