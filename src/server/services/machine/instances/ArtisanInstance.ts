@@ -80,7 +80,13 @@ class ArtisanMachineInstance extends MachineInstance {
         this.socket.emit('connection:connected', { state: state, err: '' });
 
         // Start heartbeat
-        await this.channel.startHeartbeat();
+        // await this.channel.startHeartbeat();
+
+        // Legacy
+        const sacpClient = (this.channel as SacpChannelBase).sacpClient;
+        await (this.channel as SacpChannelBase).startHeartbeatLegacy(sacpClient, undefined);
+
+        (this.channel as SacpChannelBase).setROTSubscribeApi();
     }
 
     public async onPrepare(): Promise<void> {

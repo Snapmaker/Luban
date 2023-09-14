@@ -22,19 +22,6 @@ const log = logger('machine:instance:J1Instance');
 
 
 class J1MachineInstance extends MachineInstance {
-    public async onPrepare(): Promise<void> {
-        log.info('On preparing machine...');
-
-        if (this.channel instanceof SacpSerialChannel) {
-            await this._onMachineReadySACP();
-        } else if (this.channel instanceof SacpTcpChannel) {
-            await this._onMachineReadySACP();
-        }
-        if (this.channel instanceof TextSerialChannel) {
-            // Not implemented
-        }
-    }
-
     private async _onMachineReadySACP() {
         // TO DO: Need to get seriesSize for 'connection:connected' event
         const state: ConnectedData = {};
@@ -94,7 +81,33 @@ class J1MachineInstance extends MachineInstance {
         this.socket.emit('connection:connected', { state: state, err: '' });
 
         // Start heartbeat
-        await this.channel.startHeartbeat();
+        // await this.channel.startHeartbeat();
+
+        // Legacy
+        const sacpClient = (this.channel as SacpChannelBase).sacpClient;
+        await (this.channel as SacpChannelBase).startHeartbeatLegacy(sacpClient, undefined);
+
+        (this.channel as SacpChannelBase).setROTSubscribeApi();
+    }
+
+    public async onPrepare(): Promise<void> {
+        log.info('On preparing machine...');
+
+        if (this.channel instanceof SacpSerialChannel) {
+            await this._onMachineReadySACP();
+        } else if (this.channel instanceof SacpTcpChannel) {
+            await this._onMachineReadySACP();
+        }
+        if (this.channel instanceof TextSerialChannel) {
+            // Not implemented
+        }
+    }
+
+    public async onClosing(): Promise<void> {
+        log.info('On closing connection...');
+
+        log.info('Stop heartbeat.');
+        await this.channel.stopHeartbeat();
     }
 }
 

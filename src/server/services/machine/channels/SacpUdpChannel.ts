@@ -1,10 +1,5 @@
-import { WorkflowStatus } from '@snapmaker/luban-platform';
-import { ResponseCallback } from '@snapmaker/snapmaker-sacp-sdk';
-import { readUint8 } from '@snapmaker/snapmaker-sacp-sdk/dist/helper';
 import dgram from 'dgram';
-import { includes } from 'lodash';
 
-import { WORKFLOW_STATUS_MAP } from '../../../../app/constants';
 import { SACP_TYPE_SERIES_MAP } from '../../../../app/constants/machines';
 import logger from '../../../lib/logger';
 import SacpClient from '../sacp/SacpClient';
