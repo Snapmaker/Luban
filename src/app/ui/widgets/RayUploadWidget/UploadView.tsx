@@ -32,7 +32,6 @@ const UploadView: React.FC = () => {
 
     const workflowStatus = useSelector((state: RootState) => state.workspace.workflowStatus);
     // const activeGcodeFile = useSelector((state: RootState) => state.workspace.activeGcodeFile);
-    console.log('workflowStatus =', workflowStatus);
 
     const isWorking = includes([
         WorkflowStatus.Running, WorkflowStatus.Pausing, WorkflowStatus.Paused, WorkflowStatus.Stopping, WorkflowStatus.Resuming

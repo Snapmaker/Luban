@@ -97,7 +97,9 @@ class SacpSerialChannel extends SacpChannelBase {
     }
 
     public async connectionClose(): Promise<boolean> {
-        this.serialport?.close();
+        this.serialport?.close(() => {
+            // Closed callback, TODO: return a promise here?
+        });
         this.serialport?.destroy();
         this.sacpClient?.dispose();
 

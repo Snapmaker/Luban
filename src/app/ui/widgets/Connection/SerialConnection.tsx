@@ -276,7 +276,18 @@ const SerialConnection: React.FC = () => {
 
     const canRefresh = !loadingPorts && !isOpen;
     const canChangePort = canRefresh;
-    const canOpenPort = selectedAgent && selectedAgent.port && !selectedAgent.address && !isOpen;
+
+    const canOpenPort = (() => {
+        if (!(selectedAgent && selectedAgent.port && !selectedAgent.address)) {
+            return false;
+        }
+
+        if (isConnected || isOpen || connectLoading) {
+            return false;
+        }
+
+        return true;
+    })();
 
     return (
         <div>
