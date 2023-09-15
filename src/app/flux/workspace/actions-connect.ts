@@ -176,7 +176,7 @@ const connect = (agent: MachineAgent) => {
                 dispatch(setServerToken(agent.getToken()));
             } else {
                 // serial port
-                dispatch(resetMachineState(ConnectionType.Serial));
+                // dispatch(resetMachineState(ConnectionType.Serial));
                 machineStore.set('port', agent.port);
                 dispatch(setMachineSerialPort(agent.port));
             }

@@ -258,8 +258,6 @@ export const actions = {
             },
 
             'Marlin:state': (options) => {
-                console.log('Marlin:state', options);
-
                 // Note: serialPort & Wifi -> for heartBeat
                 const { state } = options;
                 const { headType, pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
