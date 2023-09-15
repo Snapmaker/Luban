@@ -517,6 +517,9 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
         if (!allVisible) {
             return false;
         }
+        if (this.svgContentGroup.selectedElements.length === 0) {
+            return false;
+        }
         return this.svgContentGroup.selectedElements.includes(mouseTarget)
             || this.props.elementActions.isPointInSelectArea(x - this.props.size.x, this.props.size.y - y);
     }
