@@ -7,10 +7,9 @@ import { v4 as uuid } from 'uuid';
 
 import { isEqual, round, whetherTransformed } from '../../../shared/lib/utils';
 import api from '../../api';
+import { controller } from '../../communication/socket-communication';
 import {
     COORDINATE_MODE_BOTTOM_CENTER,
-    // COORDINATE_MODE_CENTER,
-    COORDINATE_MODE_CENTER,
     DATA_PREFIX,
     DISPLAYED_TYPE_MODEL,
     HEAD_LASER,
@@ -20,7 +19,7 @@ import {
     PAGE_PROCESS,
     PROCESS_MODES_EXCEPT_VECTOR,
     PROCESS_MODE_VECTOR,
-    SOURCE_TYPE,
+    SOURCE_TYPE
 } from '../../constants';
 import {
     CylinderWorkpieceSize,
@@ -28,13 +27,16 @@ import {
     Materials,
     ObjectReference,
     Origin,
+    OriginReference,
     OriginType,
     RectangleWorkpieceSize,
-    WorkpieceShape
+    Workpiece,
+    WorkpieceShape,
+    getOriginReferenceOptions,
+    getOriginTypeOptions
 } from '../../constants/coordinate';
 import CompoundOperation from '../../core/CompoundOperation';
 import OperationHistory from '../../core/OperationHistory';
-import { controller } from '../../communication/socket-communication';
 import log from '../../lib/log';
 import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
@@ -68,8 +70,8 @@ import { actions as operationHistoryActions } from '../operation-history';
 import { actions as projectActions } from '../project';
 /* eslint-disable-next-line import/no-cycle */
 // import { HeadType } from '../../../server/services/machine/sacp/SacpClient';
-import { actions as appGlobalActions } from '../app-global';
 import { SVGClippingResultType, SVGClippingType } from '../../constants/clipping';
+import { actions as appGlobalActions } from '../app-global';
 import UpdateHrefOperation2D from '../operation-history/UpdateHrefOperation2D';
 
 
@@ -2218,15 +2220,6 @@ export const actions = {
                     }
                 ));
                 await dispatch(actions.updateWorkpieceObject(headType));
-
-                await dispatch(actions.changeCoordinateMode(
-                    headType,
-                    COORDINATE_MODE_CENTER,
-                    {
-                        x: activeMachine.metadata.size.x,
-                        y: activeMachine.metadata.size.y,
-                    }
-                ));
             } else {
                 await dispatch(actions.setWorkpiece(
                     headType,
@@ -2237,14 +2230,61 @@ export const actions = {
                     }
                 ));
                 await dispatch(actions.updateWorkpieceObject(headType));
+            }
+        };
+    },
 
+    initializeOrigin: (headType: HeadType) => {
+        return async (dispatch, getState) => {
+            const activeMachine: Machine = getState().machine.activeMachine;
+            const workpiece: Workpiece = getState()[headType].workpiece;
+            const origin: Origin = getState()[headType].origin;
+
+            // origin type
+            let originType = origin.type;
+
+            const originTypeOptions = getOriginTypeOptions(workpiece.shape);
+            if (!originTypeOptions.find(option => option.value === originType)) {
+                originType = originTypeOptions[0].value;
+            }
+
+            // origin reference
+            let originReference = origin.reference;
+            const originReferenceOptions = getOriginReferenceOptions(workpiece.shape, originType);
+            if (!originReferenceOptions.find(option => option.value === originReference)) {
+                originReference = originReferenceOptions[0].mode.value as OriginReference;
+            }
+
+            await dispatch(actions.setOrigin(
+                headType,
+                {
+                    type: originType,
+                    reference: originReference,
+                    referenceMetadata: {},
+                }
+            ));
+
+            // TODO: Refactor code below
+            // get mode as well
+            const targetOption = originReferenceOptions.find(option => option.value === originReference);
+
+            if (workpiece.shape === WorkpieceShape.Rectangle) {
                 await dispatch(actions.changeCoordinateMode(
                     headType,
-                    COORDINATE_MODE_BOTTOM_CENTER,
+                    targetOption.mode,
                     {
-                        x: 40 * Math.PI,
-                        y: 75,
-                    },
+                        x: activeMachine.metadata.size.x,
+                        y: activeMachine.metadata.size.y,
+                    }
+                ));
+            } else {
+                dispatch(actions.changeCoordinateMode(
+                    HEAD_LASER,
+                    targetOption.mode,
+                    {
+                        x: (workpiece.size as CylinderWorkpieceSize).diameter * Math.PI,
+                        y: (workpiece.size as CylinderWorkpieceSize).length,
+                    }
                 ));
             }
         };
