@@ -233,14 +233,11 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
     const activeMachineToolOptions: MachineToolHeadOptions = useSelector((state: RootState) => state.workspace.activeMachineToolOptions);
 
     // connection state
-    const {
-        isConnected,
-        isSendedOnWifi,
-    } = useSelector((state: RootState) => state.workspace, shallowEqual);
-
     const connectionType: ConnectionType = useSelector((state: RootState) => state.workspace.connectionType);
-    const isNetworkConnected = connectionType === ConnectionType.WiFi;
-    const isSerialPortConnected = connectionType === ConnectionType.Serial;
+    const isConnected: boolean = useSelector((state: RootState) => state.workspace.isConnected);
+
+    const isNetworkConnected = isConnected && connectionType === ConnectionType.WiFi;
+    const isSerialPortConnected = isConnected && connectionType === ConnectionType.Serial;
 
     const {
         headType,
@@ -560,9 +557,6 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
     const hasFile = gcodeFiles.length > 0;
     const selectedFile = _.find(gcodeFiles, { uploadName: selectFileName });
 
-    // TODO: what is isSendedOnWifi?
-    const isSended = isNetworkConnected ? isSendedOnWifi : true;
-
     const canStartPrint = useMemo(() => {
         if (!hasFile || !selectedFile) {
             return false;
@@ -579,15 +573,11 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
             return false;
         }
 
-        if (!isSended) {
-            return false;
-        }
-
         // workflow status
         return includes([WorkflowStatus.Idle], workflowStatus);
-    }, [hasFile, selectedFile, isConnected, activeMachineToolOptions, isSended, workflowStatus]);
+    }, [hasFile, selectedFile, isConnected, activeMachineToolOptions, workflowStatus]);
 
-    const canSend = hasFile && isConnected && isNetworkConnected && isSendedOnWifi;
+    const canSend = hasFile && selectedFile && isNetworkConnected;
 
     const selectedGCodeFile = gcodeFiles[selectFileIndex >= 0 ? selectFileIndex : 0];
 
