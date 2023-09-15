@@ -816,26 +816,40 @@ export const actions = {
         if (activeMachine && activeMachine.identifier === SnapmakerArtisanMachine.identifier) {
             // Check only single extruder used
             const checkLeftExtruder = (extruderNumber: string) => {
-                return extruderNumber === LEFT_EXTRUDER_MAP_NUMBER;
+                return extruderNumber === LEFT_EXTRUDER_MAP_NUMBER || extruderNumber === BOTH_EXTRUDER_MAP_NUMBER;
             };
 
             const models = modelGroup.getModels<ThreeModel>();
-            let useOnlyLeftExtruder = true;
+            let useLeftExtruder = false;
             for (const model of models) {
                 if (model.isColored) {
-                    useOnlyLeftExtruder = false;
+                    useLeftExtruder = true;
                     break;
                 }
 
-                if (!checkLeftExtruder(model.extruderConfig.infill)
-                    || !checkLeftExtruder(model.extruderConfig.shell)) {
-                    useOnlyLeftExtruder = false;
+                if (checkLeftExtruder(model.extruderConfig.infill) || checkLeftExtruder(model.extruderConfig.shell)) {
+                    useLeftExtruder = true;
                     break;
                 }
             }
 
-            if (useOnlyLeftExtruder) {
-                // If use only left extruder, then right most 25 mm is unreachable
+            // adhesion
+            const adhesionEnabled = includes(['skirt', 'brim', 'raft'], adhesionType);
+            if (!useLeftExtruder && adhesionEnabled) {
+                const helperExtruderConfig = modelGroup.getHelpersExtruderConfig();
+                useLeftExtruder ||= checkLeftExtruder(helperExtruderConfig.adhesion);
+            }
+
+            // support
+            const supportEnabled = activeQualityDefinition?.settings.support_enable?.default_value || false;
+            if (!useLeftExtruder && supportEnabled) {
+                const supportExtruderConfig = modelGroup.getSupportExtruderConfig();
+                useLeftExtruder ||= checkLeftExtruder(supportExtruderConfig.support);
+                useLeftExtruder ||= checkLeftExtruder(supportExtruderConfig.interface);
+            }
+
+            if (useLeftExtruder) {
+                // If use left extruder, then right most 25 mm is unreachable
                 workRange.max.x -= 25;
             }
         }
