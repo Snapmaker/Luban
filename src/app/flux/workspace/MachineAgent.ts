@@ -194,6 +194,10 @@ export class MachineAgent extends EventEmitter {
     }
 
     public startServerGcode(args, callback) {
+        dispatch(baseActions.updateState({
+            isSendedOnWifi: false
+        }));
+
         controller
             .emitEvent(ControllerEvent.StartGCode, args)
             .once(ControllerEvent.StartGCode, ({ msg, code }) => {
@@ -208,10 +212,6 @@ export class MachineAgent extends EventEmitter {
                     this.gcodePrintingInfo.startTime = new Date().getTime();
                 }
             });
-
-        dispatch(baseActions.updateState({
-            isSendedOnWifi: false
-        }));
     }
 
     public pauseServerGcode(callback) {
