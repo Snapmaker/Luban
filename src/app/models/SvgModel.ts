@@ -1233,6 +1233,13 @@ class SvgModel extends BaseModel {
      */
     public clone(modelGroup: ModelGroup2D) {
         const clone = new SvgModel({ ...this } as unknown as ModelInfo, modelGroup);
+        if (this.resource.processedFile) {
+            clone.resource.setProcessedFile(
+                this.resource.processedFile.name,
+                this.resource.processedFile.size.width,
+                this.resource.processedFile.size.height
+            );
+        }
         clone.originModelID = this.modelID;
         const specialPrefix = this.isDrawGraphic() ? 'graph-' : '';
         clone.modelID = `${specialPrefix}${uuid()}`;
