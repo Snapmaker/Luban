@@ -10,7 +10,7 @@ import {
 import api from '../../api';
 import { DATA_PREFIX } from '../../constants';
 import { HEAD_PRINTING } from '../../constants/machines';
-import { controller } from '../../lib/controller';
+import { controller } from '../../communication/socket-communication';
 import workerManager from '../../lib/manager/workerManager';
 import ModelGroup from '../../models/ModelGroup';
 import { ExtruderConfig, ModelTransformation, TSize } from '../../models/ThreeBaseModel';

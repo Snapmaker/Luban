@@ -2,7 +2,7 @@ import os from 'os';
 import wifi from 'node-wifi';
 
 import type SocketServer from '../../lib/SocketManager';
-import ControllerEvent from '../../../app/connection/controller-events';
+import SocketEvent from '../../../app/communication/socket-events';
 import logger from '../../lib/logger';
 
 
@@ -19,7 +19,7 @@ const listAvaiableNetworks = (socket) => {
     });
 
     const emitNetworks = (networks) => {
-        socket.emit(ControllerEvent.ListWiFiNetworks, networks);
+        socket.emit(SocketEvent.ListWiFiNetworks, networks);
     };
 
     if (ipv4Interfaces.length === 0) {
@@ -59,7 +59,7 @@ const listAvaiableNetworks = (socket) => {
 
 
 function register(socketServer: SocketServer): void {
-    socketServer.registerEvent(ControllerEvent.ListWiFiNetworks, listAvaiableNetworks);
+    socketServer.registerEvent(SocketEvent.ListWiFiNetworks, listAvaiableNetworks);
 }
 
 export {

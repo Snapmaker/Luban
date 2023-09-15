@@ -3,7 +3,7 @@ import { isEqualWith } from 'lodash';
 import { LaserMachineMetadata, Machine, MachineType } from '@snapmaker/luban-platform';
 import { CUSTOM_SERVER_NAME } from '../../constants';
 import { DEFAULT_BAUDRATE } from '../../constants/machines';
-import { controller } from '../../lib/controller';
+import { controller } from '../../communication/socket-communication';
 import { MachineAgent } from './MachineAgent';
 import { NetworkedMachineInfo } from './NetworkedMachine';
 import baseActions from './actions-base';

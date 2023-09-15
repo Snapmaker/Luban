@@ -15,7 +15,7 @@ import { RootState } from '../../../flux/index.def';
 import { actions as widgetsActions } from '../../../flux/widget';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import { MachineAgent } from '../../../flux/workspace/MachineAgent';
-import { controller } from '../../../lib/controller';
+import { controller } from '../../../communication/socket-communication';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
 import { in2mm, mm2in } from '../../../lib/units';

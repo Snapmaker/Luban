@@ -6,7 +6,7 @@ import { v4 as uuid } from 'uuid';
 
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import api from '../../api';
-import ControllerEvent from '../../connection/controller-events';
+import SocketEvent from '../../communication/socket-events';
 import {
     CONNECTION_GET_GCODEFILE,
     CONNECTION_HEAD_BEGIN_WORK,
@@ -29,7 +29,7 @@ import {
     findToolHead,
 } from '../../constants/machines';
 import { valueOf } from '../../lib/contants-utils';
-import { controller } from '../../lib/controller';
+import { controller } from '../../communication/socket-communication';
 import { logGcodeExport } from '../../lib/gaEvent';
 import log from '../../lib/log';
 import workerManager from '../../lib/manager/workerManager';
@@ -98,7 +98,7 @@ export const actions = {
     __initRemoteEvents: () => (dispatch, getState) => {
         const controllerEvents = {
             // connecting state from remote
-            [ControllerEvent.ConnectionConnecting]: (options: { requireAuth?: boolean }) => {
+            [SocketEvent.ConnectionConnecting]: (options: { requireAuth?: boolean }) => {
                 const { requireAuth = false } = options;
 
                 if (requireAuth) {
@@ -258,6 +258,8 @@ export const actions = {
             },
 
             'Marlin:state': (options) => {
+                console.log('Marlin:state', options);
+
                 // Note: serialPort & Wifi -> for heartBeat
                 const { state } = options;
                 const { headType, pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
@@ -585,7 +587,7 @@ export const actions = {
                 if (includes(EMERGENCY_STOP_BUTTON, owner)) {
                     if (errorCode === 1) {
                         // TODO
-                        controller.emitEvent(ControllerEvent.ConnectionClose, () => {
+                        controller.emitEvent(SocketEvent.ConnectionClose, () => {
                             dispatch(connectActions.resetMachineState());
                             dispatch(actions.updateMachineState({
                                 headType: '',
@@ -1136,7 +1138,7 @@ export const actions = {
 
     executeCmd: (cmd: string) => {
         console.log('execute cmd', cmd);
-        controller.emitEvent(ControllerEvent.ExecuteCmd, { cmd });
+        controller.emitEvent(SocketEvent.ExecuteCmd, { cmd });
     },
 
     /**
@@ -1155,7 +1157,7 @@ export const actions = {
             return;
         }
         controller.emitEvent(
-            ControllerEvent.ExecuteGCode,
+            SocketEvent.ExecuteGCode,
             { gcode, context, cmd },
             () => {
                 if (homingModal && gcode === 'G28') {

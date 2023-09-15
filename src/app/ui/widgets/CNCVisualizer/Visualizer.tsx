@@ -17,7 +17,7 @@ import { Origin, Workpiece, convertMaterialsToWorkpiece } from '../../../constan
 import { actions as editorActions } from '../../../flux/editor';
 import { actions as machineActions } from '../../../flux/machine';
 import { actions as operationHistoryActions } from '../../../flux/operation-history';
-import { controller } from '../../../lib/controller';
+import { controller } from '../../../communication/socket-communication';
 import i18n from '../../../lib/i18n';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
 import modal from '../../../lib/modal';

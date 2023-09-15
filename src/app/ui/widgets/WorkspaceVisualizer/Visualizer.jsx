@@ -20,7 +20,7 @@ import {
     PROTOCOL_TEXT,
 } from '../../../constants';
 import { WORKSPACE_STAGE, actions as workspaceActions } from '../../../flux/workspace';
-import { controller } from '../../../lib/controller';
+import { controller } from '../../../communication/socket-communication';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import TargetPoint from '../../../scene/three-extensions/TargetPoint';

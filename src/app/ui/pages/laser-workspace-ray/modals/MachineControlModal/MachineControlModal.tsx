@@ -3,10 +3,10 @@ import classNames from 'classnames';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import ControllerEvent from '../../../../../connection/controller-events';
+import SocketEvent from '../../../../../communication/socket-events';
 import { SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH } from '../../../../../constants';
 import { RootState } from '../../../../../flux/index.def';
-import controller from '../../../../../lib/controller';
+import controller from '../../../../../communication/socket-communication';
 import i18n from '../../../../../lib/i18n';
 import { Button } from '../../../../components/Buttons';
 import Modal from '../../../../components/Modal';
@@ -23,8 +23,8 @@ const EnclosureSection: React.FC = () => {
 
     const updateEnclosureInfo = useCallback(() => {
         controller
-            .emitEvent(ControllerEvent.GetEnclosureInfo)
-            .once(ControllerEvent.GetEnclosureInfo, (response: {
+            .emitEvent(SocketEvent.GetEnclosureInfo)
+            .once(SocketEvent.GetEnclosureInfo, (response: {
                 err: number;
                 enclosureInfo: {
                     status: boolean;
@@ -62,8 +62,8 @@ const EnclosureSection: React.FC = () => {
 
         const newIntensity = lightIntensity === 0 ? 100 : 0;
         controller
-            .emitEvent(ControllerEvent.SetEnclosureLight, { value: newIntensity })
-            .once(ControllerEvent.SetEnclosureLight, ({ err }) => {
+            .emitEvent(SocketEvent.SetEnclosureLight, { value: newIntensity })
+            .once(SocketEvent.SetEnclosureLight, ({ err }) => {
                 if (err) {
                     setLightPending(false);
                     return;
@@ -87,8 +87,8 @@ const EnclosureSection: React.FC = () => {
 
         const newFanStrength = fanStrength === 0 ? 100 : 0;
         controller
-            .emitEvent(ControllerEvent.SetEnclosureFan, { value: newFanStrength })
-            .once(ControllerEvent.SetEnclosureFan, ({ err }) => {
+            .emitEvent(SocketEvent.SetEnclosureFan, { value: newFanStrength })
+            .once(SocketEvent.SetEnclosureFan, ({ err }) => {
                 if (err) {
                     setFanPending(false);
                     return;
@@ -131,8 +131,8 @@ const AirPurifierSection: React.FC = () => {
 
     const updateAirPurifierInfo = useCallback(() => {
         controller
-            .emitEvent(ControllerEvent.GetAirPurifierInfo)
-            .once(ControllerEvent.GetAirPurifierInfo, (response: {
+            .emitEvent(SocketEvent.GetAirPurifierInfo)
+            .once(SocketEvent.GetAirPurifierInfo, (response: {
                 err: number;
                 airPurifierInfo: {
                     status: number;
@@ -163,8 +163,8 @@ const AirPurifierSection: React.FC = () => {
     const onSwitchFilter = useCallback(() => {
         const newEnabled = !enabled;
         controller
-            .emitEvent(ControllerEvent.SetAirPurifierSwitch, { enable: newEnabled })
-            .once(ControllerEvent.SetAirPurifierSwitch, ({ err }) => {
+            .emitEvent(SocketEvent.SetAirPurifierSwitch, { enable: newEnabled })
+            .once(SocketEvent.SetAirPurifierSwitch, ({ err }) => {
                 if (err) {
                     return;
                 }
@@ -184,8 +184,8 @@ const AirPurifierSection: React.FC = () => {
         }
 
         controller
-            .emitEvent(ControllerEvent.SetAirPurifierStrength, { value: strength })
-            .once(ControllerEvent.SetAirPurifierStrength, ({ err }) => {
+            .emitEvent(SocketEvent.SetAirPurifierStrength, { value: strength })
+            .once(SocketEvent.SetAirPurifierStrength, ({ err }) => {
                 if (err) {
                     return;
                 }

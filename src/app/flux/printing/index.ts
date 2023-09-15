@@ -42,7 +42,7 @@ import {
 import { getMachineToolHeadConfigPath, isDualExtruder } from '../../constants/machines';
 import { isQualityPresetVisible, PRESET_CATEGORY_CUSTOM } from '../../constants/preset';
 
-import { controller } from '../../lib/controller';
+import { controller } from '../../communication/socket-communication';
 import { logPritingSlice, logProfileChange, logToolBarOperation, logTransformOperation } from '../../lib/gaEvent';
 import i18n from '../../lib/i18n';
 import log from '../../lib/log';

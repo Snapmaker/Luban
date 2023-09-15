@@ -4,7 +4,7 @@ import { capitalize } from 'lodash';
 import React, { useCallback, useMemo, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
-import ControllerEvent from '../../../connection/controller-events';
+import SocketEvent from '../../../communication/socket-events';
 import {
     LEFT_EXTRUDER,
     LEFT_EXTRUDER_MAP_NUMBER,
@@ -13,7 +13,7 @@ import {
 import { isDualExtruder } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
 import { actions as workspaceActions } from '../../../flux/workspace';
-import { controller } from '../../../lib/controller';
+import { controller } from '../../../communication/socket-communication';
 import i18n from '../../../lib/i18n';
 import { machine as SnapmakerJ1Machine } from '../../../machines/snapmaker-j1';
 import Anchor from '../../components/Anchor';
@@ -59,7 +59,7 @@ const PrintToolControl: React.FC = () => {
     } = useSelector((state: RootState) => state.workspace);
 
     const setHeatedBedTemperature = useCallback((temp) => {
-        controller.emitEvent(ControllerEvent.SetBedTemperature, {
+        controller.emitEvent(SocketEvent.SetBedTemperature, {
             heatedBedTemperatureValue: temp
         });
     }, []);
@@ -79,7 +79,7 @@ const PrintToolControl: React.FC = () => {
         } else {
             extruderIndex = LEFT_EXTRUDER_MAP_NUMBER;
         }
-        controller.emitEvent(ControllerEvent.SwitchActiveExtruder, {
+        controller.emitEvent(SocketEvent.SwitchActiveExtruder, {
             extruderIndex,
         });
     }, [currentWorkNozzle]);
@@ -108,11 +108,11 @@ const PrintToolControl: React.FC = () => {
         onClickPlusZOffset: (extruderIndex) => {
             const zOffset = extruderIndex === RIGHT_EXTRUDER_MAP_NUMBER ? rightZOffsetValue : leftZOffsetValue;
             controller
-                .emitEvent(ControllerEvent.SetZOffset, {
+                .emitEvent(SocketEvent.SetZOffset, {
                     zOffset,
                     extruderIndex,
                 })
-                .once(ControllerEvent.SetZOffset, ({ msg }) => {
+                .once(SocketEvent.SetZOffset, ({ msg }) => {
                     if (msg) {
                         return;
                     }
@@ -122,11 +122,11 @@ const PrintToolControl: React.FC = () => {
         onClickMinusZOffset: (extruderIndex) => {
             const zOffset = 0 - (extruderIndex === RIGHT_EXTRUDER_MAP_NUMBER ? rightZOffsetValue : leftZOffsetValue);
             controller
-                .emitEvent(ControllerEvent.SetZOffset, {
+                .emitEvent(SocketEvent.SetZOffset, {
                     zOffset,
                     extruderIndex,
                 })
-                .once(ControllerEvent.SetZOffset, ({ msg }) => {
+                .once(SocketEvent.SetZOffset, ({ msg }) => {
                     if (msg) {
                         return;
                     }
@@ -135,23 +135,23 @@ const PrintToolControl: React.FC = () => {
         },
         onClickLoad: (extruderIndex) => {
             setSqueezing(true);
-            controller.emitEvent(ControllerEvent.LoadFilament, {
+            controller.emitEvent(SocketEvent.LoadFilament, {
                 extruderIndex: extruderIndex
-            }).once(ControllerEvent.LoadFilament, () => {
+            }).once(SocketEvent.LoadFilament, () => {
                 setSqueezing(false);
             });
         },
         onClickUnload: (extruderIndex) => {
             setSqueezing(true);
-            controller.emitEvent(ControllerEvent.UnloadFilamnet, {
+            controller.emitEvent(SocketEvent.UnloadFilamnet, {
                 extruderIndex: extruderIndex
-            }).once(ControllerEvent.UnloadFilamnet, () => {
+            }).once(SocketEvent.UnloadFilamnet, () => {
                 setSqueezing(false);
             });
         },
 
         updateNozzleTemp: (extruderIndex, temp) => {
-            controller.emitEvent(ControllerEvent.SetExtruderTemperature, {
+            controller.emitEvent(SocketEvent.SetExtruderTemperature, {
                 extruderIndex, // RIGHT_EXTRUDER_MAP_NUMBER
                 nozzleTemperatureValue: temp
             });

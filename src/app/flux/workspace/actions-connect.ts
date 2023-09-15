@@ -2,12 +2,12 @@ import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { isEqual } from 'lodash';
 import isInteger from 'lodash/isInteger';
 
-import ControllerEvent from '../../connection/controller-events';
+import SocketEvent from '../../communication/socket-events';
 import {
     CONNECTION_STATUS_CONNECTING,
     CONNECTION_STATUS_IDLE
 } from '../../constants';
-import controller from '../../lib/controller';
+import controller from '../../communication/socket-communication';
 import { machineStore } from '../../store/local-storage';
 import { ConnectResult, MachineAgent } from './MachineAgent';
 import baseActions from './actions-base';
@@ -216,8 +216,8 @@ const resetConnections = ({ force = false }) => {
     return (dispatch) => {
         // disconnect all connections when reload
         controller
-            .emitEvent(ControllerEvent.ConnectionClose, { force })
-            .once(ControllerEvent.ConnectionClose, () => {
+            .emitEvent(SocketEvent.ConnectionClose, { force })
+            .once(SocketEvent.ConnectionClose, () => {
                 // reset machine state
                 dispatch(resetMachineState());
 

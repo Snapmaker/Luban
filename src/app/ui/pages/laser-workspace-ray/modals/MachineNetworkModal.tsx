@@ -5,9 +5,9 @@ import classNames from 'classnames';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import ControllerEvent from '../../../../connection/controller-events';
+import SocketEvent from '../../../../communication/socket-events';
 import { RootState } from '../../../../flux/index.def';
-import controller from '../../../../lib/controller';
+import controller from '../../../../communication/socket-communication';
 import i18n from '../../../../lib/i18n';
 import log from '../../../../lib/log';
 import { Button } from '../../../components/Buttons';
@@ -96,14 +96,14 @@ const MachineNetworkModal: React.FC<MachineNetworkModalProps> = (props) => {
     const loadCurrentNetwork = useCallback(async () => {
         return new Promise<boolean>((resolve) => {
             controller
-                .emitEvent(ControllerEvent.GetMachineNetworkConfiguration)
-                .once(ControllerEvent.GetMachineNetworkConfiguration, (networkConfiguration: NetworkConfiguration) => {
+                .emitEvent(SocketEvent.GetMachineNetworkConfiguration)
+                .once(SocketEvent.GetMachineNetworkConfiguration, (networkConfiguration: NetworkConfiguration) => {
                     if (networkConfiguration.networkMode === NetworkMode.Station) {
                         setCurrentNetwork(networkConfiguration.stationSSID);
 
                         controller
-                            .emitEvent(ControllerEvent.GetMachineNetworkStationState)
-                            .once(ControllerEvent.GetMachineNetworkStationState, (networkStationState: NetworkStationState) => {
+                            .emitEvent(SocketEvent.GetMachineNetworkStationState)
+                            .once(SocketEvent.GetMachineNetworkStationState, (networkStationState: NetworkStationState) => {
                                 if (networkStationState.stationState === 3) {
                                     setCurrentNetworkIP(networkStationState.stationIP);
                                     resolve(true);
@@ -158,8 +158,8 @@ const MachineNetworkModal: React.FC<MachineNetworkModalProps> = (props) => {
             setNetworkLoading(true);
 
             controller
-                .emitEvent(ControllerEvent.ListWiFiNetworks)
-                .once(ControllerEvent.ListWiFiNetworks, (networks: string[]) => {
+                .emitEvent(SocketEvent.ListWiFiNetworks)
+                .once(SocketEvent.ListWiFiNetworks, (networks: string[]) => {
                     const options = networks.map((network: string) => ({
                         value: network,
                         label: network,
@@ -195,7 +195,7 @@ const MachineNetworkModal: React.FC<MachineNetworkModalProps> = (props) => {
         log.info(`Connect machine to ${selectedNetwork}...`);
 
         controller
-            .emitEvent(ControllerEvent.SetMachineNetworkConfiguration, {
+            .emitEvent(SocketEvent.SetMachineNetworkConfiguration, {
                 networkMode: NetworkMode.Station,
                 stationIPObtain: IPObtain.DHCP,
                 stationSSID: selectedNetwork,
