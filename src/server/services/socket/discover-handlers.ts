@@ -1,4 +1,4 @@
-import ControllerEvent from '../../../app/connection/controller-events';
+import SocketEvent from '../../../app/communication/socket-events';
 import type SocketServer from '../../lib/SocketManager';
 import logger from '../../lib/logger';
 import MachineDiscoverer from '../machine/MachineDiscoverer';
@@ -75,10 +75,10 @@ const unsubscribeDiscoverMachine = (socket: SocketServer, options: SubscribeDisc
 };
 
 function register(socketServer: SocketServer): void {
-    socketServer.registerEvent(ControllerEvent.DiscoverMachine, discoverMachine);
+    socketServer.registerEvent(SocketEvent.DiscoverMachine, discoverMachine);
 
-    socketServer.registerEvent(ControllerEvent.DiscoverMachineStart, subscribeDiscoverMachine);
-    socketServer.registerEvent(ControllerEvent.DiscoverMachineEnd, unsubscribeDiscoverMachine);
+    socketServer.registerEvent(SocketEvent.DiscoverMachineStart, subscribeDiscoverMachine);
+    socketServer.registerEvent(SocketEvent.DiscoverMachineEnd, unsubscribeDiscoverMachine);
 }
 
 export {

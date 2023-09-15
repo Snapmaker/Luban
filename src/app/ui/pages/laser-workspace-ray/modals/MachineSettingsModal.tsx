@@ -5,9 +5,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Vector2 } from 'three';
 
-import ControllerEvent from '../../../../connection/controller-events';
+import SocketEvent from '../../../../communication/socket-events';
 import { RootState } from '../../../../flux/index.def';
-import controller from '../../../../lib/controller';
+import controller from '../../../../communication/socket-communication';
 import i18n from '../../../../lib/i18n';
 import log from '../../../../lib/log';
 import { Button } from '../../../components/Buttons';
@@ -35,8 +35,8 @@ const MachineSettingsModal: React.FC<MachineNetworkModalProps> = (props) => {
     useEffect(() => {
         if (isConnected) {
             controller
-                .emitEvent(ControllerEvent.GetCrosshairOffset)
-                .once(ControllerEvent.GetCrosshairOffset, ({ err, offset }) => {
+                .emitEvent(SocketEvent.GetCrosshairOffset)
+                .once(SocketEvent.GetCrosshairOffset, ({ err, offset }) => {
                     if (err) {
                         return;
                     }
@@ -49,8 +49,8 @@ const MachineSettingsModal: React.FC<MachineNetworkModalProps> = (props) => {
     const machineSetCrosshairOffset = useCallback(async (offset: Vector2) => {
         return new Promise<boolean>((resolve) => {
             controller
-                .emitEvent(ControllerEvent.SetCrosshairOffset, { x: offset.x, y: offset.y })
-                .once(ControllerEvent.SetCrosshairOffset, ({ err }) => {
+                .emitEvent(SocketEvent.SetCrosshairOffset, { x: offset.x, y: offset.y })
+                .once(SocketEvent.SetCrosshairOffset, ({ err }) => {
                     resolve(!err);
                 });
         });
@@ -64,8 +64,8 @@ const MachineSettingsModal: React.FC<MachineNetworkModalProps> = (props) => {
     useEffect(() => {
         if (isConnected) {
             controller
-                .emitEvent(ControllerEvent.GetFireSensorSensitivity)
-                .once(ControllerEvent.GetFireSensorSensitivity, ({ err, sensitivity }) => {
+                .emitEvent(SocketEvent.GetFireSensorSensitivity)
+                .once(SocketEvent.GetFireSensorSensitivity, ({ err, sensitivity }) => {
                     if (err) {
                         return;
                     }
@@ -78,8 +78,8 @@ const MachineSettingsModal: React.FC<MachineNetworkModalProps> = (props) => {
     const machineSetFireSensorSensitivity = useCallback(async (sensitivity: number) => {
         return new Promise<boolean>((resolve) => {
             controller
-                .emitEvent(ControllerEvent.SetFireSensorSensitivity, { sensitivity })
-                .once(ControllerEvent.SetFireSensorSensitivity, () => {
+                .emitEvent(SocketEvent.SetFireSensorSensitivity, { sensitivity })
+                .once(SocketEvent.SetFireSensorSensitivity, () => {
                     resolve(true);
                 });
         });
@@ -93,8 +93,8 @@ const MachineSettingsModal: React.FC<MachineNetworkModalProps> = (props) => {
 
     const updateEnclosureInfo = useCallback(() => {
         controller
-            .emitEvent(ControllerEvent.GetEnclosureInfo)
-            .once(ControllerEvent.GetEnclosureInfo, (response: {
+            .emitEvent(SocketEvent.GetEnclosureInfo)
+            .once(SocketEvent.GetEnclosureInfo, (response: {
                 err: number;
                 enclosureInfo: {
                     status: boolean;
@@ -132,8 +132,8 @@ const MachineSettingsModal: React.FC<MachineNetworkModalProps> = (props) => {
 
         return new Promise<boolean>((resolve) => {
             controller
-                .emitEvent(ControllerEvent.SetEnclosureDoorDetection, { enable: enabled })
-                .once(ControllerEvent.SetEnclosureDoorDetection, ({ err }) => {
+                .emitEvent(SocketEvent.SetEnclosureDoorDetection, { enable: enabled })
+                .once(SocketEvent.SetEnclosureDoorDetection, ({ err }) => {
                     if (err) {
                         log.info('Failed to set enclosure door detection.');
                         setDoorDetectionPending(false);

@@ -2,9 +2,9 @@ import { isUndefined } from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { shallowEqual, useSelector } from 'react-redux';
 
-import ControllerEvent from '../../../connection/controller-events';
+import SocketEvent from '../../../communication/socket-events';
 import { RootState } from '../../../flux/index.def';
-import { controller } from '../../../lib/controller';
+import { controller } from '../../../communication/socket-communication';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import Switch from '../../components/Switch';
@@ -26,23 +26,23 @@ const Enclosure: React.FC = () => {
         onHandleLed: async () => {
             const _led = enclosureLight === 0 ? 100 : 0;
             setIsLedReady(false);
-            controller.emitEvent(ControllerEvent.SetEnclosureLight, {
+            controller.emitEvent(SocketEvent.SetEnclosureLight, {
                 value: _led
             });
         },
         onHandleCoolingFans: async () => {
             const _fan = enclosureFan === 0 ? 100 : 0;
             setIsFanReady(false);
-            controller.emitEvent(ControllerEvent.SetEnclosureFan, {
+            controller.emitEvent(SocketEvent.SetEnclosureFan, {
                 value: _fan
             });
         },
         onHandleDoorEnabled: () => {
             controller
-                .emitEvent(ControllerEvent.SetEnclosureDoorDetection, {
+                .emitEvent(SocketEvent.SetEnclosureDoorDetection, {
                     enable: !isDoorEnabled
                 })
-                .once(ControllerEvent.SetEnclosureDoorDetection, ({ msg, data }) => {
+                .once(SocketEvent.SetEnclosureDoorDetection, ({ msg, data }) => {
                     if (msg) {
                         log.error(msg);
                         return;

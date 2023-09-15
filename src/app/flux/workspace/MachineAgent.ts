@@ -1,8 +1,8 @@
 import { EventEmitter } from 'events';
 
-import ControllerEvent from '../../connection/controller-events';
+import SocketEvent from '../../communication/socket-events';
 import { CUSTOM_SERVER_NAME } from '../../constants';
-import { controller } from '../../lib/controller';
+import { controller } from '../../communication/socket-communication';
 import log from '../../lib/log';
 import { dispatch } from '../../store';
 import baseActions from './actions-base';
@@ -96,7 +96,7 @@ export class MachineAgent extends EventEmitter {
 
         return new Promise((resolve) => {
             controller
-                .emitEvent(ControllerEvent.ConnectionOpen, {
+                .emitEvent(SocketEvent.ConnectionOpen, {
                     connectionType: this.isNetworkedMachine ? ConnectionType.WiFi : ConnectionType.Serial,
                     host: this.host,
                     address: this.address,
@@ -106,7 +106,7 @@ export class MachineAgent extends EventEmitter {
                     protocol: this.protocol,
                     addByUser: this.addByUser,
                 })
-                .once(ControllerEvent.ConnectionOpen, ({ msg, data, code }) => {
+                .once(SocketEvent.ConnectionOpen, ({ msg, data, code }) => {
                     if (msg) {
                         resolve({ code, msg });
                         return;
@@ -132,8 +132,8 @@ export class MachineAgent extends EventEmitter {
         if (!force) {
             return new Promise((resolve) => {
                 controller
-                    .emitEvent(ControllerEvent.ConnectionClose, { force })
-                    .once(ControllerEvent.ConnectionClose, () => {
+                    .emitEvent(SocketEvent.ConnectionClose, { force })
+                    .once(SocketEvent.ConnectionClose, () => {
                         log.info('Disconnected from machine.');
                         resolve(true);
                     });
@@ -141,8 +141,8 @@ export class MachineAgent extends EventEmitter {
         } else {
             return new Promise((resolve) => {
                 controller
-                    .emitEvent(ControllerEvent.ConnectionClose, { force })
-                    .once(ControllerEvent.ConnectionClose, () => {
+                    .emitEvent(SocketEvent.ConnectionClose, { force })
+                    .once(SocketEvent.ConnectionClose, () => {
                         resolve(true);
                     });
 
@@ -161,8 +161,8 @@ export class MachineAgent extends EventEmitter {
     public async executeGcode(gcode: string) {
         return new Promise((resolve) => {
             controller
-                .emitEvent(ControllerEvent.ExecuteGCode, { gcode })
-                .once(ControllerEvent.ExecuteGCode, () => {
+                .emitEvent(SocketEvent.ExecuteGCode, { gcode })
+                .once(SocketEvent.ExecuteGCode, () => {
                     resolve(true);
                 });
         });
@@ -176,21 +176,21 @@ export class MachineAgent extends EventEmitter {
     public async executeCmd(gcode, context, cmd) {
         return new Promise((resolve) => {
             controller
-                .emitEvent(ControllerEvent.ExecuteCmd, { gcode, context, cmd })
-                .once(ControllerEvent.ExecuteCmd, () => {
+                .emitEvent(SocketEvent.ExecuteCmd, { gcode, context, cmd })
+                .once(SocketEvent.ExecuteCmd, () => {
                     resolve(true);
                 });
         });
     }
 
     public coordinateMove(moveOrders, gcode, jogSpeed, headType) {
-        controller.emitEvent(ControllerEvent.Move, { moveOrders, gcode, jogSpeed, headType }, () => {
+        controller.emitEvent(SocketEvent.Move, { moveOrders, gcode, jogSpeed, headType }, () => {
             // homed
         });
     }
 
     public setWorkOrigin(xPosition, yPosition, zPosition, bPosition) {
-        controller.emitEvent(ControllerEvent.SetOrigin, { xPosition, yPosition, zPosition, bPosition });
+        controller.emitEvent(SocketEvent.SetOrigin, { xPosition, yPosition, zPosition, bPosition });
     }
 
     public startServerGcode(args, callback) {
@@ -199,8 +199,8 @@ export class MachineAgent extends EventEmitter {
         }));
 
         controller
-            .emitEvent(ControllerEvent.StartGCode, args)
-            .once(ControllerEvent.StartGCode, ({ msg, code }) => {
+            .emitEvent(SocketEvent.StartGCode, args)
+            .once(SocketEvent.StartGCode, ({ msg, code }) => {
                 dispatch(baseActions.updateState({
                     isSendedOnWifi: true
                 }));
@@ -216,8 +216,8 @@ export class MachineAgent extends EventEmitter {
 
     public pauseServerGcode(callback) {
         controller
-            .emitEvent(ControllerEvent.PauseGCode)
-            .once(ControllerEvent.PauseGCode, ({ err }) => {
+            .emitEvent(SocketEvent.PauseGCode)
+            .once(SocketEvent.PauseGCode, ({ err }) => {
                 // failed on serial
                 if (err) {
                     callback && callback();
@@ -227,16 +227,16 @@ export class MachineAgent extends EventEmitter {
 
     public resumeServerGcode(args, callback) {
         controller
-            .emitEvent(ControllerEvent.ResumeGCode, args, callback)
-            .once(ControllerEvent.ResumeGCode, (options) => {
+            .emitEvent(SocketEvent.ResumeGCode, args, callback)
+            .once(SocketEvent.ResumeGCode, (options) => {
                 callback && callback(options);
             });
     }
 
     public stopServerGcode(callback) {
         controller
-            .emitEvent(ControllerEvent.StopGCode)
-            .once(ControllerEvent.StopGCode, (options) => {
+            .emitEvent(SocketEvent.StopGCode)
+            .once(SocketEvent.StopGCode, (options) => {
                 callback && callback();
                 const { msg, code, data } = options;
                 if (msg) {
@@ -252,7 +252,7 @@ export class MachineAgent extends EventEmitter {
     }
 
     public goHome(data, callback) {
-        controller.emitEvent(ControllerEvent.GoHome, data, callback);
+        controller.emitEvent(SocketEvent.GoHome, data, callback);
     }
 
 

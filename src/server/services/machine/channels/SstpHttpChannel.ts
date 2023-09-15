@@ -1,7 +1,7 @@
 import { isEqual, isNil } from 'lodash';
 import request from 'superagent';
 
-import ControllerEvent from '../../../../app/connection/controller-events';
+import SocketEvent from '../../../../app/communication/socket-events';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, } from '../../../../app/constants/machines';
 import { L20WLaserToolModule, L40WLaserToolModule } from '../../../../app/machines/snapmaker-2-toolheads';
 import {
@@ -167,7 +167,7 @@ class SstpHttpChannel extends Channel implements
                     const result = _getResult(err, res);
                     if (err) {
                         log.debug(`err="${err}"`);
-                        this.socket && this.socket.emit(ControllerEvent.ConnectionOpen, result);
+                        this.socket && this.socket.emit(SocketEvent.ConnectionOpen, result);
                         resolve(false);
                         return;
                     }

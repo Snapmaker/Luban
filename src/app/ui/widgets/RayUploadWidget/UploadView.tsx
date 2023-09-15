@@ -5,9 +5,9 @@ import { includes } from 'lodash';
 
 import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { JobOffsetMode } from '../../../constants/coordinate';
-import ControllerEvent from '../../../connection/controller-events';
+import SocketEvent from '../../../communication/socket-events';
 import { RootState } from '../../../flux/index.def';
-import controller from '../../../lib/controller';
+import controller from '../../../communication/socket-communication';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import { Button } from '../../components/Buttons';
@@ -30,10 +30,10 @@ enum UploadFileModalType {
 const UploadView: React.FC = () => {
     const isConnected = useSelector((state: RootState) => state.workspace.isConnected);
 
-    const {
-        workflowStatus,
-    } = useSelector((state: RootState) => state.workspace.workflowStatus);
+    const workflowStatus = useSelector((state: RootState) => state.workspace.workflowStatus);
     // const activeGcodeFile = useSelector((state: RootState) => state.workspace.activeGcodeFile);
+    console.log('workflowStatus =', workflowStatus);
+
     const isWorking = includes([
         WorkflowStatus.Running, WorkflowStatus.Pausing, WorkflowStatus.Paused, WorkflowStatus.Stopping, WorkflowStatus.Resuming
     ], workflowStatus);
@@ -71,14 +71,14 @@ const UploadView: React.FC = () => {
             }
         };
 
-        controller.on(ControllerEvent.UploadFileProgress, onProgress);
-        controller.on(ControllerEvent.UploadFileCompressing, onCompressing);
-        controller.on(ControllerEvent.UploadFileDecompressing, onDecompressing);
+        controller.on(SocketEvent.UploadFileProgress, onProgress);
+        controller.on(SocketEvent.UploadFileCompressing, onCompressing);
+        controller.on(SocketEvent.UploadFileDecompressing, onDecompressing);
 
         return () => {
-            controller.off(ControllerEvent.UploadFileProgress, onProgress);
-            controller.off(ControllerEvent.UploadFileCompressing, onCompressing);
-            controller.off(ControllerEvent.UploadFileDecompressing, onDecompressing);
+            controller.off(SocketEvent.UploadFileProgress, onProgress);
+            controller.off(SocketEvent.UploadFileCompressing, onCompressing);
+            controller.off(SocketEvent.UploadFileDecompressing, onDecompressing);
         };
     }, [isUploading]);
 
@@ -114,11 +114,11 @@ const UploadView: React.FC = () => {
 
         return new Promise<boolean>((resolve) => {
             controller
-                .emitEvent(ControllerEvent.CompressUploadFile, {
+                .emitEvent(SocketEvent.CompressUploadFile, {
                     filePath: gcodeFileObject.uploadName,
                     targetFilename: 'boundary.nc',
                 })
-                .once(ControllerEvent.CompressUploadFile, ({ err, text }) => {
+                .once(SocketEvent.CompressUploadFile, ({ err, text }) => {
                     if (err) {
                         log.error('Unable to upload G-code to execute.');
                         log.error(err);
@@ -142,11 +142,11 @@ const UploadView: React.FC = () => {
 
         return new Promise<boolean>((resolve) => {
             controller
-                .emitEvent(ControllerEvent.CompressUploadFile, {
+                .emitEvent(SocketEvent.CompressUploadFile, {
                     filePath: gcodeFile.uploadName,
                     targetFilename: 'ray.nc',
                 })
-                .once(ControllerEvent.CompressUploadFile, ({ err, text }) => {
+                .once(SocketEvent.CompressUploadFile, ({ err, text }) => {
                     setIsUploading(false);
 
                     setFileUploadProgress(0);

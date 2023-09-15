@@ -14,7 +14,7 @@ import {
     RIGHT_EXTRUDER
 } from '../../constants';
 import CompoundOperation from '../../core/CompoundOperation';
-import { controller } from '../../lib/controller';
+import { controller } from '../../communication/socket-communication';
 import { logToolBarOperation } from '../../lib/gaEvent';
 import log from '../../lib/log';
 import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';

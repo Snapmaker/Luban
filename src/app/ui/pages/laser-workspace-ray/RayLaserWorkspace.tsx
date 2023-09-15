@@ -15,7 +15,7 @@ import {
 import { RootState } from '../../../flux/index.def';
 import { actions as widgetActions } from '../../../flux/widget';
 import { actions as workspaceActions } from '../../../flux/workspace';
-import { controller } from '../../../lib/controller';
+import { controller } from '../../../communication/socket-communication';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
 import { Button } from '../../components/Buttons';

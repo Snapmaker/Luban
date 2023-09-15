@@ -3,7 +3,7 @@ import fs from 'fs';
 import { includes } from 'lodash';
 import path from 'path';
 
-import ControllerEvent, { ConnectionConnectingOptions } from '../../../app/connection/controller-events';
+import SocketEvent, { ConnectionConnectingOptions } from '../../../app/communication/socket-events';
 import { AUTO_STRING } from '../../../app/constants';
 import {
     SnapmakerA150Machine,
@@ -163,7 +163,7 @@ class ConnectionManager {
     private onChannelConnecting = (options: ConnectionConnectingOptions) => {
         log.info('channel: Connecting');
 
-        this.socket && this.socket.emit(ControllerEvent.ConnectionConnecting, {
+        this.socket && this.socket.emit(SocketEvent.ConnectionConnecting, {
             requireAuth: options?.requireAuth || false,
         });
     };
@@ -177,7 +177,7 @@ class ConnectionManager {
     private onChannelConnected = () => {
         log.info('channel: Connected');
 
-        this.socket && this.socket.emit(ControllerEvent.ConnectionOpen, {
+        this.socket && this.socket.emit(SocketEvent.ConnectionOpen, {
             code: 200,
             msg: '',
         });
@@ -309,7 +309,7 @@ class ConnectionManager {
         log.info(`Detected protocol: ${this.protocol}`);
 
         if (this.protocol === NetworkProtocol.Unknown) {
-            this.socket && this.socket.emit(ControllerEvent.ConnectionOpen, {
+            this.socket && this.socket.emit(SocketEvent.ConnectionOpen, {
                 code: 404,
                 msg: 'Unable to detect protocol of communication.',
             });
@@ -428,10 +428,10 @@ class ConnectionManager {
         log.info('Get crosshair offset');
         try {
             const offset = await (this.channel as LaserChannelInterface).getCrosshairOffset();
-            socket.emit(ControllerEvent.GetCrosshairOffset, { err: 0, offset });
+            socket.emit(SocketEvent.GetCrosshairOffset, { err: 0, offset });
         } catch (e) {
             log.error(e);
-            socket.emit(ControllerEvent.GetCrosshairOffset, { err: 1, offset: null });
+            socket.emit(SocketEvent.GetCrosshairOffset, { err: 1, offset: null });
         }
     };
 
@@ -442,10 +442,10 @@ class ConnectionManager {
 
         try {
             const success = await (this.channel as LaserChannelInterface).setCrosshairOffset(x, y);
-            socket.emit(ControllerEvent.SetCrosshairOffset, { err: !success });
+            socket.emit(SocketEvent.SetCrosshairOffset, { err: !success });
         } catch (e) {
             log.error(e);
-            socket.emit(ControllerEvent.SetCrosshairOffset, { err: 1 });
+            socket.emit(SocketEvent.SetCrosshairOffset, { err: 1 });
         }
     };
 
@@ -453,10 +453,10 @@ class ConnectionManager {
         log.info('Get fire sensor sensitivity');
         try {
             const sensitivity = await (this.channel as LaserChannelInterface).getFireSensorSensitivity();
-            socket.emit(ControllerEvent.GetFireSensorSensitivity, { err: 0, sensitivity });
+            socket.emit(SocketEvent.GetFireSensorSensitivity, { err: 0, sensitivity });
         } catch (e) {
             log.error(e);
-            socket.emit(ControllerEvent.GetFireSensorSensitivity, { err: 1, sensitivity: -1 });
+            socket.emit(SocketEvent.GetFireSensorSensitivity, { err: 1, sensitivity: -1 });
         }
     };
 
@@ -466,10 +466,10 @@ class ConnectionManager {
 
         try {
             const success = await (this.channel as LaserChannelInterface).setFireSensorSensitivity(sensitivity);
-            socket.emit(ControllerEvent.SetFireSensorSensitivity, { err: !success });
+            socket.emit(SocketEvent.SetFireSensorSensitivity, { err: !success });
         } catch (e) {
             log.error(e);
-            socket.emit(ControllerEvent.SetFireSensorSensitivity, { err: 1 });
+            socket.emit(SocketEvent.SetFireSensorSensitivity, { err: 1 });
         }
     };
 
@@ -492,9 +492,9 @@ class ConnectionManager {
 
         const success = await (this.channel as FileChannelInterface).uploadFile(options);
         if (success) {
-            socket.emit(ControllerEvent.UploadFile, { err: null, text: '' });
+            socket.emit(SocketEvent.UploadFile, { err: null, text: '' });
         } else {
-            socket.emit(ControllerEvent.UploadFile, { err: 'failed', text: 'Failed to upload file' });
+            socket.emit(SocketEvent.UploadFile, { err: 'failed', text: 'Failed to upload file' });
         }
     };
 
@@ -525,21 +525,21 @@ class ConnectionManager {
         const success = await (this.channel as FileChannelInterface).compressUploadFile({
             ...options,
             onProgress: (progress) => {
-                socket.emit(ControllerEvent.UploadFileProgress, { progress });
+                socket.emit(SocketEvent.UploadFileProgress, { progress });
             },
             onCompressing: () => {
-                socket.emit(ControllerEvent.UploadFileCompressing);
+                socket.emit(SocketEvent.UploadFileCompressing);
             },
             onDecompressing: () => {
-                socket.emit(ControllerEvent.UploadFileDecompressing);
+                socket.emit(SocketEvent.UploadFileDecompressing);
             },
             onFailed: (reason: string) => {
                 // Report failure result instead of API success
-                socket.emit(ControllerEvent.CompressUploadFile, { err: 'failed', text: reason });
+                socket.emit(SocketEvent.CompressUploadFile, { err: 'failed', text: reason });
             }
         });
         if (success) {
-            socket.emit(ControllerEvent.CompressUploadFile, { err: null, text: '' });
+            socket.emit(SocketEvent.CompressUploadFile, { err: null, text: '' });
         }
     };
 
@@ -797,7 +797,7 @@ M3`;
     public pauseGcode = async (socket: SocketServer, options) => {
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const success = await this.channel.pauseGcode();
-            socket.emit(ControllerEvent.PauseGCode, { err: !success });
+            socket.emit(SocketEvent.PauseGCode, { err: !success });
         } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
             this.channel.pauseGcode(options);
         } else {
@@ -812,7 +812,7 @@ M3`;
     public stopGcode = async (socket: SocketServer, options) => {
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const success = await this.channel.stopGcode(options);
-            socket && socket.emit(ControllerEvent.StopGCode, { err: !success });
+            socket && socket.emit(SocketEvent.StopGCode, { err: !success });
         } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
             this.channel.stopGcode(options);
             socket && socket.emit(options.eventName, {});
@@ -1004,7 +1004,7 @@ M3`;
             const enclosureInfo = await (this.channel as EnclosureChannelInterface).getEnclosreInfo();
 
             if (enclosureInfo) {
-                socket.emit(ControllerEvent.GetEnclosureInfo, {
+                socket.emit(SocketEvent.GetEnclosureInfo, {
                     err: 0,
                     enclosureInfo: {
                         status: enclosureInfo.moduleStatus === 2, // 2: normal state
@@ -1030,14 +1030,14 @@ M3`;
                     }
                 });
             } else {
-                socket.emit(ControllerEvent.GetEnclosureInfo, {
+                socket.emit(SocketEvent.GetEnclosureInfo, {
                     err: 1,
                     msg: 'Can not get enclosure module info',
                 });
             }
         } else {
             // unsupported
-            socket.emit(ControllerEvent.GetEnclosureInfo, {
+            socket.emit(SocketEvent.GetEnclosureInfo, {
                 err: 2,
                 msg: 'Unsupported event',
             });
@@ -1048,7 +1048,7 @@ M3`;
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const success = await (this.channel as EnclosureChannelInterface).setEnclosureLight(options.value);
 
-            socket.emit(ControllerEvent.SetEnclosureLight, { err: !success });
+            socket.emit(SocketEvent.SetEnclosureLight, { err: !success });
         } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
             this.channel.setEnclosureLight(options);
         } else {
@@ -1064,7 +1064,7 @@ M3`;
     public setEnclosureFan = async (socket: SocketServer, options) => {
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const success = await (this.channel as EnclosureChannelInterface).setEnclosureFan(options.value);
-            socket.emit(ControllerEvent.SetEnclosureFan, { err: !success });
+            socket.emit(SocketEvent.SetEnclosureFan, { err: !success });
         } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
             this.channel.setEnclosureFan(options);
         } else {
@@ -1080,7 +1080,7 @@ M3`;
     public setEnclosureDoorDetection = async (socket: SocketServer, options) => {
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const success = await (this.channel as EnclosureChannelInterface).setEnclosureDoorDetection(options.enable);
-            socket.emit(ControllerEvent.SetEnclosureDoorDetection, { err: !success });
+            socket.emit(SocketEvent.SetEnclosureDoorDetection, { err: !success });
         } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
             this.channel.setDoorDetection(options.enable);
         } else {
@@ -1096,7 +1096,7 @@ M3`;
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const airPurifierInfo = await (this.channel as AirPurifierChannelInterface).getAirPurifierInfo();
             if (airPurifierInfo) {
-                socket.emit(ControllerEvent.GetAirPurifierInfo, {
+                socket.emit(SocketEvent.GetAirPurifierInfo, {
                     err: 0,
                     airPurifierInfo: {
                         status: airPurifierInfo.moduleStatus === 2, // 2: normal state
@@ -1106,13 +1106,13 @@ M3`;
                     }
                 });
             } else {
-                socket.emit(ControllerEvent.GetAirPurifierInfo, {
+                socket.emit(SocketEvent.GetAirPurifierInfo, {
                     err: 1,
                     msg: 'Can not get air purifier module info',
                 });
             }
         } else {
-            socket.emit(ControllerEvent.GetAirPurifierInfo, {
+            socket.emit(SocketEvent.GetAirPurifierInfo, {
                 err: 2,
                 msg: 'Unsupported event',
             });
@@ -1127,11 +1127,11 @@ M3`;
             if (options.enable) {
                 log.info('Turn on air purifier...');
                 const success = await (this.channel as AirPurifierChannelInterface).turnOnAirPurifier();
-                socket.emit(ControllerEvent.SetAirPurifierSwitch, { err: !success });
+                socket.emit(SocketEvent.SetAirPurifierSwitch, { err: !success });
             } else {
                 log.info('Turn off air purifier...');
                 const success = await (this.channel as AirPurifierChannelInterface).turnOffAirPurifier();
-                socket.emit(ControllerEvent.SetAirPurifierSwitch, { err: !success });
+                socket.emit(SocketEvent.SetAirPurifierSwitch, { err: !success });
             }
         } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
             this.channel.setFilterSwitch(options);
@@ -1152,7 +1152,7 @@ M3`;
     public setAirPurifierFanStrength = async (socket: SocketServer, options: SetAirPurifierStrengthOptions) => {
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const success = await (this.channel as AirPurifierChannelInterface).setAirPurifierStrength(options.value);
-            socket.emit(ControllerEvent.SetAirPurifierStrength, { err: !success });
+            socket.emit(SocketEvent.SetAirPurifierStrength, { err: !success });
         } else if (includes([NetworkProtocol.HTTP], this.protocol)) {
             this.channel.setFilterWorkSpeed(options);
         } else {
@@ -1260,7 +1260,7 @@ M3`;
             const { speed } = options;
             const success = await (this.channel as CncChannelInterface).setSpindleSpeed(speed);
 
-            socket.emit(ControllerEvent.SetSpindleSpeed, {
+            socket.emit(SocketEvent.SetSpindleSpeed, {
                 err: !success,
                 speed: speed,
             });
@@ -1285,9 +1285,9 @@ M3`;
                 await (this.channel as CncChannelInterface).spindleOn();
             }
 
-            socket.emit(ControllerEvent.SwitchCNC, { err: 0 });
+            socket.emit(SocketEvent.SwitchCNC, { err: 0 });
         } else {
-            socket.emit(ControllerEvent.SwitchCNC, { err: 1, msg: 'Wrong protocol' });
+            socket.emit(SocketEvent.SwitchCNC, { err: 1, msg: 'Wrong protocol' });
         }
     };
 
@@ -1393,10 +1393,10 @@ M3`;
     public getFirmwareVersion = async (socket: SocketServer) => {
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const version = await (this.channel as SystemChannelInterface).getFirmwareVersion();
-            socket.emit(ControllerEvent.GetFirmwareVersion, { err: 0, version });
+            socket.emit(SocketEvent.GetFirmwareVersion, { err: 0, version });
         } else {
             // not supported
-            socket.emit(ControllerEvent.UpgradeFirmware, { err: 1 });
+            socket.emit(SocketEvent.UpgradeFirmware, { err: 1 });
         }
     }
 
@@ -1407,10 +1407,10 @@ M3`;
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const success = await (this.channel as SystemChannelInterface).upgradeFirmwareFromFile(options);
 
-            socket.emit(ControllerEvent.UpgradeFirmware, { err: !success });
+            socket.emit(SocketEvent.UpgradeFirmware, { err: !success });
         } else {
             // not supported
-            socket.emit(ControllerEvent.UpgradeFirmware, { err: 1 });
+            socket.emit(SocketEvent.UpgradeFirmware, { err: 1 });
         }
     };
 }

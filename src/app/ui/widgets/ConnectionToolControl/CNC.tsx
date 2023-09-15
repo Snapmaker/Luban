@@ -3,10 +3,10 @@ import { includes } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import ControllerEvent from '../../../connection/controller-events';
+import SocketEvent from '../../../communication/socket-events';
 import { LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
-import { controller } from '../../../lib/controller';
+import { controller } from '../../../communication/socket-communication';
 import i18n from '../../../lib/i18n';
 import { SnapmakerArtisanMachine } from '../../../machines';
 import EditComponent from '../../components/EditComponent';
@@ -32,7 +32,7 @@ const CNC: React.FC = () => {
     );
 
     const onClickToolHead = useCallback(() => {
-        controller.emitEvent(ControllerEvent.SwitchCNC, {
+        controller.emitEvent(SocketEvent.SwitchCNC, {
             headStatus: isHeadOn,
             speed: cncTargetSpindleSpeed,
             toolHead,
@@ -43,7 +43,7 @@ const CNC: React.FC = () => {
     }, [isHeadOn, cncTargetSpindleSpeed, toolHead, series]);
 
     const updateToolHeadSpeed = useCallback((speed: number) => {
-        controller.emitEvent(ControllerEvent.SetSpindleSpeed, {
+        controller.emitEvent(SocketEvent.SetSpindleSpeed, {
             speed,
         });
     }, []);

@@ -61,6 +61,7 @@ class AppLayout extends React.PureComponent {
         updateCurrentModalPath: PropTypes.func.isRequired,
         startProject: PropTypes.func.isRequired,
         initializeWorkpiece: PropTypes.func.isRequired,
+        initializeOrigin: PropTypes.func.isRequired,
         scaleCanvasToFit: PropTypes.func.isRequired,
         initRecoverService: PropTypes.func.isRequired,
         save: PropTypes.func.isRequired,
@@ -801,6 +802,8 @@ class AppLayout extends React.PureComponent {
                 await this.props.initializeWorkpiece(headType, {
                     isRotate: isRotate,
                 });
+
+                await this.props.initializeOrigin(headType);
                 await this.props.scaleCanvasToFit(headType);
             });
             UniApi.Event.on('appbar-menu:clear-recent-files', () => {
@@ -1044,6 +1047,7 @@ const mapDispatchToProps = (dispatch) => {
         startProject: (from, to, history, isRotate) => dispatch(projectActions.startProject(from, to, history, false, isRotate)),
         updateRecentProject: (arr, type) => dispatch(projectActions.updateRecentFile(arr, type)),
         initializeWorkpiece: (headType, options) => dispatch(editorActions.initializeWorkpiece(headType, options)),
+        initializeOrigin: (headType) => dispatch(editorActions.initializeOrigin(headType)),
         scaleCanvasToFit: (headType) => dispatch(editorActions.scaleCanvasToFit(headType)),
         loadCase: (pathConfig, history) => dispatch(projectActions.openProject(pathConfig, history)),
         updateCurrentModalPath: (pathName) => dispatch(menuActions.updateCurrentModalPath(pathName)),

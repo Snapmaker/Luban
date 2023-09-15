@@ -6,7 +6,7 @@ import { CONNECTION_TYPE_SERIAL, CONNECTION_TYPE_WIFI } from '../../../constants
 import { RootState } from '../../../flux/index.def';
 import connectActions from '../../../flux/workspace/actions-connect';
 import { ConnectionType } from '../../../flux/workspace/state';
-import { controller } from '../../../lib/controller';
+import { controller } from '../../../communication/socket-communication';
 import i18n from '../../../lib/i18n';
 import Notifications from '../../components/Notifications';
 import GoHomeModal from './modals/GoHomeModal';

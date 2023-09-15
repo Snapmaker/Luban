@@ -5,12 +5,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { Box3 } from 'three';
 
-import ControllerEvent from '../../../connection/controller-events';
+import SocketEvent from '../../../communication/socket-events';
 import { JobOffsetMode } from '../../../constants/coordinate';
 import { RootState } from '../../../flux/index.def';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import gcodeActions, { GCodeFileObject } from '../../../flux/workspace/actions-gcode';
-import controller from '../../../lib/controller';
+import controller from '../../../communication/socket-communication';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import ControlPanel from './ControlPanel';
@@ -138,11 +138,11 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
 
         setRunBoundaryUploading(true);
         controller
-            .emitEvent(ControllerEvent.CompressUploadFile, {
+            .emitEvent(SocketEvent.CompressUploadFile, {
                 filePath: gcodeFileObject.uploadName,
                 targetFilename: 'boundary.nc',
             })
-            .once(ControllerEvent.CompressUploadFile, ({ err, text }) => {
+            .once(SocketEvent.CompressUploadFile, ({ err, text }) => {
                 setRunBoundaryUploading(false);
 
                 if (err) {

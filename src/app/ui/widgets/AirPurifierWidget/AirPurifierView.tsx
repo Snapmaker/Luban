@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import React, { useEffect, useState } from 'react';
 import { shallowEqual, useSelector } from 'react-redux';
 
-import ControllerEvent from '../../../connection/controller-events';
+import SocketEvent from '../../../communication/socket-events';
 import {
     SPEED_HIGH,
     SPEED_LOW,
@@ -10,7 +10,7 @@ import {
 } from '../../../constants';
 import { MACHINE_SERIES } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
-import { controller } from '../../../lib/controller';
+import { controller } from '../../../communication/socket-communication';
 import i18n from '../../../lib/i18n';
 import Switch from '../../components/Switch';
 import styles from './styles.styl';
@@ -41,14 +41,14 @@ const AirPurifierView: React.FC<AirPurifierViewProps> = (props) => {
     const actions = {
         onHandleFilterEnabled: () => {
             setIsFilterEnable(!isFilterEnable);
-            controller.emitEvent(ControllerEvent.SetAirPurifierSwitch, {
+            controller.emitEvent(SocketEvent.SetAirPurifierSwitch, {
                 enable: !isFilterEnable,
                 value: workSpeed
             });
         },
         onChangeFilterSpeed: (_workSpeed) => {
             setWorkSpeed(_workSpeed);
-            controller.emitEvent(ControllerEvent.SetAirPurifierStrength, {
+            controller.emitEvent(SocketEvent.SetAirPurifierStrength, {
                 value: _workSpeed
             });
         }

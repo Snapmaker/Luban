@@ -10,7 +10,7 @@ import { initReactI18next } from 'react-i18next';
 import { Provider } from 'react-redux';
 
 import settings from './config/settings';
-import { controller } from './lib/controller';
+import { controller } from './communication/socket-communication';
 import { initialize } from './lib/gaEvent';
 import log from './lib/log';
 import user from './lib/user';

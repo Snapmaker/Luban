@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import * as THREE from 'three';
 
-import ControllerEvent from '../../../connection/controller-events';
+import SocketEvent from '../../../communication/socket-events';
 import {
     AUTO_MDOE,
     HEAD_CNC,
@@ -22,7 +22,7 @@ import { RootState } from '../../../flux/index.def';
 import { actions as projectActions } from '../../../flux/project';
 import { WORKSPACE_STAGE, actions as workspaceActions } from '../../../flux/workspace';
 import { ConnectionType } from '../../../flux/workspace/state';
-import { controller } from '../../../lib/controller';
+import { controller } from '../../../communication/socket-communication';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
@@ -398,10 +398,10 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                     isCameraCapture
                 };
                 window.addEventListener('cancelReq', () => {
-                    controller.emitEvent(ControllerEvent.AbortMaterialThickness);
+                    controller.emitEvent(SocketEvent.AbortMaterialThickness);
                 });
-                controller.emitEvent(ControllerEvent.CalcMaterialThickness, args)
-                    .once(ControllerEvent.CalcMaterialThickness, ({ data: { status, thickness }, msg }) => {
+                controller.emitEvent(SocketEvent.CalcMaterialThickness, args)
+                    .once(SocketEvent.CalcMaterialThickness, ({ data: { status, thickness }, msg }) => {
                         if (msg || !status) {
                             modalSmallHOC({
                                 title: i18n._('key-Workspace/WifiTransport-Failed to measure thickness.'),
@@ -530,11 +530,11 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
         }
 
         controller
-            .emitEvent(ControllerEvent.UploadFile, {
+            .emitEvent(SocketEvent.UploadFile, {
                 filePath: find.uploadName,
                 targetFilename: find.renderGcodeFileName,
             })
-            .once(ControllerEvent.UploadFile, ({ err, text }) => {
+            .once(SocketEvent.UploadFile, ({ err, text }) => {
                 isSendingFile.current && isSendingFile.current.removeContainer();
                 if (err) {
                     modalSmallHOC({

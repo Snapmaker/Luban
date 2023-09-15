@@ -1,13 +1,11 @@
 
-
-enum ControllerEvent {
+enum SocketEvent {
     /**
      * Machine Discover
      */
     DiscoverMachine = 'discover:machine',
     DiscoverMachineStart = 'discover:start',
     DiscoverMachineEnd = 'discover:end',
-
 
     /**
      * Connection
@@ -110,7 +108,7 @@ enum ControllerEvent {
     ListWiFiNetworks = 'os:list-wifi-networks',
 }
 
-export default ControllerEvent;
+export default SocketEvent;
 
 export interface ConnectionConnectingOptions {
     requireAuth?: boolean;
