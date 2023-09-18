@@ -26,6 +26,7 @@ import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 }
 import { checkIsGCodeFile, checkIsSnapmakerProjectFile } from '../../lib/check-name';
 import { logModuleVisit } from '../../lib/gaEvent';
 import i18n from '../../lib/i18n';
+import log from '../../lib/log';
 import { PROCESS_STAGE } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
 import { bubbleSortByAttribute } from '../../lib/numeric-utils';
@@ -176,7 +177,7 @@ export const actions = {
                 const envObj = JSON.parse(content);
                 if (!envObj.models.length) return;
             } catch (e) {
-                console.info(`Unable to parse environment JSON for ${headType}`);
+                log.info(`Unable to parse environment JSON for ${headType}`);
             }
 
             dispatch(actions.updateState(headType, { findLastEnvironment: true, content }));
@@ -187,7 +188,7 @@ export const actions = {
         try {
             await api.env.removeEnv({ headType });
         } catch (e) {
-            console.log(e);
+            log.error(e);
         }
 
         dispatch(actions.updateState(headType, { unSaved: false }));
@@ -428,7 +429,7 @@ export const actions = {
 
         Promise.all(promiseArray).then(() => {
             dispatch(actions.afterOpened(envHeadType));
-        }).catch(console.error);
+        }).catch(log.error);
     },
 
     exportFile: (targetFile, renderGcodeFileName = null) => async (dispatch) => {
@@ -585,7 +586,7 @@ export const actions = {
             try {
                 envObj = JSON.parse(content);
             } catch (e) {
-                console.error(e);
+                log.error(e);
                 return;
             }
             const machineInfo = envObj.machineInfo;

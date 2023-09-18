@@ -8,19 +8,15 @@ import {
     findMachineByName,
     getMachineToolHeadConfigPath,
     isDualExtruder,
-    LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
-    LEVEL_ONE_POWER_LASER_FOR_SM2,
-    MACHINE_TOOL_HEADS,
-    SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
-    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
-    STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
-    STANDARD_CNC_TOOLHEAD_FOR_SM2,
 } from '../../../app/constants/machines';
+import { SnapmakerA150Machine, SnapmakerA250Machine, SnapmakerA350Machine, SnapmakerOriginalExtendedMachine, SnapmakerOriginalMachine } from '../../../app/machines';
+import { printToolHead, standardCNCToolHead, standardLaserToolHead } from '../../../app/machines/snapmaker-2-toolheads';
+import { cncToolHeadOriginal, laserToolHeadOriginal, printToolHeadOriginal } from '../../../app/machines/snapmaker-original-toolheads';
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import { removeSpecialChars } from '../../../shared/lib/utils';
+import DataStorage, { rmDir } from '../../DataStorage';
 import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../constants';
 import { PROTOCOL_TEXT } from '../../controllers/constants';
-import DataStorage, { rmDir } from '../../DataStorage';
 import { unzipFile, zipFolder } from '../../lib/archive';
 import { packFirmware } from '../../lib/firmware-build';
 import logger from '../../lib/logger';
@@ -28,9 +24,6 @@ import { convertFileToSTL } from '../../lib/model-to-stl';
 import { parseLubanGcodeHeader } from '../../lib/parseGcodeHeader';
 import { pathWithRandomSuffix } from '../../lib/random-utils';
 import store from '../../store';
-import { cncToolHeadOriginal, laserToolHeadOriginal, printToolHeadOriginal } from '../../../app/machines/snapmaker-original-toolheads';
-import { SnapmakerA150Machine, SnapmakerA250Machine, SnapmakerA350Machine, SnapmakerOriginalExtendedMachine, SnapmakerOriginalMachine } from '../../../app/machines';
-import { printToolHead, standardCNCToolHead, standardLaserToolHead } from '../../../app/machines/snapmaker-2-toolheads';
 
 const log = logger('api:file');
 
@@ -50,6 +43,20 @@ function traverse(models, callback) {
         }
     });
 }
+
+function getFormalMachineIdentifier(machineIdentifier) {
+    switch (machineIdentifier) {
+        case 'A150':
+            return SnapmakerA150Machine.identifier;
+        case 'A250':
+            return SnapmakerA250Machine.identifier;
+        case 'A350':
+            return SnapmakerA350Machine.identifier;
+        default:
+            return machineIdentifier;
+    }
+}
+
 
 // Default tool heads for Snapmaker original
 export const INITIAL_SNAPMAKER_ORIGINAL_TOOL_HEAD_IDENTIFIER_MAP = {
@@ -84,12 +91,16 @@ function getConfigDir(machineInfo) {
 
     if (machineInfo) {
         const series = machineInfo?.series;
-        const headType = machineInfo?.headType;
-        const toolHeadIdentifierMap = machineInfo?.toolHead || getDefaultToolHeadMap(series);
+        const machineIdentifier = getFormalMachineIdentifier(series);
 
-        const machine = findMachineByName(series);
+        const headType = machineInfo?.headType;
+        const toolHeadIdentifierMap = machineInfo?.toolHead || getDefaultToolHeadMap(machineIdentifier);
+
+        const machine = findMachineByName(machineIdentifier);
         if (machine) {
             configPath = getMachineToolHeadConfigPath(machine, toolHeadIdentifierMap[`${headType}Toolhead`]);
+        } else {
+            log.warn(`Unable to find machine with identifier ${machineIdentifier}.`);
         }
     }
 
