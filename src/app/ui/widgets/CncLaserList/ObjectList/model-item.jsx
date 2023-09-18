@@ -1,11 +1,11 @@
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React, { useState } from 'react';
-import i18n from '../../lib/i18n';
-import { normalizeNameDisplay } from '../../lib/normalize-range';
-import Anchor from '../components/Anchor';
-import SvgIcon from '../components/SvgIcon';
-import TipTrigger from '../components/TipTrigger';
+import i18n from '../../../../lib/i18n';
+import { normalizeNameDisplay } from '../../../../lib/normalize-range';
+import Anchor from '../../../components/Anchor';
+import SvgIcon from '../../../components/SvgIcon';
+import TipTrigger from '../../../components/TipTrigger';
 
 let svgName = '';
 let modelName = '';

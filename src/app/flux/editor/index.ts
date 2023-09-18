@@ -41,6 +41,7 @@ import log from '../../lib/log';
 import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
 import ModelGroup from '../../models/ModelGroup';
+import ModelGroup2D from '../../models/ModelGroup2D';
 import { DEFAULT_TEXT_CONFIG, checkParams, generateModelDefaultConfigs, isOverSizeModel, limitModelSizeByMachineSize } from '../../models/ModelInfoUtils';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
 import SvgModel from '../../models/SvgModel';
@@ -76,7 +77,6 @@ import UpdateHrefOperation2D from '../operation-history/UpdateHrefOperation2D';
 
 
 declare type HeadType = 'laser' | 'cnc';
-// declare type HeadType = 'a' | 'b';
 
 const getSourceType = fileName => {
     let sourceType;
@@ -969,21 +969,30 @@ export const actions = {
     },
 
     // TODO: method docs
-    selectTargetModel: (model, headType, isMultiSelect = false) => (dispatch, getState) => {
-        const { SVGActions, modelGroup, materials } = getState()[headType];
+    selectTargetModel: (headType: HeadType, model, isMultiSelect = false) => (dispatch, getState) => {
+        const SVGActions: SVGActionsFactory = getState()[headType].SVGActions;
+        const modelGroup: ModelGroup2D = getState()[headType].modelGroup;
+        const workpiece: Workpiece = getState()[headType].workpiece;
+
         let selected = modelGroup.getSelectedModelArray();
         selected = [...selected];
+
+        // remove all selected model
         dispatch(actions.clearSelection(headType));
+
+        const isRotate = workpiece.shape === WorkpieceShape.Cylinder;
+
         if (!isMultiSelect) {
-            // remove all selected model
-            SVGActions.addSelectedSvgModelsByModels([model], materials.isRotate);
+            SVGActions.addSelectedSvgModelsByModels([model], isRotate);
         } else {
+            // if already selected, then unselect it
             if (selected.find(item => item === model)) {
                 const selectedModels = selected.filter(item => item !== model);
                 modelGroup.emptySelectedModelArray();
-                SVGActions.addSelectedSvgModelsByModels(selectedModels, materials.isRotate);
+                SVGActions.addSelectedSvgModelsByModels(selectedModels, isRotate);
             } else {
-                SVGActions.addSelectedSvgModelsByModels([...selected, model], materials.isRotate);
+                // add model to selection
+                SVGActions.addSelectedSvgModelsByModels([...selected, model], isRotate);
             }
         }
 

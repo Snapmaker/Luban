@@ -24,6 +24,7 @@ export const getRunBoundayCode = (bbox: Box3, jobOffsetMode: JobOffsetMode) => {
         gcodeList.push('M2000 L13 P1'); // turn on crosshair
     } else if (jobOffsetMode === JobOffsetMode.LaserSpot) {
         // Use laser spot to run boundary
+        gcodeList.push('M3 S0');
         gcodeList.push('G1 F6000 S10'); // turn on laser spot
     }
 
