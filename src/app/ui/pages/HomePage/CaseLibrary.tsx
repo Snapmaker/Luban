@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
@@ -27,6 +27,7 @@ import {
 
 const CaseLibrary = (props) => {
     // useState
+    const isComponentMounted = useRef(false);
     const [canAccessInternet, setCanAccessInternet] = useState(false);
     const [showCaseResource, setShowCaseResource] = useState(false);
     const [caseConfig, setCaseConfig] = useState([]);
@@ -73,6 +74,9 @@ const CaseLibrary = (props) => {
         setIsLoading(true);
         if (!isShow) return isShow;
         const res = await api.getCaseResourcesList();
+        if (!isComponentMounted.current) {
+            return false;
+        }
         if (!res.body || !res.body.data || !Array.isArray(res.body.data)) {
             return false;
         }
@@ -84,7 +88,7 @@ const CaseLibrary = (props) => {
                 imgSrc: `${IMG_RESOURCE_BASE_URL}${caseItem.coverImageUrl}`
             };
         });
-        setCaseConfig([CaseConfigQuickStart].concat(caseList));
+        isComponentMounted.current && setCaseConfig([CaseConfigQuickStart].concat(caseList));
         return true;
     };
     const onClick = (caseItem, isLast) => {
@@ -111,7 +115,7 @@ const CaseLibrary = (props) => {
 
     //  useEffect
     useEffect(() => {
-        let isMounted = true;
+        isComponentMounted.current = true;
 
         //  method
         // test access of iframe src by path /access-test.css.
@@ -127,7 +131,7 @@ const CaseLibrary = (props) => {
             link.type = 'text/css';
             link.href = `${resourcesDomain}/access-test.css`;
             const failedAccessHandle = () => {
-                if (isOver) return;
+                if (isOver || !isComponentMounted.current) return;
                 cb && cb();
                 dispatch(appGlobalActions.updateState({ canAccessWeb: AccessResourceWebState.BLOCKED }));
                 resolve(AccessResourceWebState.BLOCKED);
@@ -136,7 +140,7 @@ const CaseLibrary = (props) => {
             };
             link.onerror = failedAccessHandle;
             link.onload = () => {
-                if (isOver) return;
+                if (isOver || !isComponentMounted.current) return;
                 dispatch(appGlobalActions.updateState({ canAccessWeb: AccessResourceWebState.PASS }));
                 resolve(AccessResourceWebState.PASS);
                 document.head.removeChild(link);
@@ -150,17 +154,22 @@ const CaseLibrary = (props) => {
 
         Promise.all([accessTest(), loadData()])
             .then(([accessedWeb, isShow]) => {
-                isMounted && setShowCaseResource(accessedWeb === AccessResourceWebState.PASS && isShow);
+                if (isComponentMounted.current) {
+                    setShowCaseResource(accessedWeb === AccessResourceWebState.PASS && isShow);
+                }
             })
             .catch(err => log.error(err))
-            .finally(() => { setIsLoading(false); });
+            .finally(() => {
+                isComponentMounted.current && setIsLoading(false);
+            });
         return () => {
-            isMounted = false;
+            isComponentMounted.current = false;
         };
     }, []);
 
     // test Internet status
     useEffect(() => {
+        isComponentMounted.current = true;
         // TODO: it is better to handler in node by dns check
         setCanAccessInternet(window.navigator.onLine);
         const onlineHandler = () => setCanAccessInternet(true);
@@ -169,15 +178,16 @@ const CaseLibrary = (props) => {
         window.addEventListener('offline', offlineHandler);
 
         return () => {
+            isComponentMounted && (isComponentMounted.current = false);
             window.removeEventListener('online', onlineHandler);
             window.removeEventListener('offline', offlineHandler);
         };
-    });
+    }, []);
 
     useEffect(() => {
         loadData()
-            .then((isShow) => setShowCaseResource(canAccessWeb === AccessResourceWebState.PASS && isShow))
-            .finally(() => { setIsLoading(false); });
+            .then((isShow) => { isComponentMounted.current && setShowCaseResource(canAccessWeb === AccessResourceWebState.PASS && isShow); })
+            .finally(() => { isComponentMounted.current && setIsLoading(false); });
     }, [series, toolHead, canAccessInternet, canAccessWeb]);
 
     return (
