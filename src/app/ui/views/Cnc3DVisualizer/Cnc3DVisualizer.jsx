@@ -311,7 +311,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         updateStlVisualizer: (val) => dispatch(cncActions.updateStlVisualizer(val)),
-        selectTargetModel: (model, headType) => dispatch(editorActions.selectTargetModel(model, headType))
+        selectTargetModel: (headType, model) => dispatch(editorActions.selectTargetModel(headType, model)),
     };
 };
 
