@@ -14,7 +14,6 @@ import {
     HEAD_TYPE_ENV_NAME,
     MARKET_EN_URL,
     MARKET_ZH_URL,
-    MYMINIFACTORY_URL,
     OFFICIAL_SITE_EN_URL,
     OFFICIAL_SITE_ZH_URL,
     SOFTWARE_MANUAL,
@@ -778,9 +777,6 @@ class AppLayout extends React.PureComponent {
                         } else {
                             UniApi.Window.openLink(MARKET_EN_URL);
                         }
-                        break;
-                    case 'myminifactory':
-                        UniApi.Window.openLink(MYMINIFACTORY_URL);
                         break;
                     default:
                         break;

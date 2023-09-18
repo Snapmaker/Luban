@@ -92,19 +92,6 @@ export default {
         },
         { type: 'separator' },
         {
-            label: 'key-App/Menu-MyMiniFactory',
-            id: 'my-minifactory',
-            enabled: true,
-            click: (menuItem, browserWindow) => {
-                if (isElectron()) {
-                    browserWindow.webContents.send('help.link', 'myminifactory');
-                } else {
-                    UniApi.Event.emit('appbar-menu:help.link', 'myminifactory');
-                }
-            }
-        },
-        { type: 'separator' },
-        {
             label: 'key-App/Menu-Software Update',
             id: 'software-update',
             enabled: true,

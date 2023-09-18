@@ -7,7 +7,6 @@ import {
     FORUM_URL,
     MARKET_EN_URL,
     MARKET_ZH_URL,
-    MYMINIFACTORY_URL,
     OFFICIAL_SITE_EN_URL,
     OFFICIAL_SITE_ZH_URL,
     SUPPORT_EN_URL,
@@ -156,11 +155,6 @@ const MoreInfo = () => {
                     <a className={classNames(styles.listItem, styles['right-part'])} href={shopURL} target="_blank" rel="noopener noreferrer">
                         <span className={classNames('heading-3-normal-with-hover')}>
                             {i18n._('key-HomePage/Begin-Store')}
-                        </span>
-                    </a>
-                    <a className={classNames(styles.listItem)} href={MYMINIFACTORY_URL} target="_blank" rel="noopener noreferrer">
-                        <span className={classNames('heading-3-normal-with-hover')}>
-                            {i18n._('key-HomePage/Begin-MyMiniFactory')}
                         </span>
                     </a>
                 </div>
