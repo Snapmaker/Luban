@@ -38,6 +38,18 @@ Checkout [Development](./docs/Development.md) to how to run and develop from sou
 - To submit a bug or feature request, [file an issue](https://github.com/Snapmaker/Luban/issues/new) in github issues.
 - To contribute some code, make sure you have read and followed our guidelines for [contributing](https://github.com/Snapmaker/Luban/blob/master/CONTRIBUTING.md).
 
+## Translations
+
+We use crowdin for collaborative translations. We would greatly appreciate your assistance in improving our translations.
+
+| Language | Crowdin Link |
+| ---------| -------------|
+| Ukrainian (Українська) | [Ukrainian translations](https://crowdin.com/project/luban/uk) |
+| German (Deutsch) | [German translations](https://crowdin.com/project/luban/de) |
+| Italian (Italiano) | [Italian translations](https://crowdin.com/project/luban/it) |
+| Chinese Simplified (简体中文) | [Chinese translations](https://crowdin.com/project/luban/zh-CN) |
+
+
 ## License
 Snapmaker Luban is released under terms of the AGPLv3 License.
 
