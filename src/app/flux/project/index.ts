@@ -5,7 +5,11 @@ import pkg from '../../../package.json';
 import api from '../../api';
 import {
     COORDINATE_MODE_BOTTOM_CENTER,
+    COORDINATE_MODE_BOTTOM_LEFT,
+    COORDINATE_MODE_BOTTOM_RIGHT,
     COORDINATE_MODE_CENTER,
+    COORDINATE_MODE_TOP_LEFT,
+    COORDINATE_MODE_TOP_RIGHT,
     DISPLAYED_TYPE_MODEL,
     HEAD_TYPE_ENV_NAME,
     LEFT_EXTRUDER,
@@ -17,11 +21,12 @@ import {
     RIGHT_EXTRUDER,
     SOURCE_TYPE
 } from '../../constants';
-import { convertMaterialsToWorkpiece } from '../../constants/coordinate';
+import { CylinderWorkpieceReference, OriginType, RectangleWorkpieceReference, convertMaterialsToWorkpiece } from '../../constants/coordinate';
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 } from '../../constants/machines';
 import { checkIsGCodeFile, checkIsSnapmakerProjectFile } from '../../lib/check-name';
 import { logModuleVisit } from '../../lib/gaEvent';
 import i18n from '../../lib/i18n';
+import log from '../../lib/log';
 import { PROCESS_STAGE } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
 import { bubbleSortByAttribute } from '../../lib/numeric-utils';
@@ -172,7 +177,7 @@ export const actions = {
                 const envObj = JSON.parse(content);
                 if (!envObj.models.length) return;
             } catch (e) {
-                console.info(`Unable to parse environment JSON for ${headType}`);
+                log.info(`Unable to parse environment JSON for ${headType}`);
             }
 
             dispatch(actions.updateState(headType, { findLastEnvironment: true, content }));
@@ -183,7 +188,7 @@ export const actions = {
         try {
             await api.env.removeEnv({ headType });
         } catch (e) {
-            console.log(e);
+            log.error(e);
         }
 
         dispatch(actions.updateState(headType, { unSaved: false }));
@@ -290,12 +295,51 @@ export const actions = {
                 dispatch(editorActions.updateWorkpieceObject(envHeadType));
             }
 
+            const isRotate = materials ? materials.isRotate : false;
+
             // origin
             if (origin) {
                 dispatch(editorActions.setOrigin(envHeadType, origin));
+            } else {
+                // Old project does not have origin saved, we asssume that they use "Workpiece" origin type
+                let reference;
+                if (!isRotate) {
+                    switch (coordinateMode.value) {
+                        case COORDINATE_MODE_CENTER.value:
+                            reference = RectangleWorkpieceReference.Center;
+                            break;
+                        case COORDINATE_MODE_BOTTOM_LEFT.value:
+                            reference = RectangleWorkpieceReference.BottomLeft;
+                            break;
+                        case COORDINATE_MODE_BOTTOM_RIGHT.value:
+                            reference = RectangleWorkpieceReference.BottomRight;
+                            break;
+                        case COORDINATE_MODE_TOP_LEFT.value:
+                            reference = RectangleWorkpieceReference.TopLeft;
+                            break;
+                        case COORDINATE_MODE_TOP_RIGHT.value:
+                            reference = RectangleWorkpieceReference.TopLeft;
+                            break;
+                        default:
+                            reference = RectangleWorkpieceReference.Center;
+                            break;
+                    }
+                } else {
+                    switch (coordinateMode.value) {
+                        case COORDINATE_MODE_BOTTOM_CENTER.value:
+                        default:
+                            reference = CylinderWorkpieceReference.FrontCenter;
+                            break;
+                    }
+                }
+
+                dispatch(editorActions.setOrigin(envHeadType, {
+                    type: OriginType.Workpiece,
+                    reference: reference,
+                    referenceMetadata: {},
+                }));
             }
 
-            const isRotate = materials ? materials.isRotate : false;
             const oversize = some(keys(coordinateSize), (key) => {
                 return currentSize[key] < coordinateSize[key];
             });
@@ -385,7 +429,7 @@ export const actions = {
 
         Promise.all(promiseArray).then(() => {
             dispatch(actions.afterOpened(envHeadType));
-        }).catch(console.error);
+        }).catch(log.error);
     },
 
     exportFile: (targetFile, renderGcodeFileName = null) => async (dispatch) => {
@@ -542,7 +586,7 @@ export const actions = {
             try {
                 envObj = JSON.parse(content);
             } catch (e) {
-                console.error(e);
+                log.error(e);
                 return;
             }
             const machineInfo = envObj.machineInfo;

@@ -8,19 +8,15 @@ import {
     findMachineByName,
     getMachineToolHeadConfigPath,
     isDualExtruder,
-    LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
-    LEVEL_ONE_POWER_LASER_FOR_SM2,
-    MACHINE_TOOL_HEADS,
-    SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL,
-    SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
-    STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL,
-    STANDARD_CNC_TOOLHEAD_FOR_SM2,
 } from '../../../app/constants/machines';
+import { SnapmakerA150Machine, SnapmakerA250Machine, SnapmakerA350Machine, SnapmakerOriginalExtendedMachine, SnapmakerOriginalMachine } from '../../../app/machines';
+import { printToolHead, standardCNCToolHead, standardLaserToolHead } from '../../../app/machines/snapmaker-2-toolheads';
+import { cncToolHeadOriginal, laserToolHeadOriginal, printToolHeadOriginal } from '../../../app/machines/snapmaker-original-toolheads';
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import { removeSpecialChars } from '../../../shared/lib/utils';
+import DataStorage, { rmDir } from '../../DataStorage';
 import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../constants';
 import { PROTOCOL_TEXT } from '../../controllers/constants';
-import DataStorage, { rmDir } from '../../DataStorage';
 import { unzipFile, zipFolder } from '../../lib/archive';
 import { packFirmware } from '../../lib/firmware-build';
 import logger from '../../lib/logger';
@@ -48,32 +44,63 @@ function traverse(models, callback) {
     });
 }
 
-// Default toolHead for original
-export const INITIAL_TOOL_HEAD_FOR_ORIGINAL = {
+function getFormalMachineIdentifier(machineIdentifier) {
+    switch (machineIdentifier) {
+        case 'A150':
+            return SnapmakerA150Machine.identifier;
+        case 'A250':
+            return SnapmakerA250Machine.identifier;
+        case 'A350':
+            return SnapmakerA350Machine.identifier;
+        default:
+            return machineIdentifier;
+    }
+}
+
+
+// Default tool heads for Snapmaker original
+export const INITIAL_SNAPMAKER_ORIGINAL_TOOL_HEAD_IDENTIFIER_MAP = {
     printingToolhead:
-    MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL].value,
-    laserToolhead: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_ORIGINAL].value,
-    cncToolhead: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL].value
+        printToolHeadOriginal.identifier,
+    laserToolhead: laserToolHeadOriginal.identifier,
+    cncToolhead: cncToolHeadOriginal.identifier,
 };
 
-export const INITIAL_TOOL_HEAD_FOR_SM2 = {
-    printingToolhead:
-    MACHINE_TOOL_HEADS[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2].value,
-    laserToolhead: MACHINE_TOOL_HEADS[LEVEL_ONE_POWER_LASER_FOR_SM2].value,
-    cncToolhead: MACHINE_TOOL_HEADS[STANDARD_CNC_TOOLHEAD_FOR_SM2].value
+export const INITIAL_SNAPMAKER_2_TOOL_HEAD_IDENTIFIER_MAP = {
+    printingToolhead: printToolHead.identifier,
+    laserToolhead: standardLaserToolHead.identifier,
+    cncToolhead: standardCNCToolHead.identifier,
 };
+
+function getDefaultToolHeadMap(machineIdentifier) {
+    switch (machineIdentifier) {
+        case SnapmakerOriginalMachine.identifier:
+        case SnapmakerOriginalExtendedMachine.identifier:
+            return INITIAL_SNAPMAKER_ORIGINAL_TOOL_HEAD_IDENTIFIER_MAP;
+        case SnapmakerA150Machine.identifier:
+        case SnapmakerA250Machine.identifier:
+        case SnapmakerA350Machine.identifier:
+            return INITIAL_SNAPMAKER_2_TOOL_HEAD_IDENTIFIER_MAP;
+        default:
+            return INITIAL_SNAPMAKER_ORIGINAL_TOOL_HEAD_IDENTIFIER_MAP;
+    }
+}
 
 function getConfigDir(machineInfo) {
     let configPath = '';
 
     if (machineInfo) {
         const series = machineInfo?.series;
-        const headType = machineInfo?.headType;
-        const toolHead = machineInfo?.toolHead || (series === 'Original' ? INITIAL_TOOL_HEAD_FOR_ORIGINAL : INITIAL_TOOL_HEAD_FOR_SM2);
+        const machineIdentifier = getFormalMachineIdentifier(series);
 
-        const machine = findMachineByName(series);
+        const headType = machineInfo?.headType;
+        const toolHeadIdentifierMap = machineInfo?.toolHead || getDefaultToolHeadMap(machineIdentifier);
+
+        const machine = findMachineByName(machineIdentifier);
         if (machine) {
-            configPath = getMachineToolHeadConfigPath(machine, toolHead[`${headType}Toolhead`]);
+            configPath = getMachineToolHeadConfigPath(machine, toolHeadIdentifierMap[`${headType}Toolhead`]);
+        } else {
+            log.warn(`Unable to find machine with identifier ${machineIdentifier}.`);
         }
     }
 
@@ -603,11 +630,11 @@ export const recoverProjectFile = async (req, res) => {
         });
         res.end();
     } catch (e) {
-        log.error(`Failed to recover file: ${file.path}`);
+        log.error(`Failed to recover from project file: ${file.path}`);
         log.error(e);
 
         res.status(ERR_INTERNAL_SERVER_ERROR).send({
-            msg: `Failed to recover file: ${e}`
+            msg: `Failed to recover from project file: ${e}`,
         });
     }
 };
