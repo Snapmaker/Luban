@@ -5,7 +5,7 @@ const log = logger('machine:instance:SM2Instance');
 
 class SM2Instance extends MachineInstance {
     public async onPrepare(): Promise<void> {
-        log.info('onPrepare');
+        log.info('On preparing machine...');
 
         // Start heartbeat
         await this.channel.startHeartbeat();

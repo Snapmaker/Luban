@@ -87,6 +87,18 @@ const convertSVGPointToLogicalPoint = (p, size) => {
     };
 };
 
+export const naturalSortKeys = (name: string): Array<string | number> => {
+    const items = name.split(' ');
+    return items.map(item => {
+        const found = item.match(/(\d+\.\d+|\d+)/g);
+        if (found) {
+            return Number(found[0]);
+        } else {
+            return item;
+        }
+    });
+};
+
 export {
     EPS,
     ensureRange,

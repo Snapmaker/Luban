@@ -17,7 +17,7 @@ import {
 import { RootState } from '../../../flux/index.def';
 import { MachineAgent } from '../../../flux/workspace/MachineAgent';
 import connectActions from '../../../flux/workspace/actions-connect';
-import { controller } from '../../../lib/controller';
+import { controller } from '../../../communication/socket-communication';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import { highPower10WLaserToolHead, standardLaserToolHead } from '../../../machines/snapmaker-2-toolheads';
@@ -276,7 +276,18 @@ const SerialConnection: React.FC = () => {
 
     const canRefresh = !loadingPorts && !isOpen;
     const canChangePort = canRefresh;
-    const canOpenPort = selectedAgent && selectedAgent.port && !selectedAgent.address && !isOpen;
+
+    const canOpenPort = (() => {
+        if (!(selectedAgent && selectedAgent.port && !selectedAgent.address)) {
+            return false;
+        }
+
+        if (isConnected || isOpen || connectLoading) {
+            return false;
+        }
+
+        return true;
+    })();
 
     return (
         <div>

@@ -52,7 +52,14 @@ function getDefaultDefinition(headType, laserToolHead, modelMode, toolDefinition
     return res;
 }
 
-function ToolPathConfigurations({ toolpath, onClose, headType }) {
+
+interface ToolPathConfigurationsProps {
+    onClose: () => void;
+    headType: string;
+    toolpath: object;
+}
+
+const ToolPathConfigurations: React.FC<ToolPathConfigurationsProps> = ({ toolpath, onClose, headType }) => {
     const toolDefinitions = useSelector(state => state[headType]?.toolDefinitions, shallowEqual);
     const laserToolHead = useSelector(state => state?.machine?.toolHead?.laserToolhead, shallowEqual);
     const dispatch = useDispatch();
@@ -182,7 +189,9 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
                 return d.definitionId === currentToolDefinition?.definitionId;
             });
             return oldTooldefinition?.settings && !Object.entries(oldTooldefinition.settings).every(([key, setting]) => {
-                return currentToolDefinition && currentToolDefinition.settings[key] && currentToolDefinition.settings[key].default_value === setting.default_value;
+                return currentToolDefinition
+                    && currentToolDefinition.settings[key]
+                    && currentToolDefinition.settings[key].default_value === setting.default_value;
             });
         },
         cancelUpdateToolPath() {
@@ -359,7 +368,7 @@ function ToolPathConfigurations({ toolpath, onClose, headType }) {
             </Modal>
         </React.Fragment>
     );
-}
+};
 ToolPathConfigurations.propTypes = {
     onClose: PropTypes.func,
     headType: PropTypes.string,

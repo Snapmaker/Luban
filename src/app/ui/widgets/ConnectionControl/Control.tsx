@@ -14,7 +14,8 @@ import {
 import { RootState } from '../../../flux/index.def';
 import { actions as widgetsActions } from '../../../flux/widget';
 import { actions as workspaceActions } from '../../../flux/workspace';
-import { controller } from '../../../lib/controller';
+import { MachineAgent } from '../../../flux/workspace/MachineAgent';
+import { controller } from '../../../communication/socket-communication';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
 import { in2mm, mm2in } from '../../../lib/units';
@@ -81,14 +82,16 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, widgetActions }) 
 
     const { isConnected } = useSelector((state: RootState) => state.workspace);
     const { headType } = useSelector((state: RootState) => state.workspace);
+
+    const server: MachineAgent = useSelector((state: RootState) => state.workspace.server);
     const {
-        server,
         isMoving,
         workflowStatus,
         workPosition,
         originOffset,
         boundingBox
     } = useSelector((state: RootState) => state.workspace);
+
 
     const { jog, axes } = widgets[widgetId];
     const { speed = 1500, keypad, selectedDistance, customDistance, selectedAngle, customAngle } = jog;

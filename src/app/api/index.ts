@@ -281,6 +281,21 @@ const getCaseResourcesList = (() => {
     };
 })();
 
+
+const getInformationFlow = (() => {
+    // cache CaseResources data for once load
+    let data;
+    return async (lang) => {
+        const getData = defaultAPIFactory(() => request.get('/api/information-flow').query({ lang }));
+        if (!data) {
+            data = getData();
+        }
+        return data;
+    };
+})();
+const getSvgShapeList = defaultAPIFactory((options) => request.get('/api/svg-shape/list').query(options));
+const getSvgShapeLabelList = defaultAPIFactory((options) => request.get('/api/svg-shape-label/list').query(options));
+
 export default {
     // version
     getLatestVersion,
@@ -338,6 +353,9 @@ export default {
     macros,
     watch, // Watch Directory
 
-    //
+    // online-service
     getCaseResourcesList,
+    getInformationFlow,
+    getSvgShapeList,
+    getSvgShapeLabelList
 };

@@ -1,6 +1,9 @@
+import { Machine } from '@snapmaker/luban-platform';
 import { includes } from 'lodash';
+
 import log from '../lib/log';
-import type { QualityPresetFilters, QualityPresetModel } from '../preset-model';
+import { L20WLaserToolModule, L40WLaserToolModule } from '../machines/snapmaker-2-toolheads';
+import type { QualityPresetModel } from '../preset-model';
 
 // export const STACK_LEFT = 'left';
 // export const STACK_RIGHT = 'right';
@@ -137,3 +140,81 @@ export function getUsedExtruderNumber(
     }
 }
 
+export interface LaserPresetGroup {
+    name: string;
+    fields: string[];
+}
+
+/**
+ * Dirty method to generate laser preset groups for specific machine and tool head.
+ */
+export function getLaserPresetGroups(machine: Machine | null, toolHeadIdentifier: string): LaserPresetGroup[] {
+    if (!machine) {
+        return [];
+    }
+
+    // Check availability of tool head
+    let avaialble = false;
+    for (const toolHeadOptions of machine.metadata.toolHeads) {
+        if (toolHeadOptions.identifier === toolHeadIdentifier) {
+            avaialble = true;
+            break;
+        }
+    }
+    if (!avaialble) {
+        return [];
+    }
+
+    const presetGroups = [];
+
+    presetGroups.push({
+        name: 'key-Laser/ToolpathParameters-Method',
+        fields: ['path_type']
+    });
+
+    presetGroups.push({
+        name: 'key-Laser/ToolpathParameters-Fill',
+        fields: ['movement_mode', 'direction', 'fill_interval']
+    });
+
+    presetGroups.push({
+        name: 'key-Laser/ToolpathParameters-Speed',
+        fields: ['jog_speed', 'work_speed', 'dwell_time']
+    });
+
+    if (machine.metadata.size.z > 0) {
+        presetGroups.push({
+            name: 'key-Laser/ToolpathParameters-Repetition',
+            fields: ['initial_height_offset', 'multi_passes', 'multi_pass_depth']
+        });
+    } else {
+        // unable to move z
+        presetGroups.push({
+            name: 'key-Laser/ToolpathParameters-Repetition',
+            fields: ['multi_passes']
+        });
+    }
+
+    if (includes([L40WLaserToolModule.identifier], toolHeadIdentifier)) {
+        // Half diode mode is only for 40W module
+        presetGroups.push({
+            name: 'key-Laser/ToolpathParameters-Power',
+            fields: ['fixed_power', 'constant_power_mode', 'half_diode_mode']
+        });
+    } else {
+        presetGroups.push({
+            name: 'key-Laser/ToolpathParameters-Power',
+            fields: ['fixed_power', 'constant_power_mode']
+        });
+    }
+
+    // Remove auxiliary gas group if not using 20W module or 40W module
+    if (includes([L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], toolHeadIdentifier)) {
+        presetGroups.push({
+            name: 'key-Laser/ToolpathParameters-Auxiliary Gas',
+            fields: ['auxiliary_air_pump']
+        });
+    }
+
+    return presetGroups;
+}

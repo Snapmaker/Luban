@@ -3,9 +3,9 @@ import { noop } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import ControllerEvent from '../../../../connection/controller-events';
+import SocketEvent from '../../../../communication/socket-events';
 import { RootState } from '../../../../flux/index.def';
-import controller from '../../../../lib/controller';
+import controller from '../../../../communication/socket-communication';
 import downloadManager from '../../../../lib/download-mananger';
 import i18n from '../../../../lib/i18n';
 import log from '../../../../lib/log';
@@ -30,8 +30,8 @@ const FirmwareUpgradeModal: React.FC<FirmwareUpgradeModalProps> = (props) => {
     useEffect(() => {
         if (isConnected) {
             controller
-                .emitEvent(ControllerEvent.GetFirmwareVersion)
-                .once(ControllerEvent.GetFirmwareVersion, ({ version }) => {
+                .emitEvent(SocketEvent.GetFirmwareVersion)
+                .once(SocketEvent.GetFirmwareVersion, ({ version }) => {
                     setFirmwareVersion(version);
                 });
         }
@@ -67,11 +67,11 @@ const FirmwareUpgradeModal: React.FC<FirmwareUpgradeModalProps> = (props) => {
 
         return new Promise((resolve) => {
             controller
-                .emitEvent(ControllerEvent.CompressUploadFile, {
+                .emitEvent(SocketEvent.CompressUploadFile, {
                     filePath: selectedFilePath,
                     targetFilename: '/update.bin',
                 })
-                .once(ControllerEvent.CompressUploadFile, ({ err, text }) => {
+                .once(SocketEvent.CompressUploadFile, ({ err, text }) => {
                     setIsUploading(false);
 
                     if (err) {
@@ -89,10 +89,10 @@ const FirmwareUpgradeModal: React.FC<FirmwareUpgradeModalProps> = (props) => {
         setIsUpgrading(true);
         return new Promise((resolve) => {
             controller
-                .emitEvent(ControllerEvent.UpgradeFirmware, {
+                .emitEvent(SocketEvent.UpgradeFirmware, {
                     filename: '/update.bin',
                 })
-                .once(ControllerEvent.UpgradeFirmware, ({ err }) => {
+                .once(SocketEvent.UpgradeFirmware, ({ err }) => {
                     setIsUpgrading(false);
                     if (err) {
                         log.error('Failed to upgrade.');

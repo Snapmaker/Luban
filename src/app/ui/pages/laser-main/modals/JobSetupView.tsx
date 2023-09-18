@@ -1,15 +1,10 @@
 import { Machine } from '@snapmaker/luban-platform';
+import { includes } from 'lodash';
 import React, { useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
 import {
-    COORDINATE_MODE_BOTTOM_CENTER,
-    COORDINATE_MODE_BOTTOM_LEFT,
-    COORDINATE_MODE_BOTTOM_RIGHT,
-    COORDINATE_MODE_CENTER,
-    COORDINATE_MODE_TOP_LEFT,
-    COORDINATE_MODE_TOP_RIGHT,
-    HEAD_LASER,
+    HEAD_LASER
 } from '../../../../constants';
 import {
     CylinderWorkpieceSize,
@@ -17,10 +12,12 @@ import {
     Materials,
     Origin,
     OriginReference,
-    OriginType,
+    OriginTypeOption,
     RectangleWorkpieceSize,
     Workpiece,
     WorkpieceShape,
+    getOriginReferenceOptions,
+    getOriginTypeOptions
 } from '../../../../constants/coordinate';
 import { actions as editorActions } from '../../../../flux/editor';
 import { RootState } from '../../../../flux/index.def';
@@ -28,109 +25,11 @@ import useSetState from '../../../../lib/hooks/set-state';
 import i18n from '../../../../lib/i18n';
 import { toFixed } from '../../../../lib/numeric-utils';
 import { SnapmakerRayMachine } from '../../../../machines';
+import { L20WLaserToolModule, L40WLaserToolModule } from '../../../../machines/snapmaker-2-toolheads';
 import { NumberInput as Input } from '../../../components/Input';
 import Select from '../../../components/Select';
 import TipTrigger from '../../../components/TipTrigger';
 
-
-type OriginTypeOption = {
-    value: OriginType;
-    label: string;
-};
-
-function getOriginTypeOptions(workpieceShape: WorkpieceShape): OriginTypeOption[] {
-    if (workpieceShape === WorkpieceShape.Rectangle) {
-        return [
-            {
-                value: OriginType.Workpiece,
-                label: i18n._('key-Term/Workpiece'),
-            },
-            {
-                value: OriginType.Object,
-                label: i18n._('key-Term/Object'),
-            },
-        ];
-    } else {
-        return [
-            {
-                value: OriginType.Workpiece,
-                label: i18n._('key-Term/Workpiece'),
-            },
-        ];
-    }
-}
-
-function getOriginReferenceOptions(workpieceShape: WorkpieceShape, originType: OriginType = OriginType.Workpiece) {
-    if (workpieceShape === WorkpieceShape.Rectangle) {
-        if (originType === OriginType.Workpiece) {
-            return [
-                {
-                    label: i18n._(COORDINATE_MODE_CENTER.label),
-                    value: COORDINATE_MODE_CENTER.value,
-                    mode: COORDINATE_MODE_CENTER
-                },
-                {
-                    label: i18n._(COORDINATE_MODE_BOTTOM_LEFT.label),
-                    value: COORDINATE_MODE_BOTTOM_LEFT.value,
-                    mode: COORDINATE_MODE_BOTTOM_LEFT
-                },
-                {
-                    label: i18n._(COORDINATE_MODE_BOTTOM_RIGHT.label),
-                    value: COORDINATE_MODE_BOTTOM_RIGHT.value,
-                    mode: COORDINATE_MODE_BOTTOM_RIGHT
-                },
-                {
-                    label: i18n._(COORDINATE_MODE_TOP_LEFT.label),
-                    value: COORDINATE_MODE_TOP_LEFT.value,
-                    mode: COORDINATE_MODE_TOP_LEFT
-                },
-                {
-                    label: i18n._(COORDINATE_MODE_TOP_RIGHT.label),
-                    value: COORDINATE_MODE_TOP_RIGHT.value,
-                    mode: COORDINATE_MODE_TOP_RIGHT
-                }
-            ];
-        } else if (originType === OriginType.Object) {
-            return [
-                {
-                    label: i18n._(COORDINATE_MODE_CENTER.label),
-                    value: COORDINATE_MODE_CENTER.value,
-                    mode: COORDINATE_MODE_CENTER
-                },
-                {
-                    label: i18n._(COORDINATE_MODE_BOTTOM_LEFT.label),
-                    value: COORDINATE_MODE_BOTTOM_LEFT.value,
-                    mode: COORDINATE_MODE_BOTTOM_LEFT
-                },
-                {
-                    label: i18n._(COORDINATE_MODE_BOTTOM_RIGHT.label),
-                    value: COORDINATE_MODE_BOTTOM_RIGHT.value,
-                    mode: COORDINATE_MODE_BOTTOM_RIGHT
-                },
-                {
-                    label: i18n._(COORDINATE_MODE_TOP_LEFT.label),
-                    value: COORDINATE_MODE_TOP_LEFT.value,
-                    mode: COORDINATE_MODE_TOP_LEFT
-                },
-                {
-                    label: i18n._(COORDINATE_MODE_TOP_RIGHT.label),
-                    value: COORDINATE_MODE_TOP_RIGHT.value,
-                    mode: COORDINATE_MODE_TOP_RIGHT
-                }
-            ];
-        }
-    } else if (workpieceShape === WorkpieceShape.Cylinder) {
-        return [
-            {
-                label: i18n._(COORDINATE_MODE_BOTTOM_CENTER),
-                value: COORDINATE_MODE_BOTTOM_CENTER.value,
-                mode: COORDINATE_MODE_BOTTOM_CENTER,
-            }
-        ];
-    }
-
-    return [];
-}
 
 export type JobSetupViewHandle = {
     onChange: () => void;
@@ -138,6 +37,11 @@ export type JobSetupViewHandle = {
 
 const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
     const activeMachine = useSelector((state: RootState) => state.machine.activeMachine) as Machine;
+
+    const toolHead = useSelector((state: RootState) => state.machine.toolHead);
+    const toolIdentifer = toolHead.laserToolhead;
+
+    // const machineToolOptions = getMachineToolOptions(activeMachine?.identifier, toolIdentifer);
 
     const materials = useSelector((state: RootState) => state[HEAD_LASER]?.materials, shallowEqual) as Materials;
     const origin = useSelector((state: RootState) => state[HEAD_LASER].origin, shallowEqual) as Origin;
@@ -263,17 +167,26 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
 
     const runBoundaryModeOptions = useMemo(() => {
         // hard-coded for ray machine
-        if (activeMachine?.identifier === SnapmakerRayMachine.identifier) {
-            return [
-                {
-                    label: i18n._('Crosshair'),
-                    value: JobOffsetMode.Crosshair,
-                },
-                {
-                    label: i18n._('Laser Spot'),
-                    value: JobOffsetMode.LaserSpot,
-                },
-            ];
+        if (includes([L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], toolIdentifer)) {
+            if (activeMachine?.identifier === SnapmakerRayMachine.identifier) {
+                return [
+                    {
+                        label: i18n._('Crosshair'),
+                        value: JobOffsetMode.Crosshair,
+                    },
+                    {
+                        label: i18n._('Laser Spot'),
+                        value: JobOffsetMode.LaserSpot,
+                    },
+                ];
+            } else {
+                return [
+                    {
+                        label: i18n._('Crosshair'),
+                        value: JobOffsetMode.Crosshair,
+                    },
+                ];
+            }
         } else {
             return [
                 {
@@ -282,8 +195,9 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
                 },
             ];
         }
-    }, [activeMachine]);
+    }, [activeMachine, toolIdentifer]);
 
+    // Check job offset mode options
     useEffect(() => {
         const targetOption = runBoundaryModeOptions.find(option => option.value === jobOffsetMode);
         if (targetOption) {
@@ -582,17 +496,24 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
                 <div className="margin-bottom-16 font-weight-bold">
                     {i18n._('Job Offset')}
                 </div>
-                <div className="sm-flex height-32">
-                    <span className="width-144 margin-right-8 text-overflow-ellipsis">
-                        {i18n._('Job Offset Mode')}
-                    </span>
-                    <Select
-                        className="width-120"
-                        options={runBoundaryModeOptions}
-                        value={selectedJobOffsetMode}
-                        onChange={onChangeJobOffsetMode}
-                    />
-                </div>
+                <TipTrigger
+                    title={i18n._('Job Offset Mode')}
+                    content={i18n._('Crosshair mode uses the crosshair for positioning, while Laser shot mode uses the working laser for positioning.')}
+                >
+                    <div className="sm-flex justify-space-between height-32">
+                        <span className="width-144 margin-right-8 text-overflow-ellipsis">
+
+                            {i18n._('Job Offset Mode')}
+                        </span>
+                        <Select
+                            className="width-120"
+                            options={runBoundaryModeOptions}
+                            value={selectedJobOffsetMode}
+                            onChange={onChangeJobOffsetMode}
+                            disabled={runBoundaryModeOptions.length <= 1}
+                        />
+                    </div>
+                </TipTrigger>
             </div>
         </div>
     );

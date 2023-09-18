@@ -6,7 +6,7 @@ import { v4 as uuid } from 'uuid';
 
 import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import api from '../../api';
-import ControllerEvent from '../../connection/controller-events';
+import SocketEvent from '../../communication/socket-events';
 import {
     CONNECTION_GET_GCODEFILE,
     CONNECTION_HEAD_BEGIN_WORK,
@@ -29,7 +29,7 @@ import {
     findToolHead,
 } from '../../constants/machines';
 import { valueOf } from '../../lib/contants-utils';
-import { controller } from '../../lib/controller';
+import { controller } from '../../communication/socket-communication';
 import { logGcodeExport } from '../../lib/gaEvent';
 import log from '../../lib/log';
 import workerManager from '../../lib/manager/workerManager';
@@ -98,7 +98,7 @@ export const actions = {
     __initRemoteEvents: () => (dispatch, getState) => {
         const controllerEvents = {
             // connecting state from remote
-            [ControllerEvent.ConnectionConnecting]: (options: { requireAuth?: boolean }) => {
+            [SocketEvent.ConnectionConnecting]: (options: { requireAuth?: boolean }) => {
                 const { requireAuth = false } = options;
 
                 if (requireAuth) {
@@ -585,7 +585,7 @@ export const actions = {
                 if (includes(EMERGENCY_STOP_BUTTON, owner)) {
                     if (errorCode === 1) {
                         // TODO
-                        controller.emitEvent(ControllerEvent.ConnectionClose, () => {
+                        controller.emitEvent(SocketEvent.ConnectionClose, () => {
                             dispatch(connectActions.resetMachineState());
                             dispatch(actions.updateMachineState({
                                 headType: '',
@@ -674,7 +674,10 @@ export const actions = {
                 // calculate bounding box of G-code objects
                 const objectBBox = ThreeUtils.computeBoundingBox(object3D);
 
-                const newBoundingBox = new Box3().copy(boundingBox);
+                const newBoundingBox = new Box3();
+                if (boundingBox) {
+                    newBoundingBox.copy(boundingBox);
+                }
                 newBoundingBox.expandByPoint(objectBBox.min);
                 newBoundingBox.expandByPoint(objectBBox.max);
 
@@ -954,15 +957,16 @@ export const actions = {
                 }
             );
         } else {
-            shouldAutoPreviewGcode
-                && dispatch(actions.renderPreviewGcodeFile(gcodeFile));
+            if (shouldAutoPreviewGcode) {
+                dispatch(actions.renderPreviewGcodeFile(gcodeFile));
+            }
 
-            if (gcodeFile?.boundingBox) {
+            if (gcodeFile.boundingBox) {
                 await dispatch(
                     actions.updateState({
                         boundingBox: new Box3(
-                            new Vector3().fromArray(gcodeFile.boundingBox.min),
-                            new Vector3().fromArray(gcodeFile.boundingBox.max),
+                            new Vector3().copy(gcodeFile.boundingBox.min),
+                            new Vector3().copy(gcodeFile.boundingBox.max),
                         ),
                     })
                 );
@@ -997,6 +1001,7 @@ export const actions = {
         fileInfo.isRenaming = false;
         fileInfo.newName = fileInfo.name;
         files.push(fileInfo);
+
         let added = 1,
             i = 0;
         while (added < 5 && i < gcodeFiles.length) {
@@ -1011,13 +1016,21 @@ export const actions = {
 
         dispatch(
             actions.updateState({
-                boundingBox: new Box3(
-                    new Vector3().fromArray(fileInfo.boundingBox.min),
-                    new Vector3().fromArray(fileInfo.boundingBox.max),
-                ),
                 gcodeFiles: files,
             })
         );
+
+        if (fileInfo.boundingBox) {
+            dispatch(
+                actions.updateState({
+                    boundingBox: new Box3(
+                        new Vector3().fromArray(fileInfo.boundingBox.min),
+                        new Vector3().fromArray(fileInfo.boundingBox.max),
+                    ),
+                    gcodeFiles: files,
+                })
+            );
+        }
     },
 
     renameGcodeFile: (uploadName, newName = null, isRenaming = null) => (
@@ -1081,12 +1094,12 @@ export const actions = {
             return;
         }
 
-        const server: MachineAgent = getState().workspace.server;
+        const machineAgent: MachineAgent = getState().workspace.server;
 
         dispatch(actions.updateState({ uploadState: 'uploading' }));
         try {
             await api.loadGCode({
-                port: server?.port,
+                port: machineAgent?.port,
                 dataSource: PROTOCOL_TEXT,
                 uploadName: gcodeFile.uploadName,
             });
@@ -1136,7 +1149,7 @@ export const actions = {
 
     executeCmd: (cmd: string) => {
         console.log('execute cmd', cmd);
-        controller.emitEvent(ControllerEvent.ExecuteCmd, { cmd });
+        controller.emitEvent(SocketEvent.ExecuteCmd, { cmd });
     },
 
     /**
@@ -1155,7 +1168,7 @@ export const actions = {
             return;
         }
         controller.emitEvent(
-            ControllerEvent.ExecuteGCode,
+            SocketEvent.ExecuteGCode,
             { gcode, context, cmd },
             () => {
                 if (homingModal && gcode === 'G28') {
@@ -1170,7 +1183,8 @@ export const actions = {
     },
 
     executeGcodeAutoHome: (hasHomingModel = false) => (dispatch, getState) => {
-        const { server, homingModal, isConnected } = getState().workspace;
+        const { homingModal, isConnected } = getState().workspace;
+        const machineAgent: MachineAgent = getState().workspace.server;
         const { headType } = getState().workspace;
         if (!isConnected) {
             if (homingModal) {
@@ -1182,7 +1196,7 @@ export const actions = {
             }
             return;
         }
-        server.goHome({ hasHomingModel, headType }, () => {
+        machineAgent.goHome({ hasHomingModel, headType }, () => {
             dispatch(
                 baseActions.updateState({
                     homingModal: false

@@ -2,9 +2,9 @@ import { Alert } from 'antd';
 import React, { useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import ControllerEvent from '../../../../connection/controller-events';
+import SocketEvent from '../../../../communication/socket-events';
 import { RootState } from '../../../../flux/index.def';
-import controller from '../../../../lib/controller';
+import controller from '../../../../communication/socket-communication';
 import i18n from '../../../../lib/i18n';
 import { Button } from '../../../components/Buttons';
 import Modal from '../../../components/Modal';
@@ -24,8 +24,8 @@ const ExportLogModal: React.FC<ExportLogModalProps> = (props) => {
         setIsExporting(true);
 
         controller
-            .emitEvent(ControllerEvent.ExportLogToExternalStorage)
-            .once(ControllerEvent.ExportLogToExternalStorage, ({ err }) => {
+            .emitEvent(SocketEvent.ExportLogToExternalStorage)
+            .once(SocketEvent.ExportLogToExternalStorage, ({ err }) => {
                 setIsExporting(false);
                 if (!err) {
                     // success

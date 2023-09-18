@@ -21,7 +21,7 @@ import { SnapmakerRayMachine } from '../machines';
 import { ToastContainer } from './components/Toast';
 import AppLayout from './layouts/AppLayout';
 import HomePage from './pages/HomePage';
-import Settings from './pages/Settings';
+import Settings from './pages/global-modals/settings-modal';
 import Workspace from './pages/Workspace';
 import { CNCMainPage } from './pages/cnc-main';
 import { LaserMainPage } from './pages/laser-main';

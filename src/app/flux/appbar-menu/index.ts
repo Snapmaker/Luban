@@ -5,7 +5,7 @@ import UniApi from '../../lib/uni-api';
 import { getCaseList } from '../../lib/caseLibrary';
 import i18n from '../../lib/i18n';
 import { CONNECTION_WIFI_STATUS_TEST } from '../../constants';
-import { controller } from '../../lib/controller';
+import { controller } from '../../communication/socket-communication';
 
 export const ACTION_UPDATE_STATE = 'appbar-menu/ACTION_UPDATE_STATE';
 const DEFAULT_IDS = [
@@ -36,7 +36,7 @@ function caseConfigToMenuItems(caseConfig) {
     return caseConfig.map(item => {
         item.label = i18n._(item.title);
         item.enabled = true;
-        item.click = function () {
+        item.click = () => {
             UniApi.Event.emit('appbar-menu:get-started', item);
         };
         return item;

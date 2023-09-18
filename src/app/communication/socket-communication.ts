@@ -3,14 +3,14 @@ import isEmpty from 'lodash/isEmpty';
 import noop from 'lodash/noop';
 
 import { MARLIN, PROTOCOL_TEXT } from '../constants';
-import { machineStore } from '../store/local-storage';
-import { lubanVisit } from './gaEvent';
-import log from './log';
-import socketController from './socket-controller';
-import ControllerEvent from '../connection/controller-events';
 import { ConnectionType } from '../flux/workspace/state';
+import { lubanVisit } from '../lib/gaEvent';
+import log from '../lib/log';
+import socketController from '../lib/socket-controller';
+import { machineStore } from '../store/local-storage';
+import SocketEvent from './socket-events';
 
-class SerialPortClient {
+class SocketCommunication {
     private callbacks = {
         //
         // Socket.IO Events
@@ -43,7 +43,7 @@ class SerialPortClient {
 
         // Serial Port events
         'connection:connected': [],
-        [ControllerEvent.ConnectionConnecting]: [],
+        [SocketEvent.ConnectionConnecting]: [],
         'connection:executeGcode': [],
         'serialport:emergencyStop': [],
         'serialport:read': [],
@@ -51,7 +51,7 @@ class SerialPortClient {
 
         // HTTP events
         'machine:serial-discover': [],
-        [ControllerEvent.DiscoverMachine]: [],
+        [SocketEvent.DiscoverMachine]: [],
         'machine:discover': [],
         'connection:open': [],
         'connection:close': [],
@@ -70,9 +70,9 @@ class SerialPortClient {
         'machine:module-list': [],
         'machine:laser-status': [],
 
-        [ControllerEvent.UploadFileProgress]: [],
-        [ControllerEvent.UploadFileCompressing]: [],
-        [ControllerEvent.UploadFileDecompressing]: [],
+        [SocketEvent.UploadFileProgress]: [],
+        [SocketEvent.UploadFileCompressing]: [],
+        [SocketEvent.UploadFileDecompressing]: [],
 
         'connection:getActiveExtruder': [],
         'connection:updateWorkNozzle': [],
@@ -142,7 +142,7 @@ class SerialPortClient {
         if (v) {
             return v;
         } else {
-            const controller = new SerialPortClient(dataSource);
+            const controller = new SocketCommunication(dataSource);
             this.map.set(dataSource, controller);
             return controller;
         }
@@ -260,15 +260,14 @@ class SerialPortClient {
     }
 
     public listPorts() {
-        socketController.emit(ControllerEvent.DiscoverMachine, {
-            dataSource: this.dataSource,
+        socketController.emit(SocketEvent.DiscoverMachine, {
             connectionType: ConnectionType.Serial,
         });
     }
 
     // Discover Wi-Fi enabled Snapmakers
     public discoverNetworkedMachines() {
-        socketController.emit(ControllerEvent.DiscoverMachine, {
+        socketController.emit(SocketEvent.DiscoverMachine, {
             connectionType: ConnectionType.WiFi,
         });
     }
@@ -334,28 +333,14 @@ class SerialPortClient {
 
     public subscribeDiscover(connectionType: ConnectionType, bool: boolean): void {
         if (bool) {
-            socketController.emit(ControllerEvent.DiscoverMachineStart, {
+            socketController.emit(SocketEvent.DiscoverMachineStart, {
                 connectionType: connectionType,
             });
         } else {
-            socketController.emit(ControllerEvent.DiscoverMachineEnd, {
+            socketController.emit(SocketEvent.DiscoverMachineEnd, {
                 connectionType: connectionType,
             });
         }
-    }
-
-    // command(cmd, ...args) {
-    public command(cmd, ...args) {
-        // const { port } = this;
-        if (!this.workspacePort) {
-            return;
-        }
-        socketController.emit('command', {
-            port: this.workspacePort,
-            dataSource: this.dataSource,
-            cmd: cmd,
-            args: [...args]
-        });
     }
 
     // @param {object} [context] The associated context information.
@@ -373,6 +358,6 @@ class SerialPortClient {
     }
 }
 
-export const controller: SerialPortClient = SerialPortClient.getController(PROTOCOL_TEXT);
+export const controller: SocketCommunication = SocketCommunication.getController(PROTOCOL_TEXT);
 
 export default controller;

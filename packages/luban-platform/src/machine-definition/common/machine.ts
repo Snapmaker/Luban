@@ -34,6 +34,11 @@ export declare type MachineToolHeadOptions = {
     workRange?: WorkRange;
 
     goHomeOnConnection?: boolean;
+
+    supportCameraCapture?: boolean;
+
+    // Allow start print remotely, defaults to false
+    disableRemoteStartPrint?: boolean;
 };
 
 export declare type MachineModuleOptions = {

@@ -17,6 +17,7 @@ import {
     RIGHT_EXTRUDER,
     SOURCE_TYPE
 } from '../../constants';
+import { convertMaterialsToWorkpiece } from '../../constants/coordinate';
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING, SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 } from '../../constants/machines';
 import { checkIsGCodeFile, checkIsSnapmakerProjectFile } from '../../lib/check-name';
 import { logModuleVisit } from '../../lib/gaEvent';
@@ -30,14 +31,15 @@ import { getCurrentHeadType } from '../../lib/url-utils';
 import { machineStore } from '../../store/local-storage';
 import { actions as editorActions } from '../editor';
 import { actions as printingActions } from '../printing';
+import { synchronizeMeshFile } from '../printing/actions-mesh';
 import { actions as workspaceActions } from '../workspace';
+
+import ThreeModel from '../../models/ThreeModel';
 
 /* eslint-disable-next-line import/no-cycle */
 import { actions as appGlobalActions } from '../app-global';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as operationHistoryActions } from '../operation-history';
-import { synchronizeMeshFile } from '../printing/actions-mesh';
-import ThreeModel from '../../models/ThreeModel';
 
 const INITIAL_STATE = {
     [HEAD_PRINTING]: {
@@ -277,7 +279,15 @@ export const actions = {
         let { models, toolpaths, materials, origin, coordinateMode, coordinateSize, machineInfo, ...restState } = envObj;
         if (envHeadType === HEAD_CNC || envHeadType === HEAD_LASER) {
             if (materials) {
-                dispatch(editorActions.updateMaterials(envHeadType, materials));
+                // For old project file, it may have x = 0 and y = 0
+                if (materials.x === 0 && materials.y === 0) {
+                    materials.x = coordinateSize.x;
+                    materials.y = coordinateSize.y;
+                }
+
+                const workpiece = convertMaterialsToWorkpiece(materials);
+                dispatch(editorActions.setWorkpiece(envHeadType, workpiece.shape, workpiece.size));
+                dispatch(editorActions.updateWorkpieceObject(envHeadType));
             }
 
             // origin

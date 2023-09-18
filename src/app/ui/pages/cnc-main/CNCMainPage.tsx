@@ -306,7 +306,11 @@ const Cnc: React.FC<CNCMainPageProps> = ({ location }) => {
                 ) : laserCncIntroStepOne(
                     i18n._('key-Cnc/Page-Set the work size and where the work origin will be.'),
                     i18n._('key-Cnc/Page-X is the width of the material,  and Y is the height of the material.'),
-                    i18n._('key-Cnc/Page-Origin can be set at any corner or the middle of the job. This point (X0, Y0) is the origin of the design coordinate system. It also represents the origin of the workpiece coordinate system that you should set on the material using the machine tool.')
+                    i18n._('There are two types of origin mode.'),
+                    i18n._('In object origin mode, the origin is at the corners or center of the object.'),
+                    i18n._('In workpiece origin mode, the origin is at the corners or center of the workpiece.'),
+                    i18n._('This point (X0, Y0) is the origin of the design coordinate system, and the origin to be positioned or set on the machine needs to coincide with this point.'),
+                    null,
                 ),
                 title: `${i18n._('key-Cnc/Page-Job Setup')} (1/8)`
             }, {

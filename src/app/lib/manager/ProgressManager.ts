@@ -317,9 +317,9 @@ export function getProgressStateManagerInstance(): ProgressStatesManager {
                 percent: 1
             }
         ],
-        'key-Progress/LaserCNC-SVG clipping {{progress}}%',
-        'key-Progress/LaserCNC-SVG clipping successfully.',
-        'key-Progress/LaserCNC-Failed to SVG clipping.');
+        'key-Progress/LaserCNC-Processing SVG {{progress}}%',
+        'key-Progress/LaserCNC-Processing SVG successfully.',
+        'key-Progress/LaserCNC-Failed to process SVG.');
     manager.push(PROCESS_STAGE.CNC_LASER_VIEW_PATH,
         [
             {

@@ -50,7 +50,6 @@ const StartProject: React.FC = () => {
         if (activeMachine?.identifier === SnapmakerRayMachine.identifier) {
             component = LaserWorkspaceRay;
         }
-        console.log('mah =', activeMachine?.identifier);
 
         return renderPopup({
             onClose,
@@ -92,7 +91,7 @@ const StartProject: React.FC = () => {
     }, [newRecentFile]);
 
     return (
-        <div className={classNames(styles['create-new-project'], 'tile-modal-homepage', 'homepage-widget-box-shadow')}>
+        <div id="start-project" className={classNames(styles['create-new-project'], 'tile-modal-homepage', 'homepage-widget-box-shadow')}>
             <div className={classNames(styles.beginPart)}>
                 <div className={classNames('position-re', styles.headingPart)}>
                     <Anchor

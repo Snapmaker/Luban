@@ -91,9 +91,12 @@ function getFastEditSettingsKeys(toolPath) {
 
 
 function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) {
+    const activeMachine = useSelector(state => state.machine.activeMachine);
     const activeToolListDefinition = useSelector(state => state[headType]?.activeToolListDefinition, shallowEqual);
     const toolDefinitions = useSelector(state => state[headType]?.toolDefinitions, shallowEqual);
+
     const dispatch = useDispatch();
+
     const [toolPath, setToolPath] = useState(toolpath);
     const [currentToolDefinition, setCurrentToolDefinition] = useState(activeToolListDefinition);
     const saveToolPath = async (toolDefinition) => {
@@ -335,6 +338,11 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
         }
         if (headType === HEAD_LASER && activeToolListDefinition) {
             allDefinition = cloneDeep(LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION);
+            if (activeMachine && activeMachine.metadata.size.z === 0) {
+                if (allDefinition.multiPassDepth) {
+                    delete allDefinition.multiPassDepth;
+                }
+            }
         }
         Object.keys(allDefinition).forEach((key) => {
             allDefinition[key].default_value = gcodeConfig[key];
@@ -349,6 +357,7 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
         });
     }
     const isModifiedDefinition = actions.checkIfDefinitionModified();
+
     return (
         <React.Fragment>
             <div className={classNames(

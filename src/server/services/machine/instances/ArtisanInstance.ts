@@ -11,6 +11,7 @@ import {
 import { SnapmakerArtisanMachine } from '../../../../app/machines';
 import { HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../../constants';
 import logger from '../../../lib/logger';
+import SacpChannelBase from '../channels/SacpChannel';
 import SacpSerialChannel from '../channels/SacpSerialChannel';
 import SacpTcpChannel from '../channels/SacpTcpChannel';
 import TextSerialChannel from '../channels/TextSerialChannel';
@@ -29,7 +30,7 @@ class ArtisanMachineInstance extends MachineInstance {
         state.series = SnapmakerArtisanMachine.identifier;
 
         // module info
-        const { data: moduleInfos } = await this.channel.getModuleInfo();
+        const moduleInfos = await (this.channel as SacpChannelBase).getModuleInfo();
 
         const moduleListStatus = {
             // airPurifier: false,
@@ -79,11 +80,17 @@ class ArtisanMachineInstance extends MachineInstance {
         this.socket.emit('connection:connected', { state: state, err: '' });
 
         // Start heartbeat
-        await this.channel.startHeartbeat();
+        // await this.channel.startHeartbeat();
+
+        // Legacy
+        const sacpClient = (this.channel as SacpChannelBase).sacpClient;
+        await (this.channel as SacpChannelBase).startHeartbeatLegacy(sacpClient, undefined);
+
+        (this.channel as SacpChannelBase).setROTSubscribeApi();
     }
 
     public async onPrepare(): Promise<void> {
-        log.info('onPrepare');
+        log.info('On preparing machine...');
 
         if (this.channel instanceof SacpSerialChannel) {
             await this._onMachineReadySACP();

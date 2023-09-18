@@ -3,14 +3,13 @@ import { PROTOCOL_TEXT, WRITE_SOURCE_CLIENT } from '../../../controllers/constan
 import type SocketServer from '../../../lib/SocketManager';
 import logger from '../../../lib/logger';
 import store from '../../../store';
-import Channel, { CncChannelInterface, GcodeChannelInterface } from './Channel';
+import Channel, { CncChannelInterface } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 
-const log = logger('machine:channel:TextSerialChannel');
+const log = logger('machine:channels:TextSerialChannel');
 
 const DEFAULT_BAUDRATE = 115200;
 class TextSerialChannel extends Channel implements
-    GcodeChannelInterface,
     CncChannelInterface {
     private port = '';
 

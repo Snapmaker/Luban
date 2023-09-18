@@ -366,7 +366,7 @@ const StackPresetSelector: React.FC<StackPresetSelectorProps> = (props) => {
                                                                 styles['preset-item'],
                                                                 {
                                                                     [styles.selected]: isPresetSelected,
-                                                                    'background-color-blue': isPresetSelected,
+                                                                    'background-color-blue-4': isPresetSelected,
                                                                 },
                                                             )}
                                                         >

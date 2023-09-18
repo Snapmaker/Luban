@@ -96,6 +96,7 @@ class Visualizer extends React.Component<VisualizerProps> {
         modelGroup: PropTypes.object.isRequired,
         SVGActions: PropTypes.object.isRequired,
         toolPathGroup: PropTypes.object.isRequired,
+        shouldGenerateGcodeCounter: PropTypes.number.isRequired,
         displayedType: PropTypes.string.isRequired,
         renderingTimestamp: PropTypes.number.isRequired,
         isChangedAfterGcodeGenerating: PropTypes.bool.isRequired,
@@ -239,7 +240,7 @@ class Visualizer extends React.Component<VisualizerProps> {
                         body: i18n._('Failed to import this object. \nPlease select a supported file format.')
                     });
                 });
-            } else if (extname === '.dxf' || extname === '.svg') {
+            } else if (extname === '.dxf' || extname === '.svg' || extname === '.png' || extname === '.jpg' || extname === '.jpeg' || extname === '.jpeg, .bmp') {
                 const fileInfo = await this.props.checkIsOversizeImage(file, () => {
                     modal({
                         cancelTitle: i18n._('key-Laser/Edit/ContextMenu-Close'),
@@ -418,10 +419,16 @@ class Visualizer extends React.Component<VisualizerProps> {
         // TODO: Occasionally cannot find 'controls', error on finding 'panOffset' of 'undefined'
         if (renderingTimestamp !== this.props.renderingTimestamp) {
             this.canvas.current.renderScene();
-            this.canvas.current.setCameraOnTop();
+        }
 
-            this.canvas.current.controls.panOffset.add(new THREE.Vector3(this.props.target?.x || 0, this.props.target?.y || 0, 0));
-            this.canvas.current.controls.updateCamera();
+        if (nextProps.shouldGenerateGcodeCounter !== this.props.shouldGenerateGcodeCounter) {
+            const { min, max } = nextProps.toolPathGroup.getBoundingBox();
+            const target = new THREE.Vector3();
+
+            target.copy(min).add(max).divideScalar(2);
+            const width = new THREE.Vector3().add(min).distanceTo(new THREE.Vector3().add(max));
+            const position = new THREE.Vector3(target.x, target.y, width * 2);
+            this.canvas.current && this.canvas.current.setCamera(position, target);
         }
 
         if (nextProps.displayedType !== this.props.displayedType) {
@@ -520,6 +527,7 @@ class Visualizer extends React.Component<VisualizerProps> {
                         target={this.props.target}
                         coordinateMode={this.props.coordinateMode}
                         coordinateSize={this.props.coordinateSize}
+                        workpiece={this.props.workpiece}
                         origin={this.props.origin}
                         updateTarget={this.props.updateTarget}
                         updateScale={this.props.updateScale}
@@ -541,6 +549,8 @@ class Visualizer extends React.Component<VisualizerProps> {
                         fileInput={this.fileInput}
                         allowedFiles={this.allowedFiles}
                         headType={HEAD_LASER}
+                        showSVGShapeLibrary={this.props.showSVGShapeLibrary}
+                        updateEditorState={this.props.updateEditorState}
                     />
                 </div>
                 <div
@@ -561,13 +571,9 @@ class Visualizer extends React.Component<VisualizerProps> {
                         onSelectModels={this.actions.onSelectModels}
                         onModelAfterTransform={noop}
                         showContextMenu={this.showContextMenu}
-                        scale={this.props.scale}
                         minScale={MIN_LASER_CNC_CANVAS_SCALE}
                         maxScale={MAX_LASER_CNC_CANVAS_SCALE}
                         scaleSize={VISUALIZER_CAMERA_HEIGHT}
-                        target={this.props.target}
-                        updateTarget={this.props.updateTarget}
-                        updateScale={this.props.updateScale}
                         transformSourceType="2D"
                     />
                 </div>
@@ -581,6 +587,7 @@ class Visualizer extends React.Component<VisualizerProps> {
                         zoomIn={this.actions.zoomIn}
                         zoomOut={this.actions.zoomOut}
                         toFront={this.actions.autoFocus}
+                        displayedType={this.props.displayedType}
                     />
                 </div>
                 {estimatedTime && (
@@ -746,7 +753,7 @@ const mapStateToProps = (state, ownProps) => {
 
     const background: { enabled: boolean; group: Group } = state.laser.background;
 
-    const { progressStatesManager } = state.laser;
+    const { progressStatesManager, shouldGenerateGcodeCounter } = state.laser;
     const {
         SVGActions, scale, target, materials, page, selectedModelID, svgModelGroup, displayedType,
         isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress,
@@ -757,6 +764,7 @@ const mapStateToProps = (state, ownProps) => {
     const workpiece: Workpiece = state.laser.workpiece;
     const origin: Origin = state.laser.origin;
 
+    const { showSVGShapeLibrary } = state.editor;
     const selectedModelArray = modelGroup.getSelectedModelArray();
     const selectedToolPathModelArray = modelGroup.getSelectedToolPathModels();
 
@@ -783,6 +791,7 @@ const mapStateToProps = (state, ownProps) => {
         svgModelGroup,
         modelGroup,
         toolPathGroup,
+        shouldGenerateGcodeCounter,
         displayedType,
         selectedModelArray,
         selectedToolPathModelArray,
@@ -794,7 +803,8 @@ const mapStateToProps = (state, ownProps) => {
         progress,
         isOverSize,
         SVGCanvasMode,
-        SVGCanvasExt
+        SVGCanvasExt,
+        showSVGShapeLibrary
     };
 };
 
@@ -845,6 +855,7 @@ const mapDispatchToProps = (dispatch) => {
         onDrawComplete: (elem) => dispatch(editorActions.drawComplete('laser', elem)),
         onBoxSelect: (bbox, onlyContainSelect) => dispatch(editorActions.boxSelect('laser', bbox, onlyContainSelect)),
         setMode: (mode, ext) => dispatch(editorActions.setCanvasMode('laser', mode, ext)),
+        updateEditorState: (state) => dispatch(editorActions.updateEditorState(state)),
 
         elementActions: {
             moveElementsStart: (elements) => dispatch(editorActions.moveElementsStart('laser', elements)),

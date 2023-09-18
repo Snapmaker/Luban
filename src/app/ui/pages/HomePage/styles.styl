@@ -9,12 +9,20 @@
         width: 62.4vw;
 
         .case-list {
-            height: 24.7vw;
-            max-height: 339px;
-            min-height: 256px;
+            // height: 24.7vw;
+            max-height: 440px;
+            @media (max-width: 1440px) {
+                max-height: 380px;
+            }
+            // min-height: 256px;
+            height: 100%
             overflow: auto;
             background: #fff;
             border-radius: 24px;
+
+            @media (min-height: 700px) {
+                margin-bottom: 20px
+            }
         }
 
         .case-resource {
@@ -28,14 +36,21 @@
         width: 31.2vw;
 
         .resource-list {
-            height: 24.7vw;
-            max-height: 339px;
-            min-height: 244px;
+            height: 100%;
+            // height: 24.7vw;
+            max-height: 440px;
+            @media (max-width: 1440px) {
+                max-height: 380px;
+            }
+            // min-height: 244px;
             overflow: auto;
             background: #fff;
             border-radius: 24px;
         }
     }
+}
+.secondLine.popup {
+    margin-bottom: 0
 }
 
 .create-new-project {
@@ -186,6 +201,8 @@
 }
 
 .quick-start-container {
+    display: flex;
+    flex-direction: column;
     .case-list {
         position: relative;
         padding: 2vw 3.33vw;
@@ -250,6 +267,143 @@
 }
 
 .more-info {
+    display: flex;
+    flex-direction: column;
+    .information-flow {
+        max-height: 440px;
+        @media (max-width: 1440px) {
+            max-height: 380px;
+        }
+        width: 100%;
+        overflow: auto;
+        height: 100%
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        @media (min-height: 700px) {
+            margin-bottom: 20px
+        }
+
+
+        .swiper-container {
+            padding-block: 36px;
+            padding-inline: 24px
+            background-color: white;
+            border-radius: 24px;
+            height: 100%
+        }
+        .swiper-slide {
+            display: flex !important;
+            justify-content: space-between
+            cursor: pointer;
+        }
+        .swiper-title {
+            color: #000;
+            font-family: Noto Sans SC;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 700;
+            line-height: 20px; /* 125% */
+        }
+        .swiper-desc {
+            margin-top: 5px;
+            color: #CBCBCB;
+            font-family: Noto Sans SC;
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+        .swiper-img {
+            flex: 0 0 auto;
+            max-height: 196px;
+            width: 50%;
+            border-radius: 16px;
+            max-width: 300px;
+            display: flex;
+            align-items: flex-start
+            margin-right: 12px
+        }
+        .swiper-a {
+            color: #0C63E2;
+            font-family: Noto Sans SC;
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+            margin-top: 16px
+        }
+        :global(.ant-carousel) {
+            flex: 1 1 auto;
+        }
+        :global(.ant-carousel .slick-dots li),:global(.ant-carousel .slick-dots li button) {
+            background-color: #D6D6D6;
+            width: 6px
+            height: 6px
+            border-radius: 6px;
+            overflow: hidden
+        }
+        :global(.ant-carousel .slick-dots li button) {
+            background-color: #D6D6D6;
+            transition: none;
+            width: 6px;
+        }
+        :global(.ant-carousel .slick-dots  li.slick-active) {
+            width: 48px;
+        }
+        :global(.ant-carousel .slick-dots  li.slick-active button) {
+            width: 0;
+            background-color: #0C63E2;
+        }
+
+        .blocks-wrapper {
+            display: flex;
+            margin-top:  20px;
+
+        }
+        .block-container {
+            width: 50%
+            padding: 16px;
+            border-radius: 24px;
+            background: #E3E3E3;
+            margin-left: 16px;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+
+            &:first-child {
+                margin-left: 0;
+            }
+        }
+        .block-title {
+            color: #000;
+            font-family: Noto Sans SC;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 700;
+            line-height: 20px; /* 166.667% */
+        }
+        .block-desc {
+            margin-top: 5px;
+            color: #000;
+            font-family: Roboto;
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+            text-transform: capitalize;
+        }
+        .block-a {
+            margin-top: 16px
+            color: #0C63E2;
+            font-family: Noto Sans SC;
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: normal;
+        }
+    }
     .resource-list {
         padding: 2vw 3.33vw 7vw;
         display: flex;
@@ -268,11 +422,22 @@
 
 .resources-container {
     width: 62.4vw;
+    padding-bottom: 20px
 
+    :global(.ant-spin-nested-loading), :global(.ant-spin-container) {
+        height: 100%
+    }
+    // :global(.ant-spin-container) {
+    //     padding-bottom: 20px;
+    // }
     .case-list {
-        height: 24.7vw;
-        max-height: 339px;
-        min-height: 256px;
+        height: 100%;
+        // height: 24.7vw;
+        max-height: 440px;
+        @media (max-width: 1440px) {
+            max-height: 380px;
+        }
+        // min-height: 256px;
         overflow: auto;
         background: #fff;
         border-radius: 24px;
@@ -281,6 +446,9 @@
         flex-wrap: wrap;
         justify-content: flex-start;
         align-content: flex-start;
+        @media (min-height: 700px) {
+            margin-bottom: 20px
+        }
 
         .case-item {
             position: relative;

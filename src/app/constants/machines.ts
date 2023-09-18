@@ -150,7 +150,7 @@ export const MODULEID_TOOLHEAD_MAP = {
     '00': printToolHeadJ1.identifier,
 };
 
-export function findMachineByName(name: string): Machine | null {
+export function findMachineByName(identifier: string): Machine | null {
     const availableMachines = [
         SnapmakerOriginalMachine,
         SnapmakerOriginalExtendedMachine,
@@ -163,7 +163,7 @@ export function findMachineByName(name: string): Machine | null {
     ];
 
     for (const machine of availableMachines) {
-        if (machine.identifier === name) {
+        if (machine.identifier === identifier) {
             return machine;
         }
     }
@@ -378,8 +378,11 @@ export function getMachineSeriesWithToolhead(series: string, toolhead: { [key: s
 }
 
 
-export function getMachineToolOptions(series: string, toolIdentifier: string): MachineToolHeadOptions | null {
-    const machine: Machine | null = findMachineByName(series);
+export function getMachineToolOptions(machineIdentifier: string, toolIdentifier: string): MachineToolHeadOptions | null {
+    const machine: Machine | null = findMachineByName(machineIdentifier);
+    if (!machine) {
+        return null;
+    }
 
     const toolHeadOptions = machine.metadata.toolHeads.find(toolHeadOption => toolHeadOption.identifier === toolIdentifier);
     if (!toolHeadOptions) {

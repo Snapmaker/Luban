@@ -1,11 +1,10 @@
 import { isEqual, isNil } from 'lodash';
 import request from 'superagent';
 
-import ControllerEvent from '../../../../app/connection/controller-events';
+import SocketEvent from '../../../../app/communication/socket-events';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, } from '../../../../app/constants/machines';
 import { L20WLaserToolModule, L40WLaserToolModule } from '../../../../app/machines/snapmaker-2-toolheads';
 import {
-    CONNECTION_TYPE_WIFI,
     HEAD_CNC,
     HEAD_LASER,
     HEAD_PRINTING,
@@ -17,12 +16,12 @@ import {
 } from '../../../constants';
 import logger from '../../../lib/logger';
 import workerManager from '../../task-manager/workerManager';
-import { EventOptions } from '../types';
-import Channel, { CncChannelInterface, FileChannelInterface, GcodeChannelInterface, UploadFileOptions } from './Channel';
+import { ConnectionType, EventOptions } from '../types';
+import Channel, { CncChannelInterface, FileChannelInterface, UploadFileOptions } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 
 let waitConfirm: boolean;
-const log = logger('machine:channel:SstpHttpChannel');
+const log = logger('machine:channels:SstpHttpChannel');
 
 
 const isJSON = (str: string) => {
@@ -113,7 +112,6 @@ interface GCodeQueueItem {
  * A singleton to manage devices connection.
  */
 class SstpHttpChannel extends Channel implements
-    GcodeChannelInterface,
     FileChannelInterface,
     CncChannelInterface {
     private isGcodeExecuting = false;
@@ -169,7 +167,7 @@ class SstpHttpChannel extends Channel implements
                     const result = _getResult(err, res);
                     if (err) {
                         log.debug(`err="${err}"`);
-                        this.socket && this.socket.emit(ControllerEvent.ConnectionOpen, result);
+                        this.socket && this.socket.emit(SocketEvent.ConnectionOpen, result);
                         resolve(false);
                         return;
                     }
@@ -177,9 +175,11 @@ class SstpHttpChannel extends Channel implements
                     // wait for authentication
                     const { data } = result;
                     if (!data) {
+                        /*
                         this.socket && this.socket.emit(ChannelEvent.Connecting, {
                             requireAuth: true,
                         });
+                        */
                         resolve(false);
                         return;
                     }
@@ -301,7 +301,11 @@ class SstpHttpChannel extends Channel implements
             const { data, code } = _getResult(null, result.res);
 
             // No Content
+            // wait for authentication
             if (Object.keys(data).length === 0 || code === 204) {
+                this.emit(ChannelEvent.Connecting, {
+                    requireAuth: true,
+                });
                 return;
             }
 
@@ -331,7 +335,7 @@ class SstpHttpChannel extends Channel implements
                 this.socket && this.socket.emit('connection:connected', {
                     state,
                     err: state?.err,
-                    type: CONNECTION_TYPE_WIFI
+                    type: ConnectionType.WiFi,
                 });
             } else {
                 // this.socket && this.socket.emit('sender:status', {
@@ -339,7 +343,7 @@ class SstpHttpChannel extends Channel implements
                 // });
                 this.socket && this.socket.emit('Marlin:state', {
                     state,
-                    type: CONNECTION_TYPE_WIFI
+                    type: ConnectionType.WiFi,
                 });
             }
         });

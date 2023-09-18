@@ -417,6 +417,7 @@ class SVGActionsFactory {
             return model.sourceType === 'image3d';
         });
 
+        // Add each model to selected models, and recalculate selected group's transformation
         for (const model of models) {
             if (!this.selectedSvgModels.includes(model)) {
                 this.selectedSvgModels.push(model);
@@ -430,6 +431,7 @@ class SVGActionsFactory {
                 });
             }
         }
+
         const t = SVGActionsFactory.calculateElementsTransformation(this.getSelectedElements());
         this._setSelectedElementsTransformation(t);
     }

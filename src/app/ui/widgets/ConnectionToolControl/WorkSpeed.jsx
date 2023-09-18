@@ -4,9 +4,9 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 
-import ControllerEvent from '../../../connection/controller-events';
+import SocketEvent from '../../../communication/socket-events';
 import { CONNECTION_TYPE_WIFI, } from '../../../constants';
-import { controller } from '../../../lib/controller';
+import { controller } from '../../../communication/socket-communication';
 import i18n from '../../../lib/i18n';
 import AttributeContainer from './components/AttributeContainer';
 
@@ -33,7 +33,7 @@ class WorkSpeed extends React.PureComponent {
             this.setState({
                 workSpeedValue: value
             });
-            controller.emitEvent(ControllerEvent.SetSpeedFactor, {
+            controller.emitEvent(SocketEvent.SetSpeedFactor, {
                 workSpeedValue: value,
                 toolHead: this.props.toolHead,
             });

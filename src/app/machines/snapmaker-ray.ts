@@ -11,7 +11,7 @@ export const machine: Machine = {
     img: '/resources/images/machine/snapmaker_ray.jpeg',
 
     metadata: {
-        size: { x: 600, y: 400, z: 30 },
+        size: { x: 600, y: 400, z: 0 },
 
         toolHeads: [
             {

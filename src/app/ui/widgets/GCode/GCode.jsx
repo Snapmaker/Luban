@@ -3,7 +3,7 @@ import moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector } from 'react-redux';
-import { controller } from '../../../lib/controller';
+import { controller } from '../../../communication/socket-communication';
 import { mm2in } from '../../../lib/units';
 import {
     // Units

@@ -14,7 +14,7 @@ import {
     CONNECTION_TYPE_SERIAL,
 } from '../../../constants';
 import { actions as workspaceActions } from '../../../flux/workspace';
-import { controller } from '../../../lib/controller';
+import { controller } from '../../../communication/socket-communication';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
 import Terminal from './Terminal';
@@ -26,7 +26,8 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
         connectionType,
         isConnected,
 
-        port, server,
+        port,
+        server,
     } = useSelector(state => state.workspace, shallowEqual);
 
     const {

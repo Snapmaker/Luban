@@ -80,6 +80,7 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
         size: PropTypes.object,
         coordinateMode: PropTypes.object.isRequired,
         coordinateSize: PropTypes.object.isRequired,
+        workpiece: PropTypes.object.isRequired,
         origin: PropTypes.object.isRequired,
 
         onCreateElement: PropTypes.func.isRequired,
@@ -210,7 +211,11 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
             || nextProps.coordinateSize.y !== this.props.coordinateSize.y
             || nextProps.origin !== this.props.origin) {
             const printableArea = this.printableArea;
-            printableArea.updateCoordinateMode(nextProps.origin, nextProps.coordinateMode, nextProps.coordinateSize);
+            printableArea.updateCoordinateMode(
+                nextProps.origin,
+                nextProps.coordinateMode,
+                nextProps.coordinateSize,
+            );
 
             // const { coordinateSize, coordinateMode } = this.props;
             const coorDelta = {
@@ -237,7 +242,7 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
         this.svgContainer.removeEventListener('mousedown', this.onMouseDown, false);
         this.svgContainer.removeEventListener('mousemove', this.onMouseMove, false);
         this.svgContainer.removeEventListener('wheel', this.onMouseWheel, false);
-        this.svgContainer.removeEventListener('mouseup', this.onMouseUp, false);
+        window.removeEventListener('mouseup', this.onMouseUp, false);
         window.removeEventListener('resize', this.onResize, false);
         window.removeEventListener('hashchange', this.onResize, false);
         window.removeEventListener('dblclick', this.onDblClick, false);
@@ -376,19 +381,21 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
         this.svgContainer.addEventListener('mousemove', this.onMouseMove, false);
         this.svgContainer.addEventListener('wheel', this.onMouseWheel, false);
         // this.svgContainer.addEventListener('contextmenu', this.onContextmenu, false);
-        this.svgContainer.addEventListener('mouseup', this.onMouseUp, false);
-        this.svgContainer.addEventListener('mouseenter', () => {
-            this.svgContentGroup.drawGroup.onMouseenter();
-        });
-        this.svgContainer.addEventListener('mouseleave', (event) => {
-            this.svgContentGroup.drawGroup.onMouseleave();
-            const leftKeyPressed = event.which === 1;
-            if (leftKeyPressed && this.mode !== 'draw' && !(this.mode === 'select' && this.editingElem)) {
-                this.calculateSelectedModel(event, true);
-                this.currentDrawing.selectedTarget = null;
-                this.svgSelector.setVisible(false);
-            }
-        }, false);
+        window.addEventListener('mouseup', this.onMouseUp, false);
+        // this.svgContainer.addEventListener('mouseenter', () => {
+        //     console.log('mouseenter');
+        //     this.svgContentGroup.drawGroup.onMouseenter();
+        // });
+        // this.svgContainer.addEventListener('mouseleave', (event) => {
+        //     console.log('mouseleave');
+        //     this.svgContentGroup.drawGroup.onMouseleave();
+        //     const leftKeyPressed = event.which === 1;
+        //     if (leftKeyPressed && this.mode !== 'draw' && !(this.mode === 'select' && this.editingElem)) {
+        //         this.calculateSelectedModel(event, true);
+        //         this.currentDrawing.selectedTarget = null;
+        //         this.svgSelector.setVisible(false);
+        //     }
+        // }, false);
         window.addEventListener('resize', this.onResize, false);
         window.addEventListener('hashchange', this.onResize, false);
         window.addEventListener('dblclick', this.onDblClick, false);
@@ -404,8 +411,10 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
     public setupWorkpiece() {
         const getRoot = () => this.svgBackground;
 
+        const size = this.props.workpiece.size;
+
         this.printableArea = new Workpiece2d({
-            size: this.props.coordinateSize,
+            size: size,
             scale: this.scale,
             getRoot,
             coordinateMode: this.props.coordinateMode,
@@ -506,6 +515,9 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
             return elem.getAttribute('display') !== 'none';
         });
         if (!allVisible) {
+            return false;
+        }
+        if (this.svgContentGroup.selectedElements.length === 0) {
             return false;
         }
         return this.svgContentGroup.selectedElements.includes(mouseTarget)

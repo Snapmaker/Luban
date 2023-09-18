@@ -49,6 +49,7 @@ export const machine: Machine = {
                     min: [0, 0, 0],
                     max: [345, 357, 334],
                 },
+                supportCameraCapture: true,
             },
             {
                 identifier: highPower10WLaserToolHead.identifier,
@@ -57,6 +58,7 @@ export const machine: Machine = {
                     min: [0, 0, 0],
                     max: [345, 357, 334],
                 },
+                supportCameraCapture: true,
             },
             {
                 identifier: L20WLaserToolModule.identifier,
@@ -65,6 +67,7 @@ export const machine: Machine = {
                     min: [0, 0, 0],
                     max: [345, 357, 0], // Correct this later
                 },
+                disableRemoteStartPrint: true,
             },
             {
                 identifier: L40WLaserToolModule.identifier,
@@ -73,6 +76,7 @@ export const machine: Machine = {
                     min: [0, 0, 0],
                     max: [345, 357, 0], // Correct this later
                 },
+                disableRemoteStartPrint: true,
             },
             {
                 identifier: standardCNCToolHead.identifier,

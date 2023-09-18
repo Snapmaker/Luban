@@ -11,7 +11,7 @@ import { EventOptions } from '../types';
 import { ChannelEvent } from './ChannelEvent';
 import SacpChannelBase from './SacpChannel';
 
-const log = logger('machine:channel:SacpSerialChannel');
+const log = logger('machine:channels:SacpSerialChannel');
 
 
 class SacpSerialChannel extends SacpChannelBase {
@@ -97,7 +97,9 @@ class SacpSerialChannel extends SacpChannelBase {
     }
 
     public async connectionClose(): Promise<boolean> {
-        this.serialport?.close();
+        this.serialport?.close(() => {
+            // Closed callback, TODO: return a promise here?
+        });
         this.serialport?.destroy();
         this.sacpClient?.dispose();
 
@@ -105,12 +107,11 @@ class SacpSerialChannel extends SacpChannelBase {
     }
 
     public async startHeartbeat(): Promise<void> {
-        // TODO:
-        // - only start heartbeat
-        // - and start subscriptions on instance
+        return super.startHeartbeat();
+    }
 
-        // await this.startHeartbeatBase(this.sacpClient);
-        // this.setROTSubscribeApi();
+    public async stopHeartbeat(): Promise<void> {
+        return super.stopHeartbeat();
     }
 
     public startGcode = async (options: EventOptions) => {

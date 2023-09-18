@@ -1,62 +1,62 @@
 import type SocketServer from '../../lib/SocketManager';
 import { connectionManager } from '../machine/ConnectionManager';
-import ControllerEvent from '../../../app/connection/controller-events';
+import SocketEvent from '../../../app/communication/socket-events';
 
 
 function register(socketServer: SocketServer): void {
     const connectionEventsObject = {
         // connection
-        [ControllerEvent.ConnectionOpen]: connectionManager.connectionOpen,
-        [ControllerEvent.ConnectionClose]: connectionManager.connectionClose,
+        [SocketEvent.ConnectionOpen]: connectionManager.connectionOpen,
+        [SocketEvent.ConnectionClose]: connectionManager.connectionClose,
 
         // general functions
-        [ControllerEvent.ExecuteGCode]: connectionManager.executeGcode,
-        [ControllerEvent.ExecuteCmd]: connectionManager.executeCmd,
+        [SocketEvent.ExecuteGCode]: connectionManager.executeGcode,
+        [SocketEvent.ExecuteCmd]: connectionManager.executeCmd,
 
         // motion control services
-        [ControllerEvent.GoHome]: connectionManager.goHome,
-        [ControllerEvent.Move]: connectionManager.coordinateMove,
-        [ControllerEvent.SetOrigin]: connectionManager.setWorkOrigin,
+        [SocketEvent.GoHome]: connectionManager.goHome,
+        [SocketEvent.Move]: connectionManager.coordinateMove,
+        [SocketEvent.SetOrigin]: connectionManager.setWorkOrigin,
         // 'connection:getWorkSpeedFactor': connectionManager.getWorkSpeedFactor,
-        [ControllerEvent.SetSpeedFactor]: connectionManager.updateWorkSpeedFactor,
+        [SocketEvent.SetSpeedFactor]: connectionManager.updateWorkSpeedFactor,
 
         // 3d printing control services
-        [ControllerEvent.SwitchActiveExtruder]: connectionManager.switchExtruder,
-        [ControllerEvent.SetExtruderTemperature]: connectionManager.updateNozzleTemperature,
-        [ControllerEvent.LoadFilament]: connectionManager.loadFilament,
-        [ControllerEvent.UnloadFilamnet]: connectionManager.unloadFilament,
-        [ControllerEvent.SetBedTemperature]: connectionManager.updateBedTemperature,
-        [ControllerEvent.SetZOffset]: connectionManager.updateZOffset,
+        [SocketEvent.SwitchActiveExtruder]: connectionManager.switchExtruder,
+        [SocketEvent.SetExtruderTemperature]: connectionManager.updateNozzleTemperature,
+        [SocketEvent.LoadFilament]: connectionManager.loadFilament,
+        [SocketEvent.UnloadFilamnet]: connectionManager.unloadFilament,
+        [SocketEvent.SetBedTemperature]: connectionManager.updateBedTemperature,
+        [SocketEvent.SetZOffset]: connectionManager.updateZOffset,
 
         // laser control services
-        [ControllerEvent.SetLaserPower]: connectionManager.updateLaserPower,
-        [ControllerEvent.SwitchLaserPower]: connectionManager.switchLaserPower,
-        [ControllerEvent.CalcMaterialThickness]: connectionManager.getLaserMaterialThickness,
-        [ControllerEvent.AbortMaterialThickness]: connectionManager.abortLaserMaterialThickness,
-        [ControllerEvent.GetCrosshairOffset]: connectionManager.getCrosshairOffset,
-        [ControllerEvent.SetCrosshairOffset]: connectionManager.setCrosshairOffset,
-        [ControllerEvent.GetFireSensorSensitivity]: connectionManager.getFireSensorSensitivity,
-        [ControllerEvent.SetFireSensorSensitivity]: connectionManager.setFireSensorSensitivity,
+        [SocketEvent.SetLaserPower]: connectionManager.updateLaserPower,
+        [SocketEvent.SwitchLaserPower]: connectionManager.switchLaserPower,
+        [SocketEvent.CalcMaterialThickness]: connectionManager.getLaserMaterialThickness,
+        [SocketEvent.AbortMaterialThickness]: connectionManager.abortLaserMaterialThickness,
+        [SocketEvent.GetCrosshairOffset]: connectionManager.getCrosshairOffset,
+        [SocketEvent.SetCrosshairOffset]: connectionManager.setCrosshairOffset,
+        [SocketEvent.GetFireSensorSensitivity]: connectionManager.getFireSensorSensitivity,
+        [SocketEvent.SetFireSensorSensitivity]: connectionManager.setFireSensorSensitivity,
 
         // CNC control services
-        [ControllerEvent.SetSpindleSpeed]: connectionManager.setSpindleSpeed, // CNC, FOR NOW
-        [ControllerEvent.SwitchCNC]: connectionManager.switchCNC, // CNC, FOR NOW
+        [SocketEvent.SetSpindleSpeed]: connectionManager.setSpindleSpeed, // CNC, FOR NOW
+        [SocketEvent.SwitchCNC]: connectionManager.switchCNC, // CNC, FOR NOW
 
         // modules services
-        [ControllerEvent.GetEnclosureInfo]: connectionManager.getEnclosureInfo,
-        [ControllerEvent.SetEnclosureLight]: connectionManager.setEnclosureLight,
-        [ControllerEvent.SetEnclosureFan]: connectionManager.setEnclosureFan,
-        [ControllerEvent.SetEnclosureDoorDetection]: connectionManager.setEnclosureDoorDetection,
+        [SocketEvent.GetEnclosureInfo]: connectionManager.getEnclosureInfo,
+        [SocketEvent.SetEnclosureLight]: connectionManager.setEnclosureLight,
+        [SocketEvent.SetEnclosureFan]: connectionManager.setEnclosureFan,
+        [SocketEvent.SetEnclosureDoorDetection]: connectionManager.setEnclosureDoorDetection,
 
-        [ControllerEvent.GetAirPurifierInfo]: connectionManager.getAirPurifierInfo,
-        [ControllerEvent.SetAirPurifierSwitch]: connectionManager.setFilterSwitch,
-        [ControllerEvent.SetAirPurifierStrength]: connectionManager.setAirPurifierFanStrength,
+        [SocketEvent.GetAirPurifierInfo]: connectionManager.getAirPurifierInfo,
+        [SocketEvent.SetAirPurifierSwitch]: connectionManager.setFilterSwitch,
+        [SocketEvent.SetAirPurifierStrength]: connectionManager.setAirPurifierFanStrength,
 
-        // machine print G-code
-        [ControllerEvent.StartGCode]: connectionManager.startGcode,
-        [ControllerEvent.PauseGCode]: connectionManager.pauseGcode,
-        [ControllerEvent.ResumeGCode]: connectionManager.resumeGcode,
-        [ControllerEvent.StopGCode]: connectionManager.stopGcode,
+        // machine print job
+        [SocketEvent.StartGCode]: connectionManager.startGcode,
+        [SocketEvent.PauseGCode]: connectionManager.pauseGcode,
+        [SocketEvent.ResumeGCode]: connectionManager.resumeGcode,
+        [SocketEvent.StopGCode]: connectionManager.stopGcode,
 
         'connection:getGcodeFile': connectionManager.getGcodeFile,
         // Seems like it's an ugly solution to start job waiting for movement done
@@ -64,19 +64,19 @@ function register(socketServer: SocketServer): void {
         'connection:headBeginWork': connectionManager.startGcodeAction,
 
         // File service
-        [ControllerEvent.UploadFile]: connectionManager.uploadFile,
-        [ControllerEvent.CompressUploadFile]: connectionManager.compressUploadFile,
+        [SocketEvent.UploadFile]: connectionManager.uploadFile,
+        [SocketEvent.CompressUploadFile]: connectionManager.compressUploadFile,
 
         // machine network
         'connection:wifiStatusTest': connectionManager.wifiStatusTest,
-        [ControllerEvent.GetMachineNetworkConfiguration]: connectionManager.getNetworkConfiguration,
-        [ControllerEvent.GetMachineNetworkStationState]: connectionManager.getNetworkStationState,
-        [ControllerEvent.SetMachineNetworkConfiguration]: connectionManager.configureMachineNetwork,
+        [SocketEvent.GetMachineNetworkConfiguration]: connectionManager.getNetworkConfiguration,
+        [SocketEvent.GetMachineNetworkStationState]: connectionManager.getNetworkStationState,
+        [SocketEvent.SetMachineNetworkConfiguration]: connectionManager.configureMachineNetwork,
 
         // machine system
-        [ControllerEvent.ExportLogToExternalStorage]: connectionManager.exportLogToExternalStorage,
-        [ControllerEvent.GetFirmwareVersion]: connectionManager.getFirmwareVersion,
-        [ControllerEvent.UpgradeFirmware]: connectionManager.upgradeFirmwareFromFile,
+        [SocketEvent.ExportLogToExternalStorage]: connectionManager.exportLogToExternalStorage,
+        [SocketEvent.GetFirmwareVersion]: connectionManager.getFirmwareVersion,
+        [SocketEvent.UpgradeFirmware]: connectionManager.upgradeFirmwareFromFile,
     };
 
     Object.entries(connectionEventsObject).forEach(([key, value]) => {

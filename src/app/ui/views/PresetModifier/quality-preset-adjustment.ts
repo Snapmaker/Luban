@@ -1,7 +1,7 @@
 import { cloneDeep } from 'lodash';
 import type { Machine } from '@snapmaker/luban-platform';
 
-import { MACHINE_SERIES } from '../../../constants/machines';
+import { SnapmakerArtisanMachine, SnapmakerJ1Machine } from '../../../machines';
 import type { QualityPresetFilters } from '../../../constants/preset';
 
 
@@ -836,7 +836,7 @@ export function getQualityPresetAdjustments(machine: Machine, presetFilters: Qua
 
         // ABS, PLA, PETG
         if (presetFilters.materialType === 'abs') {
-            if (machine.identifier === MACHINE_SERIES.J1.identifier) {
+            if (machine.identifier === SnapmakerJ1Machine.identifier) {
                 return cloneDeep(DEFAULT_PARAMS_FAST);
             } else if (machine.identifier === SnapmakerArtisanMachine.identifier) {
                 return cloneDeep(DEFAULT_PARAMS_MEDIUM);

@@ -1,5 +1,5 @@
 import { debounce } from 'lodash';
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { Input } from 'antd';
@@ -11,24 +11,23 @@ const TextAreaInput = React.memo(({
     className = '', value, defaultValue, disabled = false, onChange, ...rest
 }) => {
     const [displayValue, setDisplayValue] = useState(value);
-    function onInsideChange(event) {
+
+    const changeHandler = useCallback((newValue) => {
+        onChange && onChange(newValue);
+    }, [onChange]);
+
+    const debouncedChangeHandler = useCallback(debounce(changeHandler, 400, { trailing: true }), [changeHandler]);
+
+    // Synchronize input to display value
+    const onInsideChange = useCallback((event) => {
         if (displayValue !== event.target.value) {
             setDisplayValue(event.target.value);
-        }
-    }
-    const changeHandler = (newValue) => {
-        onChange(newValue);
-    };
-    const debouncedChangeHandler = useCallback(
-        debounce(changeHandler, 400),
-        []
-    );
 
-    useEffect(() => {
-        if (displayValue.trim() !== value.trim()) {
-            onChange && debouncedChangeHandler(displayValue);
+            // also trigger a debounced change handler
+            const newValue = event.target.value.trim();
+            debouncedChangeHandler(newValue);
         }
-    }, [displayValue, onChange]);
+    }, [displayValue, debouncedChangeHandler]);
 
     return (
         <span

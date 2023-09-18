@@ -240,8 +240,10 @@ i18n._('key-default_name-Cutting 1.5mm');
 i18n._('key-default_name-Cutting 3mm');
 i18n._('key-default_name-Cutting 5mm');
 i18n._('key-default_name-Cutting 8mm');
+i18n._('key-default_name-Cutting 10mm');
 i18n._('key-default_name-Dot-filled Engraving');
 i18n._('key-default_name-Line-filled Engraving');
+i18n._('key-default_name-Fast-Line-filled Engraving');
 i18n._('key-default_name-Vector Engraving');
 i18n._('key-default_name-Cutting 2mm');
 i18n._('key-default_name-Cutting 3mm');
@@ -346,6 +348,10 @@ i18n._('key-Progress/LaserCNC-Failed to process object.');
 i18n._('key-Progress/LaserCNC-Generating simulation {{progress}}%');
 i18n._('key-Progress/LaserCNC-Generated simulation successfully.');
 i18n._('key-Progress/LaserCNC-Failed to generate simulation.');
+i18n._('key-Progress/LaserCNC-Processing SVG {{progress}}%');
+i18n._('key-Progress/LaserCNC-Processing SVG successfully.');
+i18n._('key-Progress/LaserCNC-Failed to process SVG.');
+
 
 i18n._('key-Progress/Laser-Loading model...');
 i18n._('key-Progress/Laser-Loaded model successfully.');

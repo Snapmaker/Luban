@@ -1,4 +1,5 @@
 // @import "../styles.styl"
+@import '../../../styles/global-var.styl';
 
 .object-list-view {
     .object-tree {
@@ -59,7 +60,7 @@
         position: relative;
 
         &.selected {
-            background-color: #E7F2FD;
+            background-color: $background-color-selected;
         }
 
         &:not(.selected):hover {
@@ -68,21 +69,21 @@
 
         .bt {
             &:hover {
-                opacity(1)
+                opacity(1);
             }
 
             &:active {
-                opacity(.3)
+                opacity(.3);
             }
         }
 
         .name {
-            vertical-align: middle
-            line-height: 38px
-            height: 36px
-            display: inline-block
-            width: calc(100% - 36px)
-            max-width: 270px
+            vertical-align: middle;
+            line-height: 38px;
+            height: 36px;
+            display: inline-block;
+            width: calc(100% - 36px);
+            max-width: 270px;
         }
 
         .prefix-name, .suffix-name {
@@ -91,14 +92,14 @@
         }
 
         .prefix-name {
-            max-width: 57%
+            max-width: 57%;
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
         }
 
         .icon {
-            vertical-align: middle
+            vertical-align: middle;
             box-sizing: content-box;
             display: inline-block;
             width: 24px;
@@ -106,27 +107,26 @@
             margin-right: 4px;
 
             &.icon-shape {
-                background: url("images/list_ic_3d_18x18.png") no-repeat center center
-                display: inline-block
+                background: url('images/list_ic_3d_18x18.png') no-repeat center center;
+                display: inline-block;
             }
 
             &.icon-hide-open, &.icon-hide-close {
-                margin-right: 8px
-                border: 0
+                margin-right: 8px;
+                border: 0;
                 // position: absolute
                 // right: 0
             }
 
             &.icon-hide-open {
-                background: url("images/list_ic_open_18x18@2x.png") no-repeat center center
+                background: url('images/list_ic_open_18x18@2x.png') no-repeat center center;
             }
 
             &.icon-hide-close {
-                background: url("images/list_ic_close_18x18@2x.png") no-repeat center center
+                background: url('images/list_ic_close_18x18@2x.png') no-repeat center center;
             }
         }
     }
-
 }
 
 // overwrite dropdown menu

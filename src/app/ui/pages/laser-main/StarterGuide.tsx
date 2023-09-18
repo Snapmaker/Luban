@@ -22,6 +22,7 @@ import {
     laserCncIntroStepSix,
     laserCncIntroStepTwo
 } from '../introContent';
+import { L20WLaserToolModule, L40WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
 
 
 type TooltipPosition = 'top' | 'right' | 'bottom' | 'left' |
@@ -55,7 +56,11 @@ const getSteps = (series: string, isRotate: boolean): StepItem[] => {
             ) : laserCncIntroStepOne(
                 i18n._('key-Laser/Page-Set the work size and where the work origin will be.'),
                 i18n._('key-Laser/Page-X is the width of the material,  and Y is the height of the material.'),
-                i18n._('key-Laser/Page-Origin can be set at any corner or the middle of the job. This point (X0, Y0) is the origin of the design coordinate system. It also represents the origin of the workpiece coordinate system that you should set on the material using the machine tool.')
+                i18n._('There are two types of origin mode.'),
+                i18n._('In object origin mode, the origin is at the corners or center of the object.'),
+                i18n._('In workpiece origin mode, the origin is at the corners or center of the workpiece.'),
+                i18n._('This point (X0, Y0) is the origin of the design coordinate system, and the origin to be positioned or set on the machine needs to coincide with this point.'),
+                i18n._('There are two types of origin offset modes: crosshair mode and low light mode. In most cases we recommend using the crosshair mode, it is safer and easier to use. The laser point mode is only recommended when full-stroke machining is required.')
             ),
             title: `${i18n._('key-Laser/Page-Job Setup')} (1/8)`
         },
@@ -102,7 +107,7 @@ const getSteps = (series: string, isRotate: boolean): StepItem[] => {
             disableInteraction: true,
             intro: laserCncIntroStepSix(
                 i18n._('key-Laser/Page-Click to generate and preview the G-code file.'),
-                i18n._('key-Laser/Page-For laser engraving, you can preview the toolpath. For CNC carving, you can preview the toolpath and simulate the operation result.'),
+                i18n._('For laser engraving, you can preview the toolpath.'),
                 // isRotate ? '/resources/images/guide-tours/laser_4_axis_priview.png' : '/resources/images/guide-tours/laser_3_axis_priview.png'
                 isRotate,
                 series,
@@ -115,7 +120,7 @@ const getSteps = (series: string, isRotate: boolean): StepItem[] => {
             position: 'top',
             disableInteraction: true,
             intro: laserCncIntroStepTwo(
-                i18n._('key-Laser/Page-Export the G-code file to a local device or load it to Workspace. Use Touchscreen or Luban to start laser engraving or CNC carving.')
+                i18n._('Export the G-code file to a local device or load it to Workspace.')
             )
         },
         {
@@ -131,9 +136,24 @@ const getSteps = (series: string, isRotate: boolean): StepItem[] => {
 };
 
 
-const getShowCaseProject = (machineIdentifier: string, isRotate: boolean = false) => {
+const getShowCaseProject = (machineIdentifier: string, toolHeadIdentifier: string, isRotate: boolean = false) => {
     let pathConfig = {};
     if (isRotate) {
+        if (toolHeadIdentifier === L20WLaserToolModule.identifier) {
+            pathConfig = {
+                path: './UserCase/laser/20w_laser_module/guide-4axis.snaplzr',
+                name: 'guide-4axis.snaplzr'
+            };
+            return pathConfig;
+        } else if (toolHeadIdentifier === L40WLaserToolModule.identifier) {
+            // yes use 20w guide
+            pathConfig = {
+                path: './UserCase/laser/20w_laser_module/guide-4axis.snaplzr',
+                name: 'guide-4axis.snaplzr'
+            };
+            return pathConfig;
+        }
+
         switch (machineIdentifier) {
             case SnapmakerA250Machine.identifier:
                 pathConfig = {
@@ -149,44 +169,64 @@ const getShowCaseProject = (machineIdentifier: string, isRotate: boolean = false
                 break;
         }
     } else {
-        switch (machineIdentifier) {
-            case SnapmakerOriginalMachine.identifier:
-            case SnapmakerOriginalExtendedMachine.identifier:
+        switch (toolHeadIdentifier) {
+            case L20WLaserToolModule.identifier: {
                 pathConfig = {
-                    path: './UserCase/laser/original_200mw/laser_original_200mW.snaplzr',
-                    name: 'laser_original_200mW.snaplzr'
-                };
-                break;
-            case SnapmakerA150Machine.identifier:
-                pathConfig = {
-                    path: './UserCase/laser/a150_1600mw/laser_a150_1600mW.snaplzr',
-                    name: 'laser_a150_1600mW.snaplzr'
-                };
-                break;
-            case SnapmakerA250Machine.identifier:
-                pathConfig = {
-                    path: './UserCase/laser/a250_1600mw/laser_a250_1600mW.snaplzr',
-                    name: 'laser_a250_1600mW.snaplzr'
-                };
-                break;
-            case SnapmakerA350Machine.identifier:
-                pathConfig = {
-                    path: './UserCase/laser/a350_1600mw/laser_a350_1600mW.snaplzr',
-                    name: 'laser_a350_1600mW.snaplzr'
-                };
-                break;
-            case SnapmakerArtisanMachine.identifier:
-                pathConfig = {
-                    path: './UserCase/laser/a350_10w/wooden_ruler.snaplzr',
+                    path: './UserCase/laser/20w_laser_module/wooden_ruler.snaplzr',
                     name: 'wooden_ruler.snaplzr',
                 };
                 break;
-            default:
+            }
+            case L40WLaserToolModule.identifier: {
                 pathConfig = {
-                    path: './UserCase/laser/original_200mw/laser_original_200mW.snaplzr',
-                    name: 'laser_original_200mW.snaplzr'
+                    path: './UserCase/laser/40w_laser_module/wooden_ruler.snaplzr',
+                    name: 'wooden_ruler.snaplzr',
                 };
                 break;
+            }
+            default: {
+                switch (machineIdentifier) {
+                    case SnapmakerOriginalMachine.identifier:
+                    case SnapmakerOriginalExtendedMachine.identifier:
+                        pathConfig = {
+                            path: './UserCase/laser/original_200mw/laser_original_200mW.snaplzr',
+                            name: 'laser_original_200mW.snaplzr'
+                        };
+                        break;
+                    case SnapmakerA150Machine.identifier:
+                        pathConfig = {
+                            path: './UserCase/laser/a150_1600mw/laser_a150_1600mW.snaplzr',
+                            name: 'laser_a150_1600mW.snaplzr'
+                        };
+                        break;
+                    case SnapmakerA250Machine.identifier:
+                        pathConfig = {
+                            path: './UserCase/laser/a250_1600mw/laser_a250_1600mW.snaplzr',
+                            name: 'laser_a250_1600mW.snaplzr'
+                        };
+                        break;
+                    case SnapmakerA350Machine.identifier:
+                        pathConfig = {
+                            path: './UserCase/laser/a350_1600mw/laser_a350_1600mW.snaplzr',
+                            name: 'laser_a350_1600mW.snaplzr'
+                        };
+                        break;
+                    case SnapmakerArtisanMachine.identifier:
+                        pathConfig = {
+                            path: './UserCase/laser/a350_10w/wooden_ruler.snaplzr',
+                            name: 'wooden_ruler.snaplzr',
+                        };
+                        break;
+                    default:
+                        pathConfig = {
+                            path: './UserCase/laser/original_200mw/laser_original_200mW.snaplzr',
+                            name: 'laser_original_200mW.snaplzr'
+                        };
+                        break;
+                }
+
+                break;
+            }
         }
     }
 
@@ -195,13 +235,14 @@ const getShowCaseProject = (machineIdentifier: string, isRotate: boolean = false
 
 interface StarterGuideProps {
     machineIdentifer: string;
+    toolHeadIdentifier: string;
     isRotate: boolean;
     toolPaths: Array<{ id: string }>;
     onClose?: () => void;
 }
 
 const StarterGuide: React.FC<StarterGuideProps> = (props) => {
-    const { machineIdentifer, isRotate, toolPaths, onClose } = props;
+    const { machineIdentifer, toolHeadIdentifier, isRotate, toolPaths, onClose } = props;
 
     const steps = useMemo(() => {
         return getSteps(machineIdentifer, isRotate);
@@ -221,7 +262,7 @@ const StarterGuide: React.FC<StarterGuideProps> = (props) => {
     const history = useHistory();
     const onChange = useCallback((nextIndex: number) => {
         if (nextIndex === 1) {
-            const pathConfig = getShowCaseProject(machineIdentifer, isRotate);
+            const pathConfig = getShowCaseProject(machineIdentifer, toolHeadIdentifier, isRotate);
             dispatch(projectActions.openProject(pathConfig, history, true, true));
         }
     }, [

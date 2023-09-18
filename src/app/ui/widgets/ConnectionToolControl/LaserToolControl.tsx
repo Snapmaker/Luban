@@ -3,10 +3,10 @@ import { includes, isNil } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import ControllerEvent from '../../../connection/controller-events';
+import SocketEvent from '../../../communication/socket-events';
 import { LEVEL_TWO_POWER_LASER_FOR_SM2 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
-import { controller } from '../../../lib/controller';
+import { controller } from '../../../communication/socket-communication';
 import i18n from '../../../lib/i18n';
 import SvgIcon from '../../components/SvgIcon';
 import Switch from '../../components/Switch';
@@ -41,7 +41,7 @@ const LaserToolControl: React.FC = () => {
             return;
         }
 
-        controller.emitEvent(ControllerEvent.SwitchLaserPower, {
+        controller.emitEvent(SocketEvent.SwitchLaserPower, {
             isSM2: toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2,
             laserPower: 1,
             laserPowerOpen: laserPowerOpen,
@@ -51,7 +51,7 @@ const LaserToolControl: React.FC = () => {
     }, [isPrinting, laserPowerOpen, toolHead]);
 
     const onSaveLaserPower = useCallback((value: number) => {
-        controller.emitEvent(ControllerEvent.SetLaserPower, {
+        controller.emitEvent(SocketEvent.SetLaserPower, {
             isPrinting: isPrinting(),
             laserPower: value,
             laserPowerOpen: laserPowerOpen

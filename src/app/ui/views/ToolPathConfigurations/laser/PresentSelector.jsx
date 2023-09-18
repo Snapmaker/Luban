@@ -1,15 +1,25 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-// import { useDispatch } from 'react-redux';
 import classNames from 'classnames';
+
 import Select from '../../../components/Select';
 import i18n from '../../../../lib/i18n';
+import { naturalSortKeys } from '../../../../lib/numeric-utils';
 import styles from '../styles.styl';
 // import { actions as cncActions } from '../../../../flux/cnc';
 import LaserPresentManager from '../../LaserPresentManager';
 import SvgIcon from '../../../components/SvgIcon';
 
-function PresentSelector({ toolDefinitions, setCurrentToolDefinition, setCurrentValueAsProfile, toolDefinition, isModifiedDefinition = false, shouldSaveToolpath = false, saveToolPath, isModel }) {
+const PresentSelector = ({
+    toolDefinitions,
+    setCurrentToolDefinition,
+    setCurrentValueAsProfile,
+    toolDefinition,
+    isModifiedDefinition = false,
+    shouldSaveToolpath = false,
+    saveToolPath,
+    isModel
+}) => {
     const [showManager, setShowManager] = useState(false);
     // const dispatch = useDispatch();
 
@@ -63,13 +73,14 @@ function PresentSelector({ toolDefinitions, setCurrentToolDefinition, setCurrent
             checkboxAndSelectGroup.definitionId = definitionId;
             checkboxAndSelectGroup.label = `${detailName}`;
             checkboxAndSelectGroup.value = `${definitionId}-${name}`;
+
             if (toolDefinitionOptionsObj[category]) {
                 toolDefinitionOptionsObj[category].options.push(checkboxAndSelectGroup);
             } else {
                 const groupOptions = {
                     label: category,
                     definitionId: definitionId,
-                    options: []
+                    options: [],
                 };
                 toolDefinitionOptionsObj[category] = groupOptions;
                 groupOptions.options.push(checkboxAndSelectGroup);
@@ -77,7 +88,20 @@ function PresentSelector({ toolDefinitions, setCurrentToolDefinition, setCurrent
         }
         // return true;
     });
+
     Object.values(toolDefinitionOptionsObj).forEach((item) => {
+        item.options.sort((a, b) => {
+            const aKeys = naturalSortKeys(a.name);
+            const bKeys = naturalSortKeys(b.name);
+
+            for (let i = 0; i < aKeys.length; i++) {
+                if (aKeys[i] < bKeys[i]) return -1;
+                if (aKeys[i] > bKeys[i]) return 1;
+            }
+
+            return 0;
+        });
+
         toolDefinitionOptions.push(item);
     });
 
@@ -143,7 +167,8 @@ function PresentSelector({ toolDefinitions, setCurrentToolDefinition, setCurrent
             </React.Fragment>
         </div>
     );
-}
+};
+
 PresentSelector.propTypes = {
     toolDefinitions: PropTypes.array.isRequired,
     toolDefinition: PropTypes.object.isRequired,

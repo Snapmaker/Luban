@@ -12,16 +12,16 @@ import {
     HEAD_CNC,
     HEAD_LASER,
     HEAD_PRINTING,
-} from '../../../../constants/machines';
-import { RootState } from '../../../../flux/index.def';
-import { actions as machineActions } from '../../../../flux/machine';
-import { actions as projectActions } from '../../../../flux/project';
-import { actions as workspaceActions } from '../../../../flux/workspace';
-import i18n from '../../../../lib/i18n';
-import UniApi from '../../../../lib/uni-api';
-import { getCurrentHeadType } from '../../../../lib/url-utils';
-import Select from '../../../components/Select';
-import SvgIcon from '../../../components/SvgIcon';
+} from '../../../../../constants/machines';
+import { RootState } from '../../../../../flux/index.def';
+import { actions as machineActions } from '../../../../../flux/machine';
+import { actions as projectActions } from '../../../../../flux/project';
+import { actions as workspaceActions } from '../../../../../flux/workspace';
+import i18n from '../../../../../lib/i18n';
+import UniApi from '../../../../../lib/uni-api';
+import { getCurrentHeadType } from '../../../../../lib/url-utils';
+import Select from '../../../../components/Select';
+import SvgIcon from '../../../../components/SvgIcon';
 import styles from '../form.styl';
 
 
@@ -112,6 +112,8 @@ const MachineSettings: React.FC = () => {
             }
 
             setMachineModuleOptions(options);
+        } else {
+            setMachineModuleOptions([]);
         }
     }, [machine]);
 

@@ -3,7 +3,7 @@ import isElectron from 'is-electron';
 
 import { EPSILON, HEAD_PRINTING, DATA_PREFIX } from '../../constants';
 import { AccessResourceWebState, DetailModalState } from '../../constants/downloadManager';
-import { controller } from '../../lib/controller';
+import { controller } from '../../communication/socket-communication';
 import { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 import { baseActions as editorActions } from '../editor/actions-base';
 import ThreeGroup from '../../models/ThreeGroup';

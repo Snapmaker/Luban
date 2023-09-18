@@ -117,7 +117,7 @@ const SVGClippingOverlay: React.FC<SVGClippingOverlayProps> = ({ onClose }) => {
     return (
         <div className="position-absolute width-532 margin-left-72 border-default-grey-1 border-radius-8 background-color-white">
             <div className={classNames(styles['overlay-title-font'], 'border-bottom-normal padding-vertical-8 padding-horizontal-16')}>
-                {i18n._('key-CncLaser/MainToolBar-SVG Clipping')}
+                {i18n._('key-CncLaser/MainToolBar-Vector Tool')}
             </div>
             <div className="sm-flex justify-space-between padding-vertical-16 padding-horizontal-16">
                 {

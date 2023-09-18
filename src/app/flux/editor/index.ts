@@ -7,10 +7,9 @@ import { v4 as uuid } from 'uuid';
 
 import { isEqual, round, whetherTransformed } from '../../../shared/lib/utils';
 import api from '../../api';
+import { controller } from '../../communication/socket-communication';
 import {
     COORDINATE_MODE_BOTTOM_CENTER,
-    // COORDINATE_MODE_CENTER,
-    COORDINATE_MODE_CENTER,
     DATA_PREFIX,
     DISPLAYED_TYPE_MODEL,
     HEAD_LASER,
@@ -20,7 +19,7 @@ import {
     PAGE_PROCESS,
     PROCESS_MODES_EXCEPT_VECTOR,
     PROCESS_MODE_VECTOR,
-    SOURCE_TYPE,
+    SOURCE_TYPE
 } from '../../constants';
 import {
     CylinderWorkpieceSize,
@@ -28,17 +27,21 @@ import {
     Materials,
     ObjectReference,
     Origin,
+    OriginReference,
     OriginType,
     RectangleWorkpieceSize,
-    WorkpieceShape
+    Workpiece,
+    WorkpieceShape,
+    getOriginReferenceOptions,
+    getOriginTypeOptions
 } from '../../constants/coordinate';
 import CompoundOperation from '../../core/CompoundOperation';
 import OperationHistory from '../../core/OperationHistory';
-import { controller } from '../../lib/controller';
 import log from '../../lib/log';
 import ProgressStatesManager, { PROCESS_STAGE, STEP_STAGE } from '../../lib/manager/ProgressManager';
 import workerManager from '../../lib/manager/workerManager';
 import ModelGroup from '../../models/ModelGroup';
+import ModelGroup2D from '../../models/ModelGroup2D';
 import { DEFAULT_TEXT_CONFIG, checkParams, generateModelDefaultConfigs, isOverSizeModel, limitModelSizeByMachineSize } from '../../models/ModelInfoUtils';
 import SVGActionsFactory from '../../models/SVGActionsFactory';
 import SvgModel from '../../models/SvgModel';
@@ -68,13 +71,12 @@ import { actions as operationHistoryActions } from '../operation-history';
 import { actions as projectActions } from '../project';
 /* eslint-disable-next-line import/no-cycle */
 // import { HeadType } from '../../../server/services/machine/sacp/SacpClient';
-import { actions as appGlobalActions } from '../app-global';
 import { SVGClippingResultType, SVGClippingType } from '../../constants/clipping';
+import { actions as appGlobalActions } from '../app-global';
 import UpdateHrefOperation2D from '../operation-history/UpdateHrefOperation2D';
 
 
 declare type HeadType = 'laser' | 'cnc';
-// declare type HeadType = 'a' | 'b';
 
 const getSourceType = fileName => {
     let sourceType;
@@ -262,7 +264,11 @@ async function recordScaleActionsToHistory(scaleActionsFn, elements, SVGActions,
 }
 
 const scaleExtname = ['.svg', '.dxf'];
+const DEFAULT_STATE = {
+    showSVGShapeLibrary: false
+};
 
+export const ACTION_UPDATE_STATE = 'editor/ACTION_UPDATE_STATE';
 export const actions = {
     ...baseActions,
 
@@ -295,7 +301,7 @@ export const actions = {
 
     __initEditorParameters: (headType: string) => {
         return (dispatch) => {
-            const originType = machineStore.get('origin.type', OriginType.Object);
+            const originType = machineStore.get(`${headType}.origin.type`, headType === HEAD_LASER ? OriginType.Object : OriginType.Workpiece);
             const originReference = machineStore.get('origin.reference', ObjectReference.BottomLeft);
 
             const origin: Origin = {
@@ -963,21 +969,30 @@ export const actions = {
     },
 
     // TODO: method docs
-    selectTargetModel: (model, headType, isMultiSelect = false) => (dispatch, getState) => {
-        const { SVGActions, modelGroup, materials } = getState()[headType];
+    selectTargetModel: (headType: HeadType, model, isMultiSelect = false) => (dispatch, getState) => {
+        const SVGActions: SVGActionsFactory = getState()[headType].SVGActions;
+        const modelGroup: ModelGroup2D = getState()[headType].modelGroup;
+        const workpiece: Workpiece = getState()[headType].workpiece;
+
         let selected = modelGroup.getSelectedModelArray();
         selected = [...selected];
+
+        // remove all selected model
         dispatch(actions.clearSelection(headType));
+
+        const isRotate = workpiece.shape === WorkpieceShape.Cylinder;
+
         if (!isMultiSelect) {
-            // remove all selected model
-            SVGActions.addSelectedSvgModelsByModels([model], materials.isRotate);
+            SVGActions.addSelectedSvgModelsByModels([model], isRotate);
         } else {
+            // if already selected, then unselect it
             if (selected.find(item => item === model)) {
                 const selectedModels = selected.filter(item => item !== model);
                 modelGroup.emptySelectedModelArray();
-                SVGActions.addSelectedSvgModelsByModels(selectedModels, materials.isRotate);
+                SVGActions.addSelectedSvgModelsByModels(selectedModels, isRotate);
             } else {
-                SVGActions.addSelectedSvgModelsByModels([...selected, model], materials.isRotate);
+                // add model to selection
+                SVGActions.addSelectedSvgModelsByModels([...selected, model], isRotate);
             }
         }
 
@@ -1403,8 +1418,19 @@ export const actions = {
      */
     onReceiveSVGClippingTaskResult: (headType, taskResult) => async (dispatch, getState) => {
         // const { SVGActions, modelGroup, progressStatesManager, materials } = getState()[headType];
-        const { progressStatesManager, history } = getState()[headType];
+        const { progressStatesManager, history, toolPathGroup } = getState()[headType];
         // const { machine } = getState();
+
+        if (taskResult.taskStatus === 'failed') {
+            dispatch(
+                baseActions.updateState(headType, {
+                    stage: STEP_STAGE.CNC_LASER_SVG_CLIPPING,
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_SVG_CLIPPING, 1)
+                })
+            );
+            progressStatesManager.finishProgress(false);
+            return;
+        }
 
         const { config } = taskResult.data;
 
@@ -1417,6 +1443,12 @@ export const actions = {
 
         if (config.type === SVGClippingType.Union || config.type === SVGClippingType.Clip) {
             dispatch(actions.removeSelectedModel(headType));
+            const toolPaths = toolPathGroup.getToolPaths();
+            toolPaths.forEach(item => {
+                if (item.modelMap.size === 0) {
+                    toolPathGroup.deleteToolPath(item.id);
+                }
+            });
             historyCount++;
         }
 
@@ -2197,15 +2229,6 @@ export const actions = {
                     }
                 ));
                 await dispatch(actions.updateWorkpieceObject(headType));
-
-                await dispatch(actions.changeCoordinateMode(
-                    headType,
-                    COORDINATE_MODE_CENTER,
-                    {
-                        x: activeMachine.metadata.size.x,
-                        y: activeMachine.metadata.size.y,
-                    }
-                ));
             } else {
                 await dispatch(actions.setWorkpiece(
                     headType,
@@ -2216,14 +2239,61 @@ export const actions = {
                     }
                 ));
                 await dispatch(actions.updateWorkpieceObject(headType));
+            }
+        };
+    },
 
+    initializeOrigin: (headType: HeadType) => {
+        return async (dispatch, getState) => {
+            const activeMachine: Machine = getState().machine.activeMachine;
+            const workpiece: Workpiece = getState()[headType].workpiece;
+            const origin: Origin = getState()[headType].origin;
+
+            // origin type
+            let originType = origin.type;
+
+            const originTypeOptions = getOriginTypeOptions(workpiece.shape);
+            if (!originTypeOptions.find(option => option.value === originType)) {
+                originType = originTypeOptions[0].value;
+            }
+
+            // origin reference
+            let originReference = origin.reference;
+            const originReferenceOptions = getOriginReferenceOptions(workpiece.shape, originType);
+            if (!originReferenceOptions.find(option => option.value === originReference)) {
+                originReference = originReferenceOptions[0].mode.value as OriginReference;
+            }
+
+            await dispatch(actions.setOrigin(
+                headType,
+                {
+                    type: originType,
+                    reference: originReference,
+                    referenceMetadata: {},
+                }
+            ));
+
+            // TODO: Refactor code below
+            // get mode as well
+            const targetOption = originReferenceOptions.find(option => option.value === originReference);
+
+            if (workpiece.shape === WorkpieceShape.Rectangle) {
                 await dispatch(actions.changeCoordinateMode(
                     headType,
-                    COORDINATE_MODE_BOTTOM_CENTER,
+                    targetOption.mode,
                     {
-                        x: 40 * Math.PI,
-                        y: 75,
-                    },
+                        x: activeMachine.metadata.size.x,
+                        y: activeMachine.metadata.size.y,
+                    }
+                ));
+            } else {
+                dispatch(actions.changeCoordinateMode(
+                    HEAD_LASER,
+                    targetOption.mode,
+                    {
+                        x: (workpiece.size as CylinderWorkpieceSize).diameter * Math.PI,
+                        y: (workpiece.size as CylinderWorkpieceSize).length,
+                    }
                 ));
             }
         };
@@ -2282,39 +2352,6 @@ export const actions = {
                 coordinateSize,
             })
         );
-    },
-
-    updateMaterials: (headType, newMaterials) => (dispatch, getState) => {
-        const { materials, modelGroup, toolPathGroup } = getState()[headType];
-        const allMaterials = {
-            ...materials,
-            ...newMaterials
-        };
-
-        if (allMaterials.isRotate) {
-            allMaterials.x = round(allMaterials.diameter * Math.PI, 2);
-            allMaterials.y = allMaterials.length;
-        } else {
-            // allMaterials.x = 0;
-            // allMaterials.y = 0;
-        }
-        modelGroup.setMaterials(allMaterials);
-
-        toolPathGroup.updateMaterials(allMaterials);
-        toolPathGroup.showSimulationObject(false);
-
-        dispatch(
-            baseActions.updateState(headType, {
-                materials: {
-                    ...allMaterials
-                },
-                showSimulation: false
-            })
-        );
-
-        if (materials.isRotate !== allMaterials.isRotate) {
-            dispatch(actions.processSelectedModel(headType));
-        }
     },
 
     /**
@@ -2387,7 +2424,7 @@ export const actions = {
                 origin,
             }));
 
-            machineStore.set('origin.type', origin.type);
+            machineStore.set(`${headType}.origin.type`, origin.type);
             machineStore.set('origin.reference', origin.reference);
 
             // Update origin of tool path object
@@ -2861,9 +2898,22 @@ export const actions = {
                 page: PAGE_EDITOR
             })
         );
+    },
+
+    updateEditorState: (state) => {
+        return {
+            type: ACTION_UPDATE_STATE,
+            state
+        };
     }
 };
 
-export default function reducer() {
-    return {};
+export default function reducer(state = DEFAULT_STATE, action) {
+    switch (action.type) {
+        case ACTION_UPDATE_STATE: {
+            return Object.assign({}, state, action.state);
+        }
+        default: return state;
+    }
+    // return {};
 }

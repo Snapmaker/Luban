@@ -36,7 +36,6 @@ import { logLubanQuit } from '../../lib/gaEvent';
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
 import { getCurrentHeadType } from '../../lib/url-utils';
-
 import Anchor from '../components/Anchor';
 import { Button } from '../components/Buttons';
 import Checkbox from '../components/Checkbox';
@@ -44,10 +43,10 @@ import Modal from '../components/Modal/tileModal';
 import Space from '../components/Space';
 import SvgIcon from '../components/SvgIcon';
 import CaseResource from '../pages/CaseResource/index';
-import FirmwareTool from '../pages/Settings/FirmwareTool';
-import Settings from '../pages/Settings/Settings';
-import SoftwareUpdate from '../pages/Settings/SoftwareUpdate';
-import DownloadUpdate from '../pages/Settings/SoftwareUpdate/DownloadUpdate';
+import FirmwareTool from '../pages/global-modals/FirmwareTool';
+import Settings from '../pages/global-modals/settings-modal';
+import SoftwareUpdate from '../pages/global-modals/SoftwareUpdate';
+import DownloadUpdate from '../pages/global-modals/SoftwareUpdate/DownloadUpdate';
 import { renderModal } from '../utils';
 import { AppBar } from '../views/AppBar';
 import ModelExporter from '../widgets/PrintingVisualizer/ModelExporter';
@@ -62,6 +61,8 @@ class AppLayout extends React.PureComponent {
         updateCurrentModalPath: PropTypes.func.isRequired,
         startProject: PropTypes.func.isRequired,
         initializeWorkpiece: PropTypes.func.isRequired,
+        initializeOrigin: PropTypes.func.isRequired,
+        scaleCanvasToFit: PropTypes.func.isRequired,
         initRecoverService: PropTypes.func.isRequired,
         save: PropTypes.func.isRequired,
         saveAndClose: PropTypes.func.isRequired,
@@ -801,6 +802,9 @@ class AppLayout extends React.PureComponent {
                 await this.props.initializeWorkpiece(headType, {
                     isRotate: isRotate,
                 });
+
+                await this.props.initializeOrigin(headType);
+                await this.props.scaleCanvasToFit(headType);
             });
             UniApi.Event.on('appbar-menu:clear-recent-files', () => {
                 this.actions.updateRecentFile([], 'reset');
@@ -1043,6 +1047,8 @@ const mapDispatchToProps = (dispatch) => {
         startProject: (from, to, history, isRotate) => dispatch(projectActions.startProject(from, to, history, false, isRotate)),
         updateRecentProject: (arr, type) => dispatch(projectActions.updateRecentFile(arr, type)),
         initializeWorkpiece: (headType, options) => dispatch(editorActions.initializeWorkpiece(headType, options)),
+        initializeOrigin: (headType) => dispatch(editorActions.initializeOrigin(headType)),
+        scaleCanvasToFit: (headType) => dispatch(editorActions.scaleCanvasToFit(headType)),
         loadCase: (pathConfig, history) => dispatch(projectActions.openProject(pathConfig, history)),
         updateCurrentModalPath: (pathName) => dispatch(menuActions.updateCurrentModalPath(pathName)),
         updateMenu: () => dispatch(menuActions.updateMenu()),

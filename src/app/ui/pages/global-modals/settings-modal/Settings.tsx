@@ -8,14 +8,14 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { withRouter } from 'react-router-dom';
 
-import settings from '../../../config/settings';
-import confirm from '../../../lib/confirm';
-import i18n from '../../../lib/i18n';
-import Anchor from '../../components/Anchor';
+import settings from '../../../../config/settings';
+import confirm from '../../../../lib/confirm';
+import i18n from '../../../../lib/i18n';
+import Anchor from '../../../components/Anchor';
 import Download from './Download';
 import General from './General';
 import MachineSettings from './MachineSettings';
-import styles from './index.styl';
+import styles from './styles.styl';
 
 const mapSectionPathToId = (path = '') => {
     return camelCase(path.split('/')[0] || '');
@@ -184,7 +184,12 @@ class Settings extends React.PureComponent {
         const sectionItems = this.sections.map((section) => (
             <div key={section.id}>
                 <Anchor
-                    className={classNames(styles.item, { [styles.selected]: activeSection.id === section.id })}
+                    className={classNames(
+                        styles.item,
+                        {
+                            [styles.selected]: activeSection.id === section.id
+                        }
+                    )}
                     onClick={(e) => {
                         e.preventDefault();
                         this.switchTab(`/settings/${section.path}`);

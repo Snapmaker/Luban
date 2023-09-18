@@ -6,8 +6,10 @@ import styles from './styles.styl';
 import { SVG_EVENT_CONTEXTMENU } from './constants';
 import SVGCanvas from './SVGCanvas';
 import SVGLeftBar from './SVGLeftBar';
-import { Materials } from '../../constants/coordinate';
+import { Materials, Origin, Workpiece } from '../../constants/coordinate';
 import { library } from './lib/ext-shapes';
+import Modal from '../components/Modal/tileModal';
+import SVGShapeLibrary from './SVGShapeLibrary';
 
 
 export type SVGEditorHandle = {
@@ -29,12 +31,15 @@ type SVGEditorProps = {
     target: object;
     coordinateMode: object;
     coordinateSize: object;
-    origin: object;
+    workpiece: Workpiece;
+    origin: Origin;
     editable: boolean;
 
+    headType: string;
     menuDisabledCount: number;
     SVGCanvasMode: string;
     SVGCanvasExt: object;
+    showSVGShapeLibrary: boolean;
 
     updateScale: () => void;
     updateTarget: () => void;
@@ -71,10 +76,13 @@ type SVGEditorProps = {
         undo: () => void;
         redo: () => void;
         selectAll: () => void;
-    }
+    };
+    updateEditorState: (any) => void
 };
 
 const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
+    const [isFirstShow, setIsFirstShow] = useState(false);
+
     const canvas = useRef(null);
     const leftBarRef = useRef(null);
     const extRef = useRef(props.SVGCanvasExt);
@@ -271,11 +279,11 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         props.editorActions.onDrawTransformComplete(...args);
     };
 
-    const createExt = (ext) => {
+
+    const createSvgModelByDData = (d) => {
         const { SVGActions, coordinateMode, coordinateSize } = props;
         const centerX = (coordinateSize.x / 2) * coordinateMode.setting.sizeMultiplyFactor.x;
         const centerY = (-coordinateSize.y / 2) * coordinateMode.setting.sizeMultiplyFactor.y;
-        const d = library.data[ext];
         const canvasCenterX = SVGActions.size.x + centerX; // calculate center,
         const canvasCenterY = SVGActions.size.y + centerY;
         const element = canvas.current.svgContentGroup.addSVGElement({
@@ -305,6 +313,40 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         props.onCreateElement(element);
         changeCanvasMode('select', undefined);
     };
+    const createExt = (ext) => {
+        const d = library.data[ext];
+        createSvgModelByDData(d);
+    };
+    const updateIsShowSVGShapeLibrary = (isShow: boolean) => {
+        props.updateEditorState({ showSVGShapeLibrary: isShow });
+    };
+    const renderSVGShapeLibrary = () => {
+        const onClose = () => { updateIsShowSVGShapeLibrary(false); };
+        return (
+            <Modal
+                wrapClassName={props.showSVGShapeLibrary ? 'display-block' : 'display-none'}
+                closable={false}
+                disableOverlay
+                tile
+                onClose={onClose}
+            >
+                <SVGShapeLibrary
+                    style={{ display: props.showSVGShapeLibrary }}
+                    isPopup
+                    key="svg-shape-library-popup"
+                    onClose={onClose}
+                    headType={props.headType}
+                    createSvgModelByDData={createSvgModelByDData}
+                    onChangeFile={props.onChangeFile}
+                />
+            </Modal>
+        );
+    };
+    useEffect(() => {
+        if (props.showSVGShapeLibrary) {
+            setIsFirstShow(true);
+        }
+    }, [props.showSVGShapeLibrary]);
 
     return (
         <React.Fragment>
@@ -327,6 +369,7 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
                             updateTarget={props.updateTarget}
                             coordinateMode={props.coordinateMode}
                             coordinateSize={props.coordinateSize}
+                            workpiece={props.workpiece}
                             origin={props.origin}
                             ref={canvas}
                             onCreateElement={props.onCreateElement}
@@ -364,8 +407,10 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
                         coordinateMode={props.coordinateMode}
                         coordinateSize={props.coordinateSize}
                         createExt={createExt}
+                        updateIsShowSVGShapeLibrary={updateIsShowSVGShapeLibrary}
                     />
                 </div>
+                {isFirstShow && renderSVGShapeLibrary()}
             </div>
         </React.Fragment>
     );
@@ -381,6 +426,7 @@ SVGEditor.propTypes = {
     target: PropTypes.object,
     coordinateMode: PropTypes.object.isRequired,
     coordinateSize: PropTypes.object.isRequired,
+    workpiece: PropTypes.object.isRequired,
     origin: PropTypes.object.isRequired,
     editable: PropTypes.bool,
     menuDisabledCount: PropTypes.number,
@@ -412,6 +458,8 @@ SVGEditor.propTypes = {
     fileInput: PropTypes.object.isRequired,
     allowedFiles: PropTypes.string.isRequired,
     headType: PropTypes.string,
+    showSVGShapeLibrary: PropTypes.bool,
+    updateEditorState: PropTypes.func
 };
 
 export default SVGEditor;

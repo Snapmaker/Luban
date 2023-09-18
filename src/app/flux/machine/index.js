@@ -18,7 +18,7 @@ import {
     getMachineToolOptions
 } from '../../constants/machines';
 import { valueOf } from '../../lib/contants-utils';
-import { controller } from '../../lib/controller';
+import { controller } from '../../communication/socket-communication';
 import i18n from '../../lib/i18n';
 import log from '../../lib/log';
 import { SnapmakerOriginalMachine } from '../../machines';

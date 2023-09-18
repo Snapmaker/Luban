@@ -1,4 +1,12 @@
-import { AirPurifierInfo, EnclosureInfo, MachineInfo, NetworkConfiguration, NetworkOptions, NetworkStationState } from '@snapmaker/snapmaker-sacp-sdk/dist/models';
+import {
+    ModuleInfo,
+    AirPurifierInfo,
+    EnclosureInfo,
+    MachineInfo,
+    NetworkConfiguration,
+    NetworkOptions,
+    NetworkStationState
+} from '@snapmaker/snapmaker-sacp-sdk/dist/models';
 import { EventEmitter } from 'events';
 
 import SocketServer from '../../../lib/SocketManager';
@@ -49,12 +57,14 @@ export default class Channel extends EventEmitter {
     public async stopHeartbeat(): Promise<void> {
         return Promise.resolve();
     }
-}
 
-// G-code
-
-export interface GcodeChannelInterface extends Channel {
-    executeGcode(gcode: string): Promise<boolean>;
+    /**
+     * Execute G-code command.
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async executeGcode(gcode: string): Promise<boolean> {
+        return false;
+    }
 }
 
 // File
@@ -66,6 +76,7 @@ export interface UploadFileOptions {
     onProgress?: (progress: number) => void;
     onCompressing?: () => void;
     onDecompressing?: () => void;
+    onFailed?: (reason: string) => void;
 }
 export interface FileChannelInterface extends Channel {
     uploadFile(options: UploadFileOptions): Promise<boolean>;
@@ -81,6 +92,8 @@ export interface UpgradeFirmwareOptions {
 
 export interface SystemChannelInterface extends Channel {
     getMachineInfo(): Promise<MachineInfo>;
+
+    getModuleInfo(): Promise<ModuleInfo[]>;
 
     // log
     exportLogToExternalStorage(): Promise<boolean>;
@@ -110,7 +123,7 @@ export interface PrintJobChannelInterface extends Channel {
 // Laser
 
 export interface LaserChannelInterface extends Channel {
-    getCrosshairOffset(): Promise<{x: number; y: number}>;
+    getCrosshairOffset(): Promise<{ x: number; y: number }>;
     setCrosshairOffset(x: number, y: number): Promise<boolean>;
     getFireSensorSensitivity(): Promise<number>;
     setFireSensorSensitivity(sensitivity: number): Promise<boolean>;

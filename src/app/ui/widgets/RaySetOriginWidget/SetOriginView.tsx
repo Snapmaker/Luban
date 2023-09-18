@@ -2,18 +2,61 @@ import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { Alert, Button, Radio, RadioChangeEvent, Space } from 'antd';
 import { includes } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+import { Box3 } from 'three';
 
-import ControllerEvent from '../../../connection/controller-events';
+import SocketEvent from '../../../communication/socket-events';
 import { JobOffsetMode } from '../../../constants/coordinate';
 import { RootState } from '../../../flux/index.def';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import gcodeActions, { GCodeFileObject } from '../../../flux/workspace/actions-gcode';
-import controller from '../../../lib/controller';
+import controller from '../../../communication/socket-communication';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import ControlPanel from './ControlPanel';
 import RunBoundaryModal from './modals/RunBoundaryModal';
+
+export const getRunBoundayCode = (bbox: Box3, jobOffsetMode: JobOffsetMode) => {
+    const gcodeList = [];
+
+    if (jobOffsetMode === JobOffsetMode.Crosshair) {
+        // Use crosshair to run boundary
+        gcodeList.push('M2000 L13 P1'); // turn on crosshair
+    } else if (jobOffsetMode === JobOffsetMode.LaserSpot) {
+        // Use laser spot to run boundary
+        gcodeList.push('M3 S0');
+        gcodeList.push('G1 F6000 S10'); // turn on laser spot
+    }
+
+    gcodeList.push(
+        'G90', // absolute position
+    );
+
+    gcodeList.push(
+        'G92 X0 Y0', // set current position as origin
+    );
+
+    gcodeList.push(
+        `G1 X${bbox.min.x} Y${bbox.min.y} F6000`, // run boundary
+        `G1 X${bbox.min.x} Y${bbox.max.y}`,
+        `G1 X${bbox.max.x} Y${bbox.max.y}`,
+        `G1 X${bbox.max.x} Y${bbox.min.y}`,
+        `G1 X${bbox.min.x} Y${bbox.min.y}`,
+        'G1 X0 Y0 S0', // go back to origin
+    );
+
+    if (jobOffsetMode === JobOffsetMode.LaserSpot) {
+        gcodeList.push('M5 S0'); // turn off laser spot
+    }
+
+    gcodeList.push(
+        ';End', // empty line
+    );
+
+    const gcode = gcodeList.join('\n');
+
+    return gcode;
+};
 
 
 enum SetupCoordinateMethod {
@@ -46,7 +89,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
 
     // G-code
     const boundingBox = useSelector((state: RootState) => state.workspace.boundingBox);
-    const workflowStatus = useSelector((state: RootState) => state.workspace.workflowStatus);
+    const workflowStatus = useSelector((state: RootState) => state.workspace.workflowStatus, shallowEqual);
 
     // display of widget
     // Only when machine is IDLE
@@ -78,7 +121,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
      *
      * - useCurrentPosition: Use current position as origin
      */
-    const runBoundary = useCallback(async ({ useCurrentPosition = false }) => {
+    const runBoundary = useCallback(async () => {
         setRunBoundaryReady(false);
         if (!boundingBox) {
             log.warn('No bounding box provided, please upload G-code first.');
@@ -86,48 +129,8 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
         }
 
         log.info('Run Boundary... bbox =', boundingBox);
-        const bbox = boundingBox;
 
-        const gcodeList = [];
-
-        if (jobOffsetMode === JobOffsetMode.Crosshair) {
-            // Use crosshair to run boundary
-            gcodeList.push('M3 S0');
-            gcodeList.push('M2000 L13 P1'); // turn on crosshair
-        } else if (jobOffsetMode === JobOffsetMode.LaserSpot) {
-            // Use laser spot to run boundary
-            gcodeList.push('M3 S0');
-            gcodeList.push('G1 F6000 S5'); // turn on laser spot
-        }
-
-        gcodeList.push(
-            'G90', // absolute position
-        );
-
-        if (useCurrentPosition) {
-            gcodeList.push(
-                'G92 X0 Y0', // set current position as origin
-            );
-        }
-
-        gcodeList.push(
-            `G1 X${bbox.min.x} Y${bbox.min.y} F6000`, // run boundary
-            `G1 X${bbox.min.x} Y${bbox.max.y}`,
-            `G1 X${bbox.max.x} Y${bbox.max.y}`,
-            `G1 X${bbox.max.x} Y${bbox.min.y}`,
-            `G1 X${bbox.min.x} Y${bbox.min.y}`,
-            'G1 X0 Y0 S0', // go back to origin
-        );
-
-        if (jobOffsetMode === JobOffsetMode.LaserSpot) {
-            gcodeList.push('M5 S0'); // turn off laser spot
-        }
-
-        gcodeList.push(
-            ';End', // empty line
-        );
-
-        const gcode = gcodeList.join('\n');
+        const gcode = getRunBoundayCode(boundingBox, jobOffsetMode);
 
         const blob = new Blob([gcode], { type: 'text/plain' });
         const file = new File([blob], 'boundary.nc');
@@ -136,11 +139,11 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
 
         setRunBoundaryUploading(true);
         controller
-            .emitEvent(ControllerEvent.CompressUploadFile, {
+            .emitEvent(SocketEvent.CompressUploadFile, {
                 filePath: gcodeFileObject.uploadName,
                 targetFilename: 'boundary.nc',
             })
-            .once(ControllerEvent.CompressUploadFile, ({ err, text }) => {
+            .once(SocketEvent.CompressUploadFile, ({ err, text }) => {
                 setRunBoundaryUploading(false);
 
                 if (err) {
@@ -168,10 +171,14 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
                             <span className="display-block font-weight-bold">{i18n._('Manual Mode')}</span>
                             <span className="display-block color-black-3">{i18n._('You need to manually move the toolhead to the desired XY work origin.')}</span>
                         </Radio>
-                        <Radio value={SetupCoordinateMethod.ByControlPanel}>
-                            <span className="display-block font-weight-bold">{i18n._('Control Mode')}</span>
-                            <span className="display-block color-black-3">{i18n._('You need to use the Control panel to move the toolhead to the desired XY work origin.')}</span>
-                        </Radio>
+                        {/* Hide by control panel method */
+                            false && (
+                                <Radio value={SetupCoordinateMethod.ByControlPanel}>
+                                    <span className="display-block font-weight-bold">{i18n._('Control Mode')}</span>
+                                    <span className="display-block color-black-3">{i18n._('You need to use the Control panel to move the toolhead to the desired XY work origin.')}</span>
+                                </Radio>
+                            )
+                        }
                     </Space>
                 </Radio.Group>
             </div>
@@ -184,9 +191,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
                                 style={{ width: '100%', borderRadius: '4px' }}
                                 disabled={!boundingBox}
                                 loading={runBoundaryUploading}
-                                onClick={async () => runBoundary({
-                                    useCurrentPosition: true,
-                                })}
+                                onClick={async () => runBoundary()}
                             >
                                 {i18n._('Run Boundary')}
                             </Button>
@@ -203,9 +208,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
                     <div className="margin-top-16">
                         <ControlPanel
                             executeGCode={executeGCode}
-                            runBoundary={async () => runBoundary({
-                                useCurrentPosition: false,
-                            })}
+                            runBoundary={async () => runBoundary()}
                         />
                     </div>
                 )
