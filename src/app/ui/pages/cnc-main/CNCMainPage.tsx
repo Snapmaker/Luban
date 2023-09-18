@@ -12,6 +12,14 @@ import { actions as projectActions } from '../../../flux/project';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
 import { getUploadModeByFilename } from '../../../lib/units';
+import {
+    SnapmakerA150Machine,
+    SnapmakerA250Machine,
+    SnapmakerA350Machine,
+    SnapmakerArtisanMachine,
+    SnapmakerOriginalExtendedMachine,
+    SnapmakerOriginalMachine
+} from '../../../machines';
 import { machineStore } from '../../../store/local-storage';
 import { Button } from '../../components/Buttons';
 import Checkbox from '../../components/Checkbox';
@@ -24,8 +32,8 @@ import { logPageView, renderModal, renderPopup, useUnsavedTitle } from '../../ut
 import CNCVisualizer from '../../widgets/CNCVisualizer';
 import Thumbnail from '../../widgets/CncLaserShared/Thumbnail';
 import useRenderMainToolBar from '../CncLaserShared/MainToolBar';
-import useRenderRemoveModelsWarning from '../CncLaserShared/RemoveAllModelsWarning';
 import RenderProjectRightView from '../CncLaserShared/ProjectRightView';
+import useRenderRemoveModelsWarning from '../CncLaserShared/RemoveAllModelsWarning';
 import HomePage from '../HomePage';
 import Workspace from '../Workspace';
 import {
@@ -244,32 +252,32 @@ const Cnc: React.FC<CNCMainPageProps> = ({ location }) => {
                 };
             } else {
                 switch (series) {
-                    case 'Original Long Z-axis':
-                    case 'Original':
+                    case SnapmakerOriginalMachine.identifier:
+                    case SnapmakerOriginalExtendedMachine.identifier:
                         pathConfig = {
                             path: './UserCase/cnc/original_standard/cnc_original_standard.snapcnc',
                             name: 'cnc_original_standard.snapcnc'
                         };
                         break;
-                    case 'A150':
+                    case SnapmakerA150Machine.identifier:
                         pathConfig = {
                             path: './UserCase/cnc/a150_standard/cnc_a150_standard.snapcnc',
                             name: 'cnc_a150_standard.snapcnc'
                         };
                         break;
-                    case 'A250':
+                    case SnapmakerA250Machine.identifier:
                         pathConfig = {
                             path: './UserCase/cnc/a250_standard/cnc_a250_standard.snapcnc',
                             name: 'cnc_a250_standard.snapcnc'
                         };
                         break;
-                    case 'A350':
+                    case SnapmakerA350Machine.identifier:
                         pathConfig = {
                             path: './UserCase/cnc/a350_standard/cnc_a350_standard.snapcnc',
                             name: 'cnc_a350_standard.snapcnc'
                         };
                         break;
-                    case 'A400':
+                    case SnapmakerArtisanMachine.identifier:
                         pathConfig = {
                             path: './UserCase/cnc/Luban Lock.snapcnc',
                             name: 'Luban Lock.snapcnc',

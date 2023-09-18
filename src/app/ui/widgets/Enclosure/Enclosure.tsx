@@ -86,7 +86,7 @@ const Enclosure: React.FC = () => {
                     />
                 </div>
                 {/* Disable adjustment for door detection
-                {(isConnected && connectionType === 'wifi' && headType !== '3dp' && series !== 'A400') && (
+                {(isConnected && connectionType === 'wifi' && headType !== '3dp') && (
                     <TipTrigger
                         title={i18n._('key-Workspace/Enclosure-Door Detection')}
                         content={(

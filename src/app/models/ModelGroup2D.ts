@@ -464,11 +464,6 @@ class ModelGroup2D extends EventEmitter {
     }
 
     public getSelectedModelsForHotZoneCheck() {
-        // TODO: Refactor this
-        // if (this.series !== 'A400') {
-        //    return [];
-        // }
-
         return this.getModels<Model3D>();
     }
 
