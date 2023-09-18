@@ -50,30 +50,32 @@ const MoreInfo = () => {
         // timer over
         paginationTimeoutTimer = setTimeout(() => {
             clearInterval(paginationInterverTimer);
-            carouselRef.current.next();
+            carouselRef.current && carouselRef.current.next();
         }, carouselSleep);
     };
 
     useEffect(() => {
+        let isMounted = true;
         const init = async () => {
             const { body: data } = await api.getInformationFlow(lang);
-            setInformationFlow(data);
+            isMounted && setInformationFlow(data);
         };
         init();
 
         const timer = setInterval(() => {
-            if (carouselRef.current) {
+            if (carouselRef.current && isMounted) {
                 onCarouselAfterChange();
                 clearInterval(timer);
             }
         }, 50);
 
         return () => {
+            isMounted = false;
             clearInterval(timer);
             clearTimeout(paginationTimeoutTimer);
             clearInterval(paginationInterverTimer);
         };
-    });
+    }, []);
 
     return (
         <div className={styles['more-info']}>
