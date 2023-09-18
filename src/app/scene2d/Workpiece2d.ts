@@ -609,7 +609,14 @@ class Workpiece2d {
     }
 
     public _setMaterialsRect() {
-        const { isRotate, x = 0, y = 0, fixtureLength = 20 } = this.materials;
+        const { isRotate, diameter, length, fixtureLength = 20 } = this.materials;
+        let { x = 0, y = 0 } = this.materials;
+
+        if (isRotate && !x && !y) {
+            x = diameter * Math.PI;
+            y = length;
+        }
+
         if (!isRotate) {
             return;
         }
@@ -621,6 +628,7 @@ class Workpiece2d {
         const width = height * 415 / 90;
         const posX = this.size.x - x / 2;
         const scaleX = x / width;
+
         // eslint-disable-next-line no-unused-vars
         const nonEditableArea = createSVGElement({
             element: 'image',

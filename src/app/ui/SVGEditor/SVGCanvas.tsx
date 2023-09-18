@@ -187,24 +187,29 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
     }
 
     public componentWillReceiveProps(nextProps) {
+        let shouldUpdateCanvas = false;
+        const size = nextProps.size;
+        let materials = nextProps.materials;
+
         if (nextProps.scale !== this.lastScale) {
             // Updates from outsider
             this.lastScale = nextProps.scale;
-            this.updateCanvas();
+            shouldUpdateCanvas = true;
         }
 
         if (nextProps.target && nextProps.target !== this.target) {
             this.offsetX = -nextProps.target.x;
             this.offsetY = nextProps.target.y;
 
-            this.updateCanvas();
+            shouldUpdateCanvas = true;
         }
 
         if (nextProps.size !== this.props.size) {
-            this.updateCanvas(nextProps.size);
+            shouldUpdateCanvas = true;
         }
         if (nextProps.materials !== this.props.materials) {
-            this.updateCanvas(null, nextProps.materials);
+            materials = nextProps.materials;
+            shouldUpdateCanvas = true;
         }
         if (nextProps.coordinateMode !== this.props.coordinateMode
             || nextProps.coordinateSize.x !== this.props.coordinateSize.x
@@ -231,8 +236,15 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
             this.props.updateTarget({
                 x: -coorDelta.dx / 1, y: coorDelta.dy / 1
             });
-            this.updateCanvas(null, nextProps.materials);
+            shouldUpdateCanvas = true;
+            // this.updateCanvas(null, nextProps.materials);
         }
+
+        // Update canvas at once
+        if (shouldUpdateCanvas) {
+            this.updateCanvas(size, materials);
+        }
+
         if (nextProps.mode !== this.props.mode || nextProps.ext !== this.props.ext) {
             this.updateMode(nextProps.mode, nextProps.ext);
         }
@@ -1505,7 +1517,7 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
         this.updateCanvas();
     };
 
-    public updateCanvas = (size, materials) => {
+    public updateCanvas = (size = null, materials = null) => {
         size = size || this.props.size;
         materials = materials || this.props.materials;
 

@@ -603,7 +603,7 @@ export const processActions = {
         const { materials, SVGActions } = getState()[headType];
         if (materials.isRotate) {
             const { size } = getState().machine;
-            const { y = 0, fixtureLength = 0 } = materials;
+            const { y = 0, fixtureLength = 20 } = materials;
 
             const height = Math.min(fixtureLength, y);
             const posY = size.y - y;

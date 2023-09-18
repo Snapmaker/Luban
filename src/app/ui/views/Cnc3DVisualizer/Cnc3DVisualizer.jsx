@@ -228,7 +228,7 @@ class Cnc3DVisualizer extends Component {
                 }
             }
             if (this.props.progress !== prevProps.progress && this.props.progress === 1) {
-                this.props.selectTargetModel(selectedModel, 'cnc');
+                this.props.selectTargetModel('cnc', selectedModel);
             }
         }
         return prevProps;

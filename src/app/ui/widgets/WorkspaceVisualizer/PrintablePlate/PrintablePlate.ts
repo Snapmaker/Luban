@@ -152,7 +152,7 @@ class PrintablePlate extends Object3D {
 
     public _setMaterialsRect() {
         // eslint-disable-next-line no-unused-vars
-        const { x = 0, y = 0, fixtureLength = 0 } = this.materials;
+        const { x = 0, y = 0, fixtureLength = 20 } = this.materials;
 
         if (!x && !y) {
             return;

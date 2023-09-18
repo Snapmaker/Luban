@@ -1061,7 +1061,6 @@ export const OFFICIAL_SITE_ZH_URL = 'https://snapmaker.cn/';
 export const OFFICIAL_SITE_EN_URL = 'https://snapmaker.com/';
 export const MARKET_ZH_URL = 'https://snapmaker.tmall.com/';
 export const MARKET_EN_URL = 'https://shop.snapmaker.com/';
-export const MYMINIFACTORY_URL = 'https://www.myminifactory.com/';
 
 // Project and Menu
 // once you change this number, make sure the number in `electron-app/Menu.js` also changed
