@@ -674,7 +674,10 @@ export const actions = {
                 // calculate bounding box of G-code objects
                 const objectBBox = ThreeUtils.computeBoundingBox(object3D);
 
-                const newBoundingBox = new Box3().copy(boundingBox);
+                const newBoundingBox = new Box3();
+                if (boundingBox) {
+                    newBoundingBox.copy(boundingBox);
+                }
                 newBoundingBox.expandByPoint(objectBBox.min);
                 newBoundingBox.expandByPoint(objectBBox.max);
 
@@ -954,15 +957,16 @@ export const actions = {
                 }
             );
         } else {
-            shouldAutoPreviewGcode
-                && dispatch(actions.renderPreviewGcodeFile(gcodeFile));
+            if (shouldAutoPreviewGcode) {
+                dispatch(actions.renderPreviewGcodeFile(gcodeFile));
+            }
 
-            if (gcodeFile?.boundingBox) {
+            if (gcodeFile.boundingBox) {
                 await dispatch(
                     actions.updateState({
                         boundingBox: new Box3(
-                            new Vector3().fromArray(gcodeFile.boundingBox.min),
-                            new Vector3().fromArray(gcodeFile.boundingBox.max),
+                            new Vector3().copy(gcodeFile.boundingBox.min),
+                            new Vector3().copy(gcodeFile.boundingBox.max),
                         ),
                     })
                 );
@@ -997,6 +1001,7 @@ export const actions = {
         fileInfo.isRenaming = false;
         fileInfo.newName = fileInfo.name;
         files.push(fileInfo);
+
         let added = 1,
             i = 0;
         while (added < 5 && i < gcodeFiles.length) {
@@ -1011,13 +1016,21 @@ export const actions = {
 
         dispatch(
             actions.updateState({
-                boundingBox: new Box3(
-                    new Vector3().fromArray(fileInfo.boundingBox.min),
-                    new Vector3().fromArray(fileInfo.boundingBox.max),
-                ),
                 gcodeFiles: files,
             })
         );
+
+        if (fileInfo.boundingBox) {
+            dispatch(
+                actions.updateState({
+                    boundingBox: new Box3(
+                        new Vector3().fromArray(fileInfo.boundingBox.min),
+                        new Vector3().fromArray(fileInfo.boundingBox.max),
+                    ),
+                    gcodeFiles: files,
+                })
+            );
+        }
     },
 
     renameGcodeFile: (uploadName, newName = null, isRenaming = null) => (
