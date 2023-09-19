@@ -74,7 +74,7 @@
     "Marlin"
   ],
   "dependencies": {
-    "@babel/runtime": "7.12.18",
+    "@babel/runtime": "7.20.6",
     "@electron/remote": "2.0.8",
     "@react-three/fiber": "5.3.15",
     "@snapmaker/snapmaker-lunar": "1.4.3",
@@ -136,9 +136,9 @@
     "fs-extra": "11.1.0",
     "history": "4.6.3",
     "hogan.js": "3.0.2",
-    "i18next": "^21.10.0",
-    "i18next-browser-languagedetector": "2.2.4",
-    "i18next-express-middleware": "1.2.1",
+    "i18next": "^22.5.1",
+    "i18next-browser-languagedetector": "^7.1.0",
+    "i18next-http-middleware": "^3.3.2",
     "i18next-node-fs-backend": "2.1.3",
     "i18next-xhr-backend": "1.5.1",
     "immutability-helper": "2.9.1",
