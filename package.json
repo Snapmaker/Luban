@@ -136,7 +136,7 @@
     "fs-extra": "11.1.0",
     "history": "4.6.3",
     "hogan.js": "3.0.2",
-    "i18next": "^19.9.2",
+    "i18next": "^20.6.1",
     "i18next-browser-languagedetector": "2.2.4",
     "i18next-express-middleware": "1.2.1",
     "i18next-node-fs-backend": "2.1.3",
