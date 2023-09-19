@@ -75,7 +75,7 @@ const settings = {
             caches: ['localStorage', 'cookie']
         },
         // options for backend
-        // https://github.com/i18next/i18next-xhr-backend
+        // https://github.com/i18next/i18next-http-backend
         backend: {
             // path where resources get loaded from
             loadPath: `${webroot}resources/i18n/{{lng}}/{{ns}}.json`,

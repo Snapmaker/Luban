@@ -3,7 +3,7 @@ import 'antd/dist/antd.css';
 import series from 'async/series';
 import i18next from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
-import XHR from 'i18next-xhr-backend';
+import i18nHttpApi from 'i18next-http-backend';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { initReactI18next } from 'react-i18next';
@@ -30,7 +30,7 @@ series([
     (next) => {
         // Setup i18next
         i18next
-            .use(XHR)
+            .use(i18nHttpApi)
             .use(LanguageDetector)
             .use(initReactI18next)
             .init(settings.i18next, () => {
