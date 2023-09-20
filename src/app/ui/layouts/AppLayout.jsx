@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import i18next from 'i18next';
 import isElectron from 'is-electron';
-import { cloneDeep, throttle } from 'lodash';
+import { cloneDeep, includes, throttle } from 'lodash';
 import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
 import React from 'react';
@@ -11,6 +11,8 @@ import { Group } from 'three';
 
 import {
     FORUM_URL,
+    HEAD_CNC,
+    HEAD_LASER,
     HEAD_TYPE_ENV_NAME,
     MARKET_EN_URL,
     MARKET_ZH_URL,
@@ -795,12 +797,15 @@ class AppLayout extends React.PureComponent {
                 await this.props.updateMachineToolHead(toolHead, series, headType);
 
                 // initialize workpiece now
-                await this.props.initializeWorkpiece(headType, {
-                    isRotate: isRotate,
-                });
+                if (includes([HEAD_LASER, HEAD_CNC], headType)) {
+                    await this.props.initializeWorkpiece(headType, {
+                        isRotate: isRotate,
+                    });
 
-                await this.props.initializeOrigin(headType);
-                await this.props.scaleCanvasToFit(headType);
+                    await this.props.initializeOrigin(headType);
+
+                    await this.props.scaleCanvasToFit(headType);
+                }
             });
             UniApi.Event.on('appbar-menu:clear-recent-files', () => {
                 this.actions.updateRecentFile([], 'reset');
