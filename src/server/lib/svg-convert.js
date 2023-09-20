@@ -30,7 +30,6 @@ const TEMPLATE = `<?xml version="1.0" encoding="utf-8"?>
  * @returns {Promise<any>}
  */
 const convertRasterToSvg = (options) => {
-    console.log('options', options);
     const { uploadName, vectorThreshold, invert, turdSize } = options;
     // svg may get here, return the original file
     if (/\.svg$/i.test(uploadName)) {
