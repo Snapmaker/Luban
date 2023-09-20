@@ -78,8 +78,8 @@ export function cleanAllRecentFiles() {
     fs.writeFileSync(recentFileName, JSON.stringify([]), 'utf-8');
 }
 
+// eslint-disable-next-line no-unused-vars
 function getMenuTemplate(options) {
-    console.log('options', options);
     // const { url } = options;
 
     // const template = [
