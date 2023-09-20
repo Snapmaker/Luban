@@ -60,8 +60,6 @@ const convertRasterToSvg = (options) => {
         turdSize: turdSize
     };
 
-    console.log('modelPath', modelPath);
-
     return new Promise((resolve, reject) => {
         potrace.trace(`${modelPath}`, params, async (err, svgStr) => {
             if (err) {
@@ -155,8 +153,6 @@ const convertTextToSvg = async (options) => {
     // // fs.writeFileSync(targetPath1, svgString);
     // const result = await svgParser.parse(svgString);
     // unionShapes(result.shapes);
-
-    // console.log('svgToString(result)', svgToString(result));
 
     return new Promise((resolve, reject) => {
         const targetPath = `${process.env.Tmpdir}/${uploadName}`;
