@@ -206,7 +206,8 @@ const createApplication = () => {
     // Secure API Access
     app.use(urljoin(settings.route, 'api'), expressJwt({
         secret: config.get('secret'),
-        credentialsRequired: true
+        algorithms: ['HS256'],
+        credentialsRequired: true,
     }));
 
     app.use((err, req, res, next) => {

@@ -6,7 +6,8 @@ import fs from 'fs';
 import _ from 'lodash';
 import os from 'os';
 import path from 'path';
-import webappengine from 'webappengine';
+import http from 'http';
+// import webappengine from 'webappengine';
 
 import DataStorage from './DataStorage';
 import createApplication from './app';
@@ -18,8 +19,6 @@ import monitor from './services/monitor';
 
 
 const log = logger('init');
-
-// const EPS = 1e-6;
 
 const createServer = (options, callback) => {
     options = { ...options };
@@ -80,53 +79,35 @@ const createServer = (options, callback) => {
 
     process.env.Tmpdir = DataStorage.tmpDir;
 
-    // // Bugfix on Jimp's greyscale. ...moved to server/lib/jimp
+    const app = createApplication();
 
     const { port = 0, host, backlog } = options;
-    const routes = [];
-    if (typeof options.mount === 'object') {
-        routes.push({
-            type: 'static',
-            route: options.mount.url,
-            directory: options.mount.path
-        });
-    }
+    const server = http.createServer(app);
+    server.listen(port, host, backlog, () => {
+        // Start socket service
+        startServices(server);
 
-    routes.push({
-        type: 'server',
-        route: '/',
-        server: () => createApplication()
+        // Deal with address bindings
+        const realAddress = server.address().address;
+        const realPort = server.address().port;
+        callback && callback(null, {
+            address: realAddress,
+            port: realPort
+        });
+
+        log.info(`Starting the server at ${chalk.cyan(`http://${realAddress}:${realPort}`)}`);
+
+        dns.lookup(os.hostname(), { family: 4, all: true }, (err, addresses) => {
+            if (err) {
+                log.error(`Can't resolve host name: ${err}`);
+                return;
+            }
+
+            addresses.forEach(({ address }) => {
+                log.info(`Starting the server at ${chalk.cyan(`http://${address}:${realPort}`)}`);
+            });
+        });
     });
-    webappengine({ port, host, backlog, routes })
-        .on('ready', (server) => {
-            // Start socket service
-            startServices(server);
-
-            // Deal with address bindings
-            const realAddress = server.address().address;
-            const realPort = server.address().port;
-            callback && callback(null, {
-                address: realAddress,
-                port: realPort
-            });
-
-            log.info(`Starting the server at ${chalk.cyan(`http://${realAddress}:${realPort}`)}`);
-
-            dns.lookup(os.hostname(), { family: 4, all: true }, (err, addresses) => {
-                if (err) {
-                    log.error(`Can't resolve host name: ${err}`);
-                    return;
-                }
-
-                addresses.forEach(({ address }) => {
-                    log.info(`Starting the server at ${chalk.cyan(`http://${address}:${realPort}`)}`);
-                });
-            });
-        })
-        .on('error', (err) => {
-            callback && callback(err);
-            log.error(err);
-        });
 };
 
 export {
