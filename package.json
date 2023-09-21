@@ -277,6 +277,7 @@
     "coveralls": "3.0.14",
     "cross-env": "5.2.1",
     "css-loader": "5.2.7",
+    "del": "6.1.1",
     "electron": "15.5.7",
     "electron-builder": "23.6.0",
     "electron-rebuild": "3.2.9",
