@@ -18,6 +18,7 @@ import { controller } from '../../../communication/socket-communication';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
 import Terminal from './Terminal';
+import SocketEvent from '../../../communication/socket-events';
 
 let pubsubTokens = [];
 let unlisten = null;
@@ -69,9 +70,14 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
             const terminal = terminalRef.current;
             terminal && terminal.writeln(data);
         },
-        'connection:executeGcode': (gcodeArray) => {
-            if (gcodeArray) {
-                dispatch(workspaceActions.addConsoleLogs(gcodeArray));
+        [SocketEvent.ExecuteGCode]: ({ err }) => {
+            if (!err) {
+                // fake response ok
+                const terminal = terminalRef.current;
+                terminal && terminal.writeln('ok');
+
+                // add logs
+                dispatch(workspaceActions.addConsoleLogs('ok'));
             }
         }
     };

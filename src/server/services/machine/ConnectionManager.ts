@@ -398,9 +398,9 @@ class ConnectionManager {
 
         const success = await this.channel.executeGcode(gcode);
         if (success) {
-            socket.emit('connection:executeGcode', { msg: '', res: null });
+            socket.emit(SocketEvent.ExecuteGCode, { err: null });
         } else {
-            socket.emit('connection:executeGcode', { msg: 'Execute G-cod failed', res: null });
+            socket.emit(SocketEvent.ExecuteGCode, { err: new Error('Execute G-cod failed'), msg: 'Execute G-cod failed' });
         }
     };
 
