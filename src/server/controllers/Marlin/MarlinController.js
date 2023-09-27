@@ -41,6 +41,7 @@ import {
     WRITE_SOURCE_UNKNOWN
 } from '../constants';
 import Marlin from './Marlin';
+import { SnapmakerRayMachine } from '../../../app/machines';
 
 // % commands
 const WAIT = '%wait';
@@ -359,6 +360,10 @@ class MarlinController extends EventEmitter {
         this.controller = new Marlin();
 
         this.controller.on('firmware', (res) => {
+            if (res.machineIdentifier) {
+                this.checkMachineIsReady({ machineIdentifier: res.machineIdentifier });
+            }
+
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', { data: res.raw });
             }
@@ -366,7 +371,7 @@ class MarlinController extends EventEmitter {
         this.controller.on('series', (res) => {
             let machineIdentifier = '';
             if (res.seriesSize === 'Ray2023') {
-                machineIdentifier = 'Ray';
+                machineIdentifier = SnapmakerRayMachine.identifier;
             }
 
             this.checkMachineIsReady({ machineIdentifier });
