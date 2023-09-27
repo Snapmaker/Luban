@@ -166,7 +166,7 @@ const UploadView: React.FC = () => {
                     } else {
                         modalSmallHOC({
                             title: i18n._('key-Workspace/WifiTransport-File sent successfully.'),
-                            text: i18n._('File was successfully sent. Please long press the button on the machine to start the job. If the enclosure is installed, the enclosure door needs to be closed.'),
+                            text: i18n._('File was successfully sent. Please long press the work switch on the machine to start the job. If the enclosure is installed, the enclosure door needs to be closed.'),
                             iconColor: '#4CB518',
                             img: 'WarningTipsSuccess'
                         });

@@ -11,6 +11,7 @@ import {
     LEVEL_TWO_POWER_LASER_FOR_SM2,
     LEVEL_ONE_POWER_LASER_FOR_SM2
 } from '../constants';
+import { SnapmakerOriginalMachine } from '../../../app/machines';
 // import PacketManager from '../PacketManager';
 
 // http://stackoverflow.com/questions/10454518/javascript-how-to-retrieve-the-number-of-decimals-of-a-string-number
@@ -28,11 +29,33 @@ function decimalPlaces(num) {
     );
 }
 
+/**
+ * Parser for Snapmaker Original with firmware version 1.X
+ *
+ * Reply:
+ * Snapmaker-GD32Base-1.2
+ * Dec 19 2017
+ */
+class MarlinReplyParserOriginalFirmwareVersion {
+    static parse(line) {
+        const r = line.match(/^Snapmaker-GD32Base-([0-9.]+(-(alpha|beta)[1-9]?)?)$/);
+        if (!r) {
+            return null;
+        }
+        return {
+            type: MarlinReplyParserOriginalFirmwareVersion,
+            payload: {
+                machineIdentifier: SnapmakerOriginalMachine.identifier,
+                version: semver.coerce(r[1])
+            }
+        };
+    }
+}
+
 
 /**
  * Reply parser for tool head type (M1006)
  *
- * For details see [Snapmaker-GD32Base](https://snapmaker2.atlassian.net/wiki/spaces/SNAP/pages/3440681/Snapmaker-GD32Base).
  * Examples:
  *  'Firmware Version: Snapmaker-Base-2.2'
  *  'Firmware Version: Snapmaker-Base-2.4-beta'
@@ -705,6 +728,7 @@ class MarlinLineParser {
 
             // New Parsers (follow headType `MarlinReplyParserXXX`)
             // M1005
+            MarlinReplyParserOriginalFirmwareVersion,
             MarlinReplyParserFirmwareVersion,
 
             // Marlin SM2-1.2.1.0
@@ -903,6 +927,15 @@ class Marlin extends events.EventEmitter {
 
         const result = this.parser.parse(data) || {};
         const { type, payload } = result;
+
+        switch (type) {
+            case MarlinReplyParserOriginalFirmwareVersion:
+                this.setState({ version: payload.version });
+                this.emit('firmware', payload);
+                break;
+            default:
+                break;
+        }
 
         if (type === MarlinReplyParserFirmwareVersion) {
             this.setState({ version: payload.version });

@@ -23,7 +23,7 @@ const RunBoundaryModal: React.FC<RunBoundaryModalProps> = (props) => {
             </Modal.Header>
             <Modal.Body>
                 <div>
-                    {i18n._('Please go to the machine, click button to run boundary. If the enclosure is installed, the enclosure door needs to be closed.')}
+                    {i18n._('Please go to the machine, press the work switch to run boundary. If the enclosure is installed, the enclosure door needs to be closed.')}
                 </div>
             </Modal.Body>
             <Modal.Footer>
