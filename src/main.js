@@ -1,5 +1,10 @@
+// babel/preset-env, useBuiltIns: "entry"
+// https://babeljs.io/docs/babel-preset-env#usebuiltins
+import 'core-js';
+// import 'core-js/stable';
+// import 'regenerator-runtime/runtime';
+
 import { enable as electronEnable, initialize as electronRemoteMainInitialize } from '@electron/remote/main';
-import 'core-js/stable';
 import { app, BrowserWindow, dialog, ipcMain, Menu, powerSaveBlocker, protocol, screen, session, shell } from 'electron';
 import Store from 'electron-store';
 import { autoUpdater } from 'electron-updater';
@@ -8,7 +13,6 @@ import { debounce, isNull, isUndefined } from 'lodash';
 import log from 'loglevel';
 import fetch from 'node-fetch';
 import path from 'path';
-import 'regenerator-runtime/runtime';
 import url from 'url';
 
 import DataStorage from './DataStorage';

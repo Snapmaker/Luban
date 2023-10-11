@@ -9,6 +9,7 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import { Group } from 'three';
 
+
 import {
     FORUM_URL,
     HEAD_CNC,
@@ -34,6 +35,7 @@ import { actions as settingsActions } from '../../flux/setting';
 
 import { checkIsGCodeFile, checkIsSnapmakerProjectFile } from '../../lib/check-name';
 import { logLubanQuit } from '../../lib/gaEvent';
+import log from '../../lib/log';
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
 import { getCurrentHeadType } from '../../lib/url-utils';
@@ -470,6 +472,7 @@ class AppLayout extends React.PureComponent {
             );
         },
         openProject: async (file) => {
+            console.log('open project, file =', file);
             if (!file) {
                 // this.fileInput.current.value = null;
                 // this.fileInput.current.click();
@@ -483,7 +486,7 @@ class AppLayout extends React.PureComponent {
                         }
                     }
                 } catch (e) {
-                    console.log(e);
+                    log.error(e);
                 }
             }
         },
