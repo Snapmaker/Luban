@@ -137,6 +137,9 @@ interface VisualizerProps {
 
     onDrawLine: (line, closedLoop) => void;
     onDrawDelete: () => void;
+
+    showSVGShapeLibrary: boolean;
+    updateEditorState: (state: any) => void;
 }
 
 class Visualizer extends React.Component<VisualizerProps> {
@@ -420,7 +423,8 @@ class Visualizer extends React.Component<VisualizerProps> {
         },
         setMode: (mode, extShape) => {
             this.props.setMode(mode, extShape);
-        }
+        },
+        updateEditorState: (state) => this.props.updateEditorState(state),
     };
 
     public constructor(props) {
@@ -623,6 +627,7 @@ class Visualizer extends React.Component<VisualizerProps> {
                         fileInput={this.fileInput}
                         allowedFiles=".svg, .png, .jpg, .jpeg, .bmp, .dxf, .stl, .amf, .3mf"
                         headType={HEAD_CNC}
+                        showSVGShapeLibrary={this.props.showSVGShapeLibrary}
                     />
                 </div>
                 <div
@@ -833,6 +838,7 @@ const mapStateToProps = (state, ownProps) => {
         ...materials,
         headType: HEAD_CNC,
     };
+    const { showSVGShapeLibrary } = state.editor;
 
     return {
         series,
@@ -869,6 +875,7 @@ const mapStateToProps = (state, ownProps) => {
         SVGCanvasMode,
         SVGCanvasExt,
         promptTasks,
+        showSVGShapeLibrary
     };
 };
 
@@ -919,6 +926,7 @@ const mapDispatchToProps = (dispatch) => {
         setMode: (mode, ext) => dispatch(editorActions.setCanvasMode('cnc', mode, ext)),
         updatePromptDamageModel: (bool) => dispatch(machineActions.updatePromptDamageModel(bool)),
         repairSelectedModels: () => dispatch(editorActions.repairSelectedModels('cnc')),
+        updateEditorState: (state) => dispatch(editorActions.updateEditorState(state)),
 
         elementActions: {
             moveElementsStart: (elements, options) => dispatch(editorActions.moveElementsStart('cnc', elements, options)),

@@ -76,8 +76,8 @@ type SVGEditorProps = {
         undo: () => void;
         redo: () => void;
         selectAll: () => void;
+        updateEditorState: (any) => void
     };
-    updateEditorState: (any) => void
 };
 
 const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
@@ -318,7 +318,7 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         createSvgModelByDData(d);
     };
     const updateIsShowSVGShapeLibrary = (isShow: boolean) => {
-        props.updateEditorState({ showSVGShapeLibrary: isShow });
+        props.editorActions.updateEditorState({ showSVGShapeLibrary: isShow });
     };
     const renderSVGShapeLibrary = () => {
         const onClose = () => { updateIsShowSVGShapeLibrary(false); };

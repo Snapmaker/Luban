@@ -67,6 +67,8 @@ interface VisualizerProps {
     // actions
     undo: () => void;
     redo: () => void;
+
+    updateEditorState: (state: any) => void
 }
 
 
@@ -376,7 +378,8 @@ class Visualizer extends React.Component<VisualizerProps> {
         },
         setMode: (mode, extShape) => {
             this.props.setMode(mode, extShape);
-        }
+        },
+        updateEditorState: state => this.props.updateEditorState(state)
     };
 
     public constructor(props) {
@@ -550,7 +553,6 @@ class Visualizer extends React.Component<VisualizerProps> {
                         allowedFiles={this.allowedFiles}
                         headType={HEAD_LASER}
                         showSVGShapeLibrary={this.props.showSVGShapeLibrary}
-                        updateEditorState={this.props.updateEditorState}
                     />
                 </div>
                 <div
