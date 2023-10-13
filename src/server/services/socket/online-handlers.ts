@@ -1,5 +1,6 @@
 import path from 'path';
 import request from 'superagent';
+import i18next from 'i18next';
 
 import SocketEvent from '../../../app/communication/socket-events';
 import { SnapmakerRayMachine } from '../../../app/machines';
@@ -21,11 +22,18 @@ interface LatestFirmwareInfo {
 }
 
 async function getLatestFirmwareInfo(machineIdentifier: string): Promise<LatestFirmwareInfo> {
+    const lang = i18next.language;
+
+    let api = 'https://api.snapmaker.com/v1/ray/version';
+    if (lang === 'zh-CN') {
+        api += '?locale=cn';
+    }
+
     switch (machineIdentifier) {
         case SnapmakerRayMachine.identifier: {
             const latestInfo = await new Promise<LatestFirmwareInfo>((resolve) => {
                 request
-                    .get('https://api.snapmaker.com/v1/ray/version')
+                    .get(api)
                     .end((err, res) => {
                         if (err) {
                             log.error(err);

@@ -1,6 +1,7 @@
 import { defaultAPIFactory, request } from './base';
 
 import * as env from './api-environment';
+import * as i18n from './api-i18n';
 
 
 //
@@ -305,6 +306,9 @@ export default {
 
     // Environment / Project
     env,
+
+    // i18n
+    i18n,
 
     uploadFile,
     uploadCaseFile,

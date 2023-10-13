@@ -160,7 +160,8 @@ function registerApis(app) {
     app.get(urljoin(settings.route, 'api/watch/file'), api.watch.readFile);
     app.post(urljoin(settings.route, 'api/watch/file'), api.watch.readFile);
 
-    // I18n
+    // i18n
+    app.post(urljoin(settings.route, 'api/i18n/lang'), api.i18n.changeLanguage);
     app.get(urljoin(settings.route, 'api/resources/i18n/acceptedLng'), api.i18n.getAcceptedLanguage);
     app.post(urljoin(settings.route, 'api/resources/i18n/sendMissing/:lng/:ns'), api.i18n.saveMissing);
 

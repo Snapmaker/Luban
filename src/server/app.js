@@ -198,7 +198,10 @@ const createApplication = () => {
     i18next
         .use(i18nextBackend)
         .use(i18nextHttpMiddleware.LanguageDetector)
-        .init(settings.i18next);
+        .init({
+            lng: config.get('language', undefined), // use saved lang
+            ...settings.i18next
+        });
 
     // app.use(i18nextHandle(i18next, {}));
     app.use(i18nextHttpMiddleware.handle(i18next));
