@@ -28,12 +28,12 @@ function processKey(value, options) {
     // return sha1(value);
 }
 
-const _ = (...args) => {
-    if ((args.length === 0) || (typeof args[0] === 'undefined')) {
-        return i18next.t(...args);
-    }
+interface TranslateOptions {
+    lng?: string;
+    defaultValue?: string;
+}
 
-    const [value = '', options = {}] = args;
+const _ = (value: string = '', options: TranslateOptions = {}): string => {
     const key = processKey(value, options);
 
     options.defaultValue = value;

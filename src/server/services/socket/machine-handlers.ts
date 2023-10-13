@@ -1,6 +1,6 @@
+import SocketEvent from '../../../app/communication/socket-events';
 import type SocketServer from '../../lib/SocketManager';
 import { connectionManager } from '../machine/ConnectionManager';
-import SocketEvent from '../../../app/communication/socket-events';
 
 
 function register(socketServer: SocketServer): void {
@@ -86,5 +86,5 @@ function register(socketServer: SocketServer): void {
 
 
 export {
-    register,
+    register
 };

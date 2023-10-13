@@ -2,12 +2,8 @@ import fetch from 'node-fetch';
 import fs from 'fs';
 
 class DownloadManager {
-    public async downlaod(url: string, savePath: string) {
+    public async download(url: string, savePath: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            if (fs.existsSync(savePath)) {
-                resolve();
-                return;
-            }
             fetch(url, {
                 headers: { 'Content-Type': 'application/octet-stream' },
             })
@@ -22,6 +18,17 @@ class DownloadManager {
                     });
                 });
         });
+    }
+
+    /**
+     * Download if file on target path not exists.
+     */
+    public async downloadIfNotExist(url: string, savePath: string): Promise<void> {
+        if (fs.existsSync(savePath)) {
+            return;
+        }
+
+        await this.download(url, savePath);
     }
 }
 

@@ -301,7 +301,7 @@ class DataStorage {
 
         const defaultFont = `${this.fontDir}/${DEFAULT_FONT_NAME}`;
         if (!fs.existsSync(defaultFont)) {
-            downloadManager.downlaod(
+            downloadManager.downloadIfNotExist(
                 'https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.com/download/fonts/NotoSansSC-Regular.otf',
                 join(this.fontDir, DEFAULT_FONT_NAME)
             );
@@ -384,22 +384,22 @@ class DataStorage {
     }
 
     private async initLaserResources() {
-        downloadManager.downlaod(
+        downloadManager.downloadIfNotExist(
             'https://snapmaker-luban.s3.us-west-1.amazonaws.com/camera-capture/mapx_350.txt',
             join(this.configDir, 'mapx_350.txt')
         );
 
-        downloadManager.downlaod(
+        downloadManager.downloadIfNotExist(
             'https://snapmaker-luban.s3.us-west-1.amazonaws.com/camera-capture/mapx_350.txt',
             join(this.configDir, 'mapx_A350.txt')
         );
 
-        downloadManager.downlaod(
+        downloadManager.downloadIfNotExist(
             'https://snapmaker-luban.s3.us-west-1.amazonaws.com/camera-capture/mapy_350.txt',
             join(this.configDir, 'mapy_350.txt')
         );
 
-        downloadManager.downlaod(
+        downloadManager.downloadIfNotExist(
             'https://snapmaker-luban.s3.us-west-1.amazonaws.com/camera-capture/mapy_350.txt',
             join(this.configDir, 'mapy_A350.txt')
         );

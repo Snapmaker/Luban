@@ -10,6 +10,7 @@ import monitor from './monitor';
 import { register as registerDiscoverHandlers } from './socket/discover-handlers';
 import { register as registerMachineHandlers } from './socket/machine-handlers';
 import { register as registerOSHandlers } from './socket/os-handlers';
+import { register as registerOnlineHandlers } from './socket/online-handlers';
 import socketSlice from './socket/socket-slice';
 import system from './socket/system';
 import TaskManager from './task-manager';
@@ -50,6 +51,8 @@ function startServices(server) {
 
     socketServer.on('connection', connectionManager.onConnection);
     socketServer.on('disconnection', connectionManager.onDisconnection);
+
+    registerOnlineHandlers(socketServer);
 
     // TODO: refactor these 2 API
     socketServer.registerEvent('command', textSerialChannel.command);
