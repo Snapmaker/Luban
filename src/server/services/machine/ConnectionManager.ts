@@ -1390,13 +1390,16 @@ M3`;
         }
     };
 
+    /**
+     * Get firmware version.
+     */
     public getFirmwareVersion = async (socket: SocketServer) => {
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const version = await (this.channel as SystemChannelInterface).getFirmwareVersion();
             socket.emit(SocketEvent.GetFirmwareVersion, { err: 0, version });
         } else {
             // not supported
-            socket.emit(SocketEvent.UpgradeFirmware, { err: 1 });
+            socket.emit(SocketEvent.GetFirmwareVersion, { err: 1 });
         }
     }
 

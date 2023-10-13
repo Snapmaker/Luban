@@ -10,6 +10,7 @@ import monitor from './monitor';
 import { register as registerDiscoverHandlers } from './socket/discover-handlers';
 import { register as registerMachineHandlers } from './socket/machine-handlers';
 import { register as registerOSHandlers } from './socket/os-handlers';
+import { register as registerOnlineHandlers } from './socket/online-handlers';
 import socketSlice from './socket/socket-slice';
 import system from './socket/system';
 import TaskManager from './task-manager';
@@ -50,6 +51,8 @@ function startServices(server) {
 
     socketServer.on('connection', connectionManager.onConnection);
     socketServer.on('disconnection', connectionManager.onDisconnection);
+
+    registerOnlineHandlers(socketServer);
 
     // TODO: refactor these 2 API
     socketServer.registerEvent('command', textSerialChannel.command);
@@ -157,7 +160,8 @@ function registerApis(app) {
     app.get(urljoin(settings.route, 'api/watch/file'), api.watch.readFile);
     app.post(urljoin(settings.route, 'api/watch/file'), api.watch.readFile);
 
-    // I18n
+    // i18n
+    app.post(urljoin(settings.route, 'api/i18n/lang'), api.i18n.changeLanguage);
     app.get(urljoin(settings.route, 'api/resources/i18n/acceptedLng'), api.i18n.getAcceptedLanguage);
     app.post(urljoin(settings.route, 'api/resources/i18n/sendMissing/:lng/:ns'), api.i18n.saveMissing);
 

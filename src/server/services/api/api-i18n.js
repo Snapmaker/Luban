@@ -1,8 +1,11 @@
-import _ from 'lodash';
 import fs from 'fs';
+import i18next from 'i18next';
+import _, { includes } from 'lodash';
 import path from 'path';
+
 import settings from '../../config/settings';
 import logger from '../../lib/logger';
+import configstore from '../configstore';
 
 const log = logger('api:i18n');
 
@@ -76,6 +79,23 @@ export const getAcceptedLanguage = (req, res) => {
     log.debug(`getAcceptedLanguage: ${JSON.stringify(result)}`);
 
     res.send(preferred);
+};
+
+export const changeLanguage = (req, res) => {
+    const lang = req.body.lang;
+
+    log.info(`Changing language to: ${lang}`);
+
+    if (!includes(settings.supportedLngs, lang)) {
+        res.send('failed');
+        return;
+    }
+
+    i18next.changeLanguage(lang, () => {
+        // save language used
+        configstore.set('language', lang);
+        res.send('ok');
+    });
 };
 
 export const saveMissing = (req, res) => {
