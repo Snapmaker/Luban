@@ -13,6 +13,11 @@ const log = logger('services:socket:online-handlers');
 interface LatestFirmwareInfo {
     version: string;
     url: string;
+    changeLog: {
+        features: string[],
+        improvements: string[];
+        bugs: string[];
+    }
 }
 
 async function getLatestFirmwareInfo(machineIdentifier: string): Promise<LatestFirmwareInfo> {
@@ -27,13 +32,20 @@ async function getLatestFirmwareInfo(machineIdentifier: string): Promise<LatestF
                             return;
                         }
 
-                        resolve(res.body.data?.new_version || {});
+                        const data = res.body.data?.new_version || {};
+                        const info = {
+                            version: data.version,
+                            url: data.url,
+                            changeLog: {
+                                features: data.change_log?.new_feature || [],
+                                improvements: data.change_log?.improvement || [],
+                                bugs: data.change_log?.bug_fixed || [],
+                            }
+                        };
+                        resolve(info);
                     });
             });
-            return {
-                version: latestInfo.version,
-                url: latestInfo.url,
-            };
+            return latestInfo;
         }
         default:
             return null;

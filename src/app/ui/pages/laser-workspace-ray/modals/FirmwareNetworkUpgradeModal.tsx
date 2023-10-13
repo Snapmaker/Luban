@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import { noop } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -23,7 +24,13 @@ const FirmwareNetworkUpgradeModal: React.FC<FirmwareNetworkUpgradeModalProps> = 
     const isConnected: boolean = useSelector((state: RootState) => state.workspace.isConnected);
 
     const [firmwareVersion, setFirmwareVersion] = useState('');
+
     const [latestFirmwareVersion, setLatestFirmwareVersion] = useState('');
+    const [latestFirmwareChangeLog, setLatestFirmwareChangeLog] = useState({
+        features: [],
+        improvements: [],
+        bugs: [],
+    });
 
     useEffect(() => {
         if (isConnected) {
@@ -37,9 +44,9 @@ const FirmwareNetworkUpgradeModal: React.FC<FirmwareNetworkUpgradeModalProps> = 
                 .emitEvent(SocketEvent.GetLatestFirmwareVersion, {
                     machineIdentifier: SnapmakerRayMachine.identifier,
                 })
-                .once(SocketEvent.GetLatestFirmwareVersion, ({ version }) => {
-                    console.log('x');
+                .once(SocketEvent.GetLatestFirmwareVersion, ({ version, changeLog }) => {
                     setLatestFirmwareVersion(version);
+                    setLatestFirmwareChangeLog(changeLog);
                 });
         }
     }, [isConnected]);
@@ -177,6 +184,58 @@ const FirmwareNetworkUpgradeModal: React.FC<FirmwareNetworkUpgradeModalProps> = 
                                 <div className="sm-flex">
                                     <span>{i18n._('Latest firmware version')}:</span>
                                     <span className="margin-left-4">{latestFirmwareVersion}</span>
+                                </div>
+                                <div className="margin-top-16">
+                                    <div
+                                        className={classNames(
+                                            'font-size-middle font-weight-middle',
+                                            'margin-bottom-8',
+                                        )}
+                                    >
+                                        {i18n._('Changelogs')}:
+                                    </div>
+                                    {
+                                        latestFirmwareChangeLog.features.length > 0 && (
+                                            <div>
+                                                <p className="font-size-base color-black-2">{i18n._('New Features')}</p>
+                                                <ul>
+                                                    {
+                                                        latestFirmwareChangeLog.features.map(desc => (
+                                                            <li>{desc}</li>
+                                                        ))
+                                                    }
+                                                </ul>
+                                            </div>
+                                        )
+                                    }
+                                    {
+                                        latestFirmwareChangeLog.improvements.length > 0 && (
+                                            <div>
+                                                <p className="font-size-base color-black-2">{i18n._('Improvements')}</p>
+                                                <ul>
+                                                    {
+                                                        latestFirmwareChangeLog.improvements.map(desc => (
+                                                            <li>{desc}</li>
+                                                        ))
+                                                    }
+                                                </ul>
+                                            </div>
+                                        )
+                                    }
+                                    {
+                                        latestFirmwareChangeLog.bugs.length > 0 && (
+                                            <div>
+                                                <p className="font-size-base color-black-2">{i18n._('Bug fixes')}</p>
+                                                <ul>
+                                                    {
+                                                        latestFirmwareChangeLog.bugs.map(desc => (
+                                                            <li>{desc}</li>
+                                                        ))
+                                                    }
+                                                </ul>
+                                            </div>
+                                        )
+                                    }
                                 </div>
                             </div>
                         </Modal.Body>
