@@ -1,4 +1,4 @@
-import { isEqual, some } from 'lodash';
+import { isEqual, some, throttle } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
@@ -42,6 +42,12 @@ import styles from './styles.styl';
 import MeshColoringControl from '../../../scene/controls/MeshColoringControl';
 
 const initQuaternion = new Quaternion();
+
+enum CheckModelsBoundingBoxResult {
+    Validated,
+    OutOfBounds,
+    OutOfHeatedZone,
+}
 
 /**
  * SceneView.
@@ -271,6 +277,7 @@ class Visualizer extends PureComponent {
     /**
      * 1) Check if any model go out of bounds, toast to notify user.
      */
+    private checkModelsBoundingBoxResult: CheckModelsBoundingBoxResult = CheckModelsBoundingBoxResult.Validated;
     public checkModelsOutOfHeatedBedBounds = () => {
         // toast.dismiss();
 
@@ -284,12 +291,15 @@ class Visualizer extends PureComponent {
         });
 
         if (hasOverstepped) {
-            toast(
-                <SceneToast
-                    type="warning"
-                    text={i18n._('key-Printing/This is the non printable area')}
-                />
-            );
+            if (this.checkModelsBoundingBoxResult !== CheckModelsBoundingBoxResult.OutOfBounds) {
+                this.checkModelsBoundingBoxResult = CheckModelsBoundingBoxResult.OutOfBounds;
+                toast(
+                    <SceneToast
+                        type="warning"
+                        text={i18n._('key-Printing/This is the non printable area')}
+                    />
+                );
+            }
             return;
         }
 
@@ -315,15 +325,22 @@ class Visualizer extends PureComponent {
                     }
                 });
                 if (hasOversteppedHotArea) {
-                    toast(
-                        <SceneToast
-                            type="info"
-                            text={i18n._('key-Printing/Place the model within the High-temperature Zone to get a temperature higher than 80℃.')}
-                        />
-                    );
+                    if (this.checkModelsBoundingBoxResult !== CheckModelsBoundingBoxResult.OutOfHeatedZone) {
+                        this.checkModelsBoundingBoxResult = CheckModelsBoundingBoxResult.OutOfHeatedZone;
+                        toast(
+                            <SceneToast
+                                type="info"
+                                text={i18n._('key-Printing/Place the model within the High-temperature Zone to get a temperature higher than 80℃.')}
+                            />
+                        );
+                    }
+                    return;
                 }
             }
         }
+
+        // everything is fine
+        this.checkModelsBoundingBoxResult = CheckModelsBoundingBoxResult.Validated;
     };
 
     public onAddModel = (model) => {
@@ -332,9 +349,9 @@ class Visualizer extends PureComponent {
         this.checkModelsOutOfHeatedBedBounds();
     };
 
-    public onMeshPositionChanged = () => {
+    public onMeshPositionChanged = throttle(() => {
         this.checkModelsOutOfHeatedBedBounds();
-    };
+    }, 100, { trailing: true });
 
     // all support related actions used in VisualizerModelTransformation & canvas.controls & contextmenu
     public supportActions = {
