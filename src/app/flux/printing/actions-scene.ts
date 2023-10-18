@@ -692,7 +692,7 @@ const finishEditSupportMode = (shouldApplyChanges = false) => {
     };
 };
 
-const updateSupportOverhangAngle = (angle: number) => {
+const setSupportOverhangAngle = (angle: number) => {
     return (dispatch) => {
         dispatch(
             baseActions.updateState({
@@ -1174,7 +1174,7 @@ export default {
     computeAutoSupports,
     startEditSupportMode,
     finishEditSupportMode,
-    updateSupportOverhangAngle,
+    setSupportOverhangAngle,
     setSupportBrushRadius,
     applySupportBrush,
 

@@ -4103,7 +4103,7 @@ export const actions = {
             dispatch(actions.gcodeRenderingCallback(data, extruderColors));
         });
     },
-    clearAllManualSupport: combinedOperations => (dispatch, getState) => {
+    clearAllManualSupport: (combinedOperations = null) => (dispatch, getState) => {
         dispatch(actions.exitPreview());
 
         const { modelGroup } = getState().printing;
