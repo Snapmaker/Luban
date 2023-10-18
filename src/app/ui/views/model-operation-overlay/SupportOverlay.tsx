@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { noop } from 'lodash';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
 import { HEAD_PRINTING } from '../../../constants';
@@ -9,14 +9,12 @@ import { actions as printingActions } from '../../../flux/printing';
 import sceneActions from '../../../flux/printing/actions-scene';
 import { logTransformOperation } from '../../../lib/gaEvent';
 import i18n from '../../../lib/i18n';
+import log from '../../../lib/log';
 import { Button } from '../../components/Buttons';
 import { NumberInput as Input } from '../../components/Input';
 import { renderModal } from '../../utils';
+import CancelButton from './CancelButton';
 import styles from './styles.styl';
-
-/* eslint-disable-next-line import/no-cycle */
-import { CancelButton } from '../../widgets/PrintingVisualizer/VisualizerLeftBar';
-
 
 interface SupportOverlayProps {
     enterEditSupportPageMode: () => void;
@@ -34,19 +32,22 @@ const SupportOverlay: React.FC<SupportOverlayProps> = (props) => {
 
     const generateAutoSupportEnableForSelected = modelGroup.getModelsAttachedSupport(false).length > 0;
 
+    const generateAutoSupport = useCallback((angle: number) => {
+        log.info(`Generate Auto Support (angle: ${angle})...`);
+
+        dispatch(sceneActions.computeAutoSupports(angle));
+        setWillOverrideSupport(false);
+        logTransformOperation(HEAD_PRINTING, 'support', 'auto');
+    }, [dispatch]);
+
     const actions = {
-        generateAutoSupport(angle) {
-            dispatch(sceneActions.computeAutoSupports(angle));
-            setWillOverrideSupport(false);
-            logTransformOperation(HEAD_PRINTING, 'support', 'auto');
-        },
         checkIfOverrideSupport() {
             if (generateAutoSupportEnableForSelected || modelGroup.getModelsAttachedSupport().length > 0) {
                 const res = modelGroup.checkIfOverrideSupport();
                 if (res) {
                     setWillOverrideSupport(res);
                 } else {
-                    actions.generateAutoSupport(supportOverhangAngle);
+                    generateAutoSupport(supportOverhangAngle);
                 }
             }
         },
@@ -64,16 +65,16 @@ const SupportOverlay: React.FC<SupportOverlayProps> = (props) => {
             },
             actions: [
                 {
-                    name: i18n._('key-Printing/LeftBar/Support-No'),
+                    name: i18n._('No'),
                     onClick: () => {
                         setWillOverrideSupport(false);
                     }
                 },
                 {
-                    name: i18n._('key-Printing/LeftBar/Support-Yes'),
+                    name: i18n._('Yes'),
                     isPrimary: true,
                     onClick: () => {
-                        actions.generateAutoSupport(supportOverhangAngle);
+                        generateAutoSupport(supportOverhangAngle);
                     }
                 }
             ],
@@ -106,7 +107,9 @@ const SupportOverlay: React.FC<SupportOverlayProps> = (props) => {
                     <CancelButton onClick={onClose} />
                 </div>
                 <div className="padding-bottom-16 padding-top-12 padding-horizontal-16">
-                    <div className={classNames(styles['overlay-sub-title-font'], 'sm-flex')}>{i18n._('key-Printing/LeftBar/Support-Auto Support')}</div>
+                    <div className={classNames(styles['overlay-sub-title-font'], 'sm-flex')}>
+                        {i18n._('key-Printing/LeftBar/Support-Auto Support')}
+                    </div>
                     <Button
                         className="margin-top-8"
                         type="primary"
@@ -165,6 +168,8 @@ const SupportOverlay: React.FC<SupportOverlayProps> = (props) => {
                     </div>
                 </div>
             </div>
+
+            {/* Confirmation to generate support */}
             {renderGenerateSupportConfirm()}
         </>
     );
