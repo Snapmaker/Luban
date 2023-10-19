@@ -3,7 +3,7 @@ import 'antd/dist/antd.css';
 import series from 'async/series';
 import i18next from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
-import XHR from 'i18next-xhr-backend';
+import i18nHttpApi from 'i18next-http-backend';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { initReactI18next } from 'react-i18next';
@@ -21,28 +21,54 @@ import './styles/vendor.styl';
 import workerManager from './lib/manager/workerManager';
 import App from './ui/App';
 
-series([
-    (next) => {
-        // Setup log level
-        log.setLevel(settings.log.level);
-        next();
-    },
-    (next) => {
-        // Setup i18next
+
+function setupLog() {
+    log.setLevel(settings.log.level);
+}
+
+async function setupI18next() {
+    return new Promise((resolve) => {
         i18next
-            .use(XHR)
+            .use(i18nHttpApi)
             .use(LanguageDetector)
             .use(initReactI18next)
             .init(settings.i18next, () => {
-                next();
+                resolve();
             });
+    });
+}
+
+function setupWorkerManager() {
+    workerManager.initPool();
+}
+
+async function setup() {
+    log.info('Bootstrap');
+
+    // Setup log level
+    setupLog();
+
+    // Setup i18n
+    await setupI18next();
+
+    // Setup worker
+    setupWorkerManager();
+
+    log.info('Bootstrap finished.');
+}
+
+series([
+    async (next) => {
+        // setup
+        await setup();
+        next();
     },
     (next) => {
         const token = machineStore.get('session.token');
         user.signin({ token: token })
             .then(({ authenticated }) => {
                 if (authenticated) {
-                    log.debug('Create and establish a WebSocket connection');
+                    log.error('Create and establish a WebSocket connection');
                     controller.connect(() => {
                         next();
                     });
@@ -51,12 +77,8 @@ series([
                 next();
             });
     },
-    (next) => {
-        workerManager.initPool();
-        next();
-    },
 ], () => {
-    log.info(`Launching App ${settings.name}@${settings.version}...`);
+    log.info(`Launching Snapmaker Luban v${settings.version}...`);
 
     // Prevent browser from loading a drag-and-dropped file
     // http://stackoverflow.com/questions/6756583/prevent-browser-from-loading-a-drag-and-dropped-file

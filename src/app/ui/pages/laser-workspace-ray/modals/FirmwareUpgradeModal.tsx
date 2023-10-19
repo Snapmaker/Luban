@@ -3,9 +3,9 @@ import { noop } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
+import controller from '../../../../communication/socket-communication';
 import SocketEvent from '../../../../communication/socket-events';
 import { RootState } from '../../../../flux/index.def';
-import controller from '../../../../communication/socket-communication';
 import downloadManager from '../../../../lib/download-mananger';
 import i18n from '../../../../lib/i18n';
 import log from '../../../../lib/log';
@@ -21,9 +21,16 @@ interface FirmwareUpgradeModalProps {
     onClose?: () => void;
 }
 
+/**
+ * Firmware Upgrade Modal.
+ *
+ * 1) Select a local firmware file;
+ * 2) Upload to the controller;
+ * 3) Start upgrading.
+ */
 const FirmwareUpgradeModal: React.FC<FirmwareUpgradeModalProps> = (props) => {
     const { onClose = noop } = props;
-    const isConnected = useSelector((state: RootState) => state.workspace.isConnected);
+    const isConnected: boolean = useSelector((state: RootState) => state.workspace.isConnected);
 
     const [firmwareVersion, setFirmwareVersion] = useState('');
 
@@ -178,7 +185,7 @@ const FirmwareUpgradeModal: React.FC<FirmwareUpgradeModalProps> = (props) => {
                     className="align-r"
                     width="96px"
                     onClick={startUpgradeProcedure}
-                    disabled={!isConnected || isUploading || isUpgrading}
+                    disabled={!isConnected || !selectedFilePath || isUploading || isUpgrading}
                 >
                     {
                         !isUploading && !isUpgrading && i18n._('Upgrade')
@@ -195,6 +202,4 @@ const FirmwareUpgradeModal: React.FC<FirmwareUpgradeModalProps> = (props) => {
     );
 };
 
-
 export default FirmwareUpgradeModal;
-

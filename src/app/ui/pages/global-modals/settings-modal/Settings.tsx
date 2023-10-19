@@ -11,6 +11,7 @@ import { withRouter } from 'react-router-dom';
 import settings from '../../../../config/settings';
 import confirm from '../../../../lib/confirm';
 import i18n from '../../../../lib/i18n';
+import api from '../../../../api';
 import Anchor from '../../../components/Anchor';
 import Download from './Download';
 import General from './General';
@@ -93,11 +94,16 @@ class Settings extends React.PureComponent {
                 });
 
                 if (lang !== i18next.language) {
+                    // frontend
                     i18next.changeLanguage(lang, () => {
                         this.props.history.push('/');
                         const uri = new Uri(window.location.search);
                         uri.replaceQueryParam('lang', lang);
                         window.location.search = uri.toString();
+                    });
+
+                    api.i18n.changeLanguage({
+                        lang
                     });
                 }
             },

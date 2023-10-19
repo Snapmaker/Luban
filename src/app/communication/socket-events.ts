@@ -92,6 +92,8 @@ enum SocketEvent {
      */
     ExportLogToExternalStorage = 'machine:export-log-to-external-storage',
     GetFirmwareVersion = 'machine:get-firmware-version',
+    GetLatestFirmwareVersion = 'machine:get-latest-firmware-version',
+    DownloadLatestFirmware = 'machine:download-latest-firmware',
     UpgradeFirmware = 'machine:upgrade-firmware',
 
     /**

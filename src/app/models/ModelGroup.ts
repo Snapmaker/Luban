@@ -2547,7 +2547,6 @@ class ModelGroup extends EventEmitter {
             const supportFaceMarks = new Array(faceCount).fill(NONE);
             // calculate faces
             const zDown = new Vector3(0, 0, -1);
-            console.log('computeSupportArea, indices =', indices);
 
             const normal = new Vector3();
             for (let faceIndex = 0; faceIndex < faceCount; faceIndex++) {

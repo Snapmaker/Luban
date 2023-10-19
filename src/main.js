@@ -1,20 +1,27 @@
-import 'core-js/stable';
-import 'regenerator-runtime/runtime';
-import { app, BrowserWindow, dialog, ipcMain, Menu, powerSaveBlocker, protocol, screen, session, shell } from 'electron';
+// babel/preset-env, useBuiltIns: "entry"
+// https://babeljs.io/docs/babel-preset-env#usebuiltins
+import 'core-js';
+// import 'core-js/stable';
+// import 'regenerator-runtime/runtime';
+
 import { enable as electronEnable, initialize as electronRemoteMainInitialize } from '@electron/remote/main';
-import { autoUpdater } from 'electron-updater';
+import { app, BrowserWindow, dialog, ipcMain, Menu, powerSaveBlocker, protocol, screen, session, shell } from 'electron';
 import Store from 'electron-store';
-import url from 'url';
+import { autoUpdater } from 'electron-updater';
 import fs from 'fs';
 import { debounce, isNull, isUndefined } from 'lodash';
-import path from 'path';
+import log from 'loglevel';
 import fetch from 'node-fetch';
+import path from 'path';
+import url from 'url';
 
-import { configureWindow } from './electron-app/window';
-import MenuBuilder, { addRecentFile, cleanAllRecentFiles } from './electron-app/Menu';
 import DataStorage from './DataStorage';
+import MenuBuilder, { addRecentFile, cleanAllRecentFiles } from './electron-app/Menu';
+import { configureWindow } from './electron-app/window';
 import pkg from './package.json';
 
+
+log.setLevel(log.levels.INFO);
 
 const config = new Store();
 const userDataDir = app.getPath('userData');
@@ -23,8 +30,6 @@ global.luban = {
 };
 let serverData = null;
 let mainWindow = null;
-// https://www.electronjs.org/docs/latest/breaking-changes#planned-breaking-api-changes-100
-// console.log('getCrashesDirectory', app.getPath('crashDumps'));
 let loadUrl = '';
 let powerId = 0;
 const loadingMenu = [{
@@ -187,14 +192,14 @@ function updateHandle() {
     });
     // Emitted when is ready to check for update
     ipcMain.on('checkForUpdate', async (event, autoUpdateProviderOptions) => {
-        console.log(`checkForUpdates, feed URL: ${autoUpdateProviderOptions.url} (${autoUpdateProviderOptions.provider})`);
+        log.info(`checkForUpdates, feed URL: ${autoUpdateProviderOptions.url} (${autoUpdateProviderOptions.provider})`);
 
         autoUpdater.setFeedURL(autoUpdateProviderOptions);
 
         try {
             await autoUpdater.checkForUpdates();
         } catch (e) {
-            console.log('Check for update failed', e);
+            log.warn('Check for update failed', e);
         }
     });
     ipcMain.on('updateShouldCheckForUpdate', (event, shouldCheckForUpdate) => {

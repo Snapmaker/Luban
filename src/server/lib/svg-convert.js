@@ -30,7 +30,6 @@ const TEMPLATE = `<?xml version="1.0" encoding="utf-8"?>
  * @returns {Promise<any>}
  */
 const convertRasterToSvg = (options) => {
-    console.log('options', options);
     const { uploadName, vectorThreshold, invert, turdSize } = options;
     // svg may get here, return the original file
     if (/\.svg$/i.test(uploadName)) {
@@ -60,8 +59,6 @@ const convertRasterToSvg = (options) => {
         blackOnWhite: !invert,
         turdSize: turdSize
     };
-
-    console.log('modelPath', modelPath);
 
     return new Promise((resolve, reject) => {
         potrace.trace(`${modelPath}`, params, async (err, svgStr) => {
@@ -156,8 +153,6 @@ const convertTextToSvg = async (options) => {
     // // fs.writeFileSync(targetPath1, svgString);
     // const result = await svgParser.parse(svgString);
     // unionShapes(result.shapes);
-
-    // console.log('svgToString(result)', svgToString(result));
 
     return new Promise((resolve, reject) => {
         const targetPath = `${process.env.Tmpdir}/${uploadName}`;

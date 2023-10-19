@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import i18next from 'i18next';
 import isElectron from 'is-electron';
-import { cloneDeep, throttle } from 'lodash';
+import { cloneDeep, includes, throttle } from 'lodash';
 import Mousetrap from 'mousetrap';
 import PropTypes from 'prop-types';
 import React from 'react';
@@ -9,8 +9,11 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import { Group } from 'three';
 
+
 import {
     FORUM_URL,
+    HEAD_CNC,
+    HEAD_LASER,
     HEAD_TYPE_ENV_NAME,
     MARKET_EN_URL,
     MARKET_ZH_URL,
@@ -32,6 +35,7 @@ import { actions as settingsActions } from '../../flux/setting';
 
 import { checkIsGCodeFile, checkIsSnapmakerProjectFile } from '../../lib/check-name';
 import { logLubanQuit } from '../../lib/gaEvent';
+import log from '../../lib/log';
 import i18n from '../../lib/i18n';
 import UniApi from '../../lib/uni-api';
 import { getCurrentHeadType } from '../../lib/url-utils';
@@ -468,6 +472,7 @@ class AppLayout extends React.PureComponent {
             );
         },
         openProject: async (file) => {
+            console.log('open project, file =', file);
             if (!file) {
                 // this.fileInput.current.value = null;
                 // this.fileInput.current.click();
@@ -481,7 +486,7 @@ class AppLayout extends React.PureComponent {
                         }
                     }
                 } catch (e) {
-                    console.log(e);
+                    log.error(e);
                 }
             }
         },
@@ -795,12 +800,15 @@ class AppLayout extends React.PureComponent {
                 await this.props.updateMachineToolHead(toolHead, series, headType);
 
                 // initialize workpiece now
-                await this.props.initializeWorkpiece(headType, {
-                    isRotate: isRotate,
-                });
+                if (includes([HEAD_LASER, HEAD_CNC], headType)) {
+                    await this.props.initializeWorkpiece(headType, {
+                        isRotate: isRotate,
+                    });
 
-                await this.props.initializeOrigin(headType);
-                await this.props.scaleCanvasToFit(headType);
+                    await this.props.initializeOrigin(headType);
+
+                    await this.props.scaleCanvasToFit(headType);
+                }
             });
             UniApi.Event.on('appbar-menu:clear-recent-files', () => {
                 this.actions.updateRecentFile([], 'reset');

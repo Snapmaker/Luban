@@ -3504,13 +3504,14 @@ export const actions = {
             logTransformOperation(HEAD_PRINTING, transformMode, axis);
         }
         const { targetTmpState } = getState().printing;
-        let operations, operation;
+        let compoundOperation: CompoundOperation;
+        let operation;
         if (combinedOperations) {
-            operations = combinedOperations;
+            compoundOperation = combinedOperations;
         } else {
-            operations = new CompoundOperation();
+            compoundOperation = new CompoundOperation();
             if (transformMode === 'rotate') {
-                dispatch(actions.clearAllManualSupport(operations));
+                dispatch(actions.clearAllManualSupport(compoundOperation));
             }
         }
 
@@ -3536,8 +3537,9 @@ export const actions = {
                 && model.isModelInGroup()
                 && Math.abs(targetTmpState[model.modelID].from.positionZ - targetTmpState[model.modelID].to.positionZ) > EPSILON
             ) {
-                dispatch(actions.clearSupportInGroup(operations, model));
+                dispatch(actions.clearSupportInGroup(compoundOperation, model));
             }
+
             switch (transformMode) {
                 case 'translate':
                     operation = new MoveOperation3D({
@@ -3565,24 +3567,26 @@ export const actions = {
                 default:
                     break;
             }
-            operations.push(operation);
+
+            if (operation) {
+                compoundOperation.push(operation);
+            }
         }
 
         if (transformMode === 'scale' && isMirror) {
-            dispatch(actions.clearAllManualSupport(operations));
+            dispatch(actions.clearAllManualSupport(compoundOperation));
         }
 
-        operations.registerCallbackAll(() => {
-            dispatch(actions.updateState(modelGroup.getState()));
-            dispatch(actions.destroyGcodeLine());
-            dispatch(actions.displayModel());
-            dispatch(actions.render());
+        compoundOperation.registerCallbackAll(() => {
+            dispatch(baseActions.updateState(modelGroup.getState()));
+            dispatch(sceneActions.discardPreview({ render: true }));
         });
         recovery();
+
         dispatch(
             operationHistoryActions.setOperations(
                 INITIAL_STATE.name,
-                operations
+                compoundOperation
             )
         );
     },
@@ -4099,7 +4103,7 @@ export const actions = {
             dispatch(actions.gcodeRenderingCallback(data, extruderColors));
         });
     },
-    clearAllManualSupport: combinedOperations => (dispatch, getState) => {
+    clearAllManualSupport: (combinedOperations = null) => (dispatch, getState) => {
         dispatch(actions.exitPreview());
 
         const { modelGroup } = getState().printing;

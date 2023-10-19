@@ -685,7 +685,7 @@ class SacpChannelBase extends Channel implements
 
             const sliceTime = new Date().getTime() - this.startTime;
 
-            const remainingTime = (1 - (progress)) * progress * (this.estimatedTime * 1000) / progress + (1 - progress) * (1 - progress) * sliceTime;
+            const remainingTime = (1 - progress) * (1 - progress) * (this.estimatedTime * 1000) + (1 - progress) * sliceTime;
 
             const data = {
                 filename: this.filename,
@@ -1030,7 +1030,8 @@ class SacpChannelBase extends Channel implements
             const { currentLine } = new GcodeCurrentLine().fromBuffer(response.data);
             const progress = Math.round((currentLine / this.totalLine) * 100) / 100;
             const sliceTime = new Date().getTime() - this.startTime;
-            const remainingTime = (1 - (progress)) * progress * (this.estimatedTime * 1000) / progress + (1 - progress) * (1 - progress) * sliceTime;
+            const remainingTime = (1 - progress) * (1 - progress) * (this.estimatedTime * 1000) + (1 - progress) * sliceTime;
+
             const data = {
                 sent: currentLine,
                 total: this.totalLine,
