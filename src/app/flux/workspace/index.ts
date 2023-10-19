@@ -580,7 +580,6 @@ export const actions = {
                 }
             },
             [SocketEvent.ErrorReport]: (options) => {
-                log.warn('Receive error report...');
                 const { owner, errorCode } = options;
                 if (includes(EMERGENCY_STOP_BUTTON, owner)) {
                     if (errorCode === 1) {

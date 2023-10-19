@@ -39,6 +39,7 @@ import MachineLogModal from './modals/MachineLogModal';
 import MachineNetworkModal from './modals/MachineNetworkModal';
 import MachineSettingsModal from './modals/MachineSettingsModal';
 import MachineControlModal from './modals/MachineControlModal';
+import MachineMonitor from './MachineMonitor';
 
 
 const allWidgets = {
@@ -357,6 +358,9 @@ const RayLaserWorkspace: React.FC<RayLaserWorkspaceProps> = ({ isPopup, onClose,
                 <VisualizerOverlay />
 
                 {renderModalView(connected)}
+
+                {/* Machine Monitor */}
+                <MachineMonitor />
 
                 {/* Machine Settings */}
                 {
