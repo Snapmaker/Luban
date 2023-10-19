@@ -201,7 +201,7 @@ const FirmwareNetworkUpgradeModal: React.FC<FirmwareNetworkUpgradeModalProps> = 
                                                 <ul>
                                                     {
                                                         latestFirmwareChangeLog.features.map(desc => (
-                                                            <li>{desc}</li>
+                                                            <li key={desc}>{desc}</li>
                                                         ))
                                                     }
                                                 </ul>
@@ -215,7 +215,7 @@ const FirmwareNetworkUpgradeModal: React.FC<FirmwareNetworkUpgradeModalProps> = 
                                                 <ul>
                                                     {
                                                         latestFirmwareChangeLog.improvements.map(desc => (
-                                                            <li>{desc}</li>
+                                                            <li key={desc}>{desc}</li>
                                                         ))
                                                     }
                                                 </ul>
@@ -229,7 +229,7 @@ const FirmwareNetworkUpgradeModal: React.FC<FirmwareNetworkUpgradeModalProps> = 
                                                 <ul>
                                                     {
                                                         latestFirmwareChangeLog.bugs.map(desc => (
-                                                            <li>{desc}</li>
+                                                            <li key={desc}>{desc}</li>
                                                         ))
                                                     }
                                                 </ul>

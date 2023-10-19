@@ -90,6 +90,7 @@ enum SocketEvent {
     /**
      * Machine System
      */
+    ErrorReport = 'machine:error-report',
     ExportLogToExternalStorage = 'machine:export-log-to-external-storage',
     GetFirmwareVersion = 'machine:get-firmware-version',
     GetLatestFirmwareVersion = 'machine:get-latest-firmware-version',

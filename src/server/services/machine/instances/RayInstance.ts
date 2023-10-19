@@ -73,8 +73,8 @@ class RayMachineInstance extends MachineInstance {
         // Start heartbeat
         await this.channel.startHeartbeat();
 
-        // subscribe to machine errors
-        // 0x04, 0x00
+        // register handlers
+        (this.channel as SacpChannelBase).registerErrorReportHandler();
 
         // Subscribe job progress
         await (this.channel as PrintJobChannelInterface).subscribeGetPrintCurrentLineNumber();
@@ -105,6 +105,8 @@ class RayMachineInstance extends MachineInstance {
         // await this.channel.stopHeartbeat();
         // Remove await temporarily, it blocks other unsubscribes
         await this.channel.stopHeartbeat();
+
+        (this.channel as SacpChannelBase).unregisterErrorReportHandler();
 
         await (this.channel as PrintJobChannelInterface).unsubscribeGetPrintCurrentLineNumber();
 
