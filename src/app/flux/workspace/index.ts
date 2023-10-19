@@ -579,12 +579,10 @@ export const actions = {
                     }));
                 }
             },
-            'manager:error': (options) => {
-                log.warn('REFACTOR manager:error');
+            [SocketEvent.ErrorReport]: (options) => {
                 const { owner, errorCode } = options;
                 if (includes(EMERGENCY_STOP_BUTTON, owner)) {
                     if (errorCode === 1) {
-                        // TODO
                         controller.emitEvent(SocketEvent.ConnectionClose, () => {
                             dispatch(connectActions.resetMachineState());
                             dispatch(actions.updateMachineState({

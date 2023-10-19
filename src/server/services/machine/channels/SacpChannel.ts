@@ -67,6 +67,7 @@ import Channel, {
     UpgradeFirmwareOptions,
     UploadFileOptions
 } from './Channel';
+import { ChannelEvent } from './ChannelEvent';
 
 const log = logger('machine:channels:SacpChannel');
 
@@ -776,13 +777,6 @@ class SacpChannelBase extends Channel implements
             this.socket && this.socket.emit('move:status', { isHoming: false });
         });
 
-        this.sacpClient.setHandler(0x04, 0x00, ({ param }) => {
-            const level = readUint8(param, 0);
-            const owner = readUint16(param, 1);
-            const error = readUint8(param, 3);
-            this.socket && this.socket.emit('manager:error', { level, owner, errorCode: error });
-        });
-
         this.subscribeHeartCallback = async (data) => {
             // In case receiving heartbeat during shutting down process
             if (this.shuttingDown) {
@@ -1144,6 +1138,31 @@ class SacpChannelBase extends Channel implements
             this.resumeGcodeCallback && this.resumeGcodeCallback({ msg: data, code: data });
         });
     };
+
+    /**
+     * Register error report handler.
+     */
+    public registerErrorReportHandler(): void {
+        if (!this.socket) {
+            return;
+        }
+
+        // Set error report handler
+        this.sacpClient.setHandler(0x04, 0x00, ({ param }) => {
+            const level = readUint8(param, 0);
+            const owner = readUint16(param, 1);
+            const errorCode = readUint8(param, 3);
+
+            this.emit(ChannelEvent.ErrorReport, { level, owner, errorCode });
+        });
+    }
+
+    /**
+     * Unregister error report handler.
+     */
+    public unregisterErrorReportHandler(): void {
+        this.sacpClient.unsetHandler(0x04, 0x00);
+    }
 
     public getCoordinateInfo = async () => {
         return this.sacpClient.getCurrentCoordinateInfo();

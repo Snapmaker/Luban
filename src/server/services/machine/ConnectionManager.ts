@@ -241,6 +241,18 @@ class ConnectionManager {
         }
     };
 
+    private onChannelErrorReport = async (data: { level: number; owner: number; errorCode: number }) => {
+        const { level, owner, errorCode } = data;
+
+        if (this.socket) {
+            this.socket.emit(SocketEvent.ErrorReport, {
+                level,
+                owner,
+                errorCode,
+            });
+        }
+    }
+
     private bindChannelEvents(): void {
         if (!this.channel) {
             return;
@@ -249,6 +261,7 @@ class ConnectionManager {
         this.channel.on(ChannelEvent.Connecting, this.onChannelConnecting);
         this.channel.on(ChannelEvent.Connected, this.onChannelConnected);
         this.channel.on(ChannelEvent.Ready, this.onChannelReady);
+        this.channel.on(ChannelEvent.ErrorReport, this.onChannelErrorReport);
     }
 
     private unbindChannelEvents(): void {
@@ -259,6 +272,7 @@ class ConnectionManager {
         this.channel.off(ChannelEvent.Connecting, this.onChannelConnecting);
         this.channel.off(ChannelEvent.Connected, this.onChannelConnected);
         this.channel.off(ChannelEvent.Ready, this.onChannelReady);
+        this.channel.off(ChannelEvent.ErrorReport, this.onChannelErrorReport);
     }
 
     /**

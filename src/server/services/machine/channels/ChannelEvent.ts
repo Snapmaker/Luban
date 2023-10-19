@@ -18,6 +18,8 @@ export enum ChannelEvent {
     // channel disconnected
     Disconnected = 'disconnected',
 
+    // error report from machine
+    ErrorReport = 'error-report',
 
     // Upload file
     UploadFileProgress = 'upload-progress',

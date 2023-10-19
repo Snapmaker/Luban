@@ -624,6 +624,8 @@ export default class SacpClient extends Dispatcher {
     /**
      * Get Network station state.
      *
+     * 0x01 0x26
+     *
      * Available only when network mode is NetworkMode.Station (networkConfiguration.networkMode).
      *
      * 1) network state
@@ -681,6 +683,18 @@ export default class SacpClient extends Dispatcher {
         return this.send(0x01, 0x34, PeerId.CONTROLLER, paramBuffer, true).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
+    }
+
+    /**
+     * Get error reports.
+     *
+     * 0x04 0x02
+     */
+    public async getErrorReports() {
+        return this.send(0x04, 0x02, PeerId.CONTROLLER, Buffer.alloc(0), true)
+            .then(({ response, packet }) => {
+                return { response, packet, data: {} };
+            });
     }
 
     public async startPrint(md5: string, gcodeName: string, headType: number) {

@@ -72,7 +72,7 @@ class ArtisanMachineInstance extends MachineInstance {
         state.moduleStatusList = moduleListStatus;
 
         // Get Coordinate Info
-        const { data: coordinateInfos } = await this.channel.getCoordinateInfo();
+        const { data: coordinateInfos } = await (this.channel as SacpChannelBase).getCoordinateInfo();
         const isHomed = !(coordinateInfos?.coordinateSystemInfo?.homed); // 0: homed, 1: need to home
         state.isHomed = isHomed;
         state.isMoving = false;
@@ -85,6 +85,8 @@ class ArtisanMachineInstance extends MachineInstance {
         // Legacy
         const sacpClient = (this.channel as SacpChannelBase).sacpClient;
         await (this.channel as SacpChannelBase).startHeartbeatLegacy(sacpClient, undefined);
+
+        (this.channel as SacpChannelBase).registerErrorReportHandler();
 
         (this.channel as SacpChannelBase).setROTSubscribeApi();
     }
@@ -107,6 +109,8 @@ class ArtisanMachineInstance extends MachineInstance {
 
         log.info('Stop heartbeat.');
         await this.channel.stopHeartbeat();
+
+        (this.channel as SacpChannelBase).unregisterErrorReportHandler();
     }
 }
 
