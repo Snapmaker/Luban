@@ -1143,7 +1143,12 @@ const finalizeSceneSettings = (
             });
         } else {
             extruderDefinition.settings.machine_extruder_start_pos_abs.default_value = false;
+            extruderDefinition.settings.machine_extruder_start_pos_x.default_value = 0;
+            extruderDefinition.settings.machine_extruder_start_pos_y.default_value = 0;
+
             extruderDefinition.settings.machine_extruder_end_pos_abs.default_value = false;
+            extruderDefinition.settings.machine_extruder_end_pos_x.default_value = 0;
+            extruderDefinition.settings.machine_extruder_end_pos_y.default_value = 0;
         }
     }
 };
