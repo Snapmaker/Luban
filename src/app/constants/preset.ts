@@ -208,6 +208,11 @@ export function getLaserPresetGroups(machine: Machine | null, toolHeadIdentifier
         });
     }
 
+    presetGroups.push({
+        name: 'key-Laser/ToolpathParameters-Optimization',
+        fields: ['dot_with_compensation', 'scanning_pre_accel_ratio']
+    });
+
     // Remove auxiliary gas group if not using 20W module or 40W module
     if (includes([L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], toolHeadIdentifier)) {
         presetGroups.push({

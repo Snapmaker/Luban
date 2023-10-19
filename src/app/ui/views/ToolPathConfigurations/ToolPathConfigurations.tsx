@@ -114,6 +114,8 @@ const ToolPathConfigurations: React.FC<ToolPathConfigurationsProps> = ({ toolpat
                 if (newSettings.auxiliary_air_pump) newSettings.auxiliary_air_pump.default_value = gcodeConfig?.auxiliaryAirPump;
                 if (newSettings.half_diode_mode) newSettings.half_diode_mode.default_value = gcodeConfig?.halfDiodeMode;
                 if (newSettings.constant_power_mode) newSettings.constant_power_mode.default_value = gcodeConfig?.constantPowerMode;
+                if (newSettings.dot_with_compensation) newSettings.dot_with_compensation.default_value = gcodeConfig?.dotWithCompensation;
+                if (newSettings.scanning_pre_accel_ratio) newSettings.scanning_pre_accel_ratio.default_value = gcodeConfig?.scanningPreAccelRatio;
             }
         }
 
