@@ -1009,18 +1009,21 @@ class SacpChannelBase extends Channel implements
         // TODO: Note this is only for Artisan + J1, not for RayInstance, refactor this
         this.subscribeGetCurrentGcodeLineCallback = async ({ response }) => {
             if (!this.totalLine || !this.estimatedTime) {
-                console.log('Get print file info...');
-                this.sacpClient.getPrintingFileInfo().then((result) => {
-                    console.log('Get print file info, result =', result);
-                    const { totalLine, estimatedTime } = result.data;
-                    if (totalLine) {
-                        this.totalLine = totalLine;
-                    }
-                    if (estimatedTime) {
-                        this.estimatedTime = estimatedTime;
-                    }
-                });
+                if (includes([WorkflowStatus.Running], this.machineStatus)) {
+                    log.info('Get print file info...');
+                    this.sacpClient.getPrintingFileInfo().then((result) => {
+                        log.debug('Get print file info, result =', result);
+                        const { totalLine, estimatedTime } = result.data;
+                        if (totalLine) {
+                            this.totalLine = totalLine;
+                        }
+                        if (estimatedTime) {
+                            this.estimatedTime = estimatedTime;
+                        }
+                    });
+                }
             }
+
             const { currentLine } = new GcodeCurrentLine().fromBuffer(response.data);
             const progress = Math.round((currentLine / this.totalLine) * 100) / 100;
             const sliceTime = new Date().getTime() - this.startTime;
