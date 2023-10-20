@@ -3,7 +3,7 @@ import { Box3 } from 'three';
 /**
  * G-code metadata.
  */
-export type GCodeFileObject = {
+export type GCodeFileMetadata = {
     // file
     name: string;
     uploadName: string;

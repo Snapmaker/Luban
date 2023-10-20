@@ -41,7 +41,7 @@ import { MachineAgent } from './MachineAgent';
 import baseActions, { ACTION_UPDATE_STATE } from './actions-base';
 import connectActions from './actions-connect';
 import discoverActions from './actions-discover';
-import { GCodeFileObject } from './types';
+import { GCodeFileMetadata } from './types';
 import type { MachineStateUpdateOptions } from './state';
 import { ConnectionType, WORKSPACE_STAGE, initialState } from './state';
 
@@ -776,7 +776,7 @@ export const actions = {
             .then((res) => {
                 const response = res.body;
                 const header = response.gcodeHeader;
-                const gcodeFile: GCodeFileObject = {
+                const gcodeFile: GCodeFileMetadata = {
                     name: file.name,
                     uploadName: response.uploadName,
                     size: file.size,
@@ -916,14 +916,13 @@ export const actions = {
     },
 
     renderGcodeFile: (
-        gcodeFile: GCodeFileObject,
+        gcodeFile: GCodeFileMetadata,
         needToList = true,
         shouldRenderGcode = false
     ) => async (dispatch, getState) => {
         const { shouldAutoPreviewGcode } = getState().machine;
         const { headType, isRotate } = getState().workspace;
 
-        // const oldGcodeFile = getState().workspace.gcodeFile;
         if (needToList) {
             dispatch(actions.addGcodeFiles(gcodeFile));
         }

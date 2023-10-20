@@ -9,7 +9,7 @@ import SocketEvent from '../../../communication/socket-events';
 import { JobOffsetMode } from '../../../constants/coordinate';
 import { RootState } from '../../../flux/index.def';
 import gcodeActions from '../../../flux/workspace/actions-gcode';
-import { GCodeFileObject } from '../../../flux/workspace/types';
+import { GCodeFileMetadata } from '../../../flux/workspace/types';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import { Button } from '../../components/Buttons';
@@ -110,7 +110,7 @@ const UploadView: React.FC = () => {
         const blob = new Blob([gcode], { type: 'text/plain' });
         const file = new File([blob], 'boundary.nc');
 
-        const gcodeFileObject: GCodeFileObject = await dispatch(gcodeActions.uploadGcodeFile(file));
+        const gcodeFileObject: GCodeFileMetadata = await dispatch(gcodeActions.uploadGcodeFile(file));
 
         return new Promise<boolean>((resolve) => {
             controller

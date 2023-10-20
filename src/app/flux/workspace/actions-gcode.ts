@@ -1,7 +1,7 @@
 import { Box3, Vector3 } from 'three';
 
 import api from '../../api';
-import { GCodeFileObject } from './types';
+import { GCodeFileMetadata } from './types';
 
 /**
  * Upload G-code File.
@@ -25,7 +25,7 @@ const uploadGcodeFile = (file: File) => {
         const response = res.body;
         const header = response.gcodeHeader;
 
-        const gcodeFile: GCodeFileObject = {
+        const gcodeFile: GCodeFileMetadata = {
             name: file.name,
             uploadName: response.uploadName,
             size: file.size,
