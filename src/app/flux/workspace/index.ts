@@ -995,13 +995,13 @@ export const actions = {
 
     addGcodeFiles: (fileInfo) => (dispatch, getState) => {
         const { gcodeFiles } = getState().workspace;
+
         const files = [];
         fileInfo.isRenaming = false;
         fileInfo.newName = fileInfo.name;
         files.push(fileInfo);
 
-        let added = 1,
-            i = 0;
+        let added = 1, i = 0;
         while (added < 5 && i < gcodeFiles.length) {
             const gcodeFile = gcodeFiles[i];
             // G-code file with the same uploadName will be replaced with current one
