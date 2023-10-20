@@ -1,11 +1,12 @@
-import React, { useCallback, useRef } from 'react';
 import classNames from 'classnames';
+import React, { useCallback, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 
-import { Button } from '../../components/Buttons';
-import i18n from '../../../lib/i18n';
-import gcodeActions, { GCodeFileObject } from '../../../flux/workspace/actions-gcode';
 import { actions as workspaceActions } from '../../../flux/workspace';
+import gcodeActions from '../../../flux/workspace/actions-gcode';
+import { GCodeFileObject } from '../../../flux/workspace/types';
+import i18n from '../../../lib/i18n';
+import { Button } from '../../components/Buttons';
 
 
 const VisualizerOverlay: React.FC = () => {

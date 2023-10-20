@@ -1,20 +1,21 @@
 import classNames from 'classnames';
+import { includes } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { includes } from 'lodash';
 
 import { WorkflowStatus } from '@snapmaker/luban-platform';
-import { JobOffsetMode } from '../../../constants/coordinate';
-import SocketEvent from '../../../communication/socket-events';
-import { RootState } from '../../../flux/index.def';
 import controller from '../../../communication/socket-communication';
+import SocketEvent from '../../../communication/socket-events';
+import { JobOffsetMode } from '../../../constants/coordinate';
+import { RootState } from '../../../flux/index.def';
+import gcodeActions from '../../../flux/workspace/actions-gcode';
+import { GCodeFileObject } from '../../../flux/workspace/types';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import { Button } from '../../components/Buttons';
 import modalSmallHOC, { ModalSmallHOC } from '../../components/Modal/modal-small';
-import gcodeActions, { GCodeFileObject } from '../../../flux/workspace/actions-gcode';
-import styles from './styles.styl';
 import { getRunBoundayCode } from '../RaySetOriginWidget/SetOriginView';
+import styles from './styles.styl';
 
 export type LoadGcodeOptions = {
     renderImmediately?: boolean;

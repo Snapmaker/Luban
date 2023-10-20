@@ -584,9 +584,6 @@ class ConnectionManager {
 
             if (headType === HEAD_LASER) {
                 if (includes([NetworkProtocol.SacpOverTCP], this.protocol)) {
-                    // Snapmaker Artisan (SACP)
-                    // this.socket.uploadGcodeFile(gcodeFilePath, headType, renderName, () => {
-                    // });
                     if (laserFocalLength && toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2
                         && !isRotate && isLaserPrintAutoMode && materialThickness !== 0 && materialThicknessSource === AUTO_STRING) {
                         await this.channel.laseAutoSetMaterialHeight({ toolHead });

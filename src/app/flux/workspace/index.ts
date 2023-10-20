@@ -41,7 +41,7 @@ import { MachineAgent } from './MachineAgent';
 import baseActions, { ACTION_UPDATE_STATE } from './actions-base';
 import connectActions from './actions-connect';
 import discoverActions from './actions-discover';
-import { GCodeFileObject } from './actions-gcode';
+import { GCodeFileObject } from './types';
 import type { MachineStateUpdateOptions } from './state';
 import { ConnectionType, WORKSPACE_STAGE, initialState } from './state';
 
