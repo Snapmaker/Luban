@@ -59,13 +59,14 @@ import Channel, {
     AirPurifierChannelInterface,
     CncChannelInterface,
     EnclosureChannelInterface,
+    ExecuteGcodeResult,
     FileChannelInterface,
     LaserChannelInterface,
     NetworkServiceChannelInterface,
     PrintJobChannelInterface,
     SystemChannelInterface,
     UpgradeFirmwareOptions,
-    UploadFileOptions
+    UploadFileOptions,
 } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 
@@ -201,7 +202,7 @@ class SacpChannelBase extends Channel implements
     /**
      * Generic execute G-code commands.
      */
-    public async executeGcode(gcode: string): Promise<boolean> {
+    public async executeGcode(gcode: string): Promise<ExecuteGcodeResult> {
         const gcodeLines = gcode.split('\n');
 
         const promises = [];
@@ -214,11 +215,16 @@ class SacpChannelBase extends Channel implements
         // if any gcode line fails, then fails
         for (const res of results) {
             if (res.response.result !== 0) {
-                return false;
+                return {
+                    result: -1,
+                };
             }
         }
 
-        return true;
+        return {
+            result: 0,
+            text: 'ok',
+        };
     }
 
     /**

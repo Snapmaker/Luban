@@ -17,7 +17,7 @@ import {
 import logger from '../../../lib/logger';
 import workerManager from '../../task-manager/workerManager';
 import { ConnectionType, EventOptions } from '../types';
-import Channel, { CncChannelInterface, FileChannelInterface, UploadFileOptions } from './Channel';
+import Channel, { CncChannelInterface, ExecuteGcodeResult, FileChannelInterface, UploadFileOptions } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 
 let waitConfirm: boolean;
@@ -103,9 +103,14 @@ export type GcodeResult = {
     code?: number;
 };
 
+
+interface GCodeQueueItemResponse {
+    result: number;
+    text: string;
+}
 interface GCodeQueueItem {
     gcodes: string[];
-    callback: () => void;
+    callback: (res: GCodeQueueItemResponse) => void;
 }
 
 /**
@@ -365,8 +370,12 @@ class SstpHttpChannel extends Channel implements
                 .send(`code=${gcode}`)
                 // .send(formData)
                 .end((err, res) => {
-                    const { data, text } = _getResult(err, res);
-                    resolve({ data, text });
+                    const { code, data, text } = _getResult(err, res);
+                    if (err) {
+                        resolve({ code });
+                    } else {
+                        resolve({ data, text });
+                    }
                 });
         });
     };
@@ -380,15 +389,18 @@ class SstpHttpChannel extends Channel implements
         // drain G-code queue
         while (this.gcodeQueue.length > 0) {
             const splice = this.gcodeQueue.splice(0, 1)[0];
-            const result = [];
+            const results = [];
             for (const code of splice.gcodes) {
                 const { text } = await this._executeGcode(code) as GcodeResult;
                 if (text) {
-                    result.push(text);
+                    results.push(text);
                 }
             }
 
-            splice.callback && splice.callback();
+            splice.callback && splice.callback({
+                result: 0,
+                text: results.join('\n'),
+            });
         }
 
         this.isGcodeExecuting = false;
@@ -397,14 +409,23 @@ class SstpHttpChannel extends Channel implements
     /**
      * Generic execute G-code commands.
      */
-    public async executeGcode(gcode: string): Promise<boolean> {
+    public async executeGcode(gcode: string): Promise<ExecuteGcodeResult> {
         return new Promise((resolve) => {
             // enqueue G-code execution
             const split = gcode.split('\n');
             this.gcodeQueue.push({
                 gcodes: split,
-                callback: () => {
-                    resolve(true);
+                callback: ({ result, text }) => {
+                    if (result === 0) {
+                        resolve({
+                            result: 0,
+                            text,
+                        });
+                    } else {
+                        resolve({
+                            result: -1,
+                        });
+                    }
                 }
             });
 
