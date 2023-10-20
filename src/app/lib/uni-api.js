@@ -75,9 +75,10 @@ function getAutoUpdateProviderOptions() {
 
     // Use Github as default auto update server
     return {
-        provider: 'generic',
-        repo: 'https://github.com/Snapmaker/Luban',
-        url: 'https://github.com/Snapmaker/Luban/releases/latest/download',
+        provider: 'github',
+        owner: 'Snapmaker',
+        repo: 'Luban',
+        // url: 'https://github.com/Snapmaker/Luban/releases/latest/download',
     };
 }
 

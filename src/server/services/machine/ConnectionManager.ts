@@ -410,11 +410,11 @@ class ConnectionManager {
         const { gcode } = options;
         log.info(`executeGcode: ${gcode}`);
 
-        const success = await this.channel.executeGcode(gcode);
-        if (success) {
-            socket.emit('connection:executeGcode', { msg: '', res: null });
+        const { result, text } = await this.channel.executeGcode(gcode);
+        if (result === 0) {
+            socket.emit('connection:executeGcode', { err: null, gcode, reply: text });
         } else {
-            socket.emit('connection:executeGcode', { msg: 'Execute G-cod failed', res: null });
+            socket.emit('connection:executeGcode', { err: -1, gcode });
         }
     };
 

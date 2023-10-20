@@ -3,18 +3,18 @@ import color from 'cli-color';
 import { includes } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { useEffect, useRef, useState } from 'react';
-// import classNames from 'classnames';
 import pubsub from 'pubsub-js';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { useHistory, withRouter } from 'react-router-dom';
 
+import { controller } from '../../../communication/socket-communication';
+import SocketEvent from '../../../communication/socket-events';
 import settings from '../../../config/settings';
 import {
     ABSENT_OBJECT,
     CONNECTION_TYPE_SERIAL,
 } from '../../../constants';
 import { actions as workspaceActions } from '../../../flux/workspace';
-import { controller } from '../../../communication/socket-communication';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
 import Terminal from './Terminal';
@@ -69,9 +69,12 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
             const terminal = terminalRef.current;
             terminal && terminal.writeln(data);
         },
-        'connection:executeGcode': (gcodeArray) => {
-            if (gcodeArray) {
-                dispatch(workspaceActions.addConsoleLogs(gcodeArray));
+        [SocketEvent.ExecuteGCode]: ({ err, reply }) => {
+            if (!err) {
+                if (reply) {
+                    const newLogs = [reply];
+                    dispatch(workspaceActions.addConsoleLogs(newLogs));
+                }
             }
         }
     };
