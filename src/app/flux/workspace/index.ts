@@ -41,6 +41,7 @@ import { MachineAgent } from './MachineAgent';
 import baseActions, { ACTION_UPDATE_STATE } from './actions-base';
 import connectActions from './actions-connect';
 import discoverActions from './actions-discover';
+import gcodeActions from './actions-gcode';
 import { GCodeFileMetadata } from './types';
 import type { MachineStateUpdateOptions } from './state';
 import { ConnectionType, WORKSPACE_STAGE, initialState } from './state';
@@ -711,7 +712,7 @@ export const actions = {
                     }
                 }
 
-                dispatch(actions.render());
+                dispatch(gcodeActions.render());
                 break;
             }
             case 'progress': {
@@ -749,14 +750,6 @@ export const actions = {
             type: ACTION_SET_STATE,
             state,
         };
-    },
-
-    render: () => (dispatch) => {
-        dispatch(
-            actions.updateState({
-                renderingTimestamp: +new Date(),
-            })
-        );
     },
 
     /**
@@ -808,7 +801,7 @@ export const actions = {
                     jog_speed: header[';jog_speed(mm/minute)'],
                     power: header[';power(%)'],
                 };
-                dispatch(actions.addGcodeFiles(gcodeFile));
+                dispatch(gcodeActions.addGCodeFile(gcodeFile));
                 shouldAutoPreviewGcode
                     && dispatch(actions.renderPreviewGcodeFile(gcodeFile));
             })
@@ -869,7 +862,7 @@ export const actions = {
                 progress: 0,
             })
         );
-        dispatch(actions.render());
+        dispatch(gcodeActions.render());
     },
 
     // updateGcodeFilename: (name, x = 0, y = 0, z = 0) => (dispatch, getState) => {
@@ -924,7 +917,7 @@ export const actions = {
         const { headType, isRotate } = getState().workspace;
 
         if (needToList) {
-            dispatch(actions.addGcodeFiles(gcodeFile));
+            dispatch(gcodeActions.addGCodeFile(gcodeFile));
         }
         // if (oldGcodeFile !== null && oldGcodeFile.uploadName === gcodeFile.uploadName) {
         //     return;
@@ -990,44 +983,6 @@ export const actions = {
                 dispatch(actions.gcodeToArraybufferGeometryCallback(data));
             }
         );
-    },
-
-    addGcodeFiles: (fileInfo) => (dispatch, getState) => {
-        const { gcodeFiles } = getState().workspace;
-
-        const files = [];
-        fileInfo.isRenaming = false;
-        fileInfo.newName = fileInfo.name;
-        files.push(fileInfo);
-
-        let added = 1, i = 0;
-        while (added < 5 && i < gcodeFiles.length) {
-            const gcodeFile = gcodeFiles[i];
-            // G-code file with the same uploadName will be replaced with current one
-            if (gcodeFile.uploadName !== fileInfo.uploadName) {
-                files.push(gcodeFile);
-                added++;
-            }
-            i++;
-        }
-
-        dispatch(
-            actions.updateState({
-                gcodeFiles: files,
-            })
-        );
-
-        if (fileInfo.boundingBox) {
-            dispatch(
-                actions.updateState({
-                    boundingBox: new Box3(
-                        new Vector3().fromArray(fileInfo.boundingBox.min),
-                        new Vector3().fromArray(fileInfo.boundingBox.max),
-                    ),
-                    gcodeFiles: files,
-                })
-            );
-        }
     },
 
     renameGcodeFile: (uploadName, newName = null, isRenaming = null) => (

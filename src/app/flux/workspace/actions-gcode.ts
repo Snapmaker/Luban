@@ -2,6 +2,7 @@ import { Box3, Vector3 } from 'three';
 
 import api from '../../api';
 import { GCodeFileMetadata } from './types';
+import baseActions from './actions-base';
 
 /**
  * Upload G-code File.
@@ -63,6 +64,62 @@ const uploadGcodeFile = (file: File) => {
     };
 };
 
+/**
+ * 1. Add G-code info to G-code list.
+ * 2. Update state (boundingBox)
+ */
+const addGCodeFile = (fileInfo: GCodeFileMetadata) => (dispatch, getState) => {
+    const { gcodeFiles } = getState().workspace;
+
+    const files = [];
+    fileInfo.isRenaming = false;
+    fileInfo.newName = fileInfo.name;
+    files.push(fileInfo);
+
+    let added = 1, i = 0;
+    while (added < 5 && i < gcodeFiles.length) {
+        const gcodeFile = gcodeFiles[i];
+        // G-code file with the same uploadName will be replaced with current one
+        if (gcodeFile.uploadName !== fileInfo.uploadName) {
+            files.push(gcodeFile);
+            added++;
+        }
+        i++;
+    }
+
+    dispatch(
+        baseActions.updateState({
+            gcodeFiles: files,
+        })
+    );
+
+    // TODO: Remove this?
+    if (fileInfo.boundingBox) {
+        dispatch(
+            baseActions.updateState({
+                boundingBox: new Box3(
+                    new Vector3().copy(fileInfo.boundingBox.min),
+                    new Vector3().copy(fileInfo.boundingBox.max),
+                ),
+            })
+        );
+    }
+};
+
+const render = () => {
+    return (dispatch) => {
+        dispatch(
+            baseActions.updateState({
+                renderingTimestamp: +new Date(),
+            })
+        );
+    };
+};
+
 export default {
     uploadGcodeFile,
+    addGCodeFile,
+
+    // G-code render
+    render,
 };
