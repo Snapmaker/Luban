@@ -124,8 +124,6 @@ const INITIAL_STATE = {
     hasModel: false,
     isAnyModelOverstepped: false,
 
-    // boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()), // bbox of selected model
-
     // stl visualizer state
     stlVisualizer: { show: false },
 

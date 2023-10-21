@@ -9,7 +9,8 @@ import SocketEvent from '../../../communication/socket-events';
 import { JobOffsetMode } from '../../../constants/coordinate';
 import { RootState } from '../../../flux/index.def';
 import { actions as workspaceActions } from '../../../flux/workspace';
-import gcodeActions, { GCodeFileObject } from '../../../flux/workspace/actions-gcode';
+import gcodeActions from '../../../flux/workspace/actions-gcode';
+import { GCodeFileMetadata } from '../../../flux/workspace/types';
 import controller from '../../../communication/socket-communication';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
@@ -135,7 +136,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
         const blob = new Blob([gcode], { type: 'text/plain' });
         const file = new File([blob], 'boundary.nc');
 
-        const gcodeFileObject: GCodeFileObject = await dispatch(gcodeActions.uploadGcodeFile(file));
+        const gcodeFileObject: GCodeFileMetadata = await dispatch(gcodeActions.uploadGcodeFile(file));
 
         setRunBoundaryUploading(true);
         controller

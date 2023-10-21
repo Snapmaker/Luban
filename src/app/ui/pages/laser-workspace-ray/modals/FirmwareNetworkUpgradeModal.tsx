@@ -66,7 +66,7 @@ const FirmwareNetworkUpgradeModal: React.FC<FirmwareNetworkUpgradeModalProps> = 
         const v1 = v1Match[1];
         const v2 = v2Match[1];
 
-        return semver.lte(v1, v2);
+        return semver.lt(v1, v2);
     }, [firmwareVersion, latestFirmwareVersion]);
 
     const [isDownloading, setIsDownloading] = useState(false);
