@@ -150,6 +150,7 @@ class GcodeParameters extends PureComponent {
         if (pathType === 'fill' && movementMode === 'greyscale-line') {
             laserDefinitionOptimizationKeys.push('dotWithCompensation');
             laserDefinitionOptimizationKeys.push('scanningPreAccelRatio');
+            laserDefinitionOptimizationKeys.push('scanningOffset');
         }
         const laserDefinitionOptimization = {};
         laserDefinitionOptimizationKeys.forEach((key) => {

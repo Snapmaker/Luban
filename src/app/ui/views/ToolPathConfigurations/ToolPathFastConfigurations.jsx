@@ -189,6 +189,7 @@ function ToolPathFastConfigurations({ setEditingToolpath, headType, toolpath }) 
                 if (newSettings.constant_power_mode) newSettings.constant_power_mode.default_value = gcodeConfig?.constantPowerMode;
                 if (newSettings.dot_with_compensation) newSettings.dot_with_compensation.default_value = gcodeConfig?.dotWithCompensation;
                 if (newSettings.scanning_pre_accel_ratio) newSettings.scanning_pre_accel_ratio.default_value = gcodeConfig?.scanningPreAccelRatio;
+                if (newSettings.scanning_offset) newSettings.scanning_offset.default_value = gcodeConfig?.scanningOffset;
             }
         }
         if (currentToolDefinition?.definitionId !== activeToolDefinition?.definitionId) {
