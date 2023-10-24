@@ -145,6 +145,20 @@ class GcodeParameters extends PureComponent {
             laserDefinitionPowerKeys.push('halfDiodeMode');
         }
 
+        // Optimization
+        const laserDefinitionOptimizationKeys = [];
+        if (pathType === 'fill' && movementMode === 'greyscale-line') {
+            laserDefinitionOptimizationKeys.push('dotWithCompensation');
+            laserDefinitionOptimizationKeys.push('scanningPreAccelRatio');
+            laserDefinitionOptimizationKeys.push('scanningOffset');
+        }
+        const laserDefinitionOptimization = {};
+        laserDefinitionOptimizationKeys.forEach((key) => {
+            if (allDefinition[key]) {
+                laserDefinitionOptimization[key] = allDefinition[key];
+            }
+        });
+
         // if (pathType === 'fill' && movementMode === 'greyscale-variable-line') {
         //     laserDefinitionPowerKeys.push('fixedMinPower');
         // laserDefinitionPowerKeys.push('powerLevelDivisions');
@@ -164,6 +178,8 @@ class GcodeParameters extends PureComponent {
                 laserDefinitionAuxiliary[key] = allDefinition[key];
             }
         });
+
+        console.log('true', pathType, movementMode, pathType === 'fill' && movementMode === 'greyscale-line');
 
         return (
             <React.Fragment>
@@ -259,6 +275,25 @@ class GcodeParameters extends PureComponent {
                         </div>
                         <ToolParameters
                             settings={laserDefinitionPower}
+                            updateToolConfig={this.props.updateToolConfig}
+                            updateGcodeConfig={this.props.updateGcodeConfig}
+                            toolPath={this.props.toolPath}
+                            styleSize="large"
+                        />
+                    </div>
+                )}
+                {pathType === 'fill' && movementMode === 'greyscale-line' && (
+                    <div>
+                        <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">
+                            <SvgIcon
+                                name="TitleSetting"
+                                type={['static']}
+                                size={24}
+                            />
+                            <span>{i18n._('key-Laser/ToolpathParameters-Optimization')}</span>
+                        </div>
+                        <ToolParameters
+                            settings={laserDefinitionOptimization}
                             updateToolConfig={this.props.updateToolConfig}
                             updateGcodeConfig={this.props.updateGcodeConfig}
                             toolPath={this.props.toolPath}
