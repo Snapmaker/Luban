@@ -4,7 +4,7 @@ const without = require('lodash/without');
 const path = require('path');
 const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const ManifestPlugin = require('webpack-manifest-plugin');
+const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const nib = require('nib');
 const stylusLoader = require('stylus-loader');
@@ -95,7 +95,7 @@ module.exports = {
             new RegExp(`^\\./(${without(languages, 'en').join('|')})$`)
         ),
         // Generates a manifest.json file in your root output directory with a mapping of all source file names to their corresponding output file.
-        new ManifestPlugin(),
+        new WebpackManifestPlugin(),
         new MiniCssExtractPlugin({
             filename: '[name].css',
             chunkFilename: '[id].css'

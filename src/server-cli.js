@@ -36,6 +36,8 @@ if (normalizedArgv.length > 1) {
     program.parse(normalizedArgv);
 }
 
+const options = program.opts();
+
 const launchServer = () => new Promise((resolve, reject) => {
     // TODO: Refactor this
     global.luban = {
@@ -46,14 +48,14 @@ const launchServer = () => new Promise((resolve, reject) => {
     process.chdir(path.resolve(__dirname, 'server'));
 
     require('./server').createServer({
-        port: program.port,
-        host: program.host,
-        backlog: program.backlog,
-        verbosity: program.verbose,
-        watchDirectory: program.watchDirectory,
-        accessTokenLifetime: program.accessTokenLifetime,
-        allowRemoteAccess: !!program.allowRemoteAccess,
-        controller: program.controller
+        port: options.port,
+        host: options.host,
+        backlog: options.backlog,
+        verbosity: options.verbose,
+        watchDirectory: options.watchDirectory,
+        accessTokenLifetime: options.accessTokenLifetime,
+        allowRemoteAccess: !!options.allowRemoteAccess,
+        controller: options.controller
     }, (err, data) => {
         if (err) {
             reject(err);
