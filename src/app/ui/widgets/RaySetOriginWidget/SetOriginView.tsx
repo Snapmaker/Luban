@@ -17,7 +17,24 @@ import log from '../../../lib/log';
 import ControlPanel from './ControlPanel';
 import RunBoundaryModal from './modals/RunBoundaryModal';
 
-export const getRunBoundayCode = (bbox: Box3, jobOffsetMode: JobOffsetMode) => {
+export const getRunBoundayCode = (bbox: Box3, jobOffsetMode: JobOffsetMode, isRotate: boolean = false) => {
+    const useBInsteadOfX = isRotate;
+
+    const goto = (x: number, y: number): string => {
+        let code = 'G0';
+
+        if (useBInsteadOfX) {
+            code += ` B${x}`;
+        } else {
+            code += ` X${x}`;
+        }
+
+        code += ` Y${y}`;
+        code += ' F6000';
+
+        return code;
+    };
+
     const gcodeList = [];
 
     if (jobOffsetMode === JobOffsetMode.Crosshair) {
@@ -33,17 +50,21 @@ export const getRunBoundayCode = (bbox: Box3, jobOffsetMode: JobOffsetMode) => {
         'G90', // absolute position
     );
 
+    // set current position as origin
     gcodeList.push(
-        'G92 X0 Y0', // set current position as origin
+        'G92 X0 Y0 B0',
     );
 
     gcodeList.push(
-        `G1 X${bbox.min.x} Y${bbox.min.y} F6000`, // run boundary
-        `G1 X${bbox.min.x} Y${bbox.max.y}`,
-        `G1 X${bbox.max.x} Y${bbox.max.y}`,
-        `G1 X${bbox.max.x} Y${bbox.min.y}`,
-        `G1 X${bbox.min.x} Y${bbox.min.y}`,
-        'G1 X0 Y0 S0', // go back to origin
+        // run bounding box
+        goto(bbox.min.x, bbox.min.y),
+        goto(bbox.max.x, bbox.min.y),
+        goto(bbox.max.x, bbox.max.y),
+        goto(bbox.min.x, bbox.max.y),
+        goto(bbox.min.x, bbox.min.y),
+
+        // go back to origin
+        goto(0, 0),
     );
 
     if (jobOffsetMode === JobOffsetMode.LaserSpot) {
@@ -87,6 +108,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
     const { setDisplay } = props;
 
     const isConnected = useSelector((state: RootState) => state.workspace.isConnected);
+    const isRotate = useSelector((state: RootState) => state.workspace.isRotate);
 
     // G-code
     const boundingBox = useSelector((state: RootState) => state.workspace.boundingBox);
@@ -131,7 +153,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
 
         log.info('Run Boundary... bbox =', boundingBox);
 
-        const gcode = getRunBoundayCode(boundingBox, jobOffsetMode);
+        const gcode = getRunBoundayCode(boundingBox, jobOffsetMode, isRotate);
 
         const blob = new Blob([gcode], { type: 'text/plain' });
         const file = new File([blob], 'boundary.nc');
@@ -157,7 +179,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
                 log.info('Uploaded boundary G-code.');
                 setRunBoundaryReady(true);
             });
-    }, [dispatch, boundingBox, jobOffsetMode]);
+    }, [dispatch, isRotate, boundingBox, jobOffsetMode]);
 
     const executeGCode = useCallback(async (gcode: string) => {
         return dispatch(workspaceActions.executeGcode(gcode)) as unknown as Promise<void>;
