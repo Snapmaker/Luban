@@ -239,6 +239,7 @@ i18n._('key-default_name-SD Fill');
 i18n._('key-default_name-Cutting 1.5mm');
 i18n._('key-default_name-Cutting 3mm');
 i18n._('key-default_name-Cutting 5mm');
+i18n._('key-default_name-Cutting 6mm');
 i18n._('key-default_name-Cutting 8mm');
 i18n._('key-default_name-Cutting 10mm');
 i18n._('key-default_name-Dot-filled Engraving');
