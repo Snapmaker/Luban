@@ -8,6 +8,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import * as THREE from 'three';
 
+import { controller } from '../../../communication/socket-communication';
 import SocketEvent from '../../../communication/socket-events';
 import {
     AUTO_MDOE,
@@ -21,8 +22,8 @@ import { LEVEL_TWO_POWER_LASER_FOR_SM2 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
 import { actions as projectActions } from '../../../flux/project';
 import { WORKSPACE_STAGE, actions as workspaceActions } from '../../../flux/workspace';
+import gcodeActions from '../../../flux/workspace/actions-gcode';
 import { ConnectionType } from '../../../flux/workspace/state';
-import { controller } from '../../../communication/socket-communication';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
@@ -292,9 +293,13 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
     });
 
     const onSelectFile = useCallback((_selectFileName, name, event, needToUnselect = true) => {
-        if (event && (event.target.className.indexOf('input-select') > -1 || event.target.className.indexOf('fa-check') > -1)) {
-            return;
+        if (event && event.target && event.target.className) {
+            if (event.target.className.indexOf('input-select') > -1
+                || event.target.className.indexOf('fa-check') > -1) {
+                return;
+            }
         }
+
         // this.props.renameGcodeFile(selectFileName, name, false, true);
         const filename = path.basename(_selectFileName);
         let type = '';
@@ -372,7 +377,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                 log.warn('File not found');
                 return;
             }
-            await dispatch(workspaceActions.renderGcodeFile(find, false, true));
+            await dispatch(gcodeActions.renderGcodeFile(find, false, true));
             await dispatch(workspaceActions.updateState({ activeGcodeFile: find }));
             await dispatch(workspaceActions.updateStateGcodeFileName(find.renderGcodeFileName || find.name));
 

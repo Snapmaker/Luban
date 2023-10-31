@@ -20,6 +20,7 @@ import {
     PROTOCOL_TEXT,
 } from '../../../constants';
 import { WORKSPACE_STAGE, actions as workspaceActions } from '../../../flux/workspace';
+import gcodeActions from '../../../flux/workspace/actions-gcode';
 import { controller } from '../../../communication/socket-communication';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
@@ -895,7 +896,7 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    clearGcode: () => dispatch(workspaceActions.clearGcode()),
+    clearGcode: () => dispatch(gcodeActions.clearGcode()),
     unloadGcode: () => dispatch(workspaceActions.unloadGcode()),
     setGcodePrintingIndex: (index) => dispatch(workspaceActions.setGcodePrintingIndex(index)),
 
