@@ -9,6 +9,8 @@ export declare type ToolHeadMetadata = {
 
     // Print specific
     numberOfExtruders?: number;
+
+    supportCrosshair?: boolean;
 };
 
 export declare type ToolHead = {

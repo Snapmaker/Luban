@@ -424,6 +424,16 @@ class SacpChannelBase extends Channel implements
         return response.result === 0;
     }
 
+    public async turnOnCrosshair(): Promise<boolean> {
+        const executeResult = await this.executeGcode('M2000 L13 P1');
+        return (executeResult.result === 0);
+    }
+
+    public async turnOffCrosshair(): Promise<boolean> {
+        const executeResult = await this.executeGcode('M2000 L13 P0');
+        return (executeResult.result === 0);
+    }
+
     public async getCrosshairOffset(): Promise<{ x: number; y: number }> {
         const module = this.getLaserToolHeadModule();
         if (!module) {

@@ -33,6 +33,8 @@ function register(socketServer: SocketServer): void {
         [SocketEvent.SwitchLaserPower]: connectionManager.switchLaserPower,
         [SocketEvent.CalcMaterialThickness]: connectionManager.getLaserMaterialThickness,
         [SocketEvent.AbortMaterialThickness]: connectionManager.abortLaserMaterialThickness,
+        [SocketEvent.TurnOnCrosshair]: connectionManager.turnOnCrosshair,
+        [SocketEvent.TurnOffCrosshair]: connectionManager.turnOffCrosshair,
         [SocketEvent.GetCrosshairOffset]: connectionManager.getCrosshairOffset,
         [SocketEvent.SetCrosshairOffset]: connectionManager.setCrosshairOffset,
         [SocketEvent.GetFireSensorSensitivity]: connectionManager.getFireSensorSensitivity,

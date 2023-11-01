@@ -85,6 +85,8 @@ export const L20WLaserToolModule: ToolHead = {
 
     metadata: {
         headType: ToolHeadType.Laser,
+
+        supportCrosshair: true,
     },
 };
 
@@ -96,6 +98,8 @@ export const L40WLaserToolModule: ToolHead = {
 
     metadata: {
         headType: ToolHeadType.Laser,
+
+        supportCrosshair: true,
     },
 };
 
