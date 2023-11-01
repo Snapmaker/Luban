@@ -204,27 +204,26 @@ const gcodeToArraybufferGeometryCallback = (data) => {
     return (dispatch, getState) => {
         const {
             status,
+            gcodeFilename,
             value,
             renderMethod,
-            isDone,
-            gcodeFilename,
             isPreview = false,
+            isDone,
+            axisWorkRange,
         } = data;
+
         switch (status) {
             case 'succeed': {
                 const { modelGroup, previewModelGroup } = getState().workspace;
                 const boundingBox: Box3 = getState().workspace.boundingBox;
-                console.log('boundingBox =', boundingBox);
                 const { positions, colors, index, indexColors } = value;
 
                 const bufferGeometry = new BufferGeometry();
                 const positionAttribute = new Float32BufferAttribute(positions.send, 3);
                 const indexAttribute = new Float32BufferAttribute(index.send, 1);
-                const colorAttribute = new Uint8BufferAttribute(
-                    colors.send,
-                    3
-                );
+                const colorAttribute = new Uint8BufferAttribute(colors.send, 3);
                 const indexColorAttribute = new Uint8BufferAttribute(indexColors.send, 3);
+
                 // this will map the buffer values to 0.0f - +1.0f in the shader
                 colorAttribute.normalized = true;
                 indexColorAttribute.normalized = true;
@@ -232,10 +231,7 @@ const gcodeToArraybufferGeometryCallback = (data) => {
                 bufferGeometry.setAttribute('position', positionAttribute);
                 bufferGeometry.setAttribute('a_color', colorAttribute);
                 bufferGeometry.setAttribute('a_index', indexAttribute);
-                bufferGeometry.setAttribute(
-                    'a_index_color',
-                    indexColorAttribute
-                );
+                bufferGeometry.setAttribute('a_index_color', indexColorAttribute);
 
                 const object3D = gcodeBufferGeometryToObj3d(
                     'WORKSPACE',
@@ -283,6 +279,7 @@ const gcodeToArraybufferGeometryCallback = (data) => {
                             baseActions.updateState({
                                 previewRenderState: 'rendered',
                                 previewStage: WORKSPACE_STAGE.LOAD_GCODE_SUCCEED,
+                                gcodeAxisWorkRange: axisWorkRange,
                             })
                         );
                     } else {
@@ -290,6 +287,7 @@ const gcodeToArraybufferGeometryCallback = (data) => {
                             baseActions.updateState({
                                 renderState: 'rendered',
                                 stage: WORKSPACE_STAGE.LOAD_GCODE_SUCCEED,
+                                gcodeAxisWorkRange: axisWorkRange,
                             })
                         );
                     }
