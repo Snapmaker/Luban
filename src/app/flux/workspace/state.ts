@@ -19,6 +19,23 @@ export const WORKSPACE_STAGE = {
     LOAD_GCODE_FAILED: 3,
 };
 
+export interface AxisWorkRange {
+min: {
+            x: number;
+            y: number;
+            z: number;
+            a: number;
+            b: number;
+        };
+        max: {
+            x: number;
+            y: number;
+            z: number;
+            a: number;
+            b: number;
+        };
+}
+
 /**
  * Connection Type
  */
@@ -74,6 +91,9 @@ declare interface WorkspaceOtherState {
 
     boundingBox: Box3;
     previewBoundingBox: object;
+
+    // Actual XYZAB work range
+    gcodeAxisWorkRange: AxisWorkRange;
 
     gcodeFiles: object[];
 

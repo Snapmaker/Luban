@@ -8,7 +8,7 @@ import { HEAD_PRINTING } from '../../../constants';
 import type { RootState } from '../../../flux/index.def';
 import { actions as printingActions } from '../../../flux/printing';
 import { actions as projectActions } from '../../../flux/project';
-import { actions as workspaceActions } from '../../../flux/workspace';
+import gcodeActions from '../../../flux/workspace/actions-gcode';
 import { logGcodeExport } from '../../../lib/gaEvent';
 import i18n from '../../../lib/i18n';
 import { STEP_STAGE } from '../../../lib/manager/ProgressManager';
@@ -19,9 +19,9 @@ import Dropdown from '../../components/Dropdown';
 import Menu from '../../components/Menu';
 import SvgIcon from '../../components/SvgIcon';
 import { toast } from '../../components/Toast';
-import { SceneToast } from '../../views/toasts/SceneToast';
 import Workspace from '../../pages/Workspace';
 import { renderPopup } from '../../utils';
+import { SceneToast } from '../../views/toasts/SceneToast';
 import Thumbnail from './Thumbnail';
 
 function useRenderWorkspace() {
@@ -77,7 +77,7 @@ const Output: React.FC = () => {
                 return;
             }
             gcodeFile.thumbnail = thumbnail.current.getDataURL() || defaultThumbnail;
-            dispatch(workspaceActions.renderGcodeFile(gcodeFile));
+            dispatch(gcodeActions.renderGcodeFile(gcodeFile));
             setShowWorkspace(true);
             logGcodeExport(HEAD_PRINTING, 'workspace');
             window.scrollTo(0, 0);

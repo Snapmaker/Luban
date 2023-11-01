@@ -3,21 +3,38 @@ import { Alert, Button, Radio, RadioChangeEvent, Space } from 'antd';
 import { includes } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
-import { Box3 } from 'three';
 
+import controller from '../../../communication/socket-communication';
 import SocketEvent from '../../../communication/socket-events';
 import { JobOffsetMode } from '../../../constants/coordinate';
 import { RootState } from '../../../flux/index.def';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import gcodeActions from '../../../flux/workspace/actions-gcode';
+import { AxisWorkRange } from '../../../flux/workspace/state';
 import { GCodeFileMetadata } from '../../../flux/workspace/types';
-import controller from '../../../communication/socket-communication';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import ControlPanel from './ControlPanel';
 import RunBoundaryModal from './modals/RunBoundaryModal';
 
-export const getRunBoundayCode = (bbox: Box3, jobOffsetMode: JobOffsetMode) => {
+export const getRunBoundayCode = (axisWorkRange: AxisWorkRange, jobOffsetMode: JobOffsetMode, isRotate: boolean = false) => {
+    const useBInsteadOfX = isRotate;
+
+    const goto = (x: number, y: number): string => {
+        let code = 'G0';
+
+        if (useBInsteadOfX) {
+            code += ` B${x}`;
+        } else {
+            code += ` X${x}`;
+        }
+
+        code += ` Y${y}`;
+        code += ' F6000';
+
+        return code;
+    };
+
     const gcodeList = [];
 
     if (jobOffsetMode === JobOffsetMode.Crosshair) {
@@ -33,18 +50,36 @@ export const getRunBoundayCode = (bbox: Box3, jobOffsetMode: JobOffsetMode) => {
         'G90', // absolute position
     );
 
+    // set current position as origin
     gcodeList.push(
-        'G92 X0 Y0', // set current position as origin
+        'G92 X0 Y0 B0',
     );
 
-    gcodeList.push(
-        `G1 X${bbox.min.x} Y${bbox.min.y} F6000`, // run boundary
-        `G1 X${bbox.min.x} Y${bbox.max.y}`,
-        `G1 X${bbox.max.x} Y${bbox.max.y}`,
-        `G1 X${bbox.max.x} Y${bbox.min.y}`,
-        `G1 X${bbox.min.x} Y${bbox.min.y}`,
-        'G1 X0 Y0 S0', // go back to origin
-    );
+    if (useBInsteadOfX) {
+        gcodeList.push(
+            // run bounding box
+            goto(axisWorkRange.min.b, axisWorkRange.min.y),
+            goto(axisWorkRange.max.b, axisWorkRange.min.y),
+            goto(axisWorkRange.max.b, axisWorkRange.max.y),
+            goto(axisWorkRange.min.b, axisWorkRange.max.y),
+            goto(axisWorkRange.min.b, axisWorkRange.min.y),
+
+            // go back to origin
+            goto(0, 0),
+        );
+    } else {
+        gcodeList.push(
+            // run bounding box
+            goto(axisWorkRange.min.x, axisWorkRange.min.y),
+            goto(axisWorkRange.max.x, axisWorkRange.min.y),
+            goto(axisWorkRange.max.x, axisWorkRange.max.y),
+            goto(axisWorkRange.min.x, axisWorkRange.max.y),
+            goto(axisWorkRange.min.x, axisWorkRange.min.y),
+
+            // go back to origin
+            goto(0, 0),
+        );
+    }
 
     if (jobOffsetMode === JobOffsetMode.LaserSpot) {
         gcodeList.push('M5 S0'); // turn off laser spot
@@ -53,6 +88,8 @@ export const getRunBoundayCode = (bbox: Box3, jobOffsetMode: JobOffsetMode) => {
     gcodeList.push(
         ';End', // empty line
     );
+
+    console.log('gcode =', gcodeList);
 
     const gcode = gcodeList.join('\n');
 
@@ -87,9 +124,11 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
     const { setDisplay } = props;
 
     const isConnected = useSelector((state: RootState) => state.workspace.isConnected);
+    const isRotate = useSelector((state: RootState) => state.workspace.isRotate);
 
     // G-code
-    const boundingBox = useSelector((state: RootState) => state.workspace.boundingBox);
+    // const boundingBox = useSelector((state: RootState) => state.workspace.boundingBox);
+    const gcodeAxisWorkRange: AxisWorkRange = useSelector((state: RootState) => state.workspace.gcodeAxisWorkRange);
     const workflowStatus = useSelector((state: RootState) => state.workspace.workflowStatus, shallowEqual);
 
     // display of widget
@@ -124,14 +163,14 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
      */
     const runBoundary = useCallback(async () => {
         setRunBoundaryReady(false);
-        if (!boundingBox) {
+        if (!gcodeAxisWorkRange) {
             log.warn('No bounding box provided, please upload G-code first.');
             return;
         }
 
-        log.info('Run Boundary... bbox =', boundingBox);
+        log.info('Run Boundary... axis work range =', gcodeAxisWorkRange);
 
-        const gcode = getRunBoundayCode(boundingBox, jobOffsetMode);
+        const gcode = getRunBoundayCode(gcodeAxisWorkRange, jobOffsetMode, isRotate);
 
         const blob = new Blob([gcode], { type: 'text/plain' });
         const file = new File([blob], 'boundary.nc');
@@ -157,7 +196,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
                 log.info('Uploaded boundary G-code.');
                 setRunBoundaryReady(true);
             });
-    }, [dispatch, boundingBox, jobOffsetMode]);
+    }, [dispatch, isRotate, gcodeAxisWorkRange, jobOffsetMode]);
 
     const executeGCode = useCallback(async (gcode: string) => {
         return dispatch(workspaceActions.executeGcode(gcode)) as unknown as Promise<void>;
@@ -190,7 +229,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
                             <Button
                                 type="default"
                                 style={{ width: '100%', borderRadius: '4px' }}
-                                disabled={!boundingBox}
+                                disabled={!gcodeAxisWorkRange}
                                 loading={runBoundaryUploading}
                                 onClick={async () => runBoundary()}
                             >

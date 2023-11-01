@@ -6,6 +6,7 @@ import { useDispatch } from 'react-redux';
 
 import { pathWithRandomSuffix } from '../../../../shared/lib/random-utils';
 import { actions as workspaceActions } from '../../../flux/workspace';
+import gcodeActions from '../../../flux/workspace/actions-gcode';
 import { normalizeNameDisplay } from '../../../lib/normalize-range';
 import SvgIcon from '../../components/SvgIcon';
 
@@ -180,7 +181,7 @@ const GcodePreviewItem: React.FC<GcodePreviewItemProps> = React.memo((props) => 
                 size={24}
                 onClick={() => {
                     onSelectFile(gcodeFile.uploadName, null, null, false);
-                    dispatch(workspaceActions.renderPreviewGcodeFile(gcodeFile));
+                    dispatch(gcodeActions.renderPreviewGcodeFile(gcodeFile));
                 }}
             />
         </div>

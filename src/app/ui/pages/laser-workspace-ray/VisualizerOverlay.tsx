@@ -2,7 +2,6 @@ import classNames from 'classnames';
 import React, { useCallback, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 
-import { actions as workspaceActions } from '../../../flux/workspace';
 import gcodeActions from '../../../flux/workspace/actions-gcode';
 import { GCodeFileMetadata } from '../../../flux/workspace/types';
 import i18n from '../../../lib/i18n';
@@ -25,7 +24,7 @@ const VisualizerOverlay: React.FC = () => {
 
         const gcodeFile: GCodeFileMetadata = await dispatch(gcodeActions.uploadGcodeFile(file));
 
-        dispatch(workspaceActions.renderGcodeFile(gcodeFile, false, true));
+        dispatch(gcodeActions.renderGcodeFile(gcodeFile, false, true));
     }, [dispatch]);
 
     return (

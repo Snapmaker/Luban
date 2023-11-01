@@ -1,6 +1,7 @@
 import isEmpty from 'lodash/isEmpty';
 import { Observable } from 'rxjs';
 import { Transfer } from 'threads';
+
 import GcodeToBufferGeometryWorkspace from './GcodeToBufferGeometry/GcodeToBufferGeometryWorkspace';
 
 
@@ -16,7 +17,10 @@ const gcodeToArraybufferGeometry = (data: GcodeToArraybufferGeometryData) => {
         if (isEmpty(data)) {
             observer.next({ status: 'err', value: 'Data is empty' });
         }
+
         const { func, gcodeFilename, gcode, isPreview = false } = data;
+
+        // Support func=WORKSPACE only
         if (!['WORKSPACE'].includes(func.toUpperCase())) {
             observer.next({
                 status: 'err',
@@ -25,6 +29,7 @@ const gcodeToArraybufferGeometry = (data: GcodeToArraybufferGeometryData) => {
             observer.complete();
             return;
         }
+
         if (isEmpty(gcodeFilename) && isEmpty(gcode)) {
             observer.next({
                 status: 'err',
@@ -39,28 +44,21 @@ const gcodeToArraybufferGeometry = (data: GcodeToArraybufferGeometryData) => {
             gcode,
             (result) => {
                 const {
+                    isDone,
                     bufferGeometry,
                     renderMethod,
-                    isDone,
-                    boundingBox,
+                    axisWorkRange,
                 } = result;
-                const positions = Transfer(
-                    bufferGeometry.getAttribute('position').array
-                );
-                const colors = Transfer(
-                    bufferGeometry.getAttribute('a_color').array
-                );
-                const index = Transfer(
-                    bufferGeometry.getAttribute('a_index').array
-                );
-                const indexColors = Transfer(
-                    bufferGeometry.getAttribute('a_index_color').array
-                );
+
+                const positions = Transfer(bufferGeometry.getAttribute('position').array);
+                const colors = Transfer(bufferGeometry.getAttribute('a_color').array);
+                const index = Transfer(bufferGeometry.getAttribute('a_index').array);
+                const indexColors = Transfer(bufferGeometry.getAttribute('a_index_color').array);
 
                 const _data = {
                     status: 'succeed',
                     isDone: isDone,
-                    boundingBox: boundingBox,
+                    axisWorkRange,
                     renderMethod: renderMethod,
                     isPreview,
                     gcodeFilename,
@@ -73,6 +71,7 @@ const gcodeToArraybufferGeometry = (data: GcodeToArraybufferGeometryData) => {
                 };
 
                 observer.next(_data);
+
                 if (isDone) {
                     observer.complete();
                 }
