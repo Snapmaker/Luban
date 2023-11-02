@@ -438,6 +438,48 @@ class ConnectionManager {
 
     // Laser service
 
+    public turnOnCrosshair = async (socket: SocketServer) => {
+        log.info('Turn on crosshair');
+
+        // hard-coded for text serial channel, we have 2 implementations
+        // TODO: seperate TextSerialChannel to SM2TextSerialChannel and ArtisanTextSerialChannel?
+        if (this.channel instanceof TextSerialChannel) {
+            let gcode = '';
+
+            if (this.machineInstance instanceof SM2Instance) {
+                gcode = 'M2002 T3 P1';
+            } else {
+                gcode = 'M2000 L13 P1';
+            }
+
+            const success = await (this.channel as TextSerialChannel).executeGcode(gcode);
+            socket.emit(SocketEvent.TurnOnCrosshair, { err: !success });
+        } else {
+            const success = await (this.channel as LaserChannelInterface).turnOnCrosshair();
+            socket.emit(SocketEvent.TurnOnCrosshair, { err: !success });
+        }
+    };
+
+    public turnOffCrosshair = async (socket: SocketServer) => {
+        log.info('Turn off crosshair');
+
+        if (this.channel instanceof TextSerialChannel) {
+            let gcode = '';
+
+            if (this.machineInstance instanceof SM2Instance) {
+                gcode = 'M2002 T3 P0';
+            } else {
+                gcode = 'M2000 L13 P0';
+            }
+
+            const success = await (this.channel as TextSerialChannel).executeGcode(gcode);
+            socket.emit(SocketEvent.TurnOnCrosshair, { err: !success });
+        } else {
+            const success = await (this.channel as LaserChannelInterface).turnOffCrosshair();
+            socket.emit(SocketEvent.TurnOffCrosshair, { err: !success });
+        }
+    };
+
     public getCrosshairOffset = async (socket: SocketServer) => {
         log.info('Get crosshair offset');
         try {

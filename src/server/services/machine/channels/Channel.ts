@@ -130,6 +130,8 @@ export interface PrintJobChannelInterface extends Channel {
 // Laser
 
 export interface LaserChannelInterface extends Channel {
+    turnOnCrosshair(): Promise<boolean>;
+    turnOffCrosshair(): Promise<boolean>;
     getCrosshairOffset(): Promise<{ x: number; y: number }>;
     setCrosshairOffset(x: number, y: number): Promise<boolean>;
     getFireSensorSensitivity(): Promise<number>;

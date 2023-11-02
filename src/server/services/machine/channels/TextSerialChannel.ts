@@ -2,13 +2,14 @@ import { MarlinController } from '../../../controllers';
 import { PROTOCOL_TEXT, WRITE_SOURCE_CLIENT } from '../../../controllers/constants';
 import type SocketServer from '../../../lib/SocketManager';
 import logger from '../../../lib/logger';
-import Channel, { CncChannelInterface, ExecuteGcodeResult } from './Channel';
+import Channel, { CncChannelInterface, ExecuteGcodeResult, LaserChannelInterface } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 
 const log = logger('machine:channels:TextSerialChannel');
 
 const DEFAULT_BAUDRATE = 115200;
 class TextSerialChannel extends Channel implements
+    LaserChannelInterface,
     CncChannelInterface {
     private port = '';
 
@@ -111,6 +112,34 @@ class TextSerialChannel extends Channel implements
             result: 0,
             text: 'ok',
         };
+    }
+
+    // interface: LaserChannelInterface
+
+    public async turnOnCrosshair(): Promise<boolean> {
+        return false;
+    }
+
+    public async turnOffCrosshair(): Promise<boolean> {
+        return false;
+    }
+
+    public async getCrosshairOffset(): Promise<{ x: number; y: number; }> {
+        return { x: 0, y: 0 };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async setCrosshairOffset(x: number, y: number): Promise<boolean> {
+        return false;
+    }
+
+    public async getFireSensorSensitivity(): Promise<number> {
+        return 0;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async setFireSensorSensitivity(sensitivity: number): Promise<boolean> {
+        return false;
     }
 
     // interface: CncChannelInterface
