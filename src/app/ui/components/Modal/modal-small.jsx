@@ -48,8 +48,11 @@ export class ModalSmallHOC extends PureComponent {
 
     removeContainer() {
         const { container } = this.props;
-        ReactDOM.unmountComponentAtNode(container);
-        container.remove();
+
+        if (container) {
+            ReactDOM.unmountComponentAtNode(container);
+            container.remove();
+        }
     }
 
     render() {

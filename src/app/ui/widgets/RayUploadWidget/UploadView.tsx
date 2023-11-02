@@ -123,6 +123,12 @@ const UploadView: React.FC = () => {
                         log.error('Unable to upload G-code to execute.');
                         log.error(err);
                         log.error(`Reason: ${text}`);
+                        modalSmallHOC({
+                            title: i18n._('key-Workspace/WifiTransport-Failed to send file.'),
+                            text: text,
+                            iconColor: '#FF4D4F',
+                            img: 'WarningTipsError'
+                        });
                         resolve(false);
                         return;
                     }
@@ -134,10 +140,6 @@ const UploadView: React.FC = () => {
     }, [dispatch, boundingBox, jobOffsetMode]);
 
     const uploadJob = useCallback(async () => {
-        if (!gcodeFile) {
-            return false;
-        }
-
         setIsUploading(true);
 
         return new Promise<boolean>((resolve) => {
@@ -180,12 +182,6 @@ const UploadView: React.FC = () => {
     const onClickUploadJob = useCallback(async () => {
         const success = await uploadBoundary();
         if (!success) {
-            modalSmallHOC({
-                title: i18n._('key-Workspace/WifiTransport-Failed to send file.'),
-                text: i18n._('key-Workspace/WifiTransport-Failed to send file.'),
-                iconColor: '#FF4D4F',
-                img: 'WarningTipsError'
-            });
             return;
         }
 
@@ -199,7 +195,7 @@ const UploadView: React.FC = () => {
                     type="primary"
                     priority="level-one"
                     onClick={onClickUploadJob}
-                    disabled={!isConnected || isWorking}
+                    disabled={!isConnected || isWorking || !gcodeFile}
                 >
                     {i18n._('key-Workspace/Upload Job')}
                 </Button>

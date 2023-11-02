@@ -1,8 +1,6 @@
 import { MachineToolHeadOptions, WorkflowStatus } from '@snapmaker/luban-platform';
-import { Spin } from 'antd';
 import classNames from 'classnames';
 import _, { includes } from 'lodash';
-// import { Trans } from 'react-i18next';
 import path from 'path';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
@@ -29,198 +27,16 @@ import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import UniApi from '../../../lib/uni-api';
 import { Button } from '../../components/Buttons';
-import Dropdown from '../../components/Dropdown';
-import Menu from '../../components/Menu';
-import Modal from '../../components/Modal';
 import modalSmallHOC from '../../components/Modal/modal-small';
-import Canvas from '../../components/SMCanvas';
 import SvgIcon from '../../components/SvgIcon';
-import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
-import PrintablePlate from '../WorkspaceVisualizer/PrintablePlate';
 import GcodePreviewItem from './GCodeListItem';
-import GCodeParams from './GCodeParams';
 import LaserStartModal from './LaserStartModal';
 import PreviewToRunJobModal from './PreviewToRunJobModal';
+import PreviewModal, { visualizerGroup } from './modals/GCodeFilePreviewModal';
 import styles from './styles.styl';
 
 const cancelRequestEvent = new CustomEvent('cancelReq');
 
-const visualizerGroup = {
-    object: new THREE.Group()
-};
-
-interface PreviewModalProps {
-    gcodeFile: object | null;
-    onStartToSendFile: () => void;
-    onStartToPrint: () => void;
-    canSend: boolean;
-    canStartPrint: boolean;
-}
-
-const PreviewModal: React.FC<PreviewModalProps> = (props) => {
-    const dispatch = useDispatch();
-
-    const {
-        gcodeFile,
-        onStartToSendFile,
-        onStartToPrint,
-        canSend,
-        canStartPrint,
-    } = props;
-
-    const {
-        connectionType,
-        isConnected,
-    } = useSelector((state: RootState) => state.workspace);
-
-    const {
-        workflowStatus,
-
-        previewModelGroup,
-        previewRenderState,
-    } = useSelector((state: RootState) => state.workspace);
-
-    const { size } = useSelector((state: RootState) => state.machine);
-
-    const closeModal = useCallback(() => {
-        dispatch(workspaceActions.updateState({
-            previewStage: WORKSPACE_STAGE.EMPTY
-        }));
-    }, [dispatch]);
-
-
-    const canvas = useRef<Canvas>();
-    const printableArea = useMemo(() => {
-        return new PrintablePlate({
-            x: size.x * 2,
-            y: size.y * 2
-        });
-    }, [size]);
-
-    return (
-        <Modal
-            centered
-            open
-            onClose={closeModal}
-        >
-            <Modal.Header>
-                {i18n._('key-Workspace/Transport-Preview')}
-            </Modal.Header>
-            <Modal.Body>
-                <div style={{ width: 944, height: 522 }} className="position-re">
-                    {previewRenderState === 'rendered' && (
-                        <Canvas
-                            ref={canvas}
-                            size={size}
-                            modelGroup={visualizerGroup}
-                            printableArea={printableArea}
-                            cameraInitialPosition={new THREE.Vector3(0, 0, Math.min(size.z * 2, 300))}
-                            cameraInitialTarget={new THREE.Vector3(0, 0, 0)}
-                        />
-                        // <Spin />
-                    )}
-                    {previewRenderState === 'rendered' && (
-                        <div className={classNames('position-absolute', 'left-8', 'bottom-8')}>
-                            <SecondaryToolbar
-                                zoomIn={() => canvas.current.zoomIn()}
-                                zoomOut={() => canvas.current.zoomOut()}
-                                toFront={() => canvas.current.autoFocus(previewModelGroup.children[0], true)}
-                            />
-                        </div>
-                    )}
-                    {previewRenderState !== 'rendered' && (
-                        <div className="position-absolute position-absolute-center">
-                            <Spin />
-                        </div>
-                    )}
-                    <GCodeParams gcodeFile={gcodeFile} />
-                </div>
-            </Modal.Body>
-            <Modal.Footer>
-                <Button
-                    priority="level-two"
-                    type="default"
-                    className="margin-right-8"
-                    width="88px"
-                    onClick={closeModal}
-                >
-                    {i18n._('key-unused-Cancel')}
-                </Button>
-                {
-                    connectionType === ConnectionType.WiFi && isConnected && workflowStatus !== WorkflowStatus.Idle && (
-                        <Button
-                            priority="level-two"
-                            type="primary"
-                            width="200px"
-                            onClick={onStartToSendFile}
-                        >
-                            {i18n._('key-Workspace/WifiTransport-Sending File')}
-                        </Button>
-                    )
-                }
-                {
-                    connectionType === ConnectionType.WiFi && isConnected && workflowStatus === WorkflowStatus.Idle && (
-                        <Dropdown
-                            className="display-inline"
-                            overlay={() => (
-                                <Menu>
-                                    {
-                                        canSend && (
-                                            <Menu.Item
-                                                onClick={() => {
-                                                    onStartToSendFile();
-                                                    closeModal();
-                                                }}
-                                            >
-                                                <div className="align-c">{i18n._('key-Workspace/WifiTransport-Sending File')}</div>
-                                            </Menu.Item>
-                                        )
-                                    }
-                                    {
-                                        canStartPrint && (
-                                            <Menu.Item onClick={() => {
-                                                onStartToPrint();
-                                                closeModal();
-                                            }}
-                                            >
-                                                <div className="align-c">{i18n._('Start on Luban')}</div>
-                                            </Menu.Item>
-                                        )
-                                    }
-                                </Menu>
-                            )}
-                            trigger="click"
-                        >
-                            <Button
-                                suffixIcon={<SvgIcon name="DropdownOpen" type={['static']} color="#d5d6d9" />}
-                                priority="level-two"
-                                type="primary"
-                                width="200px"
-                            >
-                                {i18n._('key-Workspace/LaserStartJob-start_job')}
-                            </Button>
-                        </Dropdown>
-                    )
-                }
-                {
-                    connectionType === ConnectionType.Serial && isConnected && workflowStatus === WorkflowStatus.Idle && (
-                        <Button
-                            priority="level-two"
-                            type="primary"
-                            width="200px"
-                            onClick={() => {
-                                onStartToPrint();
-                                closeModal();
-                            }}
-                        >
-                            <div className="align-c">{i18n._('Start on Luban')}</div>
-                        </Button>
-                    )
-                }
-            </Modal.Footer>
-        </Modal>
-    );
-};
 
 declare interface FileTransferViewProps {
     widgetActions: object;
@@ -284,7 +100,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
     };
     */
 
-    const [showStartModal, setShowStartModal] = useState(false);
+    const [showLaserStartJobModal, setShowLaserStartJobModal] = useState(false);
     const fileInput = useRef();
     const gcodeItemRef = useRef();
     const canvas = useRef();
@@ -336,7 +152,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
             // } else {
             //     dispatch( workspaceActions.uploadGcodeFileToList(file));
             // }
-            setShowStartModal(false);
+            setShowLaserStartJobModal(false);
             dispatch(workspaceActions.uploadGcodeFileToList(file));
         },
         onClickToUpload: () => {
@@ -358,7 +174,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
 
         startPrint: async () => {
             if (headType === HEAD_LASER) {
-                setShowStartModal(true);
+                setShowLaserStartJobModal(true);
             } else {
                 actions.loadGcodeToWorkspace();
             }
@@ -567,10 +383,12 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
             return false;
         }
 
-        if (activeMachineToolOptions) {
-            const disabled = activeMachineToolOptions.disableRemoteStartPrint || false;
-            if (disabled) {
-                return false;
+        if (connectionType === ConnectionType.WiFi) {
+            if (activeMachineToolOptions) {
+                const disabled = activeMachineToolOptions.disableRemoteStartPrint || false;
+                if (disabled) {
+                    return false;
+                }
             }
         }
 
@@ -580,7 +398,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
 
         // workflow status
         return includes([WorkflowStatus.Idle], workflowStatus);
-    }, [hasFile, selectedFile, isConnected, activeMachineToolOptions, workflowStatus]);
+    }, [hasFile, selectedFile, isConnected, connectionType, activeMachineToolOptions, workflowStatus]);
 
     const canSend = hasFile && selectedFile && isNetworkConnected;
 
@@ -648,6 +466,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                     })
                 )}
             </div>
+            {/* Operations on selected G-code file */}
             <div className={classNames('height-only-96', 'box-shadow-default', 'padding-top-8', 'padding-horizontal-16', 'padding-bottom-16')}>
                 <div className={classNames('sm-flex', 'justify-space-between', 'align-center')}>
                     <SvgIcon
@@ -699,14 +518,21 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                     </Button>
                 </div>
             </div>
-            <LaserStartModal
-                showStartModal={showStartModal}
-                isHeightPower={toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2}
-                isRotate={isRotate}
-                isSerialConnect={isSerialPortConnected}
-                onClose={() => setShowStartModal(false)}
-                onConfirm={async (type) => onConfirm(type)}
-            />
+
+            {/* Laser Start Job Modal */}
+            {
+                showLaserStartJobModal && (
+                    <LaserStartModal
+                        showStartModal={showLaserStartJobModal}
+                        isHeightPower={toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2}
+                        isRotate={isRotate}
+                        isSerialConnect={isSerialPortConnected}
+                        onClose={() => setShowLaserStartJobModal(false)}
+                        onConfirm={async (type) => onConfirm(type)}
+                    />
+                )
+            }
+
             {/* Modal that displays selected file */}
             {
                 showPreviewModal && (
@@ -719,6 +545,8 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                     />
                 )
             }
+
+            {/* TODO */}
             {
                 showPreviewToRunJobModal && (
                     <PreviewToRunJobModal

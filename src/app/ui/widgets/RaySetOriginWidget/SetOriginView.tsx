@@ -1,5 +1,5 @@
 import { WorkflowStatus } from '@snapmaker/luban-platform';
-import { Alert, Button, Radio, RadioChangeEvent, Space } from 'antd';
+import { Alert, Radio, RadioChangeEvent, Space } from 'antd';
 import { includes } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
@@ -12,6 +12,7 @@ import { actions as workspaceActions } from '../../../flux/workspace';
 import gcodeActions from '../../../flux/workspace/actions-gcode';
 import { AxisWorkRange } from '../../../flux/workspace/state';
 import { GCodeFileMetadata } from '../../../flux/workspace/types';
+import { Button } from '../../components/Buttons';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import ControlPanel from './ControlPanel';
@@ -233,7 +234,6 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
                             <Button
                                 type="default"
                                 style={{ width: '100%', borderRadius: '4px' }}
-                                disabled={false}
                                 onClick={onClickGoHome}
                             >
                                 {i18n._('key-Workspace/Connection-Go Home')}
@@ -246,7 +246,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
                                 loading={runBoundaryUploading}
                                 onClick={async () => runBoundary()}
                             >
-                                {i18n._('Run Boundary')}
+                                {!runBoundaryUploading && i18n._('Run Boundary')}
                             </Button>
                         </div>
                         <Space direction="vertical" className="margin-top-8">
