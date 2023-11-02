@@ -230,7 +230,7 @@ const MachineSettingsModal: React.FC<MachineNetworkModalProps> = (props) => {
                             >
                                 <span className="line-height-32">{i18n._('Fire Sensor Sensitivity')} (0-4095)</span>
                                 <Input
-                                    suffix="mm"
+                                    suffix=""
                                     value={fireSensorSensitivity}
                                     max={4095}
                                     min={0}
