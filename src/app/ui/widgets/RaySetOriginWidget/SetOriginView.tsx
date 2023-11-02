@@ -202,6 +202,10 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
         return dispatch(workspaceActions.executeGcode(gcode)) as unknown as Promise<void>;
     }, [dispatch]);
 
+    const onClickGoHome = useCallback(async () => {
+        return dispatch(workspaceActions.executeGcode('$H')) as unknown as Promise<void>;
+    }, [dispatch]);
+
     return (
         <div>
             <div className="display-block margin-top-8">
@@ -229,6 +233,15 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
                             <Button
                                 type="default"
                                 style={{ width: '100%', borderRadius: '4px' }}
+                                disabled={false}
+                                onClick={onClickGoHome}
+                            >
+                                {i18n._('key-Workspace/Connection-Go Home')}
+                            </Button>
+                            <Button
+                                type="primary"
+                                style={{ width: '100%', borderRadius: '4px' }}
+                                className="margin-top-8"
                                 disabled={!gcodeAxisWorkRange}
                                 loading={runBoundaryUploading}
                                 onClick={async () => runBoundary()}
