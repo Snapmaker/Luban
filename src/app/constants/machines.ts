@@ -59,13 +59,13 @@ export const DEFAULT_MACHINE_ORIGINAL_LONG_Z_AXIS = 'Original Long Z-axis';
 
 // todo: refactor this data structure
 export const MACHINE_SERIES = {
-    ORIGINAL: SnapmakerOriginalMachine,
-    ORIGINAL_LZ: SnapmakerOriginalExtendedMachine,
+    [SnapmakerOriginalMachine.identifier]: SnapmakerOriginalMachine,
+    [SnapmakerOriginalExtendedMachine.identifier]: SnapmakerOriginalExtendedMachine,
     [SnapmakerA150Machine.identifier]: SnapmakerA150Machine,
     [SnapmakerA250Machine.identifier]: SnapmakerA250Machine,
-    A350: SnapmakerA350Machine,
-    A400: SnapmakerArtisanMachine,
-    J1: SnapmakerJ1Machine,
+    [SnapmakerA350Machine.identifier]: SnapmakerA350Machine,
+    [SnapmakerArtisanMachine.identifier]: SnapmakerArtisanMachine,
+    [SnapmakerJ1Machine.identifier]: SnapmakerJ1Machine,
 };
 
 export const HEAD_PRINTING = 'printing';
