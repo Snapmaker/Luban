@@ -100,7 +100,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
     };
     */
 
-    const [showStartModal, setShowStartModal] = useState(false);
+    const [showLaserStartJobModal, setShowLaserStartJobModal] = useState(false);
     const fileInput = useRef();
     const gcodeItemRef = useRef();
     const canvas = useRef();
@@ -152,7 +152,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
             // } else {
             //     dispatch( workspaceActions.uploadGcodeFileToList(file));
             // }
-            setShowStartModal(false);
+            setShowLaserStartJobModal(false);
             dispatch(workspaceActions.uploadGcodeFileToList(file));
         },
         onClickToUpload: () => {
@@ -174,7 +174,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
 
         startPrint: async () => {
             if (headType === HEAD_LASER) {
-                setShowStartModal(true);
+                setShowLaserStartJobModal(true);
             } else {
                 actions.loadGcodeToWorkspace();
             }
@@ -383,10 +383,12 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
             return false;
         }
 
-        if (activeMachineToolOptions) {
-            const disabled = activeMachineToolOptions.disableRemoteStartPrint || false;
-            if (disabled) {
-                return false;
+        if (connectionType === ConnectionType.WiFi) {
+            if (activeMachineToolOptions) {
+                const disabled = activeMachineToolOptions.disableRemoteStartPrint || false;
+                if (disabled) {
+                    return false;
+                }
             }
         }
 
@@ -396,7 +398,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
 
         // workflow status
         return includes([WorkflowStatus.Idle], workflowStatus);
-    }, [hasFile, selectedFile, isConnected, activeMachineToolOptions, workflowStatus]);
+    }, [hasFile, selectedFile, isConnected, connectionType, activeMachineToolOptions, workflowStatus]);
 
     const canSend = hasFile && selectedFile && isNetworkConnected;
 
@@ -464,6 +466,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                     })
                 )}
             </div>
+            {/* Operations on selected G-code file */}
             <div className={classNames('height-only-96', 'box-shadow-default', 'padding-top-8', 'padding-horizontal-16', 'padding-bottom-16')}>
                 <div className={classNames('sm-flex', 'justify-space-between', 'align-center')}>
                     <SvgIcon
@@ -517,14 +520,18 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
             </div>
 
             {/* Laser Start Job Modal */}
-            <LaserStartModal
-                showStartModal={showStartModal}
-                isHeightPower={toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2}
-                isRotate={isRotate}
-                isSerialConnect={isSerialPortConnected}
-                onClose={() => setShowStartModal(false)}
-                onConfirm={async (type) => onConfirm(type)}
-            />
+            {
+                showLaserStartJobModal && (
+                    <LaserStartModal
+                        showStartModal={showLaserStartJobModal}
+                        isHeightPower={toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2}
+                        isRotate={isRotate}
+                        isSerialConnect={isSerialPortConnected}
+                        onClose={() => setShowLaserStartJobModal(false)}
+                        onConfirm={async (type) => onConfirm(type)}
+                    />
+                )
+            }
 
             {/* Modal that displays selected file */}
             {

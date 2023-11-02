@@ -20,7 +20,7 @@ interface LaserStartModalProps {
     isRotate: boolean;
     isSerialConnect: boolean;
     onClose: () => void;
-    onConfirm: () => void;
+    onConfirm: (mode) => void;
 }
 
 const LaserStartModal: React.FC<LaserStartModalProps> = ({
