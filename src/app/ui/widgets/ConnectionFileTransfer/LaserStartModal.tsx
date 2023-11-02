@@ -13,14 +13,24 @@ import { NumberInput as Input } from '../../components/Input';
 import Modal from '../../components/Modal';
 import { Radio } from '../../components/Radio';
 
-function LaserStartModal({
+
+interface LaserStartModalProps {
+    showStartModal: boolean;
+    isHeightPower: boolean;
+    isRotate: boolean;
+    isSerialConnect: boolean;
+    onClose: () => void;
+    onConfirm: () => void;
+}
+
+const LaserStartModal: React.FC<LaserStartModalProps> = ({
     showStartModal,
     isHeightPower,
     isSerialConnect,
     isRotate,
     onClose,
     onConfirm
-}) {
+}) => {
     const [selectedValue, setSelectedValue] = useState(MANUAL_MODE);
     const { size } = useSelector(state => state?.machine);
     const { materialThickness } = useSelector(state => state?.workspace);
@@ -203,8 +213,7 @@ function LaserStartModal({
             </Modal.Footer>
         </Modal>
     );
-}
-
+};
 
 LaserStartModal.propTypes = {
     showStartModal: PropTypes.bool.isRequired,
@@ -214,4 +223,5 @@ LaserStartModal.propTypes = {
     onClose: PropTypes.func.isRequired,
     onConfirm: PropTypes.func.isRequired,
 };
+
 export default LaserStartModal;
