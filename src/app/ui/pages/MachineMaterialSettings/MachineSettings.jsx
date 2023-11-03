@@ -11,7 +11,6 @@ import {
     getMachineOptions,
     getMachineSupportedToolOptions,
     isDualExtruder,
-    MACHINE_SERIES
 } from '../../../constants/machines';
 import { actions as printingActions } from '../../../flux/printing';
 import i18n from '../../../lib/i18n';
@@ -21,6 +20,7 @@ import Anchor from '../../components/Anchor';
 import { Badge } from '../../components/Badge';
 import { NumberInput as Input } from '../../components/Input';
 import SvgIcon from '../../components/SvgIcon';
+import { SnapmakerOriginalExtendedMachine, SnapmakerOriginalMachine } from '../../../machines';
 
 import styles from './styles.styl';
 
@@ -109,7 +109,7 @@ const MachineSettings = forwardRef(({
     const [activeNozzle, setActiveNozzle] = useState(LEFT);
 
     // for original long zAxis
-    const [zAxis, setZAxis] = useState(series === MACHINE_SERIES.ORIGINAL_LZ.identifier);
+    const [zAxis, setZAxis] = useState(series === SnapmakerOriginalExtendedMachine.identifier);
     const [leftNozzleDiameterList, setLeftNozzleDiameterList] = useState(defaultNozzleDiameterList);
     const [rightNozzleDiameterList, setRightNozzleDiameterList] = useState(defaultNozzleDiameterList);
     const [addDiameterStatus, setAddDiameterStatus] = useState(false);
@@ -291,7 +291,7 @@ const MachineSettings = forwardRef(({
     const handleMachineUpdate = (value) => {
         setSelectedMachineSeries(value);
         setActiveNozzle(LEFT);
-        // if (value === MACHINE_SERIES.ORIGINAL.identifier) {
+        // if (value === SnapmakerOriginalMachine.identifier) {
         //     setSelectedToolName(SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL);
         //     setZAxis(false);
         // } else {
@@ -402,13 +402,13 @@ const MachineSettings = forwardRef(({
             </div>
             <div className="width-296 background-grey-3 border-radius-24 padding-vertical-32 padding-horizontal-24">
                 {
-                    (selectedMachineSeries === MACHINE_SERIES.ORIGINAL.identifier || selectedMachineSeries === MACHINE_SERIES.ORIGINAL_LZ.identifier) && (
+                    (selectedMachineSeries === SnapmakerOriginalMachine.identifier || selectedMachineSeries === SnapmakerOriginalExtendedMachine.identifier) && (
                         <div>
                             <div className="heading-3 margin-bottom-16">{i18n._('key-settings/Z-axis Module')}</div>
                             <div className="sm-flex justify-space-between">
                                 <Anchor onClick={() => {
                                     setZAxis(false);
-                                    setSelectedMachineSeries(MACHINE_SERIES.ORIGINAL.identifier);
+                                    setSelectedMachineSeries(SnapmakerOriginalMachine.identifier);
                                 }}
                                 >
                                     <div className={`width-116 height-116 border-radius-8 ${zAxis ? 'border-default-grey-1' : 'border-default-grey-1 border-color-blue-2'}`}>
@@ -418,7 +418,7 @@ const MachineSettings = forwardRef(({
                                 </Anchor>
                                 <Anchor onClick={() => {
                                     setZAxis(true);
-                                    setSelectedMachineSeries(MACHINE_SERIES.ORIGINAL_LZ.identifier);
+                                    setSelectedMachineSeries(SnapmakerOriginalExtendedMachine.identifier);
                                 }}
                                 >
                                     <div className={`width-116 height-116 border-radius-8 ${!zAxis ? 'border-default-grey-1' : 'border-default-grey-1 border-color-blue-2'}`}>
@@ -433,7 +433,7 @@ const MachineSettings = forwardRef(({
                 {
                     availableToolOptions.length > 0 && (
                         <div>
-                            <div className={`heading-3 ${(includes([MACHINE_SERIES.ORIGINAL.identifier, MACHINE_SERIES.ORIGINAL_LZ.identifier], selectedMachineSeries)) ? 'margin-top-32' : ''} margin-bottom-16`}>
+                            <div className={`heading-3 ${(includes([SnapmakerOriginalMachine.identifier, SnapmakerOriginalExtendedMachine.identifier], selectedMachineSeries)) ? 'margin-top-32' : ''} margin-bottom-16`}>
                                 {i18n._('key-App/Settings/MachineSettings-3D Print Toolhead')}
                             </div>
                             <div className="sm-flex">

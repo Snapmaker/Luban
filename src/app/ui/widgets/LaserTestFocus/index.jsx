@@ -1,16 +1,17 @@
-import React, { PureComponent } from 'react';
-import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import React from 'react';
+import { connect } from 'react-redux';
+
+import { HEAD_LASER } from '../../../constants';
 import i18n from '../../../lib/i18n';
+import { SnapmakerOriginalExtendedMachine, SnapmakerOriginalMachine } from '../../../machines';
 import {
     WidgetState
 } from '../../components/SMWidget';
 import TestFocus from './TestFocus';
-import { HEAD_LASER } from '../../../constants';
-import { MACHINE_SERIES } from '../../../constants/machines';
 
 
-class LaserTestFocusWidget extends PureComponent {
+class LaserTestFocusWidget extends React.PureComponent {
     static propTypes = {
         headType: PropTypes.string,
         widgetActions: PropTypes.object.isRequired,
@@ -51,7 +52,7 @@ class LaserTestFocusWidget extends PureComponent {
             return false;
         }
 
-        return [MACHINE_SERIES.ORIGINAL.identifier, MACHINE_SERIES.ORIGINAL_LZ.identifier].includes(machineIdentifier);
+        return [SnapmakerOriginalMachine.identifier, SnapmakerOriginalExtendedMachine.identifier].includes(machineIdentifier);
     }
 
     componentDidMount() {

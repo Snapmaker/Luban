@@ -21,7 +21,7 @@ import { valueOf } from '../../lib/contants-utils';
 import { controller } from '../../communication/socket-communication';
 import i18n from '../../lib/i18n';
 import log from '../../lib/log';
-import { SnapmakerOriginalMachine } from '../../machines';
+import { SnapmakerOriginalExtendedMachine, SnapmakerOriginalMachine } from '../../machines';
 import { PresetModel } from '../../preset-model';
 import { machineStore, printingStore } from '../../store/local-storage';
 import { actions as editorActions } from '../editor';
@@ -56,7 +56,7 @@ const INITIAL_STATE = {
      */
     activeMachine: null,
 
-    size: MACHINE_SERIES.ORIGINAL.metadata.size,
+    size: SnapmakerOriginalMachine.metadata.size,
 
     // Serial port
 
@@ -361,10 +361,10 @@ export const actions = {
 
 
         // TODO: machine hard-coded here, refactor later.
-        if (series === MACHINE_SERIES.ORIGINAL.identifier) {
+        if (series === SnapmakerOriginalMachine.identifier) {
             dispatch(actions.setZAxisModuleState(0));
         }
-        if (series === MACHINE_SERIES.ORIGINAL_LZ.identifier) {
+        if (series === SnapmakerOriginalExtendedMachine.identifier) {
             dispatch(actions.setZAxisModuleState(1));
         }
     },

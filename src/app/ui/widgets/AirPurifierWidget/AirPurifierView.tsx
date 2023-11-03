@@ -8,7 +8,7 @@ import {
     SPEED_LOW,
     SPEED_MEDIUM,
 } from '../../../constants';
-import { MACHINE_SERIES } from '../../../constants/machines';
+import { SnapmakerOriginalMachine, SnapmakerOriginalExtendedMachine } from '../../../machines';
 import { RootState } from '../../../flux/index.def';
 import { controller } from '../../../communication/socket-communication';
 import i18n from '../../../lib/i18n';
@@ -55,7 +55,7 @@ const AirPurifierView: React.FC<AirPurifierViewProps> = (props) => {
     };
 
     useEffect(() => {
-        if (airPurifier && isConnected && series !== MACHINE_SERIES.ORIGINAL.identifier && series !== MACHINE_SERIES.ORIGINAL_LZ.identifier) {
+        if (airPurifier && isConnected && series !== SnapmakerOriginalMachine.identifier && series !== SnapmakerOriginalExtendedMachine.identifier) {
             setDisplay(true);
         } else {
             setDisplay(false);

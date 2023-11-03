@@ -3,9 +3,12 @@ import { includes } from 'lodash';
 import React from 'react';
 import { useSelector } from 'react-redux';
 
+import { RootState } from '../../../flux/index.def';
 import i18n from '../../../lib/i18n';
+import { SnapmakerOriginalExtendedMachine, SnapmakerOriginalMachine } from '../../../machines';
 import '../../../styles/introCustom.styl';
 import Steps from '../../components/Steps';
+import PrintingObjectListStyles from '../../views/PrintingObjectList/styles.styl';
 import {
     getStepIntroFromText, printIntroStepEight,
     printIntroStepFive,
@@ -15,10 +18,6 @@ import {
     printIntroStepSeven,
     printIntroStepThree
 } from '../introContent';
-
-import { MACHINE_SERIES } from '../../../constants/machines';
-import { RootState } from '../../../flux/index.def';
-import PrintingObjectListStyles from '../../views/PrintingObjectList/styles.styl';
 
 declare interface StarterGuideProps {
     enabled: boolean;
@@ -34,8 +33,8 @@ const StarterGuide: React.FC<StarterGuideProps> = (props) => {
 
     const isOriginal = includes(
         [
-            MACHINE_SERIES.ORIGINAL.identifier,
-            MACHINE_SERIES.ORIGINAL_LZ.identifier,
+            SnapmakerOriginalMachine.identifier,
+            SnapmakerOriginalExtendedMachine.identifier,
         ],
         activeMachine?.identifier
     );
