@@ -68,7 +68,7 @@ interface VisualizerProps {
     undo: () => void;
     redo: () => void;
 
-    updateEditorState: (state: any) => void
+    updateShowSVGShapeLibrary: (isShow: boolean) => void
 }
 
 
@@ -379,7 +379,7 @@ class Visualizer extends React.Component<VisualizerProps> {
         setMode: (mode, extShape) => {
             this.props.setMode(mode, extShape);
         },
-        updateEditorState: state => this.props.updateEditorState(state)
+        updateShowSVGShapeLibrary: (isShow: boolean) => this.props.updateShowSVGShapeLibrary(isShow)
     };
 
     public constructor(props) {
@@ -857,7 +857,7 @@ const mapDispatchToProps = (dispatch) => {
         onDrawComplete: (elem) => dispatch(editorActions.drawComplete('laser', elem)),
         onBoxSelect: (bbox, onlyContainSelect) => dispatch(editorActions.boxSelect('laser', bbox, onlyContainSelect)),
         setMode: (mode, ext) => dispatch(editorActions.setCanvasMode('laser', mode, ext)),
-        updateEditorState: (state) => dispatch(editorActions.updateEditorState(state)),
+        updateShowSVGShapeLibrary: (isShow: boolean) => dispatch(editorActions.updateShowSVGShapeLibrary(isShow)),
 
         elementActions: {
             moveElementsStart: (elements) => dispatch(editorActions.moveElementsStart('laser', elements)),

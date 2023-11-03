@@ -139,7 +139,7 @@ interface VisualizerProps {
     onDrawDelete: () => void;
 
     showSVGShapeLibrary: boolean;
-    updateEditorState: (state: any) => void;
+    updateShowSVGShapeLibrary: (isShow: boolean) => void;
 }
 
 class Visualizer extends React.Component<VisualizerProps> {
@@ -424,7 +424,7 @@ class Visualizer extends React.Component<VisualizerProps> {
         setMode: (mode, extShape) => {
             this.props.setMode(mode, extShape);
         },
-        updateEditorState: (state) => this.props.updateEditorState(state),
+        updateShowSVGShapeLibrary: (isShow: boolean) => this.props.updateShowSVGShapeLibrary(isShow),
     };
 
     public constructor(props) {
@@ -926,7 +926,7 @@ const mapDispatchToProps = (dispatch) => {
         setMode: (mode, ext) => dispatch(editorActions.setCanvasMode('cnc', mode, ext)),
         updatePromptDamageModel: (bool) => dispatch(machineActions.updatePromptDamageModel(bool)),
         repairSelectedModels: () => dispatch(editorActions.repairSelectedModels('cnc')),
-        updateEditorState: (state) => dispatch(editorActions.updateEditorState(state)),
+        updateShowSVGShapeLibrary: (isShow: boolean) => dispatch(editorActions.updateShowSVGShapeLibrary(isShow)),
 
         elementActions: {
             moveElementsStart: (elements, options) => dispatch(editorActions.moveElementsStart('cnc', elements, options)),

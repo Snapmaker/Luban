@@ -76,7 +76,7 @@ type SVGEditorProps = {
         undo: () => void;
         redo: () => void;
         selectAll: () => void;
-        updateEditorState: (any) => void
+        updateShowSVGShapeLibrary: (isShow: boolean) => void
     };
 };
 
@@ -318,7 +318,7 @@ const SVGEditor = forwardRef<SVGEditorHandle, SVGEditorProps>((props, ref) => {
         createSvgModelByDData(d);
     };
     const updateIsShowSVGShapeLibrary = (isShow: boolean) => {
-        props.editorActions.updateEditorState({ showSVGShapeLibrary: isShow });
+        props.editorActions.updateShowSVGShapeLibrary(isShow);
     };
     const renderSVGShapeLibrary = () => {
         const onClose = () => { updateIsShowSVGShapeLibrary(false); };
@@ -459,7 +459,6 @@ SVGEditor.propTypes = {
     allowedFiles: PropTypes.string.isRequired,
     headType: PropTypes.string,
     showSVGShapeLibrary: PropTypes.bool,
-    updateEditorState: PropTypes.func
 };
 
 export default SVGEditor;
