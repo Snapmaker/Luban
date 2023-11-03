@@ -39,7 +39,7 @@ import {
     RIGHT_EXTRUDER_MAP_NUMBER,
     WHITE_COLOR
 } from '../../constants';
-import { getMachineToolHeadConfigPath, isDualExtruder } from '../../constants/machines';
+import { findToolHead, getMachineToolHeadConfigPath, isDualExtruder } from '../../constants/machines';
 import { isQualityPresetVisible, PRESET_CATEGORY_CUSTOM } from '../../constants/preset';
 
 import { controller } from '../../communication/socket-communication';
@@ -359,7 +359,9 @@ const ACTION_UPDATE_TRANSFORMATION = 'printing/ACTION_UPDATE_TRANSFORMATION';
 
 const createLoadModelWorker = (uploadPath, onMessage) => {
     const task = {
-        worker: workerManager.loadModel(uploadPath, data => {
+        worker: workerManager.loadModel({
+            filePath: uploadPath
+        }, (data) => {
             for (const fn of task.cbOnMessage) {
                 if (typeof fn === 'function') {
                     fn(data);
@@ -4189,6 +4191,10 @@ export const actions = {
         const progressStatesManager = getState().printing.progressStatesManager as ProgressStatesManager;
         const { modelGroup } = getState().printing;
         const { promptDamageModel } = getState().machine;
+        const toolHead = getState().machine.toolHead;
+        const toolHeadIdentifier: string = toolHead.printingToolhead;
+
+        const tool = findToolHead(toolHeadIdentifier);
 
         const models = [...modelGroup.models];
         const meshFileInfos: MeshFileInfo[] = files || [{ originalName, uploadName, isGroup, parentUploadName, modelID, children }];
@@ -4209,6 +4215,8 @@ export const actions = {
             parentModelID,
             primeTowerTag,
             extruderConfig,
+
+            monoColor: tool.metadata.numberOfExtruders === 1,
 
             onProgress: (progress) => {
                 dispatch(

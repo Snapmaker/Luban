@@ -63,8 +63,10 @@ import {
  */
 
 class STLLoader extends Loader {
-    constructor(manager) {
+    constructor(manager, { monoColor = false }) {
         super(manager);
+
+        this.monoColor = monoColor;
     }
 
     load(url, onLoad, onProgress, onError) {
@@ -90,6 +92,8 @@ class STLLoader extends Loader {
     }
 
     parse(data) {
+        const monoColor = this.monoColor;
+
         function matchDataViewAt(query, reader, offset) {
             // Check if each byte in query matches the corresponding byte from the current offset
             for (let i = 0, il = query.length; i < il; i++) {
@@ -197,7 +201,7 @@ class STLLoader extends Loader {
             geometry.setAttribute('position', new BufferAttribute(vertices, 3));
             geometry.setAttribute('normal', new BufferAttribute(normals, 3));
 
-            if (hasColors) {
+            if (hasColors && !monoColor) {
                 geometry.setAttribute('byte_count', new BufferAttribute(colors, 1));
 
             }
