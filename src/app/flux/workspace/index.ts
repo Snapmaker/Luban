@@ -486,6 +486,7 @@ export const actions = {
              *   { key: 7, moduleId: 1500, status: true },
              * ]
              */
+            // Only works for SM 2.0
             'machine:module-list': (options) => {
                 const moduleList = options.moduleList;
 
