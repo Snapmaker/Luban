@@ -17,6 +17,10 @@ class TextSerialChannel extends Channel implements
 
     private controller: MarlinController = null;
 
+    public getController(): MarlinController {
+        return this.controller;
+    }
+
     public onDisconnection = (socket: SocketServer) => {
         const controller = this.controller;
         if (!controller) {

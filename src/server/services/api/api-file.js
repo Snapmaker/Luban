@@ -15,14 +15,13 @@ import { generateRandomPathName } from '../../../shared/lib/random-utils';
 import { removeSpecialChars } from '../../../shared/lib/utils';
 import DataStorage, { rmDir } from '../../DataStorage';
 import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR, HEAD_CNC, HEAD_LASER, HEAD_PRINTING } from '../../constants';
-import { PROTOCOL_TEXT } from '../../controllers/constants';
 import { unzipFile, zipFolder } from '../../lib/archive';
 import { packFirmware } from '../../lib/firmware-build';
 import logger from '../../lib/logger';
 import { convertFileToSTL } from '../../lib/model-to-stl';
 import { parseLubanGcodeHeader } from '../../lib/parseGcodeHeader';
 import { pathWithRandomSuffix } from '../../lib/random-utils';
-import store from '../../store';
+import { textSerialChannel } from '../machine/channels/TextSerialChannel';
 
 const log = logger('api:file');
 
@@ -312,13 +311,6 @@ export const uploadGcodeFile = async (req, res) => {
             });
         }
     }
-
-    /*
-    const controller = store.get(`controllers["${port}/${dataSource}"]`);
-    if (!controller) {
-        return;
-    }
-    */
 };
 
 /**
@@ -326,8 +318,6 @@ export const uploadGcodeFile = async (req, res) => {
  */
 export const uploadUpdateFile = async (req, res) => {
     const file = req.files.file;
-    const port = req.body.port;
-    const dataSource = req.body.dataSource || PROTOCOL_TEXT;
     const originalName = removeSpecialChars(path.basename(file.name));
     const uploadName = pathWithRandomSuffix(originalName);
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
@@ -346,7 +336,7 @@ export const uploadUpdateFile = async (req, res) => {
         }
     }
 
-    const controller = store.get(`controllers["${port}/${dataSource}"]`);
+    const controller = textSerialChannel.getController();
     if (!controller) {
         return;
     }
