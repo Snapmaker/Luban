@@ -265,7 +265,6 @@ const INITIAL_STATE = {
     hasModel: false,
     isAnyModelOverstepped: false,
     // model: null, // selected model
-    // boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()), // bbox of selected model
     stopArea: {
         left: 0,
         right: 0,

@@ -17,7 +17,7 @@ import {
 import logger from '../../../lib/logger';
 import workerManager from '../../task-manager/workerManager';
 import { ConnectionType, EventOptions } from '../types';
-import Channel, { CncChannelInterface, FileChannelInterface, UploadFileOptions } from './Channel';
+import Channel, { CncChannelInterface, ExecuteGcodeResult, FileChannelInterface, LaserChannelInterface, UploadFileOptions } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 
 let waitConfirm: boolean;
@@ -103,9 +103,14 @@ export type GcodeResult = {
     code?: number;
 };
 
+
+interface GCodeQueueItemResponse {
+    result: number;
+    text: string;
+}
 interface GCodeQueueItem {
     gcodes: string[];
-    callback: () => void;
+    callback: (res: GCodeQueueItemResponse) => void;
 }
 
 /**
@@ -113,6 +118,7 @@ interface GCodeQueueItem {
  */
 class SstpHttpChannel extends Channel implements
     FileChannelInterface,
+    LaserChannelInterface,
     CncChannelInterface {
     private isGcodeExecuting = false;
 
@@ -365,8 +371,12 @@ class SstpHttpChannel extends Channel implements
                 .send(`code=${gcode}`)
                 // .send(formData)
                 .end((err, res) => {
-                    const { data, text } = _getResult(err, res);
-                    resolve({ data, text });
+                    const { code, data, text } = _getResult(err, res);
+                    if (err) {
+                        resolve({ code });
+                    } else {
+                        resolve({ data, text });
+                    }
                 });
         });
     };
@@ -380,15 +390,18 @@ class SstpHttpChannel extends Channel implements
         // drain G-code queue
         while (this.gcodeQueue.length > 0) {
             const splice = this.gcodeQueue.splice(0, 1)[0];
-            const result = [];
+            const results = [];
             for (const code of splice.gcodes) {
                 const { text } = await this._executeGcode(code) as GcodeResult;
                 if (text) {
-                    result.push(text);
+                    results.push(text);
                 }
             }
 
-            splice.callback && splice.callback();
+            splice.callback && splice.callback({
+                result: 0,
+                text: results.join('\n'),
+            });
         }
 
         this.isGcodeExecuting = false;
@@ -397,14 +410,23 @@ class SstpHttpChannel extends Channel implements
     /**
      * Generic execute G-code commands.
      */
-    public async executeGcode(gcode: string): Promise<boolean> {
+    public async executeGcode(gcode: string): Promise<ExecuteGcodeResult> {
         return new Promise((resolve) => {
             // enqueue G-code execution
             const split = gcode.split('\n');
             this.gcodeQueue.push({
                 gcodes: split,
-                callback: () => {
-                    resolve(true);
+                callback: ({ result, text }) => {
+                    if (result === 0) {
+                        resolve({
+                            result: 0,
+                            text,
+                        });
+                    } else {
+                        resolve({
+                            result: -1,
+                        });
+                    }
                 }
             });
 
@@ -437,30 +459,72 @@ class SstpHttpChannel extends Channel implements
         return false;
     }
 
+    // interface: LaserChannelInterface
+
+    public async turnOnCrosshair(): Promise<boolean> {
+        const executeResult = await this.executeGcode('M2002 T3 P1');
+        return (executeResult.result === 0);
+    }
+
+    public async turnOffCrosshair(): Promise<boolean> {
+        const executeResult = await this.executeGcode('M2002 T3 P0');
+        return (executeResult.result === 0);
+    }
+
+    public async getCrosshairOffset(): Promise<{ x: number; y: number; }> {
+        return { x: 0, y: 0 };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async setCrosshairOffset(x: number, y: number): Promise<boolean> {
+        return false;
+    }
+
+    public async getFireSensorSensitivity(): Promise<number> {
+        return 0;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public async setFireSensorSensitivity(sensitivity: number): Promise<boolean> {
+        return false;
+    }
+
     // interface: CncChannelInterface
 
     public async setSpindleSpeed(speed: number): Promise<boolean> {
         // on and off to set speed
-        if (await this.executeGcode(`M3 S${speed}`)) return false;
-        if (await this.executeGcode('M5')) return false;
+        let executeResult: ExecuteGcodeResult = null;
+
+        executeResult = await this.executeGcode(`M3 S${speed}`);
+        if (executeResult.result !== 0) return false;
+
+        executeResult = await this.executeGcode('M5');
+        if (executeResult.result !== 0) return false;
 
         return true;
     }
 
     public async setSpindleSpeedPercentage(percent: number): Promise<boolean> {
         // on and off to set speed
-        if (await this.executeGcode(`M3 P${percent}`)) return false;
-        if (await this.executeGcode('M5')) return false;
+        let executeResult: ExecuteGcodeResult = null;
+
+        executeResult = await this.executeGcode(`M3 P${percent}`);
+        if (executeResult.result !== 0) return false;
+
+        executeResult = await this.executeGcode('M5');
+        if (executeResult.result !== 0) return false;
 
         return true;
     }
 
     public async spindleOn(): Promise<boolean> {
-        return this.executeGcode('M3');
+        const executeResult = await this.executeGcode('M3');
+        return executeResult.result === 0;
     }
 
     public async spindleOff(): Promise<boolean> {
-        return this.executeGcode('M5');
+        const executeResult = await this.executeGcode('M5');
+        return executeResult.result === 0;
     }
 
     /**

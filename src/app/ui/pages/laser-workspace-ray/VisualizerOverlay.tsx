@@ -1,11 +1,11 @@
-import React, { useCallback, useRef } from 'react';
 import classNames from 'classnames';
+import React, { useCallback, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 
-import { Button } from '../../components/Buttons';
+import gcodeActions from '../../../flux/workspace/actions-gcode';
+import { GCodeFileMetadata } from '../../../flux/workspace/types';
 import i18n from '../../../lib/i18n';
-import gcodeActions, { GCodeFileObject } from '../../../flux/workspace/actions-gcode';
-import { actions as workspaceActions } from '../../../flux/workspace';
+import { Button } from '../../components/Buttons';
 
 
 const VisualizerOverlay: React.FC = () => {
@@ -22,9 +22,9 @@ const VisualizerOverlay: React.FC = () => {
     const onChangeFile = useCallback(async (event) => {
         const file = event.target.files[0];
 
-        const gcodeFile: GCodeFileObject = await dispatch(gcodeActions.uploadGcodeFile(file));
+        const gcodeFile: GCodeFileMetadata = await dispatch(gcodeActions.uploadGcodeFile(file));
 
-        dispatch(workspaceActions.renderGcodeFile(gcodeFile, false, true));
+        dispatch(gcodeActions.renderGcodeFile(gcodeFile, false, true));
     }, [dispatch]);
 
     return (

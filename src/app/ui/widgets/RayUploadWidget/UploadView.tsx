@@ -1,20 +1,21 @@
 import classNames from 'classnames';
+import { includes } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { includes } from 'lodash';
 
 import { WorkflowStatus } from '@snapmaker/luban-platform';
-import { JobOffsetMode } from '../../../constants/coordinate';
-import SocketEvent from '../../../communication/socket-events';
-import { RootState } from '../../../flux/index.def';
 import controller from '../../../communication/socket-communication';
+import SocketEvent from '../../../communication/socket-events';
+import { JobOffsetMode } from '../../../constants/coordinate';
+import { RootState } from '../../../flux/index.def';
+import gcodeActions from '../../../flux/workspace/actions-gcode';
+import { GCodeFileMetadata } from '../../../flux/workspace/types';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import { Button } from '../../components/Buttons';
 import modalSmallHOC, { ModalSmallHOC } from '../../components/Modal/modal-small';
-import gcodeActions, { GCodeFileObject } from '../../../flux/workspace/actions-gcode';
-import styles from './styles.styl';
 import { getRunBoundayCode } from '../RaySetOriginWidget/SetOriginView';
+import styles from './styles.styl';
 
 export type LoadGcodeOptions = {
     renderImmediately?: boolean;
@@ -109,7 +110,7 @@ const UploadView: React.FC = () => {
         const blob = new Blob([gcode], { type: 'text/plain' });
         const file = new File([blob], 'boundary.nc');
 
-        const gcodeFileObject: GCodeFileObject = await dispatch(gcodeActions.uploadGcodeFile(file));
+        const gcodeFileObject: GCodeFileMetadata = await dispatch(gcodeActions.uploadGcodeFile(file));
 
         return new Promise<boolean>((resolve) => {
             controller
@@ -122,6 +123,12 @@ const UploadView: React.FC = () => {
                         log.error('Unable to upload G-code to execute.');
                         log.error(err);
                         log.error(`Reason: ${text}`);
+                        modalSmallHOC({
+                            title: i18n._('key-Workspace/WifiTransport-Failed to send file.'),
+                            text: text,
+                            iconColor: '#FF4D4F',
+                            img: 'WarningTipsError'
+                        });
                         resolve(false);
                         return;
                     }
@@ -133,10 +140,6 @@ const UploadView: React.FC = () => {
     }, [dispatch, boundingBox, jobOffsetMode]);
 
     const uploadJob = useCallback(async () => {
-        if (!gcodeFile) {
-            return false;
-        }
-
         setIsUploading(true);
 
         return new Promise<boolean>((resolve) => {
@@ -179,12 +182,6 @@ const UploadView: React.FC = () => {
     const onClickUploadJob = useCallback(async () => {
         const success = await uploadBoundary();
         if (!success) {
-            modalSmallHOC({
-                title: i18n._('key-Workspace/WifiTransport-Failed to send file.'),
-                text: i18n._('key-Workspace/WifiTransport-Failed to send file.'),
-                iconColor: '#FF4D4F',
-                img: 'WarningTipsError'
-            });
             return;
         }
 
@@ -198,7 +195,7 @@ const UploadView: React.FC = () => {
                     type="primary"
                     priority="level-one"
                     onClick={onClickUploadJob}
-                    disabled={!isConnected || isWorking}
+                    disabled={!isConnected || isWorking || !gcodeFile}
                 >
                     {i18n._('key-Workspace/Upload Job')}
                 </Button>

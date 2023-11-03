@@ -5,6 +5,7 @@ import React, { PureComponent } from 'react';
 import { Trans } from 'react-i18next';
 import { connect } from 'react-redux';
 
+import gcodeActions from '../../../flux/workspace/actions-gcode';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import generateLaserFocusGcode from '../../../lib/generateLaserFocusGcode';
 import i18n from '../../../lib/i18n';
@@ -283,7 +284,7 @@ class TestFocus extends PureComponent {
 
 const mapDispatchToProps = (dispatch) => ({
     renderGcode: (name, gcode) => dispatch(workspaceActions.renderGcode(name, gcode)),
-    clearGcode: () => dispatch(workspaceActions.clearGcode()),
+    clearGcode: () => dispatch(gcodeActions.clearGcode()),
     executeGcode: (gcode) => dispatch(workspaceActions.executeGcode(gcode))
 });
 

@@ -21,6 +21,11 @@ interface ConnectionCloseOptions {
     force?: boolean;
 }
 
+export interface ExecuteGcodeResult {
+    result: number; // 0 means success, -1 means failed
+    text?: string;
+}
+
 /**
  * Defines basic Channel functions.
  */
@@ -62,8 +67,10 @@ export default class Channel extends EventEmitter {
      * Execute G-code command.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public async executeGcode(gcode: string): Promise<boolean> {
-        return false;
+    public async executeGcode(gcode: string): Promise<ExecuteGcodeResult> {
+        return {
+            result: -1,
+        };
     }
 }
 
@@ -123,6 +130,8 @@ export interface PrintJobChannelInterface extends Channel {
 // Laser
 
 export interface LaserChannelInterface extends Channel {
+    turnOnCrosshair(): Promise<boolean>;
+    turnOffCrosshair(): Promise<boolean>;
     getCrosshairOffset(): Promise<{ x: number; y: number }>;
     setCrosshairOffset(x: number, y: number): Promise<boolean>;
     getFireSensorSensitivity(): Promise<number>;

@@ -66,16 +66,11 @@ const normalizeToRange = (n, min, max) => {
     return n;
 };
 
-declare interface WidgetActions {
-    setTitle: (title: string) => void;
-}
-
-export declare interface ConnectionControlProps {
+declare interface ConnectionControlProps {
     widgetId: string;
-    widgetActions: WidgetActions;
 }
 
-const Control: React.FC<ConnectionControlProps> = ({ widgetId, widgetActions }) => {
+const Control: React.FC<ConnectionControlProps> = ({ widgetId }) => {
     const dispatch = useDispatch();
 
     const { widgets } = useSelector((state: RootState) => state.widget);
@@ -367,8 +362,6 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, widgetActions }) 
     }
 
     useEffect(() => {
-        widgetActions.setTitle(i18n._('key-Workspace/Console-Control'));
-
         addControllerEvents();
         return () => {
             removeControllerEvents();

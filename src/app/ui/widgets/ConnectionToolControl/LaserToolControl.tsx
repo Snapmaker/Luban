@@ -1,15 +1,18 @@
-import { WorkflowStatus } from '@snapmaker/luban-platform';
+import { ToolHead, WorkflowStatus } from '@snapmaker/luban-platform';
 import { includes, isNil } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
+import { controller } from '../../../communication/socket-communication';
 import SocketEvent from '../../../communication/socket-events';
 import { LEVEL_TWO_POWER_LASER_FOR_SM2 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
-import { controller } from '../../../communication/socket-communication';
 import i18n from '../../../lib/i18n';
+import { Button } from '../../components/Buttons';
 import SvgIcon from '../../components/SvgIcon';
 import Switch from '../../components/Switch';
+import { toast } from '../../components/Toast';
+import { makeSceneToast } from '../../views/toasts/SceneToast';
 import WorkSpeed from './WorkSpeed';
 import AttributeContainer from './components/AttributeContainer';
 
@@ -24,6 +27,9 @@ const LaserToolControl: React.FC = () => {
         laserPower,
         headStatus,
     } = useSelector((state: RootState) => state.workspace);
+
+    const activeTool: ToolHead = useSelector((state: RootState) => state.workspace.activeTool);
+    const activeToolMetadata = activeTool.metadata;
 
     const [laserPowerOpen, setLaserPowerOpen] = useState<boolean>(headStatus);
     const [localLaserPower, setLocalLaserPower] = useState<number>(laserPower || 1);
@@ -74,6 +80,26 @@ const LaserToolControl: React.FC = () => {
         setLaserPowerOpen(headStatus);
     }, [laserPower, headStatus]);
 
+    const onClickTurnOnCrosshair = useCallback(() => {
+        controller
+            .emitEvent(SocketEvent.TurnOnCrosshair)
+            .once(SocketEvent.TurnOnCrosshair, ({ err }) => {
+                if (err) {
+                    toast(makeSceneToast('info', i18n._('Failed to turn on crosshair.')));
+                }
+            });
+    }, []);
+
+    const onClickTurnOffCrosshair = useCallback(() => {
+        controller
+            .emitEvent(SocketEvent.TurnOffCrosshair)
+            .once(SocketEvent.TurnOffCrosshair, ({ err }) => {
+                if (err) {
+                    toast(makeSceneToast('info', i18n._('Failed to turn off crosshair.')));
+                }
+            });
+    }, []);
+
     const isPrintingValue = isPrinting();
 
     return (
@@ -99,27 +125,61 @@ const LaserToolControl: React.FC = () => {
             )}
             {isPrintingValue && <WorkSpeed />}
 
-            {!isPrintingValue && (
-                <div className="sm-flex justify-space-between margin-vertical-8">
-                    <span>{i18n._('key-unused-Laser Power')}</span>
+            {/* Turn On/Off laser */}
+            {
+                !isPrintingValue && (
+                    <div className="sm-flex justify-space-between margin-vertical-8">
+                        <span>{i18n._('key-unused-Laser Power')}</span>
+                        <Switch
+                            className="sm-flex-auto"
+                            onClick={onClickLaserPower}
+                            checked={Boolean(laserPowerOpen)}
+                        />
+                    </div>
+                )
+            }
 
-                    <Switch
-                        className="sm-flex-auto"
-                        onClick={onClickLaserPower}
-                        checked={Boolean(laserPowerOpen)}
-                    />
-                </div>
-            )}
-            {!isPrintingValue && (
-                <div className="sm-flex">
-                    <SvgIcon
-                        name="WarningTipsWarning"
-                        color="#FFA940"
-                        type={['static']}
-                    />
-                    <span>{i18n._('key-Workspace/Laser-high_power_tips')}</span>
-                </div>
-            )}
+            {
+                activeToolMetadata.supportCrosshair && (
+                    <div className="sm-flex justify-space-between margin-vertical-8">
+                        <span className="line-height-32">{i18n._('Crosshair')}</span>
+                        <div className="sm-flex justify-flex-end">
+                            <Button
+                                type="default"
+                                priority="level-three"
+                                width="96px"
+                                className="display-inline"
+                                onClick={onClickTurnOnCrosshair}
+                            >
+                                {i18n._('Turn On')}
+                            </Button>
+                            <Button
+                                type="default"
+                                priority="level-three"
+                                width="96px"
+                                className="display-inline margin-left-4"
+                                onClick={onClickTurnOffCrosshair}
+                            >
+                                {i18n._('Turn Off')}
+                            </Button>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* High Power Tips */}
+            {
+                !isPrintingValue && (
+                    <div className="sm-flex">
+                        <SvgIcon
+                            name="WarningTipsWarning"
+                            color="#FFA940"
+                            type={['static']}
+                        />
+                        <span>{i18n._('key-Workspace/Laser-high_power_tips')}</span>
+                    </div>
+                )
+            }
         </div>
     );
 };

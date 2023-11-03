@@ -59,13 +59,14 @@ import Channel, {
     AirPurifierChannelInterface,
     CncChannelInterface,
     EnclosureChannelInterface,
+    ExecuteGcodeResult,
     FileChannelInterface,
     LaserChannelInterface,
     NetworkServiceChannelInterface,
     PrintJobChannelInterface,
     SystemChannelInterface,
     UpgradeFirmwareOptions,
-    UploadFileOptions
+    UploadFileOptions,
 } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 
@@ -201,7 +202,7 @@ class SacpChannelBase extends Channel implements
     /**
      * Generic execute G-code commands.
      */
-    public async executeGcode(gcode: string): Promise<boolean> {
+    public async executeGcode(gcode: string): Promise<ExecuteGcodeResult> {
         const gcodeLines = gcode.split('\n');
 
         const promises = [];
@@ -214,11 +215,16 @@ class SacpChannelBase extends Channel implements
         // if any gcode line fails, then fails
         for (const res of results) {
             if (res.response.result !== 0) {
-                return false;
+                return {
+                    result: -1,
+                };
             }
         }
 
-        return true;
+        return {
+            result: 0,
+            text: 'ok',
+        };
     }
 
     /**
@@ -416,6 +422,16 @@ class SacpChannelBase extends Channel implements
         log.info(`updateLaserPower, ${JSON.stringify(response)}`);
 
         return response.result === 0;
+    }
+
+    public async turnOnCrosshair(): Promise<boolean> {
+        const executeResult = await this.executeGcode('M2000 L13 P1');
+        return (executeResult.result === 0);
+    }
+
+    public async turnOffCrosshair(): Promise<boolean> {
+        const executeResult = await this.executeGcode('M2000 L13 P0');
+        return (executeResult.result === 0);
     }
 
     public async getCrosshairOffset(): Promise<{ x: number; y: number }> {
@@ -1009,18 +1025,21 @@ class SacpChannelBase extends Channel implements
         // TODO: Note this is only for Artisan + J1, not for RayInstance, refactor this
         this.subscribeGetCurrentGcodeLineCallback = async ({ response }) => {
             if (!this.totalLine || !this.estimatedTime) {
-                console.log('Get print file info...');
-                this.sacpClient.getPrintingFileInfo().then((result) => {
-                    console.log('Get print file info, result =', result);
-                    const { totalLine, estimatedTime } = result.data;
-                    if (totalLine) {
-                        this.totalLine = totalLine;
-                    }
-                    if (estimatedTime) {
-                        this.estimatedTime = estimatedTime;
-                    }
-                });
+                if (includes([WorkflowStatus.Running], this.machineStatus)) {
+                    log.info('Get print file info...');
+                    this.sacpClient.getPrintingFileInfo().then((result) => {
+                        log.debug('Get print file info, result =', result);
+                        const { totalLine, estimatedTime } = result.data;
+                        if (totalLine) {
+                            this.totalLine = totalLine;
+                        }
+                        if (estimatedTime) {
+                            this.estimatedTime = estimatedTime;
+                        }
+                    });
+                }
             }
+
             const { currentLine } = new GcodeCurrentLine().fromBuffer(response.data);
             const progress = Math.round((currentLine / this.totalLine) * 100) / 100;
             const sliceTime = new Date().getTime() - this.startTime;

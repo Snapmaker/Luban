@@ -45,6 +45,8 @@ enum SocketEvent {
     SwitchLaserPower = 'connection:switchLaserPower', // ?
     CalcMaterialThickness = 'connection:materialThickness',
     AbortMaterialThickness = 'connection:materialThickness_abort',
+    TurnOnCrosshair = 'connection:turn-on-crosshair',
+    TurnOffCrosshair = 'connection:turn-off-crosshair',
     GetCrosshairOffset = 'connection:get-crosshair-offset',
     SetCrosshairOffset = 'connection:set-crosshair-offset',
     GetFireSensorSensitivity = 'connection:get-fire-sensor-sensitivity',

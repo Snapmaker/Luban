@@ -143,6 +143,16 @@ function updateHandle() {
 
     // Emitted when there is an available update. The update is downloaded automatically if autoDownload is true.
     autoUpdater.on('update-available', async (downloadInfo) => {
+        // {
+        //   version: string;
+        //   files: Array<{ url: string; sha512: string; size: number; }>;
+        //   path: string;
+        //   sha512: string;
+        //   releaseDate: string;
+        //   releaseNotes: string;
+        // }
+        log.debug('event: update-available');
+
         sendUpdateMessage(message.updateAva);
 
         // Get chinese version of release note for zh-CN locale
@@ -192,9 +202,14 @@ function updateHandle() {
     });
     // Emitted when is ready to check for update
     ipcMain.on('checkForUpdate', async (event, autoUpdateProviderOptions) => {
-        log.info(`checkForUpdates, feed URL: ${autoUpdateProviderOptions.url} (${autoUpdateProviderOptions.provider})`);
-
-        autoUpdater.setFeedURL(autoUpdateProviderOptions);
+        // Set feed URL
+        if (autoUpdateProviderOptions.provider === 'generic') {
+            log.info(`Check for updates, feed URL: ${autoUpdateProviderOptions.url}`);
+            autoUpdater.setFeedURL(autoUpdateProviderOptions);
+        } else {
+            log.info(`Check for updates, provider: ${autoUpdateProviderOptions.provider}`);
+            autoUpdater.setFeedURL(autoUpdateProviderOptions);
+        }
 
         try {
             await autoUpdater.checkForUpdates();

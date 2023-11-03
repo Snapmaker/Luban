@@ -10,8 +10,9 @@ import {
     PAGE_PROCESS,
 } from '../../../constants';
 import { actions as editorActions } from '../../../flux/editor';
+import { RootState } from '../../../flux/index.def';
 import { actions as projectActions } from '../../../flux/project';
-import { actions as workspaceActions } from '../../../flux/workspace';
+import gcodeActions from '../../../flux/workspace/actions-gcode';
 import { logGcodeExport } from '../../../lib/gaEvent';
 import i18n from '../../../lib/i18n';
 import modal from '../../../lib/modal';
@@ -26,7 +27,6 @@ import { LaserWorkspaceRay } from '../../pages/laser-workspace-ray';
 import { renderPopup } from '../../utils';
 import Thumbnail from '../CncLaserShared/Thumbnail';
 import styles from './styles.styl';
-import { RootState } from '../../../flux/index.def';
 
 export type LoadGcodeOptions = {
     renderImmediately?: boolean;
@@ -124,7 +124,7 @@ const Output: React.FC<OutputViewProps> = (props) => {
         logGcodeExport(headType, 'workspace', materials.isRotate);
 
         // workspace render G-code
-        await dispatch(workspaceActions.renderGcodeFile(gcodeFile, true, loadGcodeOptions?.renderImmediately || false));
+        await dispatch(gcodeActions.renderGcodeFile(gcodeFile, true, loadGcodeOptions?.renderImmediately || false));
 
         // open workspace
         setShowWorkspace(true);

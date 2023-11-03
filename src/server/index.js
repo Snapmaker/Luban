@@ -3,11 +3,10 @@ import bcrypt from 'bcrypt-nodejs';
 import chalk from 'chalk';
 import dns from 'dns';
 import fs from 'fs';
-import _ from 'lodash';
+import _, { set, size } from 'lodash';
 import os from 'os';
 import path from 'path';
 import http from 'http';
-// import webappengine from 'webappengine';
 
 import DataStorage from './DataStorage';
 import createApplication from './app';
@@ -59,18 +58,18 @@ const createServer = (options, callback) => {
     const accessTokenLifetime = options.accessTokenLifetime || config.get('accessTokenLifetime');
 
     if (accessTokenLifetime) {
-        _.set(settings, 'accessTokenLifetime', accessTokenLifetime);
+        set(settings, 'accessTokenLifetime', accessTokenLifetime);
     }
 
     // allowRemoteAccess
     const allowRemoteAccess = options.allowRemoteAccess || config.get('allowRemoteAccess', false);
 
     if (allowRemoteAccess) {
-        if (_.size(config.get('users')) === 0) {
+        if (size(config.get('users')) === 0) {
             log.warn('You\'ve enabled remote access to the server. It\'s recommended to create an user account to protect against malicious attacks.');
         }
 
-        _.set(settings, 'allowRemoteAccess', allowRemoteAccess);
+        set(settings, 'allowRemoteAccess', allowRemoteAccess);
     }
 
     // Data storage initialize

@@ -1,11 +1,11 @@
 import _ from 'lodash';
 
 import { PROTOCOL_TEXT } from '../../constants';
-import { MACHINE_SERIES } from '../../constants/machines';
+import { SnapmakerOriginalMachine } from '../../machines';
 
 const DEFAULT_STATE = {
     machine: {
-        series: MACHINE_SERIES.ORIGINAL.identifier
+        series: SnapmakerOriginalMachine.identifier
     },
     workspace: {
         default: {

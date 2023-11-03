@@ -20,10 +20,11 @@ const indexMotionColor = {
     'G3': [0, 191, 255]
 };
 
+
 class GcodeToBufferGeometryWorkspace {
     // Attention : switch y <====> z
     // vertexBuffer.push(new THREE.Vector3(this.state.x, this.state.z, -this.state.y));
-    async parse(gcodeFilename, gcode, onParsed = noop, onProgress = noop, onError = noop) {
+    public async parse(gcodeFilename, gcode, onParsed = noop, onProgress = noop, onError = noop) {
         try {
             let gcodeList;
             if (!isEmpty(gcodeFilename)) {
@@ -50,7 +51,7 @@ class GcodeToBufferGeometryWorkspace {
             let lastMotion = '';
             let lastPower = 0;
 
-            let boundingBox = null;
+            let axisWorkRange = null;
 
             const calculateXYZ = (state, modal) => {
                 const { headerType, isRotate = false, diameter } = modal;
@@ -118,8 +119,8 @@ class GcodeToBufferGeometryWorkspace {
                     }
 
                     if (motion === 'G1' && (v1.x !== v2.x || v1.y !== v2.y || v1.z !== v2.z || v1.b !== v2.b)) {
-                        if (boundingBox === null) {
-                            boundingBox = {
+                        if (axisWorkRange === null) {
+                            axisWorkRange = {
                                 max: {
                                     x: v2.x,
                                     y: v2.y,
@@ -134,14 +135,14 @@ class GcodeToBufferGeometryWorkspace {
                                 }
                             };
                         } else {
-                            boundingBox.max.x = Math.max(boundingBox.max.x, v2.x);
-                            boundingBox.max.y = Math.max(boundingBox.max.y, v2.y);
-                            boundingBox.max.z = Math.max(boundingBox.max.z, v2.z);
-                            boundingBox.max.b = Math.max(boundingBox.max.b, v2.b);
-                            boundingBox.min.x = Math.min(boundingBox.min.x, v2.x);
-                            boundingBox.min.y = Math.min(boundingBox.min.y, v2.y);
-                            boundingBox.min.z = Math.min(boundingBox.min.z, v2.z);
-                            boundingBox.min.b = Math.min(boundingBox.min.b, v2.b);
+                            axisWorkRange.max.x = Math.max(axisWorkRange.max.x, v2.x);
+                            axisWorkRange.max.y = Math.max(axisWorkRange.max.y, v2.y);
+                            axisWorkRange.max.z = Math.max(axisWorkRange.max.z, v2.z);
+                            axisWorkRange.max.b = Math.max(axisWorkRange.max.b, v2.b);
+                            axisWorkRange.min.x = Math.min(axisWorkRange.min.x, v2.x);
+                            axisWorkRange.min.y = Math.min(axisWorkRange.min.y, v2.y);
+                            axisWorkRange.min.z = Math.min(axisWorkRange.min.z, v2.z);
+                            axisWorkRange.min.b = Math.min(axisWorkRange.min.b, v2.b);
                         }
                     }
                 },
@@ -261,8 +262,8 @@ class GcodeToBufferGeometryWorkspace {
             bufferGeometry.setAttribute('a_index_color', indexColorAttribute);
             bufferGeometry.setAttribute('a_index', indexAttribute);
 
-            if (boundingBox === null) {
-                boundingBox = {
+            if (axisWorkRange === null) {
+                axisWorkRange = {
                     max: {
                         x: 0,
                         y: 0,
@@ -282,7 +283,7 @@ class GcodeToBufferGeometryWorkspace {
                 bufferGeometry: bufferGeometry,
                 renderMethod: renderMethodTmp,
                 isDone: true,
-                boundingBox: boundingBox
+                axisWorkRange,
             });
         } catch (err) {
             onError(err);

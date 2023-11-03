@@ -6,7 +6,7 @@ const path = require('path');
 const findImports = require('find-imports');
 const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const ManifestPlugin = require('webpack-manifest-plugin');
+const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const nib = require('nib');
@@ -74,7 +74,7 @@ module.exports = {
             new RegExp(`^\\./(${without(languages, 'en').join('|')})$`)
         ),
         // Generates a manifest.json file in your root output directory with a mapping of all source file names to their corresponding output file.
-        new ManifestPlugin({
+        new WebpackManifestPlugin({
             fileName: 'manifest.json'
         }),
         new MiniCssExtractPlugin({

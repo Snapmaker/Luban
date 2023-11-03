@@ -732,6 +732,29 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
         description: 'In constant power mode, the laser does not change with speed and is recommended to be turned on when cutting. And it is recommended to turn it off when picture engraving.',
         type: 'bool'
     },
+    dotWithCompensation: {
+        default_value: 0,
+        label: 'Dot width compensation',
+        description: 'It is used to compensate for deviations caused by the laser spot. It prevents excessive burning in image engraving situations. In the case of cutting, it guarantees more precise dimensions.',
+        type: 'float',
+        unit: 'mm'
+    },
+    scanningPreAccelRatio: {
+        default_value: 0,
+        label: 'Over Scanning',
+        min: 0,
+        max: 100,
+        unit: '%',
+        description: 'Over Scanning allows the true operating speed to be as close as possible to the target speed, but with a certain loss of machining travel. This value represents the percentage of the desired speed that will reach the target speed.',
+        type: 'float',
+    },
+    scanningOffset: {
+        default_value: 0,
+        label: 'Scan Offset',
+        unit: 'mm',
+        type: 'float',
+        description: 'Used for bi-directional filler engraving, it compensates for positioning deviations due to machine backlash.'
+    },
     movementMode: {
         label: 'Movement Mode',
         description: 'Set whether the object is filled with lines or dots.',

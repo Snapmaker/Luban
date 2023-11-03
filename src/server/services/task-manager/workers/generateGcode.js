@@ -7,6 +7,7 @@ import { isNull } from '../../../../shared/lib/utils';
 import { GcodeGenerator } from '../../../lib/GcodeGenerator';
 import logger from '../../../lib/logger';
 import sendMessage from '../utils/sendMessage';
+import settings from '../../../config/settings';
 import { JobOffsetMode } from '../../../../app/constants/coordinate';
 
 
@@ -237,8 +238,11 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, jobOffsetMode, serie
     }
 
     // header end
+    const date = new Date();
     headerGcodes.push(
         ';Header End',
+        `;Snapmaker Luban ${settings.version}`,
+        `;${date.toDateString()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`,
         '',
     );
 
