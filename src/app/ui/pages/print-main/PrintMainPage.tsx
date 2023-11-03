@@ -119,7 +119,7 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
             setShowMachineMaterialSettings(false);
             if (currentSeries !== seriesRef.current || currentToolhead !== toolHeadRef.current.printingToolhead) {
                 dispatch(machineActions.updateMachineSeries(currentSeries));
-                dispatch(machineActions.setZAxisModuleState(currentSeries === MACHINE_SERIES.ORIGINAL_LZ.identifier));
+                dispatch(machineActions.setZAxisModuleState(currentSeries === SnapmakerOriginalExtendedMachine.identifier));
                 dispatch(machineActions.updateMachineToolHead({
                     ...toolHead,
                     printingToolhead: currentToolhead
@@ -379,7 +379,7 @@ function getStarterProject(series, isDual) {
 
     // TODO: Refactor to not hard coding
     let pathConfig;
-    if ([MACHINE_SERIES.ORIGINAL.identifier, MACHINE_SERIES.ORIGINAL_LZ.identifier].includes(series)) {
+    if ([SnapmakerOriginalMachine.identifier, SnapmakerOriginalExtendedMachine.identifier].includes(series)) {
         pathConfig = pathConfigForOriginal;
     } else if (series === SnapmakerArtisanMachine.identifier) {
         pathConfig = CaseConfigPenHolder.pathConfig;
