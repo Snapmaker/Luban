@@ -2905,6 +2905,13 @@ export const actions = {
             type: ACTION_UPDATE_STATE,
             state
         };
+    },
+
+    updateShowSVGShapeLibrary: (showSVGShapeLibrary: boolean) => {
+        return {
+            type: ACTION_UPDATE_STATE,
+            state: { showSVGShapeLibrary }
+        };
     }
 };
 
