@@ -1,4 +1,5 @@
 import React from 'react';
+import { SnapmakerA150Machine, SnapmakerOriginalExtendedMachine, SnapmakerOriginalMachine } from '../../machines';
 
 /**
  * Get step intro node from text.
@@ -111,11 +112,11 @@ const laserCncIntroStepSix = (text1, text2, isRotate, series, headType) => {
         imgSrc = headType === 'cnc' ? '/resources/images/guide-tours/cnc_4_axis_priview.png' : '/resources/images/guide-tours/laser_4_axis_priview.png';
     } else {
         switch (series) {
-            case 'Original':
-            case 'Original Long Z-axis':
+            case SnapmakerOriginalMachine.identifier:
+            case SnapmakerOriginalExtendedMachine.identifier:
                 imgSrc = headType === 'cnc' ? '/resources/images/guide-tours/original_cnc_3_axis_preview.png' : '/resources/images/guide-tours/original_laser_3_axis_preview.png';
                 break;
-            case 'A150':
+            case SnapmakerA150Machine.identifier:
                 imgSrc = headType === 'cnc' ? '/resources/images/guide-tours/cnc_3_axis_priview.png' : '/resources/images/guide-tours/laser_3_axis_priview.png';
                 break;
             default:
