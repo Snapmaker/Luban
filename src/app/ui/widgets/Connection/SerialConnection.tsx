@@ -20,7 +20,12 @@ import connectActions from '../../../flux/workspace/actions-connect';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import { SnapmakerOriginalExtendedMachine, SnapmakerOriginalMachine } from '../../../machines';
-import { highPower10WLaserToolHead, standardLaserToolHead } from '../../../machines/snapmaker-2-toolheads';
+import {
+    L20WLaserToolModule,
+    L40WLaserToolModule,
+    highPower10WLaserToolHead,
+    standardLaserToolHead
+} from '../../../machines/snapmaker-2-toolheads';
 import { laser1600mWToolHeadOriginal, laserToolHeadOriginal } from '../../../machines/snapmaker-original-toolheads';
 import { Button } from '../../components/Buttons';
 import Select from '../../components/Select';
@@ -201,6 +206,24 @@ const SerialConnection: React.FC = () => {
                         moduleName: i18n._('key-Workspace/Connection-Laser-1600mW'),
                         status: true
                     });
+                }
+                switch (toolHead) {
+                    case L20WLaserToolModule.identifier: {
+                        newModuleStatusList.push({
+                            status: true,
+                            moduleName: i18n._('20W Laser Module')
+                        });
+                        break;
+                    }
+                    case L40WLaserToolModule.identifier: {
+                        newModuleStatusList.push({
+                            status: true,
+                            moduleName: i18n._('40W Laser Module')
+                        });
+                        break;
+                    }
+                    default:
+                        break;
                 }
             } else if (headType === HEAD_PRINTING) {
                 if (isDualExtruder(toolHead)) {

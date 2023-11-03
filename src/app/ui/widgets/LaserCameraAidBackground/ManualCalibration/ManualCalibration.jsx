@@ -16,15 +16,16 @@ import Detector from '../../../../scene/three-extensions/Detector';
 import ManualCalibrationControls from '../../../../scene/three-extensions/ManualCalibrationControls';
 import WebGLRendererWrapper from '../../../../scene/three-extensions/WebGLRendererWrapper';
 import styles from '../styles.styl';
+import { SnapmakerA150Machine, SnapmakerA250Machine, SnapmakerA350Machine, SnapmakerArtisanMachine } from '../../../../machines';
 
 export const CALIBRATION_MODE = 1;
 export const CUTOUT_MODE = 2;
 
 const CALIBRATION_CORNERS = {
-    A150: [{ x: 43, y: 122 }, { x: 123, y: 122 }, { x: 123, y: 42 }, { x: 43, y: 42 }],
-    A250: [{ x: 76, y: 180 }, { x: 176, y: 180 }, { x: 176, y: 80 }, { x: 76, y: 80 }],
-    A350: [{ x: 122, y: 228 }, { x: 222, y: 228 }, { x: 222, y: 128 }, { x: 122, y: 128 }],
-    A400: [{ x: 155, y: 255 }, { x: 255, y: 255 }, { x: 255, y: 155 }, { x: 155, y: 155 }]
+    [SnapmakerA150Machine.identifier]: [{ x: 43, y: 122 }, { x: 123, y: 122 }, { x: 123, y: 42 }, { x: 43, y: 42 }],
+    [SnapmakerA250Machine.identifier]: [{ x: 76, y: 180 }, { x: 176, y: 180 }, { x: 176, y: 80 }, { x: 76, y: 80 }],
+    [SnapmakerA350Machine.identifier]: [{ x: 122, y: 228 }, { x: 222, y: 228 }, { x: 222, y: 128 }, { x: 122, y: 128 }],
+    [SnapmakerArtisanMachine.identifier]: [{ x: 155, y: 255 }, { x: 255, y: 255 }, { x: 255, y: 155 }, { x: 155, y: 155 }],
 };
 
 class ManualCalibration extends Component {
@@ -232,12 +233,12 @@ class ManualCalibration extends Component {
                         previewCanvas.applyTranslation(-this.previewTransformation.current.e, -this.previewTransformation.current.f);
                         previewCanvas.applyTranslation(x, y);
                     } else {
-                        if (this.props.series === 'A350') {
+                        if (this.props.series === SnapmakerA350Machine.identifier) {
                             previewCanvas.applyZoom(2, {
                                 x: 80,
                                 y: 80
                             });
-                        } else if (this.props.series === 'A150') {
+                        } else if (this.props.series === SnapmakerA150Machine.identifier) {
                             previewCanvas.applyZoom(4, {
                                 x: 35,
                                 y: 30
@@ -256,7 +257,19 @@ class ManualCalibration extends Component {
         if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
             const affinePoints = this.getPoints();
             const corners = CALIBRATION_CORNERS[this.props.series];
-            const options = { picAmount: 1, currentIndex: 0, size: this.props.size, series: this.props.series, currentArrIndex: 0, getPoints: affinePoints, corners, fileNames: [], stitchFileName: this.state.photoFilename, materialThickness: this.props.materialThickness, applyAntiDistortion: this.props.series === 'A350' };
+            const options = {
+                picAmount: 1,
+                currentIndex: 0,
+                size: this.props.size,
+                series: this.props.series,
+                currentArrIndex: 0,
+                getPoints: affinePoints,
+                corners,
+                fileNames: [],
+                stitchFileName: this.state.photoFilename,
+                materialThickness: this.props.materialThickness,
+                applyAntiDistortion: this.props.series === SnapmakerA350Machine.identifier,
+            };
 
             api.processStitchEach(options).then((stitchImg) => {
                 const { filename } = JSON.parse(stitchImg.text);
@@ -326,12 +339,12 @@ class ManualCalibration extends Component {
                 canvas.applyTranslation(-this.previewTransformation.current.e, -this.previewTransformation.current.f);
                 canvas.applyTranslation(x, y);
             } else {
-                if (this.props.series === 'A350') {
+                if (this.props.series === SnapmakerA350Machine.identifier) {
                     canvas.applyZoom(2, {
                         x: 80,
                         y: 80
                     });
-                } else if (this.props.series === 'A150') {
+                } else if (this.props.series === SnapmakerA150Machine.identifier) {
                     canvas.applyZoom(4, {
                         x: 35,
                         y: 30

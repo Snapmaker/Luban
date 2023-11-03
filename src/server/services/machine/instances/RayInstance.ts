@@ -2,8 +2,10 @@ import { PeerId } from '@snapmaker/snapmaker-sacp-sdk/dist/communication/Header'
 import { includes } from 'lodash';
 
 import {
+    EMERGENCY_STOP_BUTTON,
     LASER_HEAD_MODULE_IDS,
     MODULEID_TOOLHEAD_MAP,
+    ROTARY_MODULE_IDS,
 } from '../../../../app/constants/machines';
 import { SnapmakerRayMachine } from '../../../../app/machines';
 import { HEAD_LASER } from '../../../constants';
@@ -64,6 +66,13 @@ class RayMachineInstance extends MachineInstance {
             if (includes(LASER_HEAD_MODULE_IDS, module.moduleId)) {
                 state.headType = HEAD_LASER;
                 state.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
+            }
+
+            if (includes(ROTARY_MODULE_IDS, module.moduleId)) {
+                moduleListStatus.rotaryModule = true;
+            }
+            if (includes(EMERGENCY_STOP_BUTTON, module.moduleId)) {
+                moduleListStatus.emergencyStopButton = true;
             }
         });
         state.moduleStatusList = moduleListStatus;

@@ -6,7 +6,7 @@ import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { useHistory, withRouter } from 'react-router-dom';
 
 import { LEFT_EXTRUDER, PRINTING_MANAGER_TYPE_MATERIAL } from '../../../constants';
-import { HEAD_PRINTING, MACHINE_SERIES, isDualExtruder } from '../../../constants/machines';
+import { HEAD_PRINTING, isDualExtruder } from '../../../constants/machines';
 import { actions as appGlobalActions } from '../../../flux/app-global';
 import { RootState } from '../../../flux/index.def';
 import { actions as machineActions } from '../../../flux/machine';
@@ -35,10 +35,13 @@ import SceneInitialization from './SceneInitialization';
 import StarterGuide from './StarterGuide';
 import { AccessResourceWebState } from '../../../constants/downloadManager';
 import {
+    SnapmakerOriginalMachine,
+    SnapmakerOriginalExtendedMachine,
     SnapmakerA150Machine,
     SnapmakerA250Machine,
     SnapmakerA350Machine,
     SnapmakerArtisanMachine,
+    SnapmakerJ1Machine,
 } from '../../../machines';
 
 export const openFolder = () => {
@@ -328,7 +331,8 @@ function useRenderMainToolBar(pageMode, setPageMode, profileInitialized = false)
                 (currSeries === SnapmakerA150Machine.identifier && isDual)
                 || (currSeries === SnapmakerA250Machine.identifier && isDual)
                 || (currSeries === SnapmakerA350Machine.identifier && isDual)
-                || currSeries === SnapmakerArtisanMachine.identifier || currSeries === MACHINE_SERIES.J1.identifier
+                || currSeries === SnapmakerArtisanMachine.identifier
+                || currSeries === SnapmakerJ1Machine.identifier
             ) {
                 return true;
             } else {
@@ -383,7 +387,7 @@ function getStarterProject(series, isDual) {
         pathConfig = pathConfigForOriginal;
     } else if (series === SnapmakerArtisanMachine.identifier) {
         pathConfig = CaseConfigPenHolder.pathConfig;
-    } else if (series === MACHINE_SERIES.J1.identifier) {
+    } else if (series === SnapmakerJ1Machine.identifier) {
         pathConfig = CaseConfigGimbal.pathConfig;
     } else {
         // SM 2.0

@@ -465,5 +465,47 @@ export const LASER_1600MW_CALIBRATION_POSITION = {
     },
 };
 
+export const ERROR_REPORT_REASON = {
+    // Air Purifier module
+    '7-1': i18n._('Air Purifier Disconnected. Please power off the machine, replug the Air Purifier, and restart. If the problem persists, contact our Support for help.'),
+
+    // Emergency Stop
+    '8-1': i18n._('Emergency Stop. Please make sure that there is no danger and restart the machine after releasing the emergency stop switch.'),
+
+    // 20W laser module
+    '19-1': i18n._('Abnormal Toolhead Orientation Detection. Please contact our Support for help.'),
+    '19-2': i18n._('Laser Emitter Overheat. Please power off the machine, wait for a while, and restart.If this occurs frequently, contact our Support for help.'),
+    '19-3': i18n._('Slanting Toolhead. Please reinstall the toolhead and make sure it does not slant in any direction. If this occurs frequently, contact our Support for help.'),
+    '19-4': i18n._('Abnormal Laser Emitter. Please contact our Support for help.'),
+    '19-5': i18n._('Abnormal Laser Heat Dissipation. Please contact our Support for help.'),
+    '19-6': i18n._('Flame detected. Please short press the button to resume work when it is safe to do so. The sensitivity of the flame detection can be modified in the machine settings.'),
+    '19-9': i18n._('Abnormal Laser Temperature Sensor. Please contact our Support for help.'),
+    '19-10': i18n._('Laser PCBA Overheat. Please power off the machine, wait for a while, and restart. If this occurs frequently, contact our Support for help.'),
+    '19-12': i18n._('Toolhead Disconnected. Please power off the machine, replug the toolhead, and restart. If the problem persists, contact our Support for help.'),
+    '19-14': i18n._('Laser Locked. Please unlock it on the controller.'),
+
+    // 40W laser module
+    '20-1': i18n._('Abnormal Toolhead Orientation Detection. Please contact our Support for help.'),
+    '20-2': i18n._('Laser Emitter Overheat. Please power off the machine, wait for a while, and restart.If this occurs frequently, contact our Support for help.'),
+    '20-3': i18n._('Slanting Toolhead. Please reinstall the toolhead and make sure it does not slant in any direction. If this occurs frequently, contact our Support for help.'),
+    '20-4': i18n._('Abnormal Laser Emitter. Please contact our Support for help.'),
+    '20-5': i18n._('Abnormal Laser Heat Dissipation. Please contact our Support for help.'),
+    '20-6': i18n._('Flame detected. Please short press the button to resume work when it is safe to do so. The sensitivity of the flame detection can be modified in the machine settings.'),
+    '20-9': i18n._('Abnormal Laser Temperature Sensor. Please contact our Support for help.'),
+    '20-10': i18n._('Laser PCBA Overheat. Please power off the machine, wait for a while, and restart. If this occurs frequently, contact our Support for help.'),
+    '20-12': i18n._('Toolhead Disconnected. Please power off the machine, replug the toolhead, and restart. If the problem persists, contact our Support for help.'),
+    '20-14': i18n._('Laser Locked. Please unlock it on the controller.'),
+
+    // Linear Module
+    '516-7': i18n._('Overstep the limit. X-axis limit switch triggered. Range of motion exceeds machine boundaries. If it occurs during machining, adjust the machine home position or confirm that the Gcode is correct.'),
+    '516-8': i18n._('Overstep the limit. Y-axis limit switch triggered. Range of motion exceeds machine boundaries. If it occurs during machining, adjust the machine home position or confirm that the Gcode is correct.'),
+
+    // Snapmaker Ray - Enclosure
+    '518-2': i18n._('The Enclosure door is opened or Enclosure disconnected. Please close the door or power off the machine, replug the Enclosure.If there is no Enclosure, please turn off door detection in the machine setting.'),
+
+    // Snapmaker Ray - Controller
+    '2051-1': i18n._('Toolhead not detected. Please power off the machine, plug the toolhead into the controller, and restart. If the problem persists, contact our Support for help.'),
+    '2051-5': i18n._('Failed to Home.Please check if any Linear Module is prevented from moving.If the problem persists, contact our Support for help.'),
+};
 
 export default {};

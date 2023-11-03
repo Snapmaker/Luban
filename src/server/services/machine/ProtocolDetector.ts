@@ -155,8 +155,10 @@ class ProtocolDetector {
                 // concat all previous buffer
                 responseBuffer = Buffer.concat([responseBuffer, data]);
                 const m1006Response = responseBuffer.toString();
+                const m1006ResponseHex = responseBuffer.toString();
 
                 log.debug(`M1006 response: "${m1006Response}`);
+                log.debug(`M1006 response hex: "${m1006ResponseHex}`);
 
                 // M1006 response: SACP V1 => SACP
                 if (m1006Response.match(/SACP/g)) {

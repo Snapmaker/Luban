@@ -148,8 +148,11 @@ class SacpChannelBase extends Channel implements
                 this.heartbeatTimer = null;
             }
 
-            this.heartbeatTimer = setTimeout(() => {
+            this.heartbeatTimer = setTimeout(async () => {
                 log.info('Lost heartbeat, close connection.');
+
+                await this.connectionClose({ force: true });
+
                 this.socket && this.socket.emit('connection:close');
             }, 10000);
 
