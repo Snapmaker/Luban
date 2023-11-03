@@ -2,12 +2,21 @@ import { ConvexGeometry } from '@snapmaker/luban-platform';
 import { Observable } from 'rxjs';
 import { BufferGeometry, Group, Vector3 } from 'three';
 
+import log from '../lib/log';
 import ThreeUtils from '../scene/three-extensions/ThreeUtils';
 import ModelLoader from '../ui/widgets/PrintingVisualizer/ModelLoader';
 
-const loadModel = (uploadPath: string) => {
+
+export interface LoadModelOptions {
+    filePath: string;
+    monoColor?: boolean;
+}
+
+const loadModel = (options: LoadModelOptions) => {
+    const { filePath: uploadPath, monoColor = false } = options;
+
     return new Observable((observer) => {
-        new ModelLoader().load(
+        new ModelLoader({ monoColor }).load(
             uploadPath,
             (geometry: BufferGeometry | Group) => {
                 // Rotate x by 90 degrees
@@ -85,6 +94,7 @@ const loadModel = (uploadPath: string) => {
                 observer.next({ type: 'LOAD_MODEL_PROGRESS', progress });
             },
             (err: string) => {
+                log.error(`loadModel: failed ${err}`);
                 observer.next({ type: 'LOAD_MODEL_FAILED', err });
                 observer.complete();
             }

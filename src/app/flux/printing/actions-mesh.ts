@@ -11,6 +11,7 @@ import api from '../../api';
 import { DATA_PREFIX } from '../../constants';
 import { HEAD_PRINTING } from '../../constants/machines';
 import { controller } from '../../communication/socket-communication';
+import log from '../../lib/log';
 import workerManager from '../../lib/manager/workerManager';
 import ModelGroup from '../../models/ModelGroup';
 import { ExtruderConfig, ModelTransformation, TSize } from '../../models/ThreeBaseModel';
@@ -129,9 +130,12 @@ const synchronizeMeshFile = (model: ThreeModel) => {
     };
 };
 
-const createLoadModelWorker = (uploadPath, onMessage) => {
+const createLoadModelWorker = ({ uploadPath, monoColor }, onMessage) => {
     const task = {
-        worker: workerManager.loadModel(uploadPath, data => {
+        worker: workerManager.loadModel({
+            filePath: uploadPath,
+            monoColor,
+        }, (data) => {
             for (const fn of task.cbOnMessage) {
                 if (typeof fn === 'function') {
                     fn(data);
@@ -160,6 +164,8 @@ export type LoadMeshFileOptions = {
     parentModelID?: string;
     primeTowerTag?: boolean;
     extruderConfig?: ExtruderConfig;
+
+    monoColor?: boolean;
 
     onProgress?: (progress: number) => void;
 };
@@ -190,6 +196,8 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
 
         parentModelID,
         primeTowerTag,
+
+        monoColor = false,
 
         onProgress,
     } = options;
@@ -290,7 +298,7 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
                                 }
                                 resolve(model);
                             } catch (e) {
-                                console.log(e);
+                                log.error(e);
                                 promptTasks.push({
                                     status: 'load-model-fail',
                                     originalName: meshFileInfo.originalName
@@ -354,7 +362,10 @@ export const loadMeshFiles = async (meshFileInfos: MeshFileInfo[], modelGroup: M
                             break;
                     }
                 };
-                createLoadModelWorker(uploadPath, onMessage);
+                createLoadModelWorker({
+                    uploadPath,
+                    monoColor,
+                }, onMessage);
             });
 
             return newModel;

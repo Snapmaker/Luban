@@ -34,6 +34,10 @@ function flatGroup(object) {
 }
 
 class ModelLoader {
+    constructor({ monoColor = false }) {
+        this.monoColor = monoColor;
+    }
+
     load(modelPath, onLoad, onProgress, onError) {
         // to fix bug: get firstly uploaded model when load different files with the same filename
         THREE.Cache.clear();
@@ -74,7 +78,7 @@ class ModelLoader {
     }
 
     parseAsStl(modelPath, onLoad, onProgress, onError) {
-        new STLLoader().load(
+        new STLLoader(undefined, { monoColor: this.monoColor }).load(
             modelPath,
             (geometry) => {
                 // call the following if lost reflection

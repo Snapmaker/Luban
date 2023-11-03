@@ -3,6 +3,7 @@ import { isUndefined } from 'lodash';
 import { Pool, Thread, Worker as ThreadsWorker, spawn } from 'threads';
 
 import { machineStore } from '../../store/local-storage';
+import { LoadModelOptions } from '../../workers/loadModel';
 import CalculateSectionPoints, { IMessage as TCalculateSectionPointsMessage } from './ClippingPoolManager.worker';
 import './Pool.worker';
 import './clipperPool.worker';
@@ -54,9 +55,6 @@ class WorkerManager extends EventEmitter {
     public getPool(): Pool<Thread> {
         if (!this.pool) {
             this.initPool();
-            this.loadModel('', (data) => {
-                console.log('data', data);
-            });
         }
 
         return this.pool;
@@ -82,7 +80,7 @@ class WorkerManager extends EventEmitter {
         this.exec('gcodeToBufferGeometry', data, onMessage, onComplete);
     }
 
-    public loadModel<T>(data: unknown, onMessage: (data: T) => void, onComplete?: () => void) {
+    public loadModel<T>(data: LoadModelOptions, onMessage: (data: T) => void, onComplete?: () => void) {
         this.exec('loadModel', data, onMessage, onComplete);
     }
 
