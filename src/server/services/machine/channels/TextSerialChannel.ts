@@ -120,6 +120,12 @@ class TextSerialChannel extends Channel implements
 
     // interface: LaserChannelInterface
 
+    public async turnOnTestLaser(): Promise<boolean> {
+        // Can't detect tool head identifier by now, use 1% temporarily
+        const executeResult = await this.executeGcode('M3 P1 S2.55');
+        return executeResult.result === 0;
+    }
+
     public async turnOnCrosshair(): Promise<boolean> {
         return false;
     }

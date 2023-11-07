@@ -8,6 +8,7 @@ import SocketEvent from '../../../communication/socket-events';
 import { LEVEL_TWO_POWER_LASER_FOR_SM2 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
 import i18n from '../../../lib/i18n';
+import log from '../../../lib/log';
 import { Button } from '../../components/Buttons';
 import SvgIcon from '../../components/SvgIcon';
 import Switch from '../../components/Switch';
@@ -47,14 +48,26 @@ const LaserToolControl: React.FC = () => {
             return;
         }
 
-        controller.emitEvent(SocketEvent.SwitchLaserPower, {
-            isSM2: toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2,
-            laserPower: 1,
-            laserPowerOpen: laserPowerOpen,
-        });
+        if (laserPowerOpen) {
+            controller
+                .emitEvent(SocketEvent.TurnOffLaser)
+                .once(SocketEvent.TurnOffLaser, ({ err }) => {
+                    if (err) {
+                        log.error(err);
+                    }
+                });
+        } else {
+            controller
+                .emitEvent(SocketEvent.TurnOnTestLaser)
+                .once(SocketEvent.TurnOnTestLaser, ({ err }) => {
+                    if (err) {
+                        log.error(err);
+                    }
+                });
+        }
 
         setLaserPowerOpen(!laserPowerOpen);
-    }, [isPrinting, laserPowerOpen, toolHead]);
+    }, [isPrinting, laserPowerOpen]);
 
     const onSaveLaserPower = useCallback((value: number) => {
         controller.emitEvent(SocketEvent.SetLaserPower, {
