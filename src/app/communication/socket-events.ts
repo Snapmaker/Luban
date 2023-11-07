@@ -42,7 +42,8 @@ enum SocketEvent {
      * Laser
      */
     SetLaserPower = 'connection:updateLaserPower',
-    SwitchLaserPower = 'connection:switchLaserPower', // ?
+    TurnOnTestLaser = 'connection:turn-on-test-laser',
+    TurnOffLaser = 'connectoin:turn-off-laser',
     CalcMaterialThickness = 'connection:materialThickness',
     AbortMaterialThickness = 'connection:materialThickness_abort',
     TurnOnCrosshair = 'connection:turn-on-crosshair',

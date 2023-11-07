@@ -1,4 +1,4 @@
-import { isEqual, isNil } from 'lodash';
+import { includes, isEqual, isNil } from 'lodash';
 import request from 'superagent';
 
 import SocketEvent from '../../../../app/communication/socket-events';
@@ -460,6 +460,16 @@ class SstpHttpChannel extends Channel implements
     }
 
     // interface: LaserChannelInterface
+
+    public async turnOnTestLaser(): Promise<boolean> {
+        if (includes([L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], this.state.toolHead)) {
+            const executeResult = await this.executeGcode('M3 P0.2');
+            return executeResult.result === 0;
+        } else {
+            const executeResult = await this.executeGcode('M3 P1 S2.55');
+            return executeResult.result === 0;
+        }
+    }
 
     public async turnOnCrosshair(): Promise<boolean> {
         const executeResult = await this.executeGcode('M2002 T3 P1');

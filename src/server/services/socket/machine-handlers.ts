@@ -30,7 +30,8 @@ function register(socketServer: SocketServer): void {
 
         // laser control services
         [SocketEvent.SetLaserPower]: connectionManager.updateLaserPower,
-        [SocketEvent.SwitchLaserPower]: connectionManager.switchLaserPower,
+        [SocketEvent.TurnOnTestLaser]: connectionManager.turnOnTestLaser,
+        [SocketEvent.TurnOffLaser]: connectionManager.turnOffLaser,
         [SocketEvent.CalcMaterialThickness]: connectionManager.getLaserMaterialThickness,
         [SocketEvent.AbortMaterialThickness]: connectionManager.abortLaserMaterialThickness,
         [SocketEvent.TurnOnCrosshair]: connectionManager.turnOnCrosshair,

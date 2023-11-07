@@ -3,6 +3,8 @@
 const Jimp = require('jimp');
 const fs = require('fs');
 const { cv } = require('opencv-wasm');
+
+import { SnapmakerA250Machine, SnapmakerA350Machine } from '../../../../app/machines';
 import sendMessage from '../utils/sendMessage';
 
 let initialized = false;
@@ -45,25 +47,16 @@ const remap = async () => {
     }
 }
 
-const imageRemap = (fileName, series, materialThickness, _Tmpdir, _ConfigDir) => {
-    return new Promise(async (resolve) => {
-        Tmpdir = _Tmpdir;
-        ConfigDir = _ConfigDir;
-        if (!initialized) {
-            await onRuntimeInitialized(series)
-        }
-        jobs = [{
-            fileName
-        }]
-        await remap()
-
-        resolve()
-    })
-
-}
 async function onRuntimeInitialized(series) {
-    let txt_x = await fs.readFileSync(`${ConfigDir}/mapx_${series}.txt`, { encoding: 'utf8' });
-    let txt_y = await fs.readFileSync(`${ConfigDir}/mapy_${series}.txt`, { encoding: 'utf8' });
+    let shortIdentifier = series;
+    if (series === SnapmakerA350Machine.identifier) {
+        shortIdentifier = '350';
+    } else if (series === SnapmakerA250Machine.identifier) {
+        shortIdentifier = '250';
+    }
+
+    let txt_x = await fs.readFileSync(`${ConfigDir}/mapx_${shortIdentifier}.txt`, { encoding: 'utf8' });
+    let txt_y = await fs.readFileSync(`${ConfigDir}/mapy_${shortIdentifier}.txt`, { encoding: 'utf8' });
 
     let arr_x = txt_x.split(/\s/).filter(i => i).map(j => Number(j));
     let arr_y = txt_y.split(/\s/).filter(i => i).map(j => Number(j));
@@ -77,4 +70,21 @@ async function onRuntimeInitialized(series) {
 
     initialized = true;
 }
+
+const imageRemap = (fileName, series, materialThickness, _Tmpdir, _ConfigDir) => {
+    return new Promise<void>(async (resolve) => {
+        Tmpdir = _Tmpdir;
+        ConfigDir = _ConfigDir;
+        if (!initialized) {
+            await onRuntimeInitialized(series)
+        }
+        jobs = [{
+            fileName
+        }]
+        await remap();
+
+        resolve();
+    });
+};
+
 export default imageRemap;
