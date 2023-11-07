@@ -508,4 +508,9 @@ export const ERROR_REPORT_REASON = {
     '2051-5': i18n._('Failed to Home.Please check if any Linear Module is prevented from moving.If the problem persists, contact our Support for help.'),
 };
 
+export function getErrorReportReason(ownerId: string, errorCode: string): string {
+    const id = `${ownerId}-${errorCode}`;
+    return ERROR_REPORT_REASON[id] || null;
+}
+
 export default {};
