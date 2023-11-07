@@ -463,7 +463,7 @@ class SstpHttpChannel extends Channel implements
 
     public async turnOnTestLaser(): Promise<boolean> {
         if (includes([L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], this.state.toolHead)) {
-            const executeResult = await this.executeGcode('M3 P0.5');
+            const executeResult = await this.executeGcode('M3 P0.2');
             return executeResult.result === 0;
         } else {
             const executeResult = await this.executeGcode('M3 P1 S2.55');

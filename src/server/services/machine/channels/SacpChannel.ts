@@ -423,7 +423,7 @@ class SacpChannelBase extends Channel implements
         let power;
         if (includes([19, 20], module.moduleId)) {
             // 20W & 40W
-            power = 0.5;
+            power = 0.2;
         } else {
             power = 1;
         }
