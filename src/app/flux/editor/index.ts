@@ -613,6 +613,7 @@ export const actions = {
         const formData = new FormData();
         formData.append('image', file);
         formData.append('isRotate', materials.isRotate);
+
         if (fileInfo) {
             const { sourceWidth, sourceHeight, originalName, uploadName } = fileInfo;
 
@@ -627,34 +628,34 @@ export const actions = {
                     isLimit
                 })
             );
-            return;
+        } else {
+            api.uploadImage(formData)
+                .then(res => {
+                    const { sourceWidth, sourceHeight, originalName, uploadName } = res.body;
+                    dispatch(
+                        actions.generateModel(headType, {
+                            originalName,
+                            uploadName,
+                            sourceWidth: sourceWidth,
+                            sourceHeight: sourceHeight,
+                            mode,
+                            config: { svgNodeName: 'image' },
+                            isLimit
+                        })
+                    );
+                })
+                .catch(err => {
+                    log.error(err);
+                    onError && onError(err);
+                    dispatch(
+                        actions.updateState(headType, {
+                            stage: STEP_STAGE.CNC_LASER_UPLOAD_IMAGE_FAILED,
+                            progress: 1
+                        })
+                    );
+                    progressStatesManager.finishProgress(false);
+                });
         }
-        api.uploadImage(formData)
-            .then(res => {
-                const { sourceWidth, sourceHeight, originalName, uploadName } = res.body;
-                dispatch(
-                    actions.generateModel(headType, {
-                        originalName,
-                        uploadName,
-                        sourceWidth: sourceWidth,
-                        sourceHeight: sourceHeight,
-                        mode,
-                        config: { svgNodeName: 'image' },
-                        isLimit
-                    })
-                );
-            })
-            .catch(err => {
-                log.error(err);
-                onError && onError(err);
-                dispatch(
-                    actions.updateState(headType, {
-                        stage: STEP_STAGE.CNC_LASER_UPLOAD_IMAGE_FAILED,
-                        progress: 1
-                    })
-                );
-                progressStatesManager.finishProgress(false);
-            });
     },
 
     checkIsOversizeImage: (headType, file, onError) => async (dispatch, getState) => {
@@ -814,6 +815,7 @@ export const actions = {
             const newModelSize = sourceType !== SOURCE_TYPE.IMAGE3D
                 ? limitModelSizeByMachineSize(coordinateSize, sourceWidth, sourceHeight, isLimit, isScale)
                 : sizeModel(size, materials, sourceWidth, sourceHeight);
+
             width = newModelSize?.width;
             height = newModelSize?.height;
             scale = newModelSize?.scale;
