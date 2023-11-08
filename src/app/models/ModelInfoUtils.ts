@@ -26,35 +26,39 @@ const DEFAULT_TEXT_CONFIG = {
  * Limit model size proportionally.
  *
  * @param size
- * @param width
- * @param height
+ * @param sourceWidth
+ * @param sourceHeight
  */
-const limitModelSizeByMachineSize = (size, width, height, isLimit, isScale = true) => {
-    let height_ = height;
-    let width_ = width;
-    if (width_ * size.y >= height_ * size.x && width_ > size.x && isLimit) {
-        height_ = size.x * height_ / width_;
-        width_ = size.x;
+const limitModelSizeByMachineSize = (size, sourceWidth: number, sourceHeight: number, isLimit: boolean, isScale = true) => {
+    let targetWidth = sourceWidth / 10;
+    let targetHeight = sourceHeight / 10;
+
+    let scaled = false;
+    if (targetWidth * size.y >= targetHeight * size.x && targetWidth > size.x && isLimit) {
+        targetHeight = size.x * targetHeight / targetWidth;
+        targetWidth = size.x;
+        scaled = true;
     }
-    if (height_ * size.x >= width_ * size.y && height_ > size.y && isLimit) {
-        width_ = size.y * width_ / height_;
-        height_ = size.y;
+    if (targetHeight * size.x >= targetWidth * size.y && targetHeight > size.y && isLimit) {
+        targetWidth = size.y * targetWidth / targetHeight;
+        targetHeight = size.y;
+        scaled = true;
     }
-    if (isScale) {
-        height_ *= 0.6;
-        width_ *= 0.6;
+
+    if (scaled && isScale) {
+        targetHeight *= 0.6;
+        targetWidth *= 0.6;
     }
-    return { width: width_, height: height_, scale: round(width_ / width, 2) };
+
+    return { width: targetWidth, height: targetHeight, scale: round(targetWidth / sourceWidth, 2) };
 };
 
-const isOverSizeModel = (size, width, height) => {
-    const height_ = height;
-    const width_ = width;
-    if ((width_ * size.y >= height_ * size.x && width_ > size.x) || (height_ * size.x >= width_ * size.y && height_ > size.y)) {
-        return true;
-    } else {
-        return false;
-    }
+const isOverSizeModel = (size, sourceWidth: number, sourceHeight: number): boolean => {
+    const targetWidth = sourceWidth / 10;
+    const targetHeight = sourceHeight / 10;
+
+    return (targetWidth * size.y >= targetHeight * size.x && targetWidth > size.x)
+        || (targetHeight * size.x >= targetWidth * size.y && targetHeight > size.y);
 };
 
 const MIN_SIZE = {
