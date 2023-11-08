@@ -1,17 +1,21 @@
+import events from 'events';
+import get from 'lodash/get';
 import isEqual from 'lodash/isEqual';
 import isUndefined from 'lodash/isUndefined';
-import get from 'lodash/get';
 import set from 'lodash/set';
-import events from 'events';
 import semver from 'semver';
+
 import {
-    HEAD_PRINTING,
-    HEAD_LASER,
+    L20WLaserToolModule,
+    L40WLaserToolModule,
+    highPower10WLaserToolHead,
+    standardLaserToolHead
+} from '../../../app/machines/snapmaker-2-toolheads';
+import {
     HEAD_CNC,
-    LEVEL_TWO_POWER_LASER_FOR_SM2,
-    LEVEL_ONE_POWER_LASER_FOR_SM2
+    HEAD_LASER,
+    HEAD_PRINTING,
 } from '../constants';
-// import PacketManager from '../PacketManager';
 
 // http://stackoverflow.com/questions/10454518/javascript-how-to-retrieve-the-number-of-decimals-of-a-string-number
 function decimalPlaces(num) {
@@ -920,11 +924,19 @@ class Marlin extends events.EventEmitter {
             switch (payload.headType) {
                 case 'LASER':
                     newState.headType = HEAD_LASER;
-                    newState.toolHead = LEVEL_ONE_POWER_LASER_FOR_SM2;
+                    newState.toolHead = standardLaserToolHead.identifier;
                     break;
                 case '10W LASER':
                     newState.headType = HEAD_LASER;
-                    newState.toolHead = LEVEL_TWO_POWER_LASER_FOR_SM2;
+                    newState.toolHead = highPower10WLaserToolHead.identifier;
+                    break;
+                case '20W LASER':
+                    newState.headType = HEAD_LASER;
+                    newState.toolHead = L20WLaserToolModule.identifier;
+                    break;
+                case '40W LASER':
+                    newState.headType = HEAD_LASER;
+                    newState.toolHead = L40WLaserToolModule.identifier;
                     break;
                 case '3DP':
                     newState.headType = HEAD_PRINTING;
@@ -1091,13 +1103,13 @@ class Marlin extends events.EventEmitter {
 
 export {
     MarlinLineParser,
-    MarlinLineParserResultStart,
-    MarlinLineParserResultPosition,
-    MarlinLineParserResultOk,
     MarlinLineParserResultEcho,
     MarlinLineParserResultError,
-    MarlinLineParserResultTemperature,
+    MarlinLineParserResultOk,
     MarlinLineParserResultOkTemperature,
+    MarlinLineParserResultPosition,
+    MarlinLineParserResultStart,
+    MarlinLineParserResultTemperature,
     MarlinParserHomeState
 };
 export default Marlin;
