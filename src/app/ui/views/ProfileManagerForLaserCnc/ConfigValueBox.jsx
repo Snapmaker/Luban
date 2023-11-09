@@ -151,15 +151,16 @@ function ConfigValueBox({
                                             >
                                                 {group.fields
                                                     && group.fields.map((key) => {
+                                                        const defaultSetting = selectedSettingDefaultValue && selectedSettingDefaultValue[key];
+                                                        if (!defaultSetting) {
+                                                            console.warn('missing default parameter for', key);
+                                                        }
+
                                                         if (type === 'input') {
                                                             return (
                                                                 <SettingItem
-                                                                    settings={
-                                                                        definitionForManager?.settings
-                                                                    }
-                                                                    definitionKey={
-                                                                        key
-                                                                    }
+                                                                    settings={definitionForManager?.settings}
+                                                                    definitionKey={key}
                                                                     // width={managerType === HEAD_CNC && group.name === 'Carving Tool' ? '120px' : '160px'}
                                                                     key={key}
                                                                     isDefaultDefinition={
@@ -169,15 +170,12 @@ function ConfigValueBox({
                                                                         onChangePresetSettings
                                                                     }
                                                                     isProfile="true"
-                                                                    defaultValue={{
-                                                                        // Check to reset
-                                                                        value:
-                                                                            selectedSettingDefaultValue
-                                                                            && selectedSettingDefaultValue[
-                                                                                key
-                                                                            ]
-                                                                                .default_value
-                                                                    }}
+                                                                    defaultValue={
+                                                                        defaultSetting !== undefined ? {
+                                                                            // Check to reset
+                                                                            value: defaultSetting.default_value
+                                                                        } : null
+                                                                    }
                                                                     styleSize={
                                                                         managerType
                                                                             === HEAD_CNC
