@@ -526,14 +526,16 @@ function ProfileManager({
                                                                 !definitionState.isCategorySelected
                                                                 && currentOption.value === definitionForManager.definitionId
                                                             );
+
                                                             let isAllValueDefault = true;
                                                             if (isSelected && currentOption.isDefault && definitionState?.selectedSettingDefaultValue) {
                                                                 const selectedSettingDefaultValue = definitionState?.selectedSettingDefaultValue;
+
                                                                 isAllValueDefault = optionConfigGroup.every((item) => {
                                                                     return item.fields.every((key) => {
                                                                         return (
-                                                                            definitionForManager.settings[key].default_value
-                                                                            === selectedSettingDefaultValue[key].default_value
+                                                                            !selectedSettingDefaultValue[key]
+                                                                            || definitionForManager.settings[key].default_value === selectedSettingDefaultValue[key].default_value
                                                                         );
                                                                     });
                                                                 });
