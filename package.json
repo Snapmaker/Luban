@@ -279,7 +279,6 @@
     "del": "6.1.1",
     "electron": "15.5.7",
     "electron-builder": "23.6.0",
-    "electron-rebuild": "3.2.9",
     "eslint": "7.5.0",
     "eslint-config-airbnb": "18.2.1",
     "eslint-config-airbnb-base": "14.2.1",
