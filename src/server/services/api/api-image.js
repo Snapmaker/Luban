@@ -233,6 +233,8 @@ export const processStitchEach = (req, res) => {
                 msg: 'Unable to process image',
                 error: String(err),
             });
+
+            log.error(err);
         });
 };
 

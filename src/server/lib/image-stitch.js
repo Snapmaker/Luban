@@ -3,11 +3,21 @@ import PerspT from 'perspective-transform';
 import DataStorage from '../DataStorage';
 import workerManager from '../services/task-manager/workerManager';
 import { pathWithRandomSuffix } from './random-utils';
+import logger from './logger';
+
+
+const log = logger('lib/image-stitch');
 
 // TODO: first step in here,we get the points
 async function readImage(filePath) {
-    const image = await Jimp.read(filePath);
-    return image;
+    try {
+        const image = await Jimp.read(filePath);
+        return image;
+    } catch (e) {
+        log.error(`Unable to read image file ${filePath}`);
+        log.error(e);
+        throw e;
+    }
 }
 
 export const remapImage = (fileName, materialThickness, series) => {

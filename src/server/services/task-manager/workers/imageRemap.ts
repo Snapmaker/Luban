@@ -6,6 +6,9 @@ const { cv } = require('opencv-wasm');
 
 import { SnapmakerA250Machine, SnapmakerA350Machine } from '../../../../app/machines';
 import sendMessage from '../utils/sendMessage';
+import logger from '../../../lib/logger';
+
+const log = logger('worker:imageRemap');
 
 let initialized = false;
 let jobs = []
@@ -13,27 +16,31 @@ let map_x, map_y;
 let Tmpdir, ConfigDir = ''
 
 const remap = async () => {
-    const job = jobs.shift()
-    const { fileName } = job
-    let src, dst
+    const job = jobs.shift();
+    const { fileName } = job;
+    let src, dst;
     try {
         const jimpSrc = await Jimp.read(`${Tmpdir}/${fileName}`);
         src = cv.matFromImageData(jimpSrc.bitmap);
 
         dst = new cv.Mat();
-        cv.remap(src, dst, map_x, map_y, cv.INTER_LINEAR,);
+        cv.remap(src, dst, map_x, map_y, cv.INTER_LINEAR);
         const result = new Jimp({
             width: dst.cols,
             height: dst.rows,
             data: Buffer.from(dst.data)
         })
         const outputFileName = `remaped_${fileName}`
-        result.write(`${Tmpdir}/${outputFileName}`);
+        await result.writeAsync(`${Tmpdir}/${outputFileName}`);
+        log.info(`Remap done, output file = ${outputFileName}`);
+
+        // cleanup
         src.delete();
         dst.delete();
+
         sendMessage({ status: 'complete', input: fileName, output: outputFileName })
     } catch (error) {
-        console.error(error)
+        log.error(error)
         if (src) {
             src.delete();
         }
