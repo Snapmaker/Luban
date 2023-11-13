@@ -175,7 +175,7 @@ export default class Slicer extends EventEmitter {
         const timeRegex = /^\[.*] \[info] Print time \(s\): ([\d]+)$/;
 
         array.forEach((item) => {
-            if (item.length < 10) {
+            if (item.length < 6) {
                 return;
             }
             // if (item.indexOf('[debug]') !== -1) {
