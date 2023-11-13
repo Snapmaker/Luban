@@ -8,7 +8,6 @@ import api from '../../../../api';
 import {
     findToolHead,
     LASER_10W_TAKE_PHOTO_POSITION,
-    LEVEL_ONE_POWER_LASER_FOR_SM2,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
 } from '../../../../constants/machines';
 import { actions as workspaceActions } from '../../../../flux/workspace';
@@ -21,6 +20,10 @@ import {
     SnapmakerA350Machine,
     SnapmakerArtisanMachine,
 } from '../../../../machines';
+import {
+    standardLaserToolHead,
+    highPower10WLaserToolHead
+} from '../../../../machines/snapmaker-2-toolheads';
 import { Button } from '../../../components/Buttons';
 import Modal from '../../../components/Modal';
 import ManualCalibration from '../ManualCalibration';
@@ -153,7 +156,7 @@ class ExtractSquareTrace extends React.PureComponent {
             let length;
             const workRangeX = this.props.workRange.max[0];
             const workRangeY = this.props.workRange.max[1];
-            if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
+            if (this.props.toolHead.laserToolhead === standardLaserToolHead.identifier) {
                 cameraOffsetX = 20;
                 cameraOffsetY = -8.5;
                 if (this.props.series === SnapmakerA150Machine.identifier) {
@@ -227,7 +230,7 @@ class ExtractSquareTrace extends React.PureComponent {
             Promise.all([takePhotos, getPhototTasks]).then(() => {
                 this.props.executeGcodeG54(this.props.series, this.props.headType);
 
-                if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
+                if (this.props.toolHead.laserToolhead === standardLaserToolHead.identifier) {
                     if (this.props.series !== SnapmakerA150Machine.identifier) {
                         this.swapItem(this.state.imageNames, 3, 5);
                     } else {
@@ -244,7 +247,7 @@ class ExtractSquareTrace extends React.PureComponent {
                 this.props.updateEachPicSize('xSize', this.state.xSize);
                 this.props.updateEachPicSize('ySize', this.state.ySize);
 
-                if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
+                if (this.props.toolHead.laserToolhead === standardLaserToolHead.identifier) {
                     this.actions.processStitch(this.state.options);
                 } else if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
                     this.setState({
@@ -259,7 +262,7 @@ class ExtractSquareTrace extends React.PureComponent {
         takePhotos: (address, position) => {
             const getPhotoTasks = this.state.getPhotoTasks;
             let z;
-            if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
+            if (this.props.toolHead.laserToolhead === standardLaserToolHead.identifier) {
                 z = 170;
                 if (this.state.options.picAmount === 4) {
                     z = 140;
@@ -305,6 +308,7 @@ class ExtractSquareTrace extends React.PureComponent {
                 return Promise.reject();
             }
             const getPhotoTasks = this.state.getPhotoTasks;
+
             return new Promise(((resolve, reject) => {
                 this.timer = setInterval(() => {
                     if (this.close) {
@@ -333,7 +337,8 @@ class ExtractSquareTrace extends React.PureComponent {
                             if (JSON.parse(res.text).fileName || JSON.parse(res.text).status !== 404) {
                                 const workRangeX = this.props.workRange.max[0];
                                 const workRangeY = this.props.workRange.max[1];
-                                if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
+
+                                if (this.props.toolHead.laserToolhead === standardLaserToolHead.identifier) {
                                     if (this.props.series === SnapmakerA150Machine.identifier) {
                                         this.state.xSize[task.index] = workRangeX / 2;
                                         this.state.ySize[task.index] = workRangeY / 2;
@@ -349,14 +354,16 @@ class ExtractSquareTrace extends React.PureComponent {
                                             this.state.xSize[task.index] = ((workRangeX - this.state.options.centerDis) / 2);
                                         }
                                     }
-                                } else if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                                } else if (this.props.toolHead.laserToolhead === highPower10WLaserToolHead.identifier) {
                                     this.state.xSize[task.index] = workRangeX;
                                     this.state.ySize[task.index] = workRangeY;
                                 }
                                 this.props.updateEachPicSize('xSize', this.state.xSize);
                                 this.props.updateEachPicSize('ySize', this.state.ySize);
 
-                                if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
+                                if (this.props.toolHead.laserToolhead === standardLaserToolHead.identifier) {
+                                    // 1600mW laser module
+                                    // Loading
                                     this.extractingPreview[task.index].current.onChangeImage(
                                         DefaultBgiName,
                                         this.state.xSize[task.index] * this.multiple * 0.85,
@@ -387,7 +394,8 @@ class ExtractSquareTrace extends React.PureComponent {
                                         }
                                         task.status = 2;
                                     });
-                                } else if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                                } else if (this.props.toolHead.laserToolhead === highPower10WLaserToolHead.identifier) {
+                                    // 10W laser module
                                     const { fileName } = JSON.parse(res.text);
                                     this.setState({
                                         options: {
@@ -396,6 +404,7 @@ class ExtractSquareTrace extends React.PureComponent {
                                             stitchFileName: fileName
                                         }
                                     });
+
                                     this.extractingPreview[task.index].current.onChangeImage(
                                         fileName,
                                         this.state.xSize[task.index] * this.multiple * 0.85,
@@ -403,6 +412,7 @@ class ExtractSquareTrace extends React.PureComponent {
                                         task.index,
                                         this.multiple
                                     );
+
                                     api.processStitchEach(this.state.options).then((stitchImg) => {
                                         const { filename } = JSON.parse(stitchImg.text);
                                         if (this.extractingPreview[task.index].current) {
@@ -491,7 +501,7 @@ class ExtractSquareTrace extends React.PureComponent {
                 }
             }
 
-            if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
+            if (this.props.toolHead.laserToolhead === standardLaserToolHead.identifier) {
                 api.processStitch({
                     ...this.state.options,
                     fileNames: this.props.lastFileNames
@@ -569,15 +579,17 @@ class ExtractSquareTrace extends React.PureComponent {
     timer = null;
 
     componentDidMount() {
+        // picture amount
         let picAmount = 1;
-        if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
-            picAmount = 1;
-        } else if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
+        if (this.props.toolHead.laserToolhead === standardLaserToolHead.identifier) {
             picAmount = this.props.series === SnapmakerA150Machine.identifier ? 4 : 9;
+        } else if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+            picAmount = 1;
         }
-        // Set initial photo quality
+
+        // photo quality
         let photoQuality = 255;
-        if (this.props.toolHead.laserToolhead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
+        if (this.props.toolHead.laserToolhead === standardLaserToolHead.identifier) {
             photoQuality = 31;
         } else if (this.props.toolHead.laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
             photoQuality = 10;
@@ -615,11 +627,14 @@ class ExtractSquareTrace extends React.PureComponent {
             this.extractingPreview[i] = React.createRef();
         }
 
+        // Re-do stitch on mounted
         if (this.props.lastFileNames && this.props.lastFileNames.length > 0) {
             this.setState({
                 canStart: false
             });
+
             this.actions.updateStitchEach();
+
             this.setState({
                 canStart: true
             });
