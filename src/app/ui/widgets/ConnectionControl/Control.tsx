@@ -2,9 +2,10 @@ import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { isNil } from 'lodash';
 import includes from 'lodash/includes';
 import map from 'lodash/map';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useMemo, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
+import { controller } from '../../../communication/socket-communication';
 import {
     HEAD_CNC,
     HEAD_PRINTING,
@@ -15,7 +16,6 @@ import { RootState } from '../../../flux/index.def';
 import { actions as widgetsActions } from '../../../flux/widget';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import { MachineAgent } from '../../../flux/workspace/MachineAgent';
-import { controller } from '../../../communication/socket-communication';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
 import { in2mm, mm2in } from '../../../lib/units';
@@ -180,6 +180,12 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId }) => {
                 jogSpeedOptions: [...state.jogSpeedOptions, newOption]
             });
         },
+        getJogSpeed: () => {
+            const { jogSpeed } = state;
+
+            return jogSpeed;
+        },
+
         getJogDistance: () => {
             const { units } = state;
             if (selectedDistance) {
@@ -368,6 +374,12 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId }) => {
         };
     }, [prevState]);
 
+
+    const canClick = useMemo(() => {
+        return isConnected && includes([WorkflowStatus.Unknown, WorkflowStatus.Idle, WorkflowStatus.Stopped], workflowStatus) && !isMoving;
+    }, [isConnected, workflowStatus, isMoving]);
+
+
     useEffect(() => {
         const { keypadJogging, selectedAxis } = state;
 
@@ -377,9 +389,9 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId }) => {
             ...state,
             keypadJogging: (workflowStatus === WorkflowStatus.Idle) ? keypadJogging : false,
             selectedAxis: (workflowStatus === WorkflowStatus.Idle) ? selectedAxis : '',
-            canClick: (workflowStatus === WorkflowStatus.Idle || workflowStatus === WorkflowStatus.Stopped) && !isMoving
+            canClick: canClick,
         });
-    }, [workflowStatus, isMoving]);
+    }, [isConnected, workflowStatus, isMoving, canClick]);
 
     useEffect(() => {
         setState({
@@ -456,11 +468,7 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId }) => {
         }
     }, [state]);
 
-    function canClick() {
-        return isConnected && includes([WorkflowStatus.Unknown, WorkflowStatus.Idle], workflowStatus) && !isMoving;
-    }
-
-    const _canClick = canClick();
+    const _canClick = canClick;
 
     return (
         <div>
@@ -516,6 +524,7 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId }) => {
             </div>
 
             <ControlPanel
+                disabled={!canClick}
                 state={state}
                 workPosition={workPosition}
                 actions={actions}
