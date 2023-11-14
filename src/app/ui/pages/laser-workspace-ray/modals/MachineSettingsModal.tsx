@@ -1,5 +1,5 @@
 import { ToolHeadType } from '@snapmaker/luban-platform';
-import { Alert, Space } from 'antd';
+import { Alert, Space, Tooltip } from 'antd';
 import classNames from 'classnames';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -222,23 +222,27 @@ const MachineSettingsModal: React.FC<MachineNetworkModalProps> = (props) => {
                                     }}
                                 />
                             </div>
-                            <div
-                                className={classNames(
-                                    'sm-flex justify-space-between',
-                                    'width-432',
-                                )}
+                            <Tooltip
+                                title={i18n._('A value of 0-4095 adjusts the sensor sensitivity, with lower values indicating lower sensitivity. A value of 4096 turns off detection.')}
                             >
-                                <span className="line-height-32">{i18n._('Fire Sensor Sensitivity')} (0-4095)</span>
-                                <Input
-                                    suffix=""
-                                    value={fireSensorSensitivity}
-                                    max={4095}
-                                    min={0}
-                                    onChange={(value) => {
-                                        setFireSensorSensitivity(value);
-                                    }}
-                                />
-                            </div>
+                                <div
+                                    className={classNames(
+                                        'sm-flex justify-space-between',
+                                        'width-432',
+                                    )}
+                                >
+                                    <span className="line-height-32">{i18n._('Fire Sensor Sensitivity')} (0-4095)</span>
+                                    <Input
+                                        suffix=""
+                                        value={fireSensorSensitivity}
+                                        max={4096}
+                                        min={0}
+                                        onChange={(value) => {
+                                            setFireSensorSensitivity(value);
+                                        }}
+                                    />
+                                </div>
+                            </Tooltip>
                             <div
                                 className={classNames(
                                     'sm-flex justify-space-between',

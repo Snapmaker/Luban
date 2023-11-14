@@ -2,18 +2,18 @@ import { includes } from 'lodash';
 import React, { useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { actions as workspaceActions } from '../../../flux/workspace';
+import { HEAD_CNC, HEAD_LASER } from '../../../constants';
 import { RootState } from '../../../flux/index.def';
+import { actions as workspaceActions } from '../../../flux/workspace';
 import { MachineAgent } from '../../../flux/workspace/MachineAgent';
-import Switch from '../../components/Switch';
 import i18n from '../../../lib/i18n';
 import { Button } from '../../components/Buttons';
 import Select from '../../components/Select';
+import Switch from '../../components/Switch';
 import JogDistance from './JogDistance';
 import JogPad from './JogPad';
 import MotionButtonGroup from './MotionButtonGroup';
 import styles from './styles.styl';
-import { HEAD_LASER, HEAD_CNC } from '../../../constants';
 
 interface MoveOptions {
     X?: number;
