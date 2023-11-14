@@ -8,7 +8,7 @@ import TipTrigger from '../../components/TipTrigger';
 
 
 const MotionButtonGroup = (props) => {
-    const { state, actions, workPosition } = props;
+    const { state, actions, workPosition, runBoundary } = props;
     const { canClick } = state;
 
     return (
@@ -32,7 +32,7 @@ const MotionButtonGroup = (props) => {
                     type="primary"
                     className="margin-bottom-8 display-block"
                     priority="level-three"
-                    onClick={actions.runBoundary}
+                    onClick={runBoundary}
                     disabled={!canClick}
                 >
                     {i18n._('Run Boundary')}
@@ -85,6 +85,7 @@ MotionButtonGroup.propTypes = {
     state: PropTypes.object,
     workPosition: PropTypes.object,
     actions: PropTypes.object,
+    runBoundary: PropTypes.func,
     // executeGcode: PropTypes.func
 };
 

@@ -1288,6 +1288,11 @@ M3`;
     public coordinateMove = async (socket, options, callback) => {
         const { moveOrders, gcode, jogSpeed, headType } = options;
         // const { moveOrders, gcode, context, cmd, jogSpeed, headType } = options;
+
+        if (gcode) {
+            log.info(`Coordinate move G-code:\n${gcode}`);
+        }
+
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.coordinateMove({ moveOrders, jogSpeed, headType });
         } else {
