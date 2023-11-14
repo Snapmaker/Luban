@@ -5,6 +5,13 @@ import isEqual from 'lodash/isEqual';
 import noop from 'lodash/noop';
 import semver from 'semver';
 
+import {
+    SnapmakerA150Machine,
+    SnapmakerA250Machine,
+    SnapmakerA350Machine,
+    SnapmakerArtisanMachine,
+    SnapmakerRayMachine
+} from '../../../app/machines';
 import { DEFAULT_BAUDRATE } from '../../constants';
 import EventTrigger from '../../lib/EventTrigger';
 import Feeder from '../../lib/Feeder';
@@ -41,7 +48,6 @@ import {
     WRITE_SOURCE_UNKNOWN
 } from '../constants';
 import Marlin from './Marlin';
-import { SnapmakerA150Machine, SnapmakerA250Machine, SnapmakerA350Machine, SnapmakerRayMachine } from '../../../app/machines';
 
 // % commands
 const WAIT = '%wait';
@@ -382,6 +388,9 @@ class MarlinController extends EventEmitter {
                     break;
                 case 'L':
                     machineIdentifier = SnapmakerA350Machine.identifier;
+                    break;
+                case 'A400':
+                    machineIdentifier = SnapmakerArtisanMachine.identifier;
                     break;
                 default:
                     break;

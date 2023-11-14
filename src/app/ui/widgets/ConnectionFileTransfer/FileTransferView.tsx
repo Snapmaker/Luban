@@ -524,6 +524,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                 showLaserStartJobModal && (
                     <LaserStartModal
                         showStartModal={showLaserStartJobModal}
+                        toolHeadIdentifier={toolHeadName}
                         isHeightPower={toolHeadName === LEVEL_TWO_POWER_LASER_FOR_SM2}
                         isRotate={isRotate}
                         isSerialConnect={isSerialPortConnected}
