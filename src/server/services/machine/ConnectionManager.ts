@@ -734,10 +734,11 @@ class ConnectionManager {
                     });
                 });
         } else {
+            // Serial port
             const { workflowState } = options;
             if (includes([SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
                 if (headType === HEAD_LASER && !isRotate) {
-                    if (materialThickness !== 0) {
+                    if (materialThickness !== -1) {
                         await this.channel.laserSetWorkHeight({ toolHead, materialThickness });
                     }
                     const { gcode, jogSpeed = 1500 } = options;

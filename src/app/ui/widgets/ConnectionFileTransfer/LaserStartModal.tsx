@@ -1,5 +1,5 @@
 import { Tooltip } from 'antd';
-import { isString, isUndefined } from 'lodash';
+import { includes, isString, isUndefined } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
 import { Trans } from 'react-i18next';
@@ -12,10 +12,12 @@ import { Button } from '../../components/Buttons';
 import { NumberInput as Input } from '../../components/Input';
 import Modal from '../../components/Modal';
 import { Radio } from '../../components/Radio';
+import { highPower10WLaserToolHead, standardLaserToolHead } from '../../../machines/snapmaker-2-toolheads';
 
 
 interface LaserStartModalProps {
     showStartModal: boolean;
+    toolHeadIdentifier: string;
     isHeightPower: boolean;
     isRotate: boolean;
     isSerialConnect: boolean;
@@ -25,6 +27,7 @@ interface LaserStartModalProps {
 
 const LaserStartModal: React.FC<LaserStartModalProps> = ({
     showStartModal,
+    toolHeadIdentifier,
     isHeightPower,
     isSerialConnect,
     isRotate,
@@ -36,17 +39,26 @@ const LaserStartModal: React.FC<LaserStartModalProps> = ({
     const { materialThickness } = useSelector(state => state?.workspace);
     const dispatch = useDispatch();
 
+    const supportSemiMode = includes([
+        standardLaserToolHead.identifier,
+        highPower10WLaserToolHead.identifier,
+    ], toolHeadIdentifier);
+
     useEffect(() => {
-        if (isSerialConnect) {
-            setSelectedValue(isRotate ? MANUAL_MODE : SEMI_AUTO_MODE);
+        if (isRotate) {
+            setSelectedValue(MANUAL_MODE);
         } else {
-            if (isHeightPower) {
-                setSelectedValue(isRotate ? MANUAL_MODE : AUTO_MDOE);
+            if (isSerialConnect) {
+                setSelectedValue(supportSemiMode ? SEMI_AUTO_MODE : MANUAL_MODE);
             } else {
-                setSelectedValue(isRotate ? MANUAL_MODE : SEMI_AUTO_MODE);
+                if (isHeightPower) {
+                    setSelectedValue(AUTO_MDOE);
+                } else {
+                    setSelectedValue(supportSemiMode ? SEMI_AUTO_MODE : MANUAL_MODE);
+                }
             }
         }
-    }, [isSerialConnect, isRotate, isHeightPower]);
+    }, [isSerialConnect, isRotate, isHeightPower, supportSemiMode]);
 
     const onChange = (event) => {
         setSelectedValue(event.target.value);
@@ -67,6 +79,7 @@ const LaserStartModal: React.FC<LaserStartModalProps> = ({
         const { isSerialConnect: _isSerialConnect } = value;
         return isUndefined(_isSerialConnect) || _isSerialConnect === isSerialConnect;
     };
+
 
     const handleDisplay = v => v.display && handlerAxis(v.display) && handlerPowerLevel(v.display) && handlerConnect(v.display);
     const handleDisable = v => {
@@ -133,7 +146,7 @@ const LaserStartModal: React.FC<LaserStartModalProps> = ({
                     </div>
                 </div>
             ),
-            display: {},
+            display: supportSemiMode && {},
             disable: {
                 isRotate: true,
                 // isHeightPower: true,
