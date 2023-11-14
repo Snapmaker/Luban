@@ -546,7 +546,7 @@ class ConnectionManager {
 
     public setFireSensorSensitivity = async (socket: SocketServer, options: SetFireSensorSensitivityOptions) => {
         log.info('Set fire sensor sensitivity');
-        const sensitivity = Math.max(0, Math.min(4095, options.sensitivity));
+        const sensitivity = Math.max(0, Math.min(4096, options.sensitivity));
 
         try {
             const success = await (this.channel as LaserChannelInterface).setFireSensorSensitivity(sensitivity);
