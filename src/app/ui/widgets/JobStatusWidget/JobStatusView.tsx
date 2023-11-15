@@ -177,7 +177,7 @@ const JobStatusView: React.FC<JobStatusViewProps> = (props) => {
                             <Alert
                                 type="info"
                                 showIcon
-                                message={i18n._('Press the button to pause/resume. Press and hold the button to stop.')}
+                                message={i18n._('Press the work switch to pause/resume. Press and hold the button to stop.')}
                             />
                         </Space>
                     </div>

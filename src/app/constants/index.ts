@@ -716,7 +716,7 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     },
     auxiliaryAirPump: {
         default_value: false,
-        label: 'Auxiliary Air Pump',
+        label: 'Air Assist Pump',
         description: 'It can effectively increase the air flow rate over the laser focus point to achieve better cutting results.However, it may give worse results for non-cutting conditions.',
         type: 'bool',
     },
