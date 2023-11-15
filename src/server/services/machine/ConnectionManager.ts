@@ -49,6 +49,7 @@ import {
     SM2Instance
 } from './instances';
 import { ConnectionType } from './types';
+import SacpChannelBase from './channels/SacpChannel';
 
 const log = logger('lib:ConnectionManager');
 
@@ -438,6 +439,33 @@ class ConnectionManager {
 
     // Laser service
 
+    /**
+     * Turn On test laser.
+     *
+     * Turn on a trivial laser spot for set origin.
+     */
+    public turnOnTestLaser = async (socket: SocketServer) => {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const success = await (this.channel as SacpChannelBase).turnOnTestLaser();
+            socket.emit(SocketEvent.TurnOnTestLaser, { err: !success });
+        } else {
+            const success = await (this.channel as LaserChannelInterface).turnOnTestLaser();
+            socket.emit(SocketEvent.TurnOnTestLaser, { err: !success });
+        }
+    };
+
+    public turnOffLaser = async (socket: SocketServer) => {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const success = await (this.channel as SacpChannelBase).updateLaserPower(0);
+
+            socket.emit(SocketEvent.TurnOffLaser, { err: !success });
+        } else {
+            const executeResult = await this.channel.executeGcode('M5');
+
+            socket.emit(SocketEvent.TurnOffLaser, { err: executeResult.result !== 0 });
+        }
+    }
+
     public turnOnCrosshair = async (socket: SocketServer) => {
         log.info('Turn on crosshair');
 
@@ -518,7 +546,7 @@ class ConnectionManager {
 
     public setFireSensorSensitivity = async (socket: SocketServer, options: SetFireSensorSensitivityOptions) => {
         log.info('Set fire sensor sensitivity');
-        const sensitivity = Math.max(0, Math.min(4095, options.sensitivity));
+        const sensitivity = Math.max(0, Math.min(4096, options.sensitivity));
 
         try {
             const success = await (this.channel as LaserChannelInterface).setFireSensorSensitivity(sensitivity);
@@ -706,10 +734,11 @@ class ConnectionManager {
                     });
                 });
         } else {
+            // Serial port
             const { workflowState } = options;
             if (includes([SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
                 if (headType === HEAD_LASER && !isRotate) {
-                    if (materialThickness !== 0) {
+                    if (materialThickness !== -1) {
                         await this.channel.laserSetWorkHeight({ toolHead, materialThickness });
                     }
                     const { gcode, jogSpeed = 1500 } = options;
@@ -1018,36 +1047,6 @@ M3`;
         }
     };
 
-    public switchLaserPower = (socket, options) => {
-        const { isSM2, laserPower, laserPowerOpen } = options;
-        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            if (laserPowerOpen) {
-                this.channel.updateLaserPower(0);
-            } else {
-                this.channel.updateLaserPower(laserPower);
-            }
-            return;
-        }
-        if (laserPowerOpen) {
-            this.executeGcode(
-                socket,
-                { gcode: 'M5' } // M3 P0 S0
-            );
-        } else {
-            if (isSM2) {
-                this.executeGcode(
-                    socket,
-                    { gcode: 'M3 P1 S2.55' }
-                );
-            } else {
-                this.executeGcode(
-                    socket,
-                    { gcode: `M3 P${laserPower} S${laserPower * 255 / 100}` }
-                );
-            }
-        }
-    };
-
     /**
      * Get Enclosure Info.
      */
@@ -1290,6 +1289,11 @@ M3`;
     public coordinateMove = async (socket, options, callback) => {
         const { moveOrders, gcode, jogSpeed, headType } = options;
         // const { moveOrders, gcode, context, cmd, jogSpeed, headType } = options;
+
+        if (gcode) {
+            log.info(`Coordinate move G-code:\n${gcode}`);
+        }
+
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.coordinateMove({ moveOrders, jogSpeed, headType });
         } else {

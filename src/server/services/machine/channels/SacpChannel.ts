@@ -413,6 +413,26 @@ class SacpChannelBase extends Channel implements
 
     // interface: LaserChannelInterface
 
+    public async turnOnTestLaser(): Promise<boolean> {
+        const module = this.getLaserToolHeadModule();
+        if (!module) {
+            log.error('Set laser power, no matched laser module.');
+            return false;
+        }
+
+        let power;
+        if (includes([19, 20], module.moduleId)) {
+            // 20W & 40W
+            power = 0.2;
+        } else {
+            power = 1;
+        }
+
+        log.info(`turnOnTestLaser, power = ${power}`);
+        const { response } = await this.sacpClient.SetLaserPower(module.key, power);
+        return response.result === 0;
+    }
+
     public async updateLaserPower(value: number): Promise<boolean> {
         const module = this.getLaserToolHeadModule();
         if (!module) {

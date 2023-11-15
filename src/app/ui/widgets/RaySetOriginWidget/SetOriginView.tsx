@@ -20,9 +20,10 @@ import RunBoundaryModal from './modals/RunBoundaryModal';
 
 export const getRunBoundayCode = (axisWorkRange: AxisWorkRange, jobOffsetMode: JobOffsetMode, isRotate: boolean = false) => {
     const useBInsteadOfX = isRotate;
+    const gCommand = jobOffsetMode === JobOffsetMode.Crosshair ? 'G1 S0' : 'G1 S10';
 
     const goto = (x: number, y: number): string => {
-        let code = 'G0';
+        let code = gCommand;
 
         if (useBInsteadOfX) {
             code += ` B${x}`;
@@ -44,7 +45,7 @@ export const getRunBoundayCode = (axisWorkRange: AxisWorkRange, jobOffsetMode: J
     } else if (jobOffsetMode === JobOffsetMode.LaserSpot) {
         // Use laser spot to run boundary
         gcodeList.push('M3 S0');
-        gcodeList.push('G1 F6000 S10'); // turn on laser spot
+        gcodeList.push(`${gCommand} F6000`); // turn on laser spot
     }
 
     gcodeList.push(
@@ -89,8 +90,6 @@ export const getRunBoundayCode = (axisWorkRange: AxisWorkRange, jobOffsetMode: J
     gcodeList.push(
         ';End', // empty line
     );
-
-    console.log('gcode =', gcodeList);
 
     const gcode = gcodeList.join('\n');
 

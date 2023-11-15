@@ -1,9 +1,11 @@
+import { includes } from 'lodash';
 import { MarlinController } from '../../../controllers';
 import { PROTOCOL_TEXT, WRITE_SOURCE_CLIENT } from '../../../controllers/constants';
 import type SocketServer from '../../../lib/SocketManager';
 import logger from '../../../lib/logger';
 import Channel, { CncChannelInterface, ExecuteGcodeResult, LaserChannelInterface } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
+import { L20WLaserToolModule, L40WLaserToolModule } from '../../../../app/machines/snapmaker-2-toolheads';
 
 const log = logger('machine:channels:TextSerialChannel');
 
@@ -16,6 +18,10 @@ class TextSerialChannel extends Channel implements
     private dataSource = '';
 
     private controller: MarlinController = null;
+
+    public getController(): MarlinController {
+        return this.controller;
+    }
 
     public onDisconnection = (socket: SocketServer) => {
         const controller = this.controller;
@@ -115,6 +121,21 @@ class TextSerialChannel extends Channel implements
     }
 
     // interface: LaserChannelInterface
+
+    public async turnOnTestLaser(): Promise<boolean> {
+        const controller = this.getController();
+        const state = controller.controller.state;
+
+        const toolHead = state?.toolHead;
+        if (toolHead && includes([L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], toolHead)) {
+            const executeResult = await this.executeGcode('M3 P0.2');
+            return executeResult.result === 0;
+        } else {
+            // Can't detect tool head identifier by now, use 1% temporarily
+            const executeResult = await this.executeGcode('M3 P1 S2.55');
+            return executeResult.result === 0;
+        }
+    }
 
     public async turnOnCrosshair(): Promise<boolean> {
         return false;

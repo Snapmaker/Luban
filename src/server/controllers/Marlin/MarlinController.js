@@ -5,6 +5,13 @@ import isEqual from 'lodash/isEqual';
 import noop from 'lodash/noop';
 import semver from 'semver';
 
+import {
+    SnapmakerA150Machine,
+    SnapmakerA250Machine,
+    SnapmakerA350Machine,
+    SnapmakerArtisanMachine,
+    SnapmakerRayMachine
+} from '../../../app/machines';
 import { DEFAULT_BAUDRATE } from '../../constants';
 import EventTrigger from '../../lib/EventTrigger';
 import Feeder from '../../lib/Feeder';
@@ -365,11 +372,33 @@ class MarlinController extends EventEmitter {
         });
         this.controller.on('series', (res) => {
             let machineIdentifier = '';
+
             if (res.seriesSize === 'Ray2023') {
                 machineIdentifier = 'Ray';
             }
+            switch (res.seriesSize) {
+                case 'Ray2023':
+                    machineIdentifier = SnapmakerRayMachine.identifier;
+                    break;
+                case 'S':
+                    machineIdentifier = SnapmakerA150Machine.identifier;
+                    break;
+                case 'M':
+                    machineIdentifier = SnapmakerA250Machine.identifier;
+                    break;
+                case 'L':
+                    machineIdentifier = SnapmakerA350Machine.identifier;
+                    break;
+                case 'A400':
+                    machineIdentifier = SnapmakerArtisanMachine.identifier;
+                    break;
+                default:
+                    break;
+            }
 
-            this.checkMachineIsReady({ machineIdentifier });
+            if (machineIdentifier) {
+                this.checkMachineIsReady({ machineIdentifier });
+            }
 
             log.silly(`controller.on('series'): source=${this.history.writeSource},
                  line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
@@ -990,6 +1019,8 @@ class MarlinController extends EventEmitter {
     checkMachineIsReady({ machineIdentifier }) {
         if (!this.ready) {
             this.ready = true;
+
+            this.controller.state.series = machineIdentifier;
 
             this.emitAll('connection:connected', {
                 state: this.controller.state,

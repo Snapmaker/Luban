@@ -24,7 +24,7 @@ import { RootState } from '../../../../flux/index.def';
 import useSetState from '../../../../lib/hooks/set-state';
 import i18n from '../../../../lib/i18n';
 import { toFixed } from '../../../../lib/numeric-utils';
-import { SnapmakerRayMachine } from '../../../../machines';
+import { SnapmakerArtisanMachine, SnapmakerRayMachine } from '../../../../machines';
 import { L20WLaserToolModule, L40WLaserToolModule } from '../../../../machines/snapmaker-2-toolheads';
 import { NumberInput as Input } from '../../../components/Input';
 import Select from '../../../components/Select';
@@ -179,13 +179,15 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
                         value: JobOffsetMode.LaserSpot,
                     },
                 ];
-            } else {
+            } else if (activeMachine?.identifier === SnapmakerArtisanMachine.identifier) {
                 return [
                     {
                         label: i18n._('Crosshair'),
                         value: JobOffsetMode.Crosshair,
                     },
                 ];
+            } else {
+                return [];
             }
         } else {
             return [
@@ -202,8 +204,10 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
         const targetOption = runBoundaryModeOptions.find(option => option.value === jobOffsetMode);
         if (targetOption) {
             setSelectedJobOffsetMode(jobOffsetMode);
-        } else {
+        } else if (runBoundaryModeOptions.length > 0) {
             setSelectedJobOffsetMode(runBoundaryModeOptions[0].value);
+        } else {
+            setSelectedJobOffsetMode(JobOffsetMode.Crosshair);
         }
     }, [jobOffsetMode, runBoundaryModeOptions]);
 
@@ -492,29 +496,34 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
                     )
                 }
             </div>
-            <div className="margin-top-24">
-                <div className="margin-bottom-16 font-weight-bold">
-                    {i18n._('Job Offset')}
-                </div>
-                <TipTrigger
-                    title={i18n._('Job Offset Mode')}
-                    content={i18n._('Crosshair mode uses the crosshair for positioning, while Laser shot mode uses the working laser for positioning.')}
-                >
-                    <div className="sm-flex justify-space-between height-32">
-                        <span className="width-144 margin-right-8 text-overflow-ellipsis">
 
-                            {i18n._('Job Offset Mode')}
-                        </span>
-                        <Select
-                            className="width-120"
-                            options={runBoundaryModeOptions}
-                            value={selectedJobOffsetMode}
-                            onChange={onChangeJobOffsetMode}
-                            disabled={runBoundaryModeOptions.length <= 1}
-                        />
+            {
+                runBoundaryModeOptions.length > 0 && (
+                    <div className="margin-top-24">
+                        <div className="margin-bottom-16 font-weight-bold">
+                            {i18n._('Job Offset')}
+                        </div>
+                        <TipTrigger
+                            title={i18n._('Job Offset Mode')}
+                            content={i18n._('Crosshair mode uses the crosshair for positioning, while Laser shot mode uses the working laser for positioning.')}
+                        >
+                            <div className="sm-flex justify-space-between height-32">
+                                <span className="width-144 margin-right-8 text-overflow-ellipsis">
+
+                                    {i18n._('Job Offset Mode')}
+                                </span>
+                                <Select
+                                    className="width-120"
+                                    options={runBoundaryModeOptions}
+                                    value={selectedJobOffsetMode}
+                                    onChange={onChangeJobOffsetMode}
+                                    disabled={runBoundaryModeOptions.length <= 1}
+                                />
+                            </div>
+                        </TipTrigger>
                     </div>
-                </TipTrigger>
-            </div>
+                )
+            }
         </div>
     );
 });

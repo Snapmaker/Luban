@@ -1,16 +1,15 @@
 import fs from 'fs';
-import store from '../../store';
 
 import {
     ERR_BAD_REQUEST,
     ERR_INTERNAL_SERVER_ERROR
 } from '../../constants';
-import { PROTOCOL_TEXT } from '../../controllers/constants';
 import DataStorage from '../../DataStorage';
+import { textSerialChannel } from '../machine/channels/TextSerialChannel';
 
 
 export const set = (req, res) => {
-    const { port, dataSource = PROTOCOL_TEXT, uploadName } = req.body;
+    const { port, uploadName } = req.body;
 
     if (!port) {
         res.status(ERR_BAD_REQUEST).send({
@@ -28,7 +27,7 @@ export const set = (req, res) => {
         return;
     }
 
-    const controller = store.get(`controllers["${port}/${dataSource}"]`);
+    const controller = textSerialChannel.getController();
     if (!controller) {
         /*
         res.status(ERR_BAD_REQUEST).send({
@@ -56,7 +55,7 @@ export const set = (req, res) => {
 
 export const get = (req, res) => {
     // const port = req.query.port;
-    const { port, dataSource = PROTOCOL_TEXT } = req.query;
+    const { port } = req.query;
 
     if (!port) {
         res.status(ERR_BAD_REQUEST).send({
@@ -65,7 +64,7 @@ export const get = (req, res) => {
         return;
     }
 
-    const controller = store.get(`controllers["${port}/${dataSource}"]`);
+    const controller = textSerialChannel.getController();
     if (!controller) {
         /*
         res.status(ERR_BAD_REQUEST).send({
@@ -88,7 +87,7 @@ export const get = (req, res) => {
 
 export const download = (req, res) => {
     // const port = req.query.port;
-    const { port, dataSource } = req.query;
+    const { port } = req.query;
 
     if (!port) {
         res.status(ERR_BAD_REQUEST).send({
@@ -97,7 +96,7 @@ export const download = (req, res) => {
         return;
     }
 
-    const controller = store.get(`controllers["${port}/${dataSource}"]`);
+    const controller = textSerialChannel.getController();
     if (!controller) {
         /*
         res.status(ERR_BAD_REQUEST).send({

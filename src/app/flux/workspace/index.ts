@@ -135,6 +135,9 @@ export const actions = {
                     machineSeries = valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`)
                         ? valueOf(MACHINE_SERIES, 'alias', `${series}-${seriesSize}`).value
                         : null;
+
+                    machineSeries = series;
+
                     dispatch(gcodeActions.loadGcode());
                 } else {
                     const _isRotate = moduleStatusList?.rotaryModule || false;

@@ -390,18 +390,8 @@ class DataStorage {
         );
 
         downloadManager.downloadIfNotExist(
-            'https://snapmaker-luban.s3.us-west-1.amazonaws.com/camera-capture/mapx_350.txt',
-            join(this.configDir, 'mapx_A350.txt')
-        );
-
-        downloadManager.downloadIfNotExist(
             'https://snapmaker-luban.s3.us-west-1.amazonaws.com/camera-capture/mapy_350.txt',
             join(this.configDir, 'mapy_350.txt')
-        );
-
-        downloadManager.downloadIfNotExist(
-            'https://snapmaker-luban.s3.us-west-1.amazonaws.com/camera-capture/mapy_350.txt',
-            join(this.configDir, 'mapy_A350.txt')
         );
     }
 

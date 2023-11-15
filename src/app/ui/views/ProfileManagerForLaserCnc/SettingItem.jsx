@@ -22,7 +22,7 @@ function SettingItem({ definitionKey, settings, isDefaultDefinition = false, onC
     }
     const { label, description, type, unit = '', enabled, options, min, max } = setting;
     const settingDefaultValue = setting.default_value;
-    const isDefault = defaultValue && (defaultValue.value === settingDefaultValue);
+    const isDefault = !defaultValue || (defaultValue.value === settingDefaultValue);
     if (typeof enabled === 'string') {
         if (enabled.indexOf(' and ') !== -1) {
             const andConditions = enabled.split(' and ').map(c => c.trim());
