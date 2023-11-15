@@ -170,7 +170,7 @@ class GcodeParameters extends PureComponent {
             }
         });
 
-        // section Auxiliary Gas
+        // section Assist Gas
         const laserDefinitionAuxiliaryGasKeys = ['auxiliaryAirPump'];
         const laserDefinitionAuxiliary = {};
         laserDefinitionAuxiliaryGasKeys.forEach((key) => {
@@ -310,7 +310,7 @@ class GcodeParameters extends PureComponent {
                                     type={['static']}
                                     size={24}
                                 />
-                                <span>{i18n._('key-Laser/ToolpathParameters-Auxiliary Gas')}</span>
+                                <span>{i18n._('key-Laser/ToolpathParameters-Assist Gas')}</span>
                             </div>
                             <ToolParameters
                                 settings={laserDefinitionAuxiliary}

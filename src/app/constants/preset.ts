@@ -216,7 +216,7 @@ export function getLaserPresetGroups(machine: Machine | null, toolHeadIdentifier
     // Remove auxiliary gas group if not using 20W module or 40W module
     if (includes([L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], toolHeadIdentifier)) {
         presetGroups.push({
-            name: 'key-Laser/ToolpathParameters-Auxiliary Gas',
+            name: 'key-Laser/ToolpathParameters-Assist Gas',
             fields: ['auxiliary_air_pump']
         });
     }

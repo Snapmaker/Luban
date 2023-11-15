@@ -60,7 +60,7 @@ const getSteps = (series: string, isRotate: boolean): StepItem[] => {
                 i18n._('In object origin mode, the origin is at the corners or center of the object.'),
                 i18n._('In workpiece origin mode, the origin is at the corners or center of the workpiece.'),
                 i18n._('This point (X0, Y0) is the origin of the design coordinate system, and the origin to be positioned or set on the machine needs to coincide with this point.'),
-                i18n._('There are two types of origin offset modes: crosshair mode and low light mode. In most cases we recommend using the crosshair mode, it is safer and easier to use. The laser point mode is only recommended when full-stroke machining is required.')
+                i18n._('There are two types of origin offset modes: crosshair mode and laser shot mode. In most cases we recommend using the crosshair mode, it is safer and easier to use. The laser shot mode is only recommended when full-stroke machining is required.')
             ),
             title: `${i18n._('key-Laser/Page-Job Setup')} (1/8)`
         },
