@@ -28,7 +28,9 @@ import MaterialThicknessInput from '../../widgets/LaserCameraAidBackground/Mater
 import SelectCaptureMode, { MODE_THICKNESS_COMPENSATION } from '../../widgets/LaserCameraAidBackground/SelectCaptureMode';
 import LaserSetBackground from '../../widgets/LaserSetBackground';
 
-function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setShowWorkspace, onChangeSVGClippingMode }) {
+function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setShowWorkspace, onChangeSVGClippingMode, onChangeABPositionMode }) {
+    const isOnABPosition = useSelector((state: RootState) => state.laser?.isOnABPosition);
+
     const size = useSelector((state: RootState) => state.machine?.size);
     const unSaved = useSelector((state: RootState) => state.project[headType]?.unSaved, shallowEqual);
     const isRotate = useSelector(state => state[headType]?.materials?.isRotate, shallowEqual);
@@ -50,6 +52,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         toolHead: workspaceToolHead,
         isRotate: workspaceIsRotate,
     } = useSelector((state: RootState) => state.workspace);
+
 
     const dispatch = useDispatch();
 
@@ -143,6 +146,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         {
             title: i18n._('key-CncLaser/MainToolBar-Home'),
             type: 'button',
+            disabled: isOnABPosition,
             name: 'MainToolbarHome',
             action: async () => {
                 await dispatch(editorActions.onRouterWillLeave(headType));
@@ -152,6 +156,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         {
             title: i18n._('key-CncLaser/MainToolBar-Workspace'),
             type: 'button',
+            disabled: isOnABPosition,
             name: 'MainToolbarWorkspace',
             action: async () => {
                 await dispatch(editorActions.onRouterWillLeave(headType));
@@ -163,7 +168,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         },
         {
             title: i18n._('key-CncLaser/MainToolBar-Save'),
-            disabled: !unSaved,
+            disabled: !unSaved || isOnABPosition,
             type: 'button',
             name: 'MainToolbarSave',
             iconClassName: 'cnc-laser-save-icon',
@@ -173,7 +178,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         },
         {
             title: i18n._('key-CncLaser/MainToolBar-Undo'),
-            disabled: !canUndo,
+            disabled: !canUndo || isOnABPosition,
             type: 'button',
             name: 'MainToolbarUndo',
             action: () => {
@@ -182,7 +187,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         },
         {
             title: i18n._('key-CncLaser/MainToolBar-Redo'),
-            disabled: !canRedo,
+            disabled: !canRedo || isOnABPosition,
             type: 'button',
             name: 'MainToolbarRedo',
             action: () => {
@@ -192,6 +197,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         {
             title: i18n._('key-CncLaser/MainToolBar-Job Setup'),
             type: 'button',
+            disabled: isOnABPosition,
             name: 'MainToolbarJobSetup',
             action: () => {
                 setShowJobType(true);
@@ -203,6 +209,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         {
             title: i18n._('key-CncLaser/MainToolBar-Top'),
             type: 'button',
+            disabled: isOnABPosition,
             name: 'MainToolbarTop',
             action: () => {
                 dispatch(editorActions.bringSelectedModelToFront(headType));
@@ -211,6 +218,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         {
             title: i18n._('key-CncLaser/MainToolBar-Bottom'),
             type: 'button',
+            disabled: isOnABPosition,
             name: 'MainToolbarBottom',
             action: () => {
                 dispatch(editorActions.sendSelectedModelToBack(headType));
@@ -227,7 +235,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         {
             title: i18n._('key-CncLaser/MainToolBar-Vector Tool'),
             type: 'button',
-            disabled: headType !== 'laser',
+            disabled: headType !== 'laser' || isOnABPosition,
             name: 'ToolVector',
             action: () => {
                 dispatch(onChangeSVGClippingMode);
@@ -286,6 +294,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             {
                 title: i18n._('key-CncLaser/MainToolBar-Mask'),
                 type: 'button',
+                disabled: isOnABPosition,
                 name: 'MainToolbarMask',
                 action: async () => {
                     const svgs = LaserSelectedModelArray.filter(v => v.sourceType === 'svg' && v.mode === PROCESS_MODE_VECTOR);
@@ -311,6 +320,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             {
                 title: i18n._('key-CncLaser/MainToolBar-Inverse Mask'),
                 type: 'button',
+                disabled: isOnABPosition,
                 name: 'MainToolbarInversemask',
                 action: async () => {
                     const svgs = LaserSelectedModelArray.filter(v => v.sourceType === 'svg' && v.mode === PROCESS_MODE_VECTOR);
@@ -342,6 +352,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             {
                 // MainToolbarCameraCapture
                 type: 'render',
+                disabled: isOnABPosition,
                 customRender: () => {
                     const toolIdentifer = machineToolHead.laserToolhead;
                     const machineToolOptions = getMachineToolOptions(activeMachine?.identifier, toolIdentifer);
@@ -381,11 +392,26 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             {
                 title: i18n._('key-CncLaser/MainToolBar-ShapeRepository'),
                 type: 'button',
+                disabled: isOnABPosition,
                 name: 'MainToolbarShapeRepository',
                 action: () => {
                     dispatch(editorActions.updateEditorState({ showSVGShapeLibrary: true }));
                 }
             },);
+
+        // if (!isOriginalSeries) {
+        //     const canABPosition = isConnected && connectedMachineIdentifier === activeMachine.identifier && workspaceHeadType === HEAD_LASER;
+        leftItems.push({
+            title: i18n._('key-CncLaser/MainToolBar-A-B Position'),
+            type: 'button',
+            disabled: headType !== 'laser'/* || !canABPosition */,
+            name: 'ABPosition',
+            action: () => {
+                onChangeABPositionMode();
+                dispatch(laserActions.updateIsOnABPosition(!isOnABPosition));
+            }
+        });
+        // }
     }
 
     // CNC specific tools
@@ -472,6 +498,10 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         );
     }
 
+
+    useEffect(() => {
+        console.log('$$$$222', { connectionType, isConnected, workspaceToolHead, workspaceIsRotate, workspaceHeadType, connectedMachineIdentifier, activeMachine });
+    }, [workspaceToolHead, workspaceIsRotate, workspaceHeadType, connectedMachineIdentifier, activeMachine]);
 
     const materialThickness = React.useRef(null);
     const setBackgroundModal = cameraCaptureInfo.display && (() => {

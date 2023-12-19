@@ -41,6 +41,7 @@ interface OutputViewProps {
 const Output: React.FC<OutputViewProps> = (props) => {
     const { headType, loadGcodeOptions } = props;
 
+    const isOnABPosition = useSelector((state: RootState) => state.laser.isOnABPosition);
     const activeMachine = useSelector((state: RootState) => state.machine.activeMachine);
 
     const displayedType = useSelector((state: RootState) => state[headType]?.displayedType);
@@ -210,7 +211,7 @@ const Output: React.FC<OutputViewProps> = (props) => {
                         type="primary"
                         priority="level-one"
                         onClick={actions.switchToProcess}
-                        disabled={!hasModel ?? false}
+                        disabled={isOnABPosition || (!hasModel ?? false)}
                     >
                         {i18n._('key-CncLaser/G-codeAction-Next')}
                     </Button>
@@ -220,7 +221,7 @@ const Output: React.FC<OutputViewProps> = (props) => {
                         type="primary"
                         priority="level-one"
                         onClick={actions.preview}
-                        disabled={(!hasToolPathModel ?? false) || shouldRenderToolPaths}
+                        disabled={isOnABPosition || ((!hasToolPathModel ?? false) || shouldRenderToolPaths)}
                     >
                         {i18n._('key-CncLaser/G-codeAction-Generate G-code and Preview')}
                     </Button>
@@ -229,6 +230,7 @@ const Output: React.FC<OutputViewProps> = (props) => {
                     <Button
                         type="default"
                         priority="level-one"
+                        disabled={isOnABPosition}
                         onClick={() => {
                             actions.switchToEditPage();
                             actions.handleMouseOut();
@@ -242,6 +244,7 @@ const Output: React.FC<OutputViewProps> = (props) => {
                     <Button
                         type="default"
                         priority="level-one"
+                        disabled={isOnABPosition}
                         onClick={() => {
                             actions.showToolPathObject();
                         }}
@@ -264,7 +267,7 @@ const Output: React.FC<OutputViewProps> = (props) => {
                             <Button
                                 type="primary"
                                 priority="level-one"
-                                disabled={shouldRenderToolPaths || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null}
+                                disabled={isOnABPosition || (shouldRenderToolPaths || !hasModel || workflowState === 'running' || isGcodeGenerating || gcodeFile === null)}
                                 className={classNames(
                                     'position-absolute',
                                     // 'bottom-ne-8',

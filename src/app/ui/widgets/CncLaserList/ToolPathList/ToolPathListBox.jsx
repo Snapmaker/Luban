@@ -147,6 +147,7 @@ ToolpathItem.propTypes = {
 
 
 const ToolPathListBox = (props) => {
+    const isOnABPosition = useSelector(state => state.laser?.isOnABPosition);
     const page = useSelector(state => state[props.headType]?.page);
     const toolPaths = useSelector(state => state[props.headType]?.toolPathGroup?.getToolPaths(), shallowEqual);
     const selectedToolPathIDArray = useSelector(state => state[props.headType]?.toolPathGroup?.selectedToolPathArray, shallowEqual);
@@ -297,7 +298,7 @@ const ToolPathListBox = (props) => {
                                     onClickVisible={actions.onClickVisible}
                                     setEditingToolpath={setEditingToolpath}
                                     showContextMenu={actions.showContextMenu}
-                                    disabled={inProgress}
+                                    disabled={isOnABPosition || inProgress}
                                 />
                             );
                         })}
@@ -321,7 +322,7 @@ const ToolPathListBox = (props) => {
                     >
                         <SvgIcon
                             name="Delete"
-                            disabled={selectedToolPathIDArray.length < 1}
+                            disabled={isOnABPosition || selectedToolPathIDArray.length < 1}
                             size={24}
                             title={i18n._('key-CncLaser/ToolPathList/Button/-Delete')}
                             onClick={() => actions.deleteToolPath(selectedFirstToolPathId)}
@@ -336,14 +337,14 @@ const ToolPathListBox = (props) => {
                             className={classNames(
                                 'margin-horizontal-8',
                             )}
-                            disabled={selectedToolPathIDArray.length !== 1}
+                            disabled={isOnABPosition || selectedToolPathIDArray.length !== 1}
                             title={i18n._('key-CncLaser/ToolPathList/Button/-Prioritize')}
                             onClick={() => actions.toolPathToUp(selectedToolPathIDArray)}
                             name="Prioritize"
                             size={24}
                         />
                         <SvgIcon
-                            disabled={selectedToolPathIDArray.length !== 1}
+                            disabled={isOnABPosition || selectedToolPathIDArray.length !== 1}
                             title={i18n._('key-CncLaser/ToolPathList/Button/-Deprioritize')}
                             onClick={() => actions.toolPathToDown(selectedToolPathIDArray)}
                             name="Deprioritize"
@@ -355,7 +356,7 @@ const ToolPathListBox = (props) => {
                         priority="level-two"
                         width="100%"
                         onClick={actions.createToolPath}
-                        disabled={inProgress || (!selectedModelArray || selectedModelArray.length === 0)}
+                        disabled={isOnABPosition || inProgress || (!selectedModelArray || selectedModelArray.length === 0)}
                     >
                         {i18n._('key-CncLaser/ToolPathList/Button/-Create Toolpath')}
                     </Button>
@@ -414,14 +415,14 @@ const ToolPathListBox = (props) => {
                     ]
                 }
             />
-            {editingToolpath && (
+            {!isOnABPosition && editingToolpath && (
                 <ToolPathConfigurations
                     headType={props.headType}
                     toolpath={editingToolpath}
                     onClose={() => setEditingToolpath(null)}
                 />
             )}
-            {selectedFirstToolPath && (
+            {!isOnABPosition && selectedFirstToolPath && (
                 <ToolPathFastConfigurations
                     headType={props.headType}
                     setEditingToolpath={setEditingToolpath}

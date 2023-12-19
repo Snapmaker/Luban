@@ -237,6 +237,24 @@ class SVGActionsFactory {
         };
     }
 
+    addSvgBackgroundToSVG(options) {
+        const { x, y, width, height } = coordGmModelToSvg(this.size, options.transformation);
+        const elem = this.svgContentGroup.addSVGBackgroundElement({
+            element: 'svg',
+            attr: {
+                x: x,
+                y: y,
+                width: width,
+                height: height,
+                id: options.modelID,
+                preserveAspectRatio: 'none'
+            }
+        });
+        return {
+            modelID: elem.getAttribute('id')
+        };
+    }
+
     updateElementImage(iamgeName) {
         const selected = this.svgContentGroup.getSelected();
         if (!selected) {

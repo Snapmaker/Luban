@@ -112,6 +112,9 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
     const onChangeSVGClippingMode = useCallback(() => {
         setPageMode(pageMode === PageMode.SVGClipping ? PageMode.Default : PageMode.SVGClipping);
     }, [pageMode]);
+    const onChangeABPositionMode = useCallback(() => {
+        setPageMode(pageMode === PageMode.ABPosition ? PageMode.Default : PageMode.ABPosition);
+    }, [pageMode]);
 
     const {
         setBackgroundModal,
@@ -121,7 +124,8 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
         setShowHomePage,
         setShowJobType,
         setShowWorkspace,
-        onChangeSVGClippingMode
+        onChangeSVGClippingMode,
+        onChangeABPositionMode
     });
     const renderHomepage = () => {
         const onClose = () => {

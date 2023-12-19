@@ -39,6 +39,7 @@ import { actions as editorActions } from '../editor';
 import { actions as machineActions } from '../machine';
 import definitionManager from '../manager/DefinitionManager';
 import { SVGClippingOperation, SVGClippingType } from '../../constants/clipping';
+import { createSVGElement } from '../../ui/SVGEditor/element-utils';
 
 const initModelGroup = new ModelGroup2D('laser');
 const operationHistory = new OperationHistory();
@@ -57,7 +58,6 @@ const initialOrigin: Origin = {
     reference: RectangleWorkpieceReference.Center,
     referenceMetadata: {},
 };
-
 const INITIAL_STATE = {
     page: PAGE_EDITOR,
 
@@ -172,10 +172,51 @@ const INITIAL_STATE = {
         type: SVGClippingType.Offset,
         operation: SVGClippingOperation.Merged,
         offset: 4
-    }
+    },
+
+    // A-B Position
+    isOnABPosition: false,
+    APosition: { x: 0, y: 0, z: 0, b: 0 },
+    BPosition: { X: 0, y: 0, z: 0, b: 0 }
 };
 
 const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';
+
+const calculateBoundingBox = (point1, point2) => {
+    const minX = Math.min(point1.x, point2.x);
+    const minY = Math.min(point1.y, point2.y);
+    const maxX = Math.max(point1.x, point2.x);
+    const maxY = Math.max(point1.y, point2.y);
+
+    const width = maxX - minX;
+    const height = maxY - minY;
+
+    return {
+        minX,
+        minY,
+        width,
+        height
+    };
+};
+const getCanvasimgFromSvg = async (svg, width, height) => {
+    return new Promise((resolve, reject) => {
+        const svgHtml = new XMLSerializer().serializeToString(svg);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = width;
+        canvas.height = height;
+
+        const img = new Image();
+        img.onload = () => {
+            ctx.drawImage(img, 0, 0);
+            resolve(img);
+        };
+        img.onerror = (err) => {
+            reject(err);
+        };
+        img.src = `data:image/svg+xml,${encodeURIComponent(svgHtml)}`;
+    });
+};
 
 export const actions = {
     // TODO: init should be  re-called
@@ -246,27 +287,20 @@ export const actions = {
         };
     },
 
-    setBackgroundImage: (filename, width, height, dx, dy) => (dispatch, getState) => {
-        const state = getState().laser;
-        dispatch(editorActions.changeCoordinateMode(HEAD_LASER, COORDINATE_MODE_BOTTOM_LEFT));
-        const { SVGActions } = state;
-        const coordinateMode = COORDINATE_MODE_BOTTOM_LEFT; // const { coordinateMode } = state;
 
-        SVGActions.addImageBackgroundToSVG({
-            modelID: 'image-background',
-            uploadName: filename,
-            transformation: {
-                width: width,
-                height: height,
-                positionX: (dx + width / 2) * coordinateMode.setting.sizeMultiplyFactor.x,
-                positionY: (dy + height / 2) * coordinateMode.setting.sizeMultiplyFactor.y
-            }
-        });
-
-        const imgPath = /^blob:/.test(filename) ? filename : `${DATA_PREFIX}/${filename}`;
-        const texture = new THREE.TextureLoader().load(imgPath, () => {
-            dispatch(editorActions.render('laser'));
-        });
+    afterBackgroundSet: (dispatch, state, textureSource, width, height, dx, dy) => {
+        let texture;
+        if (typeof textureSource === 'string') {
+            // if textureSource is filename
+            const filename = textureSource;
+            const imgPath = /^blob:/.test(filename) ? filename : `${DATA_PREFIX}/${filename}`;
+            texture = new THREE.TextureLoader().load(imgPath, () => {
+                dispatch(editorActions.render('laser'));
+            });
+        } else {
+            // if textureSource is canvas
+            texture = new THREE.CanvasTexture(textureSource);
+        }
         const material = new THREE.MeshBasicMaterial({
             color: 0xffffff,
             transparent: true,
@@ -289,7 +323,7 @@ export const actions = {
         }));
 
         // Force origin mode to be workpiece bottom left
-        const origin: Origin = getState().laser.origin;
+        const origin: Origin = state.origin;
         if (!(origin.type === OriginType.Workpiece && origin.reference === RectangleWorkpieceReference.BottomLeft)) {
             dispatch(editorActions.setOrigin(HEAD_LASER, {
                 type: OriginType.Workpiece,
@@ -299,6 +333,94 @@ export const actions = {
         }
 
         dispatch(editorActions.render('laser'));
+    },
+    setBackgroundImage: (filename, width, height, dx, dy, ABCoordinate) => (dispatch, getState) => {
+        const state = getState().laser;
+        dispatch(editorActions.changeCoordinateMode(HEAD_LASER, COORDINATE_MODE_BOTTOM_LEFT));
+        const { SVGActions } = state;
+        const coordinateMode = COORDINATE_MODE_BOTTOM_LEFT; // const { coordinateMode } = state;
+        const positionX = (dx + width / 2) * coordinateMode.setting.sizeMultiplyFactor.x;
+        const positionY = (dy + height / 2) * coordinateMode.setting.sizeMultiplyFactor.y;
+
+        if (!ABCoordinate) {
+            SVGActions.addImageBackgroundToSVG({
+                modelID: 'image-background',
+                uploadName: filename,
+                transformation: {
+                    width: width,
+                    height: height,
+                    positionX,
+                    positionY
+                }
+            });
+            actions.afterBackgroundSet(dispatch, state, filename, width, height, dx, dy);
+        } else {
+            const { APosition, BPosition } = ABCoordinate;
+            const { minX: targetX, minY: targetY, width: targetWidth, height: targetHeight } = calculateBoundingBox(APosition, BPosition);
+            const modelID = 'background-overlay';
+            const svgEl = SVGActions.addSvgBackgroundToSVG({
+                modelID,
+                transformation: {
+                    width: width,
+                    height: height,
+                    positionX,
+                    positionY
+                }
+            });
+            console.log('$$', svgEl, positionX, positionY, width, height, dx, dy, coordinateMode);
+            console.log('$$2', targetX, targetY, targetWidth, targetHeight);
+            const backgroundOverlay = document.querySelector(`#${modelID}`);
+            backgroundOverlay.setAttribute('fill-opacity', '1');
+
+            const mask = createSVGElement({
+                element: 'mask',
+                attr: {
+                    id: 'background-overlay-mask',
+                    x: '0',
+                    y: '0',
+                    width: '100%',
+                    height: '100%',
+                    'fill-opacity': '1'
+                }
+            });
+            const maskGlobal = createSVGElement({
+                element: 'rect',
+                attr: {
+                    fill: 'white',
+                    width: '100%',
+                    height: '100%',
+                    'fill-opacity': '1'
+                }
+            });
+            const maskTarget = createSVGElement({
+                element: 'rect',
+                attr: {
+                    x: targetX,
+                    y: height - (targetY + targetHeight),
+                    width: targetWidth,
+                    height: targetHeight,
+                    fill: 'black',
+                    'fill-opacity': '1'
+                }
+            });
+            mask.appendChild(maskGlobal);
+            mask.appendChild(maskTarget);
+            const rectTarget = createSVGElement({
+                element: 'rect',
+                attr: {
+                    width: '100%',
+                    height: '100%',
+                    fill: '#c7c7c7',
+                    mask: 'url(#background-overlay-mask)',
+                    'fill-opacity': '0.3'
+                }
+            });
+            backgroundOverlay.appendChild(mask);
+            backgroundOverlay.appendChild(rectTarget);
+
+            getCanvasimgFromSvg(backgroundOverlay, width, height)
+                .then(canvasimg => actions.afterBackgroundSet(dispatch, state, canvasimg, width, height, dx, dy));
+        }
     },
 
     removeBackgroundImage: () => (dispatch, getState) => {
@@ -440,36 +562,48 @@ export const actions = {
         const defaultDefinition = defaultDefinitions.find(d => d.definitionId === definitionId);
         dispatch(actions.updateToolListDefinition(defaultDefinition));
         return defaultDefinition;
+    },
+    updateIsOnABPosition: (isOnABPosition) => {
+        return {
+            type: ACTION_UPDATE_STATE,
+            state: { isOnABPosition }
+        };
+    },
+    updateAPosition: ({ x, y, z, b }) => {
+        return {
+            type: ACTION_UPDATE_STATE,
+            state: { APosition: { x, y, z, b } }
+        };
+    },
+    updateBPosition: ({ x, y, z, b }) => {
+        return {
+            type: ACTION_UPDATE_STATE,
+            state: { BPosition: { x, y, z, b } }
+        };
     }
 };
 
 export default function reducer(state = INITIAL_STATE, action) {
     const { headType, type } = action;
-    if (headType === 'laser') {
-        switch (type) {
-            case ACTION_UPDATE_STATE: {
-                return Object.assign({}, state, { ...action.state });
-            }
-            case ACTION_UPDATE_CONFIG: {
-                return Object.assign({}, state, {
-                    config: { ...state.config, ...action.config }
-                });
-            }
-            default:
-                return state;
+    switch (type) {
+        case ACTION_UPDATE_STATE: {
+            return Object.assign({}, state, { ...action.state });
         }
-    } else {
-        switch (type) {
-            case ACTION_SET_BACKGROUND_ENABLED: {
-                return Object.assign({}, state, {
-                    background: {
-                        ...state.background,
-                        enabled: action.enabled
-                    }
-                });
-            }
-            default:
-                return state;
+        case ACTION_UPDATE_CONFIG: {
+            return Object.assign({}, state, {
+                config: { ...state.config, ...action.config }
+            });
         }
+        case ACTION_SET_BACKGROUND_ENABLED: {
+            if (headType === 'laser') return state;
+            return Object.assign({}, state, {
+                background: {
+                    ...state.background,
+                    enabled: action.enabled
+                }
+            });
+        }
+        default:
+            return state;
     }
 }

@@ -47,7 +47,7 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
     const materials = useSelector((state: RootState) => state[HEAD_LASER]?.materials, shallowEqual) as Materials;
     const origin = useSelector((state: RootState) => state[HEAD_LASER].origin, shallowEqual) as Origin;
 
-    const { inProgress, useBackground } = useSelector((state: RootState) => state[HEAD_LASER]);
+    const { inProgress, useBackground, useABPosition } = useSelector((state: RootState) => state[HEAD_LASER]);
 
     // workpiece
     const [workpiece, updateWorkpiece] = useSetState<Workpiece>({
@@ -235,7 +235,7 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
     }
 
     let settingSizeDisabled = false;
-    if (useBackground) {
+    if (useBackground || useABPosition) {
         settingSizeDisabled = true;
     }
 

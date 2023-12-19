@@ -12,6 +12,7 @@ import { actions as editorActions } from '../../../flux/editor';
 
 const LaserParameters = ({ widgetActions }) => {
     const dispatch = useDispatch();
+    const isOnABPosition = useSelector(state => state.laser?.isOnABPosition);
 
     const page = useSelector(state => state?.laser?.page);
     const selectedModelArray = useSelector(state => state?.laser?.modelGroup?.getSelectedModelArray());
@@ -49,19 +50,19 @@ const LaserParameters = ({ widgetActions }) => {
                     updateSelectedModelUniformScalingState={
                         (params) => dispatch(editorActions.updateSelectedModelUniformScalingState(HEAD_LASER, params))
                     }
-                    disabled={!hasSelectedModels}
+                    disabled={isOnABPosition || !hasSelectedModels}
                 />
             )}
             {isEditor && showImageProcessMode && (selectedModelArray.length === 1) && (
                 <ImageProcessMode
-                    disabled={!selectedModelVisible}
+                    disabled={isOnABPosition || !selectedModelVisible}
                 />
             )}
 
             {isEditor && isTextVector && (selectedModelArray.length === 1) && (
                 <TextParameters
                     disabled={!selectedModelVisible}
-                    headType={HEAD_LASER}
+                    headType={isOnABPosition || HEAD_LASER}
                     modifyText={
                         (element, options) => dispatch(editorActions.modifyText(HEAD_LASER, element, options))
                     }

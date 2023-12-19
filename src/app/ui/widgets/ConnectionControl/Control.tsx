@@ -64,9 +64,10 @@ const normalizeToRange = (n, min, max) => {
 
 declare interface ConnectionControlProps {
     widgetId: string;
+    isInWorkspace: boolean
 }
 
-const Control: React.FC<ConnectionControlProps> = ({ widgetId }) => {
+const Control: React.FC<ConnectionControlProps> = ({ widgetId, isInWorkspace }) => {
     const dispatch = useDispatch();
 
     const { widgets } = useSelector((state: RootState) => state.widget);
@@ -429,13 +430,15 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId }) => {
 
     return (
         <div>
-            <DisplayPanel
-                workPosition={workPosition}
-                originOffset={state.originOffset}
-                headType={headType}
-                executeGcode={actions.executeGcode}
-                state={state}
-            />
+            {!isInWorkspace && (
+                <DisplayPanel
+                    workPosition={workPosition}
+                    originOffset={state.originOffset}
+                    headType={headType}
+                    executeGcode={actions.executeGcode}
+                    state={state}
+                />
+            )}
 
             {/* Comment this since Luban v4.0 and will be used in the future */}
             {/* <div>
@@ -457,8 +460,10 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId }) => {
                 disabled={!canClick}
                 state={state}
                 workPosition={workPosition}
+                originOffset={state.originOffset}
                 actions={actions}
                 executeGcode={actions.executeGcode}
+                isInWorkspace={isInWorkspace}
             />
         </div>
     );

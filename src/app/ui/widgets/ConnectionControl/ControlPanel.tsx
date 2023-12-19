@@ -13,6 +13,7 @@ import Switch from '../../components/Switch';
 import JogDistance from './JogDistance';
 import JogPad from './JogPad';
 import MotionButtonGroup from './MotionButtonGroup';
+import ABPositionButtonGroup from './ABPositionButtonGroup';
 import styles from './styles.styl';
 
 interface MoveOptions {
@@ -23,6 +24,7 @@ interface MoveOptions {
 }
 
 interface ControlPanelProps {
+    isInWorkspace: boolean
     workPosition: {
         isFourAxis: boolean;
         x: number;
@@ -69,7 +71,7 @@ interface ControlPanelProps {
  * Control Panel.
  */
 const ControlPanel: React.FC<ControlPanelProps> = (props) => {
-    const { workPosition, disabled = true, actions } = props;
+    const { workPosition, disabled = true, actions, isInWorkspace } = props;
     const enableBAxis = workPosition.isFourAxis;
 
     const { headType } = useSelector((state: RootState) => state.workspace);
@@ -206,6 +208,27 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
         jogSpeed, keepLaserOn,
     ]);
 
+    const renderMotionButtonGroup = () => {
+        if (isInWorkspace) {
+            return (
+                <div>
+                    <ABPositionButtonGroup
+                        {...props}
+                    />
+                </div>
+            );
+        } else {
+            return (
+                <div>
+                    <MotionButtonGroup
+                        {...props}
+                        runBoundary={runBoundary}
+                    />
+                </div>
+            );
+        }
+    };
+
     return (
         <div className={styles['control-panel']}>
             {
@@ -256,12 +279,7 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
                     relativeMove={relativeMove}
                     absoluteMove={absoluteMove}
                 />
-                <div>
-                    <MotionButtonGroup
-                        {...props}
-                        runBoundary={runBoundary}
-                    />
-                </div>
+                {renderMotionButtonGroup()}
             </div>
 
             <JogDistance {...props} />
