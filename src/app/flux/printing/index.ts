@@ -4556,7 +4556,7 @@ export const actions = {
                         })
                     );
                 })
-                .catch(log.error);
+                .catch(err => log.error(err));
         };
     },
 

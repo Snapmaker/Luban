@@ -34,7 +34,7 @@ function flatGroup(object) {
 }
 
 class ModelLoader {
-    constructor({ monoColor = false }) {
+    constructor({ monoColor = false } = {}) {
         this.monoColor = monoColor;
     }
 
