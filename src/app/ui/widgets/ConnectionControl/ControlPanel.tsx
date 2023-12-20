@@ -32,6 +32,7 @@ interface ControlPanelProps {
         z: number;
         b: number;
     };
+    enableShortcut?:boolean
     disabled?: boolean;
     state: {
         bbox: {
@@ -71,7 +72,7 @@ interface ControlPanelProps {
  * Control Panel.
  */
 const ControlPanel: React.FC<ControlPanelProps> = (props) => {
-    const { workPosition, disabled = true, actions, isInWorkspace } = props;
+    const { workPosition, disabled = true, actions, isInWorkspace, enableShortcut } = props;
     const enableBAxis = workPosition.isFourAxis;
 
     const { headType } = useSelector((state: RootState) => state.workspace);
@@ -274,6 +275,7 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
 
             <div className="sm-flex justify-space-between">
                 <JogPad
+                    enableShortcut={enableShortcut}
                     enableBAxis={enableBAxis}
                     disabled={disabled}
                     relativeMove={relativeMove}

@@ -177,7 +177,8 @@ const INITIAL_STATE = {
     // A-B Position
     isOnABPosition: false,
     APosition: { x: 0, y: 0, z: 0, b: 0 },
-    BPosition: { X: 0, y: 0, z: 0, b: 0 }
+    BPosition: { X: 0, y: 0, z: 0, b: 0 },
+    enableABPositionShortcut: false,
 };
 
 const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';
@@ -563,6 +564,7 @@ export const actions = {
         dispatch(actions.updateToolListDefinition(defaultDefinition));
         return defaultDefinition;
     },
+
     updateIsOnABPosition: (isOnABPosition) => {
         return {
             type: ACTION_UPDATE_STATE,
@@ -579,6 +581,12 @@ export const actions = {
         return {
             type: ACTION_UPDATE_STATE,
             state: { BPosition: { x, y, z, b } }
+        };
+    },
+    updateEnableABPositionShortcut: (enableABPositionShortcut) => {
+        return {
+            type: ACTION_UPDATE_STATE,
+            state: { enableABPositionShortcut }
         };
     }
 };

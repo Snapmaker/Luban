@@ -2,6 +2,7 @@ import { Row, Space } from 'antd';
 import React from 'react';
 
 import JogButton from './components/JogButton';
+import JogPadShortcut from './components/JogPadShortcut';
 import styles from './styles.styl';
 
 
@@ -19,6 +20,7 @@ interface JogViewProps {
     // jog buttons are disabled
     disabled?: boolean;
 
+    enableShortcut?: boolean;
     relativeMove: (moveOptions: MoveOptions) => void;
     absoluteMove: (moveOptions: MoveOptions) => void;
 }
@@ -29,6 +31,7 @@ const JogPad: React.FC<JogViewProps> = (props) => {
         enableBAxis = false,
         relativeMove,
         absoluteMove,
+        enableShortcut
     } = props;
 
     return (
@@ -132,6 +135,8 @@ const JogPad: React.FC<JogViewProps> = (props) => {
                     }
                 </Space>
             </Row>
+
+            {enableShortcut && !disabled && <JogPadShortcut {...props} />}
         </div>
     );
 };
