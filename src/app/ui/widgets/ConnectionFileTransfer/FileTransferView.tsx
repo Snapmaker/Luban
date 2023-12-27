@@ -109,7 +109,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
     });
 
     const onSelectFile = useCallback((_selectFileName, name, event, needToUnselect = true) => {
-        if (event && event.target && event.target.className) {
+        if (event && event.target && event.target.className && typeof event.target.className.indexOf === 'function') {
             if (event.target.className.indexOf('input-select') > -1
                 || event.target.className.indexOf('fa-check') > -1) {
                 return;
