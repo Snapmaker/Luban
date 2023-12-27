@@ -95,6 +95,14 @@ export const getRunBoundayCode = (axisWorkRange: AxisWorkRange, jobOffsetMode: J
 
     return gcode;
 };
+const isworkRangeEqual = (workRange1, workRange2) => {
+    const axises = ['x', 'y', 'z', 'b'];
+    for (let i = 0; i < axises.length; i++) {
+        const axis = axises[i];
+        if (workRange1[axis] !== workRange2[axis]) return false;
+    }
+    return true;
+};
 
 
 enum SetupCoordinateMethod {
@@ -127,7 +135,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
     const isRotate = useSelector((state: RootState) => state.workspace.isRotate);
 
     // G-code
-    // const boundingBox = useSelector((state: RootState) => state.workspace.boundingBox);
+    const boundingBox = useSelector((state: RootState) => state.workspace.boundingBox);
     const gcodeAxisWorkRange: AxisWorkRange = useSelector((state: RootState) => state.workspace.gcodeAxisWorkRange);
     const workflowStatus = useSelector((state: RootState) => state.workspace.workflowStatus, shallowEqual);
 
@@ -164,16 +172,21 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
     const runBoundary = useCallback(async () => {
         setRunBoundaryReady(false);
         if (!gcodeAxisWorkRange) {
-            log.warn('No bounding box provided, please upload G-code first.');
+            log.warn('No bounding box provided, please upload G-code first. ');
             return;
         }
+        let workRange = gcodeAxisWorkRange;
+        if (isworkRangeEqual(gcodeAxisWorkRange.max, gcodeAxisWorkRange.min)) {
+            workRange = boundingBox;
+        }
 
-        log.info('Run Boundary... axis work range =', gcodeAxisWorkRange);
+        log.info('Run Boundary... axis work range =', workRange);
 
-        const gcode = getRunBoundayCode(gcodeAxisWorkRange, jobOffsetMode, isRotate);
+        const gcode = getRunBoundayCode(workRange, jobOffsetMode, isRotate);
 
         const blob = new Blob([gcode], { type: 'text/plain' });
         const file = new File([blob], 'boundary.nc');
+        console.log('$$ gcode', gcode);
 
         const gcodeFileObject: GCodeFileMetadata = await dispatch(gcodeActions.uploadGcodeFile(file));
 
