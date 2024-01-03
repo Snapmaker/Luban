@@ -768,9 +768,9 @@ export const LASER_DEFAULT_GCODE_PARAMETERS_DEFINITION = {
     fillInterval: {
         label: 'Fill Interval',
         description:
-            'Set the degree to which an area is filled with laser lines or dots. The minimal interval is 0.05 mm.',
+            'Set the degree to which an area is filled with laser lines or dots. The minimal interval is 0.01 mm.',
         type: 'float',
-        min: 0.05,
+        min: 0.01,
         // max: 1,
         step: 0.01,
         default_value: 0.25,
