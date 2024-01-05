@@ -839,6 +839,12 @@ export default class SacpClient extends Dispatcher {
         });
     }
 
+    public async subscribeEnclosureLightInfo({ interval = 1000 }, callback: ResponseCallback) {
+        return this.subscribe(0x15, 0xa1, interval, callback).then(({ response, packet }) => {
+            return { response, packet, data: {} };
+        });
+    }
+
     public async subscribePurifierInfo({ interval = 1000 }, callback: ResponseCallback) {
         return this.subscribe(0x17, 0xa0, interval, callback).then(({ response, packet }) => {
             return { response, packet, data: {} };
