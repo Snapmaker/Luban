@@ -108,8 +108,8 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
         previewStage
     });
 
-    const onSelectFile = useCallback((_selectFileName, name, event, needToUnselect = true) => {
-        if (event && event.target && event.target.className) {
+    const onSelectFile = useCallback((_selectFileName: string, event?: MouseEvent, needToUnselect: boolean = true) => {
+        if (event && event.target && event.target.className && typeof event.target.className.indexOf === 'function') {
             if (event.target.className.indexOf('input-select') > -1
                 || event.target.className.indexOf('fa-check') > -1) {
                 return;
@@ -455,7 +455,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                             <React.Fragment key={index}>
                                 <GcodePreviewItem
                                     gcodeFile={gcodeFile}
-                                    index={index}
+                                    index={parseInt(index, 10)}
                                     selected={selectFileName === gcodeFile.uploadName}
                                     onSelectFile={onSelectFile}
                                     gRef={gcodeItemRef}
@@ -474,7 +474,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                         size={24}
                         title={i18n._('key-Workspace/Transport-Edit')}
                         disabled={!selectedFile}
-                        onClick={(e) => gcodeItemRef.current.remaneStart(selectedFile.uploadName, selectFileIndex, e)}
+                        onClick={(e) => gcodeItemRef.current.remaneStart(selectedFile.uploadName, selectFileIndex, selectedFile.renderGcodeFileName, e)}
                     />
                     <SvgIcon
                         name="Import"
