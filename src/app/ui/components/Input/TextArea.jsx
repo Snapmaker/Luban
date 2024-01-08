@@ -1,5 +1,5 @@
 import { debounce } from 'lodash';
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { Input } from 'antd';
@@ -11,10 +11,6 @@ const TextAreaInput = React.memo(({
     className = '', value, defaultValue, disabled = false, onChange, ...rest
 }) => {
     const [displayValue, setDisplayValue] = useState(value);
-
-    useEffect(() => {
-        setDisplayValue(value);
-    }, [value]);
 
     const changeHandler = useCallback((newValue) => {
         onChange && onChange(newValue);
