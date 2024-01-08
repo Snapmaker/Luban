@@ -8,6 +8,7 @@ import { controller } from '../../../communication/socket-communication';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import Switch from '../../components/Switch';
+import { SnapmakerJ1Machine } from '../../../machines';
 
 const Enclosure: React.FC = () => {
     const { isConnected } = useSelector((state: RootState) => state.workspace);
@@ -16,6 +17,7 @@ const Enclosure: React.FC = () => {
         enclosureLight,
         enclosureFan,
         isDoorEnabled: doorEnabled,
+        machineIdentifier
     } = useSelector((state: RootState) => state.workspace, shallowEqual);
 
     const [isLedReady, setIsLedReady] = useState(true);
@@ -56,10 +58,12 @@ const Enclosure: React.FC = () => {
 
     useEffect(() => {
         setIsLedReady(true);
+        console.log('$$ enclosureLight', enclosureLight, machineIdentifier);
     }, [enclosureLight]);
 
     useEffect(() => {
         setIsFanReady(true);
+        console.log('$$ enclosureFan', enclosureFan);
     }, [enclosureFan]);
 
     useEffect(() => {
@@ -77,14 +81,17 @@ const Enclosure: React.FC = () => {
                         disabled={(!isLedReady) || !isConnected}
                     />
                 </div>
-                <div className="sm-flex justify-space-between margin-vertical-8">
-                    <span>{i18n._('key-Workspace/Enclosure-Exhaust Fan')}</span>
-                    <Switch
-                        onClick={actions.onHandleCoolingFans}
-                        checked={Boolean(enclosureFan)}
-                        disabled={(!isFanReady) || !isConnected}
-                    />
-                </div>
+
+                {machineIdentifier !== SnapmakerJ1Machine.identifier && (
+                    <div className="sm-flex justify-space-between margin-vertical-8">
+                        <span>{i18n._('key-Workspace/Enclosure-Exhaust Fan')}</span>
+                        <Switch
+                            onClick={actions.onHandleCoolingFans}
+                            checked={Boolean(enclosureFan)}
+                            disabled={(!isFanReady) || !isConnected}
+                        />
+                    </div>
+                )}
                 {/* Disable adjustment for door detection
                 {(isConnected && connectionType === 'wifi' && headType !== '3dp') && (
                     <TipTrigger
