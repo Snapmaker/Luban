@@ -2,7 +2,9 @@ import { PeerId } from '@snapmaker/snapmaker-sacp-sdk/dist/communication/Header'
 import { includes } from 'lodash';
 
 import {
+    AIR_PURIFIER_MODULE_IDS,
     EMERGENCY_STOP_BUTTON,
+    ENCLOSURE_MODULE_IDS,
     LASER_HEAD_MODULE_IDS,
     MODULEID_TOOLHEAD_MAP,
     ROTARY_MODULE_IDS,
@@ -39,6 +41,7 @@ class RayMachineInstance extends MachineInstance {
 
         // module info
         const moduleInfos = await (this.channel as SacpChannelBase).getModuleInfo();
+        console.log('moduleInfos: ', JSON.stringify(moduleInfos));
 
         /*
         moduleInfos = [
@@ -56,9 +59,9 @@ class RayMachineInstance extends MachineInstance {
         */
 
         const moduleListStatus = {
-            // airPurifier: false,
+            airPurifier: false,
             emergencyStopButton: false,
-            // enclosure: false,
+            enclosure: false,
             rotaryModule: false
         };
 
@@ -73,6 +76,12 @@ class RayMachineInstance extends MachineInstance {
             }
             if (includes(EMERGENCY_STOP_BUTTON, module.moduleId)) {
                 moduleListStatus.emergencyStopButton = true;
+            }
+            if (includes(AIR_PURIFIER_MODULE_IDS, module.moduleId)) {
+                moduleListStatus.airPurifier = true;
+            }
+            if (includes(ENCLOSURE_MODULE_IDS, module.moduleId)) {
+                moduleListStatus.enclosure = true;
             }
         });
         state.moduleStatusList = moduleListStatus;

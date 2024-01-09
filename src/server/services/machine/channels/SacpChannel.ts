@@ -141,6 +141,24 @@ class SacpChannelBase extends Channel implements
         }
     }
 
+    public subscribePurifierInfo() {
+        this.subscribePurifierInfoCallback = (data) => {
+            const { airPurifierStatus: { fanState, speedLevel, lifeLevel, powerState } } = new AirPurifierInfo().fromBuffer(data.response.data);
+            this.socket && this.socket.emit('Marlin:state', {
+                state: {
+                    airPurifier: true,
+                    airPurifierHasPower: powerState,
+                    airPurifierSwitch: fanState,
+                    airPurifierFanSpeed: speedLevel,
+                    airPurifierFilterHealth: lifeLevel - 1
+                }
+            });
+        };
+        this.sacpClient.subscribePurifierInfo({ interval: 1000 }, this.subscribePurifierInfoCallback).then(res => {
+            log.info(`subscribe purifier info, ${res.response.result}`);
+        });
+    }
+
     public async startHeartbeat(): Promise<void> {
         log.info('Start heartbeat.');
 
@@ -182,7 +200,7 @@ class SacpChannelBase extends Channel implements
         };
 
         const res = await this.sacpClient.subscribeHeartbeat({ interval: 2000 }, subscribeHeartbeatCallback);
-
+        this.subscribePurifierInfo();
         log.info(`Subscribe heartbeat, result = ${res.code}`);
     }
 
