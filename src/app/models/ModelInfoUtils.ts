@@ -95,11 +95,14 @@ const defaultConfigs = {
 
     // Laser
     [toKey(HEAD_LASER, PROCESS_MODE_BW)]: {
+        greyscaleAlgorithm: 'Luma',
+        algorithm: 'Atkinson',
         invert: false,
         bwThreshold: 168
     },
     [toKey(HEAD_LASER, PROCESS_MODE_HALFTONE)]: {
         greyscaleAlgorithm: 'Luma',
+        algorithm: 'Atkinson',
         invert: false,
         threshold: 255, // turn pixel to white
         bwThreshold: 168, // used by toolpath generator
@@ -118,12 +121,14 @@ const defaultConfigs = {
     },
     [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE.RASTER)]: {
         greyscaleAlgorithm: 'Luma',
+        algorithm: 'Atkinson',
         vectorThreshold: 128,
         invert: false,
         turdSize: 2
     },
     [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE.SVG)]: {
         greyscaleAlgorithm: 'Luma',
+        algorithm: 'Atkinson',
         'stroke-width': '0.25'
     },
     [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE.TEXT)]: {
