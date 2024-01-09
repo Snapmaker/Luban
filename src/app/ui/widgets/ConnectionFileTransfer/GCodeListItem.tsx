@@ -70,7 +70,7 @@ const GcodePreviewItem: React.FC<GcodePreviewItemProps> = React.memo((props) => 
         if (!changeNameInput.current) {
             return;
         }
-        if (!changeNameInput.current.value) {
+        if (!changeNameInput.current.value || !changeNameInput.current.value.trim()) {
             message.error("file name can't be blank");
             return;
         }
