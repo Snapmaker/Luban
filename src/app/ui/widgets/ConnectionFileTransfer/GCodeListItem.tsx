@@ -37,7 +37,7 @@ const GcodePreviewItem: React.FC<GcodePreviewItemProps> = React.memo((props) => 
     const { prefixName, suffixName } = normalizeNameDisplay(gcodeFile?.renderGcodeFileName || gcodeFile?.name, suffixLength);
 
     let size = '';
-    const { isRenaming, uploadName } = gcodeFile;
+    const { isRenaming } = gcodeFile;
     if (!gcodeFile.size) {
         size = '';
     } else if (gcodeFile.size / 1024 / 1024 > 1) {
@@ -72,6 +72,7 @@ const GcodePreviewItem: React.FC<GcodePreviewItemProps> = React.memo((props) => 
         }
         if (!changeNameInput.current.value || !changeNameInput.current.value.trim()) {
             message.error("file name can't be blank");
+            changeNameInput.current.focus();
             return;
         }
         let newName = changeNameInput.current.value;
@@ -83,6 +84,7 @@ const GcodePreviewItem: React.FC<GcodePreviewItemProps> = React.memo((props) => 
     };
 
     const onRenameStart = (_uploadName, _index, _renderGcodeFileName = '', event) => {
+        if (!selected) return;
         dispatch(workspaceActions.renameGcodeFile(_uploadName, null, true));
         event && event.stopPropagation();
         setTimeout(() => {
@@ -168,7 +170,7 @@ const GcodePreviewItem: React.FC<GcodePreviewItemProps> = React.memo((props) => 
                     <input
                         defaultValue={gcodeFile?.renderGcodeFileName?.replace(/(\.gcode|\.cnc|\.nc)$/, '')}
                         className={classNames('input-select')}
-                        onBlur={() => onRenameEnd(uploadName)}
+                        onBlur={() => onRenameEnd(gcodeFile?.uploadName)}
                         onKeyDown={(event) => onKeyDown(event)}
                         ref={changeNameInput}
                     />
