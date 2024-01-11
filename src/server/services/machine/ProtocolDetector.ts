@@ -172,6 +172,8 @@ class ProtocolDetector {
                     trySerialConnect?.close();
 
                     resolve();
+                } else {
+                    hasData = false;
                 }
             });
             trySerialConnect.on('close', () => {
@@ -179,6 +181,9 @@ class ProtocolDetector {
             });
             trySerialConnect.on('error', (err) => {
                 log.error(`error = ${err}`);
+                if (trySerialConnect.isOpen) {
+                    trySerialConnect?.close();
+                }
             });
             trySerialConnect.once('open', () => {
                 // Use M1006 to detect if SACP is supported
