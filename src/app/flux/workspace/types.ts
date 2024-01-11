@@ -1,5 +1,22 @@
 import { Box3 } from 'three';
 
+export interface AxisWorkRange {
+    min: {
+        x: number;
+        y: number;
+        z: number;
+        a?: number;
+        b: number;
+    };
+    max: {
+        x: number;
+        y: number;
+        z: number;
+        a?: number;
+        b: number;
+    };
+}
+
 /**
  * G-code metadata.
  */
@@ -38,7 +55,12 @@ export type GCodeFileMetadata = {
 
     // laser
     power?: number;
+    // eslint-disable-next-line camelcase
+    is_rotate?: boolean
+    // eslint-disable-next-line camelcase
+    gcodeAxisWorkRange?: AxisWorkRange;
 
     // display
     renderGcodeFileName: string;
+
 };
