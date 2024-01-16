@@ -107,8 +107,8 @@ const SelectMachineModal: React.FC = () => {
 
         dispatch(workspaceActions.updateMachineState({
             machineIdentifier: selectedMachineIdentifier,
-            toolHead: selectedToolHead.identifier,
-            headType: selectedToolHead.metadata.headType,
+            toolHead: selectedToolHead?.identifier,
+            headType: selectedToolHead?.metadata.headType,
         }));
 
         // TODO: For SM 2.0 with laser/CNC tool head, execute G54 right after selection

@@ -38,7 +38,6 @@ const UploadView: React.FC = () => {
         WorkflowStatus.Running, WorkflowStatus.Pausing, WorkflowStatus.Paused, WorkflowStatus.Stopping, WorkflowStatus.Resuming
     ], workflowStatus);
 
-    const boundingBox = useSelector((state: RootState) => state.workspace.boundingBox);
     const jobOffsetMode: JobOffsetMode = useSelector((state: RootState) => state.laser.jobOffsetMode);
 
     const gcodeFile = useSelector((state: RootState) => state.workspace.gcodeFile);
@@ -99,13 +98,13 @@ const UploadView: React.FC = () => {
     const dispatch = useDispatch();
 
     const uploadBoundary = useCallback(async () => {
-        if (!boundingBox) {
+        if (!gcodeFile) {
             return false;
         }
 
-        log.info('Run Boundary... bbox =', boundingBox);
+        log.info('Run Boundary... bbox =', gcodeFile.gcodeAxisWorkRange);
 
-        const gcode = getRunBoundayCode(boundingBox, jobOffsetMode);
+        const gcode = getRunBoundayCode(gcodeFile.gcodeAxisWorkRange, jobOffsetMode, gcodeFile.is_rotate);
 
         const blob = new Blob([gcode], { type: 'text/plain' });
         const file = new File([blob], 'boundary.nc');
@@ -137,7 +136,7 @@ const UploadView: React.FC = () => {
                     resolve(true);
                 });
         });
-    }, [dispatch, boundingBox, jobOffsetMode]);
+    }, [dispatch, gcodeFile, jobOffsetMode]);
 
     const uploadJob = useCallback(async () => {
         setIsUploading(true);

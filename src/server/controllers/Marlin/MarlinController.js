@@ -10,6 +10,7 @@ import {
     SnapmakerA250Machine,
     SnapmakerA350Machine,
     SnapmakerArtisanMachine,
+    SnapmakerOriginalMachine,
     SnapmakerRayMachine
 } from '../../../app/machines';
 import { DEFAULT_BAUDRATE } from '../../constants';
@@ -163,6 +164,8 @@ class MarlinController extends EventEmitter {
         }
     };
 
+
+    seriesSize = null
 
     queryState = (() => {
         let index = 0;
@@ -372,7 +375,6 @@ class MarlinController extends EventEmitter {
         });
         this.controller.on('series', (res) => {
             let machineIdentifier = '';
-
             if (res.seriesSize === 'Ray2023') {
                 machineIdentifier = 'Ray';
             }
@@ -456,10 +458,16 @@ class MarlinController extends EventEmitter {
             }
         });
         this.controller.on('temperature', (res) => {
-            // this.checkMachineIsReady();
+            if (!this.seriesSize) {
+                let machineIdentifier = '';
+                // The Original Machine does not have a seriesSize message.
+                // We use the temperature message as a symbol that the machine is ready.
+                machineIdentifier = SnapmakerOriginalMachine.identifier;
+                this.checkMachineIsReady({ machineIdentifier });
+            }
 
-            // log.silly(`controller.on('temperature'): source=${this.history.writeSource},
-            //    line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
+            log.silly(`controller.on('temperature'): source=${this.history.writeSource},
+               line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER, WRITE_SOURCE_SENDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', { data: res.raw });
             }

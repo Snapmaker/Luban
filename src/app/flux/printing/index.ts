@@ -4200,6 +4200,11 @@ export const actions = {
         const meshFileInfos: MeshFileInfo[] = files || [{ originalName, uploadName, isGroup, parentUploadName, modelID, children }];
         // let _progress = 0;
 
+        // Modifying the scale will persist in the model file, eliminating the need to include it here.
+        transformation.scaleX = 1;
+        transformation.scaleY = 1;
+        transformation.scaleZ = 1;
+
         const loadMeshFileOptions: LoadMeshFileOptions = {
             headType,
 
@@ -4227,7 +4232,6 @@ export const actions = {
                 );
             },
         };
-
 
         const loadMeshResult = await loadMeshFiles(meshFileInfos, modelGroup, loadMeshFileOptions);
         const { promptTasks } = loadMeshResult;
@@ -4556,7 +4560,7 @@ export const actions = {
                         })
                     );
                 })
-                .catch(log.error);
+                .catch(err => log.error(err));
         };
     },
 

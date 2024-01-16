@@ -63,6 +63,7 @@ class SVGParser {
         return new Promise((resolve, reject) => {
             /*
                 Remove some xml namespace attributes which cannot be parsed by xml2js.
+                https://github.com/Leonidas-from-XIV/node-xml2js/issues/443
                 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [
                     <!ENTITY ns_flows "http://ns.adobe.com/Flows/1.0/">
                     <!ENTITY ns_extend "http://ns.adobe.com/Extensibility/1.0/">
@@ -76,7 +77,7 @@ class SVGParser {
                 ]>
                 <svg version="1.1" id="artwork" xmlns:x="&ns_extend;" xmlns:i="&ns_ai;" xmlns:graph="&ns_graphs;">
             */
-            s = s.replace(/xmlns:.+="&.+;"/ig, '');
+            s = this.handleEntity(s);
             // keep the orders of children coz they can overlap each other
             const options = {
                 explicitChildren: false,
@@ -90,6 +91,36 @@ class SVGParser {
                 }
             });
         });
+    }
+
+    handleEntity(svgString) {
+        const entityObject = this.getXMLEntity(svgString);
+        Object.keys(entityObject).forEach(key => {
+            const regex = new RegExp(`&${key};`, 'g');
+            svgString = svgString.replace(regex, entityObject[key]);
+        });
+        return svgString;
+    }
+
+    getXMLEntity(svgString) {
+        const entityDefinitions = svgString.match(/<!ENTITY\s+(\w+)\s+"([^"]+)">/g);
+
+        // Create an object to store entity key-value pairs
+        const entityObject = {};
+
+        // Iterate over all matching items and save entity key-value pairs into the object
+        if (entityDefinitions) {
+            for (let i = 0; i < entityDefinitions.length; i++) {
+                const match = /<!ENTITY\s+(\w+)\s+"([^"]+)">/.exec(entityDefinitions[i]);
+                if (match) {
+                    const key = match[1];
+                    const value = match[2];
+                    entityObject[key] = value;
+                }
+            }
+        }
+
+        return entityObject;
     }
 
     generateString(newNode, filePath) {
@@ -378,10 +409,8 @@ class SVGParser {
                             shapes.push(shape);
                         }
                     }
-                } else if (node && !shouldParseChildren) {
-                    if (Object.prototype.toString.call(node) === '[object Object]') {
-                        delete node[variable];
-                    }
+                } else if (node && !shouldParseChildren && Object.prototype.toString.call(node) === '[object Object]') {
+                    node = null;
                 }
             }
 

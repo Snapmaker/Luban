@@ -92,6 +92,14 @@ export const actions = {
      * Handing of remote events.
      */
     __initRemoteEvents: () => (dispatch, getState) => {
+        const compareAndSet = (obj: object, compareObj: object, key: string, value: boolean | number | string) => {
+            if (isNil(value)) {
+                return;
+            }
+            if (value !== compareObj[key]) {
+                obj[key] = value;
+            }
+        };
         const controllerEvents = {
             // connecting state from remote
             [SocketEvent.ConnectionConnecting]: (options: { requireAuth?: boolean }) => {
@@ -156,6 +164,22 @@ export const actions = {
                     }));
                     machineSeries = series;
                 }
+
+                if (!isNil(moduleStatusList)) {
+                    const data = {};
+                    const currentState = getState().workspace;
+                    const enclosureOnline = moduleStatusList.enclosure;
+                    const rotateModuleOnline = moduleStatusList.rotateModuleOnline;
+                    const airPurifier = moduleStatusList.airPurifier;
+
+                    compareAndSet(data, currentState, 'moduleStatusList', moduleStatusList);
+                    compareAndSet(data, currentState, 'enclosureOnline', enclosureOnline);
+                    compareAndSet(data, currentState, 'rotateModuleOnline', rotateModuleOnline);
+                    compareAndSet(data, currentState, 'airPurifier', airPurifier);
+
+                    dispatch(baseActions.updateState(data));
+                }
+
 
                 log.info(`machine = ${machineSeries}`);
                 log.info(`tool = ${toolHead}`);
@@ -261,15 +285,6 @@ export const actions = {
                 // Note: serialPort & Wifi -> for heartBeat
                 const { state } = options;
                 const { headType, pos, originOffset, headStatus, headPower, temperature, zFocus, isHomed, zAxisModule, laser10WErrorState } = state;
-
-                const compareAndSet = (obj: object, compareObj: object, key: string, value: boolean | number | string) => {
-                    if (isNil(value)) {
-                        return;
-                    }
-                    if (value !== compareObj[key]) {
-                        obj[key] = value;
-                    }
-                };
 
                 const data = {};
 
@@ -673,6 +688,21 @@ export const actions = {
                     nozzle_1_temperature: header[';nozzle_1_temperature(°C)'],
                     jog_speed: header[';jog_speed(mm/minute)'],
                     power: header[';power(%)'],
+                    is_rotate: header[';is_rotate'] === 'true',
+                    gcodeAxisWorkRange: {
+                        max: {
+                            x: header[';max_x(mm)'],
+                            y: header[';max_y(mm)'],
+                            z: header[';max_z(mm)'],
+                            b: header[';max_b(mm)']
+                        },
+                        min: {
+                            x: header[';min_x(mm)'],
+                            y: header[';min_y(mm)'],
+                            z: header[';min_z(mm)'],
+                            b: header[';min_b(mm)']
+                        }
+                    }
                 };
                 dispatch(gcodeActions.addGCodeFile(gcodeFile));
                 shouldAutoPreviewGcode
