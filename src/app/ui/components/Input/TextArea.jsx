@@ -8,9 +8,9 @@ import styles from './styles.styl';
 const { TextArea } = Input;
 
 const TextAreaInput = React.memo(({
-    className = '', value, defaultValue, disabled = false, onChange, ...rest
+    className = '', defaultValue, disabled = false, onChange, ...rest
 }) => {
-    const [displayValue, setDisplayValue] = useState(value);
+    const [displayValue, setDisplayValue] = useState(defaultValue);
 
     const changeHandler = useCallback((newValue) => {
         onChange && onChange(newValue);
@@ -49,7 +49,6 @@ const TextAreaInput = React.memo(({
 
 TextAreaInput.propTypes = {
     className: PropTypes.string,
-    value: PropTypes.string,
     defaultValue: PropTypes.string,
     disabled: PropTypes.bool,
     onChange: PropTypes.func

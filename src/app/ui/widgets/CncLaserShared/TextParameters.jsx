@@ -76,7 +76,7 @@ const TextParameters = ({ headType, modifyText, disabled }) => {
                                 disabled={disabled}
                                 className="sm-flex-width"
                                 rows="3"
-                                value={text}
+                                defaultValue={text}
                                 onChange={actions.onChangeText}
                             />
                         </div>
