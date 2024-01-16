@@ -502,6 +502,21 @@ export const processActions = {
                 // cnc
                 jog_speed: gcodeFile.header[';jog_speed(mm/minute)'],
                 power: gcodeFile.header[';power(%)'],
+                is_rotate: gcodeFile.header[';is_rotate'] === 'true',
+                gcodeAxisWorkRange: {
+                    max: {
+                        x: gcodeFile.header[';max_x(mm)'],
+                        y: gcodeFile.header[';max_y(mm)'],
+                        z: gcodeFile.header[';max_z(mm)'],
+                        b: gcodeFile.header[';max_b(mm)']
+                    },
+                    min: {
+                        x: gcodeFile.header[';min_x(mm)'],
+                        y: gcodeFile.header[';min_y(mm)'],
+                        z: gcodeFile.header[';min_z(mm)'],
+                        b: gcodeFile.header[';min_b(mm)']
+                    }
+                }
             },
             stage: STEP_STAGE.CNC_LASER_GENERATING_GCODE,
             isGcodeGenerating: false,

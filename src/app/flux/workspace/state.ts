@@ -11,6 +11,7 @@ import History from '../../core/History';
 import { CircularArray } from '../../lib/collections';
 // import { controller } from '../../lib/controller';
 import { MachineAgent } from './MachineAgent';
+import { AxisWorkRange } from './types';
 
 export const WORKSPACE_STAGE = {
     EMPTY: 0,
@@ -19,22 +20,6 @@ export const WORKSPACE_STAGE = {
     LOAD_GCODE_FAILED: 3,
 };
 
-export interface AxisWorkRange {
-min: {
-            x: number;
-            y: number;
-            z: number;
-            a: number;
-            b: number;
-        };
-        max: {
-            x: number;
-            y: number;
-            z: number;
-            a: number;
-            b: number;
-        };
-}
 
 /**
  * Connection Type

@@ -505,7 +505,7 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
                         </div>
                         <TipTrigger
                             title={i18n._('Job Offset Mode')}
-                            content={i18n._('Crosshair mode uses the crosshair for positioning, while Laser shot mode uses the working laser for positioning.')}
+                            content={i18n._('Crosshair mode uses the crosshair for positioning, while Laser Spot mode uses the working laser for positioning.')}
                         >
                             <div className="sm-flex justify-space-between height-32">
                                 <span className="width-144 margin-right-8 text-overflow-ellipsis">

@@ -78,6 +78,21 @@ const uploadGcodeFile = (file: File) => {
             nozzle_1_temperature: header[';nozzle_1_temperature(°C)'],
             jog_speed: header[';jog_speed(mm/minute)'],
             power: header[';power(%)'],
+            is_rotate: header[';is_rotate'] === 'true',
+            gcodeAxisWorkRange: {
+                max: {
+                    x: header[';max_x(mm)'],
+                    y: header[';max_y(mm)'],
+                    z: header[';max_z(mm)'],
+                    b: header[';max_b(mm)']
+                },
+                min: {
+                    x: header[';min_x(mm)'],
+                    y: header[';min_y(mm)'],
+                    z: header[';min_z(mm)'],
+                    b: header[';min_b(mm)']
+                }
+            }
         };
 
         return gcodeFile;

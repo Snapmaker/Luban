@@ -10,8 +10,7 @@ import { JobOffsetMode } from '../../../constants/coordinate';
 import { RootState } from '../../../flux/index.def';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import gcodeActions from '../../../flux/workspace/actions-gcode';
-import { AxisWorkRange } from '../../../flux/workspace/state';
-import { GCodeFileMetadata } from '../../../flux/workspace/types';
+import { AxisWorkRange, GCodeFileMetadata } from '../../../flux/workspace/types';
 import { Button } from '../../components/Buttons';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
@@ -26,9 +25,9 @@ export const getRunBoundayCode = (axisWorkRange: AxisWorkRange, jobOffsetMode: J
         let code = gCommand;
 
         if (useBInsteadOfX) {
-            code += ` B${x}`;
+            code += ` B${x || 0}`;
         } else {
-            code += ` X${x}`;
+            code += ` X${x || 0}`;
         }
 
         code += ` Y${y}`;
@@ -96,7 +95,6 @@ export const getRunBoundayCode = (axisWorkRange: AxisWorkRange, jobOffsetMode: J
     return gcode;
 };
 
-
 enum SetupCoordinateMethod {
     // Move tool manually
     Manually = 'manually',
@@ -127,8 +125,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
     const isRotate = useSelector((state: RootState) => state.workspace.isRotate);
 
     // G-code
-    // const boundingBox = useSelector((state: RootState) => state.workspace.boundingBox);
-    const gcodeAxisWorkRange: AxisWorkRange = useSelector((state: RootState) => state.workspace.gcodeAxisWorkRange);
+    const gcodeFile: GCodeFileMetadata = useSelector((state: RootState) => state.workspace.gcodeFile);
     const workflowStatus = useSelector((state: RootState) => state.workspace.workflowStatus, shallowEqual);
 
     // display of widget
@@ -163,14 +160,16 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
      */
     const runBoundary = useCallback(async () => {
         setRunBoundaryReady(false);
-        if (!gcodeAxisWorkRange) {
-            log.warn('No bounding box provided, please upload G-code first.');
+        if (!gcodeFile) {
+            log.warn('No bounding box provided, please upload G-code first. ');
             return;
         }
+        const gcodeIsRotate = gcodeFile?.is_rotate;
+        const workRange = gcodeFile.gcodeAxisWorkRange;
 
-        log.info('Run Boundary... axis work range =', gcodeAxisWorkRange);
+        log.info('Run Boundary... axis work range =', workRange);
 
-        const gcode = getRunBoundayCode(gcodeAxisWorkRange, jobOffsetMode, isRotate);
+        const gcode = getRunBoundayCode(workRange, jobOffsetMode, gcodeIsRotate);
 
         const blob = new Blob([gcode], { type: 'text/plain' });
         const file = new File([blob], 'boundary.nc');
@@ -196,7 +195,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
                 log.info('Uploaded boundary G-code.');
                 setRunBoundaryReady(true);
             });
-    }, [dispatch, isRotate, gcodeAxisWorkRange, jobOffsetMode]);
+    }, [dispatch, isRotate, gcodeFile, jobOffsetMode]);
 
     const executeGCode = useCallback(async (gcode: string) => {
         return dispatch(workspaceActions.executeGcode(gcode)) as unknown as Promise<void>;
@@ -241,7 +240,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
                                 type="primary"
                                 style={{ width: '100%', borderRadius: '4px' }}
                                 className="margin-top-8"
-                                disabled={!gcodeAxisWorkRange}
+                                disabled={!gcodeFile?.gcodeAxisWorkRange}
                                 loading={runBoundaryUploading}
                                 onClick={async () => runBoundary()}
                             >
