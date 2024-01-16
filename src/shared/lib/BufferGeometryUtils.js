@@ -234,6 +234,7 @@ var BufferGeometryUtils = {
 
 			}
 
+            // FIXME: Colors should be standardized at the beginning.
             // allow multi-color model convert
 			// ensure geometries have the same number of attributes
 			// if ( attributesCount !== attributesUsed.size ) {
