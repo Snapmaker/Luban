@@ -70,7 +70,7 @@ const SelectMachineModal: React.FC = () => {
 
     useEffect(() => {
         if (activeMachine) {
-            setSelectedMachineIdentifier(activeMachine?.identifier);
+            setSelectedMachineIdentifier(activeMachine.identifier);
         }
     }, [activeMachine]);
 

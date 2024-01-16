@@ -58,7 +58,6 @@ const Enclosure: React.FC = () => {
 
     useEffect(() => {
         setIsLedReady(true);
-        console.log('$$ enclosureLight', enclosureLight, machineIdentifier);
     }, [enclosureLight]);
 
     useEffect(() => {
