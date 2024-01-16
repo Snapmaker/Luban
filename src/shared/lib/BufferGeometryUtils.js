@@ -234,14 +234,13 @@ var BufferGeometryUtils = {
 
 			}
 
+            // FIXME: Colors should be standardized at the beginning.
+            // allow multi-color model convert
 			// ensure geometries have the same number of attributes
-
-			if ( attributesCount !== attributesUsed.size ) {
-
-				console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed with geometry at index ' + i + '. Make sure all geometries have the same number of attributes.' );
-				return null;
-
-			}
+			// if ( attributesCount !== attributesUsed.size ) {
+			// 	console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed with geometry at index ' + i + '. Make sure all geometries have the same number of attributes.' );
+			//	return null;
+			// }
 
 			// gather morph attributes, exit early if they're different
 

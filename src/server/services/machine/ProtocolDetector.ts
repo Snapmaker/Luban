@@ -136,7 +136,9 @@ class ProtocolDetector {
         setTimeout(() => {
             if (!hasData) {
                 protocol = SerialPortProtocol.SacpOverSerialPort;
-                trySerialConnect?.close();
+                if (trySerialConnect.isOpen) {
+                    trySerialConnect?.close();
+                }
             }
         }, 2000);
 
@@ -163,15 +165,21 @@ class ProtocolDetector {
                 // M1006 response: SACP V1 => SACP
                 if (m1006Response.match(/SACP/g)) {
                     protocol = SerialPortProtocol.SacpOverSerialPort;
-                    trySerialConnect?.close();
-
-                    resolve();
+                    if (trySerialConnect.isOpen) {
+                        trySerialConnect?.close();
+                    } else {
+                        resolve();
+                    }
                 } else if (m1006Response.match(/ok/g)) {
                     // ok => plaintext protocol
                     protocol = SerialPortProtocol.PlainText;
-                    trySerialConnect?.close();
-
-                    resolve();
+                    if (trySerialConnect.isOpen) {
+                        trySerialConnect?.close();
+                    } else {
+                        resolve();
+                    }
+                } else {
+                    hasData = false;
                 }
             });
             trySerialConnect.on('close', () => {
@@ -179,6 +187,9 @@ class ProtocolDetector {
             });
             trySerialConnect.on('error', (err) => {
                 log.error(`error = ${err}`);
+                if (trySerialConnect.isOpen) {
+                    trySerialConnect?.close();
+                }
             });
             trySerialConnect.once('open', () => {
                 // Use M1006 to detect if SACP is supported
