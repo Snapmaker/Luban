@@ -4,6 +4,7 @@ import classNames from 'classnames';
 import React, { useEffect, useImperativeHandle, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 
+import { message } from 'antd';
 import { pathWithRandomSuffix } from '../../../../shared/lib/random-utils';
 import { actions as workspaceActions } from '../../../flux/workspace';
 import gcodeActions from '../../../flux/workspace/actions-gcode';
@@ -20,9 +21,9 @@ declare interface GcodePreviewItemProps {
     gcodeFile: object;
     index: number;
     selected: boolean;
-    onSelectFile: () => {};
+    onSelectFile: (_selectFileName: string, event: MouseEvent, needToUnselect?: boolean) => void;
     gRef: object;
-    setSelectFileIndex: () => {};
+    setSelectFileIndex: (index: number) => void;
 }
 
 
@@ -36,7 +37,7 @@ const GcodePreviewItem: React.FC<GcodePreviewItemProps> = React.memo((props) => 
     const { prefixName, suffixName } = normalizeNameDisplay(gcodeFile?.renderGcodeFileName || gcodeFile?.name, suffixLength);
 
     let size = '';
-    const { isRenaming, uploadName } = gcodeFile;
+    const { isRenaming } = gcodeFile;
     if (!gcodeFile.size) {
         size = '';
     } else if (gcodeFile.size / 1024 / 1024 > 1) {
@@ -69,6 +70,11 @@ const GcodePreviewItem: React.FC<GcodePreviewItemProps> = React.memo((props) => 
         if (!changeNameInput.current) {
             return;
         }
+        if (!changeNameInput.current.value || !changeNameInput.current.value.trim()) {
+            message.error("file name can't be blank");
+            changeNameInput.current.focus();
+            return;
+        }
         let newName = changeNameInput.current.value;
         const m = _uploadName.match(/(\.gcode|\.cnc|\.nc)$/);
         if (m) {
@@ -78,8 +84,9 @@ const GcodePreviewItem: React.FC<GcodePreviewItemProps> = React.memo((props) => 
     };
 
     const onRenameStart = (_uploadName, _index, _renderGcodeFileName = '', event) => {
+        if (!selected) return;
         dispatch(workspaceActions.renameGcodeFile(_uploadName, null, true));
-        event.stopPropagation();
+        event && event.stopPropagation();
         setTimeout(() => {
             changeNameInput.current.value = replace(_renderGcodeFileName, /(\.gcode|\.cnc|\.nc)$/, '') || _uploadName;
             changeNameInput.current.focus();
@@ -91,7 +98,7 @@ const GcodePreviewItem: React.FC<GcodePreviewItemProps> = React.memo((props) => 
     };
 
     useImperativeHandle(gRef, () => ({
-        remaneStart: (_uploadName, _index, e) => onRenameStart(_uploadName, _index, e),
+        remaneStart: (_uploadName, _index, _renderGcodeFileName, e) => onRenameStart(_uploadName, _index, _renderGcodeFileName, e),
         removeFile: (_gcodeFile) => onRemoveFile(_gcodeFile)
     }));
 
@@ -109,7 +116,7 @@ const GcodePreviewItem: React.FC<GcodePreviewItemProps> = React.memo((props) => 
             )}
             key={pathWithRandomSuffix(gcodeFile.uploadName)}
             onClick={
-                (event) => onSelectFile(gcodeFile.uploadName, null, event)
+                (event) => onSelectFile(gcodeFile.uploadName, event)
             }
             onKeyDown={noop}
             role="button"
@@ -163,7 +170,7 @@ const GcodePreviewItem: React.FC<GcodePreviewItemProps> = React.memo((props) => 
                     <input
                         defaultValue={gcodeFile?.renderGcodeFileName?.replace(/(\.gcode|\.cnc|\.nc)$/, '')}
                         className={classNames('input-select')}
-                        onBlur={() => onRenameEnd(uploadName)}
+                        onBlur={() => onRenameEnd(gcodeFile?.uploadName)}
                         onKeyDown={(event) => onKeyDown(event)}
                         ref={changeNameInput}
                     />
@@ -180,7 +187,7 @@ const GcodePreviewItem: React.FC<GcodePreviewItemProps> = React.memo((props) => 
                 className="height-48 position-absolute right-16"
                 size={24}
                 onClick={() => {
-                    onSelectFile(gcodeFile.uploadName, null, null, false);
+                    onSelectFile(gcodeFile.uploadName, null, false);
                     dispatch(gcodeActions.renderPreviewGcodeFile(gcodeFile));
                 }}
             />

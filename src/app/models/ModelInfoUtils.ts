@@ -95,10 +95,14 @@ const defaultConfigs = {
 
     // Laser
     [toKey(HEAD_LASER, PROCESS_MODE_BW)]: {
+        greyscaleAlgorithm: 'Luma',
+        algorithm: 'Atkinson',
         invert: false,
         bwThreshold: 168
     },
     [toKey(HEAD_LASER, PROCESS_MODE_HALFTONE)]: {
+        greyscaleAlgorithm: 'Luma',
+        algorithm: 'Atkinson',
         invert: false,
         threshold: 255, // turn pixel to white
         bwThreshold: 168, // used by toolpath generator
@@ -116,11 +120,15 @@ const defaultConfigs = {
         algorithm: 'Atkinson'
     },
     [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE.RASTER)]: {
+        greyscaleAlgorithm: 'Luma',
+        algorithm: 'Atkinson',
         vectorThreshold: 128,
         invert: false,
         turdSize: 2
     },
     [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE.SVG)]: {
+        greyscaleAlgorithm: 'Luma',
+        algorithm: 'Atkinson',
         'stroke-width': '0.25'
     },
     [toKey(HEAD_LASER, PROCESS_MODE_VECTOR, SOURCE_TYPE.TEXT)]: {
@@ -380,7 +388,7 @@ const generateModelDefaultConfigs = (headType, sourceType, mode, isRotate = fals
         || defaultConfigs[toKey(headType, mode, isRotate)]
         || defaultConfigs[toKey(headType, mode)]
         || defaultConfigs[toKey(headType)]
-        || {};
+        || { greyscaleAlgorithm: 'Luma' };
     const gcodeConfig = defaultGcodeConfigs[toKey(headType, mode, sourceType, isRotate)]
         || defaultGcodeConfigs[toKey(headType, mode, sourceType)]
         || defaultGcodeConfigs[toKey(headType, mode, isRotate)]

@@ -102,13 +102,13 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
 
     const [showLaserStartJobModal, setShowLaserStartJobModal] = useState(false);
     const fileInput = useRef();
-    const gcodeItemRef = useRef();
+    const gcodeItemRef = useRef([]);
     const canvas = useRef();
     const prevProps = usePrevious({
         previewStage
     });
 
-    const onSelectFile = useCallback((_selectFileName, name, event, needToUnselect = true) => {
+    const onSelectFile = useCallback((_selectFileName: string, event?: MouseEvent, needToUnselect: boolean = true) => {
         if (event && event.target && event.target.className && typeof event.target.className.indexOf === 'function') {
             if (event.target.className.indexOf('input-select') > -1
                 || event.target.className.indexOf('fa-check') > -1) {
@@ -455,10 +455,10 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                             <React.Fragment key={index}>
                                 <GcodePreviewItem
                                     gcodeFile={gcodeFile}
-                                    index={index}
+                                    index={parseInt(index, 10)}
                                     selected={selectFileName === gcodeFile.uploadName}
                                     onSelectFile={onSelectFile}
-                                    gRef={gcodeItemRef}
+                                    gRef={ref => { gcodeItemRef?.current[index] = ref; }}
                                     setSelectFileIndex={setSelectFileIndex}
                                 />
                             </React.Fragment>
@@ -474,7 +474,16 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                         size={24}
                         title={i18n._('key-Workspace/Transport-Edit')}
                         disabled={!selectedFile}
-                        onClick={(e) => gcodeItemRef.current.remaneStart(selectedFile.uploadName, selectFileIndex, e)}
+                        onClick={
+                            (e) => {
+                                gcodeItemRef.current[selectFileIndex].remaneStart(
+                                    selectedFile.uploadName,
+                                    selectFileIndex,
+                                    selectedFile.renderGcodeFileName,
+                                    e
+                                );
+                            }
+                        }
                     />
                     <SvgIcon
                         name="Import"
@@ -494,7 +503,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                         size={24}
                         title={i18n._('key-Workspace/Transport-Delete')}
                         disabled={!selectedFile}
-                        onClick={() => gcodeItemRef.current.removeFile(selectedFile)}
+                        onClick={() => gcodeItemRef.current[selectFileIndex].removeFile(selectedFile)}
                     />
                 </div>
                 <div className={classNames('sm-flex', 'justify-space-between', 'align-center', 'margin-top-8')}>

@@ -1,5 +1,5 @@
 import { debounce } from 'lodash';
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { Input } from 'antd';
@@ -8,13 +8,9 @@ import styles from './styles.styl';
 const { TextArea } = Input;
 
 const TextAreaInput = React.memo(({
-    className = '', value, defaultValue, disabled = false, onChange, ...rest
+    className = '', defaultValue, disabled = false, onChange, ...rest
 }) => {
-    const [displayValue, setDisplayValue] = useState(value);
-
-    useEffect(() => {
-        setDisplayValue(value);
-    }, [value]);
+    const [displayValue, setDisplayValue] = useState(defaultValue);
 
     const changeHandler = useCallback((newValue) => {
         onChange && onChange(newValue);
@@ -53,7 +49,6 @@ const TextAreaInput = React.memo(({
 
 TextAreaInput.propTypes = {
     className: PropTypes.string,
-    value: PropTypes.string,
     defaultValue: PropTypes.string,
     disabled: PropTypes.bool,
     onChange: PropTypes.func
