@@ -67,9 +67,11 @@ class SacpSerialChannel extends SacpChannelBase {
                 this.serialport.write('\r\n');
                 await new Promise<void>((r) => setTimeout(() => r(), 100));
 
+                // for artisan
                 this.serialport.write('M2000 S5 P1\r\n');
                 await new Promise<void>((r) => setTimeout(() => r(), 100));
 
+                // for ray
                 this.serialport.write('$PS\r\n');
                 await new Promise<void>((r) => setTimeout(() => r(), 100));
 

@@ -106,6 +106,8 @@ class SacpChannelBase extends Channel implements
 
     public subscribeEnclosureInfoCallback: ResponseCallback;
 
+    public subscribeEnclosureLightInfoCallback: ResponseCallback;
+
     public subscribePurifierInfoCallback: ResponseCallback;
 
     private filamentAction = false;
@@ -137,6 +139,24 @@ class SacpChannelBase extends Channel implements
         if (this.sacpClient) {
             this.sacpClient.setFilePeerId(peerId);
         }
+    }
+
+    public subscribePurifierInfo() {
+        this.subscribePurifierInfoCallback = (data) => {
+            const { airPurifierStatus: { fanState, speedLevel, lifeLevel, powerState } } = new AirPurifierInfo().fromBuffer(data.response.data);
+            this.socket && this.socket.emit('Marlin:state', {
+                state: {
+                    airPurifier: true,
+                    airPurifierHasPower: powerState,
+                    airPurifierSwitch: fanState,
+                    airPurifierFanSpeed: speedLevel,
+                    airPurifierFilterHealth: lifeLevel - 1
+                }
+            });
+        };
+        this.sacpClient.subscribePurifierInfo({ interval: 1000 }, this.subscribePurifierInfoCallback).then(res => {
+            log.info(`subscribe purifier info, ${res.response.result}`);
+        });
     }
 
     public async startHeartbeat(): Promise<void> {
@@ -180,7 +200,7 @@ class SacpChannelBase extends Channel implements
         };
 
         const res = await this.sacpClient.subscribeHeartbeat({ interval: 2000 }, subscribeHeartbeatCallback);
-
+        this.subscribePurifierInfo();
         log.info(`Subscribe heartbeat, result = ${res.code}`);
     }
 
@@ -1114,6 +1134,23 @@ class SacpChannelBase extends Channel implements
         this.sacpClient.subscribeEnclosureInfo({ interval: 1000 }, this.subscribeEnclosureInfoCallback).then(res => {
             log.info(`subscribe enclosure info, ${res.response.result}`);
         });
+        // FIXME: init enclosure light Info for j1, only use for j1
+        this.subscribeEnclosureLightInfoCallback = (data) => {
+            const module = this.getEnclosureModule();
+            if (!module) {
+                return;
+            }
+            const buffer = data.response.data;
+            const lightIntensity = readUint8(buffer, 1);
+            stateData = {
+                ...stateData,
+                ledValue: Math.round(lightIntensity / 255 * 100), // lightIntensity range from 0 to 255
+            };
+        };
+        this.sacpClient.subscribeEnclosureLightInfo({ interval: 1000 }, this.subscribeEnclosureLightInfoCallback).then(res => {
+            log.info(`subscribe enclosure light info, ${res.response.result}`);
+        });
+
         this.subscribePurifierInfoCallback = (data) => {
             const { airPurifierStatus: { fanState, speedLevel, lifeLevel, powerState } } = new AirPurifierInfo().fromBuffer(data.response.data);
             stateData = {

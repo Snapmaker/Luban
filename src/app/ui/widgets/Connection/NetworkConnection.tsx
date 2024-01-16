@@ -151,6 +151,7 @@ const NetworkConnection: React.FC = () => {
         moduleList,
         moduleStatusList,
         airPurifier,
+        airPurifierHasPower,
         heatedBedTemperature,
         laserCamera,
     } = useSelector((state: RootState) => state.workspace, shallowEqual);
@@ -570,16 +571,8 @@ const NetworkConnection: React.FC = () => {
             if (moduleStatusList[key]) {
                 newModuleStatusList.push({
                     moduleName: i18n._(`key-Workspace/Connection-${key}`),
-                    status: moduleStatusList[key]
+                    status: key === 'airPurifier' ? airPurifierHasPower : moduleStatusList[key]
                 });
-            } else {
-                // compatible code
-                if (key === 'airPurifier' && airPurifier) {
-                    newModuleStatusList.push({
-                        moduleName: i18n._('key-Workspace/Connection-airPurifier'),
-                        status: moduleStatusList[key]
-                    });
-                }
             }
         });
 
@@ -602,6 +595,7 @@ const NetworkConnection: React.FC = () => {
         toolHead,
         emergencyStopButtonStatus,
         airPurifier,
+        airPurifierHasPower,
         airPurifierStatus,
         rotaryModuleStatus,
         enclosureStatus,
