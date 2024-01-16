@@ -62,7 +62,6 @@ const Enclosure: React.FC = () => {
 
     useEffect(() => {
         setIsFanReady(true);
-        console.log('$$ enclosureFan', enclosureFan);
     }, [enclosureFan]);
 
     useEffect(() => {
