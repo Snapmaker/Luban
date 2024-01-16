@@ -63,7 +63,7 @@ import {
  */
 
 class STLLoader extends Loader {
-    constructor(manager, { monoColor = false }) {
+    constructor(manager, { monoColor } = { monoColor: false}) {
         super(manager);
 
         this.monoColor = monoColor;
