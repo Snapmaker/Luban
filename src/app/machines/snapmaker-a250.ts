@@ -1,6 +1,6 @@
 import { Machine, MachineType } from '@snapmaker/luban-platform';
 
-import { quickSwapKitModule } from './snapmaker-2-modules';
+import { quickSwapKitModule, bracingKitModule } from './snapmaker-2-modules';
 import {
     L20WLaserToolModule,
     L40WLaserToolModule,
@@ -88,6 +88,10 @@ export const machine: Machine = {
             {
                 identifier: quickSwapKitModule.identifier,
                 workRangeOffset: [0, -15, 0],
+            },
+            {
+                identifier: bracingKitModule.identifier,
+                workRangeOffset: [0, -12, -6],
             }
         ],
 

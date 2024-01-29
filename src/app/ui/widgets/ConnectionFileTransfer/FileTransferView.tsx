@@ -458,7 +458,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                                     index={parseInt(index, 10)}
                                     selected={selectFileName === gcodeFile.uploadName}
                                     onSelectFile={onSelectFile}
-                                    gRef={ref => { gcodeItemRef?.current[index] = ref; }}
+                                    gRef={ref => { gcodeItemRef.current[index] = ref; }}
                                     setSelectFileIndex={setSelectFileIndex}
                                 />
                             </React.Fragment>
