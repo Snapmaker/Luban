@@ -7,6 +7,7 @@ import {
     printToolHead,
     standardLaserToolHead,
     standardCNCToolHead,
+    highPower200WCNCToolHead,
 } from './snapmaker-2-toolheads';
 
 /*
@@ -62,6 +63,10 @@ export const machine: Machine = {
                 identifier: standardCNCToolHead.identifier,
                 configPath: 'cnc/a150_standard',
             },
+            {
+                identifier: highPower200WCNCToolHead.identifier,
+                configPath: 'cnc/a150_high_power',
+            }
         ],
 
         slicerVersion: 0,

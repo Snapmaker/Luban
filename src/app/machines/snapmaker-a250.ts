@@ -6,6 +6,7 @@ import {
     L40WLaserToolModule,
     dualExtrusionPrintToolHead,
     highPower10WLaserToolHead,
+    highPower200WCNCToolHead,
     printToolHead,
     standardCNCToolHead,
     standardLaserToolHead,
@@ -82,6 +83,10 @@ export const machine: Machine = {
                 identifier: standardCNCToolHead.identifier,
                 configPath: 'cnc/a250_standard',
             },
+            {
+                identifier: highPower200WCNCToolHead.identifier,
+                configPath: 'cnc/a250_high_power',
+            }
         ],
 
         modules: [
