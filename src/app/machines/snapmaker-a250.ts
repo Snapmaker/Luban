@@ -92,7 +92,7 @@ export const machine: Machine = {
         modules: [
             {
                 identifier: quickSwapKitModule.identifier,
-                workRangeOffset: [0, -15, 0],
+                workRangeOffset: [0, -15, -15],
             },
             {
                 identifier: bracingKitModule.identifier,
