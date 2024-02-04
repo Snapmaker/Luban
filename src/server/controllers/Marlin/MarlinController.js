@@ -498,6 +498,9 @@ class MarlinController extends EventEmitter {
                 this.writeln('M1010 S2');
             }, 1000);
         });
+        this.controller.on('cnc:highpower', (res) => {
+            // log.info(`controller.on('cnc:highpower'): source=${this.history.writeSource}, res=${JSON.stringify(res)}`);
+        });
         this.controller.on('laser10w:state', (res) => {
             if (res.laser10WErrorState !== undefined) {
                 this.emitAll('marlin:state', {
@@ -626,7 +629,7 @@ class MarlinController extends EventEmitter {
             }
 
             // Marlin settings
-
+            this.writeln('M1006', { emit: false });
             if (this.settings !== this.controller.settings) {
                 this.settings = this.controller.settings;
                 this.emitAll('Marlin:settings', { settings: this.settings });

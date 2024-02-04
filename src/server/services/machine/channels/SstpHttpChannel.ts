@@ -3,7 +3,7 @@ import request from 'superagent';
 
 import SocketEvent from '../../../../app/communication/socket-events';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, } from '../../../../app/constants/machines';
-import { L20WLaserToolModule, L40WLaserToolModule } from '../../../../app/machines/snapmaker-2-toolheads';
+import { L20WLaserToolModule, L40WLaserToolModule, highPower200WCNCToolHead } from '../../../../app/machines/snapmaker-2-toolheads';
 import {
     HEAD_CNC,
     HEAD_LASER,
@@ -224,6 +224,10 @@ class SstpHttpChannel extends Channel implements
                         case 7:
                             headType = HEAD_LASER;
                             toolHead = L40WLaserToolModule.identifier;
+                            break;
+                        case 8:
+                            headType = HEAD_CNC;
+                            toolHead = highPower200WCNCToolHead.identifier;
                             break;
                         default:
                             headType = HEAD_PRINTING;

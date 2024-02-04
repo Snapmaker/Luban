@@ -1313,7 +1313,7 @@ M3`;
     };
 
     public setSpindleSpeed = async (socket: SocketServer, options) => {
-        if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.HTTP, SerialPortProtocol.SacpOverSerialPort, SerialPortProtocol.PlainText], this.protocol)) {
             const { speed } = options;
             const success = await (this.channel as CncChannelInterface).setSpindleSpeed(speed);
 

@@ -111,7 +111,7 @@ const CNC: React.FC = () => {
                             {/* //  <div className="sm-flex align-center"> */}
                             {isLevelTwoCNC && (
                                 <div className=" sm-flex sm-flex-direction-c  margin-right-16  margin-left-16">
-                                    <span>{cncTargetSpindleSpeed} RPM</span>
+                                    <span>{cncCurrentSpindleSpeed} RPM</span>
                                 </div>
                             )}
                             {isLevelTwoCNC && (

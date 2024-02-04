@@ -9,6 +9,7 @@ import {
     L20WLaserToolModule,
     L40WLaserToolModule,
     highPower10WLaserToolHead,
+    highPower200WCNCToolHead,
     standardLaserToolHead
 } from '../../../app/machines/snapmaker-2-toolheads';
 import {
@@ -694,6 +695,37 @@ class MarlinParserLaser10WErrorState {
     }
 }
 
+class MarlinReplyParserCNCRPM {
+    static parse(line) {
+        const r1 = line.match(/^rpm: ([0-9]+).*$/);
+        const r2 = line.match(/^M_I: ([0-9]+).*$/);
+        const r3 = line.match(/^M_TEMP: ([0-9]+).*$/);
+        const r4 = line.match(/^ctr mode:.*$/);
+        const r5 = line.match(/^cur_power: ([0-9]+).*$/);
+        const r6 = line.match(/^run status:.*$/);
+        const r7 = line.match(/^last error:.*$/);
+        const M1006UnneedMsg = r1 || r2 || r3 || r4 || r5 || r6 || r7;
+
+
+        const macth = line.match(/^cur_rpm: ([0-9]+) target_rpm: ([0-9]+).*$/);
+        if (!macth && !M1006UnneedMsg) {
+            return null;
+        }
+
+        if (M1006UnneedMsg) {
+            return { type: MarlinReplyParserCNCRPM };
+        }
+
+        return {
+            type: MarlinReplyParserCNCRPM,
+            payload: {
+                currRpm: parseInt(macth[1], 10),
+                targetRpm: parseInt(macth[2], 10)
+            }
+        };
+    }
+}
+
 class MarlinLineParser {
     parse(line) {
         const parsers = [
@@ -702,6 +734,9 @@ class MarlinLineParser {
 
             // cnc emergency stop when enclosure open
             MarlinReplyParserEmergencyStop,
+
+            // cnc rpm
+            MarlinReplyParserCNCRPM,
 
             // emergency stop button
             MarlinReplyParserEmergencyStopButton,
@@ -944,6 +979,10 @@ class Marlin extends events.EventEmitter {
                 case 'CNC':
                     newState.headType = HEAD_CNC;
                     break;
+                case '200W CNC':
+                    newState.headType = HEAD_CNC;
+                    newState.toolHead = highPower200WCNCToolHead.identifier;
+                    break;
                 default:
                     newState.headType = payload.headType;
                     break;
@@ -1087,6 +1126,14 @@ class Marlin extends events.EventEmitter {
             this.emit('selected', payload);
         } else if (type === MarlinParserSelectedCurrent) {
             this.emit('selected', payload);
+        } else if (type === MarlinReplyParserCNCRPM) {
+            if (typeof payload.currRpm !== 'undefined') {
+                this.setState({
+                    cncCurrentSpindleSpeed: payload.currRpm,
+                    cncTargetSpindleSpeed: payload.targetRpm
+                });
+                this.emit('cnc:highpower', payload);
+            }
         } else if (data.length > 0) {
             this.emit('others', payload);
         }
