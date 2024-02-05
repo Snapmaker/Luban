@@ -68,6 +68,7 @@ class SocketCommunication {
 
         // machine related
         'machine:module-list': [],
+        'machine:module-info': [],
         'machine:laser-status': [],
 
         [SocketEvent.UploadFileProgress]: [],

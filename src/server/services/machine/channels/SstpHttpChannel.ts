@@ -88,7 +88,8 @@ const _getResult = (err, res: request.Response): Result => {
     };
 };
 // let timeoutHandle = null;
-let intervalHandle = null;
+const intervalHandle = null;
+
 
 export type StateOptions = {
     headType?: string,
@@ -135,6 +136,13 @@ class SstpHttpChannel extends Channel implements
     private moduleSettings = null;
 
     private getLaserMaterialThicknessReq = null;
+
+    private intervalRefMap = new Map();
+
+    private clearAllInterval() {
+        Array.from(this.intervalRefMap.values())
+            .forEach(intervalRef => clearInterval(intervalRef));
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public onConnection = () => {
@@ -244,12 +252,16 @@ class SstpHttpChannel extends Channel implements
                         this.socket && this.socket.emit('connection:open', result);
                     }
 
-                    // Get module info
+                    // Get module list(only status)
                     this.getModuleList();
 
                     // Get enclosure status (every 1000ms)
-                    clearInterval(intervalHandle);
-                    intervalHandle = setInterval(this.getEnclosureStatus, 1000);
+                    clearInterval(this.intervalRefMap.get('getEnclosureStatus'));
+                    this.intervalRefMap.set('getEnclosureStatus', setInterval(this.getEnclosureStatus, 1000));
+
+                    // Get module info(include data) every 1000ms
+                    clearInterval(this.intervalRefMap.get('getModuleInfo'));
+                    this.intervalRefMap.set('getModuleInfo', setInterval(this.getModuleInfo, 1000));
 
                     // Get Active extruder
                     this.getActiveExtruder({ eventName: 'connection:getActiveExtruder' });
@@ -266,7 +278,7 @@ class SstpHttpChannel extends Channel implements
 
     public async connectionClose(options: { force: boolean }): Promise<boolean> {
         // TODO: cancel intervals on instance
-        clearInterval(intervalHandle);
+        this.clearAllInterval();
         this.stopHeartBeat();
 
         const force = options?.force || false;
@@ -304,7 +316,7 @@ class SstpHttpChannel extends Channel implements
         }], (result: object) => {
             if (result.status === 'offline') {
                 log.info(`[wifi connection offline]: msg=${result.msg}`);
-                clearInterval(intervalHandle);
+                this.clearAllInterval();
                 this.socket && this.socket.emit('connection:close');
                 return;
             }
@@ -556,6 +568,24 @@ class SstpHttpChannel extends Channel implements
                 if (!err) {
                     this.socket && this.socket.emit('machine:module-list', {
                         moduleList: data.moduleList || [],
+                    });
+                }
+            });
+    };
+
+    /**
+     * Get module info.
+     */
+    public getModuleInfo = () => {
+        request
+            .get(`${this.host}/api/v1/module_info?token=${this.token}`)
+            .timeout(1000)
+            .end((err, res) => {
+                const result = _getResult(err, res);
+                const data = result?.data;
+                if (!err) {
+                    this.socket && this.socket.emit('machine:module-info', {
+                        moduleInfo: data.moduleInfo || [],
                     });
                 }
             });

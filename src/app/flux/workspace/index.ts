@@ -24,7 +24,9 @@ import {
 } from '../../constants';
 import {
     EMERGENCY_STOP_BUTTON,
+    LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
     MACHINE_SERIES,
+    MODULEID_TOOLHEAD_MAP,
     findMachineByName,
     findToolHead,
 } from '../../constants/machines';
@@ -511,6 +513,49 @@ export const actions = {
 
                 dispatch(actions.updateState({
                     moduleList,
+                }));
+            },
+
+            /**
+             * moduleInfo: [
+             *   { key: 1, spindleSpeed: 0 },
+             *   {
+             *     key: 3,
+             *     isReady: true,
+             *     led: 100,
+             *     fan: 0,
+             *     isDoorEnabled: true,
+             *     isEnclosureDoorOpen: false,
+             *     doorSwitchCount: 0
+             *   },
+             *   { key: 7, quickSwapState: 1, quickSwapType: 1 }
+             * ]
+             */
+            // Only works for SM 2.0
+            'machine:module-info': (options) => {
+                const moduleInfo = options.moduleInfo;
+                const moduleList: Array<any> = getState().workspace.moduleList;
+
+                const newModuleList = moduleInfo.map(m => {
+                    const targetModule = moduleList.find(v => v.key === m.key);
+                    if (!targetModule) {
+                        return m;
+                    }
+                    return {
+                        ...targetModule,
+                        ...m
+                    };
+                });
+                dispatch(actions.updateState({
+                    moduleList: newModuleList,
+                }));
+
+                // update 200w cnc spindleSpeed
+                const highPower200WCNCToolHead = moduleList.find(m => MODULEID_TOOLHEAD_MAP[m.moduleId] === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2);
+                if (!highPower200WCNCToolHead) return;
+                dispatch(actions.updateState({
+                    cncTargetSpindleSpeed: highPower200WCNCToolHead.spindleSpeed,
+                    cncCurrentSpindleSpeed: highPower200WCNCToolHead.spindleSpeed,
                 }));
             },
 
