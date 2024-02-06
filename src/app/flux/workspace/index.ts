@@ -42,6 +42,7 @@ import gcodeActions from './actions-gcode';
 import type { MachineStateUpdateOptions } from './state';
 import { initialState } from './state';
 import { GCodeFileMetadata } from './types';
+import { STANDARD_CNC_TOOLHEAD_FOR_SM2 } from '../../machines/snapmaker-2-toolheads';
 
 
 export { WORKSPACE_STAGE } from './state';
@@ -550,12 +551,11 @@ export const actions = {
                     moduleList: newModuleList,
                 }));
 
-                // update 200w cnc spindleSpeed
-                const highPower200WCNCToolHead = moduleList.find(m => MODULEID_TOOLHEAD_MAP[m.moduleId] === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2);
-                if (!highPower200WCNCToolHead) return;
+                // update cnc spindleSpeed
+                const CNCToolHead = moduleList.find(m => MODULEID_TOOLHEAD_MAP[m.moduleId] === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2
+                    || MODULEID_TOOLHEAD_MAP[m.moduleId] === STANDARD_CNC_TOOLHEAD_FOR_SM2);
                 dispatch(actions.updateState({
-                    cncTargetSpindleSpeed: highPower200WCNCToolHead.spindleSpeed,
-                    cncCurrentSpindleSpeed: highPower200WCNCToolHead.spindleSpeed,
+                    cncCurrentSpindleSpeed: CNCToolHead.spindleSpeed,
                 }));
             },
 

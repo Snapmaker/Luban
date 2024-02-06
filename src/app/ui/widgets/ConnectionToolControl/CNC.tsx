@@ -1,4 +1,4 @@
-import { Machine, WorkflowStatus } from '@snapmaker/luban-platform';
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { includes } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -8,7 +8,6 @@ import SocketEvent from '../../../communication/socket-events';
 import { LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
 import i18n from '../../../lib/i18n';
-import { SnapmakerArtisanMachine } from '../../../machines';
 import EditComponent from '../../components/EditComponent';
 import Switch from '../../components/Switch';
 import WorkSpeed from './WorkSpeed';
@@ -16,7 +15,6 @@ import AttributeContainer from './components/AttributeContainer';
 
 const CNC: React.FC = () => {
     const { toolHead } = useSelector((state: RootState) => state.workspace);
-    const activeMachine: Machine = useSelector((state: RootState) => state.workspace.activeMachine);
 
     const {
         headStatus,
@@ -31,7 +29,9 @@ const CNC: React.FC = () => {
             ? cncCurrentSpindleSpeed > 0
             : headStatus
     );
+    const [switchLoading, setSwitchLoading] = useState(false);
 
+    let timeRef = null;
     const onClickToolHead = useCallback(() => {
         controller.emitEvent(SocketEvent.SwitchCNC, {
             headStatus: isHeadOn,
@@ -39,11 +39,10 @@ const CNC: React.FC = () => {
             toolHead,
         });
 
-        // Not Artisan, revert head on
-        if (activeMachine && activeMachine.identifier !== SnapmakerArtisanMachine.identifier) {
-            setIsHeadOn((prev) => !prev);
-        }
-    }, [isHeadOn, cncTargetSpindleSpeed, toolHead, activeMachine]);
+        clearTimeout(timeRef);
+        setSwitchLoading(true);
+        timeRef = setTimeout(() => setSwitchLoading(false), 2000);
+    }, [isHeadOn, cncTargetSpindleSpeed, toolHead]);
 
     const updateToolHeadSpeed = useCallback((speed: number) => {
         controller.emitEvent(SocketEvent.SetSpindleSpeed, {
@@ -59,15 +58,7 @@ const CNC: React.FC = () => {
     }, [workflowStatus]);
 
     useEffect(() => {
-        if (toolHead !== LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2) {
-            if (headStatus !== undefined && headStatus !== isHeadOn) {
-                setIsHeadOn(headStatus);
-            }
-        }
-    }, [toolHead, headStatus, isHeadOn]);
-
-    useEffect(() => {
-        if (toolHead === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2 && cncCurrentSpindleSpeed !== undefined) {
+        if (cncCurrentSpindleSpeed !== undefined) {
             setIsHeadOn(cncCurrentSpindleSpeed > 0);
         }
     }, [toolHead, cncCurrentSpindleSpeed]);
@@ -101,6 +92,7 @@ const CNC: React.FC = () => {
                         <div className="height-32 width-176 display-inline text-overflow-ellipsis">{i18n._('key-unused-Toolhead')}</div>
                         <div className="sm-flex margin-left-24 overflow-visible align-center">
                             <Switch
+                                loading={switchLoading}
                                 className="sm-flex-auto"
                                 style={{ order: 0 }}
                                 onClick={onClickToolHead}

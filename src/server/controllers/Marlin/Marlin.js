@@ -707,22 +707,30 @@ class MarlinReplyParserCNCRPM {
         const M1006UnneedMsg = r1 || r2 || r3 || r4 || r5 || r6 || r7;
 
 
-        const macth = line.match(/^cur_rpm: ([0-9]+) target_rpm: ([0-9]+).*$/);
-        if (!macth && !M1006UnneedMsg) {
+        const macth200W = line.match(/^cur_rpm: ([0-9]+) target_rpm: ([0-9]+).*$/);
+        const macth50W = line.match(/^RPM: ([0-9]+).*$/);
+        if (!macth200W && !M1006UnneedMsg && !macth50W) {
             return null;
         }
 
-        if (M1006UnneedMsg) {
+        if (macth200W) {
+            return {
+                type: MarlinReplyParserCNCRPM,
+                payload: {
+                    currRpm: parseInt(macth200W[1], 10),
+                    targetRpm: parseInt(macth200W[2], 10)
+                }
+            };
+        } else if (macth50W) {
+            return {
+                type: MarlinReplyParserCNCRPM,
+                payload: {
+                    currRpm: parseInt(macth50W[1], 10),
+                }
+            };
+        } else {
             return { type: MarlinReplyParserCNCRPM };
         }
-
-        return {
-            type: MarlinReplyParserCNCRPM,
-            payload: {
-                currRpm: parseInt(macth[1], 10),
-                targetRpm: parseInt(macth[2], 10)
-            }
-        };
     }
 }
 
