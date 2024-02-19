@@ -554,7 +554,7 @@ export const actions = {
                 // update cnc spindleSpeed
                 const CNCToolHead = moduleList.find(m => MODULEID_TOOLHEAD_MAP[m.moduleId] === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2
                     || MODULEID_TOOLHEAD_MAP[m.moduleId] === STANDARD_CNC_TOOLHEAD_FOR_SM2);
-                dispatch(actions.updateState({
+                CNCToolHead && dispatch(actions.updateState({
                     cncCurrentSpindleSpeed: CNCToolHead.spindleSpeed,
                 }));
             },
