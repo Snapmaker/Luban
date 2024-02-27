@@ -8,7 +8,7 @@ import { ConnectionType } from '../machine/types';
 const log = logger('socket:discover-handlers');
 
 interface DiscoverMachineOptions {
-    connectionType: 'wifi' | 'serial';
+    connectionType: ConnectionType.WiFi | ConnectionType.Serial;
 }
 
 const discoverMachine = (socket: SocketServer, options: DiscoverMachineOptions) => {
@@ -40,7 +40,7 @@ const discoverMachine = (socket: SocketServer, options: DiscoverMachineOptions) 
 };
 
 interface SubscribeDiscoverMachineOptions {
-    connectionType: 'wifi' | 'serial';
+    connectionType: ConnectionType.WiFi | ConnectionType.Serial;
 }
 
 const subscribeDiscoverMachine = (socket: SocketServer, options: SubscribeDiscoverMachineOptions) => {

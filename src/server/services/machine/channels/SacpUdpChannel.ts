@@ -28,7 +28,7 @@ class SacpUdpChannel extends SacpChannelBase {
             }
         });
         this.socketClient.on('close', () => {
-            log.info('TCP connection closed');
+            log.info('UDP connection closed');
             const result = {
                 code: 200,
                 data: {},
@@ -38,7 +38,7 @@ class SacpUdpChannel extends SacpChannelBase {
             this.socket && this.socket.emit('connection:close', result);
         });
         this.socketClient.on('error', (err) => {
-            log.error(`TCP connection error: ${err}`);
+            log.error(`UDP connection error: ${err}`);
         });
     }
 
