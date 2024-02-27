@@ -399,19 +399,19 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                 }
             },);
 
-        // if (!isOriginalSeries) {
-        //     const canABPosition = isConnected && connectedMachineIdentifier === activeMachine.identifier && workspaceHeadType === HEAD_LASER;
-        leftItems.push({
-            title: i18n._('key-CncLaser/MainToolBar-A-B Position'),
-            type: 'button',
-            disabled: headType !== 'laser'/* || !canABPosition */,
-            name: 'ABPosition',
-            action: () => {
-                onChangeABPositionMode();
-                dispatch(laserActions.updateIsOnABPosition(!isOnABPosition));
-            }
-        });
-        // }
+        if (!isOriginalSeries) {
+            const canABPosition = isConnected && connectedMachineIdentifier === activeMachine.identifier && workspaceHeadType === HEAD_LASER;
+            leftItems.push({
+                title: i18n._('key-CncLaser/MainToolBar-A-B Position'),
+                type: 'button',
+                disabled: headType !== 'laser' || !canABPosition,
+                name: 'ABPosition',
+                action: () => {
+                    onChangeABPositionMode();
+                    dispatch(laserActions.updateIsOnABPosition(!isOnABPosition));
+                }
+            });
+        }
     }
 
     // CNC specific tools

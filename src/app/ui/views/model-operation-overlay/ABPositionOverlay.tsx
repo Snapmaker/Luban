@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import React from 'react';
-import { Alert, Button } from 'antd';
+import { Alert, Button, message } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
 import styles from './styles.styl';
 import i18n from '../../../lib/i18n';
@@ -17,7 +17,27 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
     const { APosition, BPosition } = useSelector((state: RootState) => state.laser);
     const dispatch = useDispatch();
 
+    // const isNUllPosition = position => {
+    //     return typeof position.x === 'undefined'
+    //     || typeof position.y === 'undefined'
+    //     || typeof position.z === 'undefined'
+    //     || typeof position.b === 'undefined';
+    // };
+    // const isSamePosition = (positionA, positionB) => {
+    //     return positionA.x === positionB.x
+    //     && positionA.y === positionB.y
+    //     && positionA.z === positionB.z
+    //     && positionA.b === positionB.b;
+    // };
     const setSvgBackground = () => {
+        // if (isNUllPosition(APosition) || isNUllPosition(BPosition)) {
+        //     message.warn('A or B position is not setting.');
+        //     return;
+        // }
+        // if (isSamePosition(APosition, BPosition)) {
+        //     message.warn('The positions A and B are identical. Please select two different positions.');
+        //     return;
+        // }
         dispatch(laserActions.setBackgroundImage('', size.x, size.y, 0, 0, { APosition, BPosition }));
     };
     const settingDone = () => {

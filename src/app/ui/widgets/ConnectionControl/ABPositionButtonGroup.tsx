@@ -1,21 +1,19 @@
 import PropTypes from 'prop-types';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Trans } from 'react-i18next';
 
-// import { useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import i18n from '../../../lib/i18n';
 import { Button } from '../../components/Buttons';
 import TipTrigger from '../../components/TipTrigger';
-// import { actions as laserActions } from '../../../flux/laser';
+import { actions as laserActions } from '../../../flux/laser';
 
 
 const ABPositionButtonGroup = (props) => {
     const { state, workPosition, originOffset } = props;
     const { canClick } = state;
     const { x, y, z, b } = originOffset;
-    const [aPosition, setAPosition] = useState<any>();
-    const [bPosition, setBPosition] = useState<any>();
-    // const dispatch = useDispatch();
+    const dispatch = useDispatch();
 
 
 
@@ -24,22 +22,14 @@ const ABPositionButtonGroup = (props) => {
         const machinePositionY = (Math.round((parseFloat(workPosition.y) - y) * 1000) / 1000).toFixed(3);
         const machinePositionZ = (Math.round((parseFloat(workPosition.z) - z) * 1000) / 1000).toFixed(3);
         const machinePositionB = (Math.round((parseFloat(workPosition.b) - b) * 1000) / 1000).toFixed(3);
-        setAPosition({ x: machinePositionX, y: machinePositionY, z: machinePositionZ, b: machinePositionB });
-        console.log('$$$ setAPosition', workPosition, { x: machinePositionX, y: machinePositionY, z: machinePositionZ, b: machinePositionB }, aPosition);
+        dispatch(laserActions.updateAPosition({ x: machinePositionX, y: machinePositionY, z: machinePositionZ, b: machinePositionB }));
     };
     const storeBPosition = () => {
-        // if (workPosition.z > 0) {
-        //     actions.move({ x: 0, y: 0, b: 0, z: 0 });
-        // } else {
-        //     actions.move({ z: 0, x: 0, y: 0, b: 0 });
-        // }
-
         const machinePositionX = (Math.round((parseFloat(workPosition.x) - x) * 1000) / 1000).toFixed(3);
         const machinePositionY = (Math.round((parseFloat(workPosition.y) - y) * 1000) / 1000).toFixed(3);
         const machinePositionZ = (Math.round((parseFloat(workPosition.z) - z) * 1000) / 1000).toFixed(3);
         const machinePositionB = (Math.round((parseFloat(workPosition.b) - b) * 1000) / 1000).toFixed(3);
-        setBPosition({ x: machinePositionX, y: machinePositionY, z: machinePositionZ, b: machinePositionB });
-        console.log('$$$ setBPosition', workPosition, { x: machinePositionX, y: machinePositionY, z: machinePositionZ, b: machinePositionB }, bPosition);
+        dispatch(laserActions.updateBPosition({ x: machinePositionX, y: machinePositionY, z: machinePositionZ, b: machinePositionB }));
     };
 
 
@@ -101,10 +91,9 @@ const ABPositionButtonGroup = (props) => {
                     className="margin-bottom-8 display-block"
                     priority="level-three"
                     onClick={() => {
-                        // props.executeGcode('G92 X0 Y0 Z0 B0');
-                        // actions.setWorkOrigin();
-                        setAPosition({});
-                        setBPosition({});
+                        dispatch(laserActions.updateAPosition({}));
+                        dispatch(laserActions.updateBPosition({}));
+                        dispatch(laserActions.removeBackgroundImage());
                     }}
                     disabled={!canClick}
                 >

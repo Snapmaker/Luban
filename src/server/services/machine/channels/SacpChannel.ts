@@ -1025,37 +1025,7 @@ class SacpChannelBase extends Channel implements
         this.sacpClient.subscribeNozzleInfo({ interval: 1000 }, this.subscribeNozzleCallback).then(res => {
             log.info(`subscribe nozzle success: ${res}`);
         });
-        this.subscribeCoordinateCallback = (data) => {
-            // log.info(`revice coordinate: ${data.response}`);
-            const response = data.response;
-            const coordinateInfos = new CoordinateSystemInfo().fromBuffer(response.data);
-            const currentCoordinate = coordinateInfos.coordinates;
-            const originCoordinate = coordinateInfos.originOffset;
-            const pos = {
-                x: currentCoordinate[0].value,
-                y: currentCoordinate[1].value,
-                z: currentCoordinate[2].value,
-                b: currentCoordinate[4]?.value,
-                isFourAxis: moduleStatusList.rotaryModule
-            };
-            const originOffset = {
-                x: originCoordinate[0].value,
-                y: originCoordinate[1].value,
-                z: originCoordinate[2]?.value,
-                b: originCoordinate[4]?.value
-            };
-            const isHomed = !(coordinateInfos?.homed); // 0: homed, 1: need to home
-            stateData = {
-                ...stateData,
-                pos,
-                originOffset,
-                isHomed,
-                // isMoving: false
-            };
-        };
-        this.sacpClient.subscribeCurrentCoordinateInfo({ interval: 1000 }, this.subscribeCoordinateCallback).then(res => {
-            log.info(`subscribe coordination success: ${res}`);
-        });
+        this.subscribeCurrentCoordinateInfo(stateData, moduleStatusList);
         this.subscribeCncSpeedStateCallback = (data) => {
             const cncSpeedState = new CncSpeedState().fromBuffer(data.response.data);
             const { targetSpeed, currentSpeed } = cncSpeedState;
@@ -1182,6 +1152,40 @@ class SacpChannelBase extends Channel implements
             log.info(`subscribe purifier info, ${res.response.result}`);
         });
     };
+
+    public subscribeCurrentCoordinateInfo = (stateData: MarlinStateData, moduleStatusList) => {
+        this.subscribeCoordinateCallback = (data) => {
+            // log.info(`revice coordinate: ${data.response}`);
+            const response = data.response;
+            const coordinateInfos = new CoordinateSystemInfo().fromBuffer(response.data);
+            const currentCoordinate = coordinateInfos.coordinates;
+            const originCoordinate = coordinateInfos.originOffset;
+            const pos = {
+                x: currentCoordinate[0].value,
+                y: currentCoordinate[1].value,
+                z: currentCoordinate[2].value,
+                b: currentCoordinate[4]?.value,
+                isFourAxis: moduleStatusList.rotaryModule
+            };
+            const originOffset = {
+                x: originCoordinate[0].value,
+                y: originCoordinate[1].value,
+                z: originCoordinate[2]?.value,
+                b: originCoordinate[4]?.value
+            };
+            const isHomed = !(coordinateInfos?.homed); // 0: homed, 1: need to home
+            stateData = {
+                ...stateData,
+                pos,
+                originOffset,
+                isHomed,
+                // isMoving: false
+            };
+        };
+        this.sacpClient.subscribeCurrentCoordinateInfo({ interval: 1000 }, this.subscribeCoordinateCallback).then(res => {
+            log.info(`subscribe coordination success: ${res}`);
+        });
+    }
 
     public setROTSubscribeApi = () => {
         log.info('ack ROT api');
