@@ -449,6 +449,11 @@ class MarlinController extends EventEmitter {
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', { data: res.raw });
             }
+
+            // start get real-time cnc spindle speed
+            if (includes(['CNC', '200W CNC'], res.headType)) {
+                this.writeln('M1006 L1');
+            }
         });
         this.controller.on('pos', (res) => {
             // log.silly(`controller.on('pos'): source=${this.history.writeSource},
@@ -513,6 +518,30 @@ class MarlinController extends EventEmitter {
         this.controller.on('emergencyStop', () => {
             this.emergencyStop();
         });
+        this.controller.on('kits', (res) => {
+            const kits = res.kits;
+            const moduleList = [];
+            log.info(`get kits: ${res.kits}`);
+
+            kits.forEach((kit) => {
+                switch (kit) {
+                    case 'quick_change_kit': {
+                        moduleList.push({ moduleId: 519, status: true });
+                        break;
+                    }
+                    case 'reinforcement_kit': {
+                        moduleList.push({ moduleId: 522, status: true });
+                        break;
+                    }
+                    default: {
+                        log.warn('invaild kit', kit);
+                    }
+                }
+            });
+            this.emitAll('machine:module-list', { moduleList });
+        });
+
+
         this.controller.on('ok', (res) => {
             // log.silly(`controller.on('ok'): source=${this.history.writeSource}, line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             // Display info to console, if this is from user-input
@@ -629,7 +658,6 @@ class MarlinController extends EventEmitter {
             }
 
             // Marlin settings
-            this.writeln('M1006', { emit: false });
             if (this.settings !== this.controller.settings) {
                 this.settings = this.controller.settings;
                 this.emitAll('Marlin:settings', { settings: this.settings });

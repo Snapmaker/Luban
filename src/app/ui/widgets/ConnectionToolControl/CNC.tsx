@@ -1,20 +1,23 @@
 import { WorkflowStatus } from '@snapmaker/luban-platform';
-import { includes } from 'lodash';
+import _, { includes } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { controller } from '../../../communication/socket-communication';
 import SocketEvent from '../../../communication/socket-events';
 import { LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_SM2 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
+import { actions as workspaceActions } from '../../../flux/workspace';
 import i18n from '../../../lib/i18n';
 import EditComponent from '../../components/EditComponent';
 import Switch from '../../components/Switch';
 import WorkSpeed from './WorkSpeed';
 import AttributeContainer from './components/AttributeContainer';
+import { SnapmakerA150Machine, SnapmakerA250Machine, SnapmakerA350Machine } from '../../../machines';
 
 const CNC: React.FC = () => {
     const { toolHead } = useSelector((state: RootState) => state.workspace);
+    const dispatch = useDispatch();
 
     const {
         headStatus,
@@ -22,6 +25,7 @@ const CNC: React.FC = () => {
 
         cncCurrentSpindleSpeed,
         cncTargetSpindleSpeed,
+        activeMachine
     } = useSelector((state: RootState) => state.workspace);
 
     const [isHeadOn, setIsHeadOn] = useState(
@@ -31,10 +35,14 @@ const CNC: React.FC = () => {
     );
     const [switchLoading, setSwitchLoading] = useState(false);
 
+    const isConnectedSnapmake2 = useCallback(() => _.includes(
+        [SnapmakerA350Machine.identifier, SnapmakerA250Machine.identifier, SnapmakerA150Machine.identifier],
+        activeMachine.identifier
+    ), [activeMachine]);
     let timeRef = null;
     const onClickToolHead = useCallback(() => {
         let speed = null;
-        if (toolHead === STANDARD_CNC_TOOLHEAD_FOR_SM2) {
+        if (toolHead === STANDARD_CNC_TOOLHEAD_FOR_SM2 || (toolHead === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2 && isConnectedSnapmake2())) {
             // standard
             speed = (cncTargetSpindleSpeed && cncTargetSpindleSpeed > 8000) ? cncTargetSpindleSpeed : 8000;
         } else {
@@ -45,7 +53,6 @@ const CNC: React.FC = () => {
             speed,
             toolHead,
         });
-        console.log('speed ', cncTargetSpindleSpeed < 8000 ? 8000 : cncTargetSpindleSpeed);
 
         clearTimeout(timeRef);
         setSwitchLoading(true);
@@ -53,6 +60,12 @@ const CNC: React.FC = () => {
     }, [isHeadOn, cncTargetSpindleSpeed, toolHead]);
 
     const updateToolHeadSpeed = useCallback((speed: number) => {
+        // Technically, cncTargetSpindleSpeed should be obtained from the backend,
+        // but here, to compensate for the 2nd generation serial
+        // port protocol not supporting this target rotation speed.
+        // so we mock a value from the front-end
+        isConnectedSnapmake2() && dispatch(workspaceActions.updateState({ cncTargetSpindleSpeed: speed }));
+
         controller.emitEvent(SocketEvent.SetSpindleSpeed, {
             speed,
         });

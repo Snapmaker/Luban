@@ -65,6 +65,7 @@ const SerialConnection: React.FC = () => {
         heatedBedTemperature,
         emergencyStopOnline,
         workflowStatus,
+        moduleList
     } = useSelector((state: RootState) => state.workspace);
 
     // Selected port
@@ -284,6 +285,20 @@ const SerialConnection: React.FC = () => {
             });
         }
 
+        for (const moduleInfo of moduleList) {
+            if (moduleInfo.moduleId === 519) {
+                newModuleStatusList.push({
+                    moduleName: i18n._('key-Workspace/Connection-Quick Swap Kit'),
+                    status: moduleInfo.status,
+                });
+            }
+            if (moduleInfo.moduleId === 522) {
+                newModuleStatusList.push({
+                    moduleName: i18n._('key-Workspace/Connection-Bracing Kit'),
+                    status: moduleInfo.status,
+                });
+            }
+        }
         return newModuleStatusList;
     }, [
         machineIdentifier,

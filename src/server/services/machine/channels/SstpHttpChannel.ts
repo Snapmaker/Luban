@@ -524,8 +524,8 @@ class SstpHttpChannel extends Channel implements
         executeResult = await this.executeGcode(`M3 S${speed} C`);
         if (executeResult.result !== 0) return false;
 
-        executeResult = await this.executeGcode('M5');
-        if (executeResult.result !== 0) return false;
+        // executeResult = await this.executeGcode('M5');
+        // if (executeResult.result !== 0) return false;
 
         return true;
     }
