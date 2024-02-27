@@ -521,7 +521,7 @@ class SstpHttpChannel extends Channel implements
         // on and off to set speed
         let executeResult: ExecuteGcodeResult = null;
 
-        executeResult = await this.executeGcode(`M3 S${speed}`);
+        executeResult = await this.executeGcode(`M3 S${speed} C`);
         if (executeResult.result !== 0) return false;
 
         executeResult = await this.executeGcode('M5');

@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 
 import { controller } from '../../../communication/socket-communication';
 import SocketEvent from '../../../communication/socket-events';
-import { LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2 } from '../../../constants/machines';
+import { LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2, STANDARD_CNC_TOOLHEAD_FOR_SM2 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
 import i18n from '../../../lib/i18n';
 import EditComponent from '../../components/EditComponent';
@@ -33,15 +33,23 @@ const CNC: React.FC = () => {
 
     let timeRef = null;
     const onClickToolHead = useCallback(() => {
+        let speed = null;
+        if (toolHead === STANDARD_CNC_TOOLHEAD_FOR_SM2) {
+            // standard
+            speed = (cncTargetSpindleSpeed && cncTargetSpindleSpeed > 8000) ? cncTargetSpindleSpeed : 8000;
+        } else {
+            speed = cncTargetSpindleSpeed;
+        }
         controller.emitEvent(SocketEvent.SwitchCNC, {
             headStatus: isHeadOn,
-            speed: cncTargetSpindleSpeed,
+            speed,
             toolHead,
         });
+        console.log('speed ', cncTargetSpindleSpeed < 8000 ? 8000 : cncTargetSpindleSpeed);
 
         clearTimeout(timeRef);
         setSwitchLoading(true);
-        timeRef = setTimeout(() => setSwitchLoading(false), 2000);
+        timeRef = setTimeout(() => setSwitchLoading(false), 3000);
     }, [isHeadOn, cncTargetSpindleSpeed, toolHead]);
 
     const updateToolHeadSpeed = useCallback((speed: number) => {

@@ -168,7 +168,8 @@ class TextSerialChannel extends Channel implements
     public async setSpindleSpeed(speed: number): Promise<boolean> {
         // on and off to set speed
         const gcode = [
-            `M3 S${speed}`,
+            `M3 S${speed} C`,
+            // `M3 S${speed}`,
             'M5',
         ].join('\n');
 
