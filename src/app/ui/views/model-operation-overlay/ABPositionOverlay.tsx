@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import React from 'react';
-import { Alert, Button, message } from 'antd';
+import { Alert, Button } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
 import styles from './styles.styl';
 import i18n from '../../../lib/i18n';
