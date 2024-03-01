@@ -916,7 +916,7 @@ class TransformControls extends Object3D {
     }
 
     onMouseHover(coord) {
-        if (!(this.object.children && this.object.children.length > 0)) {
+        if (!(this.object && this.object.children && this.object.children.length > 0)) {
             return false;
         }
 
@@ -973,7 +973,7 @@ class TransformControls extends Object3D {
         if (!this.mode) {
             return false;
         }
-        if (!(this.object.children && this.object.children.length > 0) || !this.axis) {
+        if (!(this.object && this.object.children && this.object.children.length > 0) || !this.axis) {
             return false;
         }
         this.ray.setFromCamera(coord, this.camera);
@@ -1018,7 +1018,7 @@ class TransformControls extends Object3D {
 
     onMouseMove(coord, isPrimeTower = false) {
         this.object.shouldUpdateBoundingbox = false;
-        if (!(this.object.children && this.object.children.length > 0) || !this.axis || !this.dragging) {
+        if (!(this.object && this.object.children && this.object.children.length > 0) || !this.axis || !this.dragging) {
             return false;
         }
 
