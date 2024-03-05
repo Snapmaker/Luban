@@ -438,6 +438,11 @@ class Visualizer extends React.PureComponent {
             if (workflowStatus !== WorkflowStatus.Idle) {
                 setTimeout(() => {
                     server.stopServerGcode();
+
+                    // Stop the laser or CNC machine. While trying to pause, if the 'tryPause' doesn't turn off, then wait for synchronization issues.
+                    if (connectionType === CONNECTION_TYPE_SERIAL && (this.pauseStatus.headStatus || this.props.headType !== HEAD_PRINTING)) {
+                        this.props.executeGcode('M5');
+                    }
                 }, 60);
             }
         },
