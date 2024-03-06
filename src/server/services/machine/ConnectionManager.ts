@@ -662,6 +662,12 @@ class ConnectionManager {
                         || (toolHead === LEVEL_ONE_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode))
                         && ((materialThickness !== 0 && materialThickness !== -1) || isRotate)) {
                         await this.channel.laserSetWorkHeight({ toolHead, materialThickness, isRotate });
+
+                        // Fixme: multi call to set work orign coordinate
+                        // Camera Aid Background mode, force machine to work on machine coordinates (Origin = 0,0)
+                        if (background.enabled && !isRotate) {
+                            await this.channel.setAbsoluteWorkOrigin({ x: 0, y: 0, z: 0, isRotate });
+                        }
                     }
 
                     const { jogSpeed = 1500 } = options;

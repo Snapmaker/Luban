@@ -367,6 +367,7 @@ class SacpTcpChannel extends SacpChannelBase {
 
                     await this.sacpClient.updateCoordinate(CoordinateType.WORKSPACE);
 
+                    // Fixme: multi call to set work orign coordinate
                     if (isCameraCapture) {
                         const newX = new CoordinateInfo(Direction.X1, xNow);
                         const newY = new CoordinateInfo(Direction.Y1, yNow);

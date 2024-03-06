@@ -1,7 +1,8 @@
-import type { MachineToolHeadOptions } from '@snapmaker/luban-platform';
+import { WorkflowStatus, MachineToolHeadOptions } from '@snapmaker/luban-platform';
 import React, { useCallback, useEffect, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
+import { includes } from 'lodash';
 import { RootState } from '../../../../flux/index.def';
 import { actions as workspaceActions } from '../../../../flux/workspace';
 import i18n from '../../../../lib/i18n';
@@ -24,7 +25,7 @@ const GoHomeModal: React.FC = () => {
 
     const {
         isHomed,
-
+        workflowStatus,
         activeMachine,
     } = useSelector((state: RootState) => state.workspace);
 
@@ -41,7 +42,7 @@ const GoHomeModal: React.FC = () => {
                 return;
             }
 
-            if (!isHomed) {
+            if (!isHomed && !includes([WorkflowStatus.Running], workflowStatus)) {
                 setShowModal(true);
             } else {
                 // already homed, which means machine coordinates are ready

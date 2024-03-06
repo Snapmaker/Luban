@@ -1486,20 +1486,39 @@ class SacpChannelBase extends Channel implements
         }
     }
 
-    public async setAbsoluteWorkOrigin({ z, isRotate = false }: {
-        x: number, y: number, z: number, isRotate: boolean
+    public async setAbsoluteWorkOrigin({ x, y, z, isRotate = false }: {
+        x?: number, y?: number, z: number, isRotate: boolean
     }) {
         try {
             const res1 = await this.sacpClient.updateCoordinate(CoordinateType.MACHINE);
             log.debug(`updateCoordinate CoordinateType.MACHINE res: ${JSON.stringify(res1)}`);
             await this.sacpClient.getCurrentCoordinateInfo().then(async ({ coordinateSystemInfo }) => {
+                const xNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.X1).value;
+                const yNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.Y1).value;
                 const zNow = coordinateSystemInfo.coordinates.find(item => item.key === Direction.Z1).value;
-                log.debug(`current positions, ${zNow}, ${z}`);
-                // calculate the absolute distance on seperate axis, same reason with coordinate moving func 'coordinateMove'
+                log.debug(`current positions, (${xNow}, ${yNow}, ${zNow}), (${x}, ${y}, ${z})`);
 
-                const newZ = new CoordinateInfo(Direction.Z1, isRotate ? 0 : zNow - z);
-                const newCoord = [newZ];
-                log.debug(`new positions, ${zNow - z}, ${JSON.stringify(newCoord)}`);
+                // calculate the absolute distance on seperate axis, same reason with coordinate moving func 'coordinateMove'
+                const newCoord = [];
+                const setXCoord = () => {
+                    const newX = new CoordinateInfo(Direction.X1, xNow - x);
+                    newCoord.push(newX);
+                };
+                const setYCoord = () => {
+                    const newY = new CoordinateInfo(Direction.Y1, yNow - y);
+                    newCoord.push(newY);
+                };
+                const setZCoord = () => {
+                    const newZ = new CoordinateInfo(Direction.Z1, isRotate ? 0 : zNow - z);
+                    newCoord.push(newZ);
+                };
+
+                if (!isRotate) {
+                    typeof x !== 'undefined' && setXCoord();
+                    typeof y !== 'undefined' && setYCoord();
+                }
+                typeof z !== 'undefined' && setZCoord();
+                log.debug(`new positions, (${xNow - x}, ${yNow - y}, ${zNow - z}), ${JSON.stringify(newCoord)}`);
                 await this.sacpClient.updateCoordinate(CoordinateType.WORKSPACE);
                 const res = await this.sacpClient.setWorkOrigin(newCoord);
                 log.debug(`setAbsoluteWorkOrigin res:${JSON.stringify(res)}`);
@@ -1520,8 +1539,6 @@ class SacpChannelBase extends Channel implements
         const { laserToolHeadInfo } = await this.sacpClient.getLaserToolHeadInfo(headModule.key);
         log.debug(`laserFocalLength:${laserToolHeadInfo.laserFocalLength}, materialThickness: ${materialThickness}, platformHeight:${laserToolHeadInfo.platformHeight}`);
         await this.setAbsoluteWorkOrigin({
-            x: 0,
-            y: 0,
             z: laserToolHeadInfo.laserFocalLength + laserToolHeadInfo.platformHeight + materialThickness,
             isRotate
         });
