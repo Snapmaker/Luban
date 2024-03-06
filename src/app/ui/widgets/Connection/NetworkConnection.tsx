@@ -583,6 +583,12 @@ const NetworkConnection: React.FC = () => {
                     status: moduleInfo.status,
                 });
             }
+            if (moduleInfo.moduleId === 522) {
+                newModuleStatusList.push({
+                    moduleName: i18n._('key-Workspace/Connection-Bracing Kit'),
+                    status: moduleInfo.status,
+                });
+            }
         }
 
         return newModuleStatusList;

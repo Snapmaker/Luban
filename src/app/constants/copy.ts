@@ -412,6 +412,8 @@ i18n._('key-App/Settings/MachineSettings-Standard CNC');
 i18n._('key-App/Settings/MachineSettings-Dual Extruder Toolhead');
 i18n._('key-App/Settings/MachineSettings-10W Laser');
 i18n._('key-App/Settings/MachineSettings-High CNC');
+i18n._('key-App/Settings/MachineSettings-Snapmaker 2.0 Quick Swap Kit');
+i18n._('key-App/Settings/MachineSettings-Snapmaker 2.0 Bracing Kit');
 
 i18n._('key-settings_message-update_not_ava'); // Snapmaker Luban is up to date.
 i18n._('key-settings_message-updateAva'); // Updates are available.

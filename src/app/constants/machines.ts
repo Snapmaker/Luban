@@ -11,7 +11,7 @@ import {
     SnapmakerOriginalMachine,
     SnapmakerRayMachine
 } from '../machines';
-import { quickSwapKitModule } from '../machines/snapmaker-2-modules';
+import { quickSwapKitModule, bracingKitModule } from '../machines/snapmaker-2-modules';
 import {
     L20WLaserToolModule,
     L40WLaserToolModule,
@@ -395,6 +395,7 @@ export function getMachineToolOptions(machineIdentifier: string, toolIdentifier:
 export function findMachineModule(identifier: string): MachineModule | null {
     const availableModules = [
         quickSwapKitModule,
+        bracingKitModule
     ];
 
     for (const module of availableModules) {

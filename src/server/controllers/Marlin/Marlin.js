@@ -9,6 +9,7 @@ import {
     L20WLaserToolModule,
     L40WLaserToolModule,
     highPower10WLaserToolHead,
+    highPower200WCNCToolHead,
     standardLaserToolHead
 } from '../../../app/machines/snapmaker-2-toolheads';
 import {
@@ -60,7 +61,7 @@ class MarlinReplyParserFirmwareVersion {
 /**
  * Marlin SM2-1.2.1.0
  * Marlin SM2-1.2.1.0-alpha1
- * Marlin SM2-1.2.1.0-bate2
+ * Marlin SM2-1.2.1.0-beta2
  */
 class MarlinReplyParserSeries {
     static parse(line) {
@@ -694,6 +695,57 @@ class MarlinParserLaser10WErrorState {
     }
 }
 
+class MarlinReplyParserCNCRPM {
+    static parse(line) {
+        const r1 = line.match(/^rpm: ([0-9]+).*$/);
+        const r2 = line.match(/^M_I: ([0-9]+).*$/);
+        const r3 = line.match(/^M_TEMP: ([0-9]+).*$/);
+        const r4 = line.match(/^ctr mode:.*$/);
+        const r5 = line.match(/^cur_power: ([0-9]+).*$/);
+        const r6 = line.match(/^run status:.*$/);
+        const r7 = line.match(/^last error:.*$/);
+        const M1006UnneedMsg = r1 || r2 || r3 || r4 || r5 || r6 || r7;
+
+
+        const macth1 = line.match(/^cur_rpm: ([0-9]+) target_rpm: ([0-9]+).*$/);
+        const macth2 = line.match(/^RPM: ([0-9]+).*$/);
+        if (!macth1 && !M1006UnneedMsg && !macth2) {
+            return null;
+        }
+
+        if (macth1) {
+            return {
+                type: MarlinReplyParserCNCRPM,
+                payload: {
+                    currRpm: parseInt(macth1[1], 10),
+                    targetRpm: parseInt(macth1[2], 10)
+                }
+            };
+        } else if (macth2) {
+            return {
+                type: MarlinReplyParserCNCRPM,
+                payload: {
+                    currRpm: parseInt(macth2[1], 10),
+                }
+            };
+        } else {
+            return { type: MarlinReplyParserCNCRPM };
+        }
+    }
+}
+class MarlinKitsParser {
+    static parse(line) {
+        const match = line.match(/^kits: (.*)$/);
+        if (!match) return null;
+        return {
+            type: MarlinKitsParser,
+            payload: {
+                kit: match[1],
+            }
+        };
+    }
+}
+
 class MarlinLineParser {
     parse(line) {
         const parsers = [
@@ -702,6 +754,9 @@ class MarlinLineParser {
 
             // cnc emergency stop when enclosure open
             MarlinReplyParserEmergencyStop,
+
+            // cnc rpm
+            MarlinReplyParserCNCRPM,
 
             // emergency stop button
             MarlinReplyParserEmergencyStopButton,
@@ -768,8 +823,10 @@ class MarlinLineParser {
 
             MarlinReplyParserHeadPower,
 
-            MarlinReplyParserHeadStatus
+            MarlinReplyParserHeadStatus,
 
+            // M1005
+            MarlinKitsParser
         ];
 
         for (const parser of parsers) {
@@ -857,7 +914,12 @@ class Marlin extends events.EventEmitter {
         },
         zAxisModule: 0, // 0: standard module, 1: extension module
         hexModeEnabled: false,
-        isScreenProtocol: false
+        isScreenProtocol: false,
+
+
+        // quick_change_kit
+        // reinforcement_kit
+        kits: []
     };
 
     settings = {
@@ -943,6 +1005,10 @@ class Marlin extends events.EventEmitter {
                     break;
                 case 'CNC':
                     newState.headType = HEAD_CNC;
+                    break;
+                case '200W CNC':
+                    newState.headType = HEAD_CNC;
+                    newState.toolHead = highPower200WCNCToolHead.identifier;
                     break;
                 default:
                     newState.headType = payload.headType;
@@ -1087,6 +1153,18 @@ class Marlin extends events.EventEmitter {
             this.emit('selected', payload);
         } else if (type === MarlinParserSelectedCurrent) {
             this.emit('selected', payload);
+        } else if (type === MarlinReplyParserCNCRPM) {
+            if (typeof payload.currRpm !== 'undefined') {
+                this.setState({
+                    cncCurrentSpindleSpeed: payload.currRpm,
+                    cncTargetSpindleSpeed: payload.targetRpm
+                });
+                this.emit('cnc:highpower', payload);
+            }
+        } else if (type === MarlinKitsParser) {
+            if (typeof payload.kit !== 'undefined') {
+                this.emit('kits', { kits: payload.kit.split(' ') });
+            }
         } else if (data.length > 0) {
             this.emit('others', payload);
         }

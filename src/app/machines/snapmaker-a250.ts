@@ -1,11 +1,12 @@
 import { Machine, MachineType } from '@snapmaker/luban-platform';
 
-import { quickSwapKitModule } from './snapmaker-2-modules';
+import { quickSwapKitModule, bracingKitModule } from './snapmaker-2-modules';
 import {
     L20WLaserToolModule,
     L40WLaserToolModule,
     dualExtrusionPrintToolHead,
     highPower10WLaserToolHead,
+    highPower200WCNCToolHead,
     printToolHead,
     standardCNCToolHead,
     standardLaserToolHead,
@@ -82,12 +83,20 @@ export const machine: Machine = {
                 identifier: standardCNCToolHead.identifier,
                 configPath: 'cnc/a250_standard',
             },
+            {
+                identifier: highPower200WCNCToolHead.identifier,
+                configPath: 'cnc/a250_high_power',
+            }
         ],
 
         modules: [
             {
                 identifier: quickSwapKitModule.identifier,
-                workRangeOffset: [0, -15, 0],
+                workRangeOffset: [0, -15, -15],
+            },
+            {
+                identifier: bracingKitModule.identifier,
+                workRangeOffset: [0, -12, -6],
             }
         ],
 

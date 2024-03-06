@@ -195,7 +195,7 @@ const StarterGuideModal: React.FC<StarterGuideModalProps> = (props) => {
                 if (machineModule) {
                     options.push({
                         value: moduleOptions.identifier,
-                        label: machineModule.name,
+                        label: i18n._(machineModule.name),
                     });
                 }
             }
@@ -393,6 +393,7 @@ const StarterGuideModal: React.FC<StarterGuideModalProps> = (props) => {
                                                 <div className={classNames(styles['head-detail'], 'margin-top-8')}>
                                                     <div className="margin-bottom-16">
                                                         <Checkbox.Group
+                                                            className={classNames(styles['modules-select-list'])}
                                                             options={machineModuleOptions}
                                                             onChange={onCheckMachineModule}
                                                             defaultValue={modules}

@@ -106,7 +106,7 @@ const MachineSettings: React.FC = () => {
                 if (machineModule) {
                     options.push({
                         value: moduleOptions.identifier,
-                        label: machineModule.name,
+                        label: i18n._(machineModule.name),
                     });
                 }
             }

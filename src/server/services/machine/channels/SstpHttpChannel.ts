@@ -3,7 +3,7 @@ import request from 'superagent';
 
 import SocketEvent from '../../../../app/communication/socket-events';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, } from '../../../../app/constants/machines';
-import { L20WLaserToolModule, L40WLaserToolModule } from '../../../../app/machines/snapmaker-2-toolheads';
+import { L20WLaserToolModule, L40WLaserToolModule, highPower200WCNCToolHead } from '../../../../app/machines/snapmaker-2-toolheads';
 import {
     HEAD_CNC,
     HEAD_LASER,
@@ -88,7 +88,8 @@ const _getResult = (err, res: request.Response): Result => {
     };
 };
 // let timeoutHandle = null;
-let intervalHandle = null;
+const intervalHandle = null;
+
 
 export type StateOptions = {
     headType?: string,
@@ -135,6 +136,13 @@ class SstpHttpChannel extends Channel implements
     private moduleSettings = null;
 
     private getLaserMaterialThicknessReq = null;
+
+    private intervalRefMap = new Map();
+
+    private clearAllInterval() {
+        Array.from(this.intervalRefMap.values())
+            .forEach(intervalRef => clearInterval(intervalRef));
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public onConnection = () => {
@@ -225,6 +233,10 @@ class SstpHttpChannel extends Channel implements
                             headType = HEAD_LASER;
                             toolHead = L40WLaserToolModule.identifier;
                             break;
+                        case 8:
+                            headType = HEAD_CNC;
+                            toolHead = highPower200WCNCToolHead.identifier;
+                            break;
                         default:
                             headType = HEAD_PRINTING;
                             toolHead = undefined;
@@ -240,12 +252,16 @@ class SstpHttpChannel extends Channel implements
                         this.socket && this.socket.emit('connection:open', result);
                     }
 
-                    // Get module info
+                    // Get module list(only status)
                     this.getModuleList();
 
                     // Get enclosure status (every 1000ms)
-                    clearInterval(intervalHandle);
-                    intervalHandle = setInterval(this.getEnclosureStatus, 1000);
+                    clearInterval(this.intervalRefMap.get('getEnclosureStatus'));
+                    this.intervalRefMap.set('getEnclosureStatus', setInterval(this.getEnclosureStatus, 1000));
+
+                    // Get module info(include data) every 1000ms
+                    clearInterval(this.intervalRefMap.get('getModuleInfo'));
+                    this.intervalRefMap.set('getModuleInfo', setInterval(this.getModuleInfo, 1000));
 
                     // Get Active extruder
                     this.getActiveExtruder({ eventName: 'connection:getActiveExtruder' });
@@ -262,7 +278,7 @@ class SstpHttpChannel extends Channel implements
 
     public async connectionClose(options: { force: boolean }): Promise<boolean> {
         // TODO: cancel intervals on instance
-        clearInterval(intervalHandle);
+        this.clearAllInterval();
         this.stopHeartBeat();
 
         const force = options?.force || false;
@@ -300,7 +316,7 @@ class SstpHttpChannel extends Channel implements
         }], (result: object) => {
             if (result.status === 'offline') {
                 log.info(`[wifi connection offline]: msg=${result.msg}`);
-                clearInterval(intervalHandle);
+                this.clearAllInterval();
                 this.socket && this.socket.emit('connection:close');
                 return;
             }
@@ -505,11 +521,11 @@ class SstpHttpChannel extends Channel implements
         // on and off to set speed
         let executeResult: ExecuteGcodeResult = null;
 
-        executeResult = await this.executeGcode(`M3 S${speed}`);
+        executeResult = await this.executeGcode(`M3 S${speed} C`);
         if (executeResult.result !== 0) return false;
 
-        executeResult = await this.executeGcode('M5');
-        if (executeResult.result !== 0) return false;
+        // executeResult = await this.executeGcode('M5');
+        // if (executeResult.result !== 0) return false;
 
         return true;
     }
@@ -552,6 +568,24 @@ class SstpHttpChannel extends Channel implements
                 if (!err) {
                     this.socket && this.socket.emit('machine:module-list', {
                         moduleList: data.moduleList || [],
+                    });
+                }
+            });
+    };
+
+    /**
+     * Get module info.
+     */
+    public getModuleInfo = () => {
+        request
+            .get(`${this.host}/api/v1/module_info?token=${this.token}`)
+            .timeout(1000)
+            .end((err, res) => {
+                const result = _getResult(err, res);
+                const data = result?.data;
+                if (!err) {
+                    this.socket && this.socket.emit('machine:module-info', {
+                        moduleInfo: data.moduleInfo || [],
                     });
                 }
             });

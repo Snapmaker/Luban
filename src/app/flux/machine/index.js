@@ -390,7 +390,7 @@ export const actions = {
     setMachineModules: (machineModules) => {
         return (dispatch) => {
             if (machineModules.length > 0) {
-                machineStore.set('machine.modules', machineModules);
+                machineStore.replace('machine.modules', machineModules);
             } else {
                 machineStore.unset('machine.modules');
             }

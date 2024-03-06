@@ -79,6 +79,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
     const [selectFileName, setSelectFileName] = useState('');
     const [selectFileType, setSelectFileType] = useState('');
     const [selectFileIndex, setSelectFileIndex] = useState(-1);
+    const [editingName, setEditingName] = useState('');
 
     const [showPreviewToRunJobModal, setShowPreviewToRunJobModal] = useState(false);
 
@@ -101,6 +102,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
     */
 
     const [showLaserStartJobModal, setShowLaserStartJobModal] = useState(false);
+    const [hasFile, setHasFile] = useState(gcodeFiles.length > 0);
     const fileInput = useRef();
     const gcodeItemRef = useRef([]);
     const canvas = useRef();
@@ -302,9 +304,13 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
         if (gcodeFiles.length > 0) {
             const candidate = gcodeFiles[selectFileIndex > -1 ? selectFileIndex : 0];
             const newUploadName = candidate ? candidate.uploadName : gcodeFiles[0].uploadName;
+            setHasFile(true);
             onSelectFile(newUploadName);
+        } else {
+            setHasFile(false);
         }
     }, [gcodeFiles]);
+
 
     useEffect(() => {
         UniApi.Event.on('appbar-menu:workspace.export-gcode', actions.onExport);
@@ -375,7 +381,6 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
             });
     }, [gcodeFiles, selectFileName]);
 
-    const hasFile = gcodeFiles.length > 0;
     const selectedFile = _.find(gcodeFiles, { uploadName: selectFileName });
 
     const canStartPrint = useMemo(() => {
@@ -426,6 +431,8 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
         actions.loadGcodeToWorkspace(isLaserAutoFocus, useBackground);
     };
 
+    const editDone = useCallback(() => setEditingName(''), [setEditingName]);
+
     return (
         <div className="border-default-grey-1 border-radius-8">
             <input
@@ -451,17 +458,18 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                 )}
                 {hasFile && (
                     _.map(gcodeFiles, (gcodeFile, index) => {
+                        gcodeItemRef.current[index] = React.createRef();
                         return (
-                            <React.Fragment key={index}>
-                                <GcodePreviewItem
-                                    gcodeFile={gcodeFile}
-                                    index={parseInt(index, 10)}
-                                    selected={selectFileName === gcodeFile.uploadName}
-                                    onSelectFile={onSelectFile}
-                                    gRef={ref => { gcodeItemRef?.current[index] = ref; }}
-                                    setSelectFileIndex={setSelectFileIndex}
-                                />
-                            </React.Fragment>
+                            <GcodePreviewItem
+                                key={index}
+                                gcodeFile={gcodeFile}
+                                index={parseInt(index, 10)}
+                                selected={selectFileName === gcodeFile.uploadName}
+                                onSelectFile={onSelectFile}
+                                setSelectFileIndex={setSelectFileIndex}
+                                isEdit={editingName === gcodeFile.uploadName}
+                                editDone={editDone}
+                            />
                         );
                     })
                 )}
@@ -476,12 +484,8 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                         disabled={!selectedFile}
                         onClick={
                             (e) => {
-                                gcodeItemRef.current[selectFileIndex].remaneStart(
-                                    selectedFile.uploadName,
-                                    selectFileIndex,
-                                    selectedFile.renderGcodeFileName,
-                                    e
-                                );
+                                setEditingName(selectedFile.uploadName);
+                                e && e.stopPropagation();
                             }
                         }
                     />
@@ -503,7 +507,7 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                         size={24}
                         title={i18n._('key-Workspace/Transport-Delete')}
                         disabled={!selectedFile}
-                        onClick={() => gcodeItemRef.current[selectFileIndex].removeFile(selectedFile)}
+                        onClick={() => dispatch(workspaceActions.removeGcodeFile(selectedFile))}
                     />
                 </div>
                 <div className={classNames('sm-flex', 'justify-space-between', 'align-center', 'margin-top-8')}>

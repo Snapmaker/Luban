@@ -78,6 +78,9 @@ export const getCaseList = (series, toolHead) => {
             if (laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
                 caseList = caseList.concat(CaseConfigA150LaserPowerTwo);
             }
+            if (cncToolhead === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2) {
+                caseList.push(CaseConfigLubanLock);
+            }
             caseList = caseList.concat(CaseConfigA150CncStandard);
             break;
         case SnapmakerA250Machine.identifier:
@@ -92,6 +95,9 @@ export const getCaseList = (series, toolHead) => {
             }
             if (laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
                 caseList = caseList.concat(CaseConfigA250LaserPowerTwo);
+            }
+            if (cncToolhead === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2) {
+                caseList.push(CaseConfigLubanLock);
             }
             caseList = caseList.concat(CaseConfigA250CncStandard);
             caseListFourAxis = caseListFourAxis.concat(CaseConfigA250CncFourAxis);
@@ -109,6 +115,9 @@ export const getCaseList = (series, toolHead) => {
             }
             if (laserToolhead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
                 caseList = caseList.concat(CaseConfigA350LaserPowerTwo);
+            }
+            if (cncToolhead === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2) {
+                caseList.push(CaseConfigLubanLock);
             }
             caseList = caseList.concat(CaseConfigA350CncStandard);
             caseListFourAxis = caseListFourAxis.concat(CaseConfigA350CncFourAxis);
