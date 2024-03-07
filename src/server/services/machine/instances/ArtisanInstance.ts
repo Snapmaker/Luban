@@ -40,6 +40,7 @@ class ArtisanMachineInstance extends MachineInstance {
         };
 
         const toolHeadModules = [];
+        console.log('moduleInfo', moduleInfos);
         moduleInfos.forEach(module => {
             if (includes(PRINTING_HEAD_MODULE_IDS, module.moduleId)) {
                 state.headType = HEAD_PRINTING;

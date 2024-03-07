@@ -3,6 +3,7 @@ import { ToolHeadType } from '@snapmaker/luban-platform';
 
 export const SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 = 'singleExtruderToolheadForSM2';
 export const DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 = 'dualExtruderToolheadForSM2';
+export const DUAL_EXTRUDER_TOOLHEAD_FOR_ARTISAN = 'dualExtruderToolheadForArtisan';
 
 export const LEVEL_ONE_POWER_LASER_FOR_SM2 = 'levelOneLaserToolheadForSM2';
 export const LEVEL_TWO_POWER_LASER_FOR_SM2 = 'levelTwoLaserToolheadForSM2';
@@ -30,19 +31,33 @@ export const printToolHead: ToolHead = {
 /**
  * Dual Extrusion Printing Module for Snapmaker 2.0
  *
- * Snapmaker A-series & Artisan
- *
  * Detail: https://us.snapmaker.com/products/snapmaker-dual-extrusion-3d-printing-module
  */
 export const dualExtrusionPrintToolHead: ToolHead = {
     identifier: DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
 
-    label: 'key-App/Settings/MachineSettings-Dual Extruder Toolhead',
+    label: 'key-App/Settings/MachineSettings-2.0 Dual Extrusion Module',
     image: '/resources/images/machine/tool-head-a-dual-extruder.png',
 
     metadata: {
         headType: ToolHeadType.Print,
+        numberOfExtruders: 2,
+    },
+};
 
+/**
+ * Dual Extrusion Printing Module for Snapmaker Artisan
+ *
+ * Detail: https://us.snapmaker.com/products/snapmaker-dual-extrusion-3d-printing-module
+ */
+export const dualExtrusionPrintToolHeadForArtisan: ToolHead = {
+    identifier: DUAL_EXTRUDER_TOOLHEAD_FOR_ARTISAN,
+
+    label: 'key-App/Settings/MachineSettings-Artisan Dual Extrusion Module',
+    image: '/resources/images/machine/tool-head-a-dual-extruder.png',
+
+    metadata: {
+        headType: ToolHeadType.Print,
         numberOfExtruders: 2,
     },
 };

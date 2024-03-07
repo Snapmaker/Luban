@@ -16,6 +16,7 @@ import {
     L20WLaserToolModule,
     L40WLaserToolModule,
     dualExtrusionPrintToolHead,
+    dualExtrusionPrintToolHeadForArtisan,
     highPower200WCNCToolHead as highPower200WCNCToolHeadSM2,
     highPower10WLaserToolHead as laser10WToolHeadSM2,
     printToolHead as printToolHeadSM2,
@@ -36,6 +37,7 @@ import {
 export const SINGLE_EXTRUDER_TOOLHEAD_FOR_ORIGINAL = 'singleExtruderToolheadForOriginal';
 export const SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2 = 'singleExtruderToolheadForSM2';
 export const DUAL_EXTRUDER_TOOLHEAD_FOR_SM2 = 'dualExtruderToolheadForSM2';
+export const DUAL_EXTRUDER_TOOLHEAD_FOR_ARTISAN = 'dualExtruderToolheadForArtisan';
 export const LEVEL_ONE_POWER_LASER_FOR_ORIGINAL = 'levelOneLaserToolheadForOriginal';
 export const LEVEL_TWO_POWER_LASER_FOR_ORIGINAL = 'levelTwoLaserToolheadForOriginal';
 export const LEVEL_ONE_POWER_LASER_FOR_SM2 = 'levelOneLaserToolheadForSM2';
@@ -79,6 +81,7 @@ export const MACHINE_TOOL_HEADS = {
     [STANDARD_CNC_TOOLHEAD_FOR_ORIGINAL]: cncToolHeadOriginal,
     [SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]: printToolHeadSM2,
     [DUAL_EXTRUDER_TOOLHEAD_FOR_SM2]: dualExtrusionPrintToolHead,
+    [DUAL_EXTRUDER_TOOLHEAD_FOR_ARTISAN]: dualExtrusionPrintToolHeadForArtisan,
     [LEVEL_ONE_POWER_LASER_FOR_SM2]: standardLaserToolHeadSM2,
     [LEVEL_TWO_POWER_LASER_FOR_SM2]: laser10WToolHeadSM2,
     [STANDARD_CNC_TOOLHEAD_FOR_SM2]: standardCNCToolHeadSM2,
@@ -96,6 +99,7 @@ export const MODULEID_MAP = {
     '5': ENCLOSURE_FOR_SM2,
     7: AIR_PURIFIER,
     '13': DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    // '70000': DUAL_EXTRUDER_TOOLHEAD_FOR_ARTISAN,
     '14': LEVEL_TWO_POWER_LASER_FOR_SM2,
     '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
     '16': ENCLOSURE_FOR_ARTISAN,
@@ -143,6 +147,7 @@ export const MODULEID_TOOLHEAD_MAP = {
     '1': STANDARD_CNC_TOOLHEAD_FOR_SM2,
     '2': LEVEL_ONE_POWER_LASER_FOR_SM2,
     '13': DUAL_EXTRUDER_TOOLHEAD_FOR_SM2,
+    // '70000': DUAL_EXTRUDER_TOOLHEAD_FOR_ARTISAN,
     '14': LEVEL_TWO_POWER_LASER_FOR_SM2,
     '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
     19: L20WLaserToolModule.identifier,
