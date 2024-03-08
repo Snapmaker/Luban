@@ -191,6 +191,12 @@ const calculateBoundingBox = (point1, point2) => {
 
     const width = maxX - minX;
     const height = maxY - minY;
+    console.log('$$$$$ ab position', point1, point2, {
+        minX,
+        minY,
+        width,
+        height
+    });
 
     return {
         minX,
@@ -369,7 +375,7 @@ export const actions = {
                 }
             });
             console.log('$$', svgEl, positionX, positionY, width, height, dx, dy, coordinateMode);
-            console.log('$$2', targetX, targetY, targetWidth, targetHeight);
+            console.log('$$2', targetX, targetY, targetWidth, targetHeight, APosition, BPosition);
             const backgroundOverlay = document.querySelector(`#${modelID}`);
             backgroundOverlay.setAttribute('fill-opacity', '1');
 
@@ -571,13 +577,13 @@ export const actions = {
             state: { isOnABPosition }
         };
     },
-    updateAPosition: ({ x, y, z, b }) => {
+    updateAPosition: ({ x, y, z, b }: any) => {
         return {
             type: ACTION_UPDATE_STATE,
             state: { APosition: { x, y, z, b } }
         };
     },
-    updateBPosition: ({ x, y, z, b }) => {
+    updateBPosition: ({ x, y, z, b }: any) => {
         return {
             type: ACTION_UPDATE_STATE,
             state: { BPosition: { x, y, z, b } }

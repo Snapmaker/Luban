@@ -89,6 +89,9 @@ class RayMachineInstance extends MachineInstance {
 
         // Start heartbeat
         await this.channel.startHeartbeat();
+        // Legacy
+        // const sacpClient = (this.channel as SacpChannelBase).sacpClient;
+        // await (this.channel as SacpChannelBase).startHeartbeatLegacy(sacpClient, undefined);
 
         // register handlers
         (this.channel as SacpChannelBase).registerErrorReportHandler();

@@ -38,6 +38,7 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
         //     message.warn('The positions A and B are identical. Please select two different positions.');
         //     return;
         // }
+        console.log(`width: ${size.x}, height: ${size.y}`);
         dispatch(laserActions.setBackgroundImage('', size.x, size.y, 0, 0, { APosition, BPosition }));
     };
     const settingDone = () => {

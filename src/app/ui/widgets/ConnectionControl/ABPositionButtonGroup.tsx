@@ -23,13 +23,16 @@ const ABPositionButtonGroup = (props) => {
         const machinePositionZ = (Math.round((parseFloat(workPosition.z) - z) * 1000) / 1000).toFixed(3);
         const machinePositionB = (Math.round((parseFloat(workPosition.b) - b) * 1000) / 1000).toFixed(3);
         dispatch(laserActions.updateAPosition({ x: machinePositionX, y: machinePositionY, z: machinePositionZ, b: machinePositionB }));
+        console.log('$$$ setAPosition', workPosition, { x: machinePositionX, y: machinePositionY, z: machinePositionZ, b: machinePositionB });
     };
     const storeBPosition = () => {
         const machinePositionX = (Math.round((parseFloat(workPosition.x) - x) * 1000) / 1000).toFixed(3);
         const machinePositionY = (Math.round((parseFloat(workPosition.y) - y) * 1000) / 1000).toFixed(3);
         const machinePositionZ = (Math.round((parseFloat(workPosition.z) - z) * 1000) / 1000).toFixed(3);
         const machinePositionB = (Math.round((parseFloat(workPosition.b) - b) * 1000) / 1000).toFixed(3);
+        // setBPosition({ x: machinePositionX, y: machinePositionY, z: machinePositionZ, b: machinePositionB });
         dispatch(laserActions.updateBPosition({ x: machinePositionX, y: machinePositionY, z: machinePositionZ, b: machinePositionB }));
+        console.log('$$$ setBPosition', workPosition, { x: machinePositionX, y: machinePositionY, z: machinePositionZ, b: machinePositionB });
     };
 
 
@@ -91,6 +94,8 @@ const ABPositionButtonGroup = (props) => {
                     className="margin-bottom-8 display-block"
                     priority="level-three"
                     onClick={() => {
+                        // props.executeGcode('G92 X0 Y0 Z0 B0');
+                        // actions.setWorkOrigin();
                         dispatch(laserActions.updateAPosition({}));
                         dispatch(laserActions.updateBPosition({}));
                         dispatch(laserActions.removeBackgroundImage());

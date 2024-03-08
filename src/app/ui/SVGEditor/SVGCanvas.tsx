@@ -301,6 +301,7 @@ class SVGCanvas extends React.PureComponent<SVGCanvasProps> {
     public setupSVGBackground() {
         this.svgBackground = document.createElementNS(NS.SVG, 'svg');
 
+        console.log('workrange', this.props.size);
         setAttributes(this.svgBackground, {
             width: this.props.size.x * 2,
             height: this.props.size.y * 2,
