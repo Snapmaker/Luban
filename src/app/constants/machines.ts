@@ -107,6 +107,7 @@ export const MODULEID_MAP = {
     '16': ENCLOSURE_FOR_ARTISAN,
     19: L20WLaserToolModule.identifier,
     20: L40WLaserToolModule.identifier,
+    23: L2WLaserToolModule.identifier,
     // ?
     '512': HEADT_BED_FOR_SM2,
     '513': SNAPMAKER_J1_HEATED_BED,
@@ -127,6 +128,7 @@ export const LASER_HEAD_MODULE_IDS = [
     14, // 10W Laser Module
     19, // 20W Laser Module
     20, // 40W Laser Module
+    23, // 2W Laser Module
 ];
 export const CNC_HEAD_MODULE_IDS = [
     1, // Standard CNC Module
@@ -155,6 +157,7 @@ export const MODULEID_TOOLHEAD_MAP = {
     '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
     19: L20WLaserToolModule.identifier,
     20: L40WLaserToolModule.identifier,
+    23: L2WLaserToolModule.identifier,
     '00': printToolHeadJ1.identifier,
 };
 

@@ -14,7 +14,7 @@ import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import { Button } from '../../components/Buttons';
 import modalSmallHOC, { ModalSmallHOC } from '../../components/Modal/modal-small';
-import { getRunBoundayCode } from '../RaySetOriginWidget/SetOriginView';
+import { getRunBoundaryCode } from '../RaySetOriginWidget/SetOriginView';
 import styles from './styles.styl';
 
 export type LoadGcodeOptions = {
@@ -104,7 +104,7 @@ const UploadView: React.FC = () => {
 
         log.info('Run Boundary... bbox =', gcodeFile.gcodeAxisWorkRange);
 
-        const gcode = getRunBoundayCode(gcodeFile.gcodeAxisWorkRange, jobOffsetMode, gcodeFile.is_rotate);
+        const gcode = getRunBoundaryCode(gcodeFile.gcodeAxisWorkRange, jobOffsetMode, gcodeFile.is_rotate);
 
         const blob = new Blob([gcode], { type: 'text/plain' });
         const file = new File([blob], 'boundary.nc');

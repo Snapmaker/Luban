@@ -17,7 +17,7 @@ import log from '../../../lib/log';
 import ControlPanel from './ControlPanel';
 import RunBoundaryModal from './modals/RunBoundaryModal';
 
-export const getRunBoundayCode = (axisWorkRange: AxisWorkRange, jobOffsetMode: JobOffsetMode, isRotate: boolean = false) => {
+export const getRunBoundaryCode = (axisWorkRange: AxisWorkRange, jobOffsetMode: JobOffsetMode, isRotate: boolean = false) => {
     const useBInsteadOfX = isRotate;
     const gCommand = jobOffsetMode === JobOffsetMode.Crosshair ? 'G1 S0' : 'G1 S10';
 
@@ -169,7 +169,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
 
         log.info('Run Boundary... axis work range =', workRange);
 
-        const gcode = getRunBoundayCode(workRange, jobOffsetMode, gcodeIsRotate);
+        const gcode = getRunBoundaryCode(workRange, jobOffsetMode, gcodeIsRotate);
 
         const blob = new Blob([gcode], { type: 'text/plain' });
         const file = new File([blob], 'boundary.nc');
