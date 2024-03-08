@@ -7,6 +7,7 @@ import semver from 'semver';
 
 import {
     L20WLaserToolModule,
+    L2WLaserToolModule,
     L40WLaserToolModule,
     highPower10WLaserToolHead,
     highPower200WCNCToolHead,
@@ -999,6 +1000,10 @@ class Marlin extends events.EventEmitter {
                 case '40W LASER':
                     newState.headType = HEAD_LASER;
                     newState.toolHead = L40WLaserToolModule.identifier;
+                    break;
+                case '2W RED LASER':
+                    newState.headType = HEAD_LASER;
+                    newState.toolHead = L2WLaserToolModule.identifier;
                     break;
                 case '3DP':
                     newState.headType = HEAD_PRINTING;

@@ -1,5 +1,6 @@
 import { Machine, MachineGcodeFlavor, MachineType } from '@snapmaker/luban-platform';
-import { L20WLaserToolModule, L40WLaserToolModule } from './snapmaker-2-toolheads';
+import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from './snapmaker-2-toolheads';
+import { JobOffsetMode } from '../constants/coordinate';
 
 
 export const machine: Machine = {
@@ -18,11 +19,47 @@ export const machine: Machine = {
                 identifier: L20WLaserToolModule.identifier,
                 configPath: 'laser/snapmaker_ray_20w',
                 goHomeOnConnection: false,
+
+                runBoundaryModeOptions: [
+                    {
+                        label: 'Crosshair',
+                        value: JobOffsetMode.Crosshair,
+                    },
+                    {
+                        label: 'Laser Spot',
+                        value: JobOffsetMode.LaserSpot,
+                    },
+                ]
             },
             {
                 identifier: L40WLaserToolModule.identifier,
                 configPath: 'laser/snapmaker_ray_40w',
                 goHomeOnConnection: false,
+                runBoundaryModeOptions: [
+                    {
+                        label: 'Crosshair',
+                        value: JobOffsetMode.Crosshair,
+                    },
+                    {
+                        label: 'Laser Spot',
+                        value: JobOffsetMode.LaserSpot,
+                    },
+                ]
+            },
+            {
+                identifier: L2WLaserToolModule.identifier,
+                configPath: 'laser/snapmaker_ray_40w', // 'laser/snapmaker_ray_2w',
+                goHomeOnConnection: false,
+                runBoundaryModeOptions: [
+                    {
+                        label: 'Crosshair',
+                        value: JobOffsetMode.Crosshair,
+                    },
+                    {
+                        label: 'Laser Spot',
+                        value: JobOffsetMode.LaserSpot,
+                    },
+                ]
             },
         ],
 

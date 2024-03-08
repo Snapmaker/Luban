@@ -34,7 +34,7 @@ import { ConnectionType } from '../../../flux/workspace/state';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
-import { L20WLaserToolModule, L40WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
+import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
 import { Button } from '../../components/Buttons';
 import ModalSmall from '../../components/Modal/ModalSmall';
 import ModalSmallInput from '../../components/Modal/ModalSmallInput';
@@ -535,6 +535,13 @@ const NetworkConnection: React.FC = () => {
                         newModuleStatusList.push({
                             status: true,
                             moduleName: i18n._('40W Laser Module')
+                        });
+                        break;
+                    }
+                    case L2WLaserToolModule.identifier: {
+                        newModuleStatusList.push({
+                            status: true,
+                            moduleName: i18n._('2W Laser Module')
                         });
                         break;
                     }

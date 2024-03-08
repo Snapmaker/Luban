@@ -3,6 +3,7 @@ import { Machine, MachineType } from '@snapmaker/luban-platform';
 import { quickSwapKitModule, bracingKitModule } from './snapmaker-2-modules';
 import {
     L20WLaserToolModule,
+    L2WLaserToolModule,
     L40WLaserToolModule,
     dualExtrusionPrintToolHead,
     highPower10WLaserToolHead,
@@ -11,6 +12,7 @@ import {
     standardCNCToolHead,
     standardLaserToolHead,
 } from './snapmaker-2-toolheads';
+import { JobOffsetMode } from '../constants/coordinate';
 
 /*
     {
@@ -51,6 +53,12 @@ export const machine: Machine = {
                     max: [252, 260, 235],
                 },
                 supportCameraCapture: true,
+                runBoundaryModeOptions: [
+                    {
+                        label: 'Laser Spot',
+                        value: JobOffsetMode.LaserSpot,
+                    },
+                ]
             },
             {
                 identifier: highPower10WLaserToolHead.identifier,
@@ -60,6 +68,12 @@ export const machine: Machine = {
                     max: [252, 260, 235],
                 },
                 supportCameraCapture: true,
+                runBoundaryModeOptions: [
+                    {
+                        label: 'Laser Spot',
+                        value: JobOffsetMode.LaserSpot,
+                    },
+                ]
             },
             {
                 identifier: L20WLaserToolModule.identifier,
@@ -69,6 +83,12 @@ export const machine: Machine = {
                     max: [252, 260, 0], // Correct this later
                 },
                 disableRemoteStartPrint: true,
+                runBoundaryModeOptions: [
+                    // {
+                    //     label: 'Laser Spot',
+                    //     value: JobOffsetMode.LaserSpot,
+                    // },
+                ]
             },
             {
                 identifier: L40WLaserToolModule.identifier,
@@ -78,6 +98,27 @@ export const machine: Machine = {
                     max: [252, 260, 0], // Correct this later
                 },
                 disableRemoteStartPrint: true,
+                runBoundaryModeOptions: [
+                    // {
+                    //     label: 'Laser Spot',
+                    //     value: JobOffsetMode.LaserSpot,
+                    // },
+                ]
+            },
+            {
+                identifier: L2WLaserToolModule.identifier,
+                configPath: 'laser/a250_40w', // 'laser/a350_2w',
+                // workRange: {
+                //     min: [0, 0, 0],
+                //     max: [345, 357, 0], // Correct this later
+                // },
+                disableRemoteStartPrint: true,
+                runBoundaryModeOptions: [
+                    {
+                        label: 'Crosshair',
+                        value: JobOffsetMode.Crosshair,
+                    }
+                ]
             },
             {
                 identifier: standardCNCToolHead.identifier,

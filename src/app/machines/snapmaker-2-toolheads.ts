@@ -118,6 +118,19 @@ export const L40WLaserToolModule: ToolHead = {
     },
 };
 
+export const L2WLaserToolModule: ToolHead = {
+    identifier: '2W Laser Module',
+
+    label: '2W Laser Module',
+    image: '/resources/images/machine/40w_laser_module.jpeg',
+
+    metadata: {
+        headType: ToolHeadType.Laser,
+
+        supportCrosshair: true,
+    },
+};
+
 
 /**
  * Standard CNC Module for SM 2.0

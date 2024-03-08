@@ -24,6 +24,7 @@ import log from '../../../lib/log';
 import { SnapmakerOriginalExtendedMachine, SnapmakerOriginalMachine } from '../../../machines';
 import {
     L20WLaserToolModule,
+    L2WLaserToolModule,
     L40WLaserToolModule,
     highPower10WLaserToolHead,
     standardLaserToolHead
@@ -223,6 +224,13 @@ const SerialConnection: React.FC = () => {
                         newModuleStatusList.push({
                             status: true,
                             moduleName: i18n._('40W Laser Module')
+                        });
+                        break;
+                    }
+                    case L2WLaserToolModule.identifier: {
+                        newModuleStatusList.push({
+                            status: true,
+                            moduleName: i18n._('2W Laser Module')
                         });
                         break;
                     }

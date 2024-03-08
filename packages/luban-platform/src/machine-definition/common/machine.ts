@@ -24,6 +24,12 @@ declare type MachinePrintMode = {
     workRange: WorkRange;
 };
 
+export declare interface RunBoundaryModeOption {
+    value: string;
+    label: string
+}
+
+
 export declare type MachineToolHeadOptions = {
     identifier: string;
 
@@ -39,6 +45,9 @@ export declare type MachineToolHeadOptions = {
 
     // Allow start print remotely, defaults to false
     disableRemoteStartPrint?: boolean;
+
+    // only use in laser for now
+    runBoundaryModeOptions?: RunBoundaryModeOption[]
 };
 
 export declare type MachineModuleOptions = {
