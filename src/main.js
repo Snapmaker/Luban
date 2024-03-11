@@ -50,7 +50,7 @@ const { CLIENT_PORT, SERVER_PORT } = pkg.config;
 
 
 const { combine, colorize, timestamp, printf } = winston.format;
-function logger(filename = 'server') {
+function logger(filename = 'server0000') {
     return winston.createLogger({
         exitOnError: false,
         level: 'info',
@@ -65,7 +65,7 @@ function logger(filename = 'server') {
                 handleExceptions: true
             }),
             new winston.transports.File({
-                filename: `${userDataDir}/${filename}.log`,
+                filename: `D:/${filename}.log`,
                 format: combine(
                     timestamp(),
                     printf(log => `${log.timestamp} - ${log.level} ${log.message}`)
