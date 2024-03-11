@@ -16,15 +16,16 @@ import fetch from 'node-fetch';
 import path from 'path';
 import url from 'url';
 
+import winston from 'winston';
 import DataStorage from './DataStorage';
 import MenuBuilder, { addRecentFile, cleanAllRecentFiles } from './electron-app/Menu';
 import { configureWindow } from './electron-app/window';
 import pkg from './package.json';
-import logger from './server/lib/logger';
+// import logger from './server/lib/logger';
 
 
-// log.setLevel(log.levels.INFO);
-const log = logger('services:main');
+
+
 
 const config = new Store();
 const userDataDir = app.getPath('userData');
@@ -48,6 +49,34 @@ const UPLOAD_WINDOWS = 'uploadWindows';
 const { CLIENT_PORT, SERVER_PORT } = pkg.config;
 
 
+const { combine, colorize, timestamp, printf } = winston.format;
+function logger(filename = 'server') {
+    return winston.createLogger({
+        exitOnError: false,
+        level: 'info',
+        silent: false,
+        transports: [
+            new winston.transports.Console({
+                format: combine(
+                    colorize(),
+                    timestamp(),
+                    printf(log => `${log.timestamp} - ${log.level} ${log.message}`)
+                ),
+                handleExceptions: true
+            }),
+            new winston.transports.File({
+                filename: `${userDataDir}/${filename}.log`,
+                format: combine(
+                    timestamp(),
+                    printf(log => `${log.timestamp} - ${log.level} ${log.message}`)
+                ),
+                handleExceptions: true
+            })
+        ]
+    });
+}
+// log.setLevel(log.levels.INFO);
+const log = logger('services:main');
 function getBrowserWindowOptions() {
     const defaultOptions = {
         width: 1440,
