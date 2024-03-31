@@ -298,6 +298,7 @@ export const actions = {
                     }));
                 }
 
+                console.log('pos', pos);
                 if (pos) {
                     if (pos.isFourAxis) {
                         if (
@@ -406,7 +407,8 @@ export const actions = {
                     fileName,
                     ledValue,
                     fanLevel,
-                    isDoorEnable
+                    isDoorEnable,
+                    crosshairOffset
                 } = state;
 
                 compareAndSet(data, currentState, 'laser10WErrorState', laser10WErrorState);
@@ -500,6 +502,12 @@ export const actions = {
                     );
                     dispatch(connectActions.disconnect(currentState.server));
                 }
+
+                crosshairOffset && dispatch(
+                    baseActions.updateState({
+                        crosshairOffset
+                    })
+                );
             },
 
             /**
@@ -512,6 +520,7 @@ export const actions = {
             'machine:module-list': (options) => {
                 const moduleList = options.moduleList;
 
+                console.log('moduleList', options.moduleList);
                 dispatch(actions.updateState({
                     moduleList,
                 }));
@@ -536,6 +545,7 @@ export const actions = {
             'machine:module-info': (options) => {
                 const moduleInfo = options.moduleInfo;
                 const moduleList: Array<any> = getState().workspace.moduleList;
+                console.log('moduleList1', moduleList);
 
                 const newModuleList = moduleInfo.map(m => {
                     const targetModule = moduleList.find(v => v.key === m.key);
@@ -547,6 +557,7 @@ export const actions = {
                         ...m
                     };
                 });
+                console.log('new moduleList1', newModuleList);
                 dispatch(actions.updateState({
                     moduleList: newModuleList,
                 }));

@@ -50,6 +50,7 @@ import {
 } from './instances';
 import { ConnectionType } from './types';
 import SacpChannelBase from './channels/SacpChannel';
+import { L2WLaserToolModule } from '../../../app/machines/snapmaker-2-toolheads';
 
 const log = logger('lib:ConnectionManager');
 
@@ -682,7 +683,7 @@ class ConnectionManager {
                     // SM 2.0
 
                     // Both 1.6W & 10W laser can't work without a valid focal length
-                    if (!laserFocalLength) {
+                    if (!laserFocalLength && toolHead !== L2WLaserToolModule.identifier) {
                         return;
                     }
 
@@ -696,6 +697,7 @@ class ConnectionManager {
                             }
                             promises.push(promise);
                         } else {
+                            console.log('start gode =========1=========', isLaserPrintAutoMode);
                             let promise;
                             if (isLaserPrintAutoMode) {
                                 promise = this.channel.executeGcode(`G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`);
@@ -1269,7 +1271,11 @@ M3`;
     public setMatrix = (params, callback) => {
         this.channel.setMatrix(params, callback);
     };
-    // only for Wifi
+    // only for Wifi end
+
+    //
+    //  other
+    //
 
     public goHome = async (socket, options, callback) => {
         const { headType } = options;
@@ -1313,7 +1319,7 @@ M3`;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.setWorkOrigin({ xPosition, yPosition, zPosition, bPosition });
         } else {
-            await this.executeGcode(socket, { gcode: 'G92 X0 Y0 Z0 B0' });
+            await this.executeGcode(socket, { gcode: `G92 X${xPosition || 0} Y${yPosition || 0} Z${zPosition || 0} B${bPosition || 0}` });
             callback && callback();
         }
     };
@@ -1359,6 +1365,17 @@ M3`;
             sstpHttpChannel.wifiStatusTest(options);
         }
     }
+
+    public setMotorPowerMode = async (socket: SocketServer, options) => {
+        const { eventName, setMotorPowerHoldMod } = options;
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const result = await (this.channel as SystemChannelInterface).setMotorPowerMode(setMotorPowerHoldMod);
+            console.log('setMotorPowerMode result:', result, eventName);
+            socket.emit(eventName, { result });
+        }
+    }
+
+
 
     //
     // - Machine Network

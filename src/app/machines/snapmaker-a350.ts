@@ -112,7 +112,7 @@ export const machine: Machine = {
                 //     min: [0, 0, 0],
                 //     max: [345, 357, 0], // Correct this later
                 // },
-                disableRemoteStartPrint: true,
+                disableRemoteStartPrint: false,
                 runBoundaryModeOptions: [
                     {
                         label: 'Crosshair',

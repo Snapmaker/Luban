@@ -27,6 +27,7 @@ enum SocketEvent {
     Move = 'connection:coordinateMove', // Linear Move
     SetOrigin = 'connection:setWorkOrigin',
     SetSpeedFactor = 'connection:updateWorkSpeedFactor',
+    SetMotorPowerMode = 'connection:setMotorPowerMode',
 
     /**
      * 3D Printing

@@ -7,6 +7,7 @@ import pubsub from 'pubsub-js';
 import React from 'react';
 import { connect } from 'react-redux';
 import * as THREE from 'three';
+import { includes } from 'lodash';
 import { humanReadableTime } from '../../../lib/time-utils';
 
 import {
@@ -36,7 +37,9 @@ import Loading from './Loading';
 import PrintablePlate from './PrintablePlate';
 import Rendering from './Rendering';
 import ToolHead from './ToolHead';
-import { SnapmakerArtisanMachine, SnapmakerOriginalMachine } from '../../../machines';
+import { SnapmakerA150Machine, SnapmakerA250Machine, SnapmakerA350Machine, SnapmakerArtisanMachine, SnapmakerOriginalMachine } from '../../../machines';
+import { L2WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
+import { ConnectionType } from '../../../flux/workspace/state';
 
 
 class Visualizer extends React.PureComponent {
@@ -90,6 +93,10 @@ class Visualizer extends React.PureComponent {
         activeMachine: PropTypes.shape({
             metadata: PropTypes.object,
             identifier: PropTypes.string
+        }),
+        crosshairOffset: PropTypes.shape({
+            x: PropTypes.string,
+            y: PropTypes.string
         })
     };
 
@@ -273,8 +280,20 @@ class Visualizer extends React.PureComponent {
                 background,
                 workPosition,
                 originOffset,
-                activeMachine
+                activeMachine,
+                connectionType,
+                crosshairOffset
             } = this.props;
+
+            // Fix me?: 2w laser head set origin offset(crosshair offset) before start print
+            const isSnapmaker2 = includes([SnapmakerA350Machine.identifier, SnapmakerA250Machine.identifier, SnapmakerA150Machine.identifier], activeMachine.identifier);
+            if (includes([L2WLaserToolModule.identifier], toolHead) && connectionType === ConnectionType.Serial && isSnapmaker2) {
+                const { x, y } = workPosition;
+                console.log('set crosshair offset11', x, y, crosshairOffset);
+                server.setWorkOrigin(x - (parseFloat(crosshairOffset.x) || 21.5), y - (parseFloat(crosshairOffset.y) || -11));
+
+                // server.setWorkOrigin(x + 21.7, y - 12.3);
+            }
 
             if (workflowStatus === WorkflowStatus.Idle) {
                 log.info('Start to run G-code...');
@@ -898,6 +917,7 @@ const mapStateToProps = (state) => {
         // machine state
         workPosition: workspace.workPosition,
         originOffset: workspace.originOffset,
+        crosshairOffset: workspace.crosshairOffset,
     };
 };
 

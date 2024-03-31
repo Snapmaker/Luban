@@ -4,8 +4,6 @@ import includes from 'lodash/includes';
 import map from 'lodash/map';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-
-import { Switch } from 'antd';
 import { controller } from '../../../communication/socket-communication';
 import {
     HEAD_PRINTING,
@@ -22,7 +20,6 @@ import { in2mm, mm2in } from '../../../lib/units';
 import ControlPanel from './ControlPanel';
 import DisplayPanel from './DisplayPanel';
 import { DEFAULT_AXES, DISTANCE_MAX, DISTANCE_MIN, DISTANCE_STEP } from './constants';
-import i18n from '../../../lib/i18n';
 
 const DEFAULT_SPEED_OPTIONS = [
     {
@@ -67,10 +64,11 @@ const normalizeToRange = (n, min, max) => {
 
 declare interface ConnectionControlProps {
     widgetId: string;
-    isInWorkspace: boolean
+    isNotInWorkspace?: boolean
+    runBoundary?: () => void
 }
 
-const Control: React.FC<ConnectionControlProps> = ({ widgetId, isInWorkspace }) => {
+const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace, runBoundary }) => {
     const dispatch = useDispatch();
 
     const { widgets } = useSelector((state: RootState) => state.widget);
@@ -159,7 +157,7 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isInWorkspace }) 
             },
 
             // enableShortcut
-            enableShortcut: false
+            enableShortcut: true
         };
     }
 
@@ -437,7 +435,7 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isInWorkspace }) 
 
     return (
         <div>
-            {!isInWorkspace && (
+            {!isNotInWorkspace && (
                 <DisplayPanel
                     workPosition={workPosition}
                     originOffset={state.originOffset}
@@ -447,7 +445,7 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isInWorkspace }) 
                 />
             )}
 
-            {isInWorkspace && (
+            {/* {isNotInWorkspace && (
                 <div className="sm-flex justify-space-between margin-vertical-8">
                     <span>{i18n._('key-Workspace/Console-Keyboard Shortcuts')}</span>
                     <Switch
@@ -456,7 +454,7 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isInWorkspace }) 
                         checked={state.enableShortcut}
                     />
                 </div>
-            )}
+            )} */}
             {/* Comment this since Luban v4.0 and will be used in the future */}
             {/* <div>
                 <KeypadOverlay
@@ -481,7 +479,8 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isInWorkspace }) 
                 originOffset={state.originOffset}
                 actions={actions}
                 executeGcode={actions.executeGcode}
-                isInWorkspace={isInWorkspace}
+                isNotInWorkspace={isNotInWorkspace}
+                runBoundary={runBoundary}
             />
         </div>
     );

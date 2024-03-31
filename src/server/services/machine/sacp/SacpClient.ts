@@ -53,6 +53,7 @@ import { PeerId } from '@snapmaker/snapmaker-sacp-sdk/dist/communication/Header'
 import { MoveDirection } from '@snapmaker/snapmaker-sacp-sdk/dist/models/MovementInstruction';
 
 import DataStorage from '../../../DataStorage';
+import { MotorPowerMode } from '../../../../app/constants';
 
 interface Logger {
     error(msg: string): void;
@@ -94,6 +95,7 @@ export type RequestPhotoInfo = {
 export enum ToolHeadType {
     LASER1600mW, LASER10000mW
 }
+
 
 interface CompressUploadFileOptions {
     renderName?: string;
@@ -680,6 +682,7 @@ export default class SacpClient extends Dispatcher {
 
     public async requestAbsoluteCooridateMove(directions: MoveDirection[] = [0], distances: number[] = [0], jogSpeed = 0.1, coordinateType: CoordinateType) {
         const paramBuffer = new MovementInstruction(undefined, undefined, jogSpeed, directions, distances, coordinateType).toArrayBuffer();
+        console.log('paramBuffer', paramBuffer);
         return this.send(0x01, 0x34, PeerId.CONTROLLER, paramBuffer, true).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });
@@ -1438,6 +1441,17 @@ export default class SacpClient extends Dispatcher {
             const buffer = Buffer.concat([resourceBuffer, filenameBuffer]);
             this.send(0xad, 0x00, PeerId.CONTROLLER, buffer)
                 .catch((err) => reject(err));
+        });
+    }
+
+    // Laser
+    public async setMotorPowerHoldMode(motorPowerMode: MotorPowerMode) {
+        const buffer = Buffer.alloc(1);
+        writeUint8(buffer, 0, motorPowerMode);
+        console.log('sacpClient setMotorPowerHoldMode', motorPowerMode, buffer);
+        return this.send(0x01, 0x48, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
+            console.log('get from controller:', motorPowerMode, response, packet);
+            return readUint8(response.data);
         });
     }
 }

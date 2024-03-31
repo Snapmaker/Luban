@@ -14,7 +14,7 @@ import { AxisWorkRange, GCodeFileMetadata } from '../../../flux/workspace/types'
 import { Button } from '../../components/Buttons';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
-import ControlPanel from './ControlPanel';
+import ControlPanel from '../ConnectionControl/Control';
 import RunBoundaryModal from './modals/RunBoundaryModal';
 
 export const getRunBoundaryCode = (axisWorkRange: AxisWorkRange, jobOffsetMode: JobOffsetMode, isRotate: boolean = false) => {
@@ -52,9 +52,9 @@ export const getRunBoundaryCode = (axisWorkRange: AxisWorkRange, jobOffsetMode: 
     );
 
     // set current position as origin
-    gcodeList.push(
-        'G92 X0 Y0 B0',
-    );
+    // gcodeList.push(
+    //     'G92 X0 Y0 B0',
+    // );
 
     if (useBInsteadOfX) {
         gcodeList.push(
@@ -197,9 +197,9 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
             });
     }, [dispatch, isRotate, gcodeFile, jobOffsetMode]);
 
-    const executeGCode = useCallback(async (gcode: string) => {
-        return dispatch(workspaceActions.executeGcode(gcode)) as unknown as Promise<void>;
-    }, [dispatch]);
+    // const executeGCode = useCallback(async (gcode: string) => {
+    //     return dispatch(workspaceActions.executeGcode(gcode)) as unknown as Promise<void>;
+    // }, [dispatch]);
 
     const onClickGoHome = useCallback(async () => {
         return dispatch(workspaceActions.executeGcode('$H')) as unknown as Promise<void>;
@@ -257,10 +257,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
             {
                 setupCoordinateMethod === SetupCoordinateMethod.ByControlPanel && (
                     <div className="margin-top-16">
-                        <ControlPanel
-                            executeGCode={executeGCode}
-                            runBoundary={async () => runBoundary()}
-                        />
+                        <ControlPanel widgetId="control" isNotInWorkspace={false} runBoundary={runBoundary} />
                     </div>
                 )
             }

@@ -17,6 +17,8 @@ interface JogViewProps {
     // whether enable B axis control
     enableBAxis?: boolean;
 
+    enableZAxis?: boolean;
+
     // jog buttons are disabled
     disabled?: boolean;
 
@@ -29,6 +31,7 @@ const JogPad: React.FC<JogViewProps> = (props) => {
     const {
         disabled = false,
         enableBAxis = false,
+        enableZAxis = false,
         relativeMove,
         absoluteMove,
         enableShortcut
@@ -53,11 +56,13 @@ const JogPad: React.FC<JogViewProps> = (props) => {
                         disabled={disabled}
                         onClick={() => relativeMove({ X: 1, Y: 1 })}
                     />
-                    <JogButton
-                        text="Z+"
-                        disabled={disabled}
-                        onClick={() => relativeMove({ Z: 1 })}
-                    />
+                    {enableZAxis && (
+                        <JogButton
+                            text="Z+"
+                            disabled={disabled}
+                            onClick={() => relativeMove({ Z: 1 })}
+                        />
+                    )}
                     {
                         enableBAxis && (
                             <JogButton
@@ -86,11 +91,13 @@ const JogPad: React.FC<JogViewProps> = (props) => {
                         disabled={disabled}
                         onClick={() => relativeMove({ X: 1 })}
                     />
-                    <JogButton
-                        text="Z"
-                        disabled={disabled}
-                        onClick={() => absoluteMove({ Z: 0 })}
-                    />
+                    {enableZAxis && (
+                        <JogButton
+                            text="Z"
+                            disabled={disabled}
+                            onClick={() => absoluteMove({ Z: 0 })}
+                        />
+                    )}
                     {
                         enableBAxis && (
                             <JogButton
@@ -119,11 +126,14 @@ const JogPad: React.FC<JogViewProps> = (props) => {
                         disabled={disabled}
                         onClick={() => relativeMove({ X: 1, Y: -1 })}
                     />
-                    <JogButton
-                        text="Z-"
-                        disabled={disabled}
-                        onClick={() => relativeMove({ Z: -1 })}
-                    />
+
+                    {enableZAxis && (
+                        <JogButton
+                            text="Z-"
+                            disabled={disabled}
+                            onClick={() => relativeMove({ Z: -1 })}
+                        />
+                    )}
                     {
                         enableBAxis && (
                             <JogButton

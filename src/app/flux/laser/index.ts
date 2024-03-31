@@ -176,8 +176,8 @@ const INITIAL_STATE = {
 
     // A-B Position
     isOnABPosition: false,
-    APosition: { x: 0, y: 0, z: 0, b: 0 },
-    BPosition: { X: 0, y: 0, z: 0, b: 0 },
+    APosition: { x: 255, y: 155, z: 0, b: 0 },
+    BPosition: { x: 325, y: 85, z: 0, b: 0 },
     enableABPositionShortcut: false,
 };
 

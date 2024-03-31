@@ -1182,3 +1182,6 @@ export const MANUAL_MODE = Symbol('manual mode');
 export const AUTO_STRING = 'auto';
 
 
+export enum MotorPowerMode {
+    GETCURRENTMODE, SHUTAll, ONLYLINEAR, STAYPOWER
+}

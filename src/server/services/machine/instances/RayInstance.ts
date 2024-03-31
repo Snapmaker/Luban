@@ -88,10 +88,10 @@ class RayMachineInstance extends MachineInstance {
         this.socket.emit('connection:connected', { state: state, err: '' });
 
         // Start heartbeat
-        await this.channel.startHeartbeat();
+        // await this.channel.startHeartbeat();
         // Legacy
-        // const sacpClient = (this.channel as SacpChannelBase).sacpClient;
-        // await (this.channel as SacpChannelBase).startHeartbeatLegacy(sacpClient, undefined);
+        const sacpClient = (this.channel as SacpChannelBase).sacpClient;
+        await (this.channel as SacpChannelBase).startHeartbeatLegacy(sacpClient, undefined);
 
         // register handlers
         (this.channel as SacpChannelBase).registerErrorReportHandler();

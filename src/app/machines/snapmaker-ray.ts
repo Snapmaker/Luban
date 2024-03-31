@@ -1,3 +1,4 @@
+
 import { Machine, MachineGcodeFlavor, MachineType } from '@snapmaker/luban-platform';
 import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from './snapmaker-2-toolheads';
 import { JobOffsetMode } from '../constants/coordinate';
@@ -54,10 +55,6 @@ export const machine: Machine = {
                     {
                         label: 'Crosshair',
                         value: JobOffsetMode.Crosshair,
-                    },
-                    {
-                        label: 'Laser Spot',
-                        value: JobOffsetMode.LaserSpot,
                     },
                 ]
             },

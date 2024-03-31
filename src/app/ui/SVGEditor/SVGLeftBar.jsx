@@ -136,7 +136,7 @@ const SVGLeftBar = forwardRef((props, ref) => {
                                 className={
                                     classNames('background-transparent',
                                         'padding-horizontal-4', 'position-re',
-                                        { [styles.selected]: (mode === 'select') })
+                                        { [styles.selected]: (mode === 'select' && editable) })
                                 }
                                 onClick={() => actions.setMode('select')}
                             />
@@ -152,7 +152,7 @@ const SVGLeftBar = forwardRef((props, ref) => {
                                 className={
                                     classNames('background-transparent',
                                         'padding-horizontal-4', 'position-re',
-                                        { [styles.selected]: (mode === 'draw') })
+                                        { [styles.selected]: (mode === 'draw' && editable) })
                                 }
                                 onClick={() => actions.startDraw()}
                             />
@@ -167,7 +167,7 @@ const SVGLeftBar = forwardRef((props, ref) => {
                                 className={
                                     classNames('background-transparent',
                                         'padding-horizontal-4', 'position-re',
-                                        { [styles.selected]: (mode === 'rect') })
+                                        { [styles.selected]: (mode === 'rect' && editable) })
                                 }
                                 onClick={() => actions.setMode('rect')}
                             />
@@ -182,7 +182,7 @@ const SVGLeftBar = forwardRef((props, ref) => {
                                 className={
                                     classNames('background-transparent',
                                         'padding-horizontal-4', 'position-re',
-                                        { [styles.selected]: (mode === 'ellipse') })
+                                        { [styles.selected]: (mode === 'ellipse' && editable) })
                                 }
                                 onClick={() => actions.setMode('ellipse')}
                             />
@@ -211,7 +211,7 @@ const SVGLeftBar = forwardRef((props, ref) => {
                                 className={
                                     classNames('background-transparent',
                                         'padding-horizontal-4', 'position-re',
-                                        { [styles.selected]: mode === 'ext' })
+                                        { [styles.selected]: mode === 'ext' && editable })
                                 }
                                 onClick={actions.showExt}
                             />

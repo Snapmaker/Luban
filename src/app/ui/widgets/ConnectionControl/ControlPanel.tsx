@@ -1,5 +1,5 @@
 import { includes } from 'lodash';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { HEAD_CNC, HEAD_LASER } from '../../../constants';
@@ -15,6 +15,9 @@ import JogPad from './JogPad';
 import MotionButtonGroup from './MotionButtonGroup';
 import ABPositionButtonGroup from './ABPositionButtonGroup';
 import styles from './styles.styl';
+// import { L2WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
+// import { ConnectionType } from '../../../flux/workspace/state';
+import { SnapmakerRayMachine } from '../../../machines';
 
 interface MoveOptions {
     X?: number;
@@ -24,7 +27,7 @@ interface MoveOptions {
 }
 
 interface ControlPanelProps {
-    isInWorkspace: boolean
+    isNotInWorkspace: boolean
     workPosition: {
         isFourAxis: boolean;
         x: number;
@@ -66,17 +69,21 @@ interface ControlPanelProps {
         onChangeJogSpeed: (option) => void;
     }
     executeGcode: () => void;
+    runBoundary?: () => void;
 }
 
 /**
  * Control Panel.
  */
 const ControlPanel: React.FC<ControlPanelProps> = (props) => {
-    const { workPosition, disabled = true, actions, isInWorkspace, enableShortcut } = props;
+    const { workPosition, disabled = true, actions, isNotInWorkspace, enableShortcut } = props;
     const enableBAxis = workPosition.isFourAxis;
 
     const { headType } = useSelector((state: RootState) => state.workspace);
     const server: MachineAgent = useSelector((state: RootState) => state.workspace.server);
+    const { activeMachine } = useSelector((state: RootState) => state.workspace);
+    const RayWorkArea = { X: 600, Y: 400 };
+    const RayWorkAreaOffset = { X: 0, Y: 0 };
 
     const step = actions.getJogDistance();
     const stepAngle = actions.getJogAngle();
@@ -86,6 +93,7 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
 
     const bbox = props.state.bbox;
 
+    const [isConnectedRay, setIsConnectedRay] = useState(false);
     const [keepLaserOn, setKeepLaserOn] = useState(false);
 
     const onToggleKeepLaser = useCallback(() => {
@@ -95,24 +103,44 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
     const dispatch = useDispatch();
 
     const goHome = useCallback(() => {
-        dispatch(workspaceActions.executeGcodeAutoHome(true));
-    }, [dispatch, workspaceActions]);
+        console.log('isConnectedRay', isConnectedRay);
+        return isConnectedRay
+            ? dispatch(workspaceActions.executeGcode('$H')) as unknown as Promise<void>
+            : dispatch(workspaceActions.executeGcodeAutoHome(true));
+    }, [dispatch, workspaceActions, isConnectedRay]);
+
+
+    useEffect(() => {
+        if (!activeMachine) return;
+        console.log('machine', activeMachine.identifier, SnapmakerRayMachine.identifier, activeMachine.identifier === SnapmakerRayMachine.identifier, includes([SnapmakerRayMachine.identifier], activeMachine.identifier), isConnectedRay);
+        setIsConnectedRay(includes([SnapmakerRayMachine.identifier], activeMachine.identifier));
+    }, [activeMachine]);
+
 
     const relativeMove = useCallback((moveOptions: MoveOptions) => {
-        // const moveOrders = [];
+        const moveOrders = [];
         let gcodeAxis = '';
         for (const axis of Object.keys(moveOptions)) {
             const axisMove = moveOptions[axis];
 
             // const currentPosition = parseFloat(workPosition[axis.toLowerCase()]);
-            const moveDistance = axisMove * (includes(['X', 'Y', 'Z'], axis) ? step : stepAngle);
+            let moveDistance = axisMove * (includes(['X', 'Y', 'Z'], axis) ? step : stepAngle);
 
-            /*
+
+            const currentPosition = parseFloat(workPosition[axis.toLowerCase()]) + RayWorkAreaOffset[axis];
+            console.log('axis:', axis, currentPosition, moveDistance, RayWorkArea[axis], RayWorkArea[axis] - currentPosition, currentPosition + moveDistance);
+            if (isConnectedRay && (currentPosition + moveDistance > RayWorkArea[axis])) {
+                // console.log('overplace position !', currentPosition, moveDistance, RayWorkArea[axis]);
+                moveDistance = RayWorkArea[axis] - currentPosition;
+                return;
+            } else if (isConnectedRay && (currentPosition + moveDistance < 0)) {
+                moveDistance -= currentPosition;
+            }
+            console.log('moveDistance', moveDistance);
             moveOrders.push({
                 axis: axis.toUpperCase(),
                 distance: currentPosition + moveDistance,
             });
-            */
 
             gcodeAxis += `${axis.toUpperCase()}${moveDistance} `;
         }
@@ -121,11 +149,10 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
 
         // Relative move G-code
         const gcode = [
-            'G91',
-            `${gCommand} ${gcodeAxis} F${jogSpeed}`,
-            'G90',
+            `\nG91\n${gCommand} ${gcodeAxis} F${jogSpeed}\nG90\n`
         ].join('\n');
 
+        console.log(moveOrders, gcode);
         // server.coordinateMove(moveOrders, gcode, jogSpeed, headType);
         server.executeGcode(gcode);
     }, [
@@ -140,6 +167,11 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
         for (const axis of Object.keys(moveOptions)) {
             const position = moveOptions[axis];
 
+            console.log('axis:', axis, position, RayWorkArea[axis]);
+            if (isConnectedRay && position > RayWorkArea[axis]) {
+                console.log('overplace position !', position, RayWorkArea[axis]);
+                return;
+            }
             moveOrders.push({
                 axis: axis.toUpperCase(),
                 distance: position,
@@ -159,12 +191,21 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
     ]);
 
     const runBoundary = useCallback(() => {
+        // ray runBoundary need to create file boundary.nc
+        if (isConnectedRay && typeof props.runBoundary !== 'undefined') {
+            props.runBoundary();
+            return;
+        }
+
+
         const gcode = [];
         if (headType === HEAD_CNC) {
             gcode.push('G91', 'G0 Z5 F400', 'G90');
         }
 
         const gCommand = keepLaserOn ? 'G1' : 'G0';
+
+        const [minX, minY, maxX, maxY] = [bbox.min.x, bbox.min.y, bbox.max.x, bbox.max.y];
 
         if (workPosition.isFourAxis) {
             const angleDiff = Math.abs(bbox.max.b - bbox.min.b);
@@ -182,11 +223,11 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
         } else {
             gcode.push(
                 'G90', // absolute position
-                `${gCommand} X${bbox.min.x} Y${bbox.min.y} F${jogSpeed}`, // run boundary
-                `${gCommand} X${bbox.min.x} Y${bbox.max.y}`,
-                `${gCommand} X${bbox.max.x} Y${bbox.max.y}`,
-                `${gCommand} X${bbox.max.x} Y${bbox.min.y}`,
-                `${gCommand} X${bbox.min.x} Y${bbox.min.y}`,
+                `${gCommand} X${minX} Y${minY} F${jogSpeed}`, // run boundary
+                `${gCommand} X${minX} Y${maxY}`,
+                `${gCommand} X${maxX} Y${maxY}`,
+                `${gCommand} X${maxX} Y${minY}`,
+                `${gCommand} X${minX} Y${minY}`,
                 `${gCommand} X${workPosition.x} Y${workPosition.y}` // go back to origin
             );
         }
@@ -210,7 +251,7 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
     ]);
 
     const renderMotionButtonGroup = () => {
-        if (isInWorkspace) {
+        if (isNotInWorkspace) {
             return (
                 <div>
                     <ABPositionButtonGroup
@@ -248,15 +289,19 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
             }
 
             <div className="margin-vertical-8">
-                <Button
-                    type="primary"
-                    priority="level-three"
-                    width="96px"
-                    disabled={disabled}
-                    onClick={goHome}
-                >
-                    {i18n._('key-Workspace/Console-Home')}
-                </Button>
+                {
+                    (!isNotInWorkspace || isConnectedRay) && (
+                        <Button
+                            type="primary"
+                            priority="level-three"
+                            width="96px"
+                            disabled={disabled}
+                            onClick={goHome}
+                        >
+                            {i18n._('key-Workspace/Console-Home')}
+                        </Button>
+                    )
+                }
                 <div className="sm-flex justify-space-between align-center">
                     <span className="max-width-208 text-overflow-ellipsis">{i18n._('key-Workspace/Console-Jog Speed')}</span>
                     <Select
@@ -277,6 +322,7 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
                 <JogPad
                     enableShortcut={enableShortcut}
                     enableBAxis={enableBAxis}
+                    enableZAxis={!isConnectedRay}
                     disabled={disabled}
                     relativeMove={relativeMove}
                     absoluteMove={absoluteMove}

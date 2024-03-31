@@ -734,6 +734,7 @@ class MarlinReplyParserCNCRPM {
         }
     }
 }
+
 class MarlinKitsParser {
     static parse(line) {
         const match = line.match(/^kits: (.*)$/);
@@ -742,6 +743,26 @@ class MarlinKitsParser {
             type: MarlinKitsParser,
             payload: {
                 kit: match[1],
+            }
+        };
+    }
+}
+
+class MarlinGetCrossHairOffset {
+    static parse(line) {
+        const match = line.match(/^Get CrossLightOffset X: (.*), Y: (.*)$/);
+        if (!match) return null;
+        const x = match[1];
+        const y = match[2];
+        console.log('-------', x, y, 'end');
+
+        return {
+            type: MarlinGetCrossHairOffset,
+            payload: {
+                crossHairOffset: {
+                    x,
+                    y,
+                }
             }
         };
     }
@@ -827,7 +848,9 @@ class MarlinLineParser {
             MarlinReplyParserHeadStatus,
 
             // M1005
-            MarlinKitsParser
+            MarlinKitsParser,
+
+            MarlinGetCrossHairOffset
         ];
 
         for (const parser of parsers) {
@@ -1170,6 +1193,12 @@ class Marlin extends events.EventEmitter {
             if (typeof payload.kit !== 'undefined') {
                 this.emit('kits', { kits: payload.kit.split(' ') });
             }
+        } else if (type === MarlinGetCrossHairOffset) {
+            this.setState({
+                crosshairOffset: payload.crossHairOffset,
+            });
+            console.log('crosshairOffset', payload.crossHairOffset);
+            this.emit('get:crosshairOffset', payload);
         } else if (data.length > 0) {
             this.emit('others', payload);
         }

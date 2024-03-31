@@ -104,6 +104,7 @@ class SceneLogic {
         }
 
         const supportExtruderConfig = modelGroup.getSupportExtruderConfig();
+        console.log('supportExtruderConfig', supportExtruderConfig, extrudersUsed, this.supportEnabled);
         if (this.supportEnabled) {
             extrudersUsed.add(supportExtruderConfig.support);
             extrudersUsed.add(supportExtruderConfig.interface);
@@ -115,6 +116,7 @@ class SceneLogic {
             extrudersUsed.add(RIGHT_EXTRUDER_MAP_NUMBER);
         }
 
+        console.log('this.primeTowerEnabled', this.primeTowerEnabled, models.length > 0, extrudersUsed.size > 1);
         // calculate the visibility of prime tower
         // 1. Dual extruder
         // 2. Has at least one mesh
@@ -265,6 +267,7 @@ class SceneLogic {
      * @param preset - the global / left extruder preset.
      */
     public onPresetParameterChanged(stackId: string, preset: PresetModel) {
+        // console.log(preset);
         // prime tower logic
         if (stackId === LEFT_EXTRUDER) {
             const primeTowerEnabled = preset.settings.prime_tower_enable?.default_value || false;

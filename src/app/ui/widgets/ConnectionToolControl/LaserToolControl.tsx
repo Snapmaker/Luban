@@ -16,9 +16,13 @@ import { toast } from '../../components/Toast';
 import { makeSceneToast } from '../../views/toasts/SceneToast';
 import WorkSpeed from './WorkSpeed';
 import AttributeContainer from './components/AttributeContainer';
+import { L2WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
 
-
-const LaserToolControl: React.FC = () => {
+interface LaserToolControlProps {
+    withoutTips?: boolean
+}
+const LaserToolControl: React.FC<LaserToolControlProps> = (props) => {
+    const { withoutTips } = props;
     const {
         isConnected,
 
@@ -140,7 +144,7 @@ const LaserToolControl: React.FC = () => {
 
             {/* Turn On/Off laser */}
             {
-                !isPrintingValue && (
+                toolHead !== L2WLaserToolModule.identifier && !isPrintingValue && (
                     <div className="sm-flex justify-space-between margin-vertical-8">
                         <span>{i18n._('key-unused-Laser Power')}</span>
                         <Switch
@@ -182,7 +186,7 @@ const LaserToolControl: React.FC = () => {
 
             {/* High Power Tips */}
             {
-                !isPrintingValue && (
+                !withoutTips && !isPrintingValue && (
                     <div className="sm-flex">
                         <SvgIcon
                             name="WarningTipsWarning"

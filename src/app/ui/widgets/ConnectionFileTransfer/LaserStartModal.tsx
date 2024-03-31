@@ -1,4 +1,4 @@
-import { Tooltip } from 'antd';
+import { Alert, Tooltip } from 'antd';
 import { includes, isString, isUndefined } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
@@ -12,7 +12,9 @@ import { Button } from '../../components/Buttons';
 import { NumberInput as Input } from '../../components/Input';
 import Modal from '../../components/Modal';
 import { Radio } from '../../components/Radio';
-import { highPower10WLaserToolHead, standardLaserToolHead } from '../../../machines/snapmaker-2-toolheads';
+import { L2WLaserToolModule, highPower10WLaserToolHead, standardLaserToolHead } from '../../../machines/snapmaker-2-toolheads';
+import { SnapmakerA150Machine, SnapmakerA250Machine, SnapmakerA350Machine } from '../../../machines';
+import { ConnectionType } from '../../../flux/workspace/state';
 
 
 interface LaserStartModalProps {
@@ -36,12 +38,14 @@ const LaserStartModal: React.FC<LaserStartModalProps> = ({
 }) => {
     const [selectedValue, setSelectedValue] = useState(MANUAL_MODE);
     const { size } = useSelector(state => state?.machine);
-    const { materialThickness } = useSelector(state => state?.workspace);
+    const { materialThickness, toolHead, activeMachine, connectionType } = useSelector(state => state?.workspace);
     const dispatch = useDispatch();
+
 
     const supportSemiMode = includes([
         standardLaserToolHead.identifier,
         highPower10WLaserToolHead.identifier,
+        L2WLaserToolModule.identifier,
     ], toolHeadIdentifier);
 
     useEffect(() => {
@@ -185,6 +189,9 @@ const LaserStartModal: React.FC<LaserStartModalProps> = ({
                 {i18n._('key-Workspace/LaserStartJob-Select Mode')}
             </Modal.Header>
             <Modal.Body>
+                {includes([L2WLaserToolModule.identifier], toolHead)
+                && connectionType === ConnectionType.Serial
+                && includes([SnapmakerA350Machine.identifier, SnapmakerA250Machine.identifier, SnapmakerA150Machine.identifier], activeMachine.identifier) && <Alert className="width-percent-100 border-radius-8" message="After printing with the 2W red light extruder connected via serial, there will change the work origin beacuse. Please be aware of this issue." type="warning" showIcon />}
                 <Radio.Group
                     style={{ display: 'flex', flexDirection: 'column' }}
                     onChange={onChange}

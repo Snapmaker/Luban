@@ -19,6 +19,7 @@ function register(socketServer: SocketServer): void {
         [SocketEvent.SetOrigin]: connectionManager.setWorkOrigin,
         // 'connection:getWorkSpeedFactor': connectionManager.getWorkSpeedFactor,
         [SocketEvent.SetSpeedFactor]: connectionManager.updateWorkSpeedFactor,
+        [SocketEvent.SetMotorPowerMode]: connectionManager.setMotorPowerMode,
 
         // 3d printing control services
         [SocketEvent.SwitchActiveExtruder]: connectionManager.switchExtruder,

@@ -10,6 +10,7 @@ import {
 import { EventEmitter } from 'events';
 
 import SocketServer from '../../../lib/SocketManager';
+import { MotorPowerMode } from '../sacp/SacpClient';
 
 interface ConnectionOpenOptions {
     address?: string;
@@ -109,6 +110,8 @@ export interface SystemChannelInterface extends Channel {
     getFirmwareVersion(): Promise<string>;
 
     upgradeFirmwareFromFile(options: UpgradeFirmwareOptions): Promise<boolean>;
+
+    setMotorPowerMode(setMotorPowerHoldMode: MotorPowerMode): Promise<number>;
 }
 
 // Network

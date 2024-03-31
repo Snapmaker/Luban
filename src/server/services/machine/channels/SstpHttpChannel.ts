@@ -3,7 +3,7 @@ import request from 'superagent';
 
 import SocketEvent from '../../../../app/communication/socket-events';
 import { DUAL_EXTRUDER_TOOLHEAD_FOR_SM2, } from '../../../../app/constants/machines';
-import { L20WLaserToolModule, L40WLaserToolModule, highPower200WCNCToolHead } from '../../../../app/machines/snapmaker-2-toolheads';
+import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule, highPower200WCNCToolHead } from '../../../../app/machines/snapmaker-2-toolheads';
 import {
     HEAD_CNC,
     HEAD_LASER,
@@ -237,12 +237,17 @@ class SstpHttpChannel extends Channel implements
                             headType = HEAD_CNC;
                             toolHead = highPower200WCNCToolHead.identifier;
                             break;
+                        case 9:
+                            headType = HEAD_LASER;
+                            toolHead = L2WLaserToolModule.identifier;
+                            break;
                         default:
                             headType = HEAD_PRINTING;
                             toolHead = undefined;
                     }
                     this.state.headType = headType;
                     this.state.toolHead = toolHead;
+
                     if (!(this.state.series && headType && headType !== 'UNKNOWN')) {
                         this.socket && this.socket.emit('connection:open', {
                             msg: 'key-Workspace/Connection-The machine or toolhead cannot be correctly recognized. Make sure the firmware is up to date and the machine is wired correctly.',
