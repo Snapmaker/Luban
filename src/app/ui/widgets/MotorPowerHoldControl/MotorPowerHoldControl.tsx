@@ -63,7 +63,6 @@ const MotorPowerHoldControl = () => {
     return isConnected && (
         <div className="sm-flex justify-space-between margin-vertical-8">
             <span className="line-height-32">{i18n._('Motor Power Hold')}</span>
-            current: { isHoldMode }
             <div className="sm-flex justify-flex-end">
                 <Switch
                     priority="level-three"
