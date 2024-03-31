@@ -15,7 +15,7 @@ import {
     SnapmakerOriginalExtendedMachine,
     SnapmakerOriginalMachine
 } from '../machines';
-import { L20WLaserToolModule, L40WLaserToolModule } from '../machines/snapmaker-2-toolheads';
+import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from '../machines/snapmaker-2-toolheads';
 
 import {
     CaseConfigA150CncStandard,
@@ -44,6 +44,7 @@ import {
     CaseConfigPenHolder,
     getLaserCaseConfigFor20WModule,
     getLaserCaseConfigFor40WModule,
+    getLaserCaseConfigFor2WModule,
 } from '../ui/pages/HomePage/CaseConfig';
 
 export const getCaseList = (series, toolHead) => {
@@ -162,6 +163,9 @@ export const getCaseList = (series, toolHead) => {
             break;
         case L40WLaserToolModule.identifier:
             caseList = caseList.concat(getLaserCaseConfigFor40WModule());
+            break;
+        case L2WLaserToolModule.identifier:
+            caseList = caseList.concat(getLaserCaseConfigFor2WModule());
             break;
         default:
             break;

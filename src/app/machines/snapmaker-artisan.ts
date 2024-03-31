@@ -96,7 +96,7 @@ export const machine: Machine = {
             },
             {
                 identifier: L2WLaserToolModule.identifier,
-                configPath: 'laser/a400_40w', // 'laser/a400_2w',
+                configPath: 'laser/a400_2w', // 'laser/a400_2w',
                 // workRange: {
                 //     min: [0, 0, 0],
                 //     max: [410, 410, 0], // Correct this later

@@ -107,7 +107,7 @@ export const machine: Machine = {
             },
             {
                 identifier: L2WLaserToolModule.identifier,
-                configPath: 'laser/a250_40w', // 'laser/a350_2w',
+                configPath: 'laser/a250_2w', // 'laser/a350_2w',
                 // workRange: {
                 //     min: [0, 0, 0],
                 //     max: [345, 357, 0], // Correct this later

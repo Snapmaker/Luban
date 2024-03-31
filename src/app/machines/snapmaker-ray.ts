@@ -49,7 +49,7 @@ export const machine: Machine = {
             },
             {
                 identifier: L2WLaserToolModule.identifier,
-                configPath: 'laser/snapmaker_ray_40w', // 'laser/snapmaker_ray_2w',
+                configPath: 'laser/snapmaker_ray_2w', // 'laser/snapmaker_ray_2w',
                 goHomeOnConnection: false,
                 runBoundaryModeOptions: [
                     {
