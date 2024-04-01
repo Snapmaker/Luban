@@ -3,7 +3,7 @@
 	url = git@github.com:Snapmaker/luban-print-settings.git
 [submodule "packages/luban-print-settings-docs"]
 	path = packages/luban-print-settings-docs
-	url = git@github.com:parachvte/luban-print-settings-docs.git
+	url = git@github.com:Snapmaker/luban-print-settings-docs.git
 [submodule "resources/luban-case-library"]
 	path = resources/luban-case-library
-	url = git@github.com:parachvte/luban-case-library.git
+	url = git@github.com:Snapmaker/luban-case-library.git
