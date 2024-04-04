@@ -6,7 +6,7 @@
     "A value of 0-4095 adjusts the sensor sensitivity, with lower values indicating lower sensitivity. A value of 4096 turns off detection.": "设置为 0-4095 调整传感器灵敏度，越低的值表示越低的灵敏度。设置为 4096 会关闭检测。",
     "ABS": "ABS",
     "ASA": "ASA",
-    "Abnormal Laser Emitter. Please contact our Support for help.": "Abnormal Laser Emitter. Please contact our Support for help.",
+    "Abnormal Laser Emitter. Please contact our Support for help.": "异常激光Emitter。请联系我们的客服寻求帮助。",
     "Abnormal Laser Heat Dissipation. Please contact our Support for help.": "Abnormal Laser Heat Dissipation. Please contact our Support for help.",
     "Abnormal Laser Temperature Sensor. Please contact our Support for help.": "Abnormal Laser Temperature Sensor. Please contact our Support for help.",
     "Abnormal Toolhead Orientation Detection. Please contact our Support for help.": "Abnormal Toolhead Orientation Detection. Please contact our Support for help.",
