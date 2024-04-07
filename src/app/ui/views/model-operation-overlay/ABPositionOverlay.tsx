@@ -1,7 +1,8 @@
 import classNames from 'classnames';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Button } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
+import { includes } from 'lodash';
 import styles from './styles.styl';
 import i18n from '../../../lib/i18n';
 import ConnectionControl from '../../widgets/ConnectionControl/index';
@@ -11,6 +12,9 @@ import LaserToolControl from '../../widgets/ConnectionToolControl/LaserToolContr
 import { MachineAgent } from '../../../flux/workspace/MachineAgent';
 import controller from '../../../communication/socket-communication';
 import SocketEvent from '../../../communication/socket-events';
+import { SnapmakerRayMachine } from '../../../machines';
+import { actions as editorActions } from '../../../flux/editor';
+import { HEAD_LASER } from '../../../constants';
 
 interface ABPositionOverlayProps {
     onClose: () => void;
@@ -19,9 +23,18 @@ interface ABPositionOverlayProps {
 const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
     const { size, isRotate } = useSelector((state: RootState) => state.machine);
     const { APosition, BPosition } = useSelector((state: RootState) => state.laser);
-    const { workPosition, originOffset } = useSelector((state: RootState) => state.workspace);
+    const { workPosition, originOffset, activeMachine } = useSelector((state: RootState) => state.workspace);
     const server: MachineAgent = useSelector((state: RootState) => state.workspace.server);
     const dispatch = useDispatch();
+    const [isConnectedRay, setIsConnectedRay] = useState(false);
+
+    useEffect(() => {
+        if (!activeMachine) {
+            setIsConnectedRay(false);
+            return;
+        }
+        setIsConnectedRay(includes([SnapmakerRayMachine.identifier], activeMachine.identifier));
+    }, [activeMachine]);
 
     // const isNUllPosition = position => {
     //     return typeof position.x === 'undefined'
@@ -37,12 +50,9 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
     // };
 
     useEffect(() => {
-        console.log('SetMotorPowerMode start');
         controller
-            .emitEvent(SocketEvent.SetMotorPowerMode, { setMotorPowerHoldMod: 3 })
-            .once(SocketEvent.SetMotorPowerMode, () => {
-                console.log('SetMotorPowerMode');
-            });
+            .emitEvent(SocketEvent.SetMotorPowerMode, { setMotorPowerHoldMod: 3 });
+        // .once(SocketEvent.SetMotorPowerMode, () => {  });
     }, []);
 
 
@@ -60,7 +70,9 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
         //     return;
         // }
         console.log(`width: ${size.x}, height: ${size.y}`);
-
+        dispatch(editorActions.updateState(HEAD_LASER, {
+            useABPosition: true
+        }));
         dispatch(laserActions.setBackgroundImage('', size.x, size.y, 0, 0, { APosition, BPosition }));
 
 
@@ -79,7 +91,8 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
     const widgetActions = {
         setTitle: function () { return null; }
     };
-    const toXYPoint = (position) => (isRotate ? `(${position.b}, ${position.y})` : `(${position.x}, ${position.y})`);
+    const numberformat = (value) => (typeof value === 'undefined' ? '--' : value);
+    const toXYPoint = (position) => (isRotate ? `(${numberformat(position.b)}, ${numberformat(position.y)})` : `(${numberformat(position.x)}, ${numberformat(position.y)})`);
 
     return (
         <div className={classNames(
@@ -92,7 +105,10 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
                 {i18n._('key-CncLaser/MainToolBar-A-B Position')}
             </div>
             <div className="justify-space-between padding-vertical-16 padding-horizontal-16">
-                <Alert className="width-percent-100 border-radius-8" message="Use the control panel to position points A and B on the machine. Please do not move the print head manually." type="warning" showIcon />
+
+                {isConnectedRay
+                && (<Alert className="width-percent-100 border-radius-8" message="Use the control panel to position points A and B on the machine. Please do not move the print head manually." type="warning" showIcon />
+                )}
                 <div className="justify-space-between"><span>A: {toXYPoint(APosition)}</span> <span>B: {toXYPoint(BPosition)}</span></div>
                 <LaserToolControl withoutTips />
                 <div className="">

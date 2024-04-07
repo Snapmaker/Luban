@@ -1,6 +1,5 @@
 import PropTypes from 'prop-types';
 import React, { useEffect } from 'react';
-import { Trans } from 'react-i18next';
 
 import { useDispatch } from 'react-redux';
 // import { includes } from 'lodash';
@@ -8,6 +7,9 @@ import i18n from '../../../lib/i18n';
 import { Button } from '../../components/Buttons';
 import TipTrigger from '../../components/TipTrigger';
 import { actions as laserActions } from '../../../flux/laser';
+import controller from '../../../communication/socket-communication';
+import SocketEvent from '../../../communication/socket-events';
+import { MotorPowerMode } from '../../../constants';
 // import { RootState } from '../../../flux/index.def';
 // import { L2WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
 // import { ConnectionType } from '../../../flux/workspace/state';
@@ -66,21 +68,7 @@ const ABPositionButtonGroup = (props) => {
 
     return (
         <div className="sm-flex-overflow-visible" style={{ flexDirection: 'column' }}>
-            <TipTrigger
-                title={i18n._('key-Laser/Control/ABPositionButton-Set A position')}
-                content={(
-                    <div>
-                        <p>{i18n._('key-Laser/Control/ABPositionButton-Click to check the boundary of the image to be engraved.')}</p>
-                        <br />
-                        <p>
-                            <Trans i18nKey="key-unused-Note: If you are using the CNC Carving Module, make sure the carving bit will not run into the fixtures before you use this feature.">
-                                Note: If you are using the CNC Carving Module, make sure the carving
-                                bit will not run into the fixtures before you use this feature.
-                            </Trans>
-                        </p>
-                    </div>
-                )}
-            >
+            <TipTrigger content={i18n._('key-Laser/Control/ABPositionButton-Set A position')}>
                 <Button
                     width="144px"
                     type="primary"
@@ -92,10 +80,7 @@ const ABPositionButtonGroup = (props) => {
                     {i18n._('key-Laser/Control/ABPositionButton-Set A position')}
                 </Button>
             </TipTrigger>
-            <TipTrigger
-                title={i18n._('key-Laser/Control/ABPositionButton-Set B position')}
-                content={i18n._('key-Laser/Control/ABPositionButton-Move the head to the last saved work origin.')}
-            >
+            <TipTrigger content={i18n._('key-Laser/Control/ABPositionButton-Set B position')}>
                 <Button
                     width="144px"
                     type="primary"
@@ -107,10 +92,7 @@ const ABPositionButtonGroup = (props) => {
                     {i18n._('key-Laser/Control/ABPositionButton-Set B position')}
                 </Button>
             </TipTrigger>
-            <TipTrigger
-                title={i18n._('key-Laser/Control/ABPositionButton-Clear AB')}
-                content={i18n._('key-Laser/Control/ABPositionButton-Set the current position of the toolhead as the work origin.')}
-            >
+            <TipTrigger content={i18n._('key-Laser/Control/ABPositionButton-Clear AB')}>
                 <Button
                     width="144px"
                     type="primary"
@@ -122,6 +104,8 @@ const ABPositionButtonGroup = (props) => {
                         dispatch(laserActions.updateAPosition({}));
                         dispatch(laserActions.updateBPosition({}));
                         dispatch(laserActions.removeBackgroundImage());
+                        controller
+                            .emitEvent(SocketEvent.SetMotorPowerMode, { setMotorPowerHoldMod: MotorPowerMode.SHUTAll });
                     }}
                     disabled={!canClick}
                 >

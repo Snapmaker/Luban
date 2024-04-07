@@ -1185,3 +1185,11 @@ export const AUTO_STRING = 'auto';
 export enum MotorPowerMode {
     GETCURRENTMODE, SHUTAll, ONLYLINEAR, STAYPOWER
 }
+
+export enum SetupCoordinateMethod {
+    // Move tool manually
+    Manually = 'manually',
+
+    // Move tool using control panel
+    ByControlPanel = 'control-panel',
+}

@@ -6,6 +6,7 @@ import { Box3 } from 'three';
 import {
     CONNECTION_STATUS_IDLE,
     LEFT_EXTRUDER,
+    SetupCoordinateMethod,
 } from '../../constants';
 import History from '../../core/History';
 import { CircularArray } from '../../lib/collections';
@@ -274,4 +275,7 @@ export const initialState: WorkspaceState = {
     terminalHistory: new CircularArray<string>(1000),
     consoleHistory: new History<string>(1000),
     consoleLogs: [],
+
+    // ray control planel
+    setupCoordinateMethod: SetupCoordinateMethod.Manually
 };

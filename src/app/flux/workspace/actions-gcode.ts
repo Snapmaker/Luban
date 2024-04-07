@@ -338,6 +338,7 @@ const gcodeToArraybufferGeometryCallback = (data) => {
 
 const renderPreviewGcodeFile = (gcodeFile) => {
     return async (dispatch) => {
+        // Fix me? why clearGcode?
         await dispatch(clearGcode(true));
         dispatch(
             baseActions.updateState({
@@ -354,6 +355,10 @@ const renderPreviewGcodeFile = (gcodeFile) => {
             },
             (data) => {
                 dispatch(gcodeToArraybufferGeometryCallback(data));
+            },
+            // Fix me?
+            () => {
+                dispatch(baseActions.updateState({ gcodeFile: gcodeFile, boundingBox: gcodeFile.boundingBox }));
             }
         );
     };

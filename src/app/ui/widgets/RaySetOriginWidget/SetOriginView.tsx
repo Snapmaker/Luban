@@ -16,8 +16,15 @@ import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import ControlPanel from '../ConnectionControl/Control';
 import RunBoundaryModal from './modals/RunBoundaryModal';
+import HomeTipModal from './modals/HomeTipModal';
+import { SetupCoordinateMethod } from '../../../constants';
 
-export const getRunBoundaryCode = (axisWorkRange: AxisWorkRange, jobOffsetMode: JobOffsetMode, isRotate: boolean = false) => {
+export const getRunBoundaryCode = (
+    axisWorkRange: AxisWorkRange,
+    jobOffsetMode: JobOffsetMode,
+    isRotate: boolean = false,
+    setupCoordinateMethod: SetupCoordinateMethod
+) => {
     const useBInsteadOfX = isRotate;
     const gCommand = jobOffsetMode === JobOffsetMode.Crosshair ? 'G1 S0' : 'G1 S10';
 
@@ -52,9 +59,11 @@ export const getRunBoundaryCode = (axisWorkRange: AxisWorkRange, jobOffsetMode: 
     );
 
     // set current position as origin
-    // gcodeList.push(
-    //     'G92 X0 Y0 B0',
-    // );
+    if (setupCoordinateMethod === SetupCoordinateMethod.Manually) {
+        gcodeList.push(
+            'G92 X0 Y0 B0',
+        );
+    }
 
     if (useBInsteadOfX) {
         gcodeList.push(
@@ -95,13 +104,6 @@ export const getRunBoundaryCode = (axisWorkRange: AxisWorkRange, jobOffsetMode: 
     return gcode;
 };
 
-enum SetupCoordinateMethod {
-    // Move tool manually
-    Manually = 'manually',
-
-    // Move tool using control panel
-    ByControlPanel = 'control-panel',
-}
 
 /**
  * Set Origin View for Ray.
@@ -119,10 +121,10 @@ interface SetOriginViewProps {
 }
 
 const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
+    const dispatch = useDispatch();
     const { setDisplay } = props;
 
-    const isConnected = useSelector((state: RootState) => state.workspace.isConnected);
-    const isRotate = useSelector((state: RootState) => state.workspace.isRotate);
+    const { isConnected, isRotate, isHomed, setupCoordinateMethod } = useSelector((state: RootState) => state.workspace);
 
     // G-code
     const gcodeFile: GCodeFileMetadata = useSelector((state: RootState) => state.workspace.gcodeFile);
@@ -139,19 +141,27 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
         }
     }, [setDisplay, isConnected, workflowStatus]);
 
+    // Home Tip Modal state
+    const [showHomeTip, setShowHomeTip] = useState(false);
+
     // setup coordinate method
-    const [setupCoordinateMethod, setSetupCoordinateMethod] = useState(SetupCoordinateMethod.Manually);
+    const setSetupCoordinateMethod = (value: SetupCoordinateMethod) => {
+        dispatch(workspaceActions.updateState({ setupCoordinateMethod: value }));
+    };
 
     const onChangeCoordinateMode = useCallback((e: RadioChangeEvent) => {
-        setSetupCoordinateMethod(e.target.value);
-    }, []);
+        console.log('setSetupCoordinateMethod', e.target.value, isHomed);
+        if (e.target.value === SetupCoordinateMethod.ByControlPanel && !isHomed) {
+            setShowHomeTip(true);
+        } else {
+            setSetupCoordinateMethod(e.target.value);
+        }
+    }, [isHomed]);
 
     // run boundary state
     const [runBoundaryUploading, setRunBoundaryUploading] = useState(false);
     const [runBoundaryReady, setRunBoundaryReady] = useState(false);
     const jobOffsetMode: JobOffsetMode = useSelector((state: RootState) => state.laser.jobOffsetMode);
-
-    const dispatch = useDispatch();
 
     /**
      * Run boundary
@@ -169,7 +179,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
 
         log.info('Run Boundary... axis work range =', workRange);
 
-        const gcode = getRunBoundaryCode(workRange, jobOffsetMode, gcodeIsRotate);
+        const gcode = getRunBoundaryCode(workRange, jobOffsetMode, gcodeIsRotate, setupCoordinateMethod);
 
         const blob = new Blob([gcode], { type: 'text/plain' });
         const file = new File([blob], 'boundary.nc');
@@ -204,6 +214,11 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
     const onClickGoHome = useCallback(async () => {
         return dispatch(workspaceActions.executeGcode('$H')) as unknown as Promise<void>;
     }, [dispatch]);
+
+    const setControlPanelCoordinateMethod = () => {
+        onClickGoHome();
+        setSetupCoordinateMethod(SetupCoordinateMethod.ByControlPanel);
+    };
 
     return (
         <div>
@@ -265,6 +280,12 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
             {/* Run Boundary modal */
                 runBoundaryReady && (
                     <RunBoundaryModal onClose={() => setRunBoundaryReady(false)} />
+                )
+            }
+
+            {/* Go Home tip */
+                showHomeTip && (
+                    <HomeTipModal onClose={() => setShowHomeTip(false)} onOk={setControlPanelCoordinateMethod} />
                 )
             }
         </div>

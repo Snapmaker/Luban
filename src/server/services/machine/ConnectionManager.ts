@@ -649,7 +649,7 @@ class ConnectionManager {
         } = options;
 
         if (this.connectionType === ConnectionType.WiFi) {
-            const { uploadName, background, size, workPosition, originOffset } = options;
+            const { uploadName, background, size, workPosition, originOffset, useABPosition } = options;
             const gcodeFilePath = `${DataStorage.tmpDir}/${uploadName}`;
             const promises = [];
 
@@ -666,7 +666,7 @@ class ConnectionManager {
 
                         // Fixme: multi call to set work orign coordinate
                         // Camera Aid Background mode, force machine to work on machine coordinates (Origin = 0,0)
-                        if (background.enabled && !isRotate) {
+                        if (background.enabled && !isRotate && !useABPosition) {
                             await this.channel.setAbsoluteWorkOrigin({ x: 0, y: 0, z: 0, isRotate });
                         }
                     }
@@ -707,7 +707,7 @@ class ConnectionManager {
                             promises.push(promise);
                         }
                         // Camera Aid Background mode, force machine to work on machine coordinates (Origin = 0,0)
-                        if (background.enabled) {
+                        if (background.enabled && !useABPosition) {
                             let x = parseFloat(workPosition.x) - parseFloat(originOffset.x);
                             let y = parseFloat(workPosition.y) - parseFloat(originOffset.y);
 

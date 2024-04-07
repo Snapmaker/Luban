@@ -79,6 +79,7 @@ class Visualizer extends React.PureComponent {
         materialThicknessSource: PropTypes.string.isRequired,
         laserFocalLength: PropTypes.number,
         background: PropTypes.object.isRequired,
+        useABPosition: PropTypes.bool.isRequired,
         workPosition: PropTypes.object.isRequired,
         originOffset: PropTypes.object.isRequired,
 
@@ -282,20 +283,22 @@ class Visualizer extends React.PureComponent {
                 originOffset,
                 activeMachine,
                 connectionType,
-                crosshairOffset
+                crosshairOffset,
+                useABPosition
             } = this.props;
 
-            // Fix me?: 2w laser head set origin offset(crosshair offset) before start print
-            const isSnapmaker2 = includes([SnapmakerA350Machine.identifier, SnapmakerA250Machine.identifier, SnapmakerA150Machine.identifier], activeMachine.identifier);
-            if (includes([L2WLaserToolModule.identifier], toolHead) && connectionType === ConnectionType.Serial && isSnapmaker2) {
-                const { x, y } = workPosition;
-                console.log('set crosshair offset11', x, y, crosshairOffset);
-                server.setWorkOrigin(x - (parseFloat(crosshairOffset.x) || 21.5), y - (parseFloat(crosshairOffset.y) || -11));
-
-                // server.setWorkOrigin(x + 21.7, y - 12.3);
-            }
 
             if (workflowStatus === WorkflowStatus.Idle) {
+                // Fix me?: 2w laser head set origin offset(crosshair offset) before start print
+                const isSnapmaker2 = includes([SnapmakerA350Machine.identifier, SnapmakerA250Machine.identifier, SnapmakerA150Machine.identifier], activeMachine.identifier);
+                if (includes([L2WLaserToolModule.identifier], toolHead) && connectionType === ConnectionType.Serial && isSnapmaker2) {
+                    const { x, y } = workPosition;
+                    console.log('set crosshair offset', x - (parseFloat(crosshairOffset.x) || 21.5), y - (parseFloat(crosshairOffset.y) || -11), crosshairOffset);
+                    server.setWorkOrigin(x - (parseFloat(crosshairOffset.x) || 21.5), y - (parseFloat(crosshairOffset.y) || -11));
+
+                    // server.setWorkOrigin(x + 21.7, y - 12.3);
+                }
+
                 log.info('Start to run G-code...');
                 server.startServerGcode({
                     headType,
@@ -309,6 +312,7 @@ class Visualizer extends React.PureComponent {
                     uploadName: gcodeFile.uploadName,
                     laserFocalLength,
                     background,
+                    useABPosition,
                     series: activeMachine.identifier,
                     size: activeMachine.metadata.size,
                     workPosition,
@@ -394,6 +398,7 @@ class Visualizer extends React.PureComponent {
                         }
                     };
                     if (this.pauseStatus.headStatus || this.props.headType !== HEAD_PRINTING) {
+                        console.log('$$$$$$$$$', this.props.headType);
                         this.props.executeGcode('M5');
                     }
 
@@ -896,6 +901,7 @@ const mapStateToProps = (state) => {
         materialThickness: workspace.materialThickness,
         materialThicknessSource: workspace.materialThicknessSource,
         background: laser.background,
+        useABPosition: laser.useABPosition,
         isRotate: workspace.isRotate,
 
         // type

@@ -18,6 +18,7 @@ import styles from './styles.styl';
 // import { L2WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
 // import { ConnectionType } from '../../../flux/workspace/state';
 import { SnapmakerRayMachine } from '../../../machines';
+import { L2WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
 
 interface MoveOptions {
     X?: number;
@@ -79,7 +80,7 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
     const { workPosition, disabled = true, actions, isNotInWorkspace, enableShortcut } = props;
     const enableBAxis = workPosition.isFourAxis;
 
-    const { headType } = useSelector((state: RootState) => state.workspace);
+    const { headType, toolHead } = useSelector((state: RootState) => state.workspace);
     const server: MachineAgent = useSelector((state: RootState) => state.workspace.server);
     const { activeMachine } = useSelector((state: RootState) => state.workspace);
     const RayWorkArea = { X: 600, Y: 400 };
@@ -91,7 +92,7 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
     const jogSpeed = props.state.jogSpeed;
     const jogSpeedOptions = props.state.jogSpeedOptions;
 
-    const bbox = props.state.bbox;
+    let bbox = props.state.bbox;
 
     const [isConnectedRay, setIsConnectedRay] = useState(false);
     const [keepLaserOn, setKeepLaserOn] = useState(false);
@@ -191,10 +192,22 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
     ]);
 
     const runBoundary = useCallback(() => {
+        console.log('$$$$$$$$$ bbox', bbox);
         // ray runBoundary need to create file boundary.nc
         if (isConnectedRay && typeof props.runBoundary !== 'undefined') {
             props.runBoundary();
             return;
+        }
+
+        if (!bbox) {
+            bbox = {
+                max: {
+                    x: 0, y: 0, z: 0, b: 0
+                },
+                min: {
+                    x: 0, y: 0, z: 0, b: 0
+                }
+            };
         }
 
 
@@ -208,9 +221,9 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
         const [minX, minY, maxX, maxY] = [bbox.min.x, bbox.min.y, bbox.max.x, bbox.max.y];
 
         if (workPosition.isFourAxis) {
-            const angleDiff = Math.abs(bbox.max.b - bbox.min.b);
-            const minB = 0;
-            const maxB = angleDiff > 360 ? 360 : angleDiff;
+            // const angleDiff = Math.abs(bbox.max.b - bbox.min.b);
+            const minB = bbox.min.b || 0;
+            const maxB = bbox.max.b || 0;
             gcode.push(
                 'G90', // absolute position
                 `${gCommand} B${minB} Y${bbox.min.y} F${jogSpeed}`, // run boundary
@@ -274,7 +287,7 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
     return (
         <div className={styles['control-panel']}>
             {
-                headType === HEAD_LASER && (
+                (headType === HEAD_LASER && !includes([L2WLaserToolModule.identifier], toolHead)) && (
                     <div className="margin-bottom-8">
                         <div className="sm-flex justify-space-between">
                             <span>{i18n._('Keep Laser On When Moving')}</span>

@@ -82,8 +82,10 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace,
         workflowStatus,
         workPosition,
         originOffset,
-        boundingBox
+        // gcodeAxisWorkRange: boundingBox,
+        gcodeFile
     } = useSelector((state: RootState) => state.workspace);
+    const [boundingBox, setBoundingBox] = useState(gcodeFile?.gcodeAxisWorkRange);
 
     // const { enableABPositionShortcut } = useSelector((state: RootState) => state.laser);
 
@@ -93,7 +95,10 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace,
     const serverRef = useRef(server);
     useEffect(() => {
         serverRef.current = server;
-    }, [server]);
+
+        console.log('Gcodefile', gcodeFile);
+    }, [server, gcodeFile]);
+    useEffect(() => setBoundingBox(gcodeFile?.gcodeAxisWorkRange), [gcodeFile]);
 
 
     function getInitialState() {
@@ -379,6 +384,7 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace,
     }, [originOffset]);
 
     useEffect(() => {
+        console.log('%%%%%%% boundingBox', boundingBox);
         if (isNil(boundingBox)) {
             setState({
                 ...state,

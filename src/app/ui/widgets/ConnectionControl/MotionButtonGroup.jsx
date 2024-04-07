@@ -8,8 +8,8 @@ import TipTrigger from '../../components/TipTrigger';
 
 
 const MotionButtonGroup = (props) => {
-    const { state, actions, workPosition, runBoundary, executeGcode } = props;
-    const { canClick } = state;
+    const { actions, workPosition, runBoundary, executeGcode, disabled } = props;
+    // const { canClick } = state;
 
     return (
         <div className="sm-flex-overflow-visible" style={{ flexDirection: 'column' }}>
@@ -33,7 +33,7 @@ const MotionButtonGroup = (props) => {
                     className="margin-bottom-8 display-block"
                     priority="level-three"
                     onClick={runBoundary}
-                    disabled={!canClick}
+                    disabled={disabled}
                 >
                     {i18n._('Run Boundary')}
                 </Button>
@@ -54,7 +54,7 @@ const MotionButtonGroup = (props) => {
                             actions.move({ z: 0, x: 0, y: 0, b: 0 });
                         }
                     }}
-                    disabled={!canClick}
+                    disabled={disabled}
                 >
                     {i18n._('key-Workspace/Control/MotionButton-Go To Work Origin')}
                 </Button>
@@ -71,7 +71,7 @@ const MotionButtonGroup = (props) => {
                     onClick={() => {
                         executeGcode('G92 X0 Y0 Z0 B0');
                     }}
-                    disabled={!canClick}
+                    disabled={disabled}
                 >
                     {i18n._('key-Workspace/Control/MotionButton-Set Work Origin')}
                 </Button>
@@ -81,7 +81,7 @@ const MotionButtonGroup = (props) => {
 };
 
 MotionButtonGroup.propTypes = {
-    state: PropTypes.object,
+    disabled: PropTypes.bool,
     workPosition: PropTypes.object,
     actions: PropTypes.object,
     runBoundary: PropTypes.func,
