@@ -1193,3 +1193,9 @@ export enum SetupCoordinateMethod {
     // Move tool using control panel
     ByControlPanel = 'control-panel',
 }
+
+// ABPosition
+export const ABPositionOverlayID = 'ABposition-background-overlay';
+export const ABpositionMaskID = 'ABposition-mask';
+export const PointAID = 'ABposition-point-A';
+export const PointBID = 'ABposition-point-B';

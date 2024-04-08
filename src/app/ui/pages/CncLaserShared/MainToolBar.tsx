@@ -27,6 +27,7 @@ import LaserCameraAndBackground from '../../widgets/LaserCameraAidBackground';
 import MaterialThicknessInput from '../../widgets/LaserCameraAidBackground/MaterialThicknessInput';
 import SelectCaptureMode, { MODE_THICKNESS_COMPENSATION } from '../../widgets/LaserCameraAidBackground/SelectCaptureMode';
 import LaserSetBackground from '../../widgets/LaserSetBackground';
+import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
 
 function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setShowWorkspace, onChangeSVGClippingMode, onChangeABPositionMode }) {
     const isOnABPosition = useSelector((state: RootState) => state.laser?.isOnABPosition);
@@ -399,7 +400,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                 }
             },);
 
-        if (!isOriginalSeries) {
+        if (!isOriginalSeries && includes([L2WLaserToolModule.identifier, L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], workspaceToolHead)) {
             const canABPosition = isConnected && connectedMachineIdentifier === activeMachine.identifier && workspaceHeadType === HEAD_LASER;
             leftItems.push({
                 title: i18n._('key-CncLaser/MainToolBar-A-B Position'),

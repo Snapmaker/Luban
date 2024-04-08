@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import React, { useEffect, useState } from 'react';
 import { Alert, Button } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
-import { includes } from 'lodash';
+import { includes, isUndefined } from 'lodash';
 import styles from './styles.styl';
 import i18n from '../../../lib/i18n';
 import ConnectionControl from '../../widgets/ConnectionControl/index';
@@ -57,10 +57,12 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
 
 
     const setSvgBackground = () => {
-        const isUndefined = (val) => typeof val === 'undefined';
         const notSetA = isUndefined(APosition.y) || (!isRotate && isUndefined(APosition.x)) || (isRotate && isUndefined(APosition.b));
         const notSetB = isUndefined(BPosition.y) || (!isRotate && isUndefined(BPosition.x)) || (isRotate && isUndefined(BPosition.b));
-        if (notSetA || notSetB) return;
+        if (notSetA || notSetB) {
+            dispatch(laserActions.removeBackgroundImage());
+            return;
+        }
         // if (isNUllPosition(APosition) || isNUllPosition(BPosition)) {
         //     message.warn('A or B position is not setting.');
         //     return;
@@ -81,7 +83,7 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
         const machinePositionY = (Math.round((parseFloat(workPosition.y) - y) * 1000) / 1000);
         // const machinePositionZ = (Math.round((parseFloat(workPosition.z) - z) * 1000) / 1000);
         // const machinePositionB = (Math.round((parseFloat(workPosition.b) - b) * 1000) / 1000);
-        server.setWorkOrigin(machinePositionX, machinePositionY, 0, 0);
+        server.setWorkOrigin(machinePositionX, machinePositionY);
     };
     const settingDone = () => {
         props.onClose();
@@ -92,7 +94,6 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
         setTitle: function () { return null; }
     };
     const numberformat = (value) => (typeof value === 'undefined' ? '--' : value);
-    const toXYPoint = (position) => (isRotate ? `(${numberformat(position.b)}, ${numberformat(position.y)})` : `(${numberformat(position.x)}, ${numberformat(position.y)})`);
 
     return (
         <div className={classNames(
@@ -109,7 +110,26 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
                 {isConnectedRay
                 && (<Alert className="width-percent-100 border-radius-8" message="Use the control panel to position points A and B on the machine. Please do not move the print head manually." type="warning" showIcon />
                 )}
-                <div className="justify-space-between"><span>A: {toXYPoint(APosition)}</span> <span>B: {toXYPoint(BPosition)}</span></div>
+                <div className={classNames(styles['abposition-grid-container'])}>
+                    <div className={classNames(styles['abposition-grid-item'], styles['abposition-point'])}>A</div>
+                    <div className={classNames(styles['abposition-grid-item'])}>
+                        <span className={classNames(styles['abposition-number'])}>{numberformat(APosition.x)}</span><br />
+                        <span className={classNames(styles['abposition-unit'])}>mm</span>
+                    </div>
+                    <div className={classNames(styles['abposition-grid-item'])}>
+                        <span className={classNames(styles['abposition-number'])}>{numberformat(APosition.y)}</span><br />
+                        <span className={classNames(styles['abposition-unit'])}>mm</span>
+                    </div>
+                    <div className={classNames(styles['abposition-grid-item'], styles['abposition-point'])}>B</div>
+                    <div className={classNames(styles['abposition-grid-item'])}>
+                        <span className={classNames(styles['abposition-number'])}>{numberformat(BPosition.x)}</span><br />
+                        <span className={classNames(styles['abposition-unit'])}>mm</span>
+                    </div>
+                    <div className={classNames(styles['abposition-grid-item'])}>
+                        <span className={classNames(styles['abposition-number'])}>{numberformat(BPosition.y)}</span><br />
+                        <span className={classNames(styles['abposition-unit'])}>mm</span>
+                    </div>
+                </div>
                 <LaserToolControl withoutTips />
                 <div className="">
                     <ConnectionControl widgetId="control" widgetActions={widgetActions} isNotInWorkspace />

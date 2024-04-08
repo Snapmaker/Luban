@@ -189,7 +189,7 @@ export class MachineAgent extends EventEmitter {
         });
     }
 
-    public setWorkOrigin(xPosition, yPosition, zPosition, bPosition) {
+    public setWorkOrigin(xPosition, yPosition, zPosition?, bPosition?) {
         controller.emitEvent(SocketEvent.SetOrigin, { xPosition, yPosition, zPosition, bPosition });
     }
 

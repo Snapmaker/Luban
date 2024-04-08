@@ -298,7 +298,6 @@ export const actions = {
                     }));
                 }
 
-                console.log('pos', pos);
                 if (pos) {
                     if (pos.isFourAxis) {
                         if (

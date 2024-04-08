@@ -715,7 +715,7 @@ class MarlinController extends EventEmitter {
                     this.command(null, 'gcode:stop');
                 }
             }
-        }, 1000);
+        }, 300);
     }
 
     destroy() {

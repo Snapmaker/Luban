@@ -1301,9 +1301,18 @@ class SacpChannelBase extends Channel implements
 
     public setWorkOrigin = async ({ xPosition, yPosition, zPosition, bPosition }) => {
         log.info(`position: ${xPosition}, ${yPosition}, ${zPosition}, ${bPosition}`);
-        const coordinateInfos = [new CoordinateInfo(Direction.X1, 0), new CoordinateInfo(Direction.Y1, 0), new CoordinateInfo(Direction.Z1, 0)];
+        const coordinateInfos = [];
+        if (xPosition) {
+            coordinateInfos.push(new CoordinateInfo(Direction.X1, xPosition));
+        }
+        if (yPosition) {
+            coordinateInfos.push(new CoordinateInfo(Direction.Y1, yPosition));
+        }
+        if (zPosition) {
+            coordinateInfos.push(new CoordinateInfo(Direction.Z1, zPosition));
+        }
         if (bPosition) {
-            coordinateInfos.push(new CoordinateInfo(Direction.B1, 0));
+            coordinateInfos.push(new CoordinateInfo(Direction.B1, bPosition));
         }
         await this.sacpClient.setWorkOrigin(coordinateInfos).then(res => {
             log.info(`Set Work Origin: ${res.data}`);

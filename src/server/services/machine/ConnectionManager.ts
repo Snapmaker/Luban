@@ -895,7 +895,7 @@ M3`;
             this.channel.command(socket, {
                 cmd: 'gcode:pause',
             });
-            socket && socket.emit(eventName, {});
+            socket && socket.emit(eventName, { err: true });
         }
     };
 
@@ -1319,7 +1319,12 @@ M3`;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.setWorkOrigin({ xPosition, yPosition, zPosition, bPosition });
         } else {
-            await this.executeGcode(socket, { gcode: `G92 X${xPosition || 0} Y${yPosition || 0} Z${zPosition || 0} B${bPosition || 0}` });
+            let gcode = 'G92 ';
+            xPosition && (gcode += `X${xPosition || 0} `);
+            yPosition && (gcode += `Y${yPosition || 0}  `);
+            zPosition && (gcode += `Z${zPosition || 0} `);
+            bPosition && (gcode += `B${bPosition || 0} `);
+            await this.executeGcode(socket, { gcode });
             callback && callback();
         }
     };

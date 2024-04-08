@@ -1,9 +1,11 @@
-import { cloneDeep, noop } from 'lodash';
+import { cloneDeep, isUndefined, noop } from 'lodash';
 import * as THREE from 'three';
 import { Group } from 'three';
 
 import { timestamp } from '../../../shared/lib/random-utils';
 import {
+    ABPositionOverlayID,
+    ABpositionMaskID,
     COORDINATE_MODE_BOTTOM_CENTER,
     COORDINATE_MODE_BOTTOM_LEFT,
     COORDINATE_MODE_CENTER,
@@ -11,7 +13,9 @@ import {
     DISPLAYED_TYPE_MODEL,
     HEAD_LASER,
     // MACHINE_TOOL_HEADS,
-    PAGE_EDITOR
+    PAGE_EDITOR,
+    PointAID,
+    PointBID
 } from '../../constants';
 import {
     CylinderWorkpieceSize,
@@ -295,6 +299,136 @@ export const actions = {
         };
     },
 
+    // ABPosition
+    createABPositionBackgroundOverlay: (width, height, dx, dy) => (dispatch, getState) => {
+        const state = getState().laser;
+        // dispatch(editorActions.changeCoordinateMode(HEAD_LASER, COORDINATE_MODE_BOTTOM_LEFT));
+        const { SVGActions } = state;
+        const coordinateMode = COORDINATE_MODE_BOTTOM_LEFT; // const { coordinateMode } = state;
+        const positionX = (dx + width / 2) * coordinateMode.setting.sizeMultiplyFactor.x;
+        const positionY = (dy + height / 2) * coordinateMode.setting.sizeMultiplyFactor.y;
+        const svgEl = SVGActions.addSvgBackgroundToSVG({
+            modelID: ABPositionOverlayID,
+            transformation: {
+                width: width,
+                height: height,
+                positionX,
+                positionY
+            }
+        });
+        const backgroundOverlay = actions.getABPositionBackgroundOverlay();
+        backgroundOverlay.setAttribute('fill-opacity', '1');
+        getCanvasimgFromSvg(backgroundOverlay, width, height);
+        console.log('$$ svgEl', svgEl, positionX, positionY, width, height, dx, dy, coordinateMode);
+        return backgroundOverlay;
+    },
+    getABPositionBackgroundOverlay: () => {
+        const backgroundOverlay = document.querySelector(`#${ABPositionOverlayID}`);
+        // if (!backgroundOverlay) {
+        //     backgroundOverlay = actions.createABPositionBackgroundOverlay();
+        // }
+        return backgroundOverlay;
+    },
+    createABpositionMask: (x?, y?, width?, height?, withHighLine?: boolean) => {
+        const backgroundOverlay = actions.getABPositionBackgroundOverlay();
+        const mask = createSVGElement({
+            element: 'mask',
+            attr: {
+                id: 'background-overlay-mask',
+                x: '0',
+                y: '0',
+                width: '100%',
+                height: '100%',
+                'fill-opacity': '1'
+            }
+        });
+        const maskGlobal = createSVGElement({
+            element: 'rect',
+            attr: {
+                fill: 'white',
+                width: '100%',
+                height: '100%',
+                'fill-opacity': '1'
+            }
+        });
+        mask.appendChild(maskGlobal);
+        const rectTarget = createSVGElement({
+            element: 'rect',
+            attr: {
+                id: ABpositionMaskID,
+                width: '100%',
+                height: '100%',
+                fill: '#c7c7c7',
+                mask: 'url(#background-overlay-mask)',
+                'fill-opacity': '0.3'
+            }
+        });
+        backgroundOverlay.appendChild(mask);
+        backgroundOverlay.appendChild(rectTarget);
+
+        if (isUndefined(x) || isUndefined(y) || isUndefined(width) || isUndefined(height)) return;
+        const maskTarget = createSVGElement({
+            element: 'rect',
+            attr: {
+                // x: targetX,
+                // y: height - (targetY + targetHeight),
+                // width: targetWidth,
+                // height: targetHeight,
+                x,
+                y,
+                width,
+                height,
+                fill: 'black',
+                'fill-opacity': '1'
+            }
+        });
+        mask.appendChild(maskTarget);
+
+        if (withHighLine) {
+            const hightLineTarget = createSVGElement({
+                element: 'rect',
+                attr: {
+                    x,
+                    y,
+                    width,
+                    height,
+                    fill: 'none',
+                    'fill-opacity': '1',
+                    stroke: '#47D700',
+                    'stroke-dasharray': '4,4'
+                }
+            });
+            backgroundOverlay.appendChild(hightLineTarget);
+        }
+    },
+    setABPositionPoint: (position: {x: number, y: number, id?: string}, tagColor: string = '#242424', tagLength: number = 3) => {
+        let point = document.querySelector(`#${position.id}`);
+        const backgroundOverlay = actions.getABPositionBackgroundOverlay();
+        console.log('setABPositionPoint', position);
+        if (!point) {
+            point = createSVGElement({
+                element: 'path',
+                attr: {
+                    id: position.id,
+                    stroke: tagColor,
+                    d: `M${position.x - tagLength},${position.y} L${position.x + tagLength},${position.y}  M${position.x},${position.y - tagLength} L${position.x},${position.y + tagLength}`,
+                    'stroke-width': '0.5'
+                }
+
+            });
+            backgroundOverlay.appendChild(point);
+        } else {
+            point.setAttribute('d', `M${position.x - tagLength},${position.y} L${position.x + tagLength},${position.y}  M${position.x},${position.y - tagLength} L${position.x},${position.y + tagLength}`);
+            point.setAttribute('stroke', tagColor);
+        }
+    },
+    updateABPositionMask: (x?, y?, width?, height?, withHighLine?: boolean) => {
+        const backgroundOverlay = actions.getABPositionBackgroundOverlay();
+        backgroundOverlay.querySelector('mask')?.remove();
+        backgroundOverlay.querySelector(`#${ABpositionMaskID}`)?.remove();
+        actions.createABpositionMask(x, y, width, height, withHighLine);
+    },
+
 
     afterBackgroundSet: (dispatch, state, textureSource, width, height, dx, dy) => {
         let texture;
@@ -363,68 +497,25 @@ export const actions = {
             });
             actions.afterBackgroundSet(dispatch, state, filename, width, height, dx, dy);
         } else {
-            const { APosition, BPosition } = ABCoordinate;
+            let { APosition, BPosition } = ABCoordinate;
+            APosition = {
+                x: parseFloat(APosition.x),
+                y: parseFloat(APosition.y)
+            };
+            BPosition = {
+                x: parseFloat(BPosition.x),
+                y: parseFloat(BPosition.y)
+            };
             const { minX: targetX, minY: targetY, width: targetWidth, height: targetHeight } = calculateBoundingBox(APosition, BPosition);
-            const modelID = 'background-overlay';
-            const svgEl = SVGActions.addSvgBackgroundToSVG({
-                modelID,
-                transformation: {
-                    width: width,
-                    height: height,
-                    positionX,
-                    positionY
-                }
-            });
-            console.log('$$', svgEl, positionX, positionY, width, height, dx, dy, coordinateMode);
+            console.log('$$', positionX, positionY, width, height, dx, dy, coordinateMode);
             console.log('$$2', targetX, targetY, targetWidth, targetHeight, APosition, BPosition);
-            const backgroundOverlay = document.querySelector(`#${modelID}`);
-            backgroundOverlay.setAttribute('fill-opacity', '1');
+            const backgroundOverlay = dispatch(actions.createABPositionBackgroundOverlay(width, height, dx, dy));
+            actions.updateABPositionMask(targetX, height - (targetY + targetHeight), targetWidth, targetHeight, true);
 
-            const mask = createSVGElement({
-                element: 'mask',
-                attr: {
-                    id: 'background-overlay-mask',
-                    x: '0',
-                    y: '0',
-                    width: '100%',
-                    height: '100%',
-                    'fill-opacity': '1'
-                }
-            });
-            const maskGlobal = createSVGElement({
-                element: 'rect',
-                attr: {
-                    fill: 'white',
-                    width: '100%',
-                    height: '100%',
-                    'fill-opacity': '1'
-                }
-            });
-            const maskTarget = createSVGElement({
-                element: 'rect',
-                attr: {
-                    x: targetX,
-                    y: height - (targetY + targetHeight),
-                    width: targetWidth,
-                    height: targetHeight,
-                    fill: 'black',
-                    'fill-opacity': '1'
-                }
-            });
-            mask.appendChild(maskGlobal);
-            mask.appendChild(maskTarget);
-            const rectTarget = createSVGElement({
-                element: 'rect',
-                attr: {
-                    width: '100%',
-                    height: '100%',
-                    fill: '#c7c7c7',
-                    mask: 'url(#background-overlay-mask)',
-                    'fill-opacity': '0.3'
-                }
-            });
-            backgroundOverlay.appendChild(mask);
-            backgroundOverlay.appendChild(rectTarget);
+            const actuallyPointAY = height - APosition.y;
+            const actuallyPointBY = height - BPosition.y;
+            actions.setABPositionPoint({ x: APosition.x, y: actuallyPointAY, id: PointAID });
+            actions.setABPositionPoint({ x: BPosition.x, y: actuallyPointBY, id: PointBID });
 
             getCanvasimgFromSvg(backgroundOverlay, width, height)
                 .then(canvasimg => actions.afterBackgroundSet(dispatch, state, canvasimg, width, height, dx, dy));
@@ -572,23 +663,68 @@ export const actions = {
         return defaultDefinition;
     },
 
-    updateIsOnABPosition: (isOnABPosition) => {
-        return {
+    updateIsOnABPosition: (isOnABPosition) => (dispatch, getState) => {
+        const backgroundOverlay = actions.getABPositionBackgroundOverlay();
+        if (isOnABPosition && !backgroundOverlay) {
+            const { size } = getState().machine;
+            dispatch(actions.createABPositionBackgroundOverlay(size.x, size.y, 0, 0));
+            actions.createABpositionMask();
+            dispatch(editorActions.changeCoordinateMode(HEAD_LASER, COORDINATE_MODE_BOTTOM_LEFT));
+            getCanvasimgFromSvg(backgroundOverlay, size.x, size.y)
+                .then(canvasimg => actions.afterBackgroundSet(dispatch, getState.laser, canvasimg, size.x, size.y, 0, 0));
+        }
+        dispatch({
             type: ACTION_UPDATE_STATE,
             state: { isOnABPosition }
-        };
+        });
     },
-    updateAPosition: ({ x, y, z, b }: any) => {
-        return {
+    updateAPosition: ({ x, y, z, b }: any) => (dispatch, getState) => {
+        const { size } = getState().machine;
+        const backgroundOverlay = actions.getABPositionBackgroundOverlay();
+        if (!backgroundOverlay) {
+            dispatch(actions.createABPositionBackgroundOverlay(size.x, size.y, 0, 0));
+        }
+        actions.setABPositionPoint({ x: parseFloat(x), y: size.y - parseFloat(y), id: PointAID }, '#FF5759');
+        const { BPosition } = getState().laser;
+        const notSetB = isUndefined(BPosition.y) || isUndefined(BPosition.x);
+        if (!notSetB) {
+            actions.setABPositionPoint({ x: parseFloat(BPosition.x), y: size.y - parseFloat(BPosition.y), id: PointBID });
+            const {
+                minX: targetX,
+                minY: targetY,
+                width: targetWidth,
+                height: targetHeight
+            } = calculateBoundingBox({ x: parseFloat(x), y: parseFloat(y) }, BPosition);
+            actions.updateABPositionMask(targetX, size.y - (targetY + targetHeight), targetWidth, targetHeight);
+        }
+        dispatch({
             type: ACTION_UPDATE_STATE,
-            state: { APosition: { x, y, z, b } }
-        };
+            state: { APosition: { x: parseFloat(x), y: parseFloat(y), z: parseFloat(z), b: parseFloat(b) } }
+        });
     },
-    updateBPosition: ({ x, y, z, b }: any) => {
-        return {
+    updateBPosition: ({ x, y, z, b }: any) => (dispatch, getState) => {
+        const { size } = getState().machine;
+        const { APosition } = getState().laser;
+        const backgroundOverlay = actions.getABPositionBackgroundOverlay();
+        if (!backgroundOverlay) {
+            dispatch(actions.createABPositionBackgroundOverlay(size.x, size.y, 0, 0));
+        }
+        actions.setABPositionPoint({ x: parseFloat(x), y: size.y - parseFloat(y), id: PointBID }, '#FF5759');
+        const notSetA = isUndefined(APosition.y) || isUndefined(APosition.x);
+        if (!notSetA) {
+            actions.setABPositionPoint({ x: parseFloat(APosition.x), y: size.y - parseFloat(APosition.y), id: PointAID });
+            const {
+                minX: targetX,
+                minY: targetY,
+                width: targetWidth,
+                height: targetHeight
+            } = calculateBoundingBox(APosition, { x: parseFloat(x), y: parseFloat(y) });
+            actions.updateABPositionMask(targetX, size.y - (targetY + targetHeight), targetWidth, targetHeight);
+        }
+        dispatch({
             type: ACTION_UPDATE_STATE,
-            state: { BPosition: { x, y, z, b } }
-        };
+            state: { BPosition: { x: parseFloat(x), y: parseFloat(y), z: parseFloat(z), b: parseFloat(b) } }
+        });
     },
     updateEnableABPositionShortcut: (enableABPositionShortcut) => {
         return {
