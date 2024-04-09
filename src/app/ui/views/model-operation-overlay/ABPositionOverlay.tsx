@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import React, { useEffect, useState } from 'react';
 import { Alert, Button } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
-import { includes, isUndefined } from 'lodash';
+import { includes, isNull, isUndefined } from 'lodash';
 import styles from './styles.styl';
 import i18n from '../../../lib/i18n';
 import ConnectionControl from '../../widgets/ConnectionControl/index';
@@ -21,8 +21,8 @@ interface ABPositionOverlayProps {
 }
 
 const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
-    const { size, isRotate } = useSelector((state: RootState) => state.machine);
-    const { APosition, BPosition } = useSelector((state: RootState) => state.laser);
+    const { size } = useSelector((state: RootState) => state.machine);
+    const { APosition, BPosition, materials } = useSelector((state: RootState) => state.laser);
     const { workPosition, originOffset, activeMachine } = useSelector((state: RootState) => state.workspace);
     const server: MachineAgent = useSelector((state: RootState) => state.workspace.server);
     const dispatch = useDispatch();
@@ -57,8 +57,9 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
 
 
     const setSvgBackground = () => {
-        const notSetA = isUndefined(APosition.y) || (!isRotate && isUndefined(APosition.x)) || (isRotate && isUndefined(APosition.b));
-        const notSetB = isUndefined(BPosition.y) || (!isRotate && isUndefined(BPosition.x)) || (isRotate && isUndefined(BPosition.b));
+        const isNoSet = (v) => (isUndefined(v) || Number.isNaN(v) || isNull(v));
+        const notSetA = isNoSet(APosition.y) || (!materials.isRotate && isNoSet(APosition.x)) || (materials.isRotate && isNoSet(APosition.b));
+        const notSetB = isNoSet(BPosition.y) || (!materials.isRotate && isNoSet(BPosition.x)) || (materials.isRotate && isNoSet(BPosition.b));
         if (notSetA || notSetB) {
             dispatch(laserActions.removeBackgroundImage());
             return;

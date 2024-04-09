@@ -234,10 +234,12 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
         imgOF3axisCoordinateMode = `/resources/images/cnc-laser/working-origin-3-${selectedOrigin.reference}.png`;
     }
 
-    let settingSizeDisabled = false;
-    if (useBackground || useABPosition) {
-        settingSizeDisabled = true;
-    }
+    const [settingSizeDisabled, setSettingSizeDisabled] = useState(false);
+    useEffect(() => {
+        if (useBackground || useABPosition) {
+            setSettingSizeDisabled(true);
+        }
+    }, [useBackground, useABPosition]);
 
     const dispatch = useDispatch();
     useImperativeHandle(ref, () => {

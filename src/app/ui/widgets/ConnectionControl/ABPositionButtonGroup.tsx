@@ -7,9 +7,11 @@ import i18n from '../../../lib/i18n';
 import { Button } from '../../components/Buttons';
 import TipTrigger from '../../components/TipTrigger';
 import { actions as laserActions } from '../../../flux/laser';
+import { actions as editorActions } from '../../../flux/editor';
+
 import controller from '../../../communication/socket-communication';
 import SocketEvent from '../../../communication/socket-events';
-import { MotorPowerMode } from '../../../constants';
+import { HEAD_LASER, MotorPowerMode } from '../../../constants';
 // import { RootState } from '../../../flux/index.def';
 // import { L2WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
 // import { ConnectionType } from '../../../flux/workspace/state';
@@ -103,6 +105,9 @@ const ABPositionButtonGroup = (props) => {
                         // actions.setWorkOrigin();
                         dispatch(laserActions.updateAPosition({}));
                         dispatch(laserActions.updateBPosition({}));
+                        dispatch(editorActions.updateState(HEAD_LASER, {
+                            useABPosition: false
+                        }));
                         dispatch(laserActions.removeBackgroundImage());
                         controller
                             .emitEvent(SocketEvent.SetMotorPowerMode, { setMotorPowerHoldMod: MotorPowerMode.SHUTAll });
