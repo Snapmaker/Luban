@@ -40,7 +40,7 @@ import MachineNetworkModal from './modals/MachineNetworkModal';
 import MachineSettingsModal from './modals/MachineSettingsModal';
 import MachineControlModal from './modals/MachineControlModal';
 import MachineMonitor from './MachineMonitor';
-import MotorPowerHoldControlWiget from '../../widgets/MotorPowerHoldControl';
+// import MotorPowerHoldControlWiget from '../../widgets/MotorPowerHoldControl';
 
 
 const allWidgets = {
@@ -51,7 +51,7 @@ const allWidgets = {
     'enclosure': EnclosureWidget,
     'ray-machining': RayMachiningWidget,
     'job-status': JobStatusWidget,
-    'moto-power-hold-control': MotorPowerHoldControlWiget
+    // 'moto-power-hold-control': MotorPowerHoldControlWiget
 };
 
 
@@ -73,7 +73,7 @@ interface WorkspaceRightViewProps {
 const WorkspaceRightView: React.FC<WorkspaceRightViewProps> = (props) => {
     const { listActions, controlActions } = props;
 
-    const rightWidgetNames = ['connection', 'ray-machining', 'job-status', 'moto-power-hold-control'];
+    const rightWidgetNames = ['connection', 'ray-machining', 'job-status'];
 
     return (
         <div

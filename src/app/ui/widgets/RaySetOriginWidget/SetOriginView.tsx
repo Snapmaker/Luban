@@ -17,7 +17,7 @@ import log from '../../../lib/log';
 import ControlPanel from '../ConnectionControl/Control';
 import RunBoundaryModal from './modals/RunBoundaryModal';
 import HomeTipModal from './modals/HomeTipModal';
-import { SetupCoordinateMethod } from '../../../constants';
+import { MotorPowerMode, SetupCoordinateMethod } from '../../../constants';
 
 export const getRunBoundaryCode = (
     axisWorkRange: AxisWorkRange,
@@ -149,14 +149,53 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
         dispatch(workspaceActions.updateState({ setupCoordinateMethod: value }));
     };
 
-    const onChangeCoordinateMode = useCallback((e: RadioChangeEvent) => {
-        console.log('setSetupCoordinateMethod', e.target.value, isHomed);
+    // Motor hold Mode
+    const turnOnHoldMotorPower = async () => {
+        return new Promise((resolve) => {
+            controller
+                .emitEvent(SocketEvent.SetMotorPowerMode, { setMotorPowerHoldMod: MotorPowerMode.STAYPOWER })
+                .once(SocketEvent.SetMotorPowerMode, (result) => {
+                    resolve(result);
+                });
+        });
+    };
+    const turnOffHoldMotorPower = async () => {
+        return new Promise((resolve) => {
+            controller
+                .emitEvent(SocketEvent.SetMotorPowerMode, { setMotorPowerHoldMod: MotorPowerMode.SHUTAll })
+                .once(SocketEvent.SetMotorPowerMode, (result) => {
+                    resolve(result);
+                });
+        });
+    };
+    const getMotorPowerHoldMode = async () => {
+        return new Promise((resolve) => {
+            controller
+                .emitEvent(SocketEvent.SetMotorPowerMode, { setMotorPowerHoldMod: MotorPowerMode.GETCURRENTMODE })
+                .once(SocketEvent.SetMotorPowerMode, (result) => {
+                    resolve(result.result);
+                });
+        });
+    };
+    const onChangeCoordinateMode = useCallback((e: any | RadioChangeEvent) => {
         if (e.target.value === SetupCoordinateMethod.ByControlPanel && !isHomed) {
             setShowHomeTip(true);
         } else {
+            turnOffHoldMotorPower();
             setSetupCoordinateMethod(e.target.value);
         }
     }, [isHomed]);
+
+    useEffect(() => {
+        if (isConnected) {
+            console.log('---------------------');
+            getMotorPowerHoldMode().then((result) => {
+                console.log('result, ', result);
+                const mode = result !== MotorPowerMode.STAYPOWER ? SetupCoordinateMethod.Manually : SetupCoordinateMethod.ByControlPanel;
+                onChangeCoordinateMode({ target: { value: mode } });
+            });
+        }
+    }, [isConnected]);
 
     // run boundary state
     const [runBoundaryUploading, setRunBoundaryUploading] = useState(false);
@@ -216,6 +255,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
     }, [dispatch]);
 
     const setControlPanelCoordinateMethod = () => {
+        turnOnHoldMotorPower();
         onClickGoHome();
         setSetupCoordinateMethod(SetupCoordinateMethod.ByControlPanel);
     };

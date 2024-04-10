@@ -15,7 +15,6 @@ const MotorPowerHoldControl = () => {
             controller
                 .emitEvent(SocketEvent.SetMotorPowerMode, { setMotorPowerHoldMod: MotorPowerMode.STAYPOWER })
                 .once(SocketEvent.SetMotorPowerMode, (result) => {
-                    console.log('SetMotorPowerMode workspace');
                     resolve(result);
                 });
         });
@@ -25,7 +24,6 @@ const MotorPowerHoldControl = () => {
             controller
                 .emitEvent(SocketEvent.SetMotorPowerMode, { setMotorPowerHoldMod: MotorPowerMode.SHUTAll })
                 .once(SocketEvent.SetMotorPowerMode, (result) => {
-                    console.log('SetMotorPowerMode workspace off');
                     resolve(result);
                 });
         });
@@ -35,7 +33,6 @@ const MotorPowerHoldControl = () => {
             controller
                 .emitEvent(SocketEvent.SetMotorPowerMode, { setMotorPowerHoldMod: MotorPowerMode.GETCURRENTMODE })
                 .once(SocketEvent.SetMotorPowerMode, (result) => {
-                    console.log('SetMotorPowerMode workspace');
                     resolve(result.result);
                 });
         });
@@ -50,7 +47,6 @@ const MotorPowerHoldControl = () => {
         }
 
         const res = await getMotorPowerHoldMode();
-        console.log('get', res);
         setIsHoldMode(res === MotorPowerMode.STAYPOWER);
     };
 
@@ -71,24 +67,6 @@ const MotorPowerHoldControl = () => {
                     onChange={onChange}
                     disabled={false}
                 />
-                {/* <Button
-                    type="default"
-                    priority="level-three"
-                    width="96px"
-                    className="display-inline"
-                    onClick={turnOnHoldMotorPower}
-                >
-                    {i18n._('Turn On')}
-                </Button>
-                <Button
-                    type="default"
-                    priority="level-three"
-                    width="96px"
-                    className="display-inline margin-left-4"
-                    onClick={turnOffHoldMotorPower}
-                >
-                    {i18n._('Turn Off')}
-                </Button> */}
             </div>
         </div>
     );
