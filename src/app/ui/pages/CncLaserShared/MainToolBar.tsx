@@ -30,7 +30,7 @@ import LaserSetBackground from '../../widgets/LaserSetBackground';
 import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
 
 function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setShowWorkspace, onChangeSVGClippingMode, onChangeABPositionMode }) {
-    const isOnABPosition = useSelector((state: RootState) => state.laser?.isOnABPosition);
+    const { isOnABPosition, APosition, BPosition } = useSelector((state: RootState) => state.laser);
 
     const size = useSelector((state: RootState) => state.machine?.size);
     const unSaved = useSelector((state: RootState) => state.project[headType]?.unSaved, shallowEqual);
@@ -409,6 +409,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                 disabled: headType !== 'laser' || !canABPosition || !includes([WorkflowStatus.Idle], workflowStatus),
                 name: 'ABPosition',
                 action: () => {
+                    dispatch(laserActions.updateABpositionBackground(APosition, BPosition));
                     onChangeABPositionMode();
                     dispatch(laserActions.updateIsOnABPosition(!isOnABPosition));
                 }

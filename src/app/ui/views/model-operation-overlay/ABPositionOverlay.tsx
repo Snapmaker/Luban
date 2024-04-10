@@ -24,7 +24,7 @@ interface ABPositionOverlayProps {
 
 const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
     const { size } = useSelector((state: RootState) => state.machine);
-    const { APosition, BPosition, materials } = useSelector((state: RootState) => state.laser);
+    const { tmpAPosition, tmpBPosition, materials } = useSelector((state: RootState) => state.laser);
     const { workPosition, originOffset, activeMachine, isHomed } = useSelector((state: RootState) => state.workspace);
     const server: MachineAgent = useSelector((state: RootState) => state.workspace.server);
     const dispatch = useDispatch();
@@ -70,25 +70,17 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
 
     const setSvgBackground = () => {
         const isNoSet = (v) => (isUndefined(v) || Number.isNaN(v) || isNull(v));
-        const notSetA = isNoSet(APosition.y) || (!materials.isRotate && isNoSet(APosition.x)) || (materials.isRotate && isNoSet(APosition.b));
-        const notSetB = isNoSet(BPosition.y) || (!materials.isRotate && isNoSet(BPosition.x)) || (materials.isRotate && isNoSet(BPosition.b));
+        const notSetA = isNoSet(tmpAPosition.y) || (!materials.isRotate && isNoSet(tmpAPosition.x)) || (materials.isRotate && isNoSet(tmpAPosition.b));
+        const notSetB = isNoSet(tmpBPosition.y) || (!materials.isRotate && isNoSet(tmpBPosition.x)) || (materials.isRotate && isNoSet(tmpBPosition.b));
         if (notSetA || notSetB) {
             dispatch(laserActions.removeBackgroundImage());
             return;
         }
-        // if (isNUllPosition(APosition) || isNUllPosition(BPosition)) {
-        //     message.warn('A or B position is not setting.');
-        //     return;
-        // }
-        // if (isSamePosition(APosition, BPosition)) {
-        //     message.warn('The positions A and B are identical. Please select two different positions.');
-        //     return;
-        // }
-        console.log(`width: ${size.x}, height: ${size.y}`);
+
         dispatch(editorActions.updateState(HEAD_LASER, {
             useABPosition: true
         }));
-        dispatch(laserActions.setBackgroundImage('', size.x, size.y, 0, 0, { APosition, BPosition }));
+        dispatch(laserActions.setBackgroundImage('', size.x, size.y, 0, 0, { APosition: tmpAPosition, BPosition: tmpBPosition }));
 
 
         const { x, y, } = originOffset;
@@ -97,6 +89,8 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
         // const machinePositionZ = (Math.round((parseFloat(workPosition.z) - z) * 1000) / 1000);
         // const machinePositionB = (Math.round((parseFloat(workPosition.b) - b) * 1000) / 1000);
         server.setWorkOrigin(machinePositionX, machinePositionY);
+        dispatch(laserActions.updateAPosition(tmpAPosition));
+        dispatch(laserActions.updateBPosition(tmpBPosition));
     };
     const settingDone = () => {
         props.onClose();
@@ -127,20 +121,20 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
                     <div className={classNames(styles['abposition-grid-container'])}>
                         <div className={classNames(styles['abposition-grid-item'], styles['abposition-point'])}>A</div>
                         <div className={classNames(styles['abposition-grid-item'])}>
-                            <span className={classNames(styles['abposition-number'])}>{numberformat(APosition.x)}</span><br />
+                            <span className={classNames(styles['abposition-number'])}>{numberformat(tmpAPosition.x)}</span><br />
                             <span className={classNames(styles['abposition-unit'])}>mm</span>
                         </div>
                         <div className={classNames(styles['abposition-grid-item'])}>
-                            <span className={classNames(styles['abposition-number'])}>{numberformat(APosition.y)}</span><br />
+                            <span className={classNames(styles['abposition-number'])}>{numberformat(tmpAPosition.y)}</span><br />
                             <span className={classNames(styles['abposition-unit'])}>mm</span>
                         </div>
                         <div className={classNames(styles['abposition-grid-item'], styles['abposition-point'])}>B</div>
                         <div className={classNames(styles['abposition-grid-item'])}>
-                            <span className={classNames(styles['abposition-number'])}>{numberformat(BPosition.x)}</span><br />
+                            <span className={classNames(styles['abposition-number'])}>{numberformat(tmpBPosition.x)}</span><br />
                             <span className={classNames(styles['abposition-unit'])}>mm</span>
                         </div>
                         <div className={classNames(styles['abposition-grid-item'])}>
-                            <span className={classNames(styles['abposition-number'])}>{numberformat(BPosition.y)}</span><br />
+                            <span className={classNames(styles['abposition-number'])}>{numberformat(tmpBPosition.y)}</span><br />
                             <span className={classNames(styles['abposition-unit'])}>mm</span>
                         </div>
                     </div>

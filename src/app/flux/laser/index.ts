@@ -1,4 +1,4 @@
-import { cloneDeep, isUndefined, noop } from 'lodash';
+import { cloneDeep, isNull, isUndefined, noop } from 'lodash';
 import * as THREE from 'three';
 import { Group } from 'three';
 
@@ -180,8 +180,10 @@ const INITIAL_STATE = {
 
     // A-B Position
     isOnABPosition: false,
-    APosition: {}, // { x: 255, y: 155, z: 0, b: 0 },
-    BPosition: {}, // { x: 325, y: 85, z: 0, b: 0 },
+    APosition: {},
+    BPosition: {},
+    tmpAPosition: {},
+    tmpBPosition: {},
     enableABPositionShortcut: false,
     useABPosition: false
 };
@@ -229,6 +231,13 @@ const getCanvasimgFromSvg = async (svg, width, height) => {
         img.src = `data:image/svg+xml,${encodeURIComponent(svgHtml)}`;
     });
 };
+
+interface Position {
+    x?: number;
+    y?: number;
+    z?: number;
+    b?: number;
+}
 
 export const actions = {
     // TODO: init should be  re-called
@@ -428,6 +437,82 @@ export const actions = {
         backgroundOverlay.querySelector(`#${ABpositionMaskID}`)?.remove();
         actions.createABpositionMask(x, y, width, height, withHighLine);
     },
+    updateABpositionBackground: (APosition: Position, BPosition: Position) => (dispatch, getState) => {
+        const { materials } = getState()?.laser;
+        const isNoSet = (v) => (isUndefined(v) || Number.isNaN(v) || isNull(v));
+        const notSetA = isNoSet(APosition.y) || (!materials.isRotate && isNoSet(APosition.x)) || (materials.isRotate && isNoSet(APosition.b));
+        const notSetB = isNoSet(BPosition.y) || (!materials.isRotate && isNoSet(BPosition.x)) || (materials.isRotate && isNoSet(BPosition.b));
+        if (notSetA || notSetB) {
+            dispatch(actions.removeBackgroundImage());
+            return;
+        }
+        const { x: width, y: height } = materials;
+        const { minX: targetX, minY: targetY, width: targetWidth, height: targetHeight } = calculateBoundingBox(APosition, BPosition);
+
+        dispatch(actions.createABPositionBackgroundOverlay(width, height, 0, 0));
+        actions.updateABPositionMask(targetX, height - (targetY + targetHeight), targetWidth, targetHeight, true);
+
+        const actuallyPointAY = height - APosition.y;
+        const actuallyPointBY = height - BPosition.y;
+        actions.setABPositionPoint({ x: APosition.x, y: actuallyPointAY, id: PointAID });
+        actions.setABPositionPoint({ x: BPosition.x, y: actuallyPointBY, id: PointBID });
+    },
+
+    updateIsOnABPosition: (isOnABPosition) => (dispatch, getState) => {
+        const backgroundOverlay = actions.getABPositionBackgroundOverlay();
+        if (isOnABPosition && !backgroundOverlay) {
+            const { size } = getState().machine;
+            dispatch(actions.createABPositionBackgroundOverlay(size.x, size.y, 0, 0));
+            actions.createABpositionMask();
+            dispatch(editorActions.changeCoordinateMode(HEAD_LASER, COORDINATE_MODE_BOTTOM_LEFT));
+            getCanvasimgFromSvg(backgroundOverlay, size.x, size.y)
+                .then(canvasimg => actions.afterBackgroundSet(dispatch, getState.laser, canvasimg, size.x, size.y, 0, 0));
+        }
+        dispatch({
+            type: ACTION_UPDATE_STATE,
+            state: { isOnABPosition }
+        });
+    },
+    _updatePosition: (position: Position, type: string) => {
+        return {
+            type: ACTION_UPDATE_STATE,
+            state: { [type]: position }
+        };
+    },
+    updateAPosition: (position: Position) => actions._updatePosition(position, 'APosition'),
+    updateBPosition: (position: Position) => actions._updatePosition(position, 'BPosition'),
+    _updateTmpPosition: (position: Position, type: 'tmpAPosition' | 'tmpBPosition') => (dispatch, getState) => {
+        const { x, y } = position;
+        const id = type === 'tmpAPosition' ? PointAID : PointBID;
+        const anOtherPointId = type === 'tmpAPosition' ? PointBID : PointAID;
+        const { size } = getState().machine;
+
+        const anotherTmpPosition = type === 'tmpAPosition' ? getState().laser.tmpBPosition : getState().laser.tmpAPosition;
+
+        const backgroundOverlay = actions.getABPositionBackgroundOverlay();
+        if (!backgroundOverlay) {
+            dispatch(actions.createABPositionBackgroundOverlay(size.x, size.y, 0, 0));
+        }
+        actions.setABPositionPoint({ x: x, y: size.y - y, id: id }, '#FF5759');
+        const notSetAnotherPoint = isUndefined(anotherTmpPosition.y) || isUndefined(anotherTmpPosition.x);
+        if (!notSetAnotherPoint) {
+            actions.setABPositionPoint({ x: anotherTmpPosition.x, y: size.y - anotherTmpPosition.y, id: anOtherPointId });
+            const {
+                minX: targetX,
+                minY: targetY,
+                width: targetWidth,
+                height: targetHeight
+            } = calculateBoundingBox(anotherTmpPosition, { x: x, y: y });
+            actions.updateABPositionMask(targetX, size.y - (targetY + targetHeight), targetWidth, targetHeight);
+        }
+
+        dispatch({
+            type: ACTION_UPDATE_STATE,
+            state: { [type]: position }
+        });
+    },
+    updateTmpAposition: (position: Position) => actions._updateTmpPosition(position, 'tmpAPosition'),
+    updateTmpBposition: (position: Position) => actions._updateTmpPosition(position, 'tmpBPosition'),
 
 
     afterBackgroundSet: (dispatch, state, textureSource, width, height, dx, dy) => {
@@ -663,69 +748,6 @@ export const actions = {
         return defaultDefinition;
     },
 
-    updateIsOnABPosition: (isOnABPosition) => (dispatch, getState) => {
-        const backgroundOverlay = actions.getABPositionBackgroundOverlay();
-        if (isOnABPosition && !backgroundOverlay) {
-            const { size } = getState().machine;
-            dispatch(actions.createABPositionBackgroundOverlay(size.x, size.y, 0, 0));
-            actions.createABpositionMask();
-            dispatch(editorActions.changeCoordinateMode(HEAD_LASER, COORDINATE_MODE_BOTTOM_LEFT));
-            getCanvasimgFromSvg(backgroundOverlay, size.x, size.y)
-                .then(canvasimg => actions.afterBackgroundSet(dispatch, getState.laser, canvasimg, size.x, size.y, 0, 0));
-        }
-        dispatch({
-            type: ACTION_UPDATE_STATE,
-            state: { isOnABPosition }
-        });
-    },
-    updateAPosition: ({ x, y, z, b }: any) => (dispatch, getState) => {
-        const { size } = getState().machine;
-        const backgroundOverlay = actions.getABPositionBackgroundOverlay();
-        if (!backgroundOverlay) {
-            dispatch(actions.createABPositionBackgroundOverlay(size.x, size.y, 0, 0));
-        }
-        actions.setABPositionPoint({ x: parseFloat(x), y: size.y - parseFloat(y), id: PointAID }, '#FF5759');
-        const { BPosition } = getState().laser;
-        const notSetB = isUndefined(BPosition.y) || isUndefined(BPosition.x);
-        if (!notSetB) {
-            actions.setABPositionPoint({ x: parseFloat(BPosition.x), y: size.y - parseFloat(BPosition.y), id: PointBID });
-            const {
-                minX: targetX,
-                minY: targetY,
-                width: targetWidth,
-                height: targetHeight
-            } = calculateBoundingBox({ x: parseFloat(x), y: parseFloat(y) }, BPosition);
-            actions.updateABPositionMask(targetX, size.y - (targetY + targetHeight), targetWidth, targetHeight);
-        }
-        dispatch({
-            type: ACTION_UPDATE_STATE,
-            state: { APosition: { x: parseFloat(x), y: parseFloat(y), z: parseFloat(z), b: parseFloat(b) } }
-        });
-    },
-    updateBPosition: ({ x, y, z, b }: any) => (dispatch, getState) => {
-        const { size } = getState().machine;
-        const { APosition } = getState().laser;
-        const backgroundOverlay = actions.getABPositionBackgroundOverlay();
-        if (!backgroundOverlay) {
-            dispatch(actions.createABPositionBackgroundOverlay(size.x, size.y, 0, 0));
-        }
-        actions.setABPositionPoint({ x: parseFloat(x), y: size.y - parseFloat(y), id: PointBID }, '#FF5759');
-        const notSetA = isUndefined(APosition.y) || isUndefined(APosition.x);
-        if (!notSetA) {
-            actions.setABPositionPoint({ x: parseFloat(APosition.x), y: size.y - parseFloat(APosition.y), id: PointAID });
-            const {
-                minX: targetX,
-                minY: targetY,
-                width: targetWidth,
-                height: targetHeight
-            } = calculateBoundingBox(APosition, { x: parseFloat(x), y: parseFloat(y) });
-            actions.updateABPositionMask(targetX, size.y - (targetY + targetHeight), targetWidth, targetHeight);
-        }
-        dispatch({
-            type: ACTION_UPDATE_STATE,
-            state: { BPosition: { x: parseFloat(x), y: parseFloat(y), z: parseFloat(z), b: parseFloat(b) } }
-        });
-    },
     updateEnableABPositionShortcut: (enableABPositionShortcut) => {
         return {
             type: ACTION_UPDATE_STATE,
