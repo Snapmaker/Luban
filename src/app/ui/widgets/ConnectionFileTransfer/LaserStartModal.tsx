@@ -45,6 +45,7 @@ const LaserStartModal: React.FC<LaserStartModalProps> = ({
     const supportSemiMode = includes([
         standardLaserToolHead.identifier,
         highPower10WLaserToolHead.identifier,
+        L2WLaserToolModule.identifier
     ], toolHeadIdentifier);
 
     useEffect(() => {
@@ -149,7 +150,7 @@ const LaserStartModal: React.FC<LaserStartModalProps> = ({
                     </div>
                 </div>
             ),
-            display: supportSemiMode || (isSerialConnect && L2WLaserToolModule),
+            display: supportSemiMode,
             disable: {
                 isRotate: true,
                 // isHeightPower: true,

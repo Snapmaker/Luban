@@ -1,4 +1,4 @@
-import { Machine } from '@snapmaker/luban-platform';
+import { Machine, WorkflowStatus } from '@snapmaker/luban-platform';
 import { message } from 'antd';
 import i18next from 'i18next';
 import { includes } from 'lodash';
@@ -52,6 +52,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         headType: workspaceHeadType,
         toolHead: workspaceToolHead,
         isRotate: workspaceIsRotate,
+        workflowStatus
     } = useSelector((state: RootState) => state.workspace);
 
 
@@ -405,7 +406,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             leftItems.push({
                 title: i18n._('key-CncLaser/MainToolBar-A-B Position'),
                 type: 'button',
-                disabled: headType !== 'laser' || !canABPosition,
+                disabled: headType !== 'laser' || !canABPosition || !includes([WorkflowStatus.Idle], workflowStatus),
                 name: 'ABPosition',
                 action: () => {
                     onChangeABPositionMode();
