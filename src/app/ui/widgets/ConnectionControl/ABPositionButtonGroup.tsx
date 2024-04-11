@@ -11,7 +11,7 @@ import { actions as editorActions } from '../../../flux/editor';
 import { HEAD_LASER } from '../../../constants';
 
 const ABPositionButtonGroup = (props) => {
-    const { state, workPosition, originOffset } = props;
+    const { state, workPosition, originOffset, canABPosition } = props;
     const { canClick } = state;
     const { x, y, z, b } = originOffset;
     const dispatch = useDispatch();
@@ -44,7 +44,7 @@ const ABPositionButtonGroup = (props) => {
                     className="margin-bottom-8 display-block"
                     priority="level-three"
                     onClick={storeAPosition}
-                    disabled={!canClick}
+                    disabled={!canClick || !canABPosition}
                 >
                     {i18n._('key-Laser/Control/ABPositionButton-Set A position')}
                 </Button>
@@ -56,7 +56,7 @@ const ABPositionButtonGroup = (props) => {
                     className="margin-bottom-8 display-block"
                     priority="level-three"
                     onClick={storeBPosition}
-                    disabled={!canClick}
+                    disabled={!canClick || !canABPosition}
                 >
                     {i18n._('key-Laser/Control/ABPositionButton-Set B position')}
                 </Button>

@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Button } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
 import { includes, isNull, isUndefined } from 'lodash';
+import { WorkflowStatus } from '@snapmaker/luban-platform';
 import styles from './styles.styl';
 import i18n from '../../../lib/i18n';
 import ConnectionControl from '../../widgets/ConnectionControl/index';
@@ -23,12 +24,23 @@ interface ABPositionOverlayProps {
 }
 
 const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
-    const { size } = useSelector((state: RootState) => state.machine);
+    const { size, activeMachine } = useSelector((state: RootState) => state.machine);
     const { tmpAPosition, tmpBPosition, materials } = useSelector((state: RootState) => state.laser);
-    const { workPosition, originOffset, activeMachine, isHomed } = useSelector((state: RootState) => state.workspace);
+    const {
+        workPosition,
+        originOffset,
+        isHomed,
+        isConnected,
+        headType,
+        machineIdentifier,
+        workflowStatus
+    } = useSelector((state: RootState) => state.workspace);
     const server: MachineAgent = useSelector((state: RootState) => state.workspace.server);
     const dispatch = useDispatch();
     const [isConnectedRay, setIsConnectedRay] = useState(false);
+    const canABPosition = useCallback(() => {
+        return isConnected && machineIdentifier === activeMachine.identifier && headType === HEAD_LASER && WorkflowStatus.Idle === workflowStatus;
+    }, [isConnected, machineIdentifier, activeMachine, headType, workflowStatus]);
 
     // Home Tip Modal state
     const [showHomeTip, setShowHomeTip] = useState(false);
@@ -44,12 +56,12 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
         });
     };
     useEffect(() => {
-        if (!activeMachine) {
+        if (!machineIdentifier) {
             setIsConnectedRay(false);
             return;
         }
-        setIsConnectedRay(includes([SnapmakerRayMachine.identifier], activeMachine.identifier));
-    }, [activeMachine]);
+        setIsConnectedRay(includes([SnapmakerRayMachine.identifier], machineIdentifier));
+    }, [machineIdentifier]);
 
     useEffect(() => {
         if (isHomed) {
@@ -138,25 +150,36 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
                             <span className={classNames(styles['abposition-unit'])}>mm</span>
                         </div>
                     </div>
-                    <LaserToolControl withoutTips />
+                    {canABPosition() && <LaserToolControl withoutTips />}
                     <div className="">
-                        <ConnectionControl widgetId="control" widgetActions={widgetActions} isNotInWorkspace />
+                        <ConnectionControl canABPosition={canABPosition()} widgetId="control" widgetActions={widgetActions} isNotInWorkspace />
                     </div>
                 </div>
                 <div className="background-grey-3 padding-vertical-8 sm-flex padding-horizontal-16 justify-space-between border-radius-bottom-8 sm-flex justify-flex-end">
+
+                    <Button
+                        type="default"
+                        priority="level-two"
+                        className={classNames('border-radius-8', 'margin-right-8')}
+                        width="96px"
+                        onClick={() => props.onClose()}
+                    >
+                        {i18n._('key-Modal/Common-Cancel')}
+                    </Button>
                     <Button
                         className={classNames(styles['ab-position-done-btn'])}
                         onClick={settingDone}
                         priority="level-two"
                         width="96px"
-                        type="default"
+                        type="primary"
+                        disabled={!canABPosition()}
                     >
                         {i18n._('key-Modal/Common-Done')}
                     </Button>
                 </div>
             </div>
             {/* Go Home tip */
-                showHomeTip && (
+                isConnectedRay && showHomeTip && (
                     <HomeTipModal onClose={() => setShowHomeTip(false)} onOk={setControlPanelCoordinateMethod} />
                 )
             }

@@ -1,4 +1,4 @@
-import { Machine, WorkflowStatus } from '@snapmaker/luban-platform';
+import { Machine } from '@snapmaker/luban-platform';
 import { message } from 'antd';
 import i18next from 'i18next';
 import { includes } from 'lodash';
@@ -51,8 +51,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         machineIdentifier: connectedMachineIdentifier,
         headType: workspaceHeadType,
         toolHead: workspaceToolHead,
-        isRotate: workspaceIsRotate,
-        workflowStatus
+        isRotate: workspaceIsRotate
     } = useSelector((state: RootState) => state.workspace);
 
 
@@ -401,12 +400,15 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                 }
             },);
 
-        if (!isOriginalSeries && includes([L2WLaserToolModule.identifier, L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], workspaceToolHead)) {
-            const canABPosition = isConnected && connectedMachineIdentifier === activeMachine.identifier && workspaceHeadType === HEAD_LASER;
+        if (
+            !isOriginalSeries
+            && includes([L2WLaserToolModule.identifier, L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], machineToolHead.laserToolhead)
+        ) {
+            // const canABPosition = isConnected && connectedMachineIdentifier === activeMachine.identifier && workspaceHeadType === HEAD_LASER;
             leftItems.push({
                 title: i18n._('key-CncLaser/MainToolBar-A-B Position'),
                 type: 'button',
-                disabled: headType !== 'laser' || !canABPosition || !includes([WorkflowStatus.Idle], workflowStatus),
+                disabled: headType !== 'laser', // || !canABPosition || !includes([WorkflowStatus.Idle], workflowStatus),
                 name: 'ABPosition',
                 action: () => {
                     dispatch(laserActions.updateABpositionBackground(APosition, BPosition));

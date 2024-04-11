@@ -74,6 +74,7 @@ interface VisualizerProps {
 
     isOnABPosition: boolean
     updateIsOnABPosition: (isOnABPosition: boolean) => void
+    updateABpositionBackground: (APosition: any, BPosition: any) => void
 }
 
 
@@ -171,7 +172,9 @@ class Visualizer extends React.Component<VisualizerProps> {
         }),
 
         pageMode: PropTypes.string.isRequired,
-        setPageMode: PropTypes.func.isRequired
+        setPageMode: PropTypes.func.isRequired,
+        APosition: PropTypes.object.isRequired,
+        BPosition: PropTypes.object.isRequired,
     };
 
     private contextMenuRef = React.createRef();
@@ -750,6 +753,7 @@ class Visualizer extends React.Component<VisualizerProps> {
                         <div className={styles['visualizer-Overlay-left']}>
                             <ABPositionOverlay
                                 onClose={() => {
+                                    this.props.updateABpositionBackground(this.props.APosition, this.props.BPosition);
                                     this.props.setPageMode(PageMode.Default);
                                     this.props.updateIsOnABPosition(false);
                                 }}
@@ -778,6 +782,7 @@ const mapStateToProps = (state, ownProps) => {
         isChangedAfterGcodeGenerating, renderingTimestamp, stage, progress,
         coordinateMode, coordinateSize,
         enableShortcut, isOverSize, SVGCanvasMode, SVGCanvasExt,
+        APosition, BPosition
     } = state.laser;
 
     const workpiece: Workpiece = state.laser.workpiece;
@@ -824,7 +829,9 @@ const mapStateToProps = (state, ownProps) => {
         SVGCanvasMode,
         SVGCanvasExt,
         showSVGShapeLibrary,
-        isOnABPosition
+        isOnABPosition,
+        APosition,
+        BPosition
     };
 };
 
@@ -896,7 +903,9 @@ const mapDispatchToProps = (dispatch) => {
         // onModelTransform: () => dispatch(editorActions.onModelTransform('laser')),
         // onModelAfterTransform: () => dispatch(editorActions.onModelAfterTransform('laser'))
 
-        updateIsOnABPosition: (isOnABPosition: boolean) => dispatch(laserActions.updateIsOnABPosition(isOnABPosition))
+        updateIsOnABPosition: (isOnABPosition: boolean) => dispatch(laserActions.updateIsOnABPosition(isOnABPosition)),
+        updateABpositionBackground: (APosition, BPosition) => dispatch(laserActions.updateABpositionBackground(APosition, BPosition))
+
     };
 };
 

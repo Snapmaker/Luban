@@ -66,9 +66,10 @@ declare interface ConnectionControlProps {
     widgetId: string;
     isNotInWorkspace?: boolean
     runBoundary?: () => void
+    canABPosition?: boolean
 }
 
-const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace, runBoundary }) => {
+const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace, runBoundary, canABPosition }) => {
     const dispatch = useDispatch();
 
     const { widgets } = useSelector((state: RootState) => state.widget);
@@ -487,6 +488,7 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace,
                 executeGcode={actions.executeGcode}
                 isNotInWorkspace={isNotInWorkspace}
                 runBoundary={runBoundary}
+                canABPosition={canABPosition}
             />
         </div>
     );
