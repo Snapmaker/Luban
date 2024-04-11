@@ -328,7 +328,7 @@ export const actions = {
         const backgroundOverlay = actions.getABPositionBackgroundOverlay();
         backgroundOverlay.setAttribute('fill-opacity', '1');
         getCanvasimgFromSvg(backgroundOverlay, width, height);
-        console.log('$$ svgEl', svgEl, positionX, positionY, width, height, dx, dy, coordinateMode);
+        console.log('$$ svgEl', backgroundOverlay, svgEl, positionX, positionY, width, height, dx, dy, coordinateMode);
         return backgroundOverlay;
     },
     getABPositionBackgroundOverlay: () => {
@@ -459,14 +459,14 @@ export const actions = {
     },
 
     updateIsOnABPosition: (isOnABPosition) => (dispatch, getState) => {
-        const backgroundOverlay = actions.getABPositionBackgroundOverlay();
+        let backgroundOverlay = actions.getABPositionBackgroundOverlay();
         if (isOnABPosition && !backgroundOverlay) {
             const { size } = getState().machine;
-            dispatch(actions.createABPositionBackgroundOverlay(size.x, size.y, 0, 0));
+            backgroundOverlay = dispatch(actions.createABPositionBackgroundOverlay(size.x, size.y, 0, 0));
             actions.createABpositionMask();
             dispatch(editorActions.changeCoordinateMode(HEAD_LASER, COORDINATE_MODE_BOTTOM_LEFT));
             getCanvasimgFromSvg(backgroundOverlay, size.x, size.y)
-                .then(canvasimg => actions.afterBackgroundSet(dispatch, getState.laser, canvasimg, size.x, size.y, 0, 0));
+                .then(canvasimg => actions.afterBackgroundSet(dispatch, getState().laser, canvasimg, size.x, size.y, 0, 0));
         }
         dispatch({
             type: ACTION_UPDATE_STATE,
@@ -511,8 +511,8 @@ export const actions = {
             state: { [type]: position }
         });
     },
-    updateTmpAposition: (position: Position) => actions._updateTmpPosition(position, 'tmpAPosition'),
-    updateTmpBposition: (position: Position) => actions._updateTmpPosition(position, 'tmpBPosition'),
+    updateTmpAPosition: (position: Position) => actions._updateTmpPosition(position, 'tmpAPosition'),
+    updateTmpBPosition: (position: Position) => actions._updateTmpPosition(position, 'tmpBPosition'),
 
 
     afterBackgroundSet: (dispatch, state, textureSource, width, height, dx, dy) => {
@@ -551,6 +551,7 @@ export const actions = {
 
         // Force origin mode to be workpiece bottom left
         const origin: Origin = state.origin;
+        console.log(origin.type, OriginType.Workpiece, origin.reference, RectangleWorkpieceReference.BottomLeft);
         if (!(origin.type === OriginType.Workpiece && origin.reference === RectangleWorkpieceReference.BottomLeft)) {
             dispatch(editorActions.setOrigin(HEAD_LASER, {
                 type: OriginType.Workpiece,

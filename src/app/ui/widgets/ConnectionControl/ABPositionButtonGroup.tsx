@@ -22,7 +22,7 @@ const ABPositionButtonGroup = (props) => {
         const machinePositionY = (Math.round((parseFloat(workPosition.y) - y) * 1000) / 1000 + offsetY);
         const machinePositionZ = (Math.round((parseFloat(workPosition.z) - z) * 1000) / 1000 + offsetZ);
         const machinePositionB = (Math.round((parseFloat(workPosition.b) - b) * 1000) / 1000 + offsetB);
-        dispatch(laserActions.updateTmpAposition({ x: machinePositionX, y: machinePositionY, z: machinePositionZ, b: machinePositionB }));
+        dispatch(laserActions.updateTmpAPosition({ x: machinePositionX, y: machinePositionY, z: machinePositionZ, b: machinePositionB }));
         console.log('$$$ setAPosition', workPosition, { x: machinePositionX, y: machinePositionY, z: machinePositionZ, b: machinePositionB });
     };
     const storeBPosition = () => {
@@ -30,7 +30,7 @@ const ABPositionButtonGroup = (props) => {
         const machinePositionY = (Math.round((parseFloat(workPosition.y) - y) * 1000) / 1000 + offsetY);
         const machinePositionZ = (Math.round((parseFloat(workPosition.z) - z) * 1000) / 1000 + offsetZ);
         const machinePositionB = (Math.round((parseFloat(workPosition.b) - b) * 1000) / 1000 + offsetB);
-        dispatch(laserActions.updateTmpBposition({ x: machinePositionX, y: machinePositionY, z: machinePositionZ, b: machinePositionB }));
+        dispatch(laserActions.updateTmpBPosition({ x: machinePositionX, y: machinePositionY, z: machinePositionZ, b: machinePositionB }));
         console.log('$$$ setBPosition', workPosition, originOffset, { x: machinePositionX, y: machinePositionY, z: machinePositionZ, b: machinePositionB });
     };
 
@@ -72,6 +72,8 @@ const ABPositionButtonGroup = (props) => {
                         // actions.setWorkOrigin();
                         dispatch(laserActions.updateAPosition({}));
                         dispatch(laserActions.updateBPosition({}));
+                        dispatch(laserActions.updateTmpAPosition({}));
+                        dispatch(laserActions.updateTmpBPosition({}));
                         dispatch(editorActions.updateState(HEAD_LASER, {
                             useABPosition: false
                         }));

@@ -8,6 +8,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import * as THREE from 'three';
 import { includes } from 'lodash';
+import { toast } from 'react-toastify';
 import { humanReadableTime } from '../../../lib/time-utils';
 
 import {
@@ -38,8 +39,10 @@ import PrintablePlate from './PrintablePlate';
 import Rendering from './Rendering';
 import ToolHead from './ToolHead';
 import { SnapmakerA150Machine, SnapmakerA250Machine, SnapmakerA350Machine, SnapmakerArtisanMachine, SnapmakerOriginalMachine } from '../../../machines';
-import { L2WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
+import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
 import { ConnectionType } from '../../../flux/workspace/state';
+import SocketEvent from '../../../communication/socket-events';
+import { makeSceneToast } from '../../views/toasts/SceneToast';
 
 
 class Visualizer extends React.PureComponent {
@@ -299,6 +302,18 @@ class Visualizer extends React.PureComponent {
                     // server.setWorkOrigin(x + 21.7, y - 12.3);
                 }
 
+                // Hard code: for artisan turn off crossihair
+                if (includes([SnapmakerArtisanMachine.identifier], activeMachine.identifier)
+                    && includes([L2WLaserToolModule.identifier, L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], toolHead)
+                ) {
+                    controller
+                        .emitEvent(SocketEvent.TurnOffCrosshair)
+                        .once(SocketEvent.TurnOffCrosshair, ({ err }) => {
+                            if (err) {
+                                toast(makeSceneToast('info', i18n._('Failed to turn on crosshair.')));
+                            }
+                        });
+                }
                 log.info('Start to run G-code...');
                 server.startServerGcode({
                     headType,
