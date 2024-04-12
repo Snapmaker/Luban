@@ -570,10 +570,34 @@ export const getLaserCaseConfigFor2WModule = () => {
             tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
             title: 'Metal Tag',
             mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
-            imgSrc: '../../resources/images/user-case/Laser-2w/2w_msw.png',
+            imgSrc: '../../resources/images/user-case/Laser-2w/2w-metal.png',
             pathConfig: {
                 isDatastoragePath: true,
                 path: './UserCase/laser/2w_laser_module/make_something_wonderful.snaplzr',
+                name: 'make_something_wonderful.snaplzr'
+            }
+        },
+        {
+            tag: '3DP',
+            tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
+            title: 'Metal Tag',
+            mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
+            imgSrc: '../../resources/images/user-case/Laser-2w/2w-plastics.png',
+            pathConfig: {
+                isDatastoragePath: true,
+                path: './UserCase/laser/2w_laser_module/Dolphin.snaplzr',
+                name: 'Dolphin.snaplzr'
+            }
+        },
+        {
+            tag: 'laser',
+            tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
+            title: 'Metal Tag',
+            mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
+            imgSrc: '../../resources/images/user-case/Laser-2w/2w-plastics.png',
+            pathConfig: {
+                isDatastoragePath: true,
+                path: './UserCase/laser/2w_laser_module/Block_Pendant.snaplzr',
                 name: 'make_something_wonderful.snaplzr'
             }
         },
