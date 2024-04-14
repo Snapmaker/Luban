@@ -178,8 +178,12 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
         });
     };
     const onChangeCoordinateMode = useCallback((e: any | RadioChangeEvent) => {
-        if (e.target.value === SetupCoordinateMethod.ByControlPanel && !isHomed) {
-            setShowHomeTip(true);
+        if (e.target.value === SetupCoordinateMethod.ByControlPanel) {
+            if (!isHomed) {
+                setShowHomeTip(true);
+                return;
+            }
+            setSetupCoordinateMethod(SetupCoordinateMethod.ByControlPanel);
         } else {
             turnOffHoldMotorPower();
             setSetupCoordinateMethod(e.target.value);
@@ -190,7 +194,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
         if (isConnected) {
             console.log('---------------------');
             getMotorPowerHoldMode().then((result) => {
-                console.log('result, ', result);
+                console.log('result, ', result, result !== MotorPowerMode.STAYPOWER, typeof result, typeof MotorPowerMode.STAYPOWER, MotorPowerMode.STAYPOWER, isHomed);
                 const mode = result !== MotorPowerMode.STAYPOWER ? SetupCoordinateMethod.Manually : SetupCoordinateMethod.ByControlPanel;
                 onChangeCoordinateMode({ target: { value: mode } });
             });
@@ -325,7 +329,13 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
 
             {/* Go Home tip */
                 showHomeTip && (
-                    <HomeTipModal onClose={() => setShowHomeTip(false)} onOk={setControlPanelCoordinateMethod} />
+                    <HomeTipModal
+                        onClose={() => setShowHomeTip(false)}
+                        onOk={() => {
+                            setControlPanelCoordinateMethod();
+                            setShowHomeTip(false);
+                        }}
+                    />
                 )
             }
         </div>

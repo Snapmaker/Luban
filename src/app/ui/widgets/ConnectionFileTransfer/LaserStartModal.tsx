@@ -1,5 +1,5 @@
 import { Alert, Tooltip } from 'antd';
-import { includes, isString, isUndefined } from 'lodash';
+import { includes, isString, isUndefined, round } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
 import { Trans } from 'react-i18next';
@@ -38,7 +38,7 @@ const LaserStartModal: React.FC<LaserStartModalProps> = ({
 }) => {
     const [selectedValue, setSelectedValue] = useState(MANUAL_MODE);
     const { size } = useSelector(state => state?.machine);
-    const { materialThickness, toolHead, activeMachine, connectionType } = useSelector(state => state?.workspace);
+    const { materialThickness, toolHead, activeMachine, connectionType, crosshairOffset } = useSelector(state => state?.workspace);
     const dispatch = useDispatch();
 
 
@@ -189,9 +189,21 @@ const LaserStartModal: React.FC<LaserStartModalProps> = ({
                 {i18n._('key-Workspace/LaserStartJob-Select Mode')}
             </Modal.Header>
             <Modal.Body>
-                {includes([L2WLaserToolModule.identifier], toolHead)
+                {
+                    includes([L2WLaserToolModule.identifier], toolHead)
                 && connectionType === ConnectionType.Serial
-                && includes([SnapmakerA350Machine.identifier, SnapmakerA250Machine.identifier, SnapmakerA150Machine.identifier], activeMachine.identifier) && <Alert className="width-percent-100 border-radius-8" message="After printing with the 2W red light extruder connected via serial, there will change the work origin beacuse. Please be aware of this issue." type="warning" showIcon />}
+                && includes([SnapmakerA350Machine.identifier, SnapmakerA250Machine.identifier, SnapmakerA150Machine.identifier], activeMachine.identifier)
+                && (
+                    <Alert
+                        className="width-percent-100 border-radius-8"
+                        message={
+                            i18n._('Key-Workspace/LaserStart-offset-warning-After printing with the 2W red light extruder connected via serial, the working origin may be changed (X offset {{ xOffset }}, Y offset {{ yOffset }}). Please be aware of this issue when performing repeated engravings.', { xOffset: round(crosshairOffset.x, 2), yOffset: round(crosshairOffset.y, 2) })
+                        }
+                        type="warning"
+                        showIcon
+                    />
+                )
+                }
                 <Radio.Group
                     style={{ display: 'flex', flexDirection: 'column' }}
                     onChange={onChange}

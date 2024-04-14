@@ -556,10 +556,18 @@ export const actions = {
                         ...m
                     };
                 });
-                console.log('new moduleList1', newModuleList);
                 dispatch(actions.updateState({
                     moduleList: newModuleList,
                 }));
+
+                // Update for laserFocalLength
+                moduleList.forEach(m => {
+                    if (m.laserFocalLength) {
+                        dispatch(actions.updateState({
+                            laserFocalLength: m.laserFocalLength,
+                        }));
+                    }
+                });
 
                 // update cnc spindleSpeed
                 const CNCToolHead = moduleList.find(m => MODULEID_TOOLHEAD_MAP[m.moduleId] === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2

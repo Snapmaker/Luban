@@ -34,6 +34,7 @@ import LaserStartModal from './LaserStartModal';
 import PreviewToRunJobModal from './PreviewToRunJobModal';
 import PreviewModal, { visualizerGroup } from './modals/GCodeFilePreviewModal';
 import styles from './styles.styl';
+import { L2WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
 
 const cancelRequestEvent = new CustomEvent('cancelReq');
 
@@ -419,7 +420,9 @@ const WifiTransport: React.FC<FileTransferViewProps> = (props) => {
                 break;
             case SEMI_AUTO_MODE:
                 isLaserAutoFocus = false;
-                await dispatch(workspaceActions.updateIsLaserPrintAutoMode(toolHeadName !== LEVEL_TWO_POWER_LASER_FOR_SM2));
+                await dispatch(workspaceActions.updateIsLaserPrintAutoMode(!includes([
+                    LEVEL_TWO_POWER_LASER_FOR_SM2, L2WLaserToolModule.identifier
+                ], toolHeadName)));
                 break;
             case MANUAL_MODE:
                 isLaserAutoFocus = false;

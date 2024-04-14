@@ -180,7 +180,13 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
             </div>
             {/* Go Home tip */
                 isConnectedRay && showHomeTip && (
-                    <HomeTipModal onClose={() => setShowHomeTip(false)} onOk={setControlPanelCoordinateMethod} />
+                    <HomeTipModal
+                        onClose={() => { setShowHomeTip(false); props.onClose(); }}
+                        onOk={() => {
+                            setControlPanelCoordinateMethod();
+                            setShowHomeTip(false);
+                        }}
+                    />
                 )
             }
         </>

@@ -659,7 +659,7 @@ class ConnectionManager {
                         && !isRotate && isLaserPrintAutoMode && materialThickness !== 0 && materialThicknessSource === AUTO_STRING) {
                         await this.channel.laseAutoSetMaterialHeight({ toolHead });
                     }
-                    if (((toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isLaserPrintAutoMode)
+                    if (((includes([LEVEL_TWO_POWER_LASER_FOR_SM2, L2WLaserToolModule.identifier], toolHead) && !isLaserPrintAutoMode)
                         || (toolHead === LEVEL_ONE_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode))
                         && ((materialThickness !== 0 && materialThickness !== -1) || isRotate)) {
                         await this.channel.laserSetWorkHeight({ toolHead, materialThickness, isRotate });
@@ -688,7 +688,7 @@ class ConnectionManager {
                     }
 
                     if (!isRotate) {
-                        if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                        if (includes([LEVEL_TWO_POWER_LASER_FOR_SM2, L2WLaserToolModule.identifier], toolHead)) {
                             let promise;
                             if (materialThickness === -1) {
                                 promise = this.channel.executeGcode('G0 Z0 F1500;');
@@ -697,10 +697,9 @@ class ConnectionManager {
                             }
                             promises.push(promise);
                         } else {
-                            console.log('start gode =========1=========', isLaserPrintAutoMode);
                             let promise;
                             if (isLaserPrintAutoMode) {
-                                promise = this.channel.executeGcode(`G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`);
+                                promise = this.channel.executeGcode(`G53;\n G0 Z${laserFocalLength + materialThickness} F1500;\n G54;`);
                             } else {
                                 promise = this.channel.executeGcode('G0 Z0 F1500;');
                             }
@@ -772,7 +771,7 @@ class ConnectionManager {
                             });
                         } else {
                             this.channel.command(socket, {
-                                args: [`G53;\nG0 Z${materialThickness + laserFocalLength} ;\nG54;`, null]
+                                args: [['G53', `G0 Z${materialThickness + laserFocalLength}`, 'G54'], null]
                             });
                         }
                     } else {
@@ -781,11 +780,12 @@ class ConnectionManager {
                         });
                     }
                 }
+                // Fixme: setTimeout cause some commands to be dropped
                 setTimeout(() => {
                     this.channel.command(socket, {
                         cmd: 'gcode:start',
                     });
-                }, 100);
+                }, 200);
                 socket && socket.emit(eventName, {});
             }
         }
