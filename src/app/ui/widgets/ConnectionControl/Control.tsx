@@ -237,7 +237,7 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace,
             setState({ ...state, customAngle: _customAngle });
         },
 
-        move: (params = {}) => {
+        move: (params = {}, useGcode) => {
             const sArr = [];
             const s = map(params, (value, axis) => {
                 sArr.push({
@@ -248,8 +248,11 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace,
             }).join(' ');
             if (s) {
                 const gcode = `G0 ${s} F${state.jogSpeed}`;
-                // actions.executeGcode(`G0 ${s} F${state.jogSpeed}`);
-                actions.coordinateMove(gcode, sArr, state.jogSpeed);
+                if (useGcode) {
+                    actions.executeGcode(gcode);
+                } else {
+                    actions.coordinateMove(gcode, sArr, state.jogSpeed);
+                }
             }
         },
         executeGcode: (gcode) => {

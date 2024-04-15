@@ -434,6 +434,8 @@ export const actions = {
                 } else if (!isNil(zFocus)) {
                     compareAndSet(data, currentState, 'laserFocalLength', zFocus + LASER_MOCK_PLATE_HEIGHT);
                 }
+                console.log('laserFocalLength', laserFocalLength, zFocus);
+
                 if (!isNil(laserPower)) {
                     compareAndSet(data, currentState, 'laserPower', laserPower);
                 } else if (!isNil(headPower)) {
@@ -489,7 +491,6 @@ export const actions = {
                     compareAndSet(data, currentState, 'airPurifierFanSpeed', airPurifierFanSpeed);
                     compareAndSet(data, currentState, 'airPurifierFilterHealth', airPurifierFilterHealth);
                 }
-
                 dispatch(baseActions.updateState(data));
 
                 // TODO: wifi emergencyStop goes there

@@ -278,6 +278,7 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
                     <MotionButtonGroup
                         {...props}
                         runBoundary={runBoundary}
+                        isConnectedRay={isConnectedRay}
                     />
                 </div>
             );
@@ -343,7 +344,7 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
                 {renderMotionButtonGroup()}
             </div>
 
-            <JogDistance {...props} />
+            <JogDistance {...props} isConnectedRay={isConnectedRay} />
         </div>
     );
 };

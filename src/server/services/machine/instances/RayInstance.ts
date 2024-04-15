@@ -41,6 +41,7 @@ class RayMachineInstance extends MachineInstance {
 
         // module info
         const moduleInfos = await (this.channel as SacpChannelBase).getModuleInfo();
+        console.log('moduleInfos', moduleInfos);
 
         /*
         moduleInfos = [

@@ -177,18 +177,22 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
                 });
         });
     };
-    const onChangeCoordinateMode = useCallback((e: any | RadioChangeEvent) => {
+    const onChangeCoordinateMode = (e: any | RadioChangeEvent) => {
+        if (!isConnected) {
+            return;
+        }
         if (e.target.value === SetupCoordinateMethod.ByControlPanel) {
             if (!isHomed) {
                 setShowHomeTip(true);
                 return;
             }
+            setShowHomeTip(false);
             setSetupCoordinateMethod(SetupCoordinateMethod.ByControlPanel);
         } else {
             turnOffHoldMotorPower();
             setSetupCoordinateMethod(e.target.value);
         }
-    }, [isHomed]);
+    };
 
     useEffect(() => {
         if (isConnected) {
@@ -199,7 +203,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
                 onChangeCoordinateMode({ target: { value: mode } });
             });
         }
-    }, [isConnected]);
+    }, [isHomed, isConnected]);
 
     // run boundary state
     const [runBoundaryUploading, setRunBoundaryUploading] = useState(false);

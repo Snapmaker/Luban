@@ -1047,7 +1047,7 @@ class SacpChannelBase extends Channel implements
                 b: originCoordinate[4]?.value
             };
             const isHomed = !(coordinateInfos?.homed); // 0: homed, 1: need to home
-            // console.log('pos', pos, 'originOffset', originOffset, isHomed);
+            console.log('pos', pos, 'originOffset', originOffset, isHomed);
             stateData = {
                 ...stateData,
                 pos,
@@ -1180,7 +1180,9 @@ class SacpChannelBase extends Channel implements
                 airPurifierFanSpeed: speedLevel,
                 airPurifierFilterHealth: lifeLevel - 1
             };
+            console.log('airPurifierHasPower', powerState);
         };
+        console.log('airPurifierHasPower');
         this.sacpClient.subscribePurifierInfo({ interval: 1000 }, this.subscribePurifierInfoCallback).then(res => {
             log.info(`subscribe purifier info, ${res.response.result}`);
         });

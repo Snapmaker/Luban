@@ -32,11 +32,13 @@ const MotionButtonGroup = (props) => {
                     <div>
                         <p>{i18n._('key-Workspace/Control/MotionButton-Click to check the boundary of the image to be engraved.')}</p>
                         <br />
-                        <p>
-                            <Trans i18nKey="key-unused-Note: If you are using the CNC Carving Module, make sure the carving bit will not run into the fixtures before you use this feature.">
+                        {!props.isConnectedRay && (
+                            <p>
+                                <Trans i18nKey="key-unused-Note: If you are using the CNC Carving Module, make sure the carving bit will not run into the fixtures before you use this feature.">
                                 Note: If you are using the CNC Carving Module, make sure the carving bit will not run into the fixtures before you use this feature.
-                            </Trans>
-                        </p>
+                                </Trans>
+                            </p>
+                        )}
                     </div>
                 )}
             >
@@ -61,10 +63,14 @@ const MotionButtonGroup = (props) => {
                     className="margin-bottom-8 display-block"
                     priority="level-three"
                     onClick={() => {
-                        if (workPosition.z > 0) {
-                            actions.move({ x: 0, y: 0, b: 0, z: 0 });
+                        if (props.isConnectedRay) {
+                            actions.move({ z: 0, x: 0, y: 0, b: 0 }, true);
                         } else {
-                            actions.move({ z: 0, x: 0, y: 0, b: 0 });
+                            if (workPosition.z > 0) {
+                                actions.move({ x: 0, y: 0, b: 0, z: 0 });
+                            } else {
+                                actions.move({ z: 0, x: 0, y: 0, b: 0 });
+                            }
                         }
                     }}
                     disabled={disabled}
@@ -96,7 +102,8 @@ MotionButtonGroup.propTypes = {
     workPosition: PropTypes.object,
     actions: PropTypes.object,
     runBoundary: PropTypes.func,
-    executeGcode: PropTypes.func
+    executeGcode: PropTypes.func,
+    isConnectedRay: PropTypes.bool
 };
 
 export default MotionButtonGroup;

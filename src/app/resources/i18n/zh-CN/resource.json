@@ -1995,6 +1995,7 @@
     "key-Workspace/Control/JogDistance-Increase custom angle by one unit": "将自定义角度增加一个单位",
     "key-Workspace/Control/JogDistance-Increase custom distance by one unit": "将自定义距离增加一个单位",
     "key-Workspace/Control/JogDistance-XYZ Axis Travel Distance": "XYZ 轴偏移量",
+    "key-Workspace/Control/JogDistance-XY Axis Travel Distance": "XY 轴偏移量",
     "key-Workspace/Control/KeypadOverlay-0.1x Move": "0.1x 移动",
     "key-Workspace/Control/KeypadOverlay-10x Move": "10x 移动",
     "key-Workspace/Control/KeypadOverlay-Alt": "Alt 键",

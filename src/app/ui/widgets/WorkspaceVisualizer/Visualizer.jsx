@@ -291,6 +291,7 @@ class Visualizer extends React.PureComponent {
             } = this.props;
 
 
+            console.log('start gcode', laserFocalLength);
             if (workflowStatus === WorkflowStatus.Idle) {
                 // Fix me?: 2w laser head set origin offset(crosshair offset) before start print
                 const isSnapmaker2 = includes([SnapmakerA350Machine.identifier, SnapmakerA250Machine.identifier, SnapmakerA150Machine.identifier], activeMachine.identifier);

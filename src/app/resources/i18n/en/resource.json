@@ -1993,6 +1993,7 @@
     "key-Workspace/Control/JogDistance-Increase custom angle by one unit": "Increase custom angle by one unit",
     "key-Workspace/Control/JogDistance-Increase custom distance by one unit": "Increase custom distance by one unit",
     "key-Workspace/Control/JogDistance-XYZ Axis Travel Distance": "XYZ Axis Offset",
+    "key-Workspace/Control/JogDistance-XY Axis Travel Distance": "XY Axis Offset",
     "key-Workspace/Control/KeypadOverlay-0.1x Move": "0.1x Move",
     "key-Workspace/Control/KeypadOverlay-10x Move": "10x Move",
     "key-Workspace/Control/KeypadOverlay-Alt": "Alt",
