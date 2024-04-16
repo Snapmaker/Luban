@@ -82,7 +82,7 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
 
     const { headType, toolHead } = useSelector((state: RootState) => state.workspace);
     const server: MachineAgent = useSelector((state: RootState) => state.workspace.server);
-    const { activeMachine } = useSelector((state: RootState) => state.workspace);
+    const { activeMachine, originOffset } = useSelector((state: RootState) => state.workspace);
     const RayWorkArea = { X: 600, Y: 400 };
     const RayWorkAreaOffset = { X: 0, Y: 0 };
 
@@ -104,10 +104,14 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
     const dispatch = useDispatch();
 
     const goHome = useCallback(() => {
-        console.log('isConnectedRay', isConnectedRay);
-        return isConnectedRay
-            ? dispatch(workspaceActions.executeGcode('$H')) as unknown as Promise<void>
-            : dispatch(workspaceActions.executeGcodeAutoHome(true));
+        if (isConnectedRay) {
+            dispatch(workspaceActions.updateState({ isMoving: true }));
+
+            setTimeout(() => { dispatch(workspaceActions.updateState({ isMoving: false })); }, 2000);
+            return dispatch(workspaceActions.executeGcode('$H')) as unknown as Promise<void>;
+        } else {
+            return dispatch(workspaceActions.executeGcodeAutoHome(true));
+        }
     }, [dispatch, workspaceActions, isConnectedRay]);
 
 
@@ -128,8 +132,8 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
             let moveDistance = axisMove * (includes(['X', 'Y', 'Z'], axis) ? step : stepAngle);
 
 
-            const currentPosition = parseFloat(workPosition[axis.toLowerCase()]) + RayWorkAreaOffset[axis];
-            console.log('axis:', axis, currentPosition, moveDistance, RayWorkArea[axis], RayWorkArea[axis] - currentPosition, currentPosition + moveDistance);
+            const currentPosition = parseFloat(workPosition[axis.toLowerCase()]) - parseFloat(originOffset[axis.toLowerCase()]) + RayWorkAreaOffset[axis];
+            console.log('axis:', workPosition, axisMove, step, axis, currentPosition, moveDistance, RayWorkArea[axis], RayWorkArea[axis] - currentPosition, currentPosition + moveDistance);
             if (isConnectedRay && (currentPosition + moveDistance > RayWorkArea[axis])) {
                 // console.log('overplace position !', currentPosition, moveDistance, RayWorkArea[axis]);
                 moveDistance = RayWorkArea[axis] - currentPosition;
@@ -153,7 +157,6 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
             `\nG91\n${gCommand} ${gcodeAxis} F${jogSpeed}\nG90\n`
         ].join('\n');
 
-        console.log(moveOrders, gcode);
         // server.coordinateMove(moveOrders, gcode, jogSpeed, headType);
         server.executeGcode(gcode);
     }, [

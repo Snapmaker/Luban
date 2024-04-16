@@ -23,7 +23,7 @@ export const getRunBoundaryCode = (
     axisWorkRange: AxisWorkRange,
     jobOffsetMode: JobOffsetMode,
     isRotate: boolean = false,
-    setupCoordinateMethod: SetupCoordinateMethod
+    // setupCoordinateMethod: SetupCoordinateMethod
 ) => {
     const useBInsteadOfX = isRotate;
     const gCommand = jobOffsetMode === JobOffsetMode.Crosshair ? 'G1 S0' : 'G1 S10';
@@ -59,11 +59,11 @@ export const getRunBoundaryCode = (
     );
 
     // set current position as origin
-    if (setupCoordinateMethod === SetupCoordinateMethod.Manually) {
-        gcodeList.push(
-            'G92 X0 Y0 B0',
-        );
-    }
+    // if (setupCoordinateMethod === SetupCoordinateMethod.Manually) {
+    //     gcodeList.push(
+    //         'G92 X0 Y0 B0',
+    //     );
+    // }
 
     if (useBInsteadOfX) {
         gcodeList.push(
@@ -75,7 +75,7 @@ export const getRunBoundaryCode = (
             goto(axisWorkRange.min.b, axisWorkRange.min.y),
 
             // go back to origin
-            goto(0, 0),
+            goto(axisWorkRange.min.b + (axisWorkRange.max.b - axisWorkRange.min.b) / 2, axisWorkRange.min.y + (axisWorkRange.max.y - axisWorkRange.min.y) / 2),
         );
     } else {
         gcodeList.push(
@@ -87,7 +87,7 @@ export const getRunBoundaryCode = (
             goto(axisWorkRange.min.x, axisWorkRange.min.y),
 
             // go back to origin
-            goto(0, 0),
+            goto(axisWorkRange.min.x + (axisWorkRange.max.x - axisWorkRange.min.x) / 2, axisWorkRange.min.y + (axisWorkRange.max.y - axisWorkRange.min.y) / 2),
         );
     }
 
