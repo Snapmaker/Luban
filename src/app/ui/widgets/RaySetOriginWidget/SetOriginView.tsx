@@ -334,7 +334,10 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
             {/* Go Home tip */
                 showHomeTip && (
                     <HomeTipModal
-                        onClose={() => setShowHomeTip(false)}
+                        onClose={() => {
+                            onChangeCoordinateMode({ target: { value: SetupCoordinateMethod.Manually } });
+                            setShowHomeTip(false);
+                        }}
                         onOk={() => {
                             setControlPanelCoordinateMethod();
                             setShowHomeTip(false);
