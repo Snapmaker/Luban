@@ -33,7 +33,8 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
         isConnected,
         headType,
         machineIdentifier,
-        workflowStatus
+        workflowStatus,
+        isRotate
     } = useSelector((state: RootState) => state.workspace);
     const server: MachineAgent = useSelector((state: RootState) => state.workspace.server);
     const dispatch = useDispatch();
@@ -64,12 +65,12 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
     }, [machineIdentifier]);
 
     useEffect(() => {
-        if (isHomed) {
+        if (isHomed && !isConnected) {
             return;
         }
         console.log('isHomed', isHomed);
         setShowHomeTip(true);
-    }, [isHomed]);
+    }, [isHomed, isConnected]);
     const goHome = useCallback(async () => {
         return dispatch(workspaceActions.executeGcode('$H')) as unknown as Promise<void>;
     }, [dispatch]);
@@ -179,7 +180,7 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
                 </div>
             </div>
             {/* Go Home tip */
-                isConnectedRay && showHomeTip && (
+                !isRotate && isConnectedRay && showHomeTip && (
                     <HomeTipModal
                         onClose={() => { setShowHomeTip(false); props.onClose(); }}
                         onOk={() => {

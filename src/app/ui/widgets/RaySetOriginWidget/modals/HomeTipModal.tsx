@@ -36,7 +36,7 @@ const HomeTipModal: React.FC<HomeTipModalProps> = (props) => {
                     width="96px"
                     onClick={() => onClose && onClose()}
                 >
-                    {i18n._('key-Modal/Common-Cancel')}
+                    {i18n._('Close')}
                 </Button>
                 <Button
                     type="primary"

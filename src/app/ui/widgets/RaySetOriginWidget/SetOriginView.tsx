@@ -141,6 +141,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
         }
     }, [setDisplay, isConnected, workflowStatus]);
 
+
     // Home Tip Modal state
     const [showHomeTip, setShowHomeTip] = useState(false);
 
@@ -195,7 +196,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
     };
 
     useEffect(() => {
-        if (isConnected) {
+        if (isConnected && !isRotate) {
             console.log('---------------------');
             getMotorPowerHoldMode().then((result) => {
                 console.log('result, ', result, result !== MotorPowerMode.STAYPOWER, typeof result, typeof MotorPowerMode.STAYPOWER, MotorPowerMode.STAYPOWER, isHomed);
@@ -203,7 +204,12 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
                 onChangeCoordinateMode({ target: { value: mode } });
             });
         }
-    }, [isHomed, isConnected]);
+    }, [isHomed, isConnected, isRotate]);
+    useEffect(() => {
+        if (isRotate) {
+            turnOffHoldMotorPower();
+        }
+    }, [isRotate]);
 
     // run boundary state
     const [runBoundaryUploading, setRunBoundaryUploading] = useState(false);
@@ -278,7 +284,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
                             <span className="display-block color-black-3">{i18n._('You need to manually move the toolhead to the desired XY work origin.')}</span>
                         </Radio>
                         {/* Hide by control panel method */
-                            (
+                            !isRotate && (
                                 <Radio value={SetupCoordinateMethod.ByControlPanel}>
                                     <span className="display-block font-weight-bold">{i18n._('Control Mode')}</span>
                                     <span className="display-block color-black-3">{i18n._('You need to use the Control panel to move the toolhead to the desired XY work origin.')}</span>
@@ -318,7 +324,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
             }
 
             {
-                setupCoordinateMethod === SetupCoordinateMethod.ByControlPanel && (
+                !isRotate && setupCoordinateMethod === SetupCoordinateMethod.ByControlPanel && (
                     <div className="margin-top-16">
                         <ControlPanel widgetId="control" isNotInWorkspace={false} runBoundary={runBoundary} />
                     </div>

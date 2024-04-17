@@ -1280,7 +1280,7 @@ M3`;
     public goHome = async (socket, options, callback) => {
         const { headType } = options;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            this.channel.goHome();
+            this.channel.goHome(headType);
             socket && socket.emit('move:status', { isHoming: true });
         } else {
             await this.executeGcode(socket, { gcode: 'G53' });

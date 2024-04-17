@@ -133,13 +133,12 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
 
 
             const currentPosition = parseFloat(workPosition[axis.toLowerCase()]) - parseFloat(originOffset[axis.toLowerCase()]) + RayWorkAreaOffset[axis];
-            console.log('axis:', workPosition, axisMove, step, axis, currentPosition, moveDistance, RayWorkArea[axis], RayWorkArea[axis] - currentPosition, currentPosition + moveDistance);
+            console.log(isConnectedRay, 'axis:', workPosition, axisMove, step, axis, currentPosition, moveDistance, RayWorkArea[axis], RayWorkArea[axis] - currentPosition, currentPosition + moveDistance);
             if (isConnectedRay && (currentPosition + moveDistance > RayWorkArea[axis])) {
                 // console.log('overplace position !', currentPosition, moveDistance, RayWorkArea[axis]);
                 moveDistance = RayWorkArea[axis] - currentPosition;
-                return;
             } else if (isConnectedRay && (currentPosition + moveDistance < 0)) {
-                moveDistance -= currentPosition;
+                moveDistance = -currentPosition;
             }
             console.log('moveDistance', moveDistance);
             moveOrders.push({
@@ -150,7 +149,7 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
             gcodeAxis += `${axis.toUpperCase()}${moveDistance} `;
         }
 
-        const gCommand = keepLaserOn ? 'G1' : 'G0';
+        const gCommand = (keepLaserOn || isConnectedRay) ? 'G1' : 'G0';
 
         // Relative move G-code
         const gcode = [
