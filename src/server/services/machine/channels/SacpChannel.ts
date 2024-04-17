@@ -84,7 +84,7 @@ class SacpChannelBase extends Channel implements
     EnclosureChannelInterface,
     AirPurifierChannelInterface {
     // heart beat
-    private heartbeatTimerLegacy;
+    private heartbeatTimerLegacy = [];
     private heartbeatTimer;
     private shuttingDown: boolean = false;
 
@@ -206,7 +206,7 @@ class SacpChannelBase extends Channel implements
         log.info(`Subscribe heartbeat, result = ${res.code}`);
     }
 
-    public async stopHeartbeat(): Promise<void> {
+    public async stopHeartbeat(id?: string): Promise<void> {
         this.shuttingDown = true;
 
         // Remove heartbeat timeout check
@@ -214,14 +214,14 @@ class SacpChannelBase extends Channel implements
             clearTimeout(this.heartbeatTimer);
             this.heartbeatTimer = null;
         }
-        if (this.heartbeatTimerLegacy) {
-            clearTimeout(this.heartbeatTimerLegacy);
-            this.heartbeatTimerLegacy = null;
+        if (this.heartbeatTimerLegacy[id]) {
+            clearTimeout(this.heartbeatTimerLegacy[id]);
+            this.heartbeatTimerLegacy[id] = null;
         }
 
         // Cancel subscription of heartbeat
         const res = await this.sacpClient.unsubscribeHeartbeat(null);
-        log.info(`Unsubscribe heartbeat, result = ${res.code}`);
+        log.info(`Unsubscribe heartbeat, result = ${res.code}, ${id}, ${this.heartbeatTimerLegacy[id]}`);
     }
 
     /**
@@ -814,8 +814,9 @@ class SacpChannelBase extends Channel implements
     }
 
     // TODO: refactor startHeartbeatLegacy(), put subscriptions on machine instances.
-    public startHeartbeatLegacy = async (sacpClient: SacpClient, client?: net.Socket) => {
+    public startHeartbeatLegacy = async (sacpClient: SacpClient, client?: net.Socket, id = 'uuid') => {
         this.sacpClient = sacpClient;
+        log.info(`SACP start heartbeat ${id}`,);
 
         let stateData: MarlinStateData = {};
 
@@ -862,15 +863,15 @@ class SacpChannelBase extends Channel implements
 
             const statusKey = readUint8(data.response.data, 0);
 
-            if (this.heartbeatTimerLegacy) {
-                clearTimeout(this.heartbeatTimerLegacy);
-                this.heartbeatTimerLegacy = null;
+            if (this.heartbeatTimerLegacy[id]) {
+                clearTimeout(this.heartbeatTimerLegacy[id]);
+                this.heartbeatTimerLegacy[id] = null;
             }
 
-            this.heartbeatTimerLegacy = setTimeout(() => {
+            this.heartbeatTimerLegacy[id] = setTimeout(() => {
                 client && client.destroy();
-                log.info('TCP close');
-                this.socket && this.socket.emit('connection:close');
+                log.info(`SACP close ${id}, ${this.heartbeatTimerLegacy[id]}`,);
+                this.heartbeatTimerLegacy[id] && this.socket && this.socket.emit('connection:close');
             }, 10000);
 
             this.machineStatus = WORKFLOW_STATUS_MAP[statusKey];
@@ -1579,7 +1580,7 @@ class SacpChannelBase extends Channel implements
             return;
         }
         const { laserToolHeadInfo } = await this.sacpClient.getLaserToolHeadInfo(headModule.key);
-        log.info(`laserFocalLength:${laserToolHeadInfo.laserFocalLength}, materialThickness: ${materialThickness}, platformHeight:${laserToolHeadInfo.platformHeight}`);
+        log.info(`toolHead:${toolHead},${includes([L2WLaserToolModule.identifier], toolHead)}, laserFocalLength:${laserToolHeadInfo.laserFocalLength}, materialThickness: ${materialThickness}, platformHeight:${laserToolHeadInfo.platformHeight}`);
         let z;
         if (includes([L2WLaserToolModule.identifier], toolHead)) {
             z = laserToolHeadInfo.platformHeight + materialThickness;

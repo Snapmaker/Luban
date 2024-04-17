@@ -102,7 +102,7 @@ class SacpUdpChannel extends SacpChannelBase {
         return super.startHeartbeat();
     }
 
-    public async stopHeartbeat(): Promise<void> {
+    public async stopHeartbeat(id?: string): Promise<void> {
         // Remove heartbeat timeout check
         if (this.heartbeatTimer2) {
             clearTimeout(this.heartbeatTimer2);
@@ -112,6 +112,8 @@ class SacpUdpChannel extends SacpChannelBase {
         // Cancel subscription of heartbeat
         const res = await this.sacpClient.unsubscribeHeartbeat(null);
         log.info(`Unsubscribe heartbeat, result = ${res.code}`);
+
+        super.stopHeartbeat(id);
     }
 
     /**

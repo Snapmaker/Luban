@@ -2,6 +2,8 @@ import SocketServer from '../../../lib/SocketManager';
 import Channel from '../channels/Channel';
 
 class MachineInstance {
+    public id: string
+
     protected channel: Channel;
     protected socket: SocketServer;
 

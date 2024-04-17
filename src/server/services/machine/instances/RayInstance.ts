@@ -1,6 +1,7 @@
 import { PeerId } from '@snapmaker/snapmaker-sacp-sdk/dist/communication/Header';
 import { includes } from 'lodash';
 
+import { v4 as uuidv4 } from 'uuid';
 import {
     AIR_PURIFIER_MODULE_IDS,
     EMERGENCY_STOP_BUTTON,
@@ -24,6 +25,8 @@ const log = logger('services:machine:instances:RayInstance');
 
 
 class RayMachineInstance extends MachineInstance {
+    public id = uuidv4()
+
     private async _prepareMachineSACP() {
         // configure channel
         (this.channel as SacpChannelBase).setFilePeerId(PeerId.CONTROLLER);
@@ -92,7 +95,7 @@ class RayMachineInstance extends MachineInstance {
         // await this.channel.startHeartbeat();
         // Legacy
         const sacpClient = (this.channel as SacpChannelBase).sacpClient;
-        await (this.channel as SacpChannelBase).startHeartbeatLegacy(sacpClient, undefined);
+        await (this.channel as SacpChannelBase).startHeartbeatLegacy(sacpClient, undefined, this.id);
 
         // register handlers
         (this.channel as SacpChannelBase).registerErrorReportHandler();
@@ -125,7 +128,7 @@ class RayMachineInstance extends MachineInstance {
         log.info('Stop heartbeat.');
         // await this.channel.stopHeartbeat();
         // Remove await temporarily, it blocks other unsubscribes
-        await this.channel.stopHeartbeat();
+        await this.channel.stopHeartbeat(this.id);
 
         (this.channel as SacpChannelBase).unregisterErrorReportHandler();
 

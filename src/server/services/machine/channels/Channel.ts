@@ -60,8 +60,8 @@ export default class Channel extends EventEmitter {
         return Promise.resolve();
     }
 
-    public async stopHeartbeat(): Promise<void> {
-        return Promise.resolve();
+    public async stopHeartbeat(id?: string): Promise<void> {
+        return Promise.resolve(id);
     }
 
     /**
