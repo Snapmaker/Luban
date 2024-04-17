@@ -18,6 +18,7 @@ import { SnapmakerRayMachine } from '../../../machines';
 import { actions as editorActions } from '../../../flux/editor';
 import { HEAD_LASER, MotorPowerMode } from '../../../constants';
 import HomeTipModal from '../../widgets/RaySetOriginWidget/modals/HomeTipModal';
+import SvgIcon from '../../components/SvgIcon';
 
 interface ABPositionOverlayProps {
     onClose: () => void;
@@ -39,6 +40,7 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
     const server: MachineAgent = useSelector((state: RootState) => state.workspace.server);
     const dispatch = useDispatch();
     const [isConnectedRay, setIsConnectedRay] = useState(false);
+    const [isShowTip, setIsShowTip] = useState(true);
     const canABPosition = useCallback(() => {
         return isConnected && machineIdentifier === activeMachine.identifier && headType === HEAD_LASER && WorkflowStatus.Idle === workflowStatus;
     }, [isConnected, machineIdentifier, activeMachine, headType, workflowStatus]);
@@ -65,7 +67,7 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
     }, [machineIdentifier]);
 
     useEffect(() => {
-        if (isHomed && !isConnected) {
+        if (isHomed || !isConnected) {
             return;
         }
         console.log('isHomed', isHomed);
@@ -126,10 +128,27 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
                 <div className={classNames(styles['overlay-title-font'], 'border-bottom-normal padding-vertical-8 padding-horizontal-16')}>
                     {i18n._('key-CncLaser/MainToolBar-A-B Position')}
                 </div>
-                <div className="justify-space-between padding-vertical-16 padding-horizontal-16">
-
+                <div className={classNames(styles['ab-position-overlay-content'], 'justify-space-between', 'padding-vertical-16', 'padding-horizontal-16')}>
                     {isConnectedRay
-                    && (<Alert className="width-percent-100 border-radius-8" message="Use the control panel to position points A and B on the machine. Please do not move the print head manually." type="warning" showIcon />
+                    && (
+                        <>
+                            <div className="sm-flex height-32 justify-space-between">
+                                <span className={classNames(styles['ab-position-remind'])}>{i18n._('Warm reminder')}</span>
+                                <div>
+                                    <SvgIcon
+                                        key="DropdownLine"
+                                        disabled={false}
+                                        name="DropdownLine"
+                                        type={['static']}
+                                        onClick={() => setIsShowTip(!isShowTip)}
+                                        className={classNames(
+                                            isShowTip ? '' : 'rotate180'
+                                        )}
+                                    />
+                                </div>
+                            </div>
+                            {isShowTip && <Alert className="width-percent-100 border-radius-8" message="Use the control panel to position points A and B on the machine. Please do not move the print head manually." type="warning" showIcon />}
+                        </>
                     )}
                     <div className={classNames(styles['abposition-grid-container'])}>
                         <div className={classNames(styles['abposition-grid-item'], styles['abposition-point'])}>A</div>
@@ -165,7 +184,7 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
                         width="96px"
                         onClick={() => props.onClose()}
                     >
-                        {i18n._('key-Modal/Common-Cancel')}
+                        {i18n._('Close')}
                     </Button>
                     <Button
                         className={classNames(styles['ab-position-done-btn'])}
