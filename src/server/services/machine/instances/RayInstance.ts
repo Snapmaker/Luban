@@ -89,6 +89,14 @@ class RayMachineInstance extends MachineInstance {
         });
         state.moduleStatusList = moduleListStatus;
 
+
+
+        // Get Coordinate Info
+        const { data: coordinateInfos } = await (this.channel as SacpChannelBase).getCoordinateInfo();
+        const isHomed = !(coordinateInfos?.coordinateSystemInfo?.homed); // 0: homed, 1: need to home
+        state.isHomed = isHomed;
+        state.isMoving = false;
+
         this.socket.emit('connection:connected', { state: state, err: '' });
 
         // Start heartbeat
