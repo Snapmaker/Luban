@@ -16,7 +16,7 @@ import controller from '../../../communication/socket-communication';
 import SocketEvent from '../../../communication/socket-events';
 import { SnapmakerRayMachine } from '../../../machines';
 import { actions as editorActions } from '../../../flux/editor';
-import { HEAD_LASER, MotorPowerMode } from '../../../constants';
+import { HEAD_LASER, MotorPowerMode, SetupCoordinateMethod } from '../../../constants';
 import HomeTipModal from '../../widgets/RaySetOriginWidget/modals/HomeTipModal';
 import SvgIcon from '../../components/SvgIcon';
 
@@ -78,6 +78,7 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
     }, [dispatch]);
 
     const setControlPanelCoordinateMethod = () => {
+        dispatch(workspaceActions.updateState({ setupCoordinateMethod: SetupCoordinateMethod.ByControlPanel }));
         turnOnHoldMotorPower();
         goHome();
     };

@@ -45,6 +45,13 @@ export const getRunBoundaryCode = (
 
     const gcodeList = [];
 
+    console.log('setupCoordinateMethod', setupCoordinateMethod);
+    if (setupCoordinateMethod === SetupCoordinateMethod.ByControlPanel) {
+        gcodeList.push(
+            ';motor_mode: 3',
+        );
+    }
+
     if (jobOffsetMode === JobOffsetMode.Crosshair) {
         // Use crosshair to run boundary
         gcodeList.push('M2000 L13 P1'); // turn on crosshair
@@ -88,9 +95,21 @@ export const getRunBoundaryCode = (
 
     if (setupCoordinateMethod === SetupCoordinateMethod.ByControlPanel) {
         // go back to origin
-        gcodeList.push(
-            goto(axisWorkRange.min.b + (axisWorkRange.max.b - axisWorkRange.min.b) / 2, axisWorkRange.min.y + (axisWorkRange.max.y - axisWorkRange.min.y) / 2)
-        );
+        if (useBInsteadOfX) {
+            gcodeList.push(
+                goto(
+                    axisWorkRange.min.b + (axisWorkRange.max.b - axisWorkRange.min.b) / 2,
+                    axisWorkRange.min.y + (axisWorkRange.max.y - axisWorkRange.min.y) / 2
+                )
+            );
+        } else {
+            gcodeList.push(
+                goto(
+                    axisWorkRange.min.x + (axisWorkRange.max.x - axisWorkRange.min.x) / 2,
+                    axisWorkRange.min.y + (axisWorkRange.max.y - axisWorkRange.min.y) / 2
+                )
+            );
+        }
     } else {
         gcodeList.push(
             goto(0, 0)
@@ -106,6 +125,9 @@ export const getRunBoundaryCode = (
     );
 
     const gcode = gcodeList.join('\n');
+
+
+    console.log('gcode', gcode);
 
     return gcode;
 };
@@ -264,7 +286,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
                 log.info('Uploaded boundary G-code.');
                 setRunBoundaryReady(true);
             });
-    }, [dispatch, isRotate, gcodeFile, jobOffsetMode]);
+    }, [dispatch, isRotate, gcodeFile, jobOffsetMode, setupCoordinateMethod]);
 
     // const executeGCode = useCallback(async (gcode: string) => {
     //     return dispatch(workspaceActions.executeGcode(gcode)) as unknown as Promise<void>;

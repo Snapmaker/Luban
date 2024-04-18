@@ -30,6 +30,7 @@ enum UploadFileModalType {
 
 const UploadView: React.FC = () => {
     const isConnected = useSelector((state: RootState) => state.workspace.isConnected);
+    const setupCoordinateMethod = useSelector((state: RootState) => state.workspace.setupCoordinateMethod);
 
     const workflowStatus = useSelector((state: RootState) => state.workspace.workflowStatus);
     // const activeGcodeFile = useSelector((state: RootState) => state.workspace.activeGcodeFile);
@@ -104,7 +105,7 @@ const UploadView: React.FC = () => {
 
         log.info('Run Boundary... bbox =', gcodeFile.gcodeAxisWorkRange);
 
-        const gcode = getRunBoundaryCode(gcodeFile.gcodeAxisWorkRange, jobOffsetMode, gcodeFile.is_rotate);
+        const gcode = getRunBoundaryCode(gcodeFile.gcodeAxisWorkRange, jobOffsetMode, gcodeFile.is_rotate, setupCoordinateMethod);
 
         const blob = new Blob([gcode], { type: 'text/plain' });
         const file = new File([blob], 'boundary.nc');
@@ -136,7 +137,7 @@ const UploadView: React.FC = () => {
                     resolve(true);
                 });
         });
-    }, [dispatch, gcodeFile, jobOffsetMode]);
+    }, [dispatch, gcodeFile, jobOffsetMode, setupCoordinateMethod]);
 
     const uploadJob = useCallback(async () => {
         setIsUploading(true);

@@ -40,13 +40,22 @@ const LaserStartModal: React.FC<LaserStartModalProps> = ({
     const { size } = useSelector(state => state?.machine);
     const { materialThickness, toolHead, activeMachine, connectionType, crosshairOffset } = useSelector(state => state?.workspace);
     const dispatch = useDispatch();
+    const [supportSemiMode, setSupportSemiMode] = useState(false);
 
+    useEffect(() => {
+        const isSM2 = includes([
+            SnapmakerA350Machine.identifier,
+            SnapmakerA250Machine.identifier,
+            SnapmakerA150Machine.identifier
+        ], activeMachine.identifier);
+        const supportHead = includes([
+            standardLaserToolHead.identifier,
+            highPower10WLaserToolHead.identifier,
+        ], toolHeadIdentifier);
+        console.log('ddddddddd', connectionType === ConnectionType.Serial, isSM2, toolHeadIdentifier === L2WLaserToolModule.identifier);
 
-    const supportSemiMode = includes([
-        standardLaserToolHead.identifier,
-        highPower10WLaserToolHead.identifier,
-        L2WLaserToolModule.identifier
-    ], toolHeadIdentifier);
+        setSupportSemiMode(supportHead || !(L2WLaserToolModule.identifier === toolHeadIdentifier && isSM2 && connectionType === ConnectionType.Serial));
+    });
 
     useEffect(() => {
         if (isRotate) {
@@ -92,9 +101,10 @@ const LaserStartModal: React.FC<LaserStartModalProps> = ({
             case AUTO_MDOE:
                 disabled = isSerialConnect;
                 break;
-            case SEMI_AUTO_MODE:
+            case SEMI_AUTO_MODE: {
                 disabled = isRotate;
                 break;
+            }
             default:
                 disabled = false;
                 break;
