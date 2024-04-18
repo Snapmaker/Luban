@@ -1,5 +1,5 @@
 import { WorkflowStatus } from '@snapmaker/luban-platform';
-import { ResponseCallback } from '@snapmaker/snapmaker-sacp-sdk';
+import { Response, ResponseCallback } from '@snapmaker/snapmaker-sacp-sdk';
 import { PeerId } from '@snapmaker/snapmaker-sacp-sdk/dist/communication/Header';
 import { readString, readUint16, readUint32, readUint8 } from '@snapmaker/snapmaker-sacp-sdk/dist/helper';
 import {
@@ -841,17 +841,22 @@ class SacpChannelBase extends Channel implements
             }
         });
 
-        this.sacpClient.setHandler(0x01, 0x36, ({ param }) => {
+        // this.sacpClient.on('311', ())
+        this.sacpClient.setHandler(0x01, 0x36, ({ param, packet }) => {
             const isHomed = readUint8(param, 0);
             stateData = {
                 ...stateData,
                 isHomed: !isHomed
             };
-            if (stateData.headType !== HEAD_PRINTING) {
-                this.sacpClient.updateCoordinate(CoordinateType.WORKSPACE).then(({ response }) => {
-                    log.info(`updateCoordinateType, ${response.result}`);
-                });
-            }
+            this.sacpClient.ack(0x01, 0x36, packet, new Response(0).toBuffer()).then(() => {
+                if (stateData.headType !== HEAD_PRINTING) {
+                    this.sacpClient.getCurrentCoordinateInfo().then(({ response }) => {
+                        this.sacpClient.updateCoordinate(CoordinateType.WORKSPACE).then(({ response }) => {
+                            log.info(`updateCoordinateType, ${response.result}`);
+                        });
+                    });
+                }
+            });
             this.socket && this.socket.emit('move:status', { isHoming: false });
         });
 
@@ -1284,11 +1289,14 @@ class SacpChannelBase extends Channel implements
             log.info(`Go-Home, ${response}`);
             this.socket && this.socket.emit('serialport:read', { data: response.result === 0 ? 'OK' : 'WARNING' });
         });
-        if (headType === HEAD_LASER || headType === HEAD_CNC) {
-            await this.sacpClient.updateCoordinate(CoordinateType.WORKSPACE).then(res => {
-                log.info(`Update Coordinate: ${res}`);
-            });
-        }
+        console.log('====1=============', headType);
+        // if (headType === HEAD_LASER || headType === HEAD_CNC) {
+        //     console.log('=================', headType);
+        //     await this.sacpClient.updateCoordinate(CoordinateType.WORKSPACE).then(res => {
+        //         log.info(`Update Coordinate: ${res}`);
+        //         console.log('Update Coordinate: ', res);
+        //     });
+        // }
     };
 
     public coordinateMove = async ({ moveOrders, jogSpeed, headType, beforeGcodeStart = false }) => {
@@ -1587,6 +1595,7 @@ class SacpChannelBase extends Channel implements
         } else {
             z = laserToolHeadInfo.laserFocalLength + laserToolHeadInfo.platformHeight + materialThickness;
         }
+
         await this.setAbsoluteWorkOrigin({
             z,
             isRotate
