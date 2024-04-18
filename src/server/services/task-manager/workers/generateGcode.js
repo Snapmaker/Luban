@@ -82,7 +82,7 @@ const checkoutBoundingBoxIsNull = (boundingBox) => {
 };
 
 // eslint-disable-next-line consistent-return
-const generateGcode = ({ toolPaths, size, toolHead, origin, jobOffsetMode, series, metadata }) => {
+const generateGcode = ({ toolPaths, size, toolHead, origin, jobOffsetMode, series, metadata, motorMode }) => {
     if (!toolPaths && !_.isArray(toolPaths) && toolPaths.length === 0) {
         return sendMessage({ status: 'fail', value: 'modelInfo is empty.' });
     }
@@ -228,6 +228,9 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, jobOffsetMode, serie
         headerGcodes.push(
             `;thumbnail: ${thumbnail}`,
         );
+    }
+    if (motorMode) {
+        headerGcodes.push(`;motor_mode: ${motorMode}`);
     }
 
     if (headType === 'laser' && jobOffsetMode === JobOffsetMode.Crosshair) {
