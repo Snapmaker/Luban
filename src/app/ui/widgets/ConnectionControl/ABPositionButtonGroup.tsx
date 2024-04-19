@@ -7,8 +7,6 @@ import i18n from '../../../lib/i18n';
 import { Button } from '../../components/Buttons';
 import TipTrigger from '../../components/TipTrigger';
 import { actions as laserActions } from '../../../flux/laser';
-import { actions as editorActions } from '../../../flux/editor';
-import { HEAD_LASER } from '../../../constants';
 
 const ABPositionButtonGroup = (props) => {
     const { state, workPosition, originOffset, canABPosition } = props;
@@ -68,16 +66,7 @@ const ABPositionButtonGroup = (props) => {
                     className="margin-bottom-8 display-block"
                     priority="level-three"
                     onClick={() => {
-                        // props.executeGcode('G92 X0 Y0 Z0 B0');
-                        // actions.setWorkOrigin();
-                        dispatch(laserActions.updateAPosition({}));
-                        dispatch(laserActions.updateBPosition({}));
-                        dispatch(laserActions.updateTmpAPosition({}));
-                        dispatch(laserActions.updateTmpBPosition({}));
-                        dispatch(editorActions.updateState(HEAD_LASER, {
-                            useABPosition: false
-                        }));
-                        dispatch(laserActions.removeBackgroundImage());
+                        dispatch(laserActions.clearAB());
                     }}
                     disabled={!canClick}
                 >

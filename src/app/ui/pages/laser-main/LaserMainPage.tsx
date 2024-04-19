@@ -78,6 +78,7 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
         logPageView({
             pathname: '/laser',
         });
+        dispatch(laserActions.clearAB());
     }, []);
 
     useEffect(() => {

@@ -61,8 +61,8 @@ const LaserParameters = ({ widgetActions }) => {
 
             {isEditor && isTextVector && (selectedModelArray.length === 1) && (
                 <TextParameters
-                    disabled={!selectedModelVisible}
-                    headType={isOnABPosition || HEAD_LASER}
+                    disabled={isOnABPosition || !selectedModelVisible}
+                    headType={HEAD_LASER}
                     modifyText={
                         (element, options) => dispatch(editorActions.modifyText(HEAD_LASER, element, options))
                     }

@@ -79,6 +79,7 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace,
 
     const server: MachineAgent = useSelector((state: RootState) => state.workspace.server);
     const {
+        homingModal,
         isMoving,
         workflowStatus,
         workPosition,
@@ -350,8 +351,8 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace,
 
 
     const canClick = useMemo(() => {
-        return isConnected && includes([WorkflowStatus.Unknown, WorkflowStatus.Idle, WorkflowStatus.Stopped], workflowStatus) && !isMoving;
-    }, [isConnected, workflowStatus, isMoving]);
+        return isConnected && includes([WorkflowStatus.Unknown, WorkflowStatus.Idle, WorkflowStatus.Stopped], workflowStatus) && !isMoving && !homingModal;
+    }, [isConnected, workflowStatus, isMoving, homingModal]);
 
 
     useEffect(() => {
