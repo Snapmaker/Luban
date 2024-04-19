@@ -513,6 +513,16 @@ export const actions = {
     },
     updateTmpAPosition: (position: Position) => actions._updateTmpPosition(position, 'tmpAPosition'),
     updateTmpBPosition: (position: Position) => actions._updateTmpPosition(position, 'tmpBPosition'),
+    clearAB: () => (dispatch) => {
+        dispatch(actions.updateAPosition({}));
+        dispatch(actions.updateBPosition({}));
+        dispatch(actions.updateTmpAPosition({}));
+        dispatch(actions.updateTmpBPosition({}));
+        dispatch(editorActions.updateState(HEAD_LASER, {
+            useABPosition: false
+        }));
+        dispatch(actions.removeBackgroundImage());
+    },
 
 
     afterBackgroundSet: (dispatch, state, textureSource, width, height, dx, dy) => {

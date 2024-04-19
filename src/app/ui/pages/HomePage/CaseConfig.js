@@ -578,7 +578,7 @@ export const getLaserCaseConfigFor2WModule = () => {
             }
         },
         {
-            tag: 'printing',
+            tag: 'laser',
             tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
             title: 'Plastics',
             mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
@@ -590,15 +590,15 @@ export const getLaserCaseConfigFor2WModule = () => {
             }
         },
         {
-            tag: 'laser',
-            tag_i18n: 'key-HomePage/CaseLibrary_title-Laser',
+            tag: 'printing',
+            tag_i18n: 'key-HomePage/CaseLibrary_title-3DP',
             title: 'Plastics',
             mode: 'vector', // mode: 'vector','greyscale','bw','text','trace'
             imgSrc: '../../resources/images/user-case/Laser-2w/2w-plastics.png',
             pathConfig: {
                 isDatastoragePath: true,
-                path: './UserCase/laser/2w_laser_module/Block_Pendant.snaplzr',
-                name: 'Block_Pendant.snaplzr'
+                path: './UserCase/laser/2w_laser_module/Block_Pendant.snap3dp',
+                name: 'Block_Pendant.snap3dp'
             }
         },
     ];

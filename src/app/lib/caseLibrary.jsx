@@ -1,3 +1,4 @@
+import { HEAD_PRINTING } from '../constants';
 import {
     isDualExtruder,
     LEVEL_ONE_POWER_LASER_FOR_ORIGINAL,
@@ -13,7 +14,8 @@ import {
     SnapmakerArtisanMachine,
     SnapmakerJ1Machine,
     SnapmakerOriginalExtendedMachine,
-    SnapmakerOriginalMachine
+    SnapmakerOriginalMachine,
+    SnapmakerRayMachine
 } from '../machines';
 import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from '../machines/snapmaker-2-toolheads';
 
@@ -164,9 +166,13 @@ export const getCaseList = (series, toolHead) => {
         case L40WLaserToolModule.identifier:
             caseList = caseList.concat(getLaserCaseConfigFor40WModule());
             break;
-        case L2WLaserToolModule.identifier:
+        case L2WLaserToolModule.identifier: {
             caseList = caseList.concat(getLaserCaseConfigFor2WModule());
+            if (series === SnapmakerRayMachine.identifier) {
+                caseList = caseList.filter(caseObj => caseObj.tag !== HEAD_PRINTING);
+            }
             break;
+        }
         default:
             break;
     }
