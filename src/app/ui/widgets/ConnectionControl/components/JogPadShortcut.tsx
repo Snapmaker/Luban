@@ -70,7 +70,7 @@ const JogPadShortcut: React.FC<JogPadShortcutProps> = (props) => {
         return () => {
             ShortcutManager.unregister(handler);
         };
-    }, [dispatch]);
+    }, [dispatch, relativeMove]);
 
     return (<div />);
 };
