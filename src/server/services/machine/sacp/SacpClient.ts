@@ -675,6 +675,7 @@ export default class SacpClient extends Dispatcher {
     }
 
     public async requestHome(number = 0) {
+        console.log('000000 requestHome');
         return this.send(0x01, 0x35, PeerId.CONTROLLER, Buffer.alloc(1, number)).then(({ response, packet }) => {
             return { response, packet, data: {} };
         });

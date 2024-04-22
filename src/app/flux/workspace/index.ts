@@ -930,6 +930,9 @@ export const actions = {
 
         dispatch(actions.updateState(options));
     },
+    updateMoving: (isMoving: boolean) => (dispatch) => {
+        dispatch(baseActions.updateState({ isMoving }));
+    },
 
     executeCmd: (cmd: string) => {
         console.log('execute cmd', cmd);
@@ -939,7 +942,7 @@ export const actions = {
     /**
      * Execute G-code.
      */
-    executeGcode: (gcode: string, context = null, cmd = undefined) => (dispatch, getState) => {
+    executeGcode: (gcode: string, context = null, cmd = undefined, cb?: Function) => (dispatch, getState) => {
         const { homingModal, isConnected } = getState().workspace;
         if (!isConnected) {
             if (homingModal) {
@@ -962,6 +965,7 @@ export const actions = {
                         })
                     );
                 }
+                cb && typeof cb === 'function' && cb();
             }
         );
     },

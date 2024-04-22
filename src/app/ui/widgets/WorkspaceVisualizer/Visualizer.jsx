@@ -414,7 +414,7 @@ class Visualizer extends React.PureComponent {
                         }
                     };
                     if (this.pauseStatus.headStatus || this.props.headType !== HEAD_PRINTING) {
-                        console.log('$$$$$$$$$', this.props.headType);
+                        console.log('$$$$$$$$$', this.props.headType, this.state.controller.state.headPower);
                         this.props.executeGcode('M5');
                     }
 
