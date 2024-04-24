@@ -296,6 +296,14 @@ i18n._('key-default_category-Default Material');
 i18n._('key-default_category-Acrylic');
 i18n._('key-default_category-Epoxy Tooling Board');
 i18n._('key-default_category-Default Preset');
+i18n._('key-default_category-Beech');
+i18n._('key-default_category-Walnut');
+i18n._('key-default_category-POM');
+i18n._('key-default_category-Aluminium-1060');
+i18n._('key-default_category-Aluminium-5052');
+i18n._('key-default_category-Aluminium-6061');
+i18n._('key-default_category-Copper-H62');
+i18n._('key-default_category-Carbon-Fiber');
 
 i18n._('key-default_category-Basswood');
 i18n._('key-default_category-Black Acrylic');
