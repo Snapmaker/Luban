@@ -12,6 +12,7 @@ import {
     HEAD_LASER,
     HEAD_PRINTING,
     LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
+    findToolHead,
     isDualExtruder
 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
@@ -230,7 +231,7 @@ const SerialConnection: React.FC = () => {
                 if (isDualExtruder(toolHead)) {
                     newModuleStatusList.push({
                         key: 'headtype',
-                        moduleName: i18n._('key-App/Settings/MachineSettings-Dual Extruder Toolhead'),
+                        moduleName: i18n._(findToolHead(toolHead).label),
                         status: true
                     });
                 } else {

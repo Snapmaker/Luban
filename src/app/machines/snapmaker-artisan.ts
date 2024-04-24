@@ -40,7 +40,7 @@ export const machine: Machine = {
                 configPath: 'printing/a400_dual',
                 workRange: {
                     min: [0, 0, 0],
-                    max: [370, 370, 370],
+                    max: [400, 370, 400],
                 },
             },
             {

@@ -340,8 +340,15 @@ class SacpChannelBase extends Channel implements
 
 
     public getModuleIdentifier(module: ModuleInfo): string {
+        // hard-code for artisan, 2.0 dualextruder and artisan dualextruder have same moduleId
         if (module.moduleId === 13) {
-            return '';
+            if (module.hardwareVersion >= 129 || module.hardwareVersion <= 137) {
+                // aritsan dualextruder
+                return MODULEID_MAP['13'];
+            } else {
+                // 2.0 dualextruder
+                return MODULEID_MAP['70000'];
+            }
         } else {
             return MODULEID_MAP[module.moduleId];
         }
