@@ -710,11 +710,13 @@ export const actions = {
      *
      * Considering:
      *  - machine size
+     *  - toolhead affset, just x, y
      *  - print mode (different edit areas for specific print modes)
      *  - adhesion parameters (reducing edit area)
      */
     updateBoundingBox: () => (dispatch, getState) => {
         const modules = getState().machine.modules as string[];
+        const toolHead = getState().machine.toolHead;
 
         const modelGroup: ModelGroup = getState().printing.modelGroup;
         const {
@@ -772,6 +774,19 @@ export const actions = {
                     workRange.max.z += machineModuleOptions.workRangeOffset[2];
                 }
             }
+        }
+
+        // Check work range offsets from machine toolhead(x, y)
+        for (const machineToolheadOptions of activeMachine.metadata?.toolHeads || []) {
+            const identifier = machineToolheadOptions.identifier;
+            const machineSize = activeMachine.metadata.size;
+            if (toolHead.printingToolhead === identifier) {
+                if (machineToolheadOptions?.workRange) {
+                    workRange.max.x += machineToolheadOptions.workRange.max[0] - machineSize.x;
+                    workRange.max.y += machineToolheadOptions.workRange.max[1] - machineSize.y;
+                }
+            }
+            console.log('-----------workRange', workRange);
         }
 
         // validate work range in case it goes off zero

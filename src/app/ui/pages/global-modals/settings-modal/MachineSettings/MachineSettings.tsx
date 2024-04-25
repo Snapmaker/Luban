@@ -171,6 +171,19 @@ const MachineSettings: React.FC = () => {
             }
         }
     };
+    const renderToolheadWorkSize = useCallback((_toolHeadIdentify) => {
+        const _toolHead = machine?.metadata.toolHeads.find(th => th.identifier === _toolHeadIdentify);
+        if (_toolHead.workRange) {
+            const [x, y, z] = _toolHead.workRange.max;
+            let toolheadWorkSize = '';
+            if (x !== machine?.metadata?.size?.x || y !== machine?.metadata?.size?.y || z !== machine?.metadata?.size?.z) {
+                toolheadWorkSize = `(${x} x ${y} x ${z} mm)`;
+            }
+            return (<span className={classNames(styles['font-size-12'], 'margin-left-4')}>{toolheadWorkSize}</span>);
+        } else {
+            return '';
+        }
+    }, [machine]);
 
     useEffect(() => {
         setState({
@@ -243,6 +256,8 @@ const MachineSettings: React.FC = () => {
         };
     }, [onSave, onCancel]);
 
+
+
     return (
         <div className={styles['form-container']}>
             <div className="border-bottom-normal padding-bottom-4">
@@ -263,7 +278,7 @@ const MachineSettings: React.FC = () => {
             />
             <div>
                 <span className="unit-text margin-right-12">{i18n._('key-App/Settings/MachineSettings-Dimensions')}:</span>
-                <span className="main-text-normal">{`${state.size.x} x ${state.size.y} x ${state.size.z} mm`}</span>
+                <span className="main-text-normal">{`${machine?.metadata?.size?.x} x ${machine?.metadata?.size?.y} x ${machine?.metadata?.size?.z} mm`} </span>
             </div>
             <div className="border-bottom-normal padding-bottom-4 margin-top-32">
                 <SvgIcon
@@ -276,7 +291,10 @@ const MachineSettings: React.FC = () => {
                 {
                     printingToolHeadOptions.length > 0 && (
                         <div className="margin-bottom-16">
-                            <div className="main-text-normal margin-bottom-8 margin-top-16">{i18n._('key-App/Settings/MachineSettings-3D Print Toolhead')}</div>
+                            <div className="main-text-normal margin-bottom-8 margin-top-16">
+                                {i18n._('key-App/Settings/MachineSettings-3D Print Toolhead')}
+                                {renderToolheadWorkSize(printingToolHeadSelected)}
+                            </div>
                             <Select
                                 value={printingToolHeadSelected}
                                 options={printingToolHeadOptions.map(item => {
