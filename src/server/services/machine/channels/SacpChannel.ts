@@ -1113,7 +1113,7 @@ class SacpChannelBase extends Channel implements
                 estimatedTime: this.estimatedTime * 1000,
                 progress: currentLine === this.totalLine ? 1 : progress,
                 remainingTime: remainingTime,
-                printStatus: currentLine === this.totalLine ? COMPLUTE_STATUS : ''
+                printStatus: currentLine >= this.totalLine ? COMPLUTE_STATUS : ''
             };
 
             if (includes([WorkflowStatus.Running, WorkflowStatus.Paused], this.machineStatus)) {

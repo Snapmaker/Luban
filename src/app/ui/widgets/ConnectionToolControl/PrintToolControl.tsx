@@ -332,7 +332,7 @@ const PrintToolControl: React.FC = () => {
                         handleSubmit={(value) => {
                             actions.updateNozzleTemp(RIGHT_EXTRUDER_MAP_NUMBER, value);
                         }}
-                        initValue={rightNozzleTemperature}
+                        initValue={rightNozzleTargetTemperature}
                         title={i18n._('key-Workspace/Marlin-Right Nozzle Temp')}
                         suffix="°C"
                     >
