@@ -18,6 +18,7 @@ import {
 import { RootState } from '../../../flux/index.def';
 import { MachineAgent } from '../../../flux/workspace/MachineAgent';
 import connectActions from '../../../flux/workspace/actions-connect';
+import workspaceActions from '../../../flux/workspace/index';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import { SnapmakerOriginalExtendedMachine, SnapmakerOriginalMachine } from '../../../machines';
@@ -133,6 +134,7 @@ const SerialConnection: React.FC = () => {
 
     const closePort = useCallback(() => {
         dispatch(connectActions.disconnect(selectedAgent));
+        dispatch(workspaceActions.updateState({ moduleList: [] }));
     }, [dispatch, selectedAgent]);
 
     const actions = {

@@ -357,6 +357,7 @@ const NetworkConnection: React.FC = () => {
     const disconnect = useCallback(() => {
         if (server) {
             dispatch(connectActions.disconnect(server));
+            dispatch(workspaceActions.updateState({ moduleList: [] }));
         }
     }, [dispatch, server]);
 
