@@ -173,8 +173,9 @@ const MachineSettings: React.FC = () => {
     };
     const renderToolheadWorkSize = useCallback((_toolHeadIdentify) => {
         const _toolHead = machine?.metadata.toolHeads.find(th => th.identifier === _toolHeadIdentify);
-        if (_toolHead.workRange) {
-            const [x, y, z] = _toolHead.workRange.max;
+        console.log('==========================', _toolHead);
+        if (_toolHead && _toolHead.workRange) {
+            const [x, y, z] = _toolHead.workRange?.max;
             let toolheadWorkSize = '';
             if (x !== machine?.metadata?.size?.x || y !== machine?.metadata?.size?.y || z !== machine?.metadata?.size?.z) {
                 toolheadWorkSize = `(${x} x ${y} x ${z} mm)`;
