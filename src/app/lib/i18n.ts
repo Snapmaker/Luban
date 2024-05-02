@@ -5,7 +5,7 @@ const t = (...args) => {
     const options = args[1];
 
     let text = i18next.t(key, options);
-    if (typeof text === 'string' && text.length === 0) {
+    if (typeof text === 'string' && (text as string).length === 0) {
         text = i18next.t(key, { ...options, lng: 'en' });
     }
 
@@ -13,7 +13,7 @@ const t = (...args) => {
 };
 
 function processKey(value, options) {
-    const { context, count } = { ...options };
+    const { context = '', count = 0 } = { ...options };
     const containsContext = (context !== undefined) && (context !== null);
     const containsPlural = (typeof count === 'number');
 
