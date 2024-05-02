@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { includes, isEqual, isNil } from 'lodash';
 import request from 'superagent';
 

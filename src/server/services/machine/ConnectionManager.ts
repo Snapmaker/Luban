@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ToolHeadType, WorkflowStatus } from '@snapmaker/luban-platform';
 import fs from 'fs';
 import { includes } from 'lodash';

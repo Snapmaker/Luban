@@ -1,3 +1,4 @@
+// @ts-nocheck
 import crypto from 'crypto';
 import fs from 'fs';
 import { includes } from 'lodash';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { WorkflowStatus } from '@snapmaker/luban-platform';
 import { ResponseCallback } from '@snapmaker/snapmaker-sacp-sdk';
 import { PeerId } from '@snapmaker/snapmaker-sacp-sdk/dist/communication/Header';

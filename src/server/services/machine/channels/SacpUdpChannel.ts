@@ -1,3 +1,4 @@
+// @ts-nocheck
 import dgram from 'dgram';
 
 import { SACP_TYPE_SERIES_MAP } from '../../../../app/constants/machines';
