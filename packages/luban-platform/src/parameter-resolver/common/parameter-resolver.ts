@@ -4,7 +4,7 @@ import { cloneDeep, isNil, isUndefined } from 'lodash';
 import log from '../../lib/log';
 
 // We put with statement into an ES5 module
-import ParameterContext from './parameter-context.es5';
+import ParameterContext from './parameter-context';
 
 declare type ModifyParameterItem = [string, number | string | boolean];
 
