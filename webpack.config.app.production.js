@@ -39,7 +39,13 @@ module.exports = {
             path.resolve(__dirname, 'src/app'),
             'node_modules'
         ],
-        extensions: ['.js', '.json', '.jsx', '.styl', '.ts', '.tsx']
+        extensions: ['.js', '.json', '.jsx', '.styl', '.ts', '.tsx'],
+        fallback: {
+            "path": require.resolve('path-browserify'),
+            "fs": require.resolve('browserify-fs'),
+            "timers": require.resolve('timers-browserify'),
+            "stream": require.resolve('stream-browserify')
+          }
     },
     entry: {
         polyfill: path.resolve(__dirname, 'src/app/polyfill/index.js'),
@@ -210,8 +216,5 @@ module.exports = {
     // Some libraries import Node modules but don't use them in the browser.
     // Tell Webpack to provide empty mocks for them so importing them works.
     node: {
-        fs: 'empty',
-        net: 'empty',
-        tls: 'empty',
     }
 };

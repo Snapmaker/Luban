@@ -33,7 +33,13 @@ module.exports = {
     context: path.resolve(__dirname, 'src/server'),
     resolve: {
         modules: ['node_modules'],
-        extensions: ['.js', '.json', '.jsx', '.ts']
+        extensions: ['.js', '.json', '.jsx', '.ts'],
+        fallback: {
+            "path": require.resolve('path-browserify'),
+            "fs": require.resolve('browserify-fs'),
+            "timers": require.resolve('timers-browserify'),
+            "stream": require.resolve('stream-browserify')
+          }
     },
     entry: {
         index: './index.js'
@@ -81,12 +87,8 @@ module.exports = {
         modules: [NODE_MODULES]
     },
     node: {
-        console: true,
         global: true,
-        process: true,
-        Buffer: true,
         __filename: true, // Use relative path
         __dirname: true, // Use relative path
-        setImmediate: true
     }
 };

@@ -21,16 +21,21 @@ const devServer = {
     static: {
         directory: path.resolve(__dirname, 'output/src/app'),
     },
-    proxy: {
-        '/api': `http://localhost:${SERVER_PORT}`,
-        '/data': `http://localhost:${SERVER_PORT}`,
-        '/worker': `http://localhost:${SERVER_PORT}`,
-        '/resources': `http://localhost:${SERVER_PORT}`,
-        '/socket.io': {
-            target: `ws://localhost:${SERVER_PORT}`,
-            ws: true
-        },
+    proxy: [
+    {
+        context: ['/api', '/data', '/worker', '/resources'],
+        target: `http://localhost:${SERVER_PORT}`,
+        changeOrigin: true,
+        secure: false
     },
+    {
+        context: ['/socket.io'],
+        target: `ws://localhost:${SERVER_PORT}`,
+        ws: true,
+        changeOrigin: true,
+        secure: false
+    }
+    ],
     devMiddleware: {
         index: true,
         writeToDisk: true,
@@ -41,6 +46,9 @@ module.exports = {
     mode: 'development',
     target: 'web',
     // devtool: 'eval',
+    stats: {
+        children: true
+    },
     devtool: 'eval-cheap-source-map',
     context: path.resolve(__dirname, 'src/app'),
     resolve: {
@@ -50,7 +58,16 @@ module.exports = {
             path.resolve(__dirname, 'src/app'),
             'node_modules',
         ],
+        alias: {
+            'threads/dist/master/pool-types': path.resolve(__dirname, 'node_modules/threads/dist/master/pool-types.js')
+        },
         extensions: ['.js', '.json', '.jsx', '.styl', '.ts', '.tsx'],
+        fallback: {
+            "path": require.resolve('path-browserify'),
+            "fs": require.resolve('browserify-fs'),
+            "timers": require.resolve('timers-browserify'),
+            "stream": require.resolve('stream-browserify')
+          }
     },
     entry: {
         app: path.resolve(__dirname, 'src/app/index.jsx'),
@@ -59,6 +76,7 @@ module.exports = {
     },
     output: {
         path: path.resolve(__dirname, 'output/src/app'),
+        hashFunction: 'xxhash64',
         filename: '[name].[hash].bundle.js',
         publicPath: '',
         globalObject: 'this',
@@ -68,7 +86,7 @@ module.exports = {
         minimize: false,
         splitChunks: {
             chunks: 'all',
-            name: true,
+            name: false,
             cacheGroups: {
                 vendors: {
                     test: /[\\/]node_modules[\\/]/,
@@ -230,9 +248,6 @@ module.exports = {
     // Some libraries import Node modules but don't use them in the browser.
     // Tell Webpack to provide empty mocks for them so importing them works.
     node: {
-        fs: 'empty',
-        net: 'empty',
-        tls: 'empty',
     },
     devServer: devServer,
 };

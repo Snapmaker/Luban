@@ -33,6 +33,9 @@ module.exports = {
     devtool: 'eval-source-map',
     target: 'node',
     watch: true,
+    stats: {
+        children: true
+    },
     context: path.resolve(__dirname, './src/server'),
     entry: path.resolve(__dirname, './src/server/services/task-manager/Pool.worker.js'),
     output: {
@@ -68,18 +71,23 @@ module.exports = {
     },
     externals: externals,
     resolve: {
-        extensions: ['.js', '.json', '.jsx', '.ts']
+        extensions: ['.js', '.json', '.jsx', '.ts'],
+        alias: {
+            'threads/dist/master/pool-types': path.resolve(__dirname, 'node_modules/threads/dist/master/pool-types.js')
+        },
+        fallback: {
+            "path": require.resolve('path-browserify'),
+            "fs": require.resolve('browserify-fs'),
+            "timers": require.resolve('timers-browserify'),
+            "stream": require.resolve('stream-browserify')
+          }
     },
     resolveLoader: {
         modules: [NODE_MODULES]
     },
     node: {
-        console: true,
         global: true,
-        process: true,
-        Buffer: true,
         __filename: true, // Use relative path
         __dirname: true, // Use relative path
-        setImmediate: true
     }
 };
