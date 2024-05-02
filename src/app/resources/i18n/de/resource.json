@@ -2005,7 +2005,7 @@
     "key-Workspace/Enclosure-Door Detection": "Tür-Erkennung",
     "key-Workspace/Enclosure-Enclosure": "Gehäuse",
     "key-Workspace/Enclosure-Exhaust Fan": "Abluftventilator",
-    "key-Workspace/Enclosure-If you disable the Door Detection feature,\r\nyour job will not pause when one of both of the enclosure panels is/are opened.": "key-Workspace/Enclosure-If you disable the Door Detection feature,\r\nyour job will not pause when one of both of the enclosure panels is/are opened.",
+    "key-Workspace/Enclosure-If you disable the Door Detection feature,\nyour job will not pause when one of both of the enclosure panels is/are opened.": "",
     "key-Workspace/Enclosure-LED Strips": "LED-Streifen",
     "key-Workspace/Fine-tuneWorkOrigin-Close": "Schließen",
     "key-Workspace/Fine-tuneWorkOrigin-Determines how fast the machine moves when it’s working.": "Bestimmt, wie schnell sich das Gerät bewegt, wenn es sich in Betrieb befindet.",

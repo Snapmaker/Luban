@@ -2005,7 +2005,7 @@
     "key-Workspace/Enclosure-Door Detection": "ドア検出",
     "key-Workspace/Enclosure-Enclosure": "外カバー",
     "key-Workspace/Enclosure-Exhaust Fan": "排気ファン",
-    "key-Workspace/Enclosure-If you disable the Door Detection feature,\r\nyour job will not pause when one of both of the enclosure panels is/are opened.": "",
+    "key-Workspace/Enclosure-If you disable the Door Detection feature,\nyour job will not pause when one of both of the enclosure panels is/are opened.": "",
     "key-Workspace/Enclosure-LED Strips": "LEDストリップ",
     "key-Workspace/Fine-tuneWorkOrigin-Close": "閉じる",
     "key-Workspace/Fine-tuneWorkOrigin-Determines how fast the machine moves when it’s working.": "マシンの動作中にその移動速度を決定します。",

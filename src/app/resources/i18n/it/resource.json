@@ -2005,7 +2005,7 @@
     "key-Workspace/Enclosure-Door Detection": "Rilevamento della porta",
     "key-Workspace/Enclosure-Enclosure": "Contenitore",
     "key-Workspace/Enclosure-Exhaust Fan": "Ventola di scarico",
-    "key-Workspace/Enclosure-If you disable the Door Detection feature,\r\nyour job will not pause when one of both of the enclosure panels is/are opened.": "key-Workspace/Enclosure-If you disable the Door Detection feature,\r\nyour job will not pause when one of both of the enclosure panels is/are opened.",
+    "key-Workspace/Enclosure-If you disable the Door Detection feature,\nyour job will not pause when one of both of the enclosure panels is/are opened.": "",
     "key-Workspace/Enclosure-LED Strips": "Strisce LED",
     "key-Workspace/Fine-tuneWorkOrigin-Close": "Chiudi",
     "key-Workspace/Fine-tuneWorkOrigin-Determines how fast the machine moves when it’s working.": "Determina la velocità con cui si muove la macchina quando è in funzione.",
