@@ -20,15 +20,10 @@ export interface downloadRecord {
     receivedBytes: number;
 }
 
-export class MySubClassedDexie extends Dexie {
-    public downloadRecords!: Table<downloadRecord>;
+export const db = new Dexie('snapmakerDatabase');
 
-    public constructor() {
-        super('snapmakerDatabase');
-        this.version(1).stores({
-            downloadRecords: '++id, [startTime+savePath], downloadUrl', // Primary key and indexed props
-        });
-    }
-}
+db.version(1).stores({
+    downloadRecords: '++id, [startTime+savePath], downloadUrl'
+});
 
-export const db = new MySubClassedDexie();
+export const downloadRecords: Table<downloadRecord> = db.table('downloadRecords');
