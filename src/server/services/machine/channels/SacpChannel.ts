@@ -1090,7 +1090,6 @@ class SacpChannelBase extends Channel implements
                     this.sacpClient.getPrintingFileInfo().then((result) => {
                         // log.debug('Get print file info, result =', result);
                         const { totalLine, estimatedTime } = result.data;
-                        log.debug('get print=================', totalLine);
                         if (totalLine) {
                             this.totalLine = totalLine;
                         }
