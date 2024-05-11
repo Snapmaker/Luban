@@ -342,12 +342,12 @@ class SacpChannelBase extends Channel implements
     public getModuleIdentifier(module: ModuleInfo): string {
         // hard-code for artisan, 2.0 dualextruder and artisan dualextruder have same moduleId
         if (module.moduleId === 13) {
-            if (module.hardwareVersion >= 129 || module.hardwareVersion <= 137) {
-                // aritsan dualextruder
-                return MODULEID_MAP['13'];
-            } else {
+            if (module.hardwareVersion >= 129 && module.hardwareVersion <= 137) {
                 // 2.0 dualextruder
-                return MODULEID_MAP['70000'];
+                return DUAL_EXTRUDER_TOOLHEAD_FOR_SM2; // MODULEID_MAP['13'];
+            } else {
+                // aritsan dualextruder
+                return DUAL_EXTRUDER_TOOLHEAD_FOR_ARTISAN; // MODULEID_MAP['70000'];
             }
         } else {
             return MODULEID_MAP[module.moduleId];
@@ -364,7 +364,6 @@ class SacpChannelBase extends Channel implements
 
         // save module info in channel
         this.moduleInfos = {};
-        console.log('get module infos', moduleInfoList);
         for (const module of moduleInfoList) {
             if (includes(definedModuleIds, String(module.moduleId))) {
                 const identifier = this.getModuleIdentifier(module);
@@ -1089,8 +1088,9 @@ class SacpChannelBase extends Channel implements
                 if (includes([WorkflowStatus.Running], this.machineStatus)) {
                     log.info('Get print file info...');
                     this.sacpClient.getPrintingFileInfo().then((result) => {
-                        log.debug('Get print file info, result =', result);
+                        // log.debug('Get print file info, result =', result);
                         const { totalLine, estimatedTime } = result.data;
+                        log.debug('get print=================', totalLine);
                         if (totalLine) {
                             this.totalLine = totalLine;
                         }

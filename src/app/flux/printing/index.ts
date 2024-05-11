@@ -786,7 +786,6 @@ export const actions = {
                     workRange.max.y += machineToolheadOptions.workRange.max[1] - machineSize.y;
                 }
             }
-            console.log('-----------workRange', workRange);
         }
 
         // validate work range in case it goes off zero

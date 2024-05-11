@@ -40,7 +40,6 @@ class ArtisanMachineInstance extends MachineInstance {
         };
 
         const toolHeadModules = [];
-        console.log('moduleInfo', moduleInfos);
         moduleInfos.forEach(module => {
             if (includes(PRINTING_HEAD_MODULE_IDS, module.moduleId)) {
                 state.headType = HEAD_PRINTING;
@@ -64,7 +63,7 @@ class ArtisanMachineInstance extends MachineInstance {
             state.toolHead = MODULEID_TOOLHEAD_MAP['0']; // default extruder
         } else if (toolHeadModules.length === 1) {
             const module = toolHeadModules[0];
-            state.toolHead = MODULEID_TOOLHEAD_MAP[module.moduleId];
+            state.toolHead = (this.channel as SacpChannelBase).getModuleIdentifier(module);
         } else if (toolHeadModules.length === 2) {
             // hard-coded IDEX head for J1, refactor this later.
             state.toolHead = MODULEID_TOOLHEAD_MAP['00'];
