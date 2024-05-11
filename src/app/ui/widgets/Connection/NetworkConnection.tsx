@@ -22,6 +22,7 @@ import {
     LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
     findMachineByName,
+    findToolHead,
     isDualExtruder
 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
@@ -356,6 +357,7 @@ const NetworkConnection: React.FC = () => {
     const disconnect = useCallback(() => {
         if (server) {
             dispatch(connectActions.disconnect(server));
+            dispatch(workspaceActions.updateState({ moduleList: [] }));
         }
     }, [dispatch, server]);
 
@@ -498,7 +500,7 @@ const NetworkConnection: React.FC = () => {
         if (headType === HEAD_PRINTING) {
             if (isDualExtruder(toolHead)) {
                 newModuleStatusList.push({
-                    moduleName: i18n._('key-App/Settings/MachineSettings-Dual Extruder Toolhead'),
+                    moduleName: i18n._(findToolHead(toolHead).label),
                     status: true
                 });
             } else {

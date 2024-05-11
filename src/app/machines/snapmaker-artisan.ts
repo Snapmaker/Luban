@@ -5,6 +5,7 @@ import {
     L20WLaserToolModule,
     L40WLaserToolModule,
     dualExtrusionPrintToolHead,
+    dualExtrusionPrintToolHeadForArtisan,
     highPower10WLaserToolHead,
     highPower200WCNCToolHead,
 } from './snapmaker-2-toolheads';
@@ -36,6 +37,14 @@ export const machine: Machine = {
         toolHeads: [
             {
                 identifier: dualExtrusionPrintToolHead.identifier,
+                configPath: 'printing/a400_dual',
+                workRange: {
+                    min: [0, 0, 0],
+                    max: [400, 370, 400],
+                },
+            },
+            {
+                identifier: dualExtrusionPrintToolHeadForArtisan.identifier,
                 configPath: 'printing/a400_dual',
             },
             {
