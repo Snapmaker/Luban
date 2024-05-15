@@ -12,11 +12,13 @@ import {
     HEAD_LASER,
     HEAD_PRINTING,
     LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
+    findToolHead,
     isDualExtruder
 } from '../../../constants/machines';
 import { RootState } from '../../../flux/index.def';
 import { MachineAgent } from '../../../flux/workspace/MachineAgent';
 import connectActions from '../../../flux/workspace/actions-connect';
+import workspaceActions from '../../../flux/workspace/index';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
 import { SnapmakerOriginalExtendedMachine, SnapmakerOriginalMachine } from '../../../machines';
@@ -132,6 +134,7 @@ const SerialConnection: React.FC = () => {
 
     const closePort = useCallback(() => {
         dispatch(connectActions.disconnect(selectedAgent));
+        dispatch(workspaceActions.updateState({ moduleList: [] }));
     }, [dispatch, selectedAgent]);
 
     const actions = {
@@ -230,7 +233,7 @@ const SerialConnection: React.FC = () => {
                 if (isDualExtruder(toolHead)) {
                     newModuleStatusList.push({
                         key: 'headtype',
-                        moduleName: i18n._('key-App/Settings/MachineSettings-Dual Extruder Toolhead'),
+                        moduleName: i18n._(findToolHead(toolHead).label),
                         status: true
                     });
                 } else {

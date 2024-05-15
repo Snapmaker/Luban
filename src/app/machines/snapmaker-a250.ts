@@ -85,7 +85,7 @@ export const machine: Machine = {
             },
             {
                 identifier: highPower200WCNCToolHead.identifier,
-                configPath: 'cnc/a250_high_power',
+                configPath: 'cnc/200W',
             }
         ],
 
