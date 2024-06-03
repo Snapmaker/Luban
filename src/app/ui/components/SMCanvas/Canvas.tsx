@@ -804,12 +804,6 @@ class Canvas extends React.PureComponent<CanvasProps> {
         }
     }
 
-    public stopSupportMode() {
-        if (this.controls) {
-            this.controls.stopSupportMode();
-        }
-    }
-
     public startMeshColoringMode(): void {
         if (this.controls) {
             this.controls.startMeshColoringMode();
@@ -821,9 +815,9 @@ class Canvas extends React.PureComponent<CanvasProps> {
         }
     }
 
-    public stopMeshColoringMode(): void {
+    public stopMode():void {
         if (this.controls) {
-            this.controls.stopMeshColoringMode();
+            this.controls.stopMode();
         }
     }
 
