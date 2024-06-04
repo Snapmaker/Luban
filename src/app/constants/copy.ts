@@ -227,9 +227,12 @@ i18n._('key-Printing/PrintingConfigurations-Material Settings');
 
 // Profile Default name and category
 i18n._('key-default_name-Carving V-bit');
+i18n._('key-default_name-Carving V-bit 4');
 i18n._('key-default_name-Flat End Mill 1.5');
 i18n._('key-default_name-Flat End Mill 3.175');
+i18n._('key-default_name-Flat End Mill 4');
 i18n._('key-default_name-Ball End Mill');
+i18n._('key-default_name-Ball End Mill 2');
 i18n._('key-default_name-Straight Groove V-bit');
 
 i18n._('key-default_name-CUT');
@@ -255,6 +258,12 @@ i18n._('key-default_name-Cutting 350g');
 i18n._('key-default_name-Cutting 1.6mm');
 i18n._('key-default_name-Cutting 4mm');
 
+i18n._('key-default_name-Line filled');
+i18n._('key-default_name-Dot filled');
+i18n._('key-default_name-On the path');
+i18n._('key-default_name-Vector dot filled');
+i18n._('key-default_name-Vector line filled');
+i18n._('key-default_name-Vector on the path');
 i18n._('key-default_name-ABS');
 i18n._('key-default_name-PETG');
 i18n._('key-default_name-PLA');
