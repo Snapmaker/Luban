@@ -276,6 +276,9 @@ export const initialState: WorkspaceState = {
     consoleHistory: new History<string>(1000),
     consoleLogs: [],
 
-    // ray control planel
-    setupCoordinateMethod: SetupCoordinateMethod.Manually
+    // ray
+    // control planel
+    setupCoordinateMethod: SetupCoordinateMethod.Manually,
+    // 1.6.8 < (has control planel), 1.6.8 >= (without control planel)
+    isRayNewVersion: false
 };

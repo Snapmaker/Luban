@@ -35,15 +35,18 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
         headType,
         machineIdentifier,
         workflowStatus,
-        isRotate
+        isRotate,
+        isRayNewVersion
     } = useSelector((state: RootState) => state.workspace);
     const server: MachineAgent = useSelector((state: RootState) => state.workspace.server);
     const dispatch = useDispatch();
     const [isConnectedRay, setIsConnectedRay] = useState(false);
     const [isShowTip, setIsShowTip] = useState(true);
     const canABPosition = useCallback(() => {
+        // if old ray firmware version, can't operate ab position
+        if (isConnectedRay && !isRayNewVersion) return false;
         return isConnected && machineIdentifier === activeMachine.identifier && headType === HEAD_LASER && WorkflowStatus.Idle === workflowStatus;
-    }, [isConnected, machineIdentifier, activeMachine, headType, workflowStatus]);
+    }, [isConnected, machineIdentifier, activeMachine, headType, workflowStatus, isConnectedRay, isRayNewVersion]);
 
     // Home Tip Modal state
     const [showHomeTip, setShowHomeTip] = useState(false);
@@ -67,12 +70,12 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
     }, [machineIdentifier]);
 
     useEffect(() => {
-        if (isHomed || !isConnected) {
+        if (isHomed || !isConnected || (isConnectedRay && !isRayNewVersion)) {
+            setShowHomeTip(false);
             return;
         }
-        console.log('isHomed', isHomed);
         setShowHomeTip(true);
-    }, [isHomed, isConnected]);
+    }, [isHomed, isConnected, isConnectedRay, isRayNewVersion]);
     const goHome = useCallback(async () => {
         return dispatch(workspaceActions.executeGcode('$H')) as unknown as Promise<void>;
     }, [dispatch]);

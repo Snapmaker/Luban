@@ -77,7 +77,7 @@ interface ControlPanelProps {
  * Control Panel.
  */
 const ControlPanel: React.FC<ControlPanelProps> = (props) => {
-    const { workPosition, disabled = true, actions, isNotInWorkspace, enableShortcut } = props;
+    const { workPosition, disabled = true, actions, isNotInWorkspace, enableShortcut, canABPosition } = props;
     const enableBAxis = workPosition.isFourAxis;
 
     const { headType, toolHead } = useSelector((state: RootState) => state.workspace);
@@ -339,7 +339,7 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
                     enableShortcut={enableShortcut}
                     enableBAxis={enableBAxis}
                     enableZAxis={!isConnectedRay}
-                    disabled={disabled}
+                    disabled={disabled || !canABPosition}
                     relativeMove={relativeMove}
                     absoluteMove={absoluteMove}
                 />

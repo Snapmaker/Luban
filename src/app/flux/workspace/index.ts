@@ -133,12 +133,14 @@ export const actions = {
                     moduleStatusList,
                     isHomed = false,
                     isMoving,
+                    isRayNewVersion
                 } = state;
                 const { seriesSize } = state;
 
                 dispatch(baseActions.updateState({
                     isHomed: isHomed,
                     isMoving,
+                    isRayNewVersion
                 }));
 
                 if (!isNil(seriesSize)) {

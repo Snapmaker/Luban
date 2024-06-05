@@ -1,7 +1,8 @@
 import { PeerId } from '@snapmaker/snapmaker-sacp-sdk/dist/communication/Header';
-import { includes } from 'lodash';
+import { includes, isNil } from 'lodash';
 
 import { v4 as uuidv4 } from 'uuid';
+import { gt } from 'semver';
 import {
     AIR_PURIFIER_MODULE_IDS,
     EMERGENCY_STOP_BUTTON,
@@ -91,19 +92,31 @@ class RayMachineInstance extends MachineInstance {
 
 
 
-        // Get Coordinate Info
-        const { data: coordinateInfos } = await (this.channel as SacpChannelBase).getCoordinateInfo();
-        const isHomed = !(coordinateInfos?.coordinateSystemInfo?.homed); // 0: homed, 1: need to home
-        state.isHomed = isHomed;
-        state.isMoving = false;
+        console.log('get CorrdinateInfo start', gt(machineInfo?.masterControlFirmwareVersion?.slice(1), '1.6.8'), machineInfo?.masterControlFirmwareVersion?.slice(1));
+        const isNewVersion = !isNil(machineInfo?.masterControlFirmwareVersion) && gt(machineInfo?.masterControlFirmwareVersion?.slice(1), '1.6.8');
+        state.isRayNewVersion = isNewVersion;
 
+        //
+        // Get Coordinate Info
+        if (isNewVersion) {
+            const { data: coordinateInfos } = await (this.channel as SacpChannelBase).getCoordinateInfo();
+            const isHomed = !(coordinateInfos?.coordinateSystemInfo?.homed); // 0: homed, 1: need to home
+            state.isHomed = isHomed;
+            state.isMoving = false;
+        }
+
+        console.log('get CorrdinateInfo', isNewVersion);
         this.socket.emit('connection:connected', { state: state, err: '' });
 
-        // Start heartbeat
-        // await this.channel.startHeartbeat();
         // Legacy
-        const sacpClient = (this.channel as SacpChannelBase).sacpClient;
-        await (this.channel as SacpChannelBase).startHeartbeatLegacy(sacpClient, undefined, this.id);
+        if (isNewVersion) {
+            console.log('startHeartbeatLegacy');
+            const sacpClient = (this.channel as SacpChannelBase).sacpClient;
+            await (this.channel as SacpChannelBase).startHeartbeatLegacy(sacpClient, undefined, this.id);
+        } else {
+            // Start heartbeat
+            await this.channel.startHeartbeat();
+        }
 
         // register handlers
         (this.channel as SacpChannelBase).registerErrorReportHandler();
