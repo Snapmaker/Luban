@@ -364,7 +364,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
             {
                 !isRotate && setupCoordinateMethod === SetupCoordinateMethod.ByControlPanel && (
                     <div className="margin-top-16">
-                        <ControlPanel widgetId="control" isNotInWorkspace={false} runBoundary={runBoundary} />
+                        <ControlPanel widgetId="control" isNotInWorkspace={false} runBoundary={runBoundary} canABPosition={isRayNewVersion} />
                     </div>
                 )
             }

@@ -71,6 +71,7 @@ interface ControlPanelProps {
     }
     executeGcode: () => void;
     runBoundary?: () => void;
+    canABPosition?:boolean
 }
 
 /**
@@ -113,7 +114,6 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
             return dispatch(workspaceActions.executeGcodeAutoHome(true));
         }
     }, [dispatch, workspaceActions, isConnectedRay]);
-
 
     useEffect(() => {
         if (!activeMachine) return;
@@ -339,7 +339,7 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
                     enableShortcut={enableShortcut}
                     enableBAxis={enableBAxis}
                     enableZAxis={!isConnectedRay}
-                    disabled={disabled || !canABPosition}
+                    disabled={disabled || (isNotInWorkspace && !canABPosition)}
                     relativeMove={relativeMove}
                     absoluteMove={absoluteMove}
                 />
