@@ -70,7 +70,7 @@ import Channel, {
     UploadFileOptions,
 } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
-import { L2WLaserToolModule } from '../../../../app/machines/snapmaker-2-toolheads';
+import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from '../../../../app/machines/snapmaker-2-toolheads';
 
 const log = logger('machine:channels:SacpChannel');
 
@@ -1588,9 +1588,9 @@ class SacpChannelBase extends Channel implements
             return;
         }
         const { laserToolHeadInfo } = await this.sacpClient.getLaserToolHeadInfo(headModule.key);
-        log.info(`toolHead:${toolHead},${includes([L2WLaserToolModule.identifier], toolHead)}, laserFocalLength:${laserToolHeadInfo.laserFocalLength}, materialThickness: ${materialThickness}, platformHeight:${laserToolHeadInfo.platformHeight}`);
+        log.info(`toolHead:${toolHead},${includes([L2WLaserToolModule.identifier, L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], toolHead)}, laserFocalLength:${laserToolHeadInfo.laserFocalLength}, materialThickness: ${materialThickness}, platformHeight:${laserToolHeadInfo.platformHeight}`);
         let z;
-        if (includes([L2WLaserToolModule.identifier], toolHead)) {
+        if (includes([L2WLaserToolModule.identifier, L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], toolHead)) {
             z = laserToolHeadInfo.platformHeight + materialThickness;
         } else {
             z = laserToolHeadInfo.laserFocalLength + laserToolHeadInfo.platformHeight + materialThickness;
