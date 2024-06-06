@@ -19,6 +19,7 @@ import { actions as editorActions } from '../../../flux/editor';
 import { HEAD_LASER, MotorPowerMode, SetupCoordinateMethod } from '../../../constants';
 import HomeTipModal from '../../widgets/RaySetOriginWidget/modals/HomeTipModal';
 import SvgIcon from '../../components/SvgIcon';
+import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
 
 interface ABPositionOverlayProps {
     onClose: () => void;
@@ -36,17 +37,22 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
         machineIdentifier,
         workflowStatus,
         isRotate,
-        isRayNewVersion
+        isRayNewVersion,
+        worksapceToolHead
     } = useSelector((state: RootState) => state.workspace);
     const server: MachineAgent = useSelector((state: RootState) => state.workspace.server);
     const dispatch = useDispatch();
     const [isConnectedRay, setIsConnectedRay] = useState(false);
     const [isShowTip, setIsShowTip] = useState(true);
     const canABPosition = useCallback(() => {
+        const isSupportedHead = includes([L2WLaserToolModule.identifier, L20WLaserToolModule.identifier, L40WLaserToolModule], worksapceToolHead);
         // if old ray firmware version, can't operate ab position
         if (isConnectedRay && !isRayNewVersion) return false;
-        return isConnected && machineIdentifier === activeMachine.identifier && headType === HEAD_LASER && WorkflowStatus.Idle === workflowStatus;
-    }, [isConnected, machineIdentifier, activeMachine, headType, workflowStatus, isConnectedRay, isRayNewVersion]);
+        return (isConnected
+        && machineIdentifier === activeMachine.identifier
+        && headType === HEAD_LASER
+        && isSupportedHead && WorkflowStatus.Idle === workflowStatus);
+    }, [isConnected, machineIdentifier, activeMachine, headType, workflowStatus, isConnectedRay, isRayNewVersion, worksapceToolHead]);
 
     // Home Tip Modal state
     const [showHomeTip, setShowHomeTip] = useState(false);
