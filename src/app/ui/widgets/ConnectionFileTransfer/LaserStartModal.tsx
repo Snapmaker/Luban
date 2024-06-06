@@ -12,7 +12,7 @@ import { Button } from '../../components/Buttons';
 import { NumberInput as Input } from '../../components/Input';
 import Modal from '../../components/Modal';
 import { Radio } from '../../components/Radio';
-import { L2WLaserToolModule, highPower10WLaserToolHead, standardLaserToolHead } from '../../../machines/snapmaker-2-toolheads';
+import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule, highPower10WLaserToolHead, standardLaserToolHead } from '../../../machines/snapmaker-2-toolheads';
 import { SnapmakerA150Machine, SnapmakerA250Machine, SnapmakerA350Machine } from '../../../machines';
 import { ConnectionType } from '../../../flux/workspace/state';
 
@@ -53,8 +53,13 @@ const LaserStartModal: React.FC<LaserStartModalProps> = ({
             highPower10WLaserToolHead.identifier,
         ], toolHeadIdentifier);
         console.log('ddddddddd', connectionType === ConnectionType.Serial, isSM2, toolHeadIdentifier === L2WLaserToolModule.identifier);
+        const notSupportSM2SerialLaserHead = includes([
+            L2WLaserToolModule.identifier,
+            L20WLaserToolModule.identifier,
+            L40WLaserToolModule.identifier
+        ], toolHeadIdentifier);
 
-        setSupportSemiMode(supportHead || !(L2WLaserToolModule.identifier === toolHeadIdentifier && isSM2 && connectionType === ConnectionType.Serial));
+        setSupportSemiMode(supportHead || !(notSupportSM2SerialLaserHead && isSM2 && connectionType === ConnectionType.Serial));
     });
 
     useEffect(() => {
