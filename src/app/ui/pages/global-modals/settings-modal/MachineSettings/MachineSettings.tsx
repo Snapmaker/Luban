@@ -4,8 +4,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { includes } from 'lodash';
+import { Checkbox } from 'antd';
 import { Button } from '../../../../components/Buttons';
-import Checkbox from '../../../../components/Checkbox';
 import {
     findMachineByName,
     findMachineModule,
