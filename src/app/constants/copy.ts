@@ -353,6 +353,10 @@ i18n._('key-Workspace/Connection-Laser');
 i18n._('Key-Workspace/LaserStartJob-manual_mode_description');
 i18n._('key-Workspace/Marlin-Left Nozzle Temp');
 
+// workspace controllers
+i18n._('key-Workspace/Control/JogDistance-XY Axis Travel Distance');
+i18n._('key-Workspace/Control/JogDistance-XYZ Axis Travel Distance');
+
 // Progress Manager
 i18n._('key-Progress/LaserCNC-Generate toolpath and preview: {{progress}}%');
 i18n._('key-Progress/LaserCNC-Generated toolpath and previewed successfully.');

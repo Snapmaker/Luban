@@ -1,10 +1,11 @@
-import { Checkbox } from 'antd';
 import type { CheckboxValueType } from 'antd/es/checkbox/Group';
 import classNames from 'classnames';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { includes } from 'lodash';
+import { Button } from '../../../../components/Buttons';
+import Checkbox from '../../../../components/Checkbox';
 import {
     findMachineByName,
     findMachineModule,
@@ -65,6 +66,8 @@ const MachineSettings: React.FC = () => {
     const [printingToolHeadSelected, setPrintingToolHeadSelected] = useState(toolHead.printingToolhead);
     const [laserToolHeadSelected, setLaserToolHeadSelected] = useState(toolHead.laserToolhead);
     const [cncToolHeadSelected, setCncToolHeadSelected] = useState(toolHead.cncToolhead);
+    const [tmpIsMultiDualExtrusion, setTmpIsMultiDualExtrusion] = useState(isMultiDualExtrusion);
+
 
     // change options when new machine series selected
     useEffect(() => {
@@ -140,6 +143,10 @@ const MachineSettings: React.FC = () => {
     const dispatch = useDispatch();
 
 
+    const selectedArtisan = useMemo(() => {
+        return includes([SnapmakerArtisanMachine.identifier], state.series);
+    }, [state.series]);
+
     const renderArtsianDualExtrusionSelectModal = () => {
         return (
             <Modal
@@ -153,18 +160,46 @@ const MachineSettings: React.FC = () => {
                     </div>
                 </Modal.Header>
                 <Modal.Body>
-                    <div className="margin-bottom-16">
+                    <div>
+                        {i18n._('There are two versions of the Dual Extrusion 3D Printing Module: one for Artisan and one for Snapmaker 2.0. If you are using the Snapmaker 2.0 version of the Dual Extrusion 3D Printing Module, be sure to activate the 3D Print Head option and save your changes.')}
+                    </div>
+                    <div className="margin-top-16">
                         <Checkbox
-                            defaultChecked={isMultiDualExtrusion}
-                            checked={isMultiDualExtrusion}
+                            defaultChecked={tmpIsMultiDualExtrusion}
+                            checked={tmpIsMultiDualExtrusion}
+                            className="margin-right-8"
                             onChange={(event) => {
                                 // hard-code for artsian dualextrusion
-                                dispatch(machineActions.updateIsMultiDualExtrusion(event.target.checked));
+                                setTmpIsMultiDualExtrusion(event.target.checked);
                             }}
-                        />
-                        aaaaaaaaaaaaaa
+                        >
+                            {i18n._('Enable 3D Print Head Setting')}
+                        </Checkbox>
                     </div>
                 </Modal.Body>
+                <Modal.Footer>
+                    <Button
+                        priority="level-two"
+                        type="default"
+                        className="margin-right-8"
+                        width="96px"
+                        onClick={() => setIsOpenArtsianDualExtrusionSelectModal(false)}
+                    >
+                        {i18n._('Close')}
+                    </Button>
+                    <Button
+                        priority="level-two"
+                        type="primary"
+                        className="align-r"
+                        width="96px"
+                        onClick={() => {
+                            dispatch(machineActions.updateIsMultiDualExtrusion(tmpIsMultiDualExtrusion));
+                            setIsOpenArtsianDualExtrusionSelectModal(false);
+                        }}
+                    >
+                        {i18n._('Save')}
+                    </Button>
+                </Modal.Footer>
             </Modal>
         );
     };
@@ -259,6 +294,9 @@ const MachineSettings: React.FC = () => {
         series, connectionTimeout, size, enclosureDoorDetection, zAxisModule, modules,
     ]);
 
+    useEffect(() => {
+        setTmpIsMultiDualExtrusion(isMultiDualExtrusion);
+    }, [isMultiDualExtrusion]);
 
     // Save changes
     const onSave = useCallback(async () => {
@@ -303,9 +341,6 @@ const MachineSettings: React.FC = () => {
         };
     }, [onSave, onCancel]);
 
-    const selectedArtisan = useMemo(() => {
-        return includes([SnapmakerArtisanMachine.identifier], state.series);
-    }, [state.series]);
 
     return (
         <>
