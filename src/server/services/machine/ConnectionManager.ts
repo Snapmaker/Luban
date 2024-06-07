@@ -667,7 +667,7 @@ class ConnectionManager {
                         // Fixme: multi call to set work orign coordinate
                         // Camera Aid Background mode, force machine to work on machine coordinates (Origin = 0,0)
                         if (background.enabled && !isRotate && !useABPosition) {
-                            await this.channel.setAbsoluteWorkOrigin({ x: 0, y: 0, z: 0, isRotate });
+                            await this.channel.setAbsoluteWorkOrigin({ x: 0, y: 0, isRotate });
                         }
                     }
 
