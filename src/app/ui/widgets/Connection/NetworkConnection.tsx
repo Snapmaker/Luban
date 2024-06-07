@@ -361,6 +361,7 @@ const NetworkConnection: React.FC = () => {
         if (server) {
             dispatch(connectActions.disconnect(server));
             dispatch(workspaceActions.updateState({ moduleList: [] }));
+            dispatch(workspaceActions.updateState({ laserCamera: false }));
         }
     }, [dispatch, server]);
 
@@ -579,7 +580,6 @@ const NetworkConnection: React.FC = () => {
             }
         }
 
-        console.log('==========================', moduleStatusList, airPurifierHasPower);
         Object.keys(moduleStatusList).forEach((key) => {
             if (moduleStatusList[key]) {
                 newModuleStatusList.push({

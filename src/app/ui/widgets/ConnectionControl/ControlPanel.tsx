@@ -290,7 +290,9 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
     return (
         <div className={styles['control-panel']}>
             {
-                (headType === HEAD_LASER && !includes([L2WLaserToolModule.identifier], toolHead)) && (
+                (headType === HEAD_LASER
+                    && !includes([L2WLaserToolModule.identifier], toolHead)
+                    && !(isConnectedRay && isNotInWorkspace)) && (
                     <div className="margin-bottom-8">
                         <div className="sm-flex justify-space-between">
                             <span>{i18n._('Keep Laser On When Moving')}</span>

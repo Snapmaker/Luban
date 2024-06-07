@@ -38,16 +38,17 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
         workflowStatus,
         isRotate,
         isRayNewVersion,
-        worksapceToolHead
+        toolHead: worksapceToolHead
     } = useSelector((state: RootState) => state.workspace);
     const server: MachineAgent = useSelector((state: RootState) => state.workspace.server);
     const dispatch = useDispatch();
     const [isConnectedRay, setIsConnectedRay] = useState(false);
     const [isShowTip, setIsShowTip] = useState(true);
     const canABPosition = useCallback(() => {
-        const isSupportedHead = includes([L2WLaserToolModule.identifier, L20WLaserToolModule.identifier, L40WLaserToolModule], worksapceToolHead);
+        const isSupportedHead = includes([L2WLaserToolModule.identifier, L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], worksapceToolHead);
         // if old ray firmware version, can't operate ab position
         if (isConnectedRay && !isRayNewVersion) return false;
+
         return (isConnected
         && machineIdentifier === activeMachine.identifier
         && headType === HEAD_LASER
@@ -76,7 +77,11 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
     }, [machineIdentifier]);
 
     useEffect(() => {
-        if (isHomed || !isConnected || (isConnectedRay && !isRayNewVersion)) {
+        console.log('+++++++++++++++', isHomed, isConnectedRay && !isRayNewVersion);
+        if (isConnectedRay && !isRayNewVersion) {
+            setShowHomeTip(false);
+        }
+        if (isHomed || !isConnected) {
             setShowHomeTip(false);
             return;
         }

@@ -32,7 +32,7 @@ const HomeTipModal: React.FC<HomeTipModalProps> = (props) => {
                 <Button
                     type="default"
                     priority="level-two"
-                    className="align-r"
+                    className="align-r margin-right-8"
                     width="96px"
                     onClick={() => onClose && onClose()}
                 >

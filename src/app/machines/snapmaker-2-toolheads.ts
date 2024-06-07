@@ -122,7 +122,7 @@ export const L2WLaserToolModule: ToolHead = {
     identifier: '2W Laser Module',
 
     label: '2W Laser Module',
-    image: '/resources/images/machine/40w_laser_module.jpeg',
+    image: '/resources/images/machine/2w-laser-module.jpg',
 
     metadata: {
         headType: ToolHeadType.Laser,

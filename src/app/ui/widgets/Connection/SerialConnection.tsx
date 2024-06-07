@@ -136,6 +136,7 @@ const SerialConnection: React.FC = () => {
     const closePort = useCallback(() => {
         dispatch(connectActions.disconnect(selectedAgent));
         dispatch(workspaceActions.updateState({ moduleList: [] }));
+        dispatch(workspaceActions.updateState({ laserCamera: false }));
     }, [dispatch, selectedAgent]);
 
     const actions = {
