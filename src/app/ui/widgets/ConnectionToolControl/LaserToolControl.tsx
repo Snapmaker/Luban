@@ -20,9 +20,10 @@ import { L2WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
 
 interface LaserToolControlProps {
     withoutTips?: boolean
+    isConnectedRay?: boolean
 }
 const LaserToolControl: React.FC<LaserToolControlProps> = (props) => {
-    const { withoutTips } = props;
+    const { withoutTips, isConnectedRay } = props;
     const {
         isConnected,
 
@@ -121,40 +122,6 @@ const LaserToolControl: React.FC<LaserToolControlProps> = (props) => {
 
     return (
         <div>
-            {isPrintingValue && (
-                <AttributeContainer
-                    handleSubmit={(value) => {
-                        onSaveLaserPower(value);
-                    }}
-                    initValue={localLaserPower}
-                    title={i18n._('key-unused-Laser Power')}
-                    suffix="%"
-                    inputMax={100}
-                    hasSlider
-                    inputMin={0}
-                    sliderMin={0}
-                    sliderMax={100}
-                >
-                    <div className="width-44 sm-flex sm-flex-direction-c margin-left-16">
-                        <span>{localLaserPower}%</span>
-                    </div>
-                </AttributeContainer>
-            )}
-            {isPrintingValue && <WorkSpeed />}
-
-            {/* Turn On/Off laser */}
-            {
-                toolHead !== L2WLaserToolModule.identifier && !isPrintingValue && (
-                    <div className="sm-flex justify-space-between margin-vertical-8">
-                        <span>{i18n._('key-unused-Laser Power')}</span>
-                        <Switch
-                            className="sm-flex-auto"
-                            onClick={onClickLaserPower}
-                            checked={Boolean(laserPowerOpen)}
-                        />
-                    </div>
-                )
-            }
 
             {
                 activeToolMetadata.supportCrosshair && (
@@ -180,6 +147,41 @@ const LaserToolControl: React.FC<LaserToolControlProps> = (props) => {
                                 {i18n._('Turn Off')}
                             </Button>
                         </div>
+                    </div>
+                )
+            }
+
+            {isPrintingValue && (
+                <AttributeContainer
+                    handleSubmit={(value) => {
+                        onSaveLaserPower(value);
+                    }}
+                    initValue={localLaserPower}
+                    title={i18n._('key-unused-Laser Power')}
+                    suffix="%"
+                    inputMax={100}
+                    hasSlider
+                    inputMin={0}
+                    sliderMin={0}
+                    sliderMax={100}
+                >
+                    <div className="width-44 sm-flex sm-flex-direction-c margin-left-16">
+                        <span>{localLaserPower}%</span>
+                    </div>
+                </AttributeContainer>
+            )}
+            {isPrintingValue && <WorkSpeed />}
+
+            {/* Turn On/Off laser */}
+            {
+                toolHead !== L2WLaserToolModule.identifier && !isPrintingValue && !isConnectedRay && (
+                    <div className="sm-flex justify-space-between margin-vertical-8">
+                        <span>{i18n._('key-unused-Laser Power')}</span>
+                        <Switch
+                            className="sm-flex-auto"
+                            onClick={onClickLaserPower}
+                            checked={Boolean(laserPowerOpen)}
+                        />
                     </div>
                 )
             }

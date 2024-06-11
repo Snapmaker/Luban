@@ -20,6 +20,7 @@ import { HEAD_LASER, MotorPowerMode, SetupCoordinateMethod } from '../../../cons
 import HomeTipModal from '../../widgets/RaySetOriginWidget/modals/HomeTipModal';
 import SvgIcon from '../../components/SvgIcon';
 import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
+import { JobOffsetMode } from '../../../constants/coordinate';
 
 interface ABPositionOverlayProps {
     onClose: () => void;
@@ -28,6 +29,7 @@ interface ABPositionOverlayProps {
 const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
     const { size, activeMachine } = useSelector((state: RootState) => state.machine);
     const { tmpAPosition, tmpBPosition, materials } = useSelector((state: RootState) => state.laser);
+    const jobOffsetMode: JobOffsetMode = useSelector((state: RootState) => state.laser.jobOffsetMode);
     const {
         workPosition,
         originOffset,
@@ -46,14 +48,28 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
     const [isShowTip, setIsShowTip] = useState(true);
     const canABPosition = useCallback(() => {
         const isSupportedHead = includes([L2WLaserToolModule.identifier, L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], worksapceToolHead);
-        // if old ray firmware version, can't operate ab position
+        const isCrosshairJobOffsetMode = includes([JobOffsetMode.Crosshair], jobOffsetMode);
+
+        // if old ray firmware version, can't operate AB Position
         if (isConnectedRay && !isRayNewVersion) return false;
 
+        // Scenarios where AB Position can be enabled:
+        // 1. The machine is connected.
+        // 2. The connected machine must be consistent with the machine setting in the software.
+        // 3. Only 20W, 40W, and 2W laser modules support AB Position functionality; other modules do not have a red crosshair.
+        // 4. In Ray machines, only the JobOffsetMode set to "Crosshair" can be used.
+        // To-do:
+        // The "laserSpot" mode is currently unavailable due to some bugs(firmware). The laser on/off sacp interface of the Ray machine is
+        // different from other machines and requires firmware debugging to be corrected.
+        // 5. AB Position is only available for Ray machines with a firmware version greater than 1.6.8.
         return (isConnected
-        && machineIdentifier === activeMachine.identifier
-        && headType === HEAD_LASER
-        && isSupportedHead && WorkflowStatus.Idle === workflowStatus);
-    }, [isConnected, machineIdentifier, activeMachine, headType, workflowStatus, isConnectedRay, isRayNewVersion, worksapceToolHead]);
+            && machineIdentifier === activeMachine.identifier
+            && headType === HEAD_LASER
+            && isSupportedHead && WorkflowStatus.Idle === workflowStatus
+            && (isConnectedRay ? isCrosshairJobOffsetMode : true)
+            && (isConnectedRay ? isRayNewVersion : true)
+        );
+    }, [isConnected, machineIdentifier, activeMachine, headType, workflowStatus, isConnectedRay, isRayNewVersion, worksapceToolHead, jobOffsetMode]);
 
     // Home Tip Modal state
     const [showHomeTip, setShowHomeTip] = useState(false);
@@ -74,12 +90,14 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
             return;
         }
         setIsConnectedRay(includes([SnapmakerRayMachine.identifier], machineIdentifier));
+        console.log('isConnectedRay', includes([SnapmakerRayMachine.identifier], machineIdentifier), machineIdentifier, SnapmakerRayMachine.identifier);
     }, [machineIdentifier]);
 
     useEffect(() => {
         console.log('+++++++++++++++', isHomed, isConnectedRay && !isRayNewVersion);
-        if (isConnectedRay && !isRayNewVersion) {
+        if (isConnectedRay ? !isRayNewVersion : false) {
             setShowHomeTip(false);
+            return;
         }
         if (isHomed || !isConnected) {
             setShowHomeTip(false);
@@ -185,7 +203,7 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
                             <span className={classNames(styles['abposition-unit'])}>mm</span>
                         </div>
                     </div>
-                    {canABPosition() && <LaserToolControl withoutTips />}
+                    {canABPosition() && <LaserToolControl withoutTips isConnectedRay={isConnectedRay} />}
                     <div className="">
                         <ConnectionControl canABPosition={canABPosition()} widgetId="control" widgetActions={widgetActions} isNotInWorkspace />
                     </div>
