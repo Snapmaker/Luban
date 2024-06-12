@@ -150,6 +150,43 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
     };
     const numberformat = (value) => (typeof value === 'undefined' ? '--' : value);
 
+
+    const renderTips = () => {
+        let text = '';
+        if (isConnectedRay) {
+            text = 'Use the control panel to position points A and B on the machine. Please do not move the print head manually.';
+        } else {
+            return '';
+        }
+
+        if (includes([JobOffsetMode.LaserSpot], jobOffsetMode)) {
+            text = 'When using the Laser Spot Job Offset Mode, the AB Position feature is currently not supported.';
+        }
+
+        console.log('rendertips:', isConnectedRay, text, includes([JobOffsetMode.LaserSpot], jobOffsetMode));
+
+        return (
+            <>
+                <div className="sm-flex height-32 justify-space-between">
+                    <span className={classNames(styles['ab-position-remind'])}>{i18n._('Warm reminder')}</span>
+                    <div>
+                        <SvgIcon
+                            key="DropdownLine"
+                            disabled={false}
+                            name="DropdownLine"
+                            type={['static']}
+                            onClick={() => setIsShowTip(!isShowTip)}
+                            className={classNames(
+                                isShowTip ? '' : 'rotate180'
+                            )}
+                        />
+                    </div>
+                </div>
+                {isShowTip && <Alert className="width-percent-100 border-radius-8" message={text} type="warning" showIcon />}
+            </>
+        );
+    };
+
     return (
         <>
             <div className={classNames(
@@ -162,27 +199,7 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
                     {i18n._('key-CncLaser/MainToolBar-A-B Position')}
                 </div>
                 <div className={classNames(styles['ab-position-overlay-content'], 'justify-space-between', 'padding-vertical-16', 'padding-horizontal-16')}>
-                    {isConnectedRay
-                    && (
-                        <>
-                            <div className="sm-flex height-32 justify-space-between">
-                                <span className={classNames(styles['ab-position-remind'])}>{i18n._('Warm reminder')}</span>
-                                <div>
-                                    <SvgIcon
-                                        key="DropdownLine"
-                                        disabled={false}
-                                        name="DropdownLine"
-                                        type={['static']}
-                                        onClick={() => setIsShowTip(!isShowTip)}
-                                        className={classNames(
-                                            isShowTip ? '' : 'rotate180'
-                                        )}
-                                    />
-                                </div>
-                            </div>
-                            {isShowTip && <Alert className="width-percent-100 border-radius-8" message="Use the control panel to position points A and B on the machine. Please do not move the print head manually." type="warning" showIcon />}
-                        </>
-                    )}
+                    {renderTips()}
                     <div className={classNames(styles['abposition-grid-container'])}>
                         <div className={classNames(styles['abposition-grid-item'], styles['abposition-point'])}>A</div>
                         <div className={classNames(styles['abposition-grid-item'])}>

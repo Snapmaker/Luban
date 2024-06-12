@@ -482,3 +482,8 @@ i18n._('key-Definition/Category-unclassified');
 i18n._('key-2D/Model_basename-Text');
 i18n._('key-2D/Model_basename-Shape');
 i18n._('key-Workspace/LaserStartJob-manual_mode_description');
+
+
+// AB Position
+i18n._('Use the control panel to position points A and B on the machine. Please do not move the print head manually.');
+i18n._('When using the Laser Spot Job Offset Mode, the AB Position feature is currently not supported.');
