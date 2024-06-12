@@ -400,6 +400,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                 }
             },);
 
+        // AB Position
         if (
             !isOriginalSeries
             && includes([L2WLaserToolModule.identifier, L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], machineToolHead.laserToolhead)

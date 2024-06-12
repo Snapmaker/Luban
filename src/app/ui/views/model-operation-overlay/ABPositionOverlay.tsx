@@ -99,12 +99,12 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
             setShowHomeTip(false);
             return;
         }
-        if (isHomed || !isConnected) {
+        if (isHomed || !isConnected || !canABPosition()) {
             setShowHomeTip(false);
             return;
         }
         setShowHomeTip(true);
-    }, [isHomed, isConnected, isConnectedRay, isRayNewVersion]);
+    }, [isHomed, isConnected, isConnectedRay, isRayNewVersion, canABPosition]);
     const goHome = useCallback(async () => {
         return dispatch(workspaceActions.executeGcode('$H')) as unknown as Promise<void>;
     }, [dispatch]);
