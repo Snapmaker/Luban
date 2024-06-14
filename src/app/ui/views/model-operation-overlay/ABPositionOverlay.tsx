@@ -154,13 +154,13 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
     const renderTips = () => {
         let text = '';
         if (isConnectedRay) {
-            text = 'Use the control panel to position points A and B on the machine. Please do not move the print head manually.';
+            text = i18n._('Use the control panel to position points A and B on the machine. Please do not move the print head manually.');
         } else {
             return '';
         }
 
         if (includes([JobOffsetMode.LaserSpot], jobOffsetMode)) {
-            text = 'When using the Laser Spot Job Offset Mode, the AB Position feature is currently not supported.';
+            text = i18n._('When using the Laser Spot Job Offset Mode, the AB Position feature is currently not supported.');
         }
 
         console.log('rendertips:', isConnectedRay, text, includes([JobOffsetMode.LaserSpot], jobOffsetMode));
