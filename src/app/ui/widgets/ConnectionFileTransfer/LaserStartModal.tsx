@@ -127,6 +127,17 @@ const LaserStartModal: React.FC<LaserStartModalProps> = ({
     }, []);
 
 
+    const [manualModeDesc, setManualModeDesc] = useState('key-Workspace/LaserStartJob-manual_mode_description');
+    useEffect(() => {
+        const useLaserSpotHead = includes([
+            L2WLaserToolModule.identifier,
+            L20WLaserToolModule.identifier,
+            L40WLaserToolModule.identifier,
+        ], toolHeadIdentifier);
+        setManualModeDesc(useLaserSpotHead ? 'key-Workspace/LaserStartJob-20w_40w_2w_manual_mode_description' : 'key-Workspace/LaserStartJob-manual_mode_description');
+    }, []);
+
+
     // i18n._('')
     // const { AUTO_MDOE, SEMI_AUTO_MODE, MANUAL_MODE } = LaserLevelingMode;
     const arry = [
@@ -176,7 +187,7 @@ const LaserStartModal: React.FC<LaserStartModalProps> = ({
             key: MANUAL_MODE,
             name: i18n._('key-Workspace/LaserStartJob-manual_mode'),
             description: () => (
-                <Trans i18nKey="key-Workspace/LaserStartJob-manual_mode_description">
+                <Trans i18nKey={manualModeDesc}>
                     In <b>Manually control</b> the movement of the execution head until the laser beam converges into the smallest spot on the surface of
                     the material. Click to <b>start the job</b>, the machine will use the current height as the laser height.
                 </Trans>

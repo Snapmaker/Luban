@@ -2063,6 +2063,7 @@
     "key-Workspace/Input password": "",
     "key-Workspace/Laser-high_power_tips": "The laser power will be set minimum when you turn on the laser.",
     "key-Workspace/LaserStartJob-10w_3axis_start_job_prompt": "Under the Auto Mode, the machine will run auto focus according to the material thickness you input, and start the job.<1></1>Under the Manual Mode, the machine will use the current work origin to start the job. Make sure you’ve set the work origin before starting.<3></3>Safety Info: Before use, make sure the machine has been equipped with an enclosure, and both the operator and bystanders have worn Laser Safety Goggles.",
+    "key-Workspace/LaserStartJob-20w_40w_2w_manual_mode_description": "",
     "key-Workspace/LaserStartJob-3axis_start_job_material_thickness": "Material Thickness",
     "key-Workspace/LaserStartJob-3axis_start_job_prompt": "Under the Auto Mode, the machine will run auto focus according to the material thickness you input, and start the job.<1></1>Under the Manual Mode, the machine will use the current work origin to start the job. Make sure you’ve set the work origin before starting.<3></3>Safety Info: Before use, make sure the machine has been equipped with an enclosure, and both the operator and bystanders have worn Laser Safety Goggles.",
     "key-Workspace/LaserStartJob-4axis_start_job_prompt": "The machine will use the current work origin to start the job. Make sure you’ve set the work origin before starting.<1></1>Safety Info: Before use, make sure the machine has been equipped with an enclosure, and both the operator and bystanders have worn Laser Safety Goggles.",
@@ -2407,5 +2408,6 @@
     "key_menu_Quit": "Quit",
     "key_menu_Services": "Services",
     "key_menu_Unhide": "Unhide",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Transformation"
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Transformation",
+    "manualModeDesc": ""
 }

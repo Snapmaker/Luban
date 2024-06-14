@@ -2063,6 +2063,7 @@
     "key-Workspace/Input password": "",
     "key-Workspace/Laser-high_power_tips": "레이저를 켜면 레이저 출력이 최소로 설정됩니다.",
     "key-Workspace/LaserStartJob-10w_3axis_start_job_prompt": "자동 모드에서 머신은 입력한 재료 두께에 따라 자동 포커스를 실행하고 작업을 시작합니다.<1></1>수동 모드에서 머신은 현재 작업 원점을 사용하여 작업을 시작합니다. 시작하기 전에 작업 원점을 설정했는지 확인하십시오. <3></3>안전 정보: 사용하기 전에 머신에 인클로저가 장착되어 있고 작업자와 주변인 모두 레이저 안전 고글을 착용했는지 확인하십시오.",
+    "key-Workspace/LaserStartJob-20w_40w_2w_manual_mode_description": "",
     "key-Workspace/LaserStartJob-3axis_start_job_material_thickness": "재료 두께",
     "key-Workspace/LaserStartJob-3axis_start_job_prompt": "자동 모드에서 머신은 입력한 재료 두께에 따라 자동 포커스를 실행하고 작업을 시작합니다.<1></1>수동 모드에서 머신은 현재 작업 원점을 사용하여 작업을 시작합니다. 시작하기 전에 작업 원점을 설정했는지 확인하십시오. <3></3>안전 정보: 사용하기 전에 머신에 인클로저가 장착되어 있고 작업자와 주변인 모두 레이저 안전 고글을 착용했는지 확인하십시오.",
     "key-Workspace/LaserStartJob-4axis_start_job_prompt": "머신은 현재 작업 원점을 사용하여 작업을 시작합니다. 시작하기 전에 작업 원점을 설정했는지 확인하십시오. <1></1>안전 정보: 사용하기 전에 머신에 인클로저가 장착되어 있고 작업자와 주변인 모두 레이저 안전 고글을 착용했는지 확인하십시오.",
@@ -2407,5 +2408,6 @@
     "key_menu_Quit": "종료",
     "key_menu_Services": "서비스",
     "key_menu_Unhide": "숨김 해제",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "변형"
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "변형",
+    "manualModeDesc": ""
 }

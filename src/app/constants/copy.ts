@@ -482,6 +482,7 @@ i18n._('key-Definition/Category-unclassified');
 i18n._('key-2D/Model_basename-Text');
 i18n._('key-2D/Model_basename-Shape');
 i18n._('key-Workspace/LaserStartJob-manual_mode_description');
+i18n._('key-Workspace/LaserStartJob-20w_40w_2w_manual_mode_description');
 
 
 // AB Position

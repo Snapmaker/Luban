@@ -2063,6 +2063,7 @@
     "key-Workspace/Input password": "",
     "key-Workspace/Laser-high_power_tips": "レーザーをオンにすると、レーザー出力は最小に設定されます。",
     "key-Workspace/LaserStartJob-10w_3axis_start_job_prompt": "自動モードにおいて、マシンは入力する材料厚みに応じたオートフォーカスを実行します。<1></1>マニュアルモードでは、マシンはマシンはジョブの開始にあたり現在の作業原点を使用します。開始前に確実に作業原点を設定してください。<3></3>安全情報: 使用前に必ず、マシンにエンクロージャーを装備し、作業者や周囲の人はレーザー保護メガネを装着してください。",
+    "key-Workspace/LaserStartJob-20w_40w_2w_manual_mode_description": "",
     "key-Workspace/LaserStartJob-3axis_start_job_material_thickness": "材料厚み",
     "key-Workspace/LaserStartJob-3axis_start_job_prompt": "自動モードにおいて、マシンは入力する材料厚みに応じたオートフォーカスを実行します。<1></1>マニュアルモードでは、マシンはマシンはジョブの開始にあたり現在の作業原点を使用します。開始前に確実に作業原点を設定してください。<3></3>安全情報: 使用前に必ず、マシンにエンクロージャーを装備し、作業者や周囲の人はレーザー保護メガネを装着してください。",
     "key-Workspace/LaserStartJob-4axis_start_job_prompt": "マシンはジョブの開始にあたり現在の作業原点を使用します。開始前に確実に作業原点を設定してください。<1></1>安全情報: 使用前に必ず、マシンにエンクロージャーを装備し、作業者や周囲の人はレーザー保護メガネを装着してください。",
@@ -2407,5 +2408,6 @@
     "key_menu_Quit": "終了",
     "key_menu_Services": "サービス",
     "key_menu_Unhide": "表示",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "変換"
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "変換",
+    "manualModeDesc": ""
 }

@@ -2063,6 +2063,7 @@
     "key-Workspace/Input password": "Passwort eingeben",
     "key-Workspace/Laser-high_power_tips": "Die Laserleistung wird beim Einschalten des Lasers auf das Minimum eingestellt.",
     "key-Workspace/LaserStartJob-10w_3axis_start_job_prompt": "Im Auto-Modus führt das Gerät einen Autofokus entsprechend der von Ihnen eingegebenen Materialdicke aus und startet den Auftrag.<1></1>Im manuellen Modus verwendet das Gerät den aktuellen Arbeitsursprung, um den Auftrag zu starten. Vergewissern Sie sich, dass Sie den Arbeitsursprung eingestellt haben, bevor Sie beginnen.<3></3>Sicherheitsinformationen: Vergewissern Sie sich vor der Verwendung, dass das Gerät mit einem Gehäuse ausgestattet ist und dass sowohl der Bediener als auch umstehende Personen eine Laserschutzbrille tragen.",
+    "key-Workspace/LaserStartJob-20w_40w_2w_manual_mode_description": "",
     "key-Workspace/LaserStartJob-3axis_start_job_material_thickness": "Materialdicke",
     "key-Workspace/LaserStartJob-3axis_start_job_prompt": "Im Auto-Modus führt das Gerät einen Autofokus entsprechend der von Ihnen eingegebenen Materialdicke aus und startet den Auftrag.<1></1>Im manuellen Modus verwendet das Gerät den aktuellen Arbeitsursprung, um den Auftrag zu starten. Vergewissern Sie sich, dass Sie den Arbeitsursprung eingestellt haben, bevor Sie beginnen.<3></3>Sicherheitsinformationen: Vergewissern Sie sich vor der Verwendung, dass das Gerät mit einem Gehäuse ausgestattet ist und dass sowohl der Bediener als auch umstehende Personen eine Laserschutzbrille tragen.",
     "key-Workspace/LaserStartJob-4axis_start_job_prompt": "Das Gerät verwendet den aktuellen Arbeitsursprung, um den Auftrag zu starten. Vergewissern Sie sich, dass Sie den Arbeitsursprung eingestellt haben, bevor Sie beginnen.<1></1>Sicherheitsinformationen: Vergewissern Sie sich vor der Verwendung, dass das Gerät mit einem Gehäuse ausgestattet ist und dass sowohl der Bediener als auch umstehende Personen eine Laserschutzbrille tragen.",
@@ -2407,5 +2408,6 @@
     "key_menu_Quit": "Beenden",
     "key_menu_Services": "Dienstleistungen",
     "key_menu_Unhide": "Einblenden",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Umwandlung"
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Umwandlung",
+    "manualModeDesc": ""
 }

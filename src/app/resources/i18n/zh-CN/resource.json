@@ -2063,6 +2063,7 @@
     "key-Workspace/Input password": "输入密码",
     "key-Workspace/Laser-high_power_tips": "开启激光后，激光功率将设为最小值。",
     "key-Workspace/LaserStartJob-10w_3axis_start_job_prompt": "自动模式下，机器将测量材料厚度并自动对焦，随后开始作业。<1></1>非自动模式下，机器将依据输入的材料厚度完成对焦，随后开始作业。<3></3>安全提示：使用前，请确保机器已安装外罩，操作者和旁观者均已佩戴激光护目镜。",
+    "key-Workspace/LaserStartJob-20w_40w_2w_manual_mode_description": "在<1>控制</1>中设置工作原点，调节对焦杆使其触碰材料，当旋钮上方的横线对齐刻度 0 或者 Focus 时，焦点（红外激光不可见）将落在材料表面。若没有重新设置工作原点，则机器将使用与上次作业相同的工作原点。",
     "key-Workspace/LaserStartJob-3axis_start_job_material_thickness": "材料厚度",
     "key-Workspace/LaserStartJob-3axis_start_job_prompt": "自动模式下，机器将依据输入的材料厚度完成自动对焦，并开始作业。<1></1>非自动模式下，机器将使用现有原点开始作业。请确保在开始前已设定工作原点。<3></3>安全提示：使用前，请确保机器已安装外罩，操作者和旁观者均已佩戴激光护目镜。",
     "key-Workspace/LaserStartJob-4axis_start_job_prompt": "机器将使用现有原点开始作业。请确保在开始前已设定工作原点。<1></1>安全提示：使用前，请确保机器已安装外罩，操作者和旁观者均已佩戴激光护目镜。",
@@ -2407,5 +2408,6 @@
     "key_menu_Quit": "退出",
     "key_menu_Services": "服务",
     "key_menu_Unhide": "取消隐藏",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "变换"
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "变换",
+    "manualModeDesc": ""
 }

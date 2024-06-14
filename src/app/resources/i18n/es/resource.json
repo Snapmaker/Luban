@@ -2063,6 +2063,7 @@
     "key-Workspace/Input password": "",
     "key-Workspace/Laser-high_power_tips": "La potencia del láser se configurará en mínimo cuando encienda el láser.",
     "key-Workspace/LaserStartJob-10w_3axis_start_job_prompt": "En Modo automático, la máquina ejecutará el enfoque automático según el espesor del material que ingrese, e iniciará el trabajo.<1></1>En Modo manual, la máquina usará el origen de trabajo actual para iniciar el trabajo. Asegúrese de haber configurado el origen de trabajo antes de iniciar.<3></3>Información de seguridad: Antes de su uso, asegúrese de que la máquina esté equipada con un recinto, y tanto el operador como el espectador usen lentes de seguridad para láser.",
+    "key-Workspace/LaserStartJob-20w_40w_2w_manual_mode_description": "",
     "key-Workspace/LaserStartJob-3axis_start_job_material_thickness": "Espesor del material",
     "key-Workspace/LaserStartJob-3axis_start_job_prompt": "En Modo automático, la máquina ejecutará el enfoque automático según el espesor del material que ingrese, e iniciará el trabajo.<1></1>En Modo manual, la máquina usará el origen de trabajo actual para iniciar el trabajo. Asegúrese de haber configurado el origen de trabajo antes de iniciar.<3></3>Información de seguridad: Antes de su uso, asegúrese de que la máquina esté equipada con un recinto, y tanto el operador como el espectador usen lentes de seguridad para láser.",
     "key-Workspace/LaserStartJob-4axis_start_job_prompt": "La máquina utilizará el origen de trabajo actual para iniciar el trabajo. Asegúrese de haber configurado el origen de trabajo antes de iniciar.<1></1>Información de seguridad: Antes de su uso, asegúrese de que la máquina esté equipada con un recinto, y tanto el operador como el espectador usen lentes de seguridad para láser.",
@@ -2407,5 +2408,6 @@
     "key_menu_Quit": "Salir",
     "key_menu_Services": "Servicios",
     "key_menu_Unhide": "Mostrar",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Transformación"
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Transformación",
+    "manualModeDesc": ""
 }

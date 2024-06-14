@@ -2063,6 +2063,7 @@
     "key-Workspace/Input password": "",
     "key-Workspace/Laser-high_power_tips": "Lorsque le laser est allumé, la puissance du laser est réglée au minimum.",
     "key-Workspace/LaserStartJob-10w_3axis_start_job_prompt": "En mode automatique, la machine exécutera la mise au point automatique en fonction de l'épaisseur du matériau que vous saisissez, et commencera le travail.<1></1>En mode manuel, la machine utilisera l'origine du travail actuelle pour commencer le travail. Assurez-vous d'avoir défini l'origine du travail avant de commencer. <3></3> Informations de sécurité : Avant utilisation, assurez-vous que la machine est équipée d'un boîtier et que l'opérateur et les passants portent des lunettes de sécurité laser.",
+    "key-Workspace/LaserStartJob-20w_40w_2w_manual_mode_description": "",
     "key-Workspace/LaserStartJob-3axis_start_job_material_thickness": "Épaisseur du matériau",
     "key-Workspace/LaserStartJob-3axis_start_job_prompt": "En mode automatique, la machine exécutera la mise au point automatique en fonction de l'épaisseur du matériau que vous saisissez, et commencera le travail.<1></1>En mode manuel, la machine utilisera l'origine du travail actuelle pour commencer le travail. Assurez-vous d'avoir défini l'origine du travail avant de commencer. <3></3> Informations de sécurité : Avant utilisation, assurez-vous que la machine est équipée d'un boîtier et que l'opérateur et les passants portent des lunettes de sécurité laser.",
     "key-Workspace/LaserStartJob-4axis_start_job_prompt": "La machine utilisera l'origine du travail actuelle pour démarrer la tâche. Assurez-vous d'avoir défini l'origine du travail avant de commencer. <1></1> Informations de sécurité : Avant utilisation, assurez-vous que la machine est équipée d'un boîtier et que l'opérateur et les passants portent des lunettes de sécurité laser.",
@@ -2407,5 +2408,6 @@
     "key_menu_Quit": "Quitter",
     "key_menu_Services": "Services",
     "key_menu_Unhide": "Démasquer",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Transformation"
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Transformation",
+    "manualModeDesc": ""
 }

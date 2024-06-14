@@ -375,7 +375,7 @@
     "Keep the device attended while it is in use!": "Keep the device attended while it is in use!",
     "Key-Laser/ImportScale-Object size has exceeded the work size. Scale it to the maximum work size?": "Object has exceeded the work size. Scale it to the maximum work size?",
     "Key-Laser/ImportScale-Scale To Fit": "Scale To Fit",
-    "Key-Workspace/LaserStart-offset-warning-After printing with the 2W red light extruder connected via serial, the working origin may be changed (X offset {{ xOffset }}, Y offset {{ yOffset }}). Please be aware of this issue when performing repeated engravings.": "Key-Workspace/LaserStart-offset-warning-After printing with the 2W red light extruder connected via serial, the working origin may be changed (X offset {{ xOffset }}, Y offset {{ yOffset }}). Please be aware of this issue when performing repeated engravings.",
+    "Key-Workspace/LaserStart-offset-warning-After printing with the 2W red light extruder connected via serial, the working origin may be changed (X offset {{ xOffset }}, Y offset {{ yOffset }}). Please be aware of this issue when performing repeated engravings.": "After printing with the 2W red light extruder connected via serial, the working origin may be changed (X offset {{ xOffset }}, Y offset {{ yOffset }}). Please be aware of this issue when performing repeated engravings.",
     "Key-Workspace/LaserStartJob-manual_mode_description": "Key-Workspace/LaserStartJob-manual_mode_description",
     "Knot": "Knot",
     "Laser Emitter Overheat. Please power off the machine, wait for a while, and restart.If this occurs frequently, contact our Support for help.": "Laser Emitter Overheat. Please power off the machine, wait for a while, and restart.If this occurs frequently, contact our Support for help.",
@@ -2063,6 +2063,7 @@
     "key-Workspace/Input password": "Input password",
     "key-Workspace/Laser-high_power_tips": "The laser power will be set minimum when you turn on the laser.",
     "key-Workspace/LaserStartJob-10w_3axis_start_job_prompt": "Under the Auto Mode, the machine will measure the material so as to run auto focusing, and start the job.<1></1>Under the Manual Mode, the machine will run focusing according to the material thickness you input, and start the job.<3></3>Safety Info: Before use, make sure the machine is equipped with the Enclosure, and both the operator and bystanders wear the Laser Safety Goggles.",
+    "key-Workspace/LaserStartJob-20w_40w_2w_manual_mode_description": "Set Work Origin in <1>Control</1>. Adjust the focus lever to touch the material. When the line above the knob aligns with Scale 0 or Focus, the laser beam (invisible for infrared laser) will focus right on the surface of the material. Click <3>Start</3>, and the toolhead will move to the Work Origin to start laser engraving and cutting. If you do not reset Work Origin, the machine will use the same origin as the last job.",
     "key-Workspace/LaserStartJob-3axis_start_job_material_thickness": "Material Thickness",
     "key-Workspace/LaserStartJob-3axis_start_job_prompt": "Under the Auto Mode, the machine will run auto focusing according to the material thickness you input, and start the job.<1></1>Under the Manual Mode, the machine will use the current work origin to start the job. Make sure you’ve set the work origin before starting.<3></3>Safety Info: Before use, make sure the machine is equipped with the Enclosure, and both the operator and bystanders wear the Laser Safety Goggles.",
     "key-Workspace/LaserStartJob-4axis_start_job_prompt": "The machine will use the current work origin to start the job. Make sure you’ve set the work origin before starting.<1></1>Safety Info: Before use, make sure the machine is equipped with the Enclosure, and both the operator and bystanders wear the Laser Safety Goggles.",
@@ -2407,5 +2408,6 @@
     "key_menu_Quit": "Quit",
     "key_menu_Services": "Services",
     "key_menu_Unhide": "Unhide",
-    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Transformation"
+    "key_ui/widgets/CNCPath/CNCPath_Transformation": "Transformation",
+    "manualModeDesc": "manualModeDesc"
 }
