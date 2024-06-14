@@ -351,7 +351,8 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace,
 
 
     const canClick = useMemo(() => {
-        return isConnected && includes([WorkflowStatus.Unknown, WorkflowStatus.Idle, WorkflowStatus.Stopped], workflowStatus) && !isMoving && !homingModal;
+        console.log('canClick', isConnected, includes([WorkflowStatus.Unknown, WorkflowStatus.Idle, WorkflowStatus.Stopped], workflowStatus), !isMoving, !homingModal);
+        return isConnected && includes([WorkflowStatus.Unknown, WorkflowStatus.Idle, WorkflowStatus.Stopped], workflowStatus) && !isMoving;
     }, [isConnected, workflowStatus, isMoving, homingModal]);
 
 

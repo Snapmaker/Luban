@@ -50,9 +50,19 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
         const isSupportedHead = includes([L2WLaserToolModule.identifier, L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], worksapceToolHead);
         const isCrosshairJobOffsetMode = includes([JobOffsetMode.Crosshair], jobOffsetMode);
 
-        // if old ray firmware version, can't operate AB Position
-        if (isConnectedRay && !isRayNewVersion) return false;
-
+        console.log('canABPosition', (isConnected
+            && machineIdentifier === activeMachine.identifier
+            && headType === HEAD_LASER
+            && isSupportedHead && WorkflowStatus.Idle === workflowStatus
+            && (isConnectedRay ? isCrosshairJobOffsetMode : true)
+            && (isConnectedRay ? isRayNewVersion : true)
+        ));
+        console.log('canABPosition = ', isConnected,
+            machineIdentifier === activeMachine.identifier,
+            headType === HEAD_LASER,
+            isSupportedHead && WorkflowStatus.Idle === workflowStatus,
+            (isConnectedRay ? isCrosshairJobOffsetMode : true),
+            (isConnectedRay ? isRayNewVersion : true),);
         // Scenarios where AB Position can be enabled:
         // 1. The machine is connected.
         // 2. The connected machine must be consistent with the machine setting in the software.
