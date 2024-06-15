@@ -252,7 +252,7 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, jobOffsetMode, serie
     );
 
     // hard-code: 2w laser module Standby Mode
-    const isSM2 = includes([SnapmakerA150Machine.identifier, SnapmakerA250Machine.identifier, SnapmakerA350Machine.identifie], series);
+    const isSM2 = includes([SnapmakerA150Machine.identifier, SnapmakerA250Machine.identifier, SnapmakerA350Machine.identifier], series);
     const isArtisan = SnapmakerArtisanMachine.identifier === series;
     const isRay = SnapmakerRayMachine.identifier === series;
     const is2WLaser = toolHead === L2WLaserToolModule.identifier;
