@@ -410,7 +410,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                 title: i18n._('key-CncLaser/MainToolBar-A-B Position'),
                 type: 'button',
                 disabled: headType !== 'laser', // || !canABPosition || !includes([WorkflowStatus.Idle], workflowStatus),
-                name: 'ABPosition',
+                name: 'MainToolbarAbPosition',
                 action: () => {
                     dispatch(laserActions.updateABpositionBackground(APosition, BPosition));
                     onChangeABPositionMode();

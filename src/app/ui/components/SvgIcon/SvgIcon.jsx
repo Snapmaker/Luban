@@ -6,6 +6,13 @@ import React, { PureComponent } from 'react';
 import * as Icons from 'snapmaker-react-icon';
 import styles from './styles.styl';
 
+// FIXME: This is just a temporary solution. The correct approach would be to move this component into the xxx dependency library.
+import MainToolbarAbPosition from './Icons/MainToolbarAbPosition';
+
+Icons.MainToolbarAbPosition = MainToolbarAbPosition;
+
+
+
 class SvgIcon extends PureComponent {
     static propTypes = {
         name: PropTypes.string.isRequired,
@@ -95,6 +102,7 @@ class SvgIcon extends PureComponent {
         let iconBackground = 'transparent';
         let iconLineHeight = `${hoversize}px`;
         let Component = Icons[name];
+        console.log('icons', Icons);
         if (!Component) {
             Component = Icons.PrintingSettingNormal;
         }
