@@ -41,7 +41,6 @@ const MotorPowerHoldControl = () => {
     };
 
     const onChange = async (checked: boolean) => {
-        console.log(`set ${checked}`);
         if (checked) {
             await turnOnHoldMotorPower();
         } else {

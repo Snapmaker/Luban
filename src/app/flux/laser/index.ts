@@ -198,12 +198,6 @@ const calculateBoundingBox = (point1, point2) => {
 
     const width = maxX - minX;
     const height = maxY - minY;
-    console.log('$$$$$ ab position', point1, point2, {
-        minX,
-        minY,
-        width,
-        height
-    });
 
     return {
         minX,
@@ -328,7 +322,6 @@ export const actions = {
         const backgroundOverlay = actions.getABPositionBackgroundOverlay();
         backgroundOverlay.setAttribute('fill-opacity', '1');
         getCanvasimgFromSvg(backgroundOverlay, width, height);
-        console.log('$$ svgEl', backgroundOverlay, svgEl, positionX, positionY, width, height, dx, dy, coordinateMode);
         return backgroundOverlay;
     },
     getABPositionBackgroundOverlay: () => {
@@ -413,7 +406,6 @@ export const actions = {
     setABPositionPoint: (position: {x: number, y: number, id?: string}, tagColor: string = '#242424', tagLength: number = 3) => {
         let point = document.querySelector(`#${position.id}`);
         const backgroundOverlay = actions.getABPositionBackgroundOverlay();
-        console.log('setABPositionPoint', position);
         if (!point) {
             point = createSVGElement({
                 element: 'path',
@@ -561,7 +553,6 @@ export const actions = {
 
         // Force origin mode to be workpiece bottom left
         const origin: Origin = state.origin;
-        console.log(origin.type, OriginType.Workpiece, origin.reference, RectangleWorkpieceReference.BottomLeft);
         if (!(origin.type === OriginType.Workpiece && origin.reference === RectangleWorkpieceReference.BottomLeft)) {
             dispatch(editorActions.setOrigin(HEAD_LASER, {
                 type: OriginType.Workpiece,
@@ -603,8 +594,6 @@ export const actions = {
                 y: parseFloat(BPosition.y)
             };
             const { minX: targetX, minY: targetY, width: targetWidth, height: targetHeight } = calculateBoundingBox(APosition, BPosition);
-            console.log('$$', positionX, positionY, width, height, dx, dy, coordinateMode);
-            console.log('$$2', targetX, targetY, targetWidth, targetHeight, APosition, BPosition);
             const backgroundOverlay = dispatch(actions.createABPositionBackgroundOverlay(width, height, dx, dy));
             actions.updateABPositionMask(targetX, height - (targetY + targetHeight), targetWidth, targetHeight, true);
 

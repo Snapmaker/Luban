@@ -52,7 +52,6 @@ const LaserStartModal: React.FC<LaserStartModalProps> = ({
             standardLaserToolHead.identifier,
             highPower10WLaserToolHead.identifier,
         ], toolHeadIdentifier);
-        console.log('ddddddddd', connectionType === ConnectionType.Serial, isSM2, toolHeadIdentifier === L2WLaserToolModule.identifier);
         const notSupportSM2SerialLaserHead = includes([
             L2WLaserToolModule.identifier,
             L20WLaserToolModule.identifier,

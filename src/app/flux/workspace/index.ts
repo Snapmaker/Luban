@@ -436,7 +436,6 @@ export const actions = {
                 } else if (!isNil(zFocus)) {
                     compareAndSet(data, currentState, 'laserFocalLength', zFocus + LASER_MOCK_PLATE_HEIGHT);
                 }
-                console.log('laserFocalLength', laserFocalLength, zFocus);
 
                 if (!isNil(laserPower)) {
                     compareAndSet(data, currentState, 'laserPower', laserPower);
@@ -522,7 +521,6 @@ export const actions = {
             'machine:module-list': (options) => {
                 const moduleList = options.moduleList;
 
-                console.log('moduleList', options.moduleList);
                 dispatch(actions.updateState({
                     moduleList,
                 }));
@@ -547,7 +545,6 @@ export const actions = {
             'machine:module-info': (options) => {
                 const moduleInfo = options.moduleInfo;
                 const moduleList: Array<any> = getState().workspace.moduleList;
-                console.log('moduleList1', moduleList);
 
                 const newModuleList = moduleInfo.map(m => {
                     const targetModule = moduleList.find(v => v.key === m.key);
