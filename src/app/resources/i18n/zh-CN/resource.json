@@ -1,7 +1,7 @@
 {
     "0 Gap": "零间隙",
     "20W Laser Module": "20W 激光模组",
-    "2W Laser Module": "",
+    "2W Laser Module": "2W 激光模组",
     "3D Printer": "3D 打印机",
     "40W Laser Module": "40W 激光模组",
     "A value of 0-4095 adjusts the sensor sensitivity, with lower values indicating lower sensitivity. A value of 4096 turns off detection.": "设置为 0-4095 调整传感器灵敏度，越低的值表示越低的灵敏度。设置为 4096 会关闭检测。",
