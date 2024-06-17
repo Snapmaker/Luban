@@ -310,7 +310,7 @@ export const actions = {
         const coordinateMode = COORDINATE_MODE_BOTTOM_LEFT; // const { coordinateMode } = state;
         const positionX = (dx + width / 2) * coordinateMode.setting.sizeMultiplyFactor.x;
         const positionY = (dy + height / 2) * coordinateMode.setting.sizeMultiplyFactor.y;
-        const svgEl = SVGActions.addSvgBackgroundToSVG({
+        SVGActions.addSvgBackgroundToSVG({
             modelID: ABPositionOverlayID,
             transformation: {
                 width: width,
