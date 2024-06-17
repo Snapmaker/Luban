@@ -78,7 +78,6 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
         logPageView({
             pathname: '/laser',
         });
-        console.log('---------------------');
         dispatch(laserActions.clearAB());
     }, []);
 

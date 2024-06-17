@@ -73,7 +73,6 @@ const MachineSettings: React.FC = () => {
     useEffect(() => {
         let printingOptions = getMachineSupportedToolOptions(state.series, HEAD_PRINTING);
 
-        console.log('---------------isMultiDualExtrusion', isMultiDualExtrusion);
         // hard-code for artsian dualextrusion; No dualextrusion for 2.0 option by default
         if (includes([SnapmakerArtisanMachine.identifier], state.series) && !isMultiDualExtrusion) {
             printingOptions = printingOptions.filter(toolOption => toolOption.value !== dualExtrusionPrintToolHead.identifier);

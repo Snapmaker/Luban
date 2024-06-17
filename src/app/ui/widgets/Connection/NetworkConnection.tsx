@@ -21,9 +21,6 @@ import {
 import {
     LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
     LEVEL_TWO_POWER_LASER_FOR_SM2,
-    // MACHINE_TOOL_HEADS,
-    // MODULEID_MAP,
-    // MODULEID_TOOLHEAD_MAP,
     findMachineByName,
     findToolHead,
     isDualExtruder
@@ -602,23 +599,7 @@ const NetworkConnection: React.FC = () => {
                     status: moduleInfo.status,
                 });
             }
-            // if (moduleInfo.moduleId === 23) {
-            //     newModuleStatusList.push({
-            //         status: true,
-            //         moduleName: i18n._(L2WLaserToolModule.label)
-            //     });
-            // }
-
-            // const moduleIdentifier = MODULEID_MAP[moduleInfo.moduleId];
-            // const toolhead = MACHINE_TOOL_HEADS[moduleIdentifier];
-            // if (toolhead) {
-            //     newModuleStatusList.push({
-            //         status: true,
-            //         moduleName: i18n._(toolhead.label)
-            //     });
-            // }
         }
-
 
         return newModuleStatusList;
     }, [
@@ -676,7 +657,6 @@ const NetworkConnection: React.FC = () => {
                             <SvgIcon
                                 className={classNames(
                                     'border-default-black-5 border-radius-left-8',
-                                    // className="border-default-black-5 border-radius-right-8"
                                 )}
                                 name="Add"
                                 title={i18n._('key-Workspace/Connection-Add')}

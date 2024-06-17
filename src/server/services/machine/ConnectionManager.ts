@@ -687,7 +687,6 @@ class ConnectionManager {
                         return;
                     }
 
-                    console.log('laserFocalLength', laserFocalLength);
                     if (!isRotate) {
                         if (includes([LEVEL_TWO_POWER_LASER_FOR_SM2, L2WLaserToolModule.identifier], toolHead)) {
                             let promise;
@@ -838,7 +837,6 @@ G1 Z${pos.z}
                     cmd: 'gcode:resume',
                 });
             } else if (headType === HEAD_LASER) {
-                console.log('pauseStatus', pauseStatus);
                 const pos = pauseStatus.pos;
                 let code = `G1 Z${pos.z}
 G1 X${pos.x} Y${pos.y} B${pos.e}`;

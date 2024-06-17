@@ -40,7 +40,6 @@ import MachineNetworkModal from './modals/MachineNetworkModal';
 import MachineSettingsModal from './modals/MachineSettingsModal';
 import MachineControlModal from './modals/MachineControlModal';
 import MachineMonitor from './MachineMonitor';
-// import MotorPowerHoldControlWiget from '../../widgets/MotorPowerHoldControl';
 
 
 const allWidgets = {
@@ -51,7 +50,6 @@ const allWidgets = {
     'enclosure': EnclosureWidget,
     'ray-machining': RayMachiningWidget,
     'job-status': JobStatusWidget,
-    // 'moto-power-hold-control': MotorPowerHoldControlWiget
 };
 
 

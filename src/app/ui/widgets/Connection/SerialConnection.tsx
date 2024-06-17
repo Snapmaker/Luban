@@ -339,19 +339,6 @@ const SerialConnection: React.FC = () => {
         return true;
     })();
 
-    useEffect(() => {
-        console.log('$$$$', {
-            toolHead,
-            headType,
-            machineIdentifier,
-            isRotate,
-            activeMachine });
-    }, [
-        toolHead,
-        headType,
-        machineIdentifier,
-        isRotate]);
-
     return (
         <div>
             {/* List of serial port options */

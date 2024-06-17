@@ -39,6 +39,7 @@ export declare type MachineToolHeadOptions = {
     // tool head size may affect work range
     workRange?: WorkRange;
 
+    // should go home after connect machine
     goHomeOnConnection?: boolean;
 
     supportCameraCapture?: boolean;

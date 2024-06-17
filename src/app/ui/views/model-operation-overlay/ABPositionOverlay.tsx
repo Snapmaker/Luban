@@ -50,19 +50,6 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
         const isSupportedHead = includes([L2WLaserToolModule.identifier, L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], worksapceToolHead);
         const isCrosshairJobOffsetMode = includes([JobOffsetMode.Crosshair], jobOffsetMode);
 
-        console.log('canABPosition', (isConnected
-            && machineIdentifier === activeMachine.identifier
-            && headType === HEAD_LASER
-            && isSupportedHead && WorkflowStatus.Idle === workflowStatus
-            && (isConnectedRay ? isCrosshairJobOffsetMode : true)
-            && (isConnectedRay ? isRayNewVersion : true)
-        ));
-        console.log('canABPosition = ', isConnected,
-            machineIdentifier === activeMachine.identifier,
-            headType === HEAD_LASER,
-            isSupportedHead && WorkflowStatus.Idle === workflowStatus,
-            (isConnectedRay ? isCrosshairJobOffsetMode : true),
-            (isConnectedRay ? isRayNewVersion : true),);
         // Scenarios where AB Position can be enabled:
         // 1. The machine is connected.
         // 2. The connected machine must be consistent with the machine setting in the software.
@@ -100,11 +87,9 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
             return;
         }
         setIsConnectedRay(includes([SnapmakerRayMachine.identifier], machineIdentifier));
-        console.log('isConnectedRay', includes([SnapmakerRayMachine.identifier], machineIdentifier), machineIdentifier, SnapmakerRayMachine.identifier);
     }, [machineIdentifier]);
 
     useEffect(() => {
-        console.log('+++++++++++++++', isHomed, isConnectedRay && !isRayNewVersion);
         if (isConnectedRay ? !isRayNewVersion : false) {
             setShowHomeTip(false);
             return;
@@ -172,8 +157,6 @@ const ABPositionOverlay: React.FC<ABPositionOverlayProps> = (props) => {
         if (includes([JobOffsetMode.LaserSpot], jobOffsetMode)) {
             text = i18n._('When using the Laser Spot Job Offset Mode, the AB Position feature is currently not supported.');
         }
-
-        console.log('rendertips:', isConnectedRay, text, includes([JobOffsetMode.LaserSpot], jobOffsetMode));
 
         return (
             <>

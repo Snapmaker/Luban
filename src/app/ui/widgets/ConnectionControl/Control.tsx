@@ -13,7 +13,6 @@ import {
 import { RootState } from '../../../flux/index.def';
 import { actions as widgetsActions } from '../../../flux/widget';
 import { actions as workspaceActions } from '../../../flux/workspace';
-// import { actions as laserActions } from '../../../flux/laser';
 import { MachineAgent } from '../../../flux/workspace/MachineAgent';
 import usePrevious from '../../../lib/hooks/previous';
 import { in2mm, mm2in } from '../../../lib/units';
@@ -89,16 +88,12 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace,
     } = useSelector((state: RootState) => state.workspace);
     const [boundingBox, setBoundingBox] = useState(gcodeFile?.gcodeAxisWorkRange);
 
-    // const { enableABPositionShortcut } = useSelector((state: RootState) => state.laser);
-
     const { jog, axes } = widgets[widgetId];
     const { speed = 1500, keypad, selectedDistance, customDistance, selectedAngle, customAngle } = jog;
 
     const serverRef = useRef(server);
     useEffect(() => {
         serverRef.current = server;
-
-        console.log('Gcodefile', gcodeFile);
     }, [server, gcodeFile]);
     useEffect(() => setBoundingBox(gcodeFile?.gcodeAxisWorkRange), [gcodeFile]);
 
@@ -215,11 +210,6 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace,
             const s = map(params, (value, axis) => {
                 const axisMoved = axis.toUpperCase();
                 const signNumber = 1;
-                // if (axisMoved === 'Y' && state.workPosition.isFourAxis) {
-                //     signNumber = -1;
-                // } else {
-                //     signNumber = 1;
-                // }
                 sArr.push({
                     axis: axisMoved,
                     distance: parseFloat(state.workPosition[axisMoved.toLowerCase()]) + (signNumber * value)
@@ -351,7 +341,6 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace,
 
 
     const canClick = useMemo(() => {
-        console.log('canClick', isConnected, includes([WorkflowStatus.Unknown, WorkflowStatus.Idle, WorkflowStatus.Stopped], workflowStatus), !isMoving, !homingModal);
         return isConnected && includes([WorkflowStatus.Unknown, WorkflowStatus.Idle, WorkflowStatus.Stopped], workflowStatus) && !isMoving;
     }, [isConnected, workflowStatus, isMoving, homingModal]);
 
@@ -390,7 +379,6 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace,
     }, [originOffset]);
 
     useEffect(() => {
-        console.log('%%%%%%% boundingBox', boundingBox);
         if (isNil(boundingBox)) {
             setState({
                 ...state,
@@ -456,17 +444,6 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace,
                     state={state}
                 />
             )}
-
-            {/* {isNotInWorkspace && (
-                <div className="sm-flex justify-space-between margin-vertical-8">
-                    <span>{i18n._('key-Workspace/Console-Keyboard Shortcuts')}</span>
-                    <Switch
-                        onClick={() => setState(stateBefore => ({ ...state, enableShortcut: !stateBefore.enableShortcut }))}
-                        disabled={!canClick}
-                        checked={state.enableShortcut}
-                    />
-                </div>
-            )} */}
             {/* Comment this since Luban v4.0 and will be used in the future */}
             {/* <div>
                 <KeypadOverlay

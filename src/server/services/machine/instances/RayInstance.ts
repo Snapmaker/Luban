@@ -45,10 +45,9 @@ class RayMachineInstance extends MachineInstance {
 
         // module info
         const moduleInfos = await (this.channel as SacpChannelBase).getModuleInfo();
-        console.log('moduleInfos', moduleInfos);
 
         /*
-        moduleInfos = [
+        e.g. moduleInfos = [
           ModuleInfo {
             key: 3,
             moduleId: 520,
@@ -61,7 +60,6 @@ class RayMachineInstance extends MachineInstance {
           },
         ]
         */
-
         const moduleListStatus = {
             airPurifier: false,
             emergencyStopButton: false,
@@ -92,9 +90,9 @@ class RayMachineInstance extends MachineInstance {
 
 
 
-        console.log('get CorrdinateInfo start', gt(machineInfo?.masterControlFirmwareVersion?.slice(1), '1.6.8'), machineInfo?.masterControlFirmwareVersion?.slice(1));
         const isNewVersion = !isNil(machineInfo?.masterControlFirmwareVersion) && gt(machineInfo?.masterControlFirmwareVersion?.slice(1), '1.6.8');
         state.isRayNewVersion = isNewVersion;
+        log.info('connected Ray with version: ', machineInfo?.masterControlFirmwareVersion);
 
         //
         // Get Coordinate Info
@@ -105,12 +103,10 @@ class RayMachineInstance extends MachineInstance {
             state.isMoving = false;
         }
 
-        console.log('get CorrdinateInfo', isNewVersion);
         this.socket.emit('connection:connected', { state: state, err: '' });
 
         // Legacy
         if (isNewVersion) {
-            console.log('startHeartbeatLegacy');
             const sacpClient = (this.channel as SacpChannelBase).sacpClient;
             await (this.channel as SacpChannelBase).startHeartbeatLegacy(sacpClient, undefined, this.id);
         } else {

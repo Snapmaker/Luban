@@ -754,7 +754,6 @@ class MarlinGetCrossHairOffset {
         if (!match) return null;
         const x = match[1];
         const y = match[2];
-        console.log('-------', x, y, 'end');
 
         return {
             type: MarlinGetCrossHairOffset,
@@ -1197,7 +1196,6 @@ class Marlin extends events.EventEmitter {
             this.setState({
                 crosshairOffset: payload.crossHairOffset,
             });
-            console.log('crosshairOffset', payload.crossHairOffset);
             this.emit('get:crosshairOffset', payload);
         } else if (data.length > 0) {
             this.emit('others', payload);

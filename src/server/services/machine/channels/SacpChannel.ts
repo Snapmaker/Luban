@@ -880,7 +880,6 @@ class SacpChannelBase extends Channel implements
             }, 10000);
 
             this.machineStatus = WORKFLOW_STATUS_MAP[statusKey];
-            // console.log('111111111pos', stateData.pos, 'originOffset', stateData.originOffset, stateData.isHomed);
 
             // TODO: Refactor this
             this.socket && this.socket.emit('Marlin:state', {
@@ -1187,16 +1186,10 @@ class SacpChannelBase extends Channel implements
                 airPurifierFanSpeed: speedLevel,
                 airPurifierFilterHealth: lifeLevel - 1
             };
-            console.log('airPurifierHasPower', powerState);
         };
-        console.log('airPurifierHasPower');
         this.sacpClient.subscribePurifierInfo({ interval: 1000 }, this.subscribePurifierInfoCallback).then(res => {
             log.info(`subscribe purifier info, ${res.response.result}`);
         });
-
-        // setInterval(() => {
-        //     this.sacpClient.setMotorPowerHoldMode(MotorPowerMode. )
-        // })
     };
 
     public setROTSubscribeApi = () => {
@@ -1289,14 +1282,6 @@ class SacpChannelBase extends Channel implements
             log.info(`Go-Home, ${response}`);
             this.socket && this.socket.emit('serialport:read', { data: response.result === 0 ? 'OK' : 'WARNING' });
         });
-        console.log('====1=============', headType);
-        // if (headType === HEAD_LASER || headType === HEAD_CNC) {
-        //     console.log('=================', headType);
-        //     await this.sacpClient.updateCoordinate(CoordinateType.WORKSPACE).then(res => {
-        //         log.info(`Update Coordinate: ${res}`);
-        //         console.log('Update Coordinate: ', res);
-        //     });
-        // }
     };
 
     public coordinateMove = async ({ moveOrders, jogSpeed, headType, beforeGcodeStart = false }) => {
@@ -1588,7 +1573,7 @@ class SacpChannelBase extends Channel implements
             return;
         }
         const { laserToolHeadInfo } = await this.sacpClient.getLaserToolHeadInfo(headModule.key);
-        log.info(`toolHead:${toolHead},${includes([L2WLaserToolModule.identifier, L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], toolHead)}, laserFocalLength:${laserToolHeadInfo.laserFocalLength}, materialThickness: ${materialThickness}, platformHeight:${laserToolHeadInfo.platformHeight}`);
+        log.info(`toolHead:${toolHead}, hasLaserFocalLenth:${includes([L2WLaserToolModule.identifier, L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], toolHead)}, laserFocalLength:${laserToolHeadInfo.laserFocalLength}, materialThickness: ${materialThickness}, platformHeight:${laserToolHeadInfo.platformHeight}`);
         let z;
         if (includes([L2WLaserToolModule.identifier, L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], toolHead)) {
             z = laserToolHeadInfo.platformHeight + materialThickness;

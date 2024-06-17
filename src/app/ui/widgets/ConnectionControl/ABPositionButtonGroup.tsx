@@ -21,7 +21,6 @@ const ABPositionButtonGroup = (props) => {
         const machinePositionZ = (Math.round((parseFloat(workPosition.z) - z) * 1000) / 1000 + offsetZ);
         const machinePositionB = (Math.round((parseFloat(workPosition.b) - b) * 1000) / 1000 + offsetB);
         dispatch(laserActions.updateTmpAPosition({ x: machinePositionX, y: machinePositionY, z: machinePositionZ, b: machinePositionB }));
-        console.log('$$$ setAPosition', workPosition, { x: machinePositionX, y: machinePositionY, z: machinePositionZ, b: machinePositionB });
     };
     const storeBPosition = () => {
         const machinePositionX = (Math.round((parseFloat(workPosition.x) - x) * 1000) / 1000 + offsetX);
@@ -29,7 +28,6 @@ const ABPositionButtonGroup = (props) => {
         const machinePositionZ = (Math.round((parseFloat(workPosition.z) - z) * 1000) / 1000 + offsetZ);
         const machinePositionB = (Math.round((parseFloat(workPosition.b) - b) * 1000) / 1000 + offsetB);
         dispatch(laserActions.updateTmpBPosition({ x: machinePositionX, y: machinePositionY, z: machinePositionZ, b: machinePositionB }));
-        console.log('$$$ setBPosition', workPosition, originOffset, { x: machinePositionX, y: machinePositionY, z: machinePositionZ, b: machinePositionB });
     };
 
 
@@ -81,7 +79,6 @@ ABPositionButtonGroup.propTypes = {
     state: PropTypes.object,
     workPosition: PropTypes.object,
     originOffset: PropTypes.object
-    // executeGcode: PropTypes.func
 };
 
 export default ABPositionButtonGroup;

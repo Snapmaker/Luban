@@ -45,7 +45,6 @@ export const getRunBoundaryCode = (
 
     const gcodeList = [];
 
-    console.log('setupCoordinateMethod', setupCoordinateMethod);
     if (setupCoordinateMethod === SetupCoordinateMethod.ByControlPanel) {
         gcodeList.push(
             ';motor_mode: 3',
@@ -125,9 +124,6 @@ export const getRunBoundaryCode = (
     );
 
     const gcode = gcodeList.join('\n');
-
-
-    console.log('gcode', gcode);
 
     return gcode;
 };
@@ -225,9 +221,7 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
 
     useEffect(() => {
         if (isConnected && !isRotate) {
-            console.log('---------------------');
             getMotorPowerHoldMode().then((result) => {
-                console.log('result, ', result, result !== MotorPowerMode.STAYPOWER, typeof result, typeof MotorPowerMode.STAYPOWER, MotorPowerMode.STAYPOWER, isHomed);
                 const mode = result !== MotorPowerMode.STAYPOWER ? SetupCoordinateMethod.Manually : SetupCoordinateMethod.ByControlPanel;
                 onChangeCoordinateMode({ target: { value: mode } });
             });
@@ -288,10 +282,6 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
             });
     }, [dispatch, isRotate, gcodeFile, jobOffsetMode, setupCoordinateMethod]);
 
-    // const executeGCode = useCallback(async (gcode: string) => {
-    //     return dispatch(workspaceActions.executeGcode(gcode)) as unknown as Promise<void>;
-    // }, [dispatch]);
-
     const onClickGoHome = useCallback(async () => {
         return dispatch(workspaceActions.executeGcode('$H')) as unknown as Promise<void>;
     }, [dispatch]);
@@ -319,9 +309,10 @@ const SetOriginView: React.FC<SetOriginViewProps> = (props) => {
                                 </Radio>
                             )
                         }
+
+                        {/* tip for those who have not update firmware yet */}
                         {
                             !isRayNewVersion && (
-                                // 如果要使用面板控制功能，建议您将固件版本升级到V1.6.8或更高版本
                                 <Alert type="warning" showIcon message={i18n._('To access the control mode feature, please consider updating your firmware to version V1.6.8 or higher.')} />
                             )
                         }

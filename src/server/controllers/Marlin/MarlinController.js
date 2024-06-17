@@ -49,7 +49,6 @@ import {
     WRITE_SOURCE_UNKNOWN
 } from '../constants';
 import Marlin from './Marlin';
-import { L2WLaserToolModule } from '../../../app/machines/snapmaker-2-toolheads';
 
 // % commands
 const WAIT = '%wait';
@@ -325,18 +324,6 @@ class MarlinController extends EventEmitter {
                 log.warn(`Expected non-empty line: N=${this.sender.state.sent}`);
                 return;
             }
-            // Fixme: hard code for 2W laser serial connected crosshair offset
-            // const { toolHead } = this.controller.state;
-            // if (toolHead === L2WLaserToolModule.identifier) {
-            //     const regex = /X(-?\d+\.?\d*)\s+Y(-?\d+\.?\d*)/;
-            //     const xOffset = 21.7;
-            //     const yOffset = -12.3;
-            //     line = line.replace(regex, (match, x, y) => {
-            //         const newX = parseFloat(x) + xOffset;
-            //         const newY = parseFloat(y) + yOffset;
-            //         return `X${newX} Y${newY}`;
-            //     });
-            // }
 
             this.writeln(line, {
                 // ...context,

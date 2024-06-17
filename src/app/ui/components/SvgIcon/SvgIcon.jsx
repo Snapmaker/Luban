@@ -102,7 +102,6 @@ class SvgIcon extends PureComponent {
         let iconBackground = 'transparent';
         let iconLineHeight = `${hoversize}px`;
         let Component = Icons[name];
-        console.log('icons', Icons);
         if (!Component) {
             Component = Icons.PrintingSettingNormal;
         }

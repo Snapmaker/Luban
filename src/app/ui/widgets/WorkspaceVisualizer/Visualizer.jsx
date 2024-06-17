@@ -291,16 +291,12 @@ class Visualizer extends React.PureComponent {
             } = this.props;
 
 
-            console.log('start gcode', laserFocalLength);
             if (workflowStatus === WorkflowStatus.Idle) {
                 // Fix me?: 2w laser head set origin offset(crosshair offset) before start print
                 const isSnapmaker2 = includes([SnapmakerA350Machine.identifier, SnapmakerA250Machine.identifier, SnapmakerA150Machine.identifier], activeMachine.identifier);
                 if (includes([L2WLaserToolModule.identifier], toolHead) && connectionType === ConnectionType.Serial && isSnapmaker2) {
                     const { x, y } = workPosition;
-                    console.log('set crosshair offset', x - (parseFloat(crosshairOffset.x) || 21.5), y - (parseFloat(crosshairOffset.y) || -11), crosshairOffset);
                     server.setWorkOrigin(x - (parseFloat(crosshairOffset.x) || 21.5), y - (parseFloat(crosshairOffset.y) || -11));
-
-                    // server.setWorkOrigin(x + 21.7, y - 12.3);
                 }
 
                 // Hard code: for artisan turn off crossihair
@@ -399,7 +395,6 @@ class Visualizer extends React.PureComponent {
         tryPause: () => {
             // delay 500ms to let buffer executed. and status propagated
             setTimeout(() => {
-                console.log('testtest', this.state.gcode.received, this.state.gcode.sent);
                 if (this.state.gcode.received + 1 >= this.state.gcode.sent) {
                     const workPosition = this.state.workPosition;
 
@@ -414,7 +409,6 @@ class Visualizer extends React.PureComponent {
                         }
                     };
                     if (this.pauseStatus.headStatus || this.props.headType !== HEAD_PRINTING) {
-                        console.log('$$$$$$$$$', this.props.headType, this.state.controller.state.headPower);
                         this.props.executeGcode('M5');
                     }
 

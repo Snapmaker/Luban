@@ -504,11 +504,6 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         );
     }
 
-
-    useEffect(() => {
-        console.log('$$$$222', { connectionType, isConnected, workspaceToolHead, workspaceIsRotate, workspaceHeadType, connectedMachineIdentifier, activeMachine });
-    }, [workspaceToolHead, workspaceIsRotate, workspaceHeadType, connectedMachineIdentifier, activeMachine]);
-
     const materialThickness = React.useRef(null);
     const setBackgroundModal = cameraCaptureInfo.display && (() => {
         const modalConfig = {

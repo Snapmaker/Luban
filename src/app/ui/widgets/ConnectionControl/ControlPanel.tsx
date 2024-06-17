@@ -15,8 +15,6 @@ import JogPad from './JogPad';
 import MotionButtonGroup from './MotionButtonGroup';
 import ABPositionButtonGroup from './ABPositionButtonGroup';
 import styles from './styles.styl';
-// import { L2WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
-// import { ConnectionType } from '../../../flux/workspace/state';
 import { SnapmakerRayMachine } from '../../../machines';
 import { L2WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
 
@@ -117,7 +115,6 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
 
     useEffect(() => {
         if (!activeMachine) return;
-        console.log('machine', activeMachine.identifier, SnapmakerRayMachine.identifier, activeMachine.identifier === SnapmakerRayMachine.identifier, includes([SnapmakerRayMachine.identifier], activeMachine.identifier), isConnectedRay);
         setIsConnectedRay(includes([SnapmakerRayMachine.identifier], activeMachine.identifier));
     }, [activeMachine]);
 
@@ -128,19 +125,15 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
         for (const axis of Object.keys(moveOptions)) {
             const axisMove = moveOptions[axis];
 
-            // const currentPosition = parseFloat(workPosition[axis.toLowerCase()]);
             let moveDistance = axisMove * (includes(['X', 'Y', 'Z'], axis) ? step : stepAngle);
 
-
             const currentPosition = parseFloat(workPosition[axis.toLowerCase()]) - parseFloat(originOffset[axis.toLowerCase()]) + RayWorkAreaOffset[axis];
-            console.log(isConnectedRay, 'axis:', workPosition, axisMove, step, axis, currentPosition, moveDistance, RayWorkArea[axis], RayWorkArea[axis] - currentPosition, currentPosition + moveDistance);
             if (isConnectedRay && (currentPosition + moveDistance > RayWorkArea[axis])) {
-                // console.log('overplace position !', currentPosition, moveDistance, RayWorkArea[axis]);
                 moveDistance = RayWorkArea[axis] - currentPosition;
             } else if (isConnectedRay && (currentPosition + moveDistance < 0)) {
                 moveDistance = -currentPosition;
             }
-            console.log('moveDistance', moveDistance);
+
             moveOrders.push({
                 axis: axis.toUpperCase(),
                 distance: currentPosition + moveDistance,
@@ -170,9 +163,7 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
         for (const axis of Object.keys(moveOptions)) {
             const position = moveOptions[axis];
 
-            console.log('axis:', axis, position, RayWorkArea[axis]);
             if (isConnectedRay && position > RayWorkArea[axis]) {
-                console.log('overplace position !', position, RayWorkArea[axis]);
                 return;
             }
             moveOrders.push({
@@ -194,7 +185,6 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
     ]);
 
     const runBoundary = useCallback(() => {
-        console.log('$$$$$$$$$ bbox', bbox);
         // ray runBoundary need to create file boundary.nc
         if (isConnectedRay && typeof props.runBoundary !== 'undefined') {
             props.runBoundary();

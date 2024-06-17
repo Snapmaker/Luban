@@ -8,7 +8,6 @@ class PolygonTagParser extends BaseTagParser {
         const points = attributes.points || 0;
 
         for (let i = 0, l = points.length; i < l; i += 2) {
-            console.log(points[i], points[i + 1]);
             const x = points[i];
             const y = points[i + 1];
             if (i === 0) {

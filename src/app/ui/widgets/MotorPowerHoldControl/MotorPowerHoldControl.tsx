@@ -7,6 +7,8 @@ import SocketEvent from '../../../communication/socket-events';
 import { MotorPowerMode } from '../../../constants';
 import { RootState } from '../../../flux/index.def';
 
+// not used for now
+// a wiget that control MotorPowerHoldMode(just for Ray control mode)
 const MotorPowerHoldControl = () => {
     const { isConnected } = useSelector((state: RootState) => state.workspace);
     const [isHoldMode, setIsHoldMode] = useState(false);
