@@ -702,7 +702,7 @@ class MarlinController extends EventEmitter {
                     this.command(null, 'gcode:stop');
                 }
             }
-        }, 1000);
+        }, 300);
     }
 
     destroy() {
@@ -879,6 +879,8 @@ class MarlinController extends EventEmitter {
             setTimeout(() => this.writeln('M1010'), 200);
             setTimeout(() => this.writeln('M1011'), 200);
             setTimeout(() => this.writeln('M105'), 250);
+            // get crosshair offset
+            setTimeout(() => this.writeln('M2002 T8'), 300);
 
             this.handler = setInterval(() => {
                 // Set ready flag to true when receiving a start message
@@ -894,6 +896,9 @@ class MarlinController extends EventEmitter {
                 setTimeout(() => this.writeln('M1010'), 200);
                 setTimeout(() => this.writeln('M1011'), 200);
                 setTimeout(() => this.writeln('M105'), 250);
+
+                // get crosshair offset
+                setTimeout(() => this.writeln('M2002 T8'), 300);
 
                 setTimeout(() => {
                     if (this.handler && !this.ready) {

@@ -227,9 +227,12 @@ i18n._('key-Printing/PrintingConfigurations-Material Settings');
 
 // Profile Default name and category
 i18n._('key-default_name-Carving V-bit');
+i18n._('key-default_name-Carving V-bit 4');
 i18n._('key-default_name-Flat End Mill 1.5');
 i18n._('key-default_name-Flat End Mill 3.175');
+i18n._('key-default_name-Flat End Mill 4');
 i18n._('key-default_name-Ball End Mill');
+i18n._('key-default_name-Ball End Mill 2');
 i18n._('key-default_name-Straight Groove V-bit');
 
 i18n._('key-default_name-CUT');
@@ -255,6 +258,12 @@ i18n._('key-default_name-Cutting 350g');
 i18n._('key-default_name-Cutting 1.6mm');
 i18n._('key-default_name-Cutting 4mm');
 
+i18n._('key-default_name-Line filled');
+i18n._('key-default_name-Dot filled');
+i18n._('key-default_name-On the path');
+i18n._('key-default_name-Vector dot filled');
+i18n._('key-default_name-Vector line filled');
+i18n._('key-default_name-Vector on the path');
 i18n._('key-default_name-ABS');
 i18n._('key-default_name-PETG');
 i18n._('key-default_name-PLA');
@@ -343,6 +352,10 @@ i18n._('key-Workspace/Connection-3dp');
 i18n._('key-Workspace/Connection-Laser');
 i18n._('Key-Workspace/LaserStartJob-manual_mode_description');
 i18n._('key-Workspace/Marlin-Left Nozzle Temp');
+
+// workspace controllers
+i18n._('key-Workspace/Control/JogDistance-XY Axis Travel Distance');
+i18n._('key-Workspace/Control/JogDistance-XYZ Axis Travel Distance');
 
 // Progress Manager
 i18n._('key-Progress/LaserCNC-Generate toolpath and preview: {{progress}}%');
@@ -469,3 +482,9 @@ i18n._('key-Definition/Category-unclassified');
 i18n._('key-2D/Model_basename-Text');
 i18n._('key-2D/Model_basename-Shape');
 i18n._('key-Workspace/LaserStartJob-manual_mode_description');
+i18n._('key-Workspace/LaserStartJob-20w_40w_2w_manual_mode_description');
+
+
+// AB Position
+i18n._('Use the control panel to position points A and B on the machine. Please do not move the print head manually.');
+i18n._('When using the Laser Spot Job Offset Mode, the AB Position feature is currently not supported.');

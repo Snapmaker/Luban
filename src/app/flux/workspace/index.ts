@@ -133,12 +133,14 @@ export const actions = {
                     moduleStatusList,
                     isHomed = false,
                     isMoving,
+                    isRayNewVersion
                 } = state;
                 const { seriesSize } = state;
 
                 dispatch(baseActions.updateState({
                     isHomed: isHomed,
                     isMoving,
+                    isRayNewVersion
                 }));
 
                 if (!isNil(seriesSize)) {
@@ -406,7 +408,8 @@ export const actions = {
                     fileName,
                     ledValue,
                     fanLevel,
-                    isDoorEnable
+                    isDoorEnable,
+                    crosshairOffset
                 } = state;
 
                 compareAndSet(data, currentState, 'laser10WErrorState', laser10WErrorState);
@@ -433,6 +436,7 @@ export const actions = {
                 } else if (!isNil(zFocus)) {
                     compareAndSet(data, currentState, 'laserFocalLength', zFocus + LASER_MOCK_PLATE_HEIGHT);
                 }
+
                 if (!isNil(laserPower)) {
                     compareAndSet(data, currentState, 'laserPower', laserPower);
                 } else if (!isNil(headPower)) {
@@ -488,7 +492,6 @@ export const actions = {
                     compareAndSet(data, currentState, 'airPurifierFanSpeed', airPurifierFanSpeed);
                     compareAndSet(data, currentState, 'airPurifierFilterHealth', airPurifierFilterHealth);
                 }
-
                 dispatch(baseActions.updateState(data));
 
                 // TODO: wifi emergencyStop goes there
@@ -500,6 +503,12 @@ export const actions = {
                     );
                     dispatch(connectActions.disconnect(currentState.server));
                 }
+
+                crosshairOffset && dispatch(
+                    baseActions.updateState({
+                        crosshairOffset
+                    })
+                );
             },
 
             /**
@@ -550,6 +559,15 @@ export const actions = {
                 dispatch(actions.updateState({
                     moduleList: newModuleList,
                 }));
+
+                // Update for laserFocalLength
+                moduleList.forEach(m => {
+                    if (m.laserFocalLength) {
+                        dispatch(actions.updateState({
+                            laserFocalLength: m.laserFocalLength,
+                        }));
+                    }
+                });
 
                 // update cnc spindleSpeed
                 const CNCToolHead = moduleList.find(m => MODULEID_TOOLHEAD_MAP[m.moduleId] === LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2
@@ -911,6 +929,9 @@ export const actions = {
 
         dispatch(actions.updateState(options));
     },
+    updateMoving: (isMoving: boolean) => (dispatch) => {
+        dispatch(baseActions.updateState({ isMoving }));
+    },
 
     executeCmd: (cmd: string) => {
         console.log('execute cmd', cmd);
@@ -920,7 +941,7 @@ export const actions = {
     /**
      * Execute G-code.
      */
-    executeGcode: (gcode: string, context = null, cmd = undefined) => (dispatch, getState) => {
+    executeGcode: (gcode: string, context = null, cmd = undefined, cb?: Function) => (dispatch, getState) => {
         const { homingModal, isConnected } = getState().workspace;
         if (!isConnected) {
             if (homingModal) {
@@ -943,6 +964,7 @@ export const actions = {
                         })
                     );
                 }
+                cb && typeof cb === 'function' && cb();
             }
         );
     },

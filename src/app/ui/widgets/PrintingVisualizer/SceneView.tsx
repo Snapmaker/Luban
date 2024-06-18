@@ -1,4 +1,4 @@
-import { isEqual, some, throttle } from 'lodash';
+import { includes, isEqual, some, throttle } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
@@ -430,16 +430,13 @@ class Visualizer extends PureComponent {
             promptTasks
         } = this.props;
 
-
         if (transformMode !== prevProps.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
 
-            if (prevProps.transformMode === 'support-edit') {
-                this.canvas.current.stopSupportMode();
+            if (includes(['support-edit', 'mesh-coloring', 'rotate-placement'], prevProps.transformMode)) {
+                this.canvas.current.stopMode();
             }
-            if (prevProps.transformMode === 'mesh-coloring') {
-                this.canvas.current.stopMeshColoringMode();
-            }
+
 
             if (transformMode === 'rotate-placement') {
                 this.canvas.current.setSelectedModelConvexMeshGroup(modelGroup.selectedModelConvexMeshGroup);

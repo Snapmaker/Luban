@@ -132,7 +132,6 @@ class SVGLoader extends Loader {
 					break;
 
 				default:
-				// console.log( node );
 			}
 
 			if (path) {

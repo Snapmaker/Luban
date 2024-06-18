@@ -9,6 +9,7 @@ import {
     standardCNCToolHead,
     highPower200WCNCToolHead,
 } from './snapmaker-2-toolheads';
+import { JobOffsetMode } from '../constants/coordinate';
 
 /*
     {
@@ -49,6 +50,12 @@ export const machine: Machine = {
                     max: [167, 165, 150],
                 },
                 supportCameraCapture: true,
+                runBoundaryModeOptions: [
+                    {
+                        label: 'Laser Spot',
+                        value: JobOffsetMode.LaserSpot,
+                    },
+                ]
             },
             {
                 identifier: highPower10WLaserToolHead.identifier,
@@ -58,6 +65,12 @@ export const machine: Machine = {
                     max: [167, 165, 120], // TODO: check data
                 },
                 supportCameraCapture: true,
+                runBoundaryModeOptions: [
+                    {
+                        label: 'Laser Spot',
+                        value: JobOffsetMode.LaserSpot,
+                    },
+                ]
             },
             {
                 identifier: standardCNCToolHead.identifier,

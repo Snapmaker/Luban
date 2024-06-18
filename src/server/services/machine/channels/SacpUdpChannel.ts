@@ -5,6 +5,7 @@ import logger from '../../../lib/logger';
 import SacpClient from '../sacp/SacpClient';
 import { ChannelEvent } from './ChannelEvent';
 import SacpChannelBase from './SacpChannel';
+import { ExecuteGcodeResult } from './Channel';
 
 const log = logger('machine:channels:SacpUdpChannel');
 
@@ -28,7 +29,7 @@ class SacpUdpChannel extends SacpChannelBase {
             }
         });
         this.socketClient.on('close', () => {
-            log.info('TCP connection closed');
+            log.info('UDP connection closed');
             const result = {
                 code: 200,
                 data: {},
@@ -38,7 +39,7 @@ class SacpUdpChannel extends SacpChannelBase {
             this.socket && this.socket.emit('connection:close', result);
         });
         this.socketClient.on('error', (err) => {
-            log.error(`TCP connection error: ${err}`);
+            log.error(`UDP connection error: ${err}`);
         });
     }
 
@@ -101,7 +102,7 @@ class SacpUdpChannel extends SacpChannelBase {
         return super.startHeartbeat();
     }
 
-    public async stopHeartbeat(): Promise<void> {
+    public async stopHeartbeat(id?: string): Promise<void> {
         // Remove heartbeat timeout check
         if (this.heartbeatTimer2) {
             clearTimeout(this.heartbeatTimer2);
@@ -111,6 +112,33 @@ class SacpUdpChannel extends SacpChannelBase {
         // Cancel subscription of heartbeat
         const res = await this.sacpClient.unsubscribeHeartbeat(null);
         log.info(`Unsubscribe heartbeat, result = ${res.code}`);
+
+        super.stopHeartbeat(id);
+    }
+
+    /**
+     * Generic execute G-code commands.
+     */
+    public async executeGcode(gcode: string): Promise<ExecuteGcodeResult> {
+        const result = await this.sacpClient.executeGcode(gcode);
+
+        // if any gcode line fails, then fails
+        if (result.response.result !== 0) {
+            return {
+                result: -1,
+            };
+        }
+
+        return {
+            result: 0,
+            text: 'ok',
+        };
+    }
+
+    public goHome = async () => {
+        await this.sacpClient.requestHome().then(({ response }) => {
+            this.socket && this.socket.emit('serialport:read', { data: response.result === 0 ? 'OK' : 'WARNING' });
+        });
     }
 }
 

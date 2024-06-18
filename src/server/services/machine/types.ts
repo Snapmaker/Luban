@@ -33,6 +33,7 @@ export type ConnectedData = {
     seriesSize?: string,
     isMoving?: boolean,
     err?: string
+    isRayNewVersion?: boolean
 };
 
 export type MarlinStateData = {

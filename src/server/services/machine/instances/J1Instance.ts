@@ -1,5 +1,6 @@
 import { includes } from 'lodash';
 
+import { v4 as uuidv4 } from 'uuid';
 import {
     CNC_HEAD_MODULE_IDS,
     EMERGENCY_STOP_BUTTON,
@@ -22,6 +23,7 @@ const log = logger('machine:instance:J1Instance');
 
 
 class J1MachineInstance extends MachineInstance {
+    public id = uuidv4()
     private async _onMachineReadySACP() {
         // TO DO: Need to get seriesSize for 'connection:connected' event
         const state: ConnectedData = {};
@@ -109,7 +111,7 @@ class J1MachineInstance extends MachineInstance {
         log.info('On closing connection...');
 
         log.info('Stop heartbeat.');
-        await this.channel.stopHeartbeat();
+        await this.channel.stopHeartbeat(this.id);
 
         (this.channel as SacpChannelBase).unregisterErrorReportHandler();
     }

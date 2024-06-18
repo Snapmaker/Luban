@@ -103,6 +103,8 @@ const INITIAL_STATE = {
     enable3dpLivePreview: false,
     // wifi connection, home button in control widget
     homingModal: false,
+
+    isMultiDualExtrusion: false
 };
 
 export const actions = {
@@ -187,6 +189,13 @@ export const actions = {
             dispatch(
                 baseActions.updateState({
                     enable3dpLivePreview: false
+                })
+            );
+        }
+        if (machineStore.get('machine.isMultiDualExtrusion')) {
+            dispatch(
+                baseActions.updateState({
+                    isMultiDualExtrusion: machineStore.get('machine.isMultiDualExtrusion')
                 })
             );
         }
@@ -514,8 +523,17 @@ export const actions = {
         machineStore.set('enable3dpLivePreview', bool);
         dispatch(baseActions.updateState({ enable3dpLivePreview: bool }));
         modelGroup.setClipperEnable(bool);
-    }
+    },
     // endregion
+
+    updateIsMultiDualExtrusion: (value) => (dispatch) => {
+        machineStore.set('machine.isMultiDualExtrusion', value);
+        dispatch(
+            baseActions.updateState({
+                isMultiDualExtrusion: value
+            })
+        );
+    }
 };
 
 export default function reducer(state = INITIAL_STATE, action) {

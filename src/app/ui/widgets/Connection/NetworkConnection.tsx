@@ -34,7 +34,7 @@ import { ConnectionType } from '../../../flux/workspace/state';
 import usePrevious from '../../../lib/hooks/previous';
 import i18n from '../../../lib/i18n';
 import log from '../../../lib/log';
-import { L20WLaserToolModule, L40WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
+import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
 import { Button } from '../../components/Buttons';
 import ModalSmall from '../../components/Modal/ModalSmall';
 import ModalSmallInput from '../../components/Modal/ModalSmallInput';
@@ -358,6 +358,7 @@ const NetworkConnection: React.FC = () => {
         if (server) {
             dispatch(connectActions.disconnect(server));
             dispatch(workspaceActions.updateState({ moduleList: [] }));
+            dispatch(workspaceActions.updateState({ laserCamera: false }));
         }
     }, [dispatch, server]);
 
@@ -538,6 +539,13 @@ const NetworkConnection: React.FC = () => {
                         });
                         break;
                     }
+                    case L2WLaserToolModule.identifier: {
+                        newModuleStatusList.push({
+                            status: true,
+                            moduleName: i18n._(L2WLaserToolModule.label)
+                        });
+                        break;
+                    }
                     default: {
                         newModuleStatusList.push({
                             status: true,
@@ -649,7 +657,6 @@ const NetworkConnection: React.FC = () => {
                             <SvgIcon
                                 className={classNames(
                                     'border-default-black-5 border-radius-left-8',
-                                    // className="border-default-black-5 border-radius-right-8"
                                 )}
                                 name="Add"
                                 title={i18n._('key-Workspace/Connection-Add')}

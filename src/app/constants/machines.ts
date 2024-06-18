@@ -1,4 +1,4 @@
-import type { Machine, MachineModule, MachineToolHeadOptions, ToolHead, ToolHeadType } from '@snapmaker/luban-platform';
+import type { Machine, MachineModule, MachineToolHeadOptions, ToolHead, ToolHeadType, RunBoundaryModeOption } from '@snapmaker/luban-platform';
 
 import i18n from '../lib/i18n';
 import {
@@ -14,6 +14,7 @@ import {
 import { quickSwapKitModule, bracingKitModule } from '../machines/snapmaker-2-modules';
 import {
     L20WLaserToolModule,
+    L2WLaserToolModule,
     L40WLaserToolModule,
     dualExtrusionPrintToolHead,
     dualExtrusionPrintToolHeadForArtisan,
@@ -89,6 +90,7 @@ export const MACHINE_TOOL_HEADS = {
     [printToolHeadJ1.identifier]: printToolHeadJ1,
     [L20WLaserToolModule.identifier]: L20WLaserToolModule,
     [L40WLaserToolModule.identifier]: L40WLaserToolModule,
+    [L2WLaserToolModule.identifier]: L2WLaserToolModule,
 };
 
 // Module IDs
@@ -105,6 +107,8 @@ export const MODULEID_MAP = {
     '16': ENCLOSURE_FOR_ARTISAN,
     19: L20WLaserToolModule.identifier,
     20: L40WLaserToolModule.identifier,
+    23: L2WLaserToolModule.identifier,
+    // ?
     '512': HEADT_BED_FOR_SM2,
     '513': SNAPMAKER_J1_HEATED_BED,
     '514': SNAPMAKER_J1_LINEAR_MODULE,
@@ -124,6 +128,7 @@ export const LASER_HEAD_MODULE_IDS = [
     14, // 10W Laser Module
     19, // 20W Laser Module
     20, // 40W Laser Module
+    23, // 2W Laser Module
 ];
 export const CNC_HEAD_MODULE_IDS = [
     1, // Standard CNC Module
@@ -152,6 +157,7 @@ export const MODULEID_TOOLHEAD_MAP = {
     '15': LEVEL_TWO_CNC_TOOLHEAD_FOR_SM2,
     19: L20WLaserToolModule.identifier,
     20: L40WLaserToolModule.identifier,
+    23: L2WLaserToolModule.identifier,
     '00': printToolHeadJ1.identifier,
 };
 
@@ -270,6 +276,10 @@ export function getMachineSupportedToolOptions(machineSeries: string, headType =
     }
 
     return options;
+}
+
+export function getSupportedRunBoundaryModeOptions(machine: Machine, toolIdentifer: string): RunBoundaryModeOption[] {
+    return machine?.metadata?.toolHeads.find(toolHead => toolHead.identifier === toolIdentifer).runBoundaryModeOptions;
 }
 
 export function isDualExtruder(identifier: string): boolean {

@@ -26,16 +26,17 @@ export const UniformToolpathConfig = (config) => {
 
     if (isNil(version) || lt(version, '4.9.0')) {
         config.toolpaths.map((toolPath) => {
-            if (!toolPath.gcodeConfig.auxiliaryAirPump) {
+            const isNotExist = target => typeof target === 'undefined' || isNil(target);
+            if (isNotExist(toolPath.gcodeConfig.auxiliaryAirPump)) {
                 toolPath.gcodeConfig.auxiliaryAirPump = false;
             }
-            if (!toolPath.gcodeConfig.halfDiodeMode) {
+            if (isNotExist(toolPath.gcodeConfig.halfDiodeMode)) {
                 toolPath.gcodeConfig.halfDiodeMode = false;
             }
-            if (!toolPath.gcodeConfig.constantPowerMode) {
+            if (isNotExist(toolPath.gcodeConfig.constantPowerMode)) {
                 toolPath.gcodeConfig.constantPowerMode = true;
             }
-            if (!toolPath.gcodeConfig.initialHeightOffset) {
+            if (isNotExist(toolPath.gcodeConfig.initialHeightOffset)) {
                 toolPath.gcodeConfig.initialHeightOffset = 0;
             }
             return toolPath;

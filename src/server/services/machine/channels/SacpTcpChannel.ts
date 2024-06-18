@@ -243,8 +243,8 @@ class SacpTcpChannel extends SacpChannelBase {
         return super.startHeartbeat();
     }
 
-    public async stopHeartbeat(): Promise<void> {
-        return super.stopHeartbeat();
+    public async stopHeartbeat(id?: string): Promise<void> {
+        return super.stopHeartbeat(id);
     }
 
     public takePhoto = async (params: RequestPhotoInfo, callback: (result: { status: boolean }) => void) => {

@@ -7,6 +7,7 @@ import {
     printToolHeadOriginal,
     cncToolHeadOriginal
 } from './snapmaker-original-toolheads';
+import { JobOffsetMode } from '../constants/coordinate';
 
 /**
  * Snapmaker Original
@@ -38,6 +39,12 @@ export const machine: Machine = {
                 identifier: laser1600mWToolHeadOriginal.identifier,
                 configPath: 'laser/original_1600mw',
                 goHomeOnConnection: false,
+                runBoundaryModeOptions: [
+                    {
+                        label: 'Laser Spot',
+                        value: JobOffsetMode.LaserSpot,
+                    },
+                ]
             },
             {
                 identifier: cncToolHeadOriginal.identifier,

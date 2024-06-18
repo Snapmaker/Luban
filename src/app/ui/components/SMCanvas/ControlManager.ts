@@ -922,25 +922,11 @@ class ControlManager extends EventEmitter {
         this.setMode('edit-support');
     }
 
-    public stopSupportMode() {
-        this.state = STATE.NONE;
-        this.prevState = STATE.NONE;
-
-        this.setMode('');
-    }
-
     public startMeshColoringMode() {
         this.state = STATE.NONE;
         this.prevState = STATE.NONE;
 
         this.setMode('mesh-coloring');
-    }
-
-    public stopMeshColoringMode() {
-        this.state = STATE.NONE;
-        this.prevState = STATE.NONE;
-
-        this.setMode('');
     }
 
     private updateCamera(shouldUpdateTarget = false) {
@@ -1043,6 +1029,13 @@ class ControlManager extends EventEmitter {
     public setSelectedModelConvexMeshGroup(group) {
         this.state = STATE.ROTATE_PLACEMENT;
         this.transformControl.setObjectConvexMeshGroup(group);
+    }
+
+    public stopMode() {
+        this.state = STATE.NONE;
+        this.prevState = STATE.NONE;
+
+        this.setMode('');
     }
 }
 

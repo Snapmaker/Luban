@@ -16,13 +16,13 @@ interface DiscoverOptions {
 }
 
 interface SubscribeOptions {
-    connectionType: 'wifi' | 'serial';
+    connectionType: ConnectionType.WiFi | ConnectionType.Serial;
     interval?: number; // in milliseconds
     callback: (discoverResult: DiscoverResult) => void;
 }
 
 interface UnsubscribeOptions {
-    connectionType: 'wifi' | 'serial';
+    connectionType: ConnectionType.WiFi | ConnectionType.Serial;
 }
 
 class MachineDiscoverer {

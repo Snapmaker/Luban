@@ -9,6 +9,8 @@ declare interface WidgetActions {
 export declare interface ConnectionProps {
     widgetId: string;
     widgetActions: WidgetActions;
+    isNotInWorkspace?: boolean
+    canABPosition?: boolean
 }
 
 /**

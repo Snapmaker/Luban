@@ -6,6 +6,7 @@ import logger from '../../../lib/logger';
 import Channel, { CncChannelInterface, ExecuteGcodeResult, LaserChannelInterface } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 import { L20WLaserToolModule, L40WLaserToolModule } from '../../../../app/machines/snapmaker-2-toolheads';
+import { HEAD_LASER } from '../../../constants';
 
 const log = logger('machine:channels:TextSerialChannel');
 
@@ -93,6 +94,10 @@ class TextSerialChannel extends Channel implements
         const controller = this.controller;
         if (!controller) {
             return false;
+        }
+
+        if (controller.state.headType === HEAD_LASER) {
+            controller.writeln('M5');
         }
 
         return new Promise((resolve) => {

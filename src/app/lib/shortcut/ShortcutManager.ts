@@ -25,6 +25,7 @@ export enum ShortcutHandlerPriority {
     App = 0,
     Page = 1,
     View = 2,
+    Widget = 3
 }
 
 export interface ShortcutHandler {

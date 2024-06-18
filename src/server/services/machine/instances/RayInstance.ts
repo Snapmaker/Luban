@@ -1,6 +1,8 @@
 import { PeerId } from '@snapmaker/snapmaker-sacp-sdk/dist/communication/Header';
-import { includes } from 'lodash';
+import { includes, isNil } from 'lodash';
 
+import { v4 as uuidv4 } from 'uuid';
+import { gt } from 'semver';
 import {
     AIR_PURIFIER_MODULE_IDS,
     EMERGENCY_STOP_BUTTON,
@@ -24,6 +26,8 @@ const log = logger('services:machine:instances:RayInstance');
 
 
 class RayMachineInstance extends MachineInstance {
+    public id = uuidv4()
+
     private async _prepareMachineSACP() {
         // configure channel
         (this.channel as SacpChannelBase).setFilePeerId(PeerId.CONTROLLER);
@@ -41,10 +45,9 @@ class RayMachineInstance extends MachineInstance {
 
         // module info
         const moduleInfos = await (this.channel as SacpChannelBase).getModuleInfo();
-        console.log('moduleInfos: ', JSON.stringify(moduleInfos));
 
         /*
-        moduleInfos = [
+        e.g. moduleInfos = [
           ModuleInfo {
             key: 3,
             moduleId: 520,
@@ -57,7 +60,6 @@ class RayMachineInstance extends MachineInstance {
           },
         ]
         */
-
         const moduleListStatus = {
             airPurifier: false,
             emergencyStopButton: false,
@@ -86,10 +88,31 @@ class RayMachineInstance extends MachineInstance {
         });
         state.moduleStatusList = moduleListStatus;
 
+
+
+        const isNewVersion = !isNil(machineInfo?.masterControlFirmwareVersion) && gt(machineInfo?.masterControlFirmwareVersion?.slice(1), '1.6.8');
+        state.isRayNewVersion = isNewVersion;
+        log.info('connected Ray with version: ', machineInfo?.masterControlFirmwareVersion);
+
+        //
+        // Get Coordinate Info
+        if (isNewVersion) {
+            const { data: coordinateInfos } = await (this.channel as SacpChannelBase).getCoordinateInfo();
+            const isHomed = !(coordinateInfos?.coordinateSystemInfo?.homed); // 0: homed, 1: need to home
+            state.isHomed = isHomed;
+            state.isMoving = false;
+        }
+
         this.socket.emit('connection:connected', { state: state, err: '' });
 
-        // Start heartbeat
-        await this.channel.startHeartbeat();
+        // Legacy
+        if (isNewVersion) {
+            const sacpClient = (this.channel as SacpChannelBase).sacpClient;
+            await (this.channel as SacpChannelBase).startHeartbeatLegacy(sacpClient, undefined, this.id);
+        } else {
+            // Start heartbeat
+            await this.channel.startHeartbeat();
+        }
 
         // register handlers
         (this.channel as SacpChannelBase).registerErrorReportHandler();
@@ -122,7 +145,7 @@ class RayMachineInstance extends MachineInstance {
         log.info('Stop heartbeat.');
         // await this.channel.stopHeartbeat();
         // Remove await temporarily, it blocks other unsubscribes
-        await this.channel.stopHeartbeat();
+        await this.channel.stopHeartbeat(this.id);
 
         (this.channel as SacpChannelBase).unregisterErrorReportHandler();
 

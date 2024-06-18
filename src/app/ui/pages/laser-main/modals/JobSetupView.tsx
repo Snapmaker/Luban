@@ -1,5 +1,5 @@
 import { Machine } from '@snapmaker/luban-platform';
-import { includes } from 'lodash';
+// import { includes } from 'lodash';
 import React, { useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
@@ -24,11 +24,10 @@ import { RootState } from '../../../../flux/index.def';
 import useSetState from '../../../../lib/hooks/set-state';
 import i18n from '../../../../lib/i18n';
 import { toFixed } from '../../../../lib/numeric-utils';
-import { SnapmakerArtisanMachine, SnapmakerRayMachine } from '../../../../machines';
-import { L20WLaserToolModule, L40WLaserToolModule } from '../../../../machines/snapmaker-2-toolheads';
 import { NumberInput as Input } from '../../../components/Input';
 import Select from '../../../components/Select';
 import TipTrigger from '../../../components/TipTrigger';
+import { getSupportedRunBoundaryModeOptions } from '../../../../constants/machines';
 
 
 export type JobSetupViewHandle = {
@@ -46,7 +45,7 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
     const materials = useSelector((state: RootState) => state[HEAD_LASER]?.materials, shallowEqual) as Materials;
     const origin = useSelector((state: RootState) => state[HEAD_LASER].origin, shallowEqual) as Origin;
 
-    const { inProgress, useBackground } = useSelector((state: RootState) => state[HEAD_LASER]);
+    const { inProgress, useBackground, useABPosition } = useSelector((state: RootState) => state[HEAD_LASER]);
 
     // workpiece
     const [workpiece, updateWorkpiece] = useSetState<Workpiece>({
@@ -166,37 +165,12 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
     const [selectedJobOffsetMode, setSelectedJobOffsetMode] = useState(jobOffsetMode);
 
     const runBoundaryModeOptions = useMemo(() => {
-        // hard-coded for ray machine
-        if (includes([L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], toolIdentifer)) {
-            if (activeMachine?.identifier === SnapmakerRayMachine.identifier) {
-                return [
-                    {
-                        label: i18n._('Crosshair'),
-                        value: JobOffsetMode.Crosshair,
-                    },
-                    {
-                        label: i18n._('Laser Spot'),
-                        value: JobOffsetMode.LaserSpot,
-                    },
-                ];
-            } else if (activeMachine?.identifier === SnapmakerArtisanMachine.identifier) {
-                return [
-                    {
-                        label: i18n._('Crosshair'),
-                        value: JobOffsetMode.Crosshair,
-                    },
-                ];
-            } else {
-                return [];
-            }
-        } else {
-            return [
-                {
-                    label: i18n._('Laser Spot'),
-                    value: JobOffsetMode.LaserSpot,
-                },
-            ];
-        }
+        const _runBoundaryModeOptions = getSupportedRunBoundaryModeOptions(activeMachine, toolIdentifer) || [];
+
+        return _runBoundaryModeOptions.map(option => ({
+            label: i18n._(option.label),
+            value: option.value
+        }));
     }, [activeMachine, toolIdentifer]);
 
     // Check job offset mode options
@@ -227,10 +201,12 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
         imgOF3axisCoordinateMode = `/resources/images/cnc-laser/working-origin-3-${selectedOrigin.reference}.png`;
     }
 
-    let settingSizeDisabled = false;
-    if (useBackground) {
-        settingSizeDisabled = true;
-    }
+    const [settingSizeDisabled, setSettingSizeDisabled] = useState(false);
+    useEffect(() => {
+        if (useBackground || useABPosition) {
+            setSettingSizeDisabled(true);
+        }
+    }, [useBackground, useABPosition]);
 
     const dispatch = useDispatch();
     useImperativeHandle(ref, () => {

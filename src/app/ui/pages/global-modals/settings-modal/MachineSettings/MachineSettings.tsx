@@ -1,9 +1,11 @@
-import { Checkbox } from 'antd';
 import type { CheckboxValueType } from 'antd/es/checkbox/Group';
 import classNames from 'classnames';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
+import { includes } from 'lodash';
+import { Checkbox } from 'antd';
+import { Button } from '../../../../components/Buttons';
 import {
     findMachineByName,
     findMachineModule,
@@ -23,6 +25,9 @@ import { getCurrentHeadType } from '../../../../../lib/url-utils';
 import Select from '../../../../components/Select';
 import SvgIcon from '../../../../components/SvgIcon';
 import styles from '../form.styl';
+import { SnapmakerArtisanMachine } from '../../../../../machines';
+import Modal from '../../../../components/Modal';
+import { dualExtrusionPrintToolHead } from '../../../../../machines/snapmaker-2-toolheads';
 
 
 const MachineSettings: React.FC = () => {
@@ -34,6 +39,8 @@ const MachineSettings: React.FC = () => {
     const enclosureDoorDetection = useSelector((state: RootState) => state.machine?.enclosureDoorDetection);
     const zAxisModule = useSelector((state: RootState) => state.machine?.zAxisModule);
     const connectionTimeout = useSelector((state: RootState) => state.machine?.connectionTimeout);
+    const isMultiDualExtrusion = useSelector((state: RootState) => state.machine?.isMultiDualExtrusion);
+
 
     const [state, setState] = useState({
         series: '',
@@ -59,10 +66,18 @@ const MachineSettings: React.FC = () => {
     const [printingToolHeadSelected, setPrintingToolHeadSelected] = useState(toolHead.printingToolhead);
     const [laserToolHeadSelected, setLaserToolHeadSelected] = useState(toolHead.laserToolhead);
     const [cncToolHeadSelected, setCncToolHeadSelected] = useState(toolHead.cncToolhead);
+    const [tmpIsMultiDualExtrusion, setTmpIsMultiDualExtrusion] = useState(isMultiDualExtrusion);
+
 
     // change options when new machine series selected
     useEffect(() => {
-        const printingOptions = getMachineSupportedToolOptions(state.series, HEAD_PRINTING);
+        let printingOptions = getMachineSupportedToolOptions(state.series, HEAD_PRINTING);
+
+        // hard-code for artsian dualextrusion; No dualextrusion for 2.0 option by default
+        if (includes([SnapmakerArtisanMachine.identifier], state.series) && !isMultiDualExtrusion) {
+            printingOptions = printingOptions.filter(toolOption => toolOption.value !== dualExtrusionPrintToolHead.identifier);
+        }
+
         setPrintingToolHeadOptions(printingOptions);
 
         if (printingOptions.length > 0) {
@@ -91,10 +106,11 @@ const MachineSettings: React.FC = () => {
                 setCncToolHeadSelected(cncOptions[0].value);
             }
         }
-    }, [state.series]);
+    }, [state.series, isMultiDualExtrusion]);
 
     // machine modules options
     const [machineModuleOptions, setMachineModuleOptions] = useState([]);
+    const [isOpenArtsianDualExtrusionSelectModal, setIsOpenArtsianDualExtrusionSelectModal] = useState<boolean>(false);
 
     useEffect(() => {
         if (machine && machine.metadata?.modules) {
@@ -124,6 +140,68 @@ const MachineSettings: React.FC = () => {
     }, []);
 
     const dispatch = useDispatch();
+
+
+    const selectedArtisan = useMemo(() => {
+        return includes([SnapmakerArtisanMachine.identifier], state.series);
+    }, [state.series]);
+
+    const renderArtsianDualExtrusionSelectModal = () => {
+        return (
+            <Modal
+                size="sm"
+                style={{ minWidth: 700 }}
+                onClose={() => setIsOpenArtsianDualExtrusionSelectModal(false)}
+            >
+                <Modal.Header>
+                    <div>
+                        {i18n._('Print Settings')}
+                    </div>
+                </Modal.Header>
+                <Modal.Body>
+                    <div>
+                        {i18n._('There are two versions of the Dual Extrusion 3D Printing Module: one for Artisan and one for Snapmaker 2.0. If you are using the Snapmaker 2.0 version of the Dual Extrusion 3D Printing Module, be sure to activate the 3D Print Head option and save your changes.')}
+                    </div>
+                    <div className="margin-top-16">
+                        <Checkbox
+                            defaultChecked={tmpIsMultiDualExtrusion}
+                            checked={tmpIsMultiDualExtrusion}
+                            className="margin-right-8"
+                            onChange={(event) => {
+                                // hard-code for artsian dualextrusion
+                                setTmpIsMultiDualExtrusion(event.target.checked);
+                            }}
+                        >
+                            {i18n._('Enable 3D Print Head Setting')}
+                        </Checkbox>
+                    </div>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button
+                        priority="level-two"
+                        type="default"
+                        className="margin-right-8"
+                        width="96px"
+                        onClick={() => setIsOpenArtsianDualExtrusionSelectModal(false)}
+                    >
+                        {i18n._('Close')}
+                    </Button>
+                    <Button
+                        priority="level-two"
+                        type="primary"
+                        className="align-r"
+                        width="96px"
+                        onClick={() => {
+                            dispatch(machineActions.updateIsMultiDualExtrusion(tmpIsMultiDualExtrusion));
+                            setIsOpenArtsianDualExtrusionSelectModal(false);
+                        }}
+                    >
+                        {i18n._('Save')}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        );
+    };
 
     const actions = {
         // Machine Model
@@ -169,11 +247,13 @@ const MachineSettings: React.FC = () => {
                 default:
                     break;
             }
+        },
+        openArtsianDualExtrusionSelectModal: () => {
+            setIsOpenArtsianDualExtrusionSelectModal(true);
         }
     };
     const renderToolheadWorkSize = useCallback((_toolHeadIdentify) => {
         const _toolHead = machine?.metadata.toolHeads.find(th => th.identifier === _toolHeadIdentify);
-        console.log('==========================', _toolHead);
         if (_toolHead && _toolHead.workRange) {
             const [x, y, z] = _toolHead.workRange?.max;
             let toolheadWorkSize = '';
@@ -213,6 +293,9 @@ const MachineSettings: React.FC = () => {
         series, connectionTimeout, size, enclosureDoorDetection, zAxisModule, modules,
     ]);
 
+    useEffect(() => {
+        setTmpIsMultiDualExtrusion(isMultiDualExtrusion);
+    }, [isMultiDualExtrusion]);
 
     // Save changes
     const onSave = useCallback(async () => {
@@ -258,125 +341,130 @@ const MachineSettings: React.FC = () => {
     }, [onSave, onCancel]);
 
 
-
     return (
-        <div className={styles['form-container']}>
-            <div className="border-bottom-normal padding-bottom-4">
-                <SvgIcon
-                    name="TitleSetting"
-                    type={['static']}
+        <>
+            <div className={styles['form-container']}>
+                <div className="border-bottom-normal padding-bottom-4">
+                    <SvgIcon
+                        name="TitleSetting"
+                        type={['static']}
+                    />
+                    <span className="margin-left-4">{i18n._('key-App/Settings/MachineSettings-Machine')}</span>
+                </div>
+                <Select
+                    className="margin-vertical-16"
+                    searchable={false}
+                    size="200px"
+                    name="select-machine"
+                    options={machineOptions}
+                    value={state.series}
+                    onChange={actions.onChangeMachineSeries}
                 />
-                <span className="margin-left-4">{i18n._('key-App/Settings/MachineSettings-Machine')}</span>
-            </div>
-            <Select
-                className="margin-vertical-16"
-                searchable={false}
-                size="200px"
-                name="select-machine"
-                options={machineOptions}
-                value={state.series}
-                onChange={actions.onChangeMachineSeries}
-            />
-            <div>
-                <span className="unit-text margin-right-12">{i18n._('key-App/Settings/MachineSettings-Dimensions')}:</span>
-                <span className="main-text-normal">{`${machine?.metadata?.size?.x} x ${machine?.metadata?.size?.y} x ${machine?.metadata?.size?.z} mm`} </span>
-            </div>
-            <div className="border-bottom-normal padding-bottom-4 margin-top-32">
-                <SvgIcon
-                    name="TitleSetting"
-                    type={['static']}
-                />
-                <span className="margin-left-4">{i18n._('key-App/Settings/MachineSettings-Head')}</span>
-            </div>
-            <div className={styles['head-detail']}>
-                {
-                    printingToolHeadOptions.length > 0 && (
-                        <div className="margin-bottom-16">
-                            <div className="main-text-normal margin-bottom-8 margin-top-16">
-                                {i18n._('key-App/Settings/MachineSettings-3D Print Toolhead')}
-                                {renderToolheadWorkSize(printingToolHeadSelected)}
+                <div>
+                    <span className="unit-text margin-right-12">{i18n._('key-App/Settings/MachineSettings-Dimensions')}:</span>
+                    <span className="main-text-normal">{`${machine?.metadata?.size?.x} x ${machine?.metadata?.size?.y} x ${machine?.metadata?.size?.z} mm`} </span>
+                </div>
+                <div className="border-bottom-normal padding-bottom-4 margin-top-32">
+                    <SvgIcon
+                        name="TitleSetting"
+                        type={['static']}
+                    />
+                    <span className="margin-left-4">{i18n._('key-App/Settings/MachineSettings-Head')}</span>
+                </div>
+                <div className={styles['head-detail']}>
+                    {
+                        printingToolHeadOptions.length > 0 && (
+                            <div className="margin-bottom-16">
+                                <div className="main-text-normal margin-bottom-8 margin-top-16">
+                                    {i18n._('key-App/Settings/MachineSettings-3D Print Toolhead')}
+                                    {renderToolheadWorkSize(printingToolHeadSelected)}
+                                </div>
+                                <Select
+                                    value={printingToolHeadSelected}
+                                    options={printingToolHeadOptions.map(item => {
+                                        return {
+                                            value: item.value,
+                                            label: item.label,
+                                        };
+                                    })}
+                                    onChange={e => actions.handleToolheadChange(e, 'printing')}
+                                    size="large"
+                                    disabled={printingToolHeadOptions.length <= 1}
+                                />
+                                {
+                                    selectedArtisan && <i onClick={actions.openArtsianDualExtrusionSelectModal} className="fa fa-info-circle margin-left-8 cursor-pointer" aria-hidden="true" />
+                                }
                             </div>
-                            <Select
-                                value={printingToolHeadSelected}
-                                options={printingToolHeadOptions.map(item => {
-                                    return {
-                                        value: item.value,
-                                        label: item.label,
-                                    };
-                                })}
-                                onChange={e => actions.handleToolheadChange(e, 'printing')}
-                                size="large"
-                                disabled={printingToolHeadOptions.length <= 1}
-                            />
-                        </div>
-                    )
-                }
-                {
-                    laserToolHeadOptions.length > 0 && (
-                        <div className="margin-bottom-16">
-                            <div className="main-text-normal margin-bottom-8">{i18n._('key-App/Settings/MachineSettings-Laser Toolhead')}</div>
-                            <Select
-                                value={laserToolHeadSelected}
-                                options={laserToolHeadOptions.map(item => {
-                                    return {
+                        )
+                    }
+                    {
+                        laserToolHeadOptions.length > 0 && (
+                            <div className="margin-bottom-16">
+                                <div className="main-text-normal margin-bottom-8">{i18n._('key-App/Settings/MachineSettings-Laser Toolhead')}</div>
+                                <Select
+                                    value={laserToolHeadSelected}
+                                    options={laserToolHeadOptions.map(item => {
+                                        return {
+                                            value: item.value,
+                                            label: i18n._(item.label)
+                                        };
+                                    })}
+                                    onChange={e => actions.handleToolheadChange(e, 'laser')}
+                                    size="large"
+                                    disabled={laserToolHeadOptions.length <= 1}
+                                />
+                            </div>
+
+                        )
+                    }
+                    {
+                        cncToolHeadOptions.length > 0 && (
+                            <div className="margin-bottom-16">
+                                <div className="main-text-normal margin-bottom-8">{i18n._('key-App/Settings/MachineSettings-CNC Toolhead')}</div>
+                                <Select
+                                    value={cncToolHeadSelected}
+                                    options={cncToolHeadOptions.map(item => ({
                                         value: item.value,
                                         label: i18n._(item.label)
-                                    };
-                                })}
-                                onChange={e => actions.handleToolheadChange(e, 'laser')}
-                                size="large"
-                                disabled={laserToolHeadOptions.length <= 1}
-                            />
-                        </div>
+                                    }))}
+                                    onChange={e => actions.handleToolheadChange(e, 'cnc')}
+                                    size="large"
+                                    disabled={cncToolHeadOptions.length <= 1}
+                                />
+                            </div>
 
+                        )
+                    }
+                </div>
+
+                {
+                    machineModuleOptions.length > 0 && (
+                        <div className="border-bottom-normal padding-bottom-4 margin-top-32">
+                            <SvgIcon
+                                name="TitleSetting"
+                                type={['static']}
+                            />
+                            <span className="margin-left-4">{i18n._('key-App/Settings/MachineSettings-Modules')}</span>
+                        </div>
                     )
                 }
-                {
-                    cncToolHeadOptions.length > 0 && (
-                        <div className="margin-bottom-16">
-                            <div className="main-text-normal margin-bottom-8">{i18n._('key-App/Settings/MachineSettings-CNC Toolhead')}</div>
-                            <Select
-                                value={cncToolHeadSelected}
-                                options={cncToolHeadOptions.map(item => ({
-                                    value: item.value,
-                                    label: i18n._(item.label)
-                                }))}
-                                onChange={e => actions.handleToolheadChange(e, 'cnc')}
-                                size="large"
-                                disabled={cncToolHeadOptions.length <= 1}
-                            />
-                        </div>
 
+                {
+                    machineModuleOptions.length > 0 && (
+                        <div className={classNames(styles['head-detail'], 'margin-top-8')}>
+                            <div className="margin-bottom-16">
+                                <Checkbox.Group
+                                    options={machineModuleOptions}
+                                    onChange={onCheckMachineModule}
+                                    defaultValue={state.modules}
+                                />
+                            </div>
+                        </div>
                     )
                 }
             </div>
-
-            {
-                machineModuleOptions.length > 0 && (
-                    <div className="border-bottom-normal padding-bottom-4 margin-top-32">
-                        <SvgIcon
-                            name="TitleSetting"
-                            type={['static']}
-                        />
-                        <span className="margin-left-4">{i18n._('key-App/Settings/MachineSettings-Modules')}</span>
-                    </div>
-                )
-            }
-
-            {
-                machineModuleOptions.length > 0 && (
-                    <div className={classNames(styles['head-detail'], 'margin-top-8')}>
-                        <div className="margin-bottom-16">
-                            <Checkbox.Group
-                                options={machineModuleOptions}
-                                onChange={onCheckMachineModule}
-                                defaultValue={state.modules}
-                            />
-                        </div>
-                    </div>
-                )
-            }
-        </div>
+            {isOpenArtsianDualExtrusionSelectModal && renderArtsianDualExtrusionSelectModal()}
+        </>
     );
 };
 

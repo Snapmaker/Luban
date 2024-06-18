@@ -7,6 +7,8 @@ import pubsub from 'pubsub-js';
 import React from 'react';
 import { connect } from 'react-redux';
 import * as THREE from 'three';
+import { includes } from 'lodash';
+import { toast } from 'react-toastify';
 import { humanReadableTime } from '../../../lib/time-utils';
 
 import {
@@ -36,7 +38,11 @@ import Loading from './Loading';
 import PrintablePlate from './PrintablePlate';
 import Rendering from './Rendering';
 import ToolHead from './ToolHead';
-import { SnapmakerArtisanMachine, SnapmakerOriginalMachine } from '../../../machines';
+import { SnapmakerA150Machine, SnapmakerA250Machine, SnapmakerA350Machine, SnapmakerArtisanMachine, SnapmakerOriginalMachine } from '../../../machines';
+import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
+import { ConnectionType } from '../../../flux/workspace/state';
+import SocketEvent from '../../../communication/socket-events';
+import { makeSceneToast } from '../../views/toasts/SceneToast';
 
 
 class Visualizer extends React.PureComponent {
@@ -76,6 +82,7 @@ class Visualizer extends React.PureComponent {
         materialThicknessSource: PropTypes.string.isRequired,
         laserFocalLength: PropTypes.number,
         background: PropTypes.object.isRequired,
+        useABPosition: PropTypes.bool.isRequired,
         workPosition: PropTypes.object.isRequired,
         originOffset: PropTypes.object.isRequired,
 
@@ -90,6 +97,10 @@ class Visualizer extends React.PureComponent {
         activeMachine: PropTypes.shape({
             metadata: PropTypes.object,
             identifier: PropTypes.string
+        }),
+        crosshairOffset: PropTypes.shape({
+            x: PropTypes.string,
+            y: PropTypes.string
         })
     };
 
@@ -273,10 +284,33 @@ class Visualizer extends React.PureComponent {
                 background,
                 workPosition,
                 originOffset,
-                activeMachine
+                activeMachine,
+                connectionType,
+                crosshairOffset,
+                useABPosition
             } = this.props;
 
+
             if (workflowStatus === WorkflowStatus.Idle) {
+                // Fix me?: 2w laser head set origin offset(crosshair offset) before start print
+                const isSnapmaker2 = includes([SnapmakerA350Machine.identifier, SnapmakerA250Machine.identifier, SnapmakerA150Machine.identifier], activeMachine.identifier);
+                if (includes([L2WLaserToolModule.identifier], toolHead) && connectionType === ConnectionType.Serial && isSnapmaker2) {
+                    const { x, y } = workPosition;
+                    server.setWorkOrigin(x - (parseFloat(crosshairOffset.x) || 21.5), y - (parseFloat(crosshairOffset.y) || -11));
+                }
+
+                // Hard code: for artisan turn off crossihair
+                if (includes([SnapmakerArtisanMachine.identifier], activeMachine.identifier)
+                    && includes([L2WLaserToolModule.identifier, L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], toolHead)
+                ) {
+                    controller
+                        .emitEvent(SocketEvent.TurnOffCrosshair)
+                        .once(SocketEvent.TurnOffCrosshair, ({ err }) => {
+                            if (err) {
+                                toast(makeSceneToast('info', i18n._('Failed to turn on crosshair.')));
+                            }
+                        });
+                }
                 log.info('Start to run G-code...');
                 server.startServerGcode({
                     headType,
@@ -290,6 +324,7 @@ class Visualizer extends React.PureComponent {
                     uploadName: gcodeFile.uploadName,
                     laserFocalLength,
                     background,
+                    useABPosition,
                     series: activeMachine.identifier,
                     size: activeMachine.metadata.size,
                     workPosition,
@@ -876,6 +911,7 @@ const mapStateToProps = (state) => {
         materialThickness: workspace.materialThickness,
         materialThicknessSource: workspace.materialThicknessSource,
         background: laser.background,
+        useABPosition: laser.useABPosition,
         isRotate: workspace.isRotate,
 
         // type
@@ -897,6 +933,7 @@ const mapStateToProps = (state) => {
         // machine state
         workPosition: workspace.workPosition,
         originOffset: workspace.originOffset,
+        crosshairOffset: workspace.crosshairOffset,
     };
 };
 

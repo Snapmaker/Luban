@@ -191,7 +191,11 @@ function updateHandle() {
     autoUpdater.on('update-downloaded', debounce((downloadInfo) => {
         ipcMain.on('replaceAppNow', () => {
             // some code here to handle event
-            autoUpdater.quitAndInstall();
+            try {
+                autoUpdater.quitAndInstall();
+            } catch (err) {
+                log.error('quitAndInstall get err', err);
+            }
         });
         mainWindow.webContents.send('is-replacing-app-now', downloadInfo);
     }), 300);

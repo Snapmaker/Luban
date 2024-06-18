@@ -1,5 +1,5 @@
 import fs from 'fs';
-import _ from 'lodash';
+import _, { includes } from 'lodash';
 import path from 'path';
 
 import { pathWithRandomSuffix } from '../../../../shared/lib/random-utils';
@@ -9,6 +9,8 @@ import logger from '../../../lib/logger';
 import sendMessage from '../utils/sendMessage';
 import settings from '../../../config/settings';
 import { JobOffsetMode } from '../../../../app/constants/coordinate';
+import { SnapmakerA150Machine, SnapmakerA250Machine, SnapmakerA350Machine, SnapmakerArtisanMachine, SnapmakerRayMachine } from '../../../../app/machines';
+import { L2WLaserToolModule } from '../../../../app/machines/snapmaker-2-toolheads';
 
 
 const log = logger('service:TaskManager');
@@ -82,7 +84,7 @@ const checkoutBoundingBoxIsNull = (boundingBox) => {
 };
 
 // eslint-disable-next-line consistent-return
-const generateGcode = ({ toolPaths, size, toolHead, origin, jobOffsetMode, series, metadata }) => {
+const generateGcode = ({ toolPaths, size, toolHead, origin, jobOffsetMode, series, metadata, motorMode }) => {
     if (!toolPaths && !_.isArray(toolPaths) && toolPaths.length === 0) {
         return sendMessage({ status: 'fail', value: 'modelInfo is empty.' });
     }
@@ -229,6 +231,9 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, jobOffsetMode, serie
             `;thumbnail: ${thumbnail}`,
         );
     }
+    if (motorMode) {
+        headerGcodes.push(`;motor_mode: ${motorMode}`);
+    }
 
     if (headType === 'laser' && jobOffsetMode === JobOffsetMode.Crosshair) {
         headerGcodes.push(
@@ -245,6 +250,19 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, jobOffsetMode, serie
         `;${date.toDateString()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`,
         '',
     );
+
+    // hard-code: 2w laser module Standby Mode
+    const isSM2 = includes([SnapmakerA150Machine.identifier, SnapmakerA250Machine.identifier, SnapmakerA350Machine.identifier], series);
+    const isArtisan = SnapmakerArtisanMachine.identifier === series;
+    const isRay = SnapmakerRayMachine.identifier === series;
+    const is2WLaser = toolHead === L2WLaserToolModule.identifier;
+    if ((isArtisan || isSM2) && is2WLaser) {
+        headerGcodes.push('M2000 L30 P0');
+        headerGcodes.push('G4S5');
+    } else if (isRay && is2WLaser) {
+        headerGcodes.push('M2000 L30 P0');
+        headerGcodes.push('G4P5');
+    }
 
     // add header codes
     headerStart += headerGcodes.join('\n');

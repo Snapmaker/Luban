@@ -50,6 +50,7 @@ import {
 } from './instances';
 import { ConnectionType } from './types';
 import SacpChannelBase from './channels/SacpChannel';
+import { L2WLaserToolModule } from '../../../app/machines/snapmaker-2-toolheads';
 
 const log = logger('lib:ConnectionManager');
 
@@ -648,7 +649,7 @@ class ConnectionManager {
         } = options;
 
         if (this.connectionType === ConnectionType.WiFi) {
-            const { uploadName, background, size, workPosition, originOffset } = options;
+            const { uploadName, background, size, workPosition, originOffset, useABPosition } = options;
             const gcodeFilePath = `${DataStorage.tmpDir}/${uploadName}`;
             const promises = [];
 
@@ -658,15 +659,15 @@ class ConnectionManager {
                         && !isRotate && isLaserPrintAutoMode && materialThickness !== 0 && materialThicknessSource === AUTO_STRING) {
                         await this.channel.laseAutoSetMaterialHeight({ toolHead });
                     }
-                    if (((toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2 && !isLaserPrintAutoMode)
+                    if (((includes([LEVEL_TWO_POWER_LASER_FOR_SM2, L2WLaserToolModule.identifier], toolHead) && !isLaserPrintAutoMode)
                         || (toolHead === LEVEL_ONE_POWER_LASER_FOR_SM2 && isLaserPrintAutoMode))
                         && ((materialThickness !== 0 && materialThickness !== -1) || isRotate)) {
                         await this.channel.laserSetWorkHeight({ toolHead, materialThickness, isRotate });
 
                         // Fixme: multi call to set work orign coordinate
                         // Camera Aid Background mode, force machine to work on machine coordinates (Origin = 0,0)
-                        if (background.enabled && !isRotate) {
-                            await this.channel.setAbsoluteWorkOrigin({ x: 0, y: 0, z: 0, isRotate });
+                        if (background.enabled && !isRotate && !useABPosition) {
+                            await this.channel.setAbsoluteWorkOrigin({ x: 0, y: 0, isRotate });
                         }
                     }
 
@@ -682,12 +683,12 @@ class ConnectionManager {
                     // SM 2.0
 
                     // Both 1.6W & 10W laser can't work without a valid focal length
-                    if (!laserFocalLength) {
+                    if (!laserFocalLength && toolHead !== L2WLaserToolModule.identifier) {
                         return;
                     }
 
                     if (!isRotate) {
-                        if (toolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
+                        if (includes([LEVEL_TWO_POWER_LASER_FOR_SM2, L2WLaserToolModule.identifier], toolHead)) {
                             let promise;
                             if (materialThickness === -1) {
                                 promise = this.channel.executeGcode('G0 Z0 F1500;');
@@ -698,14 +699,14 @@ class ConnectionManager {
                         } else {
                             let promise;
                             if (isLaserPrintAutoMode) {
-                                promise = this.channel.executeGcode(`G53;\nG0 Z${laserFocalLength + materialThickness} F1500;\nG54;`);
+                                promise = this.channel.executeGcode(`G53;\n G0 Z${laserFocalLength + materialThickness} F1500;\n G54;`);
                             } else {
                                 promise = this.channel.executeGcode('G0 Z0 F1500;');
                             }
                             promises.push(promise);
                         }
                         // Camera Aid Background mode, force machine to work on machine coordinates (Origin = 0,0)
-                        if (background.enabled) {
+                        if (background.enabled && !useABPosition) {
                             let x = parseFloat(workPosition.x) - parseFloat(originOffset.x);
                             let y = parseFloat(workPosition.y) - parseFloat(originOffset.y);
 
@@ -770,7 +771,7 @@ class ConnectionManager {
                             });
                         } else {
                             this.channel.command(socket, {
-                                args: [`G53;\nG0 Z${materialThickness + laserFocalLength} ;\nG54;`, null]
+                                args: [['G53', `G0 Z${materialThickness + laserFocalLength}`, 'G54'], null]
                             });
                         }
                     } else {
@@ -779,11 +780,12 @@ class ConnectionManager {
                         });
                     }
                 }
+                // Fixme: setTimeout cause some commands to be dropped
                 setTimeout(() => {
                     this.channel.command(socket, {
                         cmd: 'gcode:start',
                     });
-                }, 100);
+                }, 200);
                 socket && socket.emit(eventName, {});
             }
         }
@@ -893,7 +895,7 @@ M3`;
             this.channel.command(socket, {
                 cmd: 'gcode:pause',
             });
-            socket && socket.emit(eventName, {});
+            socket && socket.emit(eventName, { err: true });
         }
     };
 
@@ -1269,12 +1271,16 @@ M3`;
     public setMatrix = (params, callback) => {
         this.channel.setMatrix(params, callback);
     };
-    // only for Wifi
+    // only for Wifi end
+
+    //
+    //  other
+    //
 
     public goHome = async (socket, options, callback) => {
         const { headType } = options;
-        if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
-            this.channel.goHome();
+        if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort, NetworkProtocol.SacpOverUDP], this.protocol)) {
+            this.channel.goHome(headType);
             socket && socket.emit('move:status', { isHoming: true });
         } else {
             await this.executeGcode(socket, { gcode: 'G53' });
@@ -1313,7 +1319,12 @@ M3`;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.setWorkOrigin({ xPosition, yPosition, zPosition, bPosition });
         } else {
-            await this.executeGcode(socket, { gcode: 'G92 X0 Y0 Z0 B0' });
+            let gcode = 'G92 ';
+            xPosition && (gcode += `X${xPosition || 0} `);
+            yPosition && (gcode += `Y${yPosition || 0}  `);
+            zPosition && (gcode += `Z${zPosition || 0} `);
+            bPosition && (gcode += `B${bPosition || 0} `);
+            await this.executeGcode(socket, { gcode });
             callback && callback();
         }
     };
@@ -1359,6 +1370,17 @@ M3`;
             sstpHttpChannel.wifiStatusTest(options);
         }
     }
+
+    public setMotorPowerMode = async (socket: SocketServer, options) => {
+        const { eventName, setMotorPowerHoldMod } = options;
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const result = await (this.channel as SystemChannelInterface).setMotorPowerMode(setMotorPowerHoldMod);
+            console.log('setMotorPowerMode result:', result, eventName);
+            socket.emit(eventName, { result });
+        }
+    }
+
+
 
     //
     // - Machine Network

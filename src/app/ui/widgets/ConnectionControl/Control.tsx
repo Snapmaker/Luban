@@ -4,7 +4,6 @@ import includes from 'lodash/includes';
 import map from 'lodash/map';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-
 import { controller } from '../../../communication/socket-communication';
 import {
     HEAD_PRINTING,
@@ -64,9 +63,12 @@ const normalizeToRange = (n, min, max) => {
 
 declare interface ConnectionControlProps {
     widgetId: string;
+    isNotInWorkspace?: boolean
+    runBoundary?: () => void
+    canABPosition?: boolean
 }
 
-const Control: React.FC<ConnectionControlProps> = ({ widgetId }) => {
+const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace, runBoundary, canABPosition }) => {
     const dispatch = useDispatch();
 
     const { widgets } = useSelector((state: RootState) => state.widget);
@@ -76,13 +78,15 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId }) => {
 
     const server: MachineAgent = useSelector((state: RootState) => state.workspace.server);
     const {
+        homingModal,
         isMoving,
         workflowStatus,
         workPosition,
         originOffset,
-        boundingBox
+        // gcodeAxisWorkRange: boundingBox,
+        gcodeFile
     } = useSelector((state: RootState) => state.workspace);
-
+    const [boundingBox, setBoundingBox] = useState(gcodeFile?.gcodeAxisWorkRange);
 
     const { jog, axes } = widgets[widgetId];
     const { speed = 1500, keypad, selectedDistance, customDistance, selectedAngle, customAngle } = jog;
@@ -90,7 +94,8 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId }) => {
     const serverRef = useRef(server);
     useEffect(() => {
         serverRef.current = server;
-    }, [server]);
+    }, [server, gcodeFile]);
+    useEffect(() => setBoundingBox(gcodeFile?.gcodeAxisWorkRange), [gcodeFile]);
 
 
     function getInitialState() {
@@ -151,7 +156,10 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId }) => {
                     y: 0,
                     z: 0
                 }
-            }
+            },
+
+            // enableShortcut
+            enableShortcut: true
         };
     }
 
@@ -202,11 +210,6 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId }) => {
             const s = map(params, (value, axis) => {
                 const axisMoved = axis.toUpperCase();
                 const signNumber = 1;
-                // if (axisMoved === 'Y' && state.workPosition.isFourAxis) {
-                //     signNumber = -1;
-                // } else {
-                //     signNumber = 1;
-                // }
                 sArr.push({
                     axis: axisMoved,
                     distance: parseFloat(state.workPosition[axisMoved.toLowerCase()]) + (signNumber * value)
@@ -225,7 +228,7 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId }) => {
             setState({ ...state, customAngle: _customAngle });
         },
 
-        move: (params = {}) => {
+        move: (params = {}, useGcode) => {
             const sArr = [];
             const s = map(params, (value, axis) => {
                 sArr.push({
@@ -236,8 +239,11 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId }) => {
             }).join(' ');
             if (s) {
                 const gcode = `G0 ${s} F${state.jogSpeed}`;
-                // actions.executeGcode(`G0 ${s} F${state.jogSpeed}`);
-                actions.coordinateMove(gcode, sArr, state.jogSpeed);
+                if (useGcode) {
+                    actions.executeGcode(gcode);
+                } else {
+                    actions.coordinateMove(gcode, sArr, state.jogSpeed);
+                }
             }
         },
         executeGcode: (gcode) => {
@@ -336,7 +342,7 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId }) => {
 
     const canClick = useMemo(() => {
         return isConnected && includes([WorkflowStatus.Unknown, WorkflowStatus.Idle, WorkflowStatus.Stopped], workflowStatus) && !isMoving;
-    }, [isConnected, workflowStatus, isMoving]);
+    }, [isConnected, workflowStatus, isMoving, homingModal]);
 
 
     useEffect(() => {
@@ -429,14 +435,15 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId }) => {
 
     return (
         <div>
-            <DisplayPanel
-                workPosition={workPosition}
-                originOffset={state.originOffset}
-                headType={headType}
-                executeGcode={actions.executeGcode}
-                state={state}
-            />
-
+            {!isNotInWorkspace && (
+                <DisplayPanel
+                    workPosition={workPosition}
+                    originOffset={state.originOffset}
+                    headType={headType}
+                    executeGcode={actions.executeGcode}
+                    state={state}
+                />
+            )}
             {/* Comment this since Luban v4.0 and will be used in the future */}
             {/* <div>
                 <KeypadOverlay
@@ -454,11 +461,16 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId }) => {
             </div> */}
 
             <ControlPanel
+                enableShortcut={state.enableShortcut}
                 disabled={!canClick}
                 state={state}
                 workPosition={workPosition}
+                originOffset={state.originOffset}
                 actions={actions}
                 executeGcode={actions.executeGcode}
+                isNotInWorkspace={isNotInWorkspace}
+                runBoundary={runBoundary}
+                canABPosition={canABPosition}
             />
         </div>
     );

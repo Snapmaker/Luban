@@ -27,7 +27,7 @@ const JogDistance = (props) => {
     return (
         <div>
             <div>
-                <p className="margin-vertical-8">{i18n._('key-Workspace/Control/JogDistance-XYZ Axis Travel Distance')}</p>
+                <p className="margin-vertical-8">{i18n._(props.isConnectedRay ? 'key-Workspace/Control/JogDistance-XY Axis Travel Distance' : 'key-Workspace/Control/JogDistance-XYZ Axis Travel Distance')}</p>
                 <Space direction="vertical" size={8}>
                     <Radio.Group
                         size="small"
@@ -147,7 +147,8 @@ const JogDistance = (props) => {
 JogDistance.propTypes = {
     state: PropTypes.object,
     workPosition: PropTypes.object,
-    actions: PropTypes.object
+    actions: PropTypes.object,
+    isConnectedRay: PropTypes.bool
 };
 
 export default JogDistance;

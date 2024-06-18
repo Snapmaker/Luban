@@ -13,7 +13,6 @@ class EventTrigger {
         }
 
         const events = config.get('events', []);
-
         events
             .filter(event => event && event.event === eventKey)
             .forEach(options => {

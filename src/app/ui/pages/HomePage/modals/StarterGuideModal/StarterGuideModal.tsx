@@ -1,13 +1,14 @@
 import type { Machine } from '@snapmaker/luban-platform';
 import { MachineType } from '@snapmaker/luban-platform';
-import { Checkbox } from 'antd';
 import type { CheckboxValueType } from 'antd/es/checkbox/Group';
 import classNames from 'classnames';
 import i18next from 'i18next';
 import Uri from 'jsuri';
 import { includes } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { Checkbox } from 'antd';
+import { Button } from '../../../../components/Buttons';
 
 import {
     HEAD_CNC,
@@ -24,12 +25,14 @@ import {
 import { actions as machineActions } from '../../../../../flux/machine';
 import i18n from '../../../../../lib/i18n';
 import { machineStore } from '../../../../../store/local-storage';
-import { Button } from '../../../../components/Buttons';
 import Modal from '../../../../components/Modal';
 import Select from '../../../../components/Select';
 import SvgIcon from '../../../../components/SvgIcon';
 import { languageOptions, languages } from './constants';
 import styles from './styles.styl';
+import { SnapmakerArtisanMachine } from '../../../../../machines';
+import { dualExtrusionPrintToolHead } from '../../../../../machines/snapmaker-2-toolheads';
+import { RootState } from '../../../../../flux/index.def';
 
 
 interface StarterGuideLanguageStepProps {
@@ -89,6 +92,7 @@ interface StarterGuideModalProps {
 const StarterGuideModal: React.FC<StarterGuideModalProps> = (props) => {
     // step controls which setting view to be shown
     const [settingStep, setSettingStep] = useState<StarterGuideStepType>('lang');
+    const isMultiDualExtrusion = useSelector((state: RootState) => state.machine?.isMultiDualExtrusion);
 
     // language
     const [lang, setLang] = useState('en');
@@ -139,13 +143,19 @@ const StarterGuideModal: React.FC<StarterGuideModalProps> = (props) => {
     const [printingToolHeadSelected, setPrintingToolHeadSelected] = useState('');
     const [laserToolHeadSelected, setLaserToolHeadSelected] = useState('');
     const [cncToolHeadSelected, setCncToolHeadSelected] = useState('');
+    const [tmpIsMultiDualExtrusion, setTmpIsMultiDualExtrusion] = useState(isMultiDualExtrusion);
+
 
     useEffect(() => {
         if (!machine) {
             return;
         }
 
-        const printingOptions = getMachineSupportedToolOptions(machine.identifier, HEAD_PRINTING);
+        let printingOptions = getMachineSupportedToolOptions(machine.identifier, HEAD_PRINTING);
+        // hard-code for artsian dualextrusion; No dualextrusion for 2.0 option by default
+        if (includes([SnapmakerArtisanMachine.identifier], machine.identifier) && !isMultiDualExtrusion) {
+            printingOptions = printingOptions.filter(toolOption => toolOption.value !== dualExtrusionPrintToolHead.identifier);
+        }
         setPrintingToolHeadOptions(printingOptions);
 
         if (printingOptions.length > 0) {
@@ -165,7 +175,7 @@ const StarterGuideModal: React.FC<StarterGuideModalProps> = (props) => {
         if (cncOptions.length > 0) {
             setCncToolHeadSelected(cncOptions[0].value);
         }
-    }, [machine]);
+    }, [machine, isMultiDualExtrusion]);
 
     const handleToolheadChange = useCallback((e, type) => {
         const nextValue = e.value;
@@ -276,177 +286,247 @@ const StarterGuideModal: React.FC<StarterGuideModalProps> = (props) => {
 
     const machineSize = machine?.metadata.size;
 
-    return (
-        <Modal size="sm" onClose={handleCancel} className={styles['setting-modal']}>
-            <Modal.Header>
-                {i18n._('key-HomePage/Begin-Configuration Wizard')}
-            </Modal.Header>
-            <Modal.Body>
-                {
-                    settingStep === 'lang' && (
-                        <StarterGuideLanguageStep
-                            lang={lang}
-                            setLang={setLang}
-                        />
-                    )
-                }
-                {
-                    settingStep === 'machine' && (
-                        <div
-                            className={styles['machine-select']}
-                            style={{
-                                paddingTop: '12px',
-                                paddingLeft: '16px',
-                                paddingRight: '16px'
+    const [isOpenArtsianDualExtrusionSelectModal, setIsOpenArtsianDualExtrusionSelectModal] = useState<boolean>(false);
+    const selectedArtisan = useMemo(() => {
+        return includes([SnapmakerArtisanMachine.identifier], machine.identifier);
+    }, [machine]);
+    const openArtsianDualExtrusionSelectModal = () => {
+        setIsOpenArtsianDualExtrusionSelectModal(true);
+    };
+    const renderArtsianDualExtrusionSelectModal = () => {
+        return (
+            <Modal
+                size="sm"
+                style={{ minWidth: 700 }}
+                onClose={() => setIsOpenArtsianDualExtrusionSelectModal(false)}
+            >
+                <Modal.Header>
+                    <div>
+                        {i18n._('Print Settings')}
+                    </div>
+                </Modal.Header>
+                <Modal.Body>
+                    <div>
+                        {i18n._('There are two versions of the Dual Extrusion 3D Printing Module: one for Artisan and one for Snapmaker 2.0. If you are using the Snapmaker 2.0 version of the Dual Extrusion 3D Printing Module, be sure to activate the 3D Print Head option and save your changes.')}
+                    </div>
+                    <div className="margin-top-16">
+                        <Checkbox
+                            defaultChecked={tmpIsMultiDualExtrusion}
+                            checked={tmpIsMultiDualExtrusion}
+                            className="margin-right-8"
+                            onChange={(event) => {
+                                // hard-code for artsian dualextrusion
+                                setTmpIsMultiDualExtrusion(event.target.checked);
                             }}
                         >
-                            <div className={classNames(styles.titleLabel, 'heading-1')}>{i18n._('key-HomePage/Begin-Select Machine')}</div>
-                            <div className={styles['machine-content']}>
-                                <div className={styles['machine-image']}>
-                                    <SvgIcon
-                                        size={48}
-                                        name="LeftSlipNormal"
-                                        onClick={() => handleMachineChange('up')}
-                                        borderRadius={8}
-                                    />
-                                    <div className="text-align-center">
-                                        <img
-                                            width="240px"
-                                            src={machine.img}
-                                            alt={machine.fullName}
+                            {i18n._('Enable 3D Print Head Setting')}
+                        </Checkbox>
+                    </div>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button
+                        priority="level-two"
+                        type="default"
+                        className="margin-right-8"
+                        width="96px"
+                        onClick={() => setIsOpenArtsianDualExtrusionSelectModal(false)}
+                    >
+                        {i18n._('Close')}
+                    </Button>
+                    <Button
+                        priority="level-two"
+                        type="primary"
+                        className="align-r"
+                        width="96px"
+                        onClick={() => {
+                            dispatch(machineActions.updateIsMultiDualExtrusion(tmpIsMultiDualExtrusion));
+                            setIsOpenArtsianDualExtrusionSelectModal(false);
+                        }}
+                    >
+                        {i18n._('Save')}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        );
+    };
+
+    return (
+        <>
+            <Modal size="sm" onClose={handleCancel} className={styles['setting-modal']}>
+                <Modal.Header>
+                    {i18n._('key-HomePage/Begin-Configuration Wizard')}
+                </Modal.Header>
+                <Modal.Body>
+                    {
+                        settingStep === 'lang' && (
+                            <StarterGuideLanguageStep
+                                lang={lang}
+                                setLang={setLang}
+                            />
+                        )
+                    }
+                    {
+                        settingStep === 'machine' && (
+                            <div
+                                className={styles['machine-select']}
+                                style={{
+                                    paddingTop: '12px',
+                                    paddingLeft: '16px',
+                                    paddingRight: '16px'
+                                }}
+                            >
+                                <div className={classNames(styles.titleLabel, 'heading-1')}>{i18n._('key-HomePage/Begin-Select Machine')}</div>
+                                <div className={styles['machine-content']}>
+                                    <div className={styles['machine-image']}>
+                                        <SvgIcon
+                                            size={48}
+                                            name="LeftSlipNormal"
+                                            onClick={() => handleMachineChange('up')}
+                                            borderRadius={8}
                                         />
-                                        <div className="heading-3 margin-bottom-8">{i18n._(machine.fullName)}</div>
-                                        <div>
-                                            <span className="main-text-normal margin-right-4">{i18n._('key-HomePage/Begin-Work Area')}:</span>
-                                            <span className="main-text-normal">
-                                                {`${machineSize.x} mm × ${machineSize.y} mm × ${machineSize.z} mm`}
-                                            </span>
+                                        <div className="text-align-center">
+                                            <img
+                                                width="240px"
+                                                src={machine.img}
+                                                alt={machine.fullName}
+                                            />
+                                            <div className="heading-3 margin-bottom-8">{i18n._(machine.fullName)}</div>
+                                            <div>
+                                                <span className="main-text-normal margin-right-4">{i18n._('key-HomePage/Begin-Work Area')}:</span>
+                                                <span className="main-text-normal">
+                                                    {`${machineSize.x} mm × ${machineSize.y} mm × ${machineSize.z} mm`}
+                                                </span>
+                                            </div>
                                         </div>
+                                        <SvgIcon
+                                            size={48}
+                                            name="RightSlipNormal"
+                                            onClick={() => handleMachineChange('down')}
+                                            borderRadius={8}
+                                        />
                                     </div>
-                                    <SvgIcon
-                                        size={48}
-                                        name="RightSlipNormal"
-                                        onClick={() => handleMachineChange('down')}
-                                        borderRadius={8}
-                                    />
-                                </div>
-                                <div className={classNames(styles['machine-info'], 'margin-left-16')}>
-                                    <div className={styles['head-detail']}>
-                                        {
-                                            (is3DPrinter || isMultiFunctionMachine) && (
-                                                <div className={classNames(styles['tool-select'], 'margin-bottom-16')}>
-                                                    <span className="main-text-normal margin-right-16">{i18n._('key-App/Settings/MachineSettings-3D Print Toolhead')}</span>
-                                                    <Select
-                                                        value={printingToolHeadSelected}
-                                                        options={printingToolHeadOptions.map(item => {
-                                                            return {
-                                                                value: item.value,
-                                                                label: i18n._(item.label)
-                                                            };
-                                                        })}
-                                                        onChange={e => handleToolheadChange(e, 'printing')}
-                                                        size="large"
-                                                        disabled={printingToolHeadOptions.length <= 1}
-                                                    />
-                                                </div>
-                                            )
-                                        }
-                                        {
-                                            (isLaserMachine || isMultiFunctionMachine) && (
-                                                <div className={classNames(styles['tool-select'], 'margin-bottom-16')}>
-                                                    <span className="main-text-normal margin-right-16">{i18n._('key-App/Settings/MachineSettings-Laser Toolhead')}</span>
-                                                    <Select
-                                                        value={laserToolHeadSelected}
-                                                        showSearch={false}
-                                                        options={laserToolHeadOptions.map(item => {
-                                                            return {
-                                                                value: item.value,
-                                                                label: i18n._(item.label)
-                                                            };
-                                                        })}
-                                                        onChange={e => handleToolheadChange(e, 'laser')}
-                                                        size="large"
-                                                        disabled={laserToolHeadOptions.length <= 1}
-                                                    />
-                                                </div>
-                                            )
-                                        }
-                                        {
-                                            isMultiFunctionMachine && (
-                                                <div className={classNames(styles['tool-select'], 'margin-bottom-16')}>
-                                                    <span className="main-text-normal margin-right-16">{i18n._('key-App/Settings/MachineSettings-CNC Toolhead')}</span>
-                                                    <Select
-                                                        value={cncToolHeadSelected}
-                                                        options={cncToolHeadOptions.map(item => ({
-                                                            value: item.value,
-                                                            label: i18n._(item.label)
-                                                        }))}
-                                                        onChange={e => handleToolheadChange(e, 'cnc')}
-                                                        size="large"
-                                                        disabled={cncToolHeadOptions.length <= 1}
-                                                    />
-                                                </div>
-                                            )
-                                        }
-                                        {
-                                            machineModuleOptions.length > 0 && (
-                                                <div className={classNames(styles['head-detail'], 'margin-top-8')}>
-                                                    <div className="margin-bottom-16">
-                                                        <Checkbox.Group
-                                                            className={classNames(styles['modules-select-list'])}
-                                                            options={machineModuleOptions}
-                                                            onChange={onCheckMachineModule}
-                                                            defaultValue={modules}
+                                    <div className={classNames(styles['machine-info'], 'margin-left-16')}>
+                                        <div className={styles['head-detail']}>
+                                            {
+                                                (is3DPrinter || isMultiFunctionMachine) && (
+                                                    <div className={classNames(styles['tool-select'], 'margin-bottom-16')}>
+                                                        <span className="main-text-normal margin-right-16">{i18n._('key-App/Settings/MachineSettings-3D Print Toolhead')}</span>
+                                                        <Select
+                                                            value={printingToolHeadSelected}
+                                                            options={printingToolHeadOptions.map(item => {
+                                                                return {
+                                                                    value: item.value,
+                                                                    label: i18n._(item.label)
+                                                                };
+                                                            })}
+                                                            onChange={e => handleToolheadChange(e, 'printing')}
+                                                            size="large"
+                                                            disabled={printingToolHeadOptions.length <= 1}
+                                                        />
+                                                        {
+                                                            selectedArtisan && <i onClick={openArtsianDualExtrusionSelectModal} className="fa fa-info-circle margin-left-8 cursor-pointer" aria-hidden="true" />
+                                                        }
+                                                    </div>
+                                                )
+                                            }
+                                            {
+                                                (isLaserMachine || isMultiFunctionMachine) && (
+                                                    <div className={classNames(styles['tool-select'], 'margin-bottom-16')}>
+                                                        <span className="main-text-normal margin-right-16">{i18n._('key-App/Settings/MachineSettings-Laser Toolhead')}</span>
+                                                        <Select
+                                                            value={laserToolHeadSelected}
+                                                            showSearch={false}
+                                                            options={laserToolHeadOptions.map(item => {
+                                                                return {
+                                                                    value: item.value,
+                                                                    label: i18n._(item.label)
+                                                                };
+                                                            })}
+                                                            onChange={e => handleToolheadChange(e, 'laser')}
+                                                            size="large"
+                                                            disabled={laserToolHeadOptions.length <= 1}
                                                         />
                                                     </div>
-                                                </div>
-                                            )
-                                        }
+                                                )
+                                            }
+                                            {
+                                                isMultiFunctionMachine && (
+                                                    <div className={classNames(styles['tool-select'], 'margin-bottom-16')}>
+                                                        <span className="main-text-normal margin-right-16">{i18n._('key-App/Settings/MachineSettings-CNC Toolhead')}</span>
+                                                        <Select
+                                                            value={cncToolHeadSelected}
+                                                            options={cncToolHeadOptions.map(item => ({
+                                                                value: item.value,
+                                                                label: i18n._(item.label)
+                                                            }))}
+                                                            onChange={e => handleToolheadChange(e, 'cnc')}
+                                                            size="large"
+                                                            disabled={cncToolHeadOptions.length <= 1}
+                                                        />
+                                                    </div>
+                                                )
+                                            }
+                                            {
+                                                machineModuleOptions.length > 0 && (
+                                                    <div className={classNames(styles['head-detail'], 'margin-top-8')}>
+                                                        <div className="margin-bottom-16">
+                                                            <Checkbox.Group
+                                                                className={classNames(styles['modules-select-list'])}
+                                                                options={machineModuleOptions}
+                                                                onChange={onCheckMachineModule}
+                                                                defaultValue={modules}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )
+                                            }
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    )
-                }
-            </Modal.Body>
-            <Modal.Footer>
-                <Button
-                    onClick={handleCancel}
-                    type="default"
-                    width="96px"
-                    priority="level-two"
-                    className="display-inline"
-                >
-                    {i18n._('key-HomePage/Begin-Cancel')}
-                </Button>
-                {
-                    settingStep === 'lang' && (
-                        <Button
-                            onClick={handleStepChange}
-                            type="primary"
-                            width="96px"
-                            priority="level-two"
-                            className="display-inline margin-horizontal-8"
-                        >
-                            {i18n._('key-HomePage/Begin-Next')}
-                        </Button>
-                    )
-                }
-                {
-                    settingStep === 'machine' && (
-                        <Button
-                            onClick={handleSubmit}
-                            type="primary"
-                            width="96px"
-                            priority="level-two"
-                            className="display-inline margin-horizontal-8"
-                        >
-                            {i18n._('key-HomePage/Begin-Complete')}
-                        </Button>
-                    )
-                }
-            </Modal.Footer>
-        </Modal>
+                        )
+                    }
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button
+                        onClick={handleCancel}
+                        type="default"
+                        width="96px"
+                        priority="level-two"
+                        className="display-inline"
+                    >
+                        {i18n._('key-HomePage/Begin-Cancel')}
+                    </Button>
+                    {
+                        settingStep === 'lang' && (
+                            <Button
+                                onClick={handleStepChange}
+                                type="primary"
+                                width="96px"
+                                priority="level-two"
+                                className="display-inline margin-horizontal-8"
+                            >
+                                {i18n._('key-HomePage/Begin-Next')}
+                            </Button>
+                        )
+                    }
+                    {
+                        settingStep === 'machine' && (
+                            <Button
+                                onClick={handleSubmit}
+                                type="primary"
+                                width="96px"
+                                priority="level-two"
+                                className="display-inline margin-horizontal-8"
+                            >
+                                {i18n._('key-HomePage/Begin-Complete')}
+                            </Button>
+                        )
+                    }
+                </Modal.Footer>
+            </Modal>
+            {isOpenArtsianDualExtrusionSelectModal && renderArtsianDualExtrusionSelectModal()}
+        </>
     );
 };
 

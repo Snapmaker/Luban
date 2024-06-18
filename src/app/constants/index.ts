@@ -1182,3 +1182,20 @@ export const MANUAL_MODE = Symbol('manual mode');
 export const AUTO_STRING = 'auto';
 
 
+export enum MotorPowerMode {
+    GETCURRENTMODE, SHUTAll, ONLYLINEAR, STAYPOWER
+}
+
+export enum SetupCoordinateMethod {
+    // Move tool manually
+    Manually = 'manually',
+
+    // Move tool using control panel
+    ByControlPanel = 'control-panel',
+}
+
+// ABPosition
+export const ABPositionOverlayID = 'ABposition-background-overlay';
+export const ABpositionMaskID = 'ABposition-mask';
+export const PointAID = 'ABposition-point-A';
+export const PointBID = 'ABposition-point-B';

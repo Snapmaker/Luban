@@ -5,7 +5,7 @@ import { Box3, Vector3 } from 'three';
 
 import { timestamp } from '../../../shared/lib/random-utils';
 import api from '../../api';
-import { DISPLAYED_TYPE_MODEL, DISPLAYED_TYPE_TOOLPATH, HEAD_CNC, HEAD_LASER, SELECTEVENT } from '../../constants';
+import { DISPLAYED_TYPE_MODEL, DISPLAYED_TYPE_TOOLPATH, HEAD_CNC, HEAD_LASER, MotorPowerMode, SELECTEVENT, SetupCoordinateMethod } from '../../constants';
 import { JobOffsetMode, Origin, OriginType } from '../../constants/coordinate';
 import CompoundOperation from '../../core/CompoundOperation';
 import { controller } from '../../communication/socket-communication';
@@ -24,6 +24,7 @@ import { baseActions } from './actions-base';
 import { actions as operationHistoryActions } from '../operation-history';
 /* eslint-disable-next-line import/no-cycle */
 import { actions as projectActions } from '../project';
+import { SnapmakerRayMachine } from '../../machines';
 
 let toastId;
 export const processActions = {
@@ -410,6 +411,7 @@ export const processActions = {
                 lockingBlockPosition,
             } = getState()[headType];
             const jobOffsetMode: JobOffsetMode = getState()[headType].jobOffsetMode;
+            const { setupCoordinateMethod, isConnected } = getState().workspace;
 
             const { size, toolHead } = getState().machine;
             const activeMachine: Machine = getState().machine.activeMachine;
@@ -431,6 +433,13 @@ export const processActions = {
                     progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_GENERATING_GCODE, 0.1)
                 })
             );
+
+            // Fixme: Hard-cord for Ray, need specify which type gcode for firmware
+            let motorMode;
+            if (activeMachine.identifier === SnapmakerRayMachine.identifier) {
+                motorMode = (setupCoordinateMethod === SetupCoordinateMethod.Manually || !isConnected) ? MotorPowerMode.SHUTAll : MotorPowerMode.STAYPOWER;
+            }
+
             controller.commitGcodeTask({
                 taskId: uuid(),
                 headType: headType,
@@ -442,6 +451,7 @@ export const processActions = {
                     jobOffsetMode,
                     series: activeMachine?.identifier,
                     metadata: activeMachine?.metadata,
+                    motorMode
                 }
             });
         };
@@ -516,7 +526,8 @@ export const processActions = {
                         z: gcodeFile.header[';min_z(mm)'],
                         b: gcodeFile.header[';min_b(mm)']
                     }
-                }
+                },
+                motorMode: gcodeFile.header[';motorMode']
             },
             stage: STEP_STAGE.CNC_LASER_GENERATING_GCODE,
             isGcodeGenerating: false,
