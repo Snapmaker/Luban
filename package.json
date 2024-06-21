@@ -170,7 +170,7 @@
     "node-wifi": "2.0.16",
     "normalize.css": "8.0.1",
     "opencv-wasm": "^4.3.0-10",
-    "opentype.js": "0.9.0",
+    "opentype.js": "1.3.4",
     "overlap-area": "^1.0.0",
     "parse-json": "2.2.0",
     "pathseg": "1.2.1",
