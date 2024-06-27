@@ -1,5 +1,6 @@
 import workerpool, { WorkerPool } from 'workerpool';
 import DataStorage from '../../DataStorage';
+import { getLogDir } from '../../lib/logger';
 
 // Avoid TSC precompiling, at the same time, webpack can collect dependencies
 if (process.env.NODE_ENV === 'production') {
@@ -37,6 +38,7 @@ class WorkerManager {
                     env: {
                         Tmpdir: DataStorage.tmpDir,
                         fontDir: DataStorage.fontDir,
+                        logDir: getLogDir()
                     }
                 }
             };

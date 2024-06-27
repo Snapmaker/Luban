@@ -7,7 +7,7 @@ import settings from '../config/settings';
 
 const FILE_MAX_SIZE = 1024 * 1024 * 10;
 
-const getLogDir = () => {
+export const getLogDir = () => {
     let logDir: string;
     if (global.luban && global.luban.userDataDir) {
         if (isElectron()) {
