@@ -52,6 +52,8 @@ import { ConnectionType } from './types';
 import SacpChannelBase from './channels/SacpChannel';
 import { L2WLaserToolModule } from '../../../app/machines/snapmaker-2-toolheads';
 
+import { openServer, closeServer } from './orca-service'
+
 const log = logger('lib:ConnectionManager');
 
 const ensureRange = (value, min, max) => {
@@ -85,6 +87,7 @@ interface SetFireSensorSensitivityOptions {
 interface UploadFileOptions {
     filePath: string;
     targetFilename?: string;
+    orcaFile?: boolean;
 }
 
 interface UpgradeFirmwareOptions {
@@ -125,8 +128,18 @@ class ConnectionManager {
 
     // TODO: Refactor this
     public onConnection = (socket: SocketServer) => {
+        console.log('socket::: ', socket);
+        console.log('onConnection::: ', 128);
         sstpHttpChannel.onConnection();
         this.scheduledTasksHandle = new ScheduledTasks(socket);
+  
+        //开启服务
+        openServer().then(res=>{
+            console.log("返回:"+res);
+        }).catch((e)=>{
+             console.log("提示信息:",e);
+        });
+
     };
 
     // TODO: Refactor this
@@ -134,6 +147,7 @@ class ConnectionManager {
         sstpHttpChannel.onDisconnection();
         textSerialChannel.onDisconnection(socket);
         this.scheduledTasksHandle.cancelTasks();
+        closeServer();
     };
 
     /**
@@ -565,15 +579,17 @@ class ConnectionManager {
      */
     public uploadFile = async (socket: SocketServer, options: UploadFileOptions) => {
         // If using relative path, we assuem it's in tmp directory
-        if (!options.filePath.startsWith('/')) {
-            options.filePath = path.resolve(`${DataStorage.tmpDir}/${options.filePath}`);
+        if (!options.orcaFile) {
+            if (!options.filePath.startsWith('/')) {
+                options.filePath = path.resolve(`${DataStorage.tmpDir}/${options.filePath}`);
+            }
+
+            if (!options.targetFilename) {
+                options.targetFilename = path.basename(options.filePath);
+            }
         }
 
-        if (!options.targetFilename) {
-            options.targetFilename = path.basename(options.filePath);
-        }
-
-        log.info(`Upload file to controller... ${options.filePath} to ${options.targetFilename}`);
+        log.info(`Upload file to controller...2 ${options.filePath} to ${options.targetFilename}`);
 
         const success = await (this.channel as FileChannelInterface).uploadFile(options);
         if (success) {
