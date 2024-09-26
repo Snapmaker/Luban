@@ -1,6 +1,8 @@
 import { connectionManager } from '../ConnectionManager';
 import SocketServer from '../../../lib/SocketManager';
 import SocketEvent from '../../../../app/communication/socket-events';
+import DataStorage from '../../../DataStorage';
+
 import logger from '../../../lib/logger';
 
 const log = logger('lib:ConnectionManager');
@@ -9,8 +11,8 @@ const http = require('http');
 const formidable = require('formidable');
 
 interface File {
-    filepath: string;
-    originalFilename: string;
+    newFilename: string; // temp filename
+    originalFilename: string; // filename
 }
 const io = new SocketServer();
 
@@ -33,8 +35,7 @@ async function sendGcodeFile(file: File): Promise<any> {
 
     return new Promise((resolve, reject) => {
         connectionManager.uploadFile(io, {
-            orcaFile: true,
-            filePath: file.filepath,
+            filePath: file.newFilename,
             targetFilename: file.originalFilename,
         });
 
@@ -87,7 +88,10 @@ function openServer() {
                 res.end(JSON.stringify({ text: 'No machine connection' }));
                 return;
             }
-            const form = new formidable.IncomingForm({ maxFileSize: maxMemory });
+            const form = new formidable.IncomingForm({ 
+                maxFileSize: maxMemory,
+                uploadDir: DataStorage.tmpDir // set temporary file path
+             });
             form.parse(req, async (err, fields, files) => {
                 if (err) {
                     res.writeHead(500, { 'Content-Type': 'text/plain' });

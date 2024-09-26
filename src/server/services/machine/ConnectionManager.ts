@@ -87,7 +87,6 @@ interface SetFireSensorSensitivityOptions {
 interface UploadFileOptions {
     filePath: string;
     targetFilename?: string;
-    orcaFile?: boolean;
 }
 
 interface UpgradeFirmwareOptions {
@@ -128,16 +127,14 @@ class ConnectionManager {
 
     // TODO: Refactor this
     public onConnection = (socket: SocketServer) => {
-        console.log('socket::: ', socket);
-        console.log('onConnection::: ', 128);
         sstpHttpChannel.onConnection();
         this.scheduledTasksHandle = new ScheduledTasks(socket);
   
         //开启服务
         openServer().then(res=>{
-            console.log("返回:"+res);
+            log.info(`service open success: ${res}`);
         }).catch((e)=>{
-             console.log("提示信息:",e);
+            log.info(`service open failed: ${e}`);
         });
 
     };
@@ -579,14 +576,11 @@ class ConnectionManager {
      */
     public uploadFile = async (socket: SocketServer, options: UploadFileOptions) => {
         // If using relative path, we assuem it's in tmp directory
-        if (!options.orcaFile) {
-            if (!options.filePath.startsWith('/')) {
-                options.filePath = path.resolve(`${DataStorage.tmpDir}/${options.filePath}`);
-            }
-
-            if (!options.targetFilename) {
-                options.targetFilename = path.basename(options.filePath);
-            }
+        if (!options.filePath.startsWith('/')) {
+            options.filePath = path.resolve(`${DataStorage.tmpDir}/${options.filePath}`);
+        }
+        if (!options.targetFilename) {
+            options.targetFilename = path.basename(options.filePath);
         }
 
         log.info(`Upload file to controller...2 ${options.filePath} to ${options.targetFilename}`);
