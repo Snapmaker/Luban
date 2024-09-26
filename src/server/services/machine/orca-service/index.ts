@@ -1,19 +1,14 @@
+import * as Formidable from 'formidable';
 import { connectionManager } from '../ConnectionManager';
 import SocketServer from '../../../lib/SocketManager';
 import SocketEvent from '../../../../app/communication/socket-events';
 import DataStorage from '../../../DataStorage';
-
 import logger from '../../../lib/logger';
 
 const log = logger('lib:ConnectionManager');
 
 const http = require('http');
-const formidable = require('formidable');
 
-interface File {
-    newFilename: string; // temp filename
-    originalFilename: string; // filename
-}
 const io = new SocketServer();
 
 function checkConnection() {
@@ -25,7 +20,7 @@ function checkConnection() {
     return false;
 }
 
-async function sendGcodeFile(file: File): Promise<any> {
+async function sendGcodeFile(file): Promise<any> {
     if (!checkConnection()) {
         return {
             err: true,
@@ -88,7 +83,7 @@ function openServer() {
                 res.end(JSON.stringify({ text: 'No machine connection' }));
                 return;
             }
-            const form = new formidable.IncomingForm({ 
+            const form = new Formidable.IncomingForm({ 
                 maxFileSize: maxMemory,
                 uploadDir: DataStorage.tmpDir // set temporary file path
              });
@@ -99,7 +94,7 @@ function openServer() {
                     return;
                 }
 
-                const file = files.file;
+                const file: Formidable.File = files.file;
                 log.info(`file: ${file}`);
                 if (!file) {
                     res.writeHead(400, { 'Content-Type': 'text/plain' });
