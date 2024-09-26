@@ -52,6 +52,8 @@ import { ConnectionType } from './types';
 import SacpChannelBase from './channels/SacpChannel';
 import { L2WLaserToolModule } from '../../../app/machines/snapmaker-2-toolheads';
 
+import { openServer, closeServer } from './orca-service'
+
 const log = logger('lib:ConnectionManager');
 
 const ensureRange = (value, min, max) => {
@@ -127,6 +129,14 @@ class ConnectionManager {
     public onConnection = (socket: SocketServer) => {
         sstpHttpChannel.onConnection();
         this.scheduledTasksHandle = new ScheduledTasks(socket);
+  
+        //开启服务
+        openServer().then(res=>{
+            log.info(`service open success: ${res}`);
+        }).catch((e)=>{
+            log.info(`service open failed: ${e}`);
+        });
+
     };
 
     // TODO: Refactor this
@@ -134,6 +144,7 @@ class ConnectionManager {
         sstpHttpChannel.onDisconnection();
         textSerialChannel.onDisconnection(socket);
         this.scheduledTasksHandle.cancelTasks();
+        closeServer();
     };
 
     /**
@@ -568,12 +579,11 @@ class ConnectionManager {
         if (!options.filePath.startsWith('/')) {
             options.filePath = path.resolve(`${DataStorage.tmpDir}/${options.filePath}`);
         }
-
         if (!options.targetFilename) {
             options.targetFilename = path.basename(options.filePath);
         }
 
-        log.info(`Upload file to controller... ${options.filePath} to ${options.targetFilename}`);
+        log.info(`Upload file to controller...2 ${options.filePath} to ${options.targetFilename}`);
 
         const success = await (this.channel as FileChannelInterface).uploadFile(options);
         if (success) {
