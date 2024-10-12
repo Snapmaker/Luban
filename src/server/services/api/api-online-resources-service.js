@@ -87,3 +87,24 @@ export function getInformationFlowData(req, res) {
             log.error('get information flow err:', JSON.stringify(err));
         });
 }
+
+const addAuthorization = (token) => {
+    return function (request) {
+        request.set('Authorization', `Bearer ${token}`);
+        return request;
+    };
+};
+
+export function getUserInfoData(req, res) {
+    const userDomain = 'https://account.snapmaker.com';
+    const { token } = req.query;
+    agent.use(addAuthorization(token));
+    agent.get(`${userDomain}/api/common/accounts/current`)
+        .then((result) => {
+            res.status(200).send({
+                ...result.body
+            });
+        }).catch((err) => {
+            log.error('get information flow err:', JSON.stringify(err));
+        });
+}

@@ -211,6 +211,7 @@ function registerApis(app) {
     app.get(urljoin(settings.route, 'api/svg-shape-label/list'), api.onlineResourcesService.getSvgShapeLabelList);
 
     app.get(urljoin(settings.route, 'api/information-flow'), api.onlineResourcesService.getInformationFlowData);
+    app.get(urljoin(settings.route, 'api/common/accounts/current'), api.onlineResourcesService.getUserInfoData);
 }
 
 export {
