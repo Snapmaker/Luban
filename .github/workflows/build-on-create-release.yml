@@ -52,7 +52,7 @@ jobs:
         name: Build macOS Packages
 
         # macos-11.7
-        runs-on: macos-11
+        runs-on: macos-latest
 
         steps:
             - name: Checkout Code
@@ -63,6 +63,15 @@ jobs:
 
             - name: Checkout submodules
               run: git submodule update --init --recursive
+            
+            - name: Set up Python
+              uses: actions/setup-python@v2
+              with:
+                python-version: 3.11
+
+            - name: Install dependencies
+              run: |
+                python -m pip install --upgrade pip
 
             - name: Use Node.js 16
               uses: actions/setup-node@v3
