@@ -20,6 +20,23 @@ import MenuBuilder, { addRecentFile, cleanAllRecentFiles } from './electron-app/
 import { configureWindow } from './electron-app/window';
 import pkg from './package.json';
 
+import * as Sentry from "@sentry/electron/main";
+
+Sentry.init({
+  dsn: "https://cd2af28a126afbc7a8257a75b3b5d0ab@o4508125599563776.ingest.us.sentry.io/4508125605068800",
+  release: pkg.version,
+//   integrations: [new Sentry.Integrations.BrowserTracing()],
+  tracesSampleRate: 1.0,
+  debug: true,
+  beforeSend(event) {
+    log.info('Sentry event::: ', event);
+    // Log the error to the console
+    if (event.exception) {
+      console.error('Captured exception:', event.exception.values[0]);
+    }
+    return event;
+  }
+});
 
 log.setLevel(log.levels.INFO);
 
