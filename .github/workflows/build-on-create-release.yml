@@ -71,8 +71,8 @@ jobs:
 
             # install setuptools to reintroduce distutils missing in Python 3.12
             # https://github.com/nodejs/node-gyp/issues/2869
-            - run: pip install setuptools
-            - run: npm install -g npm@^9
+            # - run: pip install setuptools
+            # - run: npm install -g npm@^9
             - run: npm install
 
             - run: npm run build
