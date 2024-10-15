@@ -1,3 +1,4 @@
+import * as os from 'os';
 import * as Formidable from 'formidable';
 import { connectionManager } from '../ConnectionManager';
 import SocketServer from '../../../lib/SocketManager';
@@ -11,10 +12,30 @@ const http = require('http');
 
 const io = new SocketServer();
 
+let server;
+let SERVER_PORT = 65526;
+let SERVER_IP = getLocalIPAddress();
+const printer = { ID: 'not Connection ', IP: SERVER_IP + ':' + SERVER_PORT, Sacp: true };
+const maxMemory = 64 * 1024 * 1024; // 64MB
+
+function getLocalIPAddress() {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+        for (const iface of interfaces[name]) {
+            if (iface.family === 'IPv4' && !iface.internal) {
+                return iface.address;
+            }
+        }
+    }
+    return '0.0.0.0'; // Fallback to localhost if no external IP is found
+}
+
 function checkConnection() {
     log.info(`connectionManager: ${connectionManager}`);
 
     if (connectionManager?.machineInstance?.id) {
+        printer.ID = connectionManager.machineInstance.id;
+        printer.IP = connectionManager.machineInstance.ip;
         return true;
     }
     return false;
@@ -41,12 +62,30 @@ async function sendGcodeFile(file): Promise<any> {
     });
 }
 
-let server;
-let SERVER_PORT = 65526;
-let SERVER_IP = '127.0.0.1';
-const Version = '0.0.1';
-const printer = { ID: '123', IP: SERVER_IP + ':' + SERVER_PORT, Sacp: true };
-const maxMemory = 64 * 1024 * 1024; // 64MB
+async function printGcodeFile(file): Promise<any> {
+    if (!checkConnection()) {
+        return {
+            err: true,
+            text: 'No machine connection',
+        }
+    }
+
+    return new Promise((resolve, reject) => {
+        const event = SocketEvent.StartGCode;
+        connectionManager.startGcode(io, {
+            eventName: event,
+            uploadName: file.newFilename,
+            renderName: file.originalFilename,
+        });
+
+        io.on(event, (data) => {
+            resolve({
+                err: null,
+                text: 'success',
+            });
+        });
+    });
+}
 
 function openServer() {
     // 防止重复开启
@@ -66,7 +105,7 @@ function openServer() {
 
         if (req.url === '/') {
             const protocol = printer.Sacp ? 'SACP' : 'HTTP';
-            const resp = `sm2uploader ${Version}
+            const resp = `Welcome to Snapmker OctoPrint proxy service
                 printer id: ${printer.ID}
                 printer ip: ${printer.IP}
                 machineConnection: ${checkConnection()}
@@ -102,7 +141,9 @@ function openServer() {
                     return;
                 }
                 const payload = { Name: file.originalFilename, Size: file.size };
-                const result = await sendGcodeFile(file);
+                let result;
+                if (fields.print === 'true') result = await printGcodeFile(file);
+                else result = await sendGcodeFile(file);
                 log.info(`upload file result: ${result}`);
 
                 if (result.err) {
