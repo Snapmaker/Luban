@@ -52,7 +52,7 @@ jobs:
         name: Build macOS Packages
 
         # macos-11.7
-        runs-on: macos-11
+        runs-on: macos-14
 
         steps:
             - name: Checkout Code
