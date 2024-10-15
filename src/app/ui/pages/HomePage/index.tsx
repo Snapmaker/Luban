@@ -15,7 +15,7 @@ import MoreInfo from './MoreInfo';
 import StartProject from './StartProject';
 import StarterGuideModal from './modals/StarterGuideModal';
 import styles from './styles.styl';
-
+import Avatar from './Avatar';
 
 interface HomePageProps {
     isPopup?: boolean;
@@ -98,6 +98,7 @@ const HomePage: React.FC<HomePageProps> = (props) => { // Todo, what's the props
                     />
                 )
             }
+            <Avatar />
             <StartProject />
             <div className={classNames(styles.secondLine, isPopup ? styles.popup : '')} ref={resourcesBlock} id="second-line">
                 <CaseLibrary {...props} />
