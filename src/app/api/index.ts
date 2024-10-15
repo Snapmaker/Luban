@@ -283,7 +283,7 @@ const getCaseResourcesList = (() => {
 })();
 
 //
-// Latest Version
+// user info
 //
 const getUserInfo = (() => {
     // cache CaseResources data for once load
