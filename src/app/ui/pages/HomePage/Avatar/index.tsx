@@ -38,7 +38,7 @@ const Avatar: React.FC = () => {
         }
     };
     // define Login
-    const login = () => {
+    const handleLogin = () => {
         if (loading) return;
         setIframeUrl('https://id.snapmaker.com?postKey=Luban');
         showModal();
@@ -108,8 +108,8 @@ const Avatar: React.FC = () => {
                     <div
                         role="button"
                         tabIndex={0}
-                        onClick={login}
-                        onKeyDown={login}
+                        onClick={handleLogin}
+                        onKeyDown={handleLogin}
                         aria-disabled={loading}
                         className={styles.imgBox}
                     >
