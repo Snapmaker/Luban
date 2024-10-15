@@ -743,9 +743,13 @@ class ConnectionManager {
             Promise.all(promises)
                 .then(() => {
                     this.channel.uploadGcodeFile(gcodeFilePath, headType, renderName, (msg) => {
+                        log.info('uploadGcodeFile result:' + msg);
                         if (msg) {
+                            socket.emit(SocketEvent.StartGCode, { err: 'failed', text: msg || 'Failed to upload file' });
                             // FIXME: Add abort message
                             return;
+                        } else {
+                            socket.emit(SocketEvent.StartGCode, { err: null, text: '' });
                         }
                         this.channel.startGcode(options);
                     });
