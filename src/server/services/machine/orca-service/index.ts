@@ -14,28 +14,15 @@ const io = new SocketServer();
 
 let server;
 let SERVER_PORT = 65526;
-let SERVER_IP = getLocalIPAddress();
+let SERVER_IP = '0.0.0.0';
 const printer = { ID: 'not Connection ', IP: SERVER_IP + ':' + SERVER_PORT, Sacp: true };
 const maxMemory = 64 * 1024 * 1024; // 64MB
-
-function getLocalIPAddress() {
-    const interfaces = os.networkInterfaces();
-    for (const name of Object.keys(interfaces)) {
-        for (const iface of interfaces[name]) {
-            if (iface.family === 'IPv4' && !iface.internal) {
-                return iface.address;
-            }
-        }
-    }
-    return '0.0.0.0'; // Fallback to localhost if no external IP is found
-}
 
 function checkConnection() {
     log.info(`connectionManager: ${connectionManager}`);
 
     if (connectionManager?.machineInstance?.id) {
         printer.ID = connectionManager.machineInstance.id;
-        printer.IP = connectionManager.machineInstance.ip;
         return true;
     }
     return false;
