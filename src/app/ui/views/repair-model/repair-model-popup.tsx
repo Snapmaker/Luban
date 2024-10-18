@@ -30,6 +30,7 @@ export const repairModelPopup = async (models) => {
 
     return new Promise((resolve, reject) => {
         const action = modal({
+            wrapClassName: 'repair-model-modal',
             title: i18n._('key-Modal/Repair-Repair Model(s)'),
             body: (
                 <React.Fragment>
