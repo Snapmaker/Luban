@@ -95,14 +95,10 @@ const getSourceType = fileName => {
  * Recalculate model size
  */
 const sizeModel = (size, materials, sourceWidth, sourceHeight) => {
-    console.log('line:98 materials::: ', materials);
     let width = sourceWidth;
     let height = sourceHeight;
     let scale = 1;
-    // 取消 SVG 和 DXF 的缩放逻辑
-    // if (sourceType === 'svg' || sourceType === 'dxf') {
-    //     return { width, height, scale: 1 }; // 不进行缩放
-    // }
+
     if (!materials.isRotate) {
         const isX = sourceWidth > sourceHeight;
         const value = isX ? sourceWidth : sourceHeight;
@@ -810,15 +806,13 @@ export const actions = {
                 height = transformation?.height;
             }
             if (sourceType === SOURCE_TYPE.IMAGE3D) {
-                const newModelSize = sizeModel(coordinateSize, materials, sourceWidth, sourceHeight, '3d');
+                const newModelSize = sizeModel(coordinateSize, materials, sourceWidth, sourceHeight);
                 scale = newModelSize?.scale;
             }
         } else {
             const extname = path.extname(uploadName);
             const isScale = !includes(scaleExtname, extname);
 
-            // svg(.svg | .dxf) type doesn't need to sizeModel
-            // const newModelSize = sourceType !== SOURCE_TYPE.IMAGE3D && sourceType !== SOURCE_TYPE.SVG
             const newModelSize = sourceType !== SOURCE_TYPE.IMAGE3D
                 ? limitModelSizeByMachineSize(coordinateSize, sourceWidth, sourceHeight, isLimit, isScale)
                 : sizeModel(size, materials, sourceWidth, sourceHeight);
