@@ -8,17 +8,16 @@ export const vertexMiddle = (v1, v2) => {
 };
 
 export const parseFloats = (floatStrings) => {
-    // Convert a list of float strings to an actual list of floats,
-    // The function can deal with pretty much any separation chars.
-    const re = /(-?[0-9]+\.?[0-9]*(e-?[0-9]*)?)/g;
+    const re = /(-?\d+\.?\d*|\.\d+)([eE][-+]?\d+)?/g;
     const floats = [];
 
     let m = re.exec(floatStrings);
-    while (m) {
-        floats.push(parseFloat(m[1]));
+    while (m !== null) {
+        if (!Number.isNaN(parseFloat(m[0]))) {
+            floats.push(parseFloat(m[0]));
+        }
         m = re.exec(floatStrings);
     }
-
     return floats;
 };
 
