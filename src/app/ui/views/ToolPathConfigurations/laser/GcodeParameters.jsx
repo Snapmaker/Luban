@@ -23,6 +23,7 @@ class GcodeParameters extends PureComponent {
         zOffsetEnabled: PropTypes.bool,
         halfDiodeModeEnabled: PropTypes.bool,
         auxiliaryAirPumpEnabled: PropTypes.bool,
+        noNeedName: PropTypes.bool,
     };
 
     state = {
@@ -32,6 +33,8 @@ class GcodeParameters extends PureComponent {
     };
 
     render() {
+        console.log('line:36 this.props::: ', this.props);
+
         const { toolPath, activeToolDefinition } = this.props;
         const {
             zOffsetEnabled = true,
@@ -192,14 +195,16 @@ class GcodeParameters extends PureComponent {
                         />
                         <span>{i18n._('Preset')}</span>
                     </div>
-                    <PresentSelector
-                        toolDefinition={this.props.activeToolDefinition}
-                        toolDefinitions={this.props.toolDefinitions}
-                        setCurrentToolDefinition={this.props.setCurrentToolDefinition}
-                        isModifiedDefinition={this.props.isModifiedDefinition}
-                        setCurrentValueAsProfile={this.props.setCurrentValueAsProfile}
-                        isModel={this.props.isModel}
-                    />
+                    {!this.props.noNeedName && (
+                        <PresentSelector
+                            toolDefinition={this.props.activeToolDefinition}
+                            toolDefinitions={this.props.toolDefinitions}
+                            setCurrentToolDefinition={this.props.setCurrentToolDefinition}
+                            isModifiedDefinition={this.props.isModifiedDefinition}
+                            setCurrentValueAsProfile={this.props.setCurrentValueAsProfile}
+                            isModel={this.props.isModel}
+                        />
+                    )}
                     <ToolParameters
                         settings={laserDefinitionMethod}
                         updateToolConfig={this.props.updateToolConfig}

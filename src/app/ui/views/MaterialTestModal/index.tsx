@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
-import { Modal, Row, Col, Form, InputNumber, Divider, Checkbox } from 'antd';
-import { useDispatch } from 'react-redux';
+import React, { useEffect, useState } from 'react';
+import { Modal, Row, Col, Form, InputNumber, Divider } from 'antd';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+
 import { actions } from '../../../flux/editor';
+import SvgIcon from '../../components/SvgIcon';
+
+import ToolPathConfig from './ToolPathConfig';
 
 import styles from './styles.styl';
 
@@ -9,6 +13,12 @@ interface MaterialTestModalProps {
     onClose: () => void;
 }
 
+const setAttributes = (element, attributes) => {
+    Object.entries(attributes).forEach(([key, value]) => {
+        element.setAttribute(key, value);
+    });
+};
+let svgContainer = null;
 const leftFormItems = [
     {
         label: '参数',
@@ -19,12 +29,35 @@ const leftFormItems = [
             </select>
         )
     },
-    { label: '行数', component: <InputNumber className={styles.input} min={1} max={11} defaultValue={10} name="leftRow" /> },
-    { label: '最小值', component: <InputNumber className={styles.input} min={0} name="leftMin" defaultValue={600} /> },
-    { label: '最大值', component: <InputNumber className={styles.input} min={200} name="rileftMax" defaultValue={18000} /> },
-    { label: '矩形高度', component: <InputNumber className={styles.input} min={1} max={30} defaultValue={5} name="leftRectHeight" /> },
+    { label: '行数', component: <InputNumber className={styles.input} min={1} max={11} defaultValue={1} name="leftRow" /> },
+    {
+        label: '最小值',
+        component: (
+            <>
+                <InputNumber controls={false} className={styles.input} min={0} name="leftMin" defaultValue={600} />
+                <span className={styles.suffix}>mm/min</span>
+            </>
+        )
+    },
+    {
+        label: '最大值',
+        component: (
+            <>
+                <InputNumber controls={false} className={styles.input} min={200} name="reftMax" defaultValue={18000} />
+                <span className={styles.suffix}>mm/min</span>
+            </>
+        )
+    },
+    {
+        label: '矩形高度',
+        component: (
+            <>
+                <InputNumber controls={false} className={styles.input} min={1} max={30} defaultValue={5} name="leftRectHeight" />
+                <span className={styles.suffix}>mm</span>
+            </>
+        )
+    },
 ];
-
 const rightFormItems = [
     {
         label: '参数',
@@ -34,66 +67,49 @@ const rightFormItems = [
             </select>
         )
     },
-    { label: '列数', component: <InputNumber className={styles.input} min={1} max={11} defaultValue={10} name="rightCol" /> },
-    { label: '最小值', component: <InputNumber className={styles.input} min={0} name="rightMin" defaultValue={10} /> },
-    { label: '最大值', component: <InputNumber className={styles.input} max={100} defaultValue={100} name="rightMax" /> },
-    { label: '矩形高度', component: <InputNumber className={styles.input} min={1} max={30} defaultValue={5} name="rightRectHeight" /> },
-];
-
-// 加工方法
-const addFactoryItems = [
+    { label: '列数', component: <InputNumber className={styles.input} min={1} max={11} defaultValue={1} name="rightCol" /> },
     {
-        label: '加工方法',
+        label: '最小值',
         component: (
-            <select className={`${styles.input} ${styles.select}`} defaultValue="填充" name="factory_method">
-                <option value="填充">填充</option>
-                <option value="恒功率模式">恒功率模式</option>
-            </select>
+            <>
+                <InputNumber controls={false} className={styles.input} max={100} min={0} defaultValue={10} name="rightMin" />
+                <span className={styles.suffix}>mm/min</span>
+            </>
         )
     },
-    { label: '恒功率模式', component: <Checkbox name="constant_power_mode" /> },
-];
-
-// 填充
-const fillItems = [
     {
-        label: '移动模式',
+        label: '最大值',
         component: (
-            <select className={`${styles.input} ${styles.select}`} defaultValue="线条" name="fill_mode">
-                <option value="线条">线条</option>
-                <option value="曲线">曲线</option>
-            </select>
+            <>
+                <InputNumber controls={false} className={styles.input} max={100} min={1} defaultValue={100} name="rightMax" />
+                <span className={styles.suffix}>mm/min</span>
+            </>
         )
     },
-
-    { label: '填充间距', component: <InputNumber className={styles.input} name="optimize_rect_gap" /> },
-
     {
-        label: '线条方向',
+        label: '矩形高度',
         component: (
-            <select className={`${styles.input} ${styles.select}`} defaultValue="水平" name="line_direct">
-                <option value="水平">水平</option>
-                <option value="垂直">垂直</option>
-            </select>
+            <>
+                <InputNumber controls={false} className={styles.input} max={30} min={1} defaultValue={5} name="rightRectHeight" />
+                <span className={styles.suffix}>mm</span>
+            </>
         )
     },
 ];
-
-// 优化
-const optimizeItems = [
-    { label: 'Dot width compensation', component: <InputNumber className={styles.input} name="dot_width_compensation" /> },
-    { label: 'Scan Offset', component: <InputNumber className={styles.input} name="scan_offset" /> },
-    { label: 'Over Scanning', component: <InputNumber className={styles.input} name="over_scanning" /> },
-    { label: 'Air Assist Pump', component: <Checkbox className={styles.input} name="air_assist_pump" /> },
-];
-
-const DesignForm = () => {
+const FormComponent = () => {
     return (
-        <div className={styles['form-box']}>
+        <>
             <Form id="formIDataBox" labelAlign="left" labelCol={{ span: 12 }} wrapperCol={{ span: 12 }}>
                 <Row gutter={24}>
                     <Col span={12}>
-                        <div>行</div>
+                        <div>
+                            <SvgIcon
+                                name="TitleSetting"
+                                type={['static']}
+                                size={24}
+                            />
+                            行
+                        </div>
                         <Divider className={styles.divider} />
                         {leftFormItems.map((item) => (
                             <Form.Item key={item.label} label={item.label} className={styles['form-item']}>
@@ -102,7 +118,14 @@ const DesignForm = () => {
                         ))}
                     </Col>
                     <Col span={12}>
-                        <div>列</div>
+                        <div>
+                            <SvgIcon
+                                name="TitleSetting"
+                                type={['static']}
+                                size={24}
+                            />
+                            列
+                        </div>
                         <Divider className={styles.divider} />
                         {rightFormItems.map((item) => (
                             <Form.Item key={item.label} label={item.label} className={styles['form-item']}>
@@ -111,67 +134,89 @@ const DesignForm = () => {
                         ))}
                     </Col>
                 </Row>
-
-                <Row>
-                    <div>加工方法</div>
-                    <Divider className={styles.divider} />
-                    {addFactoryItems.map((item) => (
-                        <Col key={`addFactory-${item.label}`} span={12}>
-                            <Form.Item key={item.label} label={item.label} className={styles['form-item']}>
-                                {item.component}
-                            </Form.Item>
-                        </Col>
-                    ))}
-                </Row>
-
-                <Row>
-                    <div>填充</div>
-                    <Divider className={styles.divider} />
-                    {fillItems.map((item) => (
-                        <Col key={`fill-${item.label}`} span={12}>
-                            <Form.Item key={item.label} label={item.label} className={styles['form-item']}>
-                                {item.component}
-                            </Form.Item>
-                        </Col>
-                    ))}
-                </Row>
-
-                <Row>
-                    <div>优化</div>
-                    <Divider className={styles.divider} />
-                    {optimizeItems.map((item) => (
-                        <Col key={`optimize-${item.label}`} span={12}>
-                            <Form.Item key={item.label} label={item.label} className={styles['form-item']}>
-                                {item.component}
-                            </Form.Item>
-                        </Col>
-                    ))}
-                </Row>
             </Form>
-        </div>
+        </>
     );
 };
-
-const setAttributes = (element, attributes) => {
-    Object.entries(attributes).forEach(([key, value]) => {
-        element.setAttribute(key, value);
-    });
+const defaultPath = {
+    'id': 'default',
+    'headType': 'laser',
+    'name': '矢量工具路径 - 1',
+    'baseName': '',
+    'type': 'vector',
+    'useLegacyEngine': false,
+    'status': 'warning',
+    'check': true,
+    'visible': true,
+    'modelMap': {},
+    'modelMode': 'vector',
+    'visibleModelIDs': [
+        'id-1730041940243-0-0'
+    ],
+    'toolPathFiles': [
+        null
+    ],
+    'gcodeConfig': {
+        'optimizePath': false,
+        'movementMode': 'greyscale-line',
+        'pathType': 'path',
+        'fillInterval': 0.25,
+        'jogSpeed': 3000,
+        'workSpeed': 140,
+        'plungeSpeed': 800,
+        'dwellTime': 5,
+        'fixedPowerEnabled': true,
+        'fixedPower': 100,
+        'multiPassEnabled': true,
+        'multiPasses': 2,
+        'initialHeightOffset': 0,
+        'multiPassDepth': 0.6
+    },
+    'toolParams': {},
+    'materials': {
+        'isRotate': false,
+        'diameter': 0,
+        'x': 320,
+        'y': 350
+    }
 };
-let svgContainer = null;
 
 export default function MaterialTest({ onClose }): React.ReactElement<MaterialTestModalProps> {
     const [visible, setVisible] = useState(true);
-    // const [leftParameter, setLeftParameter] = useState("速度");
-    // const [rightParameter, setRightParameter] = useState("速度");
-    const dispatch = useDispatch(); // 获取 dispatch
+    const [saveToolPathFlag, setSaveToolPathFlag] = useState(false);
 
+    const dispatch = useDispatch(); // 获取 dispatch
+    const [editingToolpath, setEditingToolpath] = useState({ ...defaultPath });
+    // const selectedToolPathIDArray = useSelector(state => state.laser?.toolPath?.getSelectedToolPathIDArray());
+    // const selectedToolPathIDArray = useSelector(state => state[props.headType]?.toolPathGroup?.selectedToolPathArray, shallowEqual);
+    const toolPaths = useSelector(state => state.laser?.toolPathGroup?.getToolPaths(), shallowEqual);
+
+    const selectedModelArray = useSelector(state => state.laser?.modelGroup?.getSelectedModelArray());
+    useEffect(() => {
+        console.log('line:204 selectedModelArray::: ', selectedModelArray);
+        if (selectedModelArray.length > 0) {
+            const firstModel = selectedModelArray[0];
+            console.log('line:206 firstModel::: ', firstModel);
+            const toolpath = dispatch(actions.createToolPath('laser'));
+            console.log('line:222 toolpath::: ', toolpath);
+            setEditingToolpath(toolpath);
+        }
+    }, [selectedModelArray]);
+
+    const handleClose = () => {
+        console.log('line:160 handleClose::: ');
+    };
+    const handleCancel = () => {
+        setVisible(false);
+        onClose();
+    };
     // 用于设置并生成svg的个数
     // 需要知道类型，以及svg的个数
     const svgNamespace = 'http://www.w3.org/2000/svg';
 
     const powX = 210;
     const powY = 475;
-    const attributeObj = (uniqueId, x, y, w, h, text?: string) => {
+    const attributeObj = (uniqueId, x, y, w, h) => {
         return {
             id: uniqueId,
             x: powX + x,
@@ -183,7 +228,6 @@ export default function MaterialTest({ onClose }): React.ReactElement<MaterialTe
             opacity: '1',
             stroke: '#000000',
             'stroke-width': '0.2756410256410256',
-            text: text,
         };
     };
     // Generate a unique ID
@@ -200,7 +244,7 @@ export default function MaterialTest({ onClose }): React.ReactElement<MaterialTe
     type TypeDta = {
         leftRow: number,
         leftMin: number,
-        rileftMax: number,
+        reftMax: number,
         rightCol: number,
         rightMax: number,
         rightMin: number,
@@ -219,24 +263,36 @@ export default function MaterialTest({ onClose }): React.ReactElement<MaterialTe
             dispatch(actions.rotateElementsImmediately('laser', [textElement], { newAngle: -90 }));
         }
     };
+    const selectAllElements = () => dispatch(actions.selectAllElements('laser'));
+    const onSelectElements = (elements) => dispatch(actions.selectElements('laser', elements));
 
     const onCreateElement = async () => {
-        dispatch(actions.selectAllElements('laser'));
+        // remove ToolPaths
+        const toolPathIDArray = toolPaths.map(v => v.id);
+        if (toolPathIDArray.length) dispatch(actions.deleteToolPath('laser', toolPathIDArray));
+
+        await selectAllElements();
+        console.log('line:276 selectedModelArray::: ', selectedModelArray);
         dispatch(actions.removeSelectedModel('laser'));
-        // const svgContainer = document.createElement('div');
-        // svgContainer.id = 'svgContainer';
-        // document.body.appendChild(svgContainer);
-        if (!svgContainer) svgContainer = document.createElementNS(svgNamespace, 'svg'); // 创建一个临时的 SVG 容器
-        svgContainer.style.opacity = '0';
-        svgContainer.id = 'svgContainer-box';
+        // dispatch(actions.showModelGroupObject('laser'));
+
+        if (!svgContainer) {
+            svgContainer = document.createElementNS(svgNamespace, 'svg'); // 创建一个临时的 SVG 容器
+            svgContainer.style.opacity = '0';
+            svgContainer.id = 'svgContainer-box';
+            document.body.appendChild(svgContainer);
+        }
         // 根据行列最小值 最大值生成 rect
         const data: TypeDta = handleSubmit();
         console.log('line:212 data::: ', data);
+
         const gap = 5;
-        const { leftRow, leftMin, rileftMax, rightCol, rightMax, rightMin, leftRectHeight, rightRectHeight } = data;
+        const { leftRow, leftMin, reftMax, rightCol, rightMax, rightMin, leftRectHeight, rightRectHeight } = data;
+        console.log('line:174 leftRow::: ', leftRow);
+        console.log('line:174 leftRow::: ', typeof leftRow);
         // leftX = leftMin + i * lex
         const leftMinNum = Number(leftMin);
-        const leftMaxNum = Number(rileftMax);
+        const leftMaxNum = Number(reftMax);
         const lex = (leftMaxNum - leftMinNum) / ((leftRow - 1) || 1);
 
         const rightMinNum = Number(rightMin);
@@ -248,49 +304,65 @@ export default function MaterialTest({ onClose }): React.ReactElement<MaterialTe
         const w = Number(rightRectHeight);
         const h = Number(leftRectHeight);
         await onCreatText('Pssses', rightCol / 2 * (gap + w), -leftRow * (gap + h) - 20, false);
-        await onCreatText('Power(%)', rightCol / 2 * (gap + w) + 10, 8 * gap, false);
+        await onCreatText('Power(%)', rightCol / 2 * (gap + w) + 10, 6 * gap, false);
         await onCreatText('Speed(mm/m)', -8 * gap, -leftRow / 2 * (gap + h), true);
 
         // row * col create rect
         for (let i = 0; i < rightCol; i++) {
-            // x += gap + w;
             if (i === 0) x = 2 * gap;
             else x += gap + w;
-            await onCreatText(`${(rightMinNum + i * rex).toFixed(1)}`, x + w / 2, 3 * gap, true);
-
+            await onCreatText(`${Math.round(rightMinNum + i * rex)}`, x + w / 2, 2 * gap, true);
             y = 0;
             for (let j = 0; j < leftRow; j++) {
+                setSaveToolPathFlag(false);
                 y -= gap + h;
                 const rect = document.createElementNS(svgNamespace, 'rect');
                 setAttributes(rect, attributeObj(`${uniqueId()}-${i}-${j}`, x, y, w, h));
-                console.log('line:263 svgContainer::: ', svgContainer);
                 svgContainer.appendChild(rect);
-                document.body.appendChild(svgContainer);
                 await dispatch(actions.createModelFromElement('laser', rect));
+                onSelectElements([rect]);
+                setSaveToolPathFlag(true);
+                // add todo: create Path
                 if (i === 0) await onCreatText(`${Math.round(leftMinNum + j * lex)}`, -2 * gap, y + h / 2, false);
             }
         }
+        setSaveToolPathFlag(false);
+        const AllRect = await selectAllElements();
+        console.log('line:327 AllRect::: ', AllRect);
+        setSaveToolPathFlag(true);
+        await dispatch(actions.preview('laser'));
+        console.log('completed');
+        handleCancel();
     };
-    const handleOk = () => {
-        setVisible(false);
-        onClose();
+    const handleCreate = () => {
+        // setVisible(false);
+        // onClose();
         onCreateElement();
     };
 
-    const handleCancel = () => {
-        setVisible(false);
-        onClose();
-    };
     return (
         <div className={styles.container}>
             <Modal
                 title="Material Test"
                 open={visible}
-                onOk={handleOk}
+                onOk={handleCreate}
                 onCancel={handleCancel}
-                width="500px"
+                width="540px"
             >
-                <DesignForm />
+                <div className={styles['form-box']}>
+                    <FormComponent />
+                    {
+                        editingToolpath && (
+                            <ToolPathConfig
+                                headType="laser"
+                                toolpath={editingToolpath}
+                                onClose={() => handleClose}
+                                saveToolPathFlag={saveToolPathFlag}
+                                noNeedName={Boolean(1)}
+                            />
+                        )
+                    }
+                </div>
             </Modal>
         </div>
     );
