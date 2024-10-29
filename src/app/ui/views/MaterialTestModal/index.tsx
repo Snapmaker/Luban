@@ -139,13 +139,14 @@ export default function MaterialTest({ onClose }): React.ReactElement<MaterialTe
     const onCreatText = async (text, x, y, w, h, needRote) => {
         const textSvg = await dispatch(actions.createText('laser', text));
         const id = uniqueId();
-        setAttributes(textSvg, { id: id });
+        const pox = powX + x;
+        const poy = powY + y;
+        setAttributes(textSvg, { id: id, x: pox, y: poy, width: w, height: h });
         await dispatch(actions.createModelFromElement('laser', textSvg));
         const textElement = document.getElementById(id);
-        setAttributes(textElement, { width: w, height: h, x: powX + x, y: powY + y });
+        dispatch(actions.resizeElementsImmediately('laser', [textElement], { newHeight: h, newWidth: w }));
         textRectArray.push(textElement);
         if (needRote) {
-            // 需要旋转的元素
             dispatch(actions.rotateElementsImmediately('laser', [textElement], { newAngle: -90 }));
         }
     };
@@ -184,12 +185,12 @@ export default function MaterialTest({ onClose }): React.ReactElement<MaterialTe
         const w = Number(rightRectHeight);
         const h = Number(leftRectHeight);
         await onCreatText('Passes', rightCol / 2 * (gap + w), -leftRow * (gap + h) - 20, 20, h, false);
-        await onCreatText('Power(%)', rightCol / 2 * (gap + w), 10, 25, h, false);
-        await onCreatText('Speed(mm/m)', -4 * gap, -leftRow / 2 * (gap + h), 30, h, true);
+        await onCreatText('Power(%)', rightCol / 2 * (gap + w) + 5, 10, 25, h, false);
+        await onCreatText('Speed(mm/m)', -2 * gap, -leftRow / 2 * (gap + h), 30, h, true);
         // row * col create rect
         for (let i = 0; i < rightCol; i++) {
             x += gap + w;
-            await onCreatText(`${Math.round(rightMinNum + i * rex)}`, x, 0, h, w, true);
+            await onCreatText(`${Math.round(rightMinNum + i * rex)}`, x + 3, 0, h, w, true);
             y = 0;
             for (let j = 0; j < leftRow; j++) {
                 setSaveToolPathFlag(false);
@@ -203,11 +204,13 @@ export default function MaterialTest({ onClose }): React.ReactElement<MaterialTe
                 setFixedPower(Math.round(rightMinNum + i * rex));
                 setSaveToolPathFlag(true);
                 onClearSelection();
-                if (i === 0) await onCreatText(`${Math.round(leftMinNum + j * lex)}`, x - w - 5, y, w, h, false);
+                if (i === 0) await onCreatText(`${Math.round(leftMinNum + j * lex)}`, x - w, y + 3, w, h, false);
             }
         }
         setSaveToolPathFlag(false);
         onSelectElements(textRectArray);
+        setWorkSpeed(defaultPath.gcodeConfig.workSpeed);
+        setFixedPower(defaultPath.gcodeConfig.fixedPower);
         setSaveToolPathFlag(true);
         await dispatch(actions.preview('laser'));
         onClearSelection();
