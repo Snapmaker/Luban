@@ -8,7 +8,7 @@ import styles from './styles.styl';
 
 // FIXME: This is just a temporary solution. The correct approach would be to move this component into the xxx dependency library.
 import MainToolbarAbPosition from './Icons/MainToolbarAbPosition';
-import MaterialTest from './Icons/MaterialTest';
+import MaterialTest from './Icons/MaterialTestIcon';
 
 Icons.MainToolbarAbPosition = MainToolbarAbPosition;
 
