@@ -33,8 +33,6 @@ class GcodeParameters extends PureComponent {
     };
 
     render() {
-        console.log('line:36 this.props::: ', this.props);
-
         const { toolPath, activeToolDefinition } = this.props;
         const {
             zOffsetEnabled = true,
@@ -120,10 +118,10 @@ class GcodeParameters extends PureComponent {
         const laserDefinitionSpeed = {};
         laserDefinitionSpeedKeys.forEach((key) => {
             if (allDefinition[key]) {
-                laserDefinitionSpeed[key] = allDefinition[key];
+                laserDefinitionSpeed[key] = { ...allDefinition[key] };
             }
         });
-
+        laserDefinitionSpeed.workSpeed.hidden = Boolean(this.props.noNeedName);
         // section Pass
         const laserDefinitionRepetitionKeys = [];
         const laserDefinitionRepetition = {};
@@ -169,10 +167,10 @@ class GcodeParameters extends PureComponent {
         const laserDefinitionPower = {};
         laserDefinitionPowerKeys.forEach((key) => {
             if (allDefinition[key]) {
-                laserDefinitionPower[key] = allDefinition[key];
+                laserDefinitionPower[key] = { ...allDefinition[key] };
             }
         });
-
+        laserDefinitionPower.fixedPower.hidden = Boolean(this.props.noNeedName);
         // section Assist Gas
         const laserDefinitionAuxiliaryGasKeys = ['auxiliaryAirPump'];
         const laserDefinitionAuxiliary = {};

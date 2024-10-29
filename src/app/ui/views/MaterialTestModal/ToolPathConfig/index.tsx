@@ -57,14 +57,14 @@ interface ToolPathConfigurationsProps {
     headType: string;
     toolpath: object;
     saveToolPathFlag: boolean;
-    noNeedName: boolean;
+    fixedPower: number,
+    workSpeed: number;
 }
 
 const ToolPathConfig: React.FC<ToolPathConfigurationsProps> = (props) => {
-    const { toolpath, onClose, headType } = props;
+    const needName = true;
+    const { toolpath, onClose, headType, fixedPower, workSpeed } = props;
     const { activeMachine, toolHeadIdentifier } = props;
-
-    console.log('line:3 toolpath::: ', toolpath);
 
     const toolDefinitions = useSelector(state => state[headType]?.toolDefinitions, shallowEqual);
     const laserToolHead = useSelector(state => state?.machine?.toolHead?.laserToolhead, shallowEqual);
@@ -207,7 +207,6 @@ const ToolPathConfig: React.FC<ToolPathConfigurationsProps> = (props) => {
             onClose && onClose();
         },
         async saveToolPath() {
-            console.log('line:209 saveToolPath::: ');
             const toolParams = {};
             const gcodeConfig = {
                 ...toolPath.gcodeConfig
@@ -245,6 +244,8 @@ const ToolPathConfig: React.FC<ToolPathConfigurationsProps> = (props) => {
                 gcodeConfig,
                 toolParams
             };
+            gcodeConfig.fixedPower = fixedPower;
+            gcodeConfig.workSpeed = workSpeed;
             await dispatch(editorActions.saveToolPath(headType, newToolPath));
             await dispatch(editorActions.changeActiveToolListDefinition(headType, currentToolDefinition?.definitionId, currentToolDefinition?.name));
             await dispatch(editorActions.selectToolPathById(headType));
@@ -267,7 +268,6 @@ const ToolPathConfig: React.FC<ToolPathConfigurationsProps> = (props) => {
             await dispatch(editorActions.duplicateToolListDefinition(headType, newToolDefinition));
         },
         setCurrentValueAsProfile: async (save) => {
-            console.log('line:268 save::: ', save);
             const activeToolDefinition = currentToolDefinition;
             const definitionsWithSameCategory = toolDefinitions.filter(d => d.category === activeToolDefinition.category);
             // make sure name is not repeated
@@ -293,7 +293,6 @@ const ToolPathConfig: React.FC<ToolPathConfigurationsProps> = (props) => {
         }
     };
     const updateGcodeConfig = (option) => {
-        console.log('line:66 option::: ', option);
         // Movement Mode
         if (option.movementMode === 'greyscale-dot') {
             option.dwellTime = 5;
@@ -342,7 +341,6 @@ const ToolPathConfig: React.FC<ToolPathConfigurationsProps> = (props) => {
     const auxiliaryAirPumpEnabled = includes([L20WLaserToolModule.identifier, L40WLaserToolModule.identifier], toolHeadIdentifier);
 
     useEffect(() => {
-        console.log('line:341 props.saveToolPathFlag::: ', props.saveToolPathFlag);
         if (props.saveToolPathFlag) {
             actions.saveToolPath();
         }
@@ -364,7 +362,7 @@ const ToolPathConfig: React.FC<ToolPathConfigurationsProps> = (props) => {
                     zOffsetEnabled={zOffsetEnabled}
                     halfDiodeModeEnabled={halfDiodeModeEnabled}
                     auxiliaryAirPumpEnabled={auxiliaryAirPumpEnabled}
-                    noNeedName={props.noNeedName}
+                    noNeedName={needName}
                 />
             </div>
         </>

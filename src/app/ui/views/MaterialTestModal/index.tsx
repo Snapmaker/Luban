@@ -1,17 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Row, Col, Form, InputNumber, Divider } from 'antd';
+import { Modal, Spin } from 'antd';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
+import log from '../../../lib/log';
 import { actions } from '../../../flux/editor';
-import SvgIcon from '../../components/SvgIcon';
+import { machineStore } from '../../../store/local-storage';
 
 import ToolPathConfig from './ToolPathConfig';
-
+import FormComponent from './FormComponent';
 import styles from './styles.styl';
-
-interface MaterialTestModalProps {
-    onClose: () => void;
-}
 
 const setAttributes = (element, attributes) => {
     Object.entries(attributes).forEach(([key, value]) => {
@@ -19,125 +16,7 @@ const setAttributes = (element, attributes) => {
     });
 };
 let svgContainer = null;
-const leftFormItems = [
-    {
-        label: '参数',
-        name: 'parameter',
-        component: (
-            <select className={`${styles.input} ${styles.select}`} defaultValue="速度" name="left_parameter">
-                <option value="速度">速度</option>
-            </select>
-        )
-    },
-    { label: '行数', component: <InputNumber className={styles.input} min={1} max={11} defaultValue={1} name="leftRow" /> },
-    {
-        label: '最小值',
-        component: (
-            <>
-                <InputNumber controls={false} className={styles.input} min={0} name="leftMin" defaultValue={600} />
-                <span className={styles.suffix}>mm/min</span>
-            </>
-        )
-    },
-    {
-        label: '最大值',
-        component: (
-            <>
-                <InputNumber controls={false} className={styles.input} min={200} name="reftMax" defaultValue={18000} />
-                <span className={styles.suffix}>mm/min</span>
-            </>
-        )
-    },
-    {
-        label: '矩形高度',
-        component: (
-            <>
-                <InputNumber controls={false} className={styles.input} min={1} max={30} defaultValue={5} name="leftRectHeight" />
-                <span className={styles.suffix}>mm</span>
-            </>
-        )
-    },
-];
-const rightFormItems = [
-    {
-        label: '参数',
-        component: (
-            <select className={`${styles.input} ${styles.select}`} defaultValue="功率" name="right_parameter">
-                <option value="功率">功率</option>
-            </select>
-        )
-    },
-    { label: '列数', component: <InputNumber className={styles.input} min={1} max={11} defaultValue={1} name="rightCol" /> },
-    {
-        label: '最小值',
-        component: (
-            <>
-                <InputNumber controls={false} className={styles.input} max={100} min={0} defaultValue={10} name="rightMin" />
-                <span className={styles.suffix}>mm/min</span>
-            </>
-        )
-    },
-    {
-        label: '最大值',
-        component: (
-            <>
-                <InputNumber controls={false} className={styles.input} max={100} min={1} defaultValue={100} name="rightMax" />
-                <span className={styles.suffix}>mm/min</span>
-            </>
-        )
-    },
-    {
-        label: '矩形高度',
-        component: (
-            <>
-                <InputNumber controls={false} className={styles.input} max={30} min={1} defaultValue={5} name="rightRectHeight" />
-                <span className={styles.suffix}>mm</span>
-            </>
-        )
-    },
-];
-const FormComponent = () => {
-    return (
-        <>
-            <Form id="formIDataBox" labelAlign="left" labelCol={{ span: 12 }} wrapperCol={{ span: 12 }}>
-                <Row gutter={24}>
-                    <Col span={12}>
-                        <div>
-                            <SvgIcon
-                                name="TitleSetting"
-                                type={['static']}
-                                size={24}
-                            />
-                            行
-                        </div>
-                        <Divider className={styles.divider} />
-                        {leftFormItems.map((item) => (
-                            <Form.Item key={item.label} label={item.label} className={styles['form-item']}>
-                                {item.component}
-                            </Form.Item>
-                        ))}
-                    </Col>
-                    <Col span={12}>
-                        <div>
-                            <SvgIcon
-                                name="TitleSetting"
-                                type={['static']}
-                                size={24}
-                            />
-                            列
-                        </div>
-                        <Divider className={styles.divider} />
-                        {rightFormItems.map((item) => (
-                            <Form.Item key={item.label} label={item.label} className={styles['form-item']}>
-                                {item.component}
-                            </Form.Item>
-                        ))}
-                    </Col>
-                </Row>
-            </Form>
-        </>
-    );
-};
+
 const defaultPath = {
     'id': 'default',
     'headType': 'laser',
@@ -181,41 +60,46 @@ const defaultPath = {
     }
 };
 
+interface MaterialTestModalProps {
+    onClose: () => void;
+}
 export default function MaterialTest({ onClose }): React.ReactElement<MaterialTestModalProps> {
+    const [loading, setLoading] = useState(false);
     const [visible, setVisible] = useState(true);
     const [saveToolPathFlag, setSaveToolPathFlag] = useState(false);
-
-    const dispatch = useDispatch(); // 获取 dispatch
+    const [workSpeed, setWorkSpeed] = useState(140);
+    const [fixedPower, setFixedPower] = useState(100);
+    const dispatch = useDispatch();
     const [editingToolpath, setEditingToolpath] = useState({ ...defaultPath });
-    // const selectedToolPathIDArray = useSelector(state => state.laser?.toolPath?.getSelectedToolPathIDArray());
-    // const selectedToolPathIDArray = useSelector(state => state[props.headType]?.toolPathGroup?.selectedToolPathArray, shallowEqual);
     const toolPaths = useSelector(state => state.laser?.toolPathGroup?.getToolPaths(), shallowEqual);
 
     const selectedModelArray = useSelector(state => state.laser?.modelGroup?.getSelectedModelArray());
     useEffect(() => {
-        console.log('line:204 selectedModelArray::: ', selectedModelArray);
         if (selectedModelArray.length > 0) {
-            const firstModel = selectedModelArray[0];
-            console.log('line:206 firstModel::: ', firstModel);
             const toolpath = dispatch(actions.createToolPath('laser'));
-            console.log('line:222 toolpath::: ', toolpath);
             setEditingToolpath(toolpath);
         }
     }, [selectedModelArray]);
 
-    const handleClose = () => {
-        console.log('line:160 handleClose::: ');
-    };
     const handleCancel = () => {
         setVisible(false);
         onClose();
     };
-    // 用于设置并生成svg的个数
-    // 需要知道类型，以及svg的个数
+
     const svgNamespace = 'http://www.w3.org/2000/svg';
 
-    const powX = 210;
-    const powY = 475;
+    const powXCenter = 180;
+    const powYCenter = 500;
+    const originPosition = {
+        'bottom-left': { powX: powXCenter + 160, powY: powXCenter + 100 },
+        'bottom-right': { powX: powXCenter - 160, powY: powXCenter + 100 },
+        'top-left': { powX: powXCenter + 160, powY: powXCenter + 450 },
+        'top-right': { powX: powXCenter - 160, powY: powXCenter + 450 },
+        'center': { powX: powXCenter, powY: powYCenter },
+    };
+    const originReference = machineStore.get('origin.reference');
+    const { powX, powY } = originPosition[originReference];
+
     const attributeObj = (uniqueId, x, y, w, h) => {
         return {
             id: uniqueId,
@@ -235,7 +119,7 @@ export default function MaterialTest({ onClose }): React.ReactElement<MaterialTe
         return `id-${Date.now()}`;
     };
 
-    const handleSubmit = () => {
+    const getFormData = () => {
         const formIDataBox = document.getElementById('formIDataBox') as HTMLFormElement;
         const formData = new FormData(formIDataBox);
         const dataObject = Object.fromEntries(formData.entries());
@@ -251,45 +135,41 @@ export default function MaterialTest({ onClose }): React.ReactElement<MaterialTe
         leftRectHeight: number,
         rightRectHeight: number,
     };
-
-    const onCreatText = async (text, x, y, needRote,) => {
+    const textRectArray = [];
+    const onCreatText = async (text, x, y, w, h, needRote) => {
         const textSvg = await dispatch(actions.createText('laser', text));
         const id = uniqueId();
-        setAttributes(textSvg, { x: powX + x, y: powY + y, id: id });
+        setAttributes(textSvg, { id: id });
         await dispatch(actions.createModelFromElement('laser', textSvg));
+        const textElement = document.getElementById(id);
+        setAttributes(textElement, { width: w, height: h, x: powX + x, y: powY + y });
+        textRectArray.push(textElement);
         if (needRote) {
             // 需要旋转的元素
-            const textElement = document.getElementById(id);
             dispatch(actions.rotateElementsImmediately('laser', [textElement], { newAngle: -90 }));
         }
     };
     const selectAllElements = () => dispatch(actions.selectAllElements('laser'));
     const onSelectElements = (elements) => dispatch(actions.selectElements('laser', elements));
-
+    const onClearSelection = () => dispatch(actions.clearSelection('laser'));
     const onCreateElement = async () => {
-        // remove ToolPaths
+        textRectArray.splice(0);
         const toolPathIDArray = toolPaths.map(v => v.id);
-        if (toolPathIDArray.length) dispatch(actions.deleteToolPath('laser', toolPathIDArray));
-
+        if (toolPathIDArray.length) {
+            dispatch(actions.deleteToolPath('laser', toolPathIDArray));
+        }
         await selectAllElements();
-        console.log('line:276 selectedModelArray::: ', selectedModelArray);
         dispatch(actions.removeSelectedModel('laser'));
-        // dispatch(actions.showModelGroupObject('laser'));
 
         if (!svgContainer) {
-            svgContainer = document.createElementNS(svgNamespace, 'svg'); // 创建一个临时的 SVG 容器
+            svgContainer = document.createElementNS(svgNamespace, 'svg');
             svgContainer.style.opacity = '0';
             svgContainer.id = 'svgContainer-box';
             document.body.appendChild(svgContainer);
         }
-        // 根据行列最小值 最大值生成 rect
-        const data: TypeDta = handleSubmit();
-        console.log('line:212 data::: ', data);
-
+        const data: TypeDta = getFormData();
         const gap = 5;
         const { leftRow, leftMin, reftMax, rightCol, rightMax, rightMin, leftRectHeight, rightRectHeight } = data;
-        console.log('line:174 leftRow::: ', leftRow);
-        console.log('line:174 leftRow::: ', typeof leftRow);
         // leftX = leftMin + i * lex
         const leftMinNum = Number(leftMin);
         const leftMaxNum = Number(reftMax);
@@ -303,15 +183,13 @@ export default function MaterialTest({ onClose }): React.ReactElement<MaterialTe
         let y = 0;
         const w = Number(rightRectHeight);
         const h = Number(leftRectHeight);
-        await onCreatText('Pssses', rightCol / 2 * (gap + w), -leftRow * (gap + h) - 20, false);
-        await onCreatText('Power(%)', rightCol / 2 * (gap + w) + 10, 6 * gap, false);
-        await onCreatText('Speed(mm/m)', -8 * gap, -leftRow / 2 * (gap + h), true);
-
+        await onCreatText('Passes', rightCol / 2 * (gap + w), -leftRow * (gap + h) - 20, 20, h, false);
+        await onCreatText('Power(%)', rightCol / 2 * (gap + w), 10, 25, h, false);
+        await onCreatText('Speed(mm/m)', -4 * gap, -leftRow / 2 * (gap + h), 30, h, true);
         // row * col create rect
         for (let i = 0; i < rightCol; i++) {
-            if (i === 0) x = 2 * gap;
-            else x += gap + w;
-            await onCreatText(`${Math.round(rightMinNum + i * rex)}`, x + w / 2, 2 * gap, true);
+            x += gap + w;
+            await onCreatText(`${Math.round(rightMinNum + i * rex)}`, x, 0, h, w, true);
             y = 0;
             for (let j = 0; j < leftRow; j++) {
                 setSaveToolPathFlag(false);
@@ -321,23 +199,26 @@ export default function MaterialTest({ onClose }): React.ReactElement<MaterialTe
                 svgContainer.appendChild(rect);
                 await dispatch(actions.createModelFromElement('laser', rect));
                 onSelectElements([rect]);
+                setWorkSpeed(Math.round(leftMinNum + j * lex));
+                setFixedPower(Math.round(rightMinNum + i * rex));
                 setSaveToolPathFlag(true);
-                // add todo: create Path
-                if (i === 0) await onCreatText(`${Math.round(leftMinNum + j * lex)}`, -2 * gap, y + h / 2, false);
+                onClearSelection();
+                if (i === 0) await onCreatText(`${Math.round(leftMinNum + j * lex)}`, x - w - 5, y, w, h, false);
             }
         }
         setSaveToolPathFlag(false);
-        const AllRect = await selectAllElements();
-        console.log('line:327 AllRect::: ', AllRect);
+        onSelectElements(textRectArray);
         setSaveToolPathFlag(true);
         await dispatch(actions.preview('laser'));
-        console.log('completed');
+        onClearSelection();
         handleCancel();
     };
     const handleCreate = () => {
-        // setVisible(false);
-        // onClose();
+        setLoading(true);
         onCreateElement();
+    };
+    const onComplated = () => {
+        log.info('onComplated:');
     };
 
     return (
@@ -347,22 +228,28 @@ export default function MaterialTest({ onClose }): React.ReactElement<MaterialTe
                 open={visible}
                 onOk={handleCreate}
                 onCancel={handleCancel}
+                okButtonProps={{ disabled: loading }}
+                cancelButtonProps={{ disabled: loading }}
                 width="540px"
             >
-                <div className={styles['form-box']}>
-                    <FormComponent />
-                    {
-                        editingToolpath && (
-                            <ToolPathConfig
-                                headType="laser"
-                                toolpath={editingToolpath}
-                                onClose={() => handleClose}
-                                saveToolPathFlag={saveToolPathFlag}
-                                noNeedName={Boolean(1)}
-                            />
-                        )
-                    }
-                </div>
+                <Spin spinning={loading} tip="Loading...">
+                    <div className={styles['form-box']}>
+                        {/* <FormComponentt /> */}
+                        <FormComponent />
+                        {
+                            editingToolpath && (
+                                <ToolPathConfig
+                                    headType="laser"
+                                    toolpath={editingToolpath}
+                                    onClose={onComplated}
+                                    saveToolPathFlag={saveToolPathFlag}
+                                    fixedPower={fixedPower}
+                                    workSpeed={workSpeed}
+                                />
+                            )
+                        }
+                    </div>
+                </Spin>
             </Modal>
         </div>
     );

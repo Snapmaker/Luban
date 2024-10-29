@@ -419,8 +419,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                 }
             });
         }
-        console.log('422 add MaterialTest');
-        // add MaterialTest
+
         leftItems.push({
             title: 'MaterialTest',
             type: 'button',
