@@ -6,22 +6,6 @@ import SvgIcon from '../../components/SvgIcon';
 
 const FormComponent: React.FC = () => {
     const leftFormItems = [
-        // {
-        //     label: i18n._('Parameters'),
-        //     name: 'parameter',
-        //     component: (
-        //         <Select
-        //             defaultValue="速度"
-        //             className={styles['select-box']}
-        //             options={[
-        //                 {
-        //                     value: '速度',
-        //                     label: '速度',
-        //                 },
-        //             ]}
-        //         />
-        //     )
-        // },
         { label: '行数', component: <InputNumber className={styles.input} min={1} max={11} defaultValue={10} name="leftRow" /> },
         {
             label: '最小值',
@@ -52,22 +36,6 @@ const FormComponent: React.FC = () => {
         },
     ];
     const rightFormItems = [
-        // {
-        //     label: '参数',
-        //     name: 'parameter',
-        //     component: (
-        //         <Select
-        //             defaultValue="功率"
-        //             className={styles['select-box']}
-        //             options={[
-        //                 {
-        //                     value: '功率',
-        //                     label: '功率',
-        //                 },
-        //             ]}
-        //         />
-        //     )
-        // },
         { label: '列数', component: <InputNumber className={styles.input} min={1} max={11} defaultValue={10} name="rightCol" /> },
         {
             label: '最小值',
