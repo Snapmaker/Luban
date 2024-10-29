@@ -532,6 +532,13 @@ class Visualizer extends PureComponent {
                     }
                 }
             }
+        } else {
+            // resolve repair model box
+            const repairModelBox = document.getElementsByClassName('repair-model-modal');
+            if (repairModelBox.length > 0) {
+                const parentNode = repairModelBox[0].parentNode;
+                parentNode.remove();
+            }
         }
 
         this.canvas.current.renderScene();
