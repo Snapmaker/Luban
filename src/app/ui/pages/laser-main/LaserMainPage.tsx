@@ -113,6 +113,11 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
     const onChangeSVGClippingMode = useCallback(() => {
         setPageMode(pageMode === PageMode.SVGClipping ? PageMode.Default : PageMode.SVGClipping);
     }, [pageMode]);
+
+    const onChangeMaterialTestMode = useCallback(() => {
+        setPageMode(pageMode === PageMode.MaterialTest ? PageMode.Default : PageMode.MaterialTest);
+    }, [pageMode]);
+
     const onChangeABPositionMode = useCallback(() => {
         setPageMode(pageMode === PageMode.ABPosition ? PageMode.Default : PageMode.ABPosition);
     }, [pageMode]);
@@ -126,6 +131,7 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
         setShowJobType,
         setShowWorkspace,
         onChangeSVGClippingMode,
+        onChangeMaterialTestMode,
         onChangeABPositionMode
     });
     const renderHomepage = () => {

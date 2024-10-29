@@ -39,6 +39,7 @@ import Canvas from '../../components/SMCanvas';
 import Space from '../../components/Space';
 import { PageMode } from '../../pages/PageMode';
 import SVGClippingOverlay from '../../views/model-operation-overlay/SVGClippingOverlay';
+import MaterialTestModal from '../../views/MaterialTestModal';
 import ABPositionOverlay from '../../views/model-operation-overlay/ABPositionOverlay';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import VisualizerBottomLeft from '../CncLaserShared/VisualizerBottomLeft';
@@ -746,6 +747,13 @@ class Visualizer extends React.Component<VisualizerProps> {
                                 onClose={() => { this.props.setPageMode(PageMode.Default); }}
                             />
                         </div>
+                    )
+                }
+                {/* Simplify Model */
+                    this.props.pageMode === PageMode.MaterialTest && (
+                        <MaterialTestModal
+                            onClose={() => { this.props.setPageMode(PageMode.Default); }}
+                        />
                     )
                 }
                 {/* A-B Position Model */
