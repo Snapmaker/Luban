@@ -812,7 +812,8 @@ export const actions = {
         } else {
             const extname = path.extname(uploadName);
             const isScale = !includes(scaleExtname, extname);
-            const newModelSize = sourceType !== SOURCE_TYPE.IMAGE3D && sourceType !== SOURCE_TYPE.SVG
+
+            const newModelSize = sourceType !== SOURCE_TYPE.IMAGE3D
                 ? limitModelSizeByMachineSize(coordinateSize, sourceWidth, sourceHeight, isLimit, isScale)
                 : sizeModel(size, materials, sourceWidth, sourceHeight);
 
