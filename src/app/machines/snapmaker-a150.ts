@@ -8,6 +8,8 @@ import {
     standardLaserToolHead,
     standardCNCToolHead,
     highPower200WCNCToolHead,
+    L20WLaserToolModule,
+    L2WLaserToolModule,
 } from './snapmaker-2-toolheads';
 import { JobOffsetMode } from '../constants/coordinate';
 
@@ -70,6 +72,36 @@ export const machine: Machine = {
                         label: 'Laser Spot',
                         value: JobOffsetMode.LaserSpot,
                     },
+                ]
+            },
+            {
+                identifier: L20WLaserToolModule.identifier,
+                configPath: 'laser/a250_20w',
+                workRange: {
+                    min: [0, 0, 0],
+                    max: [160, 155, 0], // Correct this later
+                },
+                disableRemoteStartPrint: true,
+                runBoundaryModeOptions: [
+                    // {
+                    //     label: 'Laser Spot',
+                    //     value: JobOffsetMode.LaserSpot,
+                    // },
+                ]
+            },
+            {
+                identifier: L2WLaserToolModule.identifier,
+                configPath: 'laser/a250_2w', // 'laser/a350_2w',
+                workRange: {
+                    min: [0, 0, 0],
+                    max: [155, 150, 0], // Correct this later
+                },
+                disableRemoteStartPrint: false,
+                runBoundaryModeOptions: [
+                    {
+                        label: 'Crosshair',
+                        value: JobOffsetMode.Crosshair,
+                    }
                 ]
             },
             {
