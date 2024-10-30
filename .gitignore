@@ -18,4 +18,3 @@ npm-debug.log*
 .vscode/
 *.swp
 .DS_store
-.history
