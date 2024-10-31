@@ -209,8 +209,8 @@ export default function MaterialTest({ onClose }): React.ReactElement<MaterialTe
         }
         setSaveToolPathFlag(false);
         onSelectElements(textRectArray);
-        setWorkSpeed(defaultPath.gcodeConfig.workSpeed);
-        setFixedPower(defaultPath.gcodeConfig.fixedPower);
+        setWorkSpeed(Math.round(leftMinNum + lex / 2));
+        setFixedPower(Math.round(rightMinNum + rex / 2));
         setSaveToolPathFlag(true);
         await dispatch(actions.preview('laser'));
         onClearSelection();
