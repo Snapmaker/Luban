@@ -106,20 +106,20 @@ jobs:
                       ./output/*.dmg
                       ./output/latest-mac.yml
 
-            - name: Init OSS
-              if: github.repository == 'Snapmaker/Luban'
-              uses: yizhoumo/setup-ossutil@v1
-              with:
-                  ossutil-version: '1.7.0'
-                  endpoint: ${{ secrets.OSS_ENDPOINT }}
-                  access-key-id: ${{ secrets.OSS_ACCESS_KEY_ID }}
-                  access-key-secret: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+            # - name: Init OSS
+            #   if: github.repository == 'Snapmaker/Luban'
+            #   uses: yizhoumo/setup-ossutil@v1
+            #   with:
+            #       ossutil-version: '1.7.0'
+            #       endpoint: ${{ secrets.OSS_ENDPOINT }}
+            #       access-key-id: ${{ secrets.OSS_ACCESS_KEY_ID }}
+            #       access-key-secret: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
 
-            - name: Upload Release macOS Installer OSS
-              if: github.repository == 'Snapmaker/Luban'
-              run: |
-                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.dmg" -r
-                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.zip" -r
+            # - name: Upload Release macOS Installer OSS
+            #   if: github.repository == 'Snapmaker/Luban'
+            #   run: |
+            #       ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.dmg" -r
+            #       ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.zip" -r
 
     build-linux:
         name: Build Linux Packages
@@ -171,18 +171,18 @@ jobs:
                       ./output/*.rpm
                       ./output/*.tar.gz
 
-            - name: Init OSS
-              if: github.repository == 'Snapmaker/Luban'
-              uses: yizhoumo/setup-ossutil@v1
-              with:
-                  ossutil-version: '1.7.0'
-                  endpoint: ${{ secrets.OSS_ENDPOINT }}
-                  access-key-id: ${{ secrets.OSS_ACCESS_KEY_ID }}
-                  access-key-secret: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+            # - name: Init OSS
+            #   if: github.repository == 'Snapmaker/Luban'
+            #   uses: yizhoumo/setup-ossutil@v1
+            #   with:
+            #       ossutil-version: '1.7.0'
+            #       endpoint: ${{ secrets.OSS_ENDPOINT }}
+            #       access-key-id: ${{ secrets.OSS_ACCESS_KEY_ID }}
+            #       access-key-secret: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
 
-            - name: Upload Release linux Installer To OSS
-              if: github.repository == 'Snapmaker/Luban'
-              run: |
-                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.deb" -r
-                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.rpm" -r
-                  ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.tar.gz" -r
+            # - name: Upload Release linux Installer To OSS
+            #   if: github.repository == 'Snapmaker/Luban'
+            #   run: |
+            #       ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.deb" -r
+            #       ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.rpm" -r
+            #       ossutil cp -f ./output/ ${{secrets.OSS_UPDATE_PATH}}/ --include "*.tar.gz" -r
