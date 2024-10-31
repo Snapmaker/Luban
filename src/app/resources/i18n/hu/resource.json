@@ -2409,5 +2409,16 @@
     "key_menu_Services": "",
     "key_menu_Unhide": "",
     "key_ui/widgets/CNCPath/CNCPath_Transformation": "",
-    "manualModeDesc": ""
+    "manualModeDesc": "",
+    "key_ui-views-MaterialTestModal-FormComponent-title": "Anyagvizsgálat",
+    "key_ui-views-MaterialTestModal-FormComponent-rows": "Sorok",
+    "key_ui-views-MaterialTestModal-FormComponent-rowCount": "Sorok száma",
+    "key_ui-views-MaterialTestModal-FormComponent-columns": "Oszlopok",
+    "key_ui-views-MaterialTestModal-FormComponent-columnCount": "Oszlopok száma",
+    "key_ui-views-MaterialTestModal-FormComponent-speed": "Sebesség",
+    "key_ui-views-MaterialTestModal-FormComponent-power": "Teljesítmény",
+    "key_ui-views-MaterialTestModal-FormComponent-min": "Min.",
+    "key_ui-views-MaterialTestModal-FormComponent-max": "Max.",
+    "key_ui-views-MaterialTestModal-FormComponent-height": "Magasság",
+    "key_ui-views-MaterialTestModal-FormComponent-width": "Szélesség"
 }

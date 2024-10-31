@@ -2409,5 +2409,16 @@
     "key_menu_Services": "Services",
     "key_menu_Unhide": "Démasquer",
     "key_ui/widgets/CNCPath/CNCPath_Transformation": "Transformation",
-    "manualModeDesc": ""
+    "manualModeDesc": "",
+    "key_ui-views-MaterialTestModal-FormComponent-title": "Test de Matériau",
+    "key_ui-views-MaterialTestModal-FormComponent-rows": "Lignes",
+    "key_ui-views-MaterialTestModal-FormComponent-rowCount": "Nombre de Lignes",
+    "key_ui-views-MaterialTestModal-FormComponent-columns": "Colonnes",
+    "key_ui-views-MaterialTestModal-FormComponent-columnCount": "Nombre de Colonnes",
+    "key_ui-views-MaterialTestModal-FormComponent-speed": "Vitesse",
+    "key_ui-views-MaterialTestModal-FormComponent-power": "Puissance",
+    "key_ui-views-MaterialTestModal-FormComponent-min": "Min.",
+    "key_ui-views-MaterialTestModal-FormComponent-max": "Max.",
+    "key_ui-views-MaterialTestModal-FormComponent-height": "Hauteur",
+    "key_ui-views-MaterialTestModal-FormComponent-width": "Largeur"
 }

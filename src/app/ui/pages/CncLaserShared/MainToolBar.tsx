@@ -421,7 +421,7 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
         }
 
         leftItems.push({
-            title: 'MaterialTest',
+            title: i18n._('key_ui-views-MaterialTestModal-FormComponent-title'),
             type: 'button',
             disabled: isOnABPosition,
             name: 'MaterialTest',

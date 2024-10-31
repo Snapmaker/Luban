@@ -1,23 +1,23 @@
 import React from 'react';
 import { Row, Col, Form, InputNumber, Divider } from 'antd';
 import styles from './styles.styl';
-// import i18n from '../../../lib/i18n';
+import i18n from '../../../lib/i18n';
 import SvgIcon from '../../components/SvgIcon';
 
 const FormComponent: React.FC = () => {
-    const leftFormItems = [
-        { label: '行数', component: <InputNumber className={styles.input} min={1} max={11} defaultValue={10} name="leftRow" /> },
+    const speedFormItems = [
+        { label: i18n._('key_ui-views-MaterialTestModal-FormComponent-rows'), component: <InputNumber className={styles.input} min={1} max={11} defaultValue={10} name="speedRow" /> },
         {
-            label: '最小值',
+            label: i18n._('key_ui-views-MaterialTestModal-FormComponent-min'),
             component: (
                 <>
-                    <InputNumber controls={false} className={styles.input} min={0} name="leftMin" defaultValue={600} />
+                    <InputNumber controls={false} className={styles.input} min={0} name="speedMin" defaultValue={600} />
                     <span className={styles.suffix}>mm/min</span>
                 </>
             )
         },
         {
-            label: '最大值',
+            label: i18n._('key_ui-views-MaterialTestModal-FormComponent-max'),
             component: (
                 <>
                     <InputNumber controls={false} className={styles.input} min={200} name="reftMax" defaultValue={18000} />
@@ -26,40 +26,40 @@ const FormComponent: React.FC = () => {
             )
         },
         {
-            label: '矩形高度',
+            label: i18n._('key_ui-views-MaterialTestModal-FormComponent-height'),
             component: (
                 <>
-                    <InputNumber controls={false} className={styles.input} min={1} max={30} defaultValue={5} name="leftRectHeight" />
+                    <InputNumber controls={false} className={styles.input} min={1} max={30} defaultValue={5} name="speedRectHeight" />
                     <span className={styles.suffix}>mm</span>
                 </>
             )
         },
     ];
-    const rightFormItems = [
-        { label: '列数', component: <InputNumber className={styles.input} min={1} max={11} defaultValue={10} name="rightCol" /> },
+    const powerFormItems = [
+        { label: i18n._('key_ui-views-MaterialTestModal-FormComponent-columnCount'), component: <InputNumber className={styles.input} min={1} max={11} defaultValue={10} name="powerCol" /> },
         {
-            label: '最小值',
+            label: i18n._('key_ui-views-MaterialTestModal-FormComponent-min'),
             component: (
                 <>
-                    <InputNumber controls={false} className={styles.input} max={100} min={0} defaultValue={10} name="rightMin" />
+                    <InputNumber controls={false} className={styles.input} max={100} min={0} defaultValue={10} name="powerMin" />
                     <span className={styles.suffix}>%</span>
                 </>
             )
         },
         {
-            label: '最大值',
+            label: i18n._('key_ui-views-MaterialTestModal-FormComponent-max'),
             component: (
                 <>
-                    <InputNumber controls={false} className={styles.input} max={100} min={1} defaultValue={100} name="rightMax" />
+                    <InputNumber controls={false} className={styles.input} max={100} min={1} defaultValue={100} name="powerMax" />
                     <span className={styles.suffix}>%</span>
                 </>
             )
         },
         {
-            label: '矩形高度',
+            label: i18n._('key_ui-views-MaterialTestModal-FormComponent-width'),
             component: (
                 <>
-                    <InputNumber controls={false} className={styles.input} max={30} min={1} defaultValue={5} name="rightRectHeight" />
+                    <InputNumber controls={false} className={styles.input} max={30} min={1} defaultValue={5} name="powerRectWhith" />
                     <span className={styles.suffix}>mm</span>
                 </>
             )
@@ -67,7 +67,7 @@ const FormComponent: React.FC = () => {
     ];
     return (
         <>
-            <Form id="formIDataBox" labelAlign="left" labelCol={{ span: 12 }} wrapperCol={{ span: 12 }}>
+            <Form id="formIDataBox" labelAlign="speed" labelCol={{ span: 12 }} wrapperCol={{ span: 12 }}>
                 <Row gutter={24}>
                     <Col span={12}>
                         <div className={styles['title-box']}>
@@ -77,12 +77,12 @@ const FormComponent: React.FC = () => {
                                     type={['static']}
                                     size={24}
                                 />
-                                行
+                                {i18n._('key_ui-views-MaterialTestModal-FormComponent-rows')}
                             </div>
-                            <div className={styles['title-box-name']}>速度</div>
+                            <div className={styles['title-box-name']}>{i18n._('key_ui-views-MaterialTestModal-FormComponent-speed')}</div>
                         </div>
                         <Divider className={styles.divider} />
-                        {leftFormItems.map((item) => (
+                        {speedFormItems.map((item) => (
                             <Form.Item key={item.label} label={<span className={styles['input-label']}>{item.label}</span>} colon={false} className={styles['form-item']}>
                                 {item.component}
                             </Form.Item>
@@ -96,12 +96,12 @@ const FormComponent: React.FC = () => {
                                     type={['static']}
                                     size={24}
                                 />
-                                列
+                                {i18n._('key_ui-views-MaterialTestModal-FormComponent-columns')}
                             </div>
-                            <div className={styles['title-box-name']}>功率</div>
+                            <div className={styles['title-box-name']}>{i18n._('key_ui-views-MaterialTestModal-FormComponent-power')}</div>
                         </div>
                         <Divider className={styles.divider} />
-                        {rightFormItems.map((item) => (
+                        {powerFormItems.map((item) => (
                             <Form.Item key={item.label} label={<span className={styles['input-label']}>{item.label}</span>} colon={false} className={styles['form-item']}>
                                 {item.component}
                             </Form.Item>
