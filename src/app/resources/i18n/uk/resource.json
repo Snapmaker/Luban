@@ -2409,5 +2409,16 @@
     "key_menu_Services": "Служби",
     "key_menu_Unhide": "Показати",
     "key_ui/widgets/CNCPath/CNCPath_Transformation": "Трансформація",
-    "manualModeDesc": ""
+    "manualModeDesc": "",
+    "key_ui-views-MaterialTestModal-FormComponent-title": "Матеріальний тест",
+    "key_ui-views-MaterialTestModal-FormComponent-rows": "Ряди",
+    "key_ui-views-MaterialTestModal-FormComponent-rowCount": "Кількість рядів",
+    "key_ui-views-MaterialTestModal-FormComponent-columns": "Стовпці",
+    "key_ui-views-MaterialTestModal-FormComponent-columnCount": "Кількість стовпців",
+    "key_ui-views-MaterialTestModal-FormComponent-speed": "Швидкість",
+    "key_ui-views-MaterialTestModal-FormComponent-power": "Потужність",
+    "key_ui-views-MaterialTestModal-FormComponent-min": "Мін.",
+    "key_ui-views-MaterialTestModal-FormComponent-max": "Макс.",
+    "key_ui-views-MaterialTestModal-FormComponent-height": "Висота",
+    "key_ui-views-MaterialTestModal-FormComponent-width": "Ширина"
 }

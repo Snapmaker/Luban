@@ -121,7 +121,9 @@ class GcodeParameters extends PureComponent {
                 laserDefinitionSpeed[key] = { ...allDefinition[key] };
             }
         });
-        laserDefinitionSpeed.workSpeed.hidden = Boolean(this.props.noNeedName);
+        if (typeof laserDefinitionSpeed.workSpeed === 'object' && laserDefinitionSpeed.workSpeed !== null) {
+            laserDefinitionSpeed.workSpeed.hidden = Boolean(this.props.noNeedName);
+        }
         // section Pass
         const laserDefinitionRepetitionKeys = [];
         const laserDefinitionRepetition = {};
@@ -170,7 +172,9 @@ class GcodeParameters extends PureComponent {
                 laserDefinitionPower[key] = { ...allDefinition[key] };
             }
         });
-        laserDefinitionPower.fixedPower.hidden = Boolean(this.props.noNeedName);
+        if (typeof laserDefinitionSpeed.fixedPower === 'object' && laserDefinitionSpeed.fixedPower !== null) {
+            laserDefinitionSpeed.fixedPower.hidden = Boolean(this.props.noNeedName);
+        }
         // section Assist Gas
         const laserDefinitionAuxiliaryGasKeys = ['auxiliaryAirPump'];
         const laserDefinitionAuxiliary = {};

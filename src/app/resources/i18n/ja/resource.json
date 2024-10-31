@@ -2409,5 +2409,16 @@
     "key_menu_Services": "サービス",
     "key_menu_Unhide": "表示",
     "key_ui/widgets/CNCPath/CNCPath_Transformation": "変換",
-    "manualModeDesc": ""
+    "manualModeDesc": "",
+    "key_ui-views-MaterialTestModal-FormComponent-title": "材料テスト",
+    "key_ui-views-MaterialTestModal-FormComponent-rows": "行",
+    "key_ui-views-MaterialTestModal-FormComponent-rowCount": "行数",
+    "key_ui-views-MaterialTestModal-FormComponent-columns": "列",
+    "key_ui-views-MaterialTestModal-FormComponent-columnCount": "列数",
+    "key_ui-views-MaterialTestModal-FormComponent-speed": "速度",
+    "key_ui-views-MaterialTestModal-FormComponent-power": "電力",
+    "key_ui-views-MaterialTestModal-FormComponent-min": "最小",
+    "key_ui-views-MaterialTestModal-FormComponent-max": "最大",
+    "key_ui-views-MaterialTestModal-FormComponent-height": "高さ",
+    "key_ui-views-MaterialTestModal-FormComponent-width": "幅"
 }

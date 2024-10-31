@@ -2409,5 +2409,16 @@
     "key_menu_Services": "Services",
     "key_menu_Unhide": "Unhide",
     "key_ui/widgets/CNCPath/CNCPath_Transformation": "Transformation",
-    "manualModeDesc": ""
+    "manualModeDesc": "",
+    "key_ui-views-MaterialTestModal-FormComponent-title": "Материальный тест",
+    "key_ui-views-MaterialTestModal-FormComponent-rows": "Ряды",
+    "key_ui-views-MaterialTestModal-FormComponent-rowCount": "Количество рядов",
+    "key_ui-views-MaterialTestModal-FormComponent-columns": "Столбцы",
+    "key_ui-views-MaterialTestModal-FormComponent-columnCount": "Количество столбцов",
+    "key_ui-views-MaterialTestModal-FormComponent-speed": "Скорость",
+    "key_ui-views-MaterialTestModal-FormComponent-power": "Мощность",
+    "key_ui-views-MaterialTestModal-FormComponent-min": "Мин.",
+    "key_ui-views-MaterialTestModal-FormComponent-max": "Макс.",
+    "key_ui-views-MaterialTestModal-FormComponent-height": "Высота",
+    "key_ui-views-MaterialTestModal-FormComponent-width": "Ширина"
 }

@@ -2409,5 +2409,16 @@
     "key_menu_Services": "Dienstleistungen",
     "key_menu_Unhide": "Einblenden",
     "key_ui/widgets/CNCPath/CNCPath_Transformation": "Umwandlung",
-    "manualModeDesc": ""
+    "manualModeDesc": "",
+    "key_ui-views-MaterialTestModal-FormComponent-title": "Materialtest",
+    "key_ui-views-MaterialTestModal-FormComponent-rows": "Reihen",
+    "key_ui-views-MaterialTestModal-FormComponent-rowCount": "Reihenzahl",
+    "key_ui-views-MaterialTestModal-FormComponent-columns": "Spalten",
+    "key_ui-views-MaterialTestModal-FormComponent-columnCount": "Spaltenzahl",
+    "key_ui-views-MaterialTestModal-FormComponent-speed": "Geschwindigkeit",
+    "key_ui-views-MaterialTestModal-FormComponent-power": "Leistung",
+    "key_ui-views-MaterialTestModal-FormComponent-min": "Min.",
+    "key_ui-views-MaterialTestModal-FormComponent-max": "Max.",
+    "key_ui-views-MaterialTestModal-FormComponent-height": "Höhe",
+    "key_ui-views-MaterialTestModal-FormComponent-width": "Breite"
 }

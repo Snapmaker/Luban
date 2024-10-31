@@ -178,7 +178,7 @@ function ToolParameters(props) {
                     <div>
                         {(Object.keys(settings).map(key => {
                             const setting = settings[key];
-                            if (setting.hidden) {
+                            if (setting?.hidden) {
                                 return null;
                             }
                             return (
