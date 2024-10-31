@@ -87,7 +87,7 @@ export default function MaterialTest({ onClose }): React.ReactElement<MaterialTe
     };
 
     const svgNamespace = 'http://www.w3.org/2000/svg';
-
+    // todo: auto generate x and y
     const powXCenter = 200;
     const powYCenter = 440;
 
@@ -128,14 +128,14 @@ export default function MaterialTest({ onClose }): React.ReactElement<MaterialTe
         return dataObject;
     };
     type TypeDta = {
-        speedRow: number,
+        rectRows: number,
         speedMin: number,
         reftMax: number,
-        powerCol: number,
+        rectCols: number,
         powerMax: number,
         powerMin: number,
-        speedRectHeight: number,
-        powerRectWhith: number,
+        rectheight: number,
+        rectWidth: number,
     };
     const textRectArray = [];
     const onCreatText = async (text, x, y, w, h, needRote) => {
@@ -173,30 +173,30 @@ export default function MaterialTest({ onClose }): React.ReactElement<MaterialTe
         }
         const data: TypeDta = getFormData();
         const gap = 5;
-        const { speedRow, speedMin, reftMax, powerCol, powerMax, powerMin, speedRectHeight, powerRectWhith } = data;
+        const { rectRows, speedMin, reftMax, rectCols, powerMax, powerMin, rectheight, rectWidth } = data;
         // speedX = speedMin + i * lex
         const speedMinNum = Number(speedMin);
         const speedMaxNum = Number(reftMax);
-        const lex = (speedMaxNum - speedMinNum) / ((speedRow - 1) || 1);
+        const lex = (speedMaxNum - speedMinNum) / ((rectRows - 1) || 1);
 
         const powerMinNum = Number(powerMin);
         const powerMaxNum = Number(powerMax);
-        const rex = (powerMaxNum - powerMinNum) / ((powerCol - 1) || 1);
+        const rex = (powerMaxNum - powerMinNum) / ((rectCols - 1) || 1);
 
         let x = 0;
         let y = 0;
-        const w = Number(powerRectWhith);
-        const h = Number(speedRectHeight);
+        const w = Number(rectWidth);
+        const h = Number(rectheight);
 
-        await onCreatText('Passes', powerCol / 2 * (gap + w), -speedRow * (gap + h) - 20, 20, h, false);
-        await onCreatText('Power(%)', powerCol / 2 * (gap + w) + h, 2 * h, 25, h, false);
-        await onCreatText('Speed(mm/m)', -w - h / 2, -speedRow / 2 * (gap + h), 30, h, true);
+        await onCreatText('Passes', rectCols / 2 * (gap + w), -rectRows * (gap + h) - 20, 20, h, false);
+        await onCreatText('Power(%)', rectCols / 2 * (gap + w) + h, 2 * h, 25, h, false);
+        await onCreatText('Speed(mm/m)', -w - h / 2, -rectRows / 2 * (gap + h), 30, h, true);
         // row * col create rect
-        for (let i = 0; i < powerCol; i++) {
+        for (let i = 0; i < rectCols; i++) {
             x += gap + w;
             await onCreatText(`${Math.round(powerMinNum + i * rex)}`, x + w / 2, h / 2, h, w, true);
             y = 0;
-            for (let j = 0; j < speedRow; j++) {
+            for (let j = 0; j < rectRows; j++) {
                 setSaveToolPathFlag(false);
                 y -= gap + h;
                 const rect = document.createElementNS(svgNamespace, 'rect');

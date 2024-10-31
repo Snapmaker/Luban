@@ -6,7 +6,7 @@ import SvgIcon from '../../components/SvgIcon';
 
 const FormComponent: React.FC = () => {
     const speedFormItems = [
-        { label: i18n._('key_ui-views-MaterialTestModal-FormComponent-rows'), component: <InputNumber className={styles.input} min={1} max={11} defaultValue={10} name="speedRow" /> },
+        { label: i18n._('key_ui-views-MaterialTestModal-FormComponent-rows'), component: <InputNumber className={styles.input} min={1} max={11} defaultValue={10} name="rectRows" /> },
         {
             label: i18n._('key_ui-views-MaterialTestModal-FormComponent-min'),
             component: (
@@ -29,14 +29,14 @@ const FormComponent: React.FC = () => {
             label: i18n._('key_ui-views-MaterialTestModal-FormComponent-height'),
             component: (
                 <>
-                    <InputNumber controls={false} className={styles.input} min={1} max={30} defaultValue={5} name="speedRectHeight" />
+                    <InputNumber controls={false} className={styles.input} min={1} max={30} defaultValue={5} name="rectheight" />
                     <span className={styles.suffix}>mm</span>
                 </>
             )
         },
     ];
     const powerFormItems = [
-        { label: i18n._('key_ui-views-MaterialTestModal-FormComponent-columnCount'), component: <InputNumber className={styles.input} min={1} max={11} defaultValue={10} name="powerCol" /> },
+        { label: i18n._('key_ui-views-MaterialTestModal-FormComponent-columnCount'), component: <InputNumber className={styles.input} min={1} max={11} defaultValue={10} name="rectCols" /> },
         {
             label: i18n._('key_ui-views-MaterialTestModal-FormComponent-min'),
             component: (
@@ -59,7 +59,7 @@ const FormComponent: React.FC = () => {
             label: i18n._('key_ui-views-MaterialTestModal-FormComponent-width'),
             component: (
                 <>
-                    <InputNumber controls={false} className={styles.input} max={30} min={1} defaultValue={5} name="powerRectWhith" />
+                    <InputNumber controls={false} className={styles.input} max={30} min={1} defaultValue={5} name="rectWidth" />
                     <span className={styles.suffix}>mm</span>
                 </>
             )
