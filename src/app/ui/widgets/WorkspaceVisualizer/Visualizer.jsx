@@ -360,6 +360,9 @@ class Visualizer extends React.PureComponent {
             }
 
             if (workflowStatus === WorkflowStatus.Paused) {
+                if (this.actions.isLaser()) {
+                    this.pauseStatus.pos.z = 0;
+                }
                 server.resumeServerGcode({
                     headType: this.props.headType,
                     pause3dpStatus: this.props.pause3dpStatus,
