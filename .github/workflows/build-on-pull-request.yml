@@ -35,7 +35,7 @@ jobs:
                     $PACKAGE_VERSION= node -e "console.log(require('./src/package.json').version)"
                     $RELEASE="$PACKAGE_NAME-$PACKAGE_VERSION"
                     echo "SM_RELEASE=$RELEASE" >> $env:GITHUB_ENV
-                    
+
             -   name: install
                 run: |
                     npm install -g npm@^9
@@ -55,16 +55,16 @@ jobs:
             -   name: Upload artifacts Windows x64
                 uses: actions/upload-artifact@v4
                 with:
-                    name: Snapmaker-Luban-4.13.1-beta.1-win-x64.exe
-                    path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}.exe
+                    name: ${{ env.SM_RELEASE }}-win-x64.exe
+                    path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-win-x64.exe
 
             -   name: Deploy Windows release
                 uses: WebFreak001/deploy-nightly@v3.1.0
                 with:
                     upload_url: https://uploads.github.com/repos/leo-songye-li/Luban/releases/183507405/assets{?name,label}
                     release_id: 183507405
-                    asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}.exe
-                    asset_name: ${{ env.SM_RELEASE }}.exe
+                    asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-win-x64.exe
+                    asset_name: ${{ env.SM_RELEASE }}-win-x64.exe
                     asset_content_type: application/octet-stream
                     max_releases: 1 # optional, if there are more releases than this matching the asset_name, the oldest ones are going to be deleted
 
@@ -126,52 +126,92 @@ jobs:
 #    #                        ./output/latest-mac.yml
 #
 #
-#    build-linux:
-#        name: Build Linux Packages
-#
-#        # Ubuntu 20.04: ubuntu-latest or ubuntu-20.04
-#        runs-on: ubuntu-latest
-#
-#        steps:
-#            -   name: Checkout Code
-#                uses: actions/checkout@v4
-#                with:
-#                    token: ${{ secrets.SACP_TOKEN }}
-#                    submodules: 'true'
-#
-#            -   name: Checkout submodules
-#                run: git submodule update --init --recursive
-#
-#            -   name: Use Node.js 16
-#                uses: actions/setup-node@v3
-#                with:
-#                    node-version: 16
-#
-#            -   run: npm install -g npm@^9
-#            -   run: npm install
-#
-#            -   run: npm run build
-#
-#            # ----------------------------------------------------------------
-#            # Build Linux x64
-#            # ----------------------------------------------------------------
-#            -   name: Build Linux x64 Binaries
-#                run: npm run build:linux-x64
-#
-#            -   run: |
-#                    PRODUCT_NAME="Snapmaker Luban"
-#                    PACKAGE_NAME="snapmaker-luban"
-#                    PACKAGE_VERSION=`node -e "console.log(require('./src/package.json').version)"`
-#                    RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}
-#
-#                    ln -sf ./output/linux-unpacked "${RELEASE}-linux-x64"
-#                    tar zcfh "./output/${RELEASE}-linux-x64.tar.gz" "${RELEASE}-linux-x64"
-#                    rm -f "${RELEASE}-linux-x64"
-#
-#            -   name: Release on Github
-#                uses: softprops/action-gh-release@v1
-#                with:
-#                    files: |
-#                        ./output/*.deb
-#                        ./output/*.rpm
-#                        ./output/*.tar.gz
+    build-linux:
+        name: Build Linux Packages
+
+        # Ubuntu 20.04: ubuntu-latest or ubuntu-20.04
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout Code
+                uses: actions/checkout@v4
+                with:
+                    token: ${{ secrets.SACP_TOKEN }}
+                    submodules: 'true'
+
+            -   name: Checkout submodules
+                run: git submodule update --init --recursive
+
+            -   name: Use Node.js 16
+                uses: actions/setup-node@v3
+                with:
+                    node-version: 16
+
+            -   run: npm install -g npm@^9
+            -   run: npm install
+
+            -   run: npm run build
+
+            # ----------------------------------------------------------------
+            # Build Linux x64
+            # ----------------------------------------------------------------
+            -   name: Build Linux x64 Binaries
+                run: npm run build:linux-x64
+
+            -   run: |
+                    PRODUCT_NAME="Snapmaker Luban"
+                    PACKAGE_NAME="Snapmaker-luban"
+                    PACKAGE_VERSION=`node -e "console.log(require('./src/package.json').version)"`
+                    RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}
+
+                    ln -sf ./output/linux-unpacked "${RELEASE}-linux-x64"
+                    tar zcfh "./output/${RELEASE}-linux-x64.tar.gz" "${RELEASE}-linux-x64"
+                    rm -f "${RELEASE}-linux-x64"
+
+            -   name: Upload artifacts linux-amd64
+                uses: actions/upload-artifact@v4
+                with:
+                    name: ${{ env.SM_RELEASE }}-linux-amd64.deb
+                    path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-linux-amd64.deb
+
+            -   name: Deploy Linux-deb release
+                uses: WebFreak001/deploy-nightly@v3.1.0
+                with:
+                    upload_url: https://uploads.github.com/repos/leo-songye-li/Luban/releases/183507405/assets{?name,label}
+                    release_id: 183507405
+                    asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-linux-amd64.deb
+                    asset_name: ${{ env.SM_RELEASE }}-linux-amd64.deb
+                    asset_content_type: application/octet-stream
+                    max_releases: 1 # optional, if there are more releases than this matching the asset_name, the oldest ones are going to be deleted
+
+
+            -   name: Upload artifacts linux-amd64
+                uses: actions/upload-artifact@v4
+                with:
+                    name: ${{ env.SM_RELEASE }}-linux.x86_64.rpm
+                    path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-linux.x86_64.rpm
+
+            -   name: Deploy Linux-rpm release
+                uses: WebFreak001/deploy-nightly@v3.1.0
+                with:
+                    upload_url: https://uploads.github.com/repos/leo-songye-li/Luban/releases/183507405/assets{?name,label}
+                    release_id: 183507405
+                    asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-linux.x86_64.rpm
+                    asset_name: ${{ env.SM_RELEASE }}-linux.x86_64.rpm
+                    asset_content_type: application/octet-stream
+                    max_releases: 1
+
+            -   name: Upload artifacts linux-x64
+                uses: actions/upload-artifact@v4
+                with:
+                    name: ${{ env.SM_RELEASE }}-linux-x64.tar.gz
+                    path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-linux-x64.tar.gz
+
+            -   name: Deploy Linux-tar release
+                uses: WebFreak001/deploy-nightly@v3.1.0
+                with:
+                    upload_url: https://uploads.github.com/repos/leo-songye-li/Luban/releases/183507405/assets{?name,label}
+                    release_id: 183507405
+                    asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-linux-x64.tar.gz
+                    asset_name: ${{ env.SM_RELEASE }}-linux-x64.tar.gz
+                    asset_content_type: application/octet-stream
+                    max_releases: 1
