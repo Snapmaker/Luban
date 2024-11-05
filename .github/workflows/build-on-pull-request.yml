@@ -30,10 +30,10 @@ jobs:
 
             -   name: Init Props
                 run: |
-                    PRODUCT_NAME="Snapmaker Luban"
-                    PACKAGE_NAME="Snapmaker-luban"
-                    PACKAGE_VERSION=`node -e "console.log(require('./src/package.json').version)"`
-                    RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}
+                    $PRODUCT_NAME="Snapmaker Luban"
+                    $PACKAGE_NAME="Snapmaker-luban"
+                    $PACKAGE_VERSION= node -e "console.log(require('./src/package.json').version)"
+                    $RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}
                     echo "SM_RELEASE=$RELEASE" >> $GITHUB_ENV
                     npm install -g npm@^9
                     npm install
