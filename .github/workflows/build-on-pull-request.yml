@@ -36,12 +36,12 @@ jobs:
                     $RELEASE="$PACKAGE_NAME-$PACKAGE_VERSION"
                     echo "SM_RELEASE=$RELEASE" >> $env:GITHUB_ENV
                     
-            -   name: install
-                run: |
-                    npm install -g npm@^9
-                    npm install
-            -   name: build
-                run: npm run build
+            # -   name: install
+            #     run: |
+            #         npm install -g npm@^9
+            #         npm install
+            # -   name: build
+            #     run: npm run build
 
             # ----------------------------------------------------------------
             # Build Windows x64
@@ -54,17 +54,17 @@ jobs:
                 uses: actions/upload-artifact@v4
                 with:
                     name: Snapmaker-Luban-4.13.1-beta.1-win-x64.exe
-                    path: ./output/$SM_RELEASE.exe
+                    path: ./output/${{ SM_RELEASE }}.exe
 
-            -   name: Deploy Windows release
-                uses: WebFreak001/deploy-nightly@v3.1.0
-                with:
-                    upload_url: https://uploads.github.com/repos/leo-songye-li/Luban/releases/183507405/assets{?name,label}
-                    release_id: 183507405
-                    asset_path: ./output/$SM_RELEASE.exe
-                    asset_name: $SM_RELEASE.exe
-                    asset_content_type: application/octet-stream
-                    max_releases: 1 # optional, if there are more releases than this matching the asset_name, the oldest ones are going to be deleted
+            # -   name: Deploy Windows release
+            #     uses: WebFreak001/deploy-nightly@v3.1.0
+            #     with:
+            #         upload_url: https://uploads.github.com/repos/leo-songye-li/Luban/releases/183507405/assets{?name,label}
+            #         release_id: 183507405
+            #         asset_path: ./output/$SM_RELEASE.exe
+            #         asset_name: $SM_RELEASE.exe
+            #         asset_content_type: application/octet-stream
+            #         max_releases: 1 # optional, if there are more releases than this matching the asset_name, the oldest ones are going to be deleted
 
     #            -   name: Release on Github
     #                uses: softprops/action-gh-release@v1
