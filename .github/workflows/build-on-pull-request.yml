@@ -36,11 +36,11 @@ jobs:
                     $RELEASE="$PACKAGE_NAME-$PACKAGE_VERSION"
                     echo "SM_RELEASE=$RELEASE" >> $env:GITHUB_ENV
                     
-            -   name: install
-                run: npm install -g npm@^9
+            # -   name: install
+            #     run: npm install -g npm@^9
                 
-            -   name: build
-                run: npm run build
+            # -   name: build
+            #     run: npm run build
 
             # ----------------------------------------------------------------
             # Build Windows x64
