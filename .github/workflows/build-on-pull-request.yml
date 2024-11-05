@@ -35,9 +35,12 @@ jobs:
                     $PACKAGE_VERSION= node -e "console.log(require('./src/package.json').version)"
                     $RELEASE="$PACKAGE_NAME-$PACKAGE_VERSION"
                     echo "SM_RELEASE=$RELEASE" >> $GITHUB_ENV
-                    npm install -g npm@^9
-                    npm install
-                    npm run build
+                    
+            -   name: install
+                run: npm install -g npm@^9
+                
+            -   name: build
+                run: npm run build
 
             # ----------------------------------------------------------------
             # Build Windows x64
