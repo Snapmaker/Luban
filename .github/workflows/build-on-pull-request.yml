@@ -1,4 +1,4 @@
-name: Build on Release created
+name: Build on PR
 
 on:
     workflow_dispatch:
