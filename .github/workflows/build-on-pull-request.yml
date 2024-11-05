@@ -34,7 +34,7 @@ jobs:
                     $PACKAGE_NAME="Snapmaker-luban"
                     $PACKAGE_VERSION= node -e "console.log(require('./src/package.json').version)"
                     $RELEASE="$PACKAGE_NAME-$PACKAGE_VERSION"
-                    echo "SM_RELEASE=$RELEASE" >> $GITHUB_ENV
+                    echo "SM_RELEASE=$RELEASE" >> $env:GITHUB_ENV
                     
             -   name: install
                 run: npm install -g npm@^9
@@ -48,7 +48,6 @@ jobs:
             -   name: Build Windows x64 Binaries
                 run: |
                     npm run build:win-x64
-                    echo $SM_RELEASE
 
             -   name: Upload artifacts Windows x64
                 uses: actions/upload-artifact@v4
