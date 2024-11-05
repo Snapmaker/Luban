@@ -162,6 +162,7 @@ jobs:
                     PACKAGE_NAME="Snapmaker-luban"
                     PACKAGE_VERSION=`node -e "console.log(require('./src/package.json').version)"`
                     RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}
+                    echo "SM_RELEASE=$RELEASE" >> $env:GITHUB_ENV
 
                     ln -sf ./output/linux-unpacked "${RELEASE}-linux-x64"
                     tar zcfh "./output/${RELEASE}-linux-x64.tar.gz" "${RELEASE}-linux-x64"
@@ -182,7 +183,6 @@ jobs:
                     asset_name: ${{ env.SM_RELEASE }}-linux-amd64.deb
                     asset_content_type: application/octet-stream
                     max_releases: 1 # optional, if there are more releases than this matching the asset_name, the oldest ones are going to be deleted
-
 
             -   name: Upload artifacts linux-amd64
                 uses: actions/upload-artifact@v4
