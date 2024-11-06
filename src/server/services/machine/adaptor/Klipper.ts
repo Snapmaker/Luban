@@ -88,7 +88,7 @@ class Klipper {
     }
 
     public onStop = () => {
-        if (this.server == null) {
+        if (this.server === null) {
             return;
         }
         this.server && this.server.removeAllListeners();
