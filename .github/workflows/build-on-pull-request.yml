@@ -168,6 +168,8 @@ jobs:
                     ln -sf ./output/linux-unpacked "${RELEASE}-linux-x64"
                     tar zcfh "./output/${RELEASE}-linux-x64.tar.gz" "${RELEASE}-linux-x64"
                     rm -f "${RELEASE}-linux-x64"
+                    ls "."
+                    ls "./output"
 
             -   name: Upload artifacts linux-amd64
                 uses: actions/upload-artifact@v4
