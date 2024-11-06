@@ -2,6 +2,9 @@ name: Build on PR
 
 on:
     workflow_dispatch:
+    push:
+        branches:
+            - feature-prworkflow-bugfix
     pull_request:
         branches:
             - main
