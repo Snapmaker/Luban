@@ -59,7 +59,7 @@ jobs:
                     path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-win-x64.exe
 
             -   name: Deploy Windows release
-                uses: WebFreak001/deploy-nightly@v3.1.0
+                uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
                     upload_url: https://uploads.github.com/repos/leo-songye-li/Luban/releases/183507405/assets{?name,label}
                     release_id: 183507405
@@ -67,6 +67,7 @@ jobs:
                     asset_name: ${{ env.SM_RELEASE }}-win-x64.exe
                     asset_content_type: application/octet-stream
                     max_releases: 1 # optional, if there are more releases than this matching the asset_name, the oldest ones are going to be deleted
+                    ignore_hash: true
 
 #    build-macos:
 #        name: Build macOS Packages
@@ -162,7 +163,7 @@ jobs:
                     PACKAGE_NAME="Snapmaker-luban"
                     PACKAGE_VERSION=`node -e "console.log(require('./src/package.json').version)"`
                     RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}
-                    echo "SM_RELEASE=$RELEASE" >> $env:GITHUB_ENV
+                    echo "SM_RELEASE=$RELEASE" >> $GITHUB_ENV
 
                     ln -sf ./output/linux-unpacked "${RELEASE}-linux-x64"
                     tar zcfh "./output/${RELEASE}-linux-x64.tar.gz" "${RELEASE}-linux-x64"
@@ -175,7 +176,7 @@ jobs:
                     path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-linux-amd64.deb
 
             -   name: Deploy Linux-deb release
-                uses: WebFreak001/deploy-nightly@v3.1.0
+                uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
                     upload_url: https://uploads.github.com/repos/leo-songye-li/Luban/releases/183507405/assets{?name,label}
                     release_id: 183507405
@@ -191,7 +192,7 @@ jobs:
                     path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-linux.x86_64.rpm
 
             -   name: Deploy Linux-rpm release
-                uses: WebFreak001/deploy-nightly@v3.1.0
+                uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
                     upload_url: https://uploads.github.com/repos/leo-songye-li/Luban/releases/183507405/assets{?name,label}
                     release_id: 183507405
@@ -207,7 +208,7 @@ jobs:
                     path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-linux-x64.tar.gz
 
             -   name: Deploy Linux-tar release
-                uses: WebFreak001/deploy-nightly@v3.1.0
+                uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
                     upload_url: https://uploads.github.com/repos/leo-songye-li/Luban/releases/183507405/assets{?name,label}
                     release_id: 183507405
