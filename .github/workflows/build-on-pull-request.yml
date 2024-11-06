@@ -35,8 +35,8 @@ jobs:
 
             -   name: Init Props
                 run: |
-                    $PRODUCT_NAME="leo-songye-li Luban"
-                    $PACKAGE_NAME="leo-songye-li-luban"
+                    $PRODUCT_NAME="Snapmaker Luban"
+                    $PACKAGE_NAME="Snapmaker-luban"
                     $PACKAGE_VERSION= node -e "console.log(require('./src/package.json').version)"
                     $RELEASE="$PACKAGE_NAME-$PACKAGE_VERSION"
                     echo "SM_RELEASE=$RELEASE" >> $env:GITHUB_ENV
@@ -106,8 +106,8 @@ jobs:
                    
            -   name: Init Props
                run: |
-                    PRODUCT_NAME="leo-songye-li Luban"
-                    PACKAGE_NAME="leo-songye-li-luban"
+                    PRODUCT_NAME="Snapmaker Luban"
+                    PACKAGE_NAME="Snapmaker-luban"
                     PACKAGE_VERSION=`node -e "console.log(require('./src/package.json').version)"`
                     RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}
                     echo "SM_RELEASE=$RELEASE" >> $GITHUB_ENV
@@ -205,8 +205,8 @@ jobs:
                 run: npm run build:linux-x64
 
             -   run: |
-                    PRODUCT_NAME="leo-songye-li Luban"
-                    PACKAGE_NAME="leo-songye-li-luban"
+                    PRODUCT_NAME="Snapmaker Luban"
+                    PACKAGE_NAME="Snapmaker-luban"
                     PACKAGE_VERSION=`node -e "console.log(require('./src/package.json').version)"`
                     RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}
                     echo "SM_RELEASE=$RELEASE" >> $GITHUB_ENV
