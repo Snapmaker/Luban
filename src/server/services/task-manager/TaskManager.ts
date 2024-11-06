@@ -49,7 +49,9 @@ class TaskManager {
     private tasks: Task[] = [];
 
     private exec(runnerName: string, task: Task) {
+        log.info(`workmanager:exec:${runnerName}`);
         const { terminate } = this.workerManager[runnerName]([task.data], (payload) => {
+            log.info(`workmanager:status:${terminate}`);
             if (payload.status === 'progress') {
                 this.onProgress(task, payload.value);
             } else if (payload.status === 'complete') {
@@ -143,6 +145,7 @@ class TaskManager {
 
         const runnerName = TASK_TYPE_RUNNER_MAP[task.taskType];
         if (runnerName) {
+            log.info(`runnername:${runnerName}`);
             this.exec(runnerName, task);
         } else {
             log.warn(`task runner for ${task.taskType} no found`);
