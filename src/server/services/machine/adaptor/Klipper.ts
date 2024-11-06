@@ -88,6 +88,9 @@ class Klipper {
     }
 
     public onStop = () => {
+        if (this.server == null) {
+            return;
+        }
         this.server && this.server.removeAllListeners();
         this.server.close(() => {
             log.info('octo klipper adapter server closed');
