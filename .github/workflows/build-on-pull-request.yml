@@ -72,7 +72,7 @@ jobs:
                     max_releases: 1 # optional, if there are more releases than this matching the asset_name, the oldest ones are going to be deleted
                     ignore_hash: true
 
-   build-macos:
+    build-macos:
        name: Build macOS Packages
 
        # macos-11.7
