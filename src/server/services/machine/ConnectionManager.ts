@@ -51,7 +51,7 @@ import {
 import { ConnectionType } from './types';
 import SacpChannelBase from './channels/SacpChannel';
 import { L2WLaserToolModule } from '../../../app/machines/snapmaker-2-toolheads';
-import { klipper } from './adaptor/Klipper';
+import { octo } from './adaptor/Octo';
 
 const log = logger('lib:ConnectionManager');
 
@@ -346,7 +346,7 @@ class ConnectionManager {
 
         log.info(`ConnectionOpen: type = ${connectionType}, channel = ${this.channel.constructor.name}.`);
         await this.channel.connectionOpen(options);
-        await klipper.onStart(this.socket);
+        await octo.onStart();
     };
 
     /**
@@ -362,7 +362,7 @@ class ConnectionManager {
                 text: ''
             };
             socket.emit('connection:close', result);
-            klipper.onStop();
+            octo.onStop();
             return;
         }
 
