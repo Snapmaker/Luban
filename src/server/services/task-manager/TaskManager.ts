@@ -49,20 +49,15 @@ class TaskManager {
     private tasks: Task[] = [];
 
     private exec(runnerName: string, task: Task) {
-        log.info(`workmanager:exec:${runnerName}`);
         const { terminate } = this.workerManager[runnerName]([task.data], (payload) => {
             if (payload.status === 'progress') {
-                log.info(`workmanager:status:${payload.status}`);
                 this.onProgress(task, payload.value);
             } else if (payload.status === 'complete') {
-                log.info(`workmanager:status:${payload.status}`);
                 this.onComplete(task, payload.value);
             } else if (payload.status === 'fail') {
-                log.info(`workmanager:status:${payload.status}`);
                 this.onFail(task, payload.value);
             }
         });
-        log.info(`workmanager:exec:term:${terminate}`);
         task.terminateFn = terminate;
     }
 
