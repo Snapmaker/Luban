@@ -38,16 +38,17 @@ const Avatar: React.FC = () => {
         }
     };
     // define Login
+    const loginBaseUrl = 'https://id.snapmaker.com';
     const handleLogin = () => {
         if (loading) return;
-        setIframeUrl('https://id.snapmaker.com?postKey=Luban');
+        setIframeUrl(`${loginBaseUrl}?postKey=Luban`);
         showModal();
     };
     // define Logout
     const handleLogout = () => {
         machineStore.set('machine-token', '');
         setUserInfo(null);
-        setIframeUrl('http://id.snapmaker.com/logout#Luban');
+        setIframeUrl(`${loginBaseUrl}/logout#Luban`);
         showModal();
     };
     // define Main
@@ -60,7 +61,6 @@ const Avatar: React.FC = () => {
         window.addEventListener(
             'message',
             (event) => {
-                setIframeUrl('https://snapmaker.com');
                 const token = event.data;
                 if (token && typeof token === 'string') {
                     if (token === 'logout') {
@@ -69,6 +69,7 @@ const Avatar: React.FC = () => {
                         handleToken(token);
                         machineStore.set('machine-token', token);
                     }
+                    setIframeUrl('https://snapmaker.com');
                 }
             }
         );
@@ -126,6 +127,7 @@ const Avatar: React.FC = () => {
                 onCancel={handleCancel}
                 className={styles.iframeModal}
                 footer={null}
+                destroyOnClose
                 getContainer={() => document.getElementById('avatar-box')}
             >
                 <div className={styles.iframeBox}>
