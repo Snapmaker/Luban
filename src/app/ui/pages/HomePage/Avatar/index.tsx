@@ -12,6 +12,7 @@ const Avatar: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [iframeUrl, setIframeUrl] = useState('');
+    const isOnline = navigator.onLine;
 
     const showModal = () => {
         setIsModalVisible(true);
@@ -37,18 +38,19 @@ const Avatar: React.FC = () => {
             log.info(`userinfo load error: ${error}`);
         }
     };
-    // define Login
+    // define url
     const loginBaseUrl = 'https://id.snapmaker.com';
+    // define Login
     const handleLogin = () => {
         if (loading) return;
-        setIframeUrl(`${loginBaseUrl}?postKey=Luban`);
+        setIframeUrl(`${loginBaseUrl}?from=Luban`);
         showModal();
     };
     // define Logout
     const handleLogout = () => {
         machineStore.set('machine-token', '');
         setUserInfo(null);
-        setIframeUrl(`${loginBaseUrl}/logout#Luban`);
+        setIframeUrl(`${loginBaseUrl}/logout?from=Luban`);
         showModal();
     };
     // define Main
@@ -131,9 +133,18 @@ const Avatar: React.FC = () => {
                 getContainer={() => document.getElementById('avatar-box')}
             >
                 <div className={styles.iframeBox}>
-                    <iframe id="dashboard" key={iframeUrl} src={iframeUrl} title="iframe">
-                        <p>Your browser does not support the iframe tag.</p>
-                    </iframe>
+                    {
+                        isOnline ? (
+                            <iframe id="dashboard" key={iframeUrl} src={iframeUrl} title="iframe">
+                                <p>Your browser does not support the iframe tag.</p>
+                            </iframe>
+                        )
+                            : (
+                                <div className={styles['not-online']}>
+                                    ERR_INTERNET_DISCONNECTED
+                                </div>
+                            )
+                    }
                 </div>
             </Modal>
         </div>
