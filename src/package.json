@@ -19,7 +19,7 @@
     "@babel/runtime": "7.20.6",
     "@electron/remote": "2.0.8",
     "@sentry/electron": "^5.6.0",
-    "@snapmaker/snapmaker-lunar": "1.4.8",
+    "@snapmaker/snapmaker-lunar": "1.4.9",
     "@snapmaker/snapmaker-sacp-sdk": "0.1.1",
     "@xmldom/xmldom": "^0.8.2",
     "bcrypt-nodejs": "0.0.3",
