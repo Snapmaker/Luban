@@ -30,7 +30,9 @@ import LaserSetBackground from '../../widgets/LaserSetBackground';
 import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
 
 function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setShowWorkspace,
-    onChangeSVGClippingMode, onChangeMaterialTestMode, onChangeABPositionMode }) {
+    onChangeSVGClippingMode,
+    // onChangeMaterialTestMode,
+    onChangeABPositionMode }) {
     const { isOnABPosition, APosition, BPosition } = useSelector((state: RootState) => state.laser);
 
     const size = useSelector((state: RootState) => state.machine?.size);
@@ -419,16 +421,16 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
                 }
             });
         }
-
-        leftItems.push({
-            title: i18n._('key_ui-views-MaterialTestModal-FormComponent-title'),
-            type: 'button',
-            disabled: isOnABPosition,
-            name: 'MaterialTest',
-            action: () => {
-                dispatch(onChangeMaterialTestMode);
-            }
-        });
+        // TODO
+        // leftItems.push({
+        //     title: i18n._('key_ui-views-MaterialTestModal-FormComponent-title'),
+        //     type: 'button',
+        //     disabled: isOnABPosition,
+        //     name: 'MaterialTest',
+        //     action: () => {
+        //         dispatch(onChangeMaterialTestMode);
+        //     }
+        // });
     }
 
     // CNC specific tools
