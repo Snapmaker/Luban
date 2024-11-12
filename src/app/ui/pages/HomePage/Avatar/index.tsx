@@ -12,6 +12,7 @@ const Avatar: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [iframeUrl, setIframeUrl] = useState('');
+    const isOnline = navigator.onLine;
 
     const showModal = () => {
         setIsModalVisible(true);
@@ -37,17 +38,19 @@ const Avatar: React.FC = () => {
             log.info(`userinfo load error: ${error}`);
         }
     };
+    // define url
+    const loginBaseUrl = 'https://id.snapmaker.com';
     // define Login
     const handleLogin = () => {
         if (loading) return;
-        setIframeUrl('https://id.snapmaker.com?postKey=Luban');
+        setIframeUrl(`${loginBaseUrl}?from=Luban`);
         showModal();
     };
     // define Logout
     const handleLogout = () => {
         machineStore.set('machine-token', '');
         setUserInfo(null);
-        setIframeUrl('http://id.snapmaker.com/logout#Luban');
+        setIframeUrl(`${loginBaseUrl}/logout?from=Luban`);
         showModal();
     };
     // define Main
@@ -60,7 +63,6 @@ const Avatar: React.FC = () => {
         window.addEventListener(
             'message',
             (event) => {
-                setIframeUrl('https://snapmaker.com');
                 const token = event.data;
                 if (token && typeof token === 'string') {
                     if (token === 'logout') {
@@ -69,6 +71,7 @@ const Avatar: React.FC = () => {
                         handleToken(token);
                         machineStore.set('machine-token', token);
                     }
+                    setIframeUrl('https://snapmaker.com');
                 }
             }
         );
@@ -126,12 +129,22 @@ const Avatar: React.FC = () => {
                 onCancel={handleCancel}
                 className={styles.iframeModal}
                 footer={null}
+                destroyOnClose
                 getContainer={() => document.getElementById('avatar-box')}
             >
                 <div className={styles.iframeBox}>
-                    <iframe id="dashboard" key={iframeUrl} src={iframeUrl} title="iframe">
-                        <p>Your browser does not support the iframe tag.</p>
-                    </iframe>
+                    {
+                        isOnline ? (
+                            <iframe id="dashboard" key={iframeUrl} src={iframeUrl} title="iframe">
+                                <p>Your browser does not support the iframe tag.</p>
+                            </iframe>
+                        )
+                            : (
+                                <div className={styles['not-online']}>
+                                    ERR_INTERNET_DISCONNECTED
+                                </div>
+                            )
+                    }
                 </div>
             </Modal>
         </div>

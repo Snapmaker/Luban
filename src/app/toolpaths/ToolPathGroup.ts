@@ -279,11 +279,9 @@ class ToolPathGroup {
         if (!withoutSelection) {
             this.selectedToolPathArray.forEach((id) => {
                 const selectedToolpath = this._getToolPath(id);
-                if (selectedToolpath) {
-                    this.toolPathObjects.remove(selectedToolpath.object);
-                    selectedToolpath.object = selectedToolpath.object.clone();
-                    this.toolPathObjects.add(selectedToolpath.object);
-                }
+                this.toolPathObjects.remove(selectedToolpath.object);
+                selectedToolpath.object = selectedToolpath.object.clone();
+                this.toolPathObjects.add(selectedToolpath.object);
             });
         }
     }

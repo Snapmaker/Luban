@@ -63,7 +63,7 @@ jobs:
 
             - name: Checkout submodules
               run: git submodule update --init --recursive
-            
+
             - name: Set up Python
               uses: actions/setup-python@v2
               with:
@@ -154,7 +154,7 @@ jobs:
 
             - run: |
                   PRODUCT_NAME="Snapmaker Luban"
-                  PACKAGE_NAME="snapmaker-luban"
+                  PACKAGE_NAME="Snapmaker-luban"
                   PACKAGE_VERSION=`node -e "console.log(require('./src/package.json').version)"`
                   RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}
 
