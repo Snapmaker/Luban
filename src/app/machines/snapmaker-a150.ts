@@ -76,7 +76,7 @@ export const machine: Machine = {
             },
             {
                 identifier: L20WLaserToolModule.identifier,
-                configPath: 'laser/a250_20w',
+                configPath: 'laser/a150_20w',
                 workRange: {
                     min: [0, 0, 0],
                     max: [160, 155, 0], // Correct this later
@@ -91,7 +91,7 @@ export const machine: Machine = {
             },
             {
                 identifier: L2WLaserToolModule.identifier,
-                configPath: 'laser/a250_2w', // 'laser/a350_2w',
+                configPath: 'laser/a150_2w',
                 workRange: {
                     min: [0, 0, 0],
                     max: [155, 150, 0], // Correct this later
