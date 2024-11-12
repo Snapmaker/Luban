@@ -102,7 +102,6 @@ const sizeModel = (size, materials, sourceWidth, sourceHeight) => {
     if (!materials.isRotate) {
         const isX = sourceWidth > sourceHeight;
         const value = isX ? sourceWidth : sourceHeight;
-        console.log('line:105 value::: ', value);
         const max = isX ? size.x : size.y;
         const min = 30;
 
