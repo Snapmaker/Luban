@@ -404,8 +404,6 @@ class ConnectionManager {
             await this.machineInstance.onClosed();
 
             this.machineInstance = null;
-            // close socket when machine instance closed
-            klipper.onStop();
         }
     };
 

@@ -23,7 +23,6 @@ class GcodeParameters extends PureComponent {
         zOffsetEnabled: PropTypes.bool,
         halfDiodeModeEnabled: PropTypes.bool,
         auxiliaryAirPumpEnabled: PropTypes.bool,
-        noNeedName: PropTypes.bool,
     };
 
     state = {
@@ -118,12 +117,10 @@ class GcodeParameters extends PureComponent {
         const laserDefinitionSpeed = {};
         laserDefinitionSpeedKeys.forEach((key) => {
             if (allDefinition[key]) {
-                laserDefinitionSpeed[key] = { ...allDefinition[key] };
+                laserDefinitionSpeed[key] = allDefinition[key];
             }
         });
-        if (typeof laserDefinitionSpeed.workSpeed === 'object' && laserDefinitionSpeed.workSpeed !== null) {
-            laserDefinitionSpeed.workSpeed.hidden = Boolean(this.props.noNeedName);
-        }
+
         // section Pass
         const laserDefinitionRepetitionKeys = [];
         const laserDefinitionRepetition = {};
@@ -169,12 +166,10 @@ class GcodeParameters extends PureComponent {
         const laserDefinitionPower = {};
         laserDefinitionPowerKeys.forEach((key) => {
             if (allDefinition[key]) {
-                laserDefinitionPower[key] = { ...allDefinition[key] };
+                laserDefinitionPower[key] = allDefinition[key];
             }
         });
-        if (typeof laserDefinitionSpeed.fixedPower === 'object' && laserDefinitionSpeed.fixedPower !== null) {
-            laserDefinitionSpeed.fixedPower.hidden = Boolean(this.props.noNeedName);
-        }
+
         // section Assist Gas
         const laserDefinitionAuxiliaryGasKeys = ['auxiliaryAirPump'];
         const laserDefinitionAuxiliary = {};
@@ -197,16 +192,14 @@ class GcodeParameters extends PureComponent {
                         />
                         <span>{i18n._('Preset')}</span>
                     </div>
-                    {!this.props.noNeedName && (
-                        <PresentSelector
-                            toolDefinition={this.props.activeToolDefinition}
-                            toolDefinitions={this.props.toolDefinitions}
-                            setCurrentToolDefinition={this.props.setCurrentToolDefinition}
-                            isModifiedDefinition={this.props.isModifiedDefinition}
-                            setCurrentValueAsProfile={this.props.setCurrentValueAsProfile}
-                            isModel={this.props.isModel}
-                        />
-                    )}
+                    <PresentSelector
+                        toolDefinition={this.props.activeToolDefinition}
+                        toolDefinitions={this.props.toolDefinitions}
+                        setCurrentToolDefinition={this.props.setCurrentToolDefinition}
+                        isModifiedDefinition={this.props.isModifiedDefinition}
+                        setCurrentValueAsProfile={this.props.setCurrentValueAsProfile}
+                        isModel={this.props.isModel}
+                    />
                     <ToolParameters
                         settings={laserDefinitionMethod}
                         updateToolConfig={this.props.updateToolConfig}

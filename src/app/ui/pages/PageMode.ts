@@ -24,8 +24,6 @@ export enum PageMode {
     // Print mode
     SVGClipping = 'SVGClipping',
 
-    // Laser
-    MaterialTest = 'MaterialTest',
 
     // Laser
     // A-B Position mode

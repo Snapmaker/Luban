@@ -143,7 +143,6 @@ class TaskManager {
 
         const runnerName = TASK_TYPE_RUNNER_MAP[task.taskType];
         if (runnerName) {
-            log.info(`runnername:${runnerName}`);
             this.exec(runnerName, task);
         } else {
             log.warn(`task runner for ${task.taskType} no found`);
