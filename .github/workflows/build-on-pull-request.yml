@@ -2,8 +2,7 @@ name: Build on PR
 
 on:
     workflow_dispatch:
-    pull_request:
-        type: closed
+    push:
         branches:
             - main
             - release/*
@@ -25,7 +24,7 @@ jobs:
                 run: git submodule update --init --recursive
 
             -   name: Set up Python
-                uses: actions/setup-python@v2
+                uses: actions/setup-python@v3
                 with:
                    python-version: 3.11
 
@@ -96,7 +95,7 @@ jobs:
                run: git submodule update --init --recursive
 
            -   name: Set up Python
-               uses: actions/setup-python@v2
+               uses: actions/setup-python@v3
                with:
                    python-version: 3.11
 
@@ -136,7 +135,8 @@ jobs:
                    APPLEID: ${{ secrets.APPLEID }}
                    APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
 
-           -    name: Upload artifacts mac-arm64-dmp
+           # Mac arm64
+           -    name: Upload artifacts mac-arm64-dmg
                 uses: actions/upload-artifact@v4
                 with:
                    name: ${{ env.SM_RELEASE }}-mac-arm64.dmg
@@ -156,7 +156,36 @@ jobs:
                 with:
                    name: ${{ env.SM_RELEASE }}-mac-arm64.zip
                    path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-arm64.zip
-
+           -    name: Deploy mac-arm64-dmg release
+                uses: WebFreak001/deploy-nightly@v3.2.0
+                with:
+                   upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
+                   release_id: 180614211
+                   asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-arm64.zip
+                   asset_name: ${{ env.SM_RELEASE }}-mac-arm64.zip
+                   asset_content_type: application/octet-stream
+                   max_releases: 1
+                   ignore_hash: true
+           -    name: Upload artifacts mac-arm64-dmg
+                uses: actions/upload-artifact@v4
+                with:
+                   name: ${{ env.SM_RELEASE }}-mac-arm64.dmg
+                   path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-arm64.dmg
+           -    name: Deploy mac-arm64-dmg release
+                uses: WebFreak001/deploy-nightly@v3.2.0
+                with:
+                   upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
+                   release_id: 180614211
+                   asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-arm64.dmg
+                   asset_name: ${{ env.SM_RELEASE }}-mac-arm64.dmg
+                   asset_content_type: application/octet-stream
+                   max_releases: 1
+                   ignore_hash: true
+           -    name: Upload artifacts mac-arm64-zip
+                uses: actions/upload-artifact@v4
+                with:
+                   name: ${{ env.SM_RELEASE }}-mac-arm64.zip
+                   path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-arm64.zip
            -    name: Deploy mac-arm64-dmg release
                 uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
@@ -168,6 +197,37 @@ jobs:
                    max_releases: 1
                    ignore_hash: true
 
+           # Mac x64
+           -    name: Upload artifacts mac-x64-dmg
+                uses: actions/upload-artifact@v4
+                with:
+                   name: ${{ env.SM_RELEASE }}-mac-x64.dmg
+                   path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-x64.dmg
+           -    name: Deploy mac-x64-dmg release
+                uses: WebFreak001/deploy-nightly@v3.2.0
+                with:
+                   upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
+                   release_id: 180614211
+                   asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-x64.dmg
+                   asset_name: ${{ env.SM_RELEASE }}-mac-x64.dmg
+                   asset_content_type: application/octet-stream
+                   max_releases: 1
+                   ignore_hash: true
+           -    name: Upload artifacts mac-x64-zip
+                uses: actions/upload-artifact@v4
+                with:
+                   name: ${{ env.SM_RELEASE }}-mac-x64.zip
+                   path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-x64.zip
+           -    name: Deploy mac-x64-dmg release
+                uses: WebFreak001/deploy-nightly@v3.2.0
+                with:
+                   upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
+                   release_id: 180614211
+                   asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-x64.zip
+                   asset_name: ${{ env.SM_RELEASE }}-mac-x64.zip
+                   asset_content_type: application/octet-stream
+                   max_releases: 1
+                   ignore_hash: true
 
     build-linux:
         name: Build Linux Packages
@@ -185,7 +245,7 @@ jobs:
                 run: git submodule update --init --recursive
 
             -   name: Set up Python
-                uses: actions/setup-python@v2
+                uses: actions/setup-python@v3
                 with:
                    python-version: 3.11
 
