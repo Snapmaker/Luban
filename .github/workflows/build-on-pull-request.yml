@@ -203,13 +203,13 @@ jobs:
                 with:
                    name: ${{ env.SM_RELEASE }}-mac-x64.dmg
                    path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-x64.dmg
-           -    name: Deploy mac-arm64-dmg release
+           -    name: Deploy mac-x64-dmg release
                 uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
                    upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
                    release_id: 180614211
                    asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-x64.dmg
-                   asset_name: ${{ env.SM_RELEASE }}-mac-arm64.dmg
+                   asset_name: ${{ env.SM_RELEASE }}-mac-x64.dmg
                    asset_content_type: application/octet-stream
                    max_releases: 1
                    ignore_hash: true
@@ -218,13 +218,13 @@ jobs:
                 with:
                    name: ${{ env.SM_RELEASE }}-mac-x64.zip
                    path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-x64.zip
-           -    name: Deploy mac-arm64-dmg release
+           -    name: Deploy mac-x64-dmg release
                 uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
                    upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
                    release_id: 180614211
-                   asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-arm64.zip
-                   asset_name: ${{ env.SM_RELEASE }}-mac-arm64.zip
+                   asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-x64.zip
+                   asset_name: ${{ env.SM_RELEASE }}-mac-x64.zip
                    asset_content_type: application/octet-stream
                    max_releases: 1
                    ignore_hash: true
