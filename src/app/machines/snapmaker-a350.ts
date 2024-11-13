@@ -30,7 +30,7 @@ export const machine: Machine = {
     img: '/resources/images/machine/size-2.0-A350.jpg',
 
     metadata: {
-        size: { x: 320, y: 350, z: 330 },
+        size: { x: 320, y: 350, z: 325 },
 
         toolHeads: [
             {
@@ -42,7 +42,7 @@ export const machine: Machine = {
                 configPath: 'printing/a350_dual',
                 workRange: {
                     min: [0, 0, 0],
-                    max: [320, 350, 290],
+                    max: [320, 330, 285],
                 },
             },
             {
