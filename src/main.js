@@ -77,7 +77,8 @@ function getBrowserWindowOptions() {
             // remote module is default false
             // https://www.electronjs.org/docs/latest/breaking-changes#default-changed-enableremotemodule-defaults-to-false
             enableRemoteModule: true,
-            nodeIntegrationInWorker: true
+            nodeIntegrationInWorker: true,
+            webviewTag: true,
         }
     };
 

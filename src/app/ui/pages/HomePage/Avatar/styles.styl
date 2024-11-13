@@ -29,24 +29,28 @@
     }
 }
 
-.iframeModal {
+.webviewModal {
     width: 90% !important;
     max-width: 100% !important;
     height: 100% !important;
     max-height: 100% !important;
     z-index: 99999;
+
+    :global(.ant-modal-body) {
+        max-height none !important;
+    }
 }
 
-.iframeBox {
+.contentBox {
     margin: 20px;
-    iframe {
+    webview {
         border: none;
         height: 800px;
         width: 100%;
     }
 }
 
-.not-online {
+.not-online, .error-tips {
     padding: 10px;
     height: 500px;
     display: flex;
