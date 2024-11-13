@@ -29,7 +29,7 @@ export const machine: Machine = {
     img: '/resources/images/machine/size-2.0-A150.png',
 
     metadata: {
-        size: { x: 160, y: 160, z: 145 },
+        size: { x: 160, y: 160, z: 140 },
 
         toolHeads: [
             {
@@ -41,7 +41,7 @@ export const machine: Machine = {
                 configPath: 'printing/a150_dual',
                 workRange: {
                     min: [0, 0, 0],
-                    max: [160, 160, 110],
+                    max: [145, 145, 105],
                 },
             },
             {
