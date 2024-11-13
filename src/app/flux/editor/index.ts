@@ -812,14 +812,20 @@ export const actions = {
         } else {
             const extname = path.extname(uploadName);
             const isScale = !includes(scaleExtname, extname);
+            const originalExtname = path.extname(originalName).toLowerCase();
+            if (originalExtname !== '.dxf') {
+                const newModelSize = sourceType !== SOURCE_TYPE.IMAGE3D && sourceType !== SOURCE_TYPE.SVG
+                    ? limitModelSizeByMachineSize(coordinateSize, sourceWidth, sourceHeight, isLimit, isScale)
+                    : sizeModel(size, materials, sourceWidth, sourceHeight);
 
-            const newModelSize = sourceType !== SOURCE_TYPE.IMAGE3D
-                ? limitModelSizeByMachineSize(coordinateSize, sourceWidth, sourceHeight, isLimit, isScale)
-                : sizeModel(size, materials, sourceWidth, sourceHeight);
-
-            width = newModelSize?.width;
-            height = newModelSize?.height;
-            scale = newModelSize?.scale;
+                width = newModelSize?.width;
+                height = newModelSize?.height;
+                scale = newModelSize?.scale;
+            } else {
+                width = sourceWidth;
+                height = sourceHeight;
+                scale = 1;
+            }
         }
 
         if (`${headType}-${sourceType}-${mode}` === 'cnc-raster-greyscale') {
