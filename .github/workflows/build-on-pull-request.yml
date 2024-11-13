@@ -136,12 +136,14 @@ jobs:
                    APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
 
            # Mac arm64
+           #dmg
            -    name: Upload artifacts mac-arm64-dmg
                 uses: actions/upload-artifact@v4
                 with:
                    name: ${{ env.SM_RELEASE }}-mac-arm64.dmg
                    path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-arm64.dmg
-           -    name: Deploy mac-arm64-dmg release
+
+           -    name: Deploy mac-arm64-dmg nightly
                 uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
                    upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
@@ -151,42 +153,13 @@ jobs:
                    asset_content_type: application/octet-stream
                    max_releases: 1
                    ignore_hash: true
+           # zip
            -    name: Upload artifacts mac-arm64-zip
                 uses: actions/upload-artifact@v4
                 with:
                    name: ${{ env.SM_RELEASE }}-mac-arm64.zip
                    path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-arm64.zip
-           -    name: Deploy mac-arm64-dmg release
-                uses: WebFreak001/deploy-nightly@v3.2.0
-                with:
-                   upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
-                   release_id: 180614211
-                   asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-arm64.zip
-                   asset_name: ${{ env.SM_RELEASE }}-mac-arm64.zip
-                   asset_content_type: application/octet-stream
-                   max_releases: 1
-                   ignore_hash: true
-           -    name: Upload artifacts mac-arm64-dmg
-                uses: actions/upload-artifact@v4
-                with:
-                   name: ${{ env.SM_RELEASE }}-mac-arm64.dmg
-                   path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-arm64.dmg
-           -    name: Deploy mac-arm64-dmg release
-                uses: WebFreak001/deploy-nightly@v3.2.0
-                with:
-                   upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
-                   release_id: 180614211
-                   asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-arm64.dmg
-                   asset_name: ${{ env.SM_RELEASE }}-mac-arm64.dmg
-                   asset_content_type: application/octet-stream
-                   max_releases: 1
-                   ignore_hash: true
-           -    name: Upload artifacts mac-arm64-zip
-                uses: actions/upload-artifact@v4
-                with:
-                   name: ${{ env.SM_RELEASE }}-mac-arm64.zip
-                   path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-arm64.zip
-           -    name: Deploy mac-arm64-dmg release
+           -    name: Deploy mac-arm64-zip nightly
                 uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
                    upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
@@ -198,12 +171,13 @@ jobs:
                    ignore_hash: true
 
            # Mac x64
+           #dmg
            -    name: Upload artifacts mac-x64-dmg
                 uses: actions/upload-artifact@v4
                 with:
                    name: ${{ env.SM_RELEASE }}-mac-x64.dmg
                    path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-x64.dmg
-           -    name: Deploy mac-x64-dmg release
+           -    name: Deploy mac-x64-dmg nightly
                 uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
                    upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
@@ -213,12 +187,13 @@ jobs:
                    asset_content_type: application/octet-stream
                    max_releases: 1
                    ignore_hash: true
+           # zip
            -    name: Upload artifacts mac-x64-zip
                 uses: actions/upload-artifact@v4
                 with:
                    name: ${{ env.SM_RELEASE }}-mac-x64.zip
                    path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-x64.zip
-           -    name: Deploy mac-x64-dmg release
+           -    name: Deploy mac-x64-dmg nightly
                 uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
                    upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
@@ -280,13 +255,13 @@ jobs:
                     tar zcfh "./output/${RELEASE}-linux-x64.tar.gz" "${RELEASE}-linux-x64"
                     rm -f "${RELEASE}-linux-x64"
 
-            -   name: Upload artifacts linux-amd64
+            # amd64-deb
+            -   name: Upload artifacts linux-deb
                 uses: actions/upload-artifact@v4
                 with:
                     name: ${{ env.SM_RELEASE }}-linux-amd64.deb
                     path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-linux-amd64.deb
-
-            -   name: Deploy Linux-deb release
+            -   name: Deploy Linux-deb nightly
                 uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
                     upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
@@ -297,13 +272,13 @@ jobs:
                     max_releases: 1
                     ignore_hash: true
 
-            -   name: Upload artifacts linux-amd64
+            # x86_64.rpm
+            -   name: Upload artifacts linux-rpm
                 uses: actions/upload-artifact@v4
                 with:
                     name: ${{ env.SM_RELEASE }}-linux.x86_64.rpm
                     path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-linux.x86_64.rpm
-
-            -   name: Deploy Linux-rpm release
+            -   name: Deploy Linux-rpm nightly
                 uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
                     upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
@@ -314,13 +289,14 @@ jobs:
                     max_releases: 1
                     ignore_hash: true
 
-            -   name: Upload artifacts linux-x64
+            # x64.tar.gz
+            -   name: Upload artifacts linux-tar
                 uses: actions/upload-artifact@v4
                 with:
                     name: ${{ env.SM_RELEASE }}-linux-x64.tar.gz
                     path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-linux-x64.tar.gz
 
-            -   name: Deploy Linux-tar release
+            -   name: Deploy Linux-tar nightly
                 uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
                     upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
