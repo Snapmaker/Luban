@@ -15,7 +15,7 @@ class Octo {
     private socket: SocketServer | null = null;
     private server: Server | null = null;
     private ip: string = '0.0.0.0';
-    private port: number = 65526;
+    private port: number = 5000;
 
     public onStart = async () => {
         this.socket = new SocketServer();
