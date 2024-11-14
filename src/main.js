@@ -349,6 +349,14 @@ const showMainWindow = async () => {
     const windowOptions = getBrowserWindowOptions();
     const window = new BrowserWindow(windowOptions);
     mainWindow = window;
+    // Monitor policy links, do not allow redirection
+    window.webContents.on('did-attach-webview', (e, webContent)=>  {
+        webContent.on('will-navigate', (e, url) => {
+            if (url.includes('policy')) {
+                e.preventDefault();
+            }
+        });
+    });
     powerId = powerSaveBlocker.start('prevent-display-sleep');
 
     if (process.platform === 'win32') {

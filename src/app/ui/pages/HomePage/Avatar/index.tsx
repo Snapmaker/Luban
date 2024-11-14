@@ -36,6 +36,7 @@ const Avatar: React.FC = () => {
 
     const showModal = () => {
         setIsModalVisible(true);
+        setErrorTips('');
         setTimeout(() => {
             const webviewBox = document.getElementById('webviewBox');
             webviewBox?.addEventListener('will-navigate', (event) => {
@@ -47,10 +48,14 @@ const Avatar: React.FC = () => {
                     setWebviewUrl('https://snapmaker.com');
                 } else if (url.includes('logout')) {
                     setWebviewUrl('https://snapmaker.com');
+                } else if (url.includes('policy')) {
+                    window.open(url);
+                    event.preventDefault();
                 }
             });
+
             webviewBox?.addEventListener('did-fail-load', (event) => {
-                log.info(`Load failed: ${event}`);
+                log.info(`Load failed: ${event.errorDescription}`);
                 const errorDescription = event.errorDescription;
                 setErrorTips(errorDescription || 'Load Error');
             });
@@ -58,6 +63,7 @@ const Avatar: React.FC = () => {
     };
     const handleCancel = () => {
         setIsModalVisible(false);
+        setErrorTips('');
     };
 
     // define url
