@@ -346,7 +346,7 @@ class ConnectionManager {
 
         log.info(`ConnectionOpen: type = ${connectionType}, channel = ${this.channel.constructor.name}.`);
         await this.channel.connectionOpen(options);
-        await octo.onStart();
+        octo.onStart();
     };
 
     /**
@@ -362,7 +362,6 @@ class ConnectionManager {
                 text: ''
             };
             socket.emit('connection:close', result);
-            octo.onStop();
             return;
         }
 
@@ -404,6 +403,7 @@ class ConnectionManager {
             await this.machineInstance.onClosed();
 
             this.machineInstance = null;
+            octo.onStop();
         }
     };
 

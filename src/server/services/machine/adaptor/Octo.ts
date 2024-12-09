@@ -10,14 +10,16 @@ import { HEAD_PRINTING } from '../../../constants';
 const log = logger('service:machine:adapter:Octo');
 
 const maxMemory = 64 * 1024 * 1024; // 64MB
-
+interface ConnectionCloseOptions {
+    port?: number;
+}
 class Octo {
     private socket: SocketServer | null = null;
     private server: Server | null = null;
     private ip: string = '0.0.0.0';
     private port: number = 5000;
 
-    public onStart = async () => {
+    public onStart = () => {
         this.socket = new SocketServer();
         // create single listener Server
         if (this.server !== null) {
@@ -103,6 +105,27 @@ class Octo {
             log.info('octo octo adapter server closed');
         });
         this.server = null;
+    }
+
+    public onResetPort = (socket: SocketServer, options: ConnectionCloseOptions, callback) => {
+        const port = options.port;
+        const restartServer = () => {
+            this.server && this.server.removeAllListeners();
+            this.server.close(() => {
+                log.info('octo octo adapter server closed');
+                this.server = null;
+                this.port = port;
+                this.onStart();
+            });
+        };
+
+        if (this.server === null) {
+            this.port = port;
+            this.onStart();
+        } else {
+            restartServer();
+        }
+        callback(`address: ${this.ip}:${this.port}`);
     }
 
     private sendGcodeFile = async (socket: SocketServer, file): Promise<any> => {

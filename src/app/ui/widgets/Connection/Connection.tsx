@@ -10,6 +10,7 @@ import { controller } from '../../../communication/socket-communication';
 import i18n from '../../../lib/i18n';
 import Notifications from '../../components/Notifications';
 import GoHomeModal from './modals/GoHomeModal';
+import OctoSetPort from './OctoSetPort';
 import SelectMachineModal from './modals/SelectMachineModal';
 import NetworkConnection from './NetworkConnection';
 import SerialConnection from './SerialConnection';
@@ -108,6 +109,8 @@ const Connection: React.FC = () => {
 
             {/* Go Home Modal */}
             <GoHomeModal />
+            {/* Set Octo post */}
+            <OctoSetPort />
         </div>
     );
 };
