@@ -1088,6 +1088,8 @@
     "key-App/Settings/MachineSettings-High CNC": "",
     "key-App/Settings/MachineSettings-Laser": "",
     "key-App/Settings/MachineSettings-Laser Toolhead": "Módulo láser",
+    "key-App/Settings/MachineSettings-Port Settings Tips": "Por favor, ingrese un número",
+    "key-App/Settings/MachineSettings-Port Settings": "Configuración de puertos",
     "key-App/Settings/MachineSettings-Machine": "Máquina",
     "key-App/Settings/MachineSettings-Modules": "",
     "key-App/Settings/MachineSettings-Single Extruder Toolhead": "Extrusor simple",

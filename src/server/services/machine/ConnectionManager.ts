@@ -346,13 +346,15 @@ class ConnectionManager {
 
         log.info(`ConnectionOpen: type = ${connectionType}, channel = ${this.channel.constructor.name}.`);
         await this.channel.connectionOpen(options);
-        await octo.onStart();
+        octo.onStart();
     };
 
     /**
      * Connection close.
      */
     public connectionClose = async (socket: SocketServer, options: ConnectionCloseOptions) => {
+        octo.onStop();
+
         if (!this.channel) {
             // success if no channel is used
             const result = {
@@ -362,10 +364,8 @@ class ConnectionManager {
                 text: ''
             };
             socket.emit('connection:close', result);
-            octo.onStop();
             return;
         }
-
         log.info(`Closing connection... ${this.channel.constructor.name}`);
 
         if (this.machineInstance) {

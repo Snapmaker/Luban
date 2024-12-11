@@ -1088,6 +1088,8 @@
     "key-App/Settings/MachineSettings-High CNC": "高功率CNC",
     "key-App/Settings/MachineSettings-Laser": "激光加工",
     "key-App/Settings/MachineSettings-Laser Toolhead": "激光模组",
+    "key-App/Settings/MachineSettings-Port Settings Tips": "请输入数字",
+    "key-App/Settings/MachineSettings-Port Settings": "端口设置",
     "key-App/Settings/MachineSettings-Machine": "机器",
     "key-App/Settings/MachineSettings-Modules": "模组",
     "key-App/Settings/MachineSettings-Single Extruder Toolhead": "单喷头",

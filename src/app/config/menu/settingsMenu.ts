@@ -55,6 +55,22 @@ export default {
             }
         },
         {
+            id: 'port',
+            label: 'key-App/Settings/MachineSettings-Port Settings',
+            enabled: true,
+            click: (menuItem, browserWindow) => {
+                if (isElectron()) {
+                    browserWindow.webContents.send('preferences.show', {
+                        activeTab: 'port'
+                    });
+                } else {
+                    UniApi.Event.emit('appbar-menu:preferences.show', {
+                        activeTab: 'port'
+                    });
+                }
+            }
+        },
+        {
             id: 'longterm-backup-config',
             label: 'key-App/Menu-Backup config',
             enabled: true,

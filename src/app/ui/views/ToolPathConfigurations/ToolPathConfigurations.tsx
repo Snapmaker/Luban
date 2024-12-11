@@ -91,6 +91,7 @@ const ToolPathConfigurations: React.FC<ToolPathConfigurationsProps> = ({ toolpat
                 if (newSettings.shaft_diameter) newSettings.shaft_diameter.default_value = toolParams?.toolShaftDiameter;
                 if (newSettings.jog_speed) newSettings.jog_speed.default_value = gcodeConfig?.jogSpeed;
                 if (newSettings.plunge_speed) newSettings.plunge_speed.default_value = gcodeConfig?.plungeSpeed;
+                if (newSettings.safety_height) newSettings.safety_height.default_value = gcodeConfig?.safetyHeight;
                 if (newSettings.work_speed) newSettings.work_speed.default_value = gcodeConfig?.workSpeed;
                 if (newSettings.step_down) newSettings.step_down.default_value = gcodeConfig?.stepDown;
                 if (newSettings.step_over) newSettings.step_over.default_value = gcodeConfig?.stepOver;

@@ -1,7 +1,7 @@
 import SocketEvent from '../../../app/communication/socket-events';
 import type SocketServer from '../../lib/SocketManager';
 import { connectionManager } from '../machine/ConnectionManager';
-
+import { octo } from '../machine/adaptor/Octo';
 
 function register(socketServer: SocketServer): void {
     const connectionEventsObject = {
@@ -81,6 +81,9 @@ function register(socketServer: SocketServer): void {
         [SocketEvent.ExportLogToExternalStorage]: connectionManager.exportLogToExternalStorage,
         [SocketEvent.GetFirmwareVersion]: connectionManager.getFirmwareVersion,
         [SocketEvent.UpgradeFirmware]: connectionManager.upgradeFirmwareFromFile,
+
+        // Octo onResetPort
+        'otco:onResetPort': octo.onResetPort,
     };
 
     Object.entries(connectionEventsObject).forEach(([key, value]) => {

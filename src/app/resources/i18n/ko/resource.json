@@ -1088,6 +1088,8 @@
     "key-App/Settings/MachineSettings-High CNC": "",
     "key-App/Settings/MachineSettings-Laser": "",
     "key-App/Settings/MachineSettings-Laser Toolhead": "레이저 모듈",
+    "key-App/Settings/MachineSettings-Port Settings Tips": "숫자를 입력하세요",
+    "key-App/Settings/MachineSettings-Port Settings": "포트 설정",
     "key-App/Settings/MachineSettings-Machine": "머신",
     "key-App/Settings/MachineSettings-Modules": "",
     "key-App/Settings/MachineSettings-Single Extruder Toolhead": "단일 압출기",
