@@ -92,7 +92,7 @@ class Octo {
         });
         // Note: start listener
         this.server.listen(this.port, this.ip, () => {
-            log.info(`octo octo adapter server start, address: ${this.ip}:${this.port}`);
+            log.info(`octo adapter server start, address: ${this.ip}:${this.port}`);
         });
     }
 
@@ -102,30 +102,20 @@ class Octo {
         }
         this.server && this.server.removeAllListeners();
         this.server.close(() => {
-            log.info('octo octo adapter server closed');
+            log.info('octo adapter server closed');
         });
         this.server = null;
     }
 
     public onResetPort = (socket: SocketServer, options: ConnectionCloseOptions, callback) => {
-        const port = options.port;
-        const restartServer = () => {
-            this.server && this.server.removeAllListeners();
-            this.server.close(() => {
-                log.info('octo octo adapter server closed');
-                this.server = null;
-                this.port = port;
-                this.onStart();
-            });
-        };
+        this.port = options.port;
+        console.log('line:112 this.port::: ', this.port);
 
-        if (this.server === null) {
-            this.port = port;
+        if (this.server) {
+            this.onStop();
             this.onStart();
-        } else {
-            restartServer();
         }
-        callback(`address: ${this.ip}:${this.port}`);
+        callback(`Octo port is : ${this.port}`);
     }
 
     private sendGcodeFile = async (socket: SocketServer, file): Promise<any> => {

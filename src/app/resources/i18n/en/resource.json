@@ -1088,6 +1088,8 @@
     "key-App/Settings/MachineSettings-High CNC": "200W CNC",
     "key-App/Settings/MachineSettings-Laser": "Laser",
     "key-App/Settings/MachineSettings-Laser Toolhead": "Laser Module",
+    "key-App/Settings/MachineSettings-Port Settings Tips": "Please input the number",
+    "key-App/Settings/MachineSettings-Port Settings": "Port Settings",
     "key-App/Settings/MachineSettings-Machine": "Machine",
     "key-App/Settings/MachineSettings-Modules": "Modules",
     "key-App/Settings/MachineSettings-Single Extruder Toolhead": "Single Extrusion",
