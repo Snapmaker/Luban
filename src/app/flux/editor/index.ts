@@ -1661,22 +1661,8 @@ export const actions = {
         const { modelGroup, SVGActions, toolPathGroup, coordinateMode, coordinateSize, materials } = getState()[headType];
         // const { modelGroup, SVGActions, toolPathGroup, coordinateSize, materials } = getState()[headType];
         const { rectRows, speedMin, speedMax, rectHeight, rectCols, powerMin, powerMax, rectWidth } = params;
-        console.log(params);
 
         const origin: Origin = getState()[headType].origin;
-        SVGActions.selectAllElements(materials.isRotate);
-        const { selectedModelIDArray } = modelGroup.getState();
-        const toolPaths = toolPathGroup.getToolPaths();
-        toolPaths.forEach(item => {
-            for (const id of selectedModelIDArray) {
-                if (item.modelMap.has(id)) {
-                    item.modelMap.delete(id);
-                }
-            }
-        });
-
-        SVGActions.deleteSelectedElements();
-        modelGroup.removeSelectedModel();
 
         const gap = 5;
 
