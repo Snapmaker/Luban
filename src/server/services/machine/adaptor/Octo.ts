@@ -109,8 +109,6 @@ class Octo {
 
     public onResetPort = (socket: SocketServer, options: ConnectionCloseOptions, callback) => {
         this.port = options.port;
-        console.log('line:112 this.port::: ', this.port);
-
         if (this.server) {
             this.onStop();
             this.onStart();
