@@ -1088,6 +1088,8 @@
     "key-App/Settings/MachineSettings-High CNC": "200W",
     "key-App/Settings/MachineSettings-Laser": "Лазер",
     "key-App/Settings/MachineSettings-Laser Toolhead": "Лазерний модуль",
+    "key-App/Settings/MachineSettings-Port Settings Tips": "Будь ласка, введіть число",
+    "key-App/Settings/MachineSettings-Port Settings": "Налаштування порту",
     "key-App/Settings/MachineSettings-Machine": "Пристрій",
     "key-App/Settings/MachineSettings-Modules": "Модулі",
     "key-App/Settings/MachineSettings-Single Extruder Toolhead": "Одинарний екструдер",
