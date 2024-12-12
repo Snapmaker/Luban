@@ -246,6 +246,16 @@ const init = () => {
     };
 };
 
+const onResetPort = (port:number = 5000) => {
+    return async () => {
+        return new Promise((res) => {
+            controller.emitEvent(SocketEvent.OnResetPort, { port }, (e) => {
+                res(e);
+            });
+        });
+    };
+};
+
 export default {
     setConnectionType,
     setConnectionTimeout,
@@ -282,4 +292,5 @@ export default {
      * Initialization
      */
     init,
+    onResetPort
 };
