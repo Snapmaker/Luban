@@ -1657,6 +1657,121 @@ export const actions = {
         dispatch(actions.resetProcessState(headType));
     },
 
+    createElementAndGenToolPath: (headType, params) => async (dispatch, getState) => {
+        const { modelGroup, SVGActions, toolPathGroup, coordinateMode, coordinateSize, materials } = getState()[headType];
+        // const { modelGroup, SVGActions, toolPathGroup, coordinateSize, materials } = getState()[headType];
+        const { rectRows, speedMin, speedMax, rectHeight, rectCols, powerMin, powerMax, rectWidth } = params;
+        console.log(params);
+
+        const origin: Origin = getState()[headType].origin;
+        SVGActions.selectAllElements(materials.isRotate);
+        const { selectedModelIDArray } = modelGroup.getState();
+        const toolPaths = toolPathGroup.getToolPaths();
+        toolPaths.forEach(item => {
+            for (const id of selectedModelIDArray) {
+                if (item.modelMap.has(id)) {
+                    item.modelMap.delete(id);
+                }
+            }
+        });
+
+        SVGActions.deleteSelectedElements();
+        modelGroup.removeSelectedModel();
+
+        const gap = 5;
+
+        const position = {
+            lx: -coordinateSize.x / 2,
+            dy: -coordinateSize.y / 2,
+            x: (coordinateSize.x / 2) * coordinateMode.setting.sizeMultiplyFactor.x,
+            y: (-coordinateSize.y / 2) * coordinateMode.setting.sizeMultiplyFactor.y
+        };
+        const begin = {
+            x: (rectWidth + gap) * rectCols / -2,
+            y: (rectHeight + gap) * rectRows / -2,
+        };
+        if (begin.x < position.lx || begin.y < position.dy) {
+            log.error('越界');
+            return;
+        }
+
+        const toolPathBase = {
+            speed: (speedMax - speedMin) / ((rectRows - 1) || 1),
+            power: (powerMax - powerMin) / ((rectCols - 1) || 1),
+        };
+
+        const wordSpeed = (speedMax - speedMin) / 2 + speedMin;
+        const wordPower = (powerMax - powerMin) / 2 + powerMin;
+        const createElement = async (text, x, y, w, h, workspeed, fixedPower, needRote) => {
+            const curX = coordinateSize.x * 0.5 + x;
+            const curY = coordinateSize.y * 1.5 + y;
+            let svg;
+            if (text) {
+                svg = await SVGActions.svgContentGroup.addSVGElement({
+                    element: 'text',
+                    attr: {
+                        x: curX,
+                        y: curY,
+                        'font-size': 24,
+                        'font-family': 'Arial Black',
+                        style: 'Regular',
+                        alignment: 'left',
+                        textContent: text,
+                        width: w,
+                        height: h,
+                    }
+                });
+            } else {
+                svg = await SVGActions.svgContentGroup.addSVGElement({
+                    element: 'rect',
+                    attr: {
+                        x: curX,
+                        y: curY,
+                        fill: '#ffffff',
+                        'fill-opacity': '0',
+                        opacity: '1',
+                        stroke: '#000000',
+                        'stroke-width': '0.2756410256410256',
+                        width: w,
+                        height: h,
+                    }
+                });
+            }
+            const newSVGModel = await SVGActions.createModelFromElement(svg);
+            const textElement = document.getElementById(svg.id);
+            await SVGActions.resizeElementsImmediately([textElement], { newWidth: w, newHeight: h });
+            if (needRote) {
+                await SVGActions.rotateElementsImmediately([textElement], { newAngle: -90 });
+            }
+            modelGroup.selectedModelArray.push(newSVGModel);
+            const toolPath = toolPathGroup.createToolPath({ materials, origin });
+            toolPath.gcodeConfig.workSpeed = workspeed;
+            toolPath.gcodeConfig.fixedPower = fixedPower;
+            toolPathGroup.saveToolPath(toolPath, { materials, origin }, false);
+            modelGroup.selectedModelArray = [];
+        };
+        await createElement('Passes', rectCols / 2 * (gap + rectWidth) + 5, -rectRows * (gap + rectHeight) - 10, 20, rectHeight, wordSpeed, wordPower, false);
+        await createElement('Power(%)', rectCols / 2 * (gap + rectWidth) + rectHeight, 2 * rectHeight, 25, rectHeight, wordSpeed, wordPower, false);
+        await createElement('Speed(mm/m)', -rectWidth - rectHeight / 2, -rectRows / 2 * (gap + rectHeight), 30, rectHeight, wordSpeed, wordPower, true);
+        let x = 0;
+        let y = 0;
+        for (let i = 0; i < rectCols; i++) {
+            x += gap + rectWidth;
+            await createElement(`${Math.round(powerMin + i * toolPathBase.power)}`, x + rectWidth / 2, rectHeight / 2, rectHeight, rectWidth, wordSpeed, wordPower, true);
+            y = 0;
+            for (let j = 0; j < rectRows; j++) {
+                y -= gap + rectHeight;
+                if (i === 0) {
+                    await createElement(`${Math.round(speedMin + j * toolPathBase.speed)}`, x - rectWidth, y + rectHeight / 2, rectWidth, rectHeight, wordSpeed, wordPower, false);
+                } else {
+                    await createElement(null, x - rectWidth, y + rectHeight / 2, rectWidth, rectHeight,
+                        speedMin + j * toolPathBase.speed, powerMin + i * toolPathBase.power, false);
+                }
+            }
+        }
+        dispatch(baseActions.render(headType));
+    },
+
     selectAllElements: headType => async (dispatch, getState) => {
         const { SVGActions, SVGCanvasMode, SVGCanvasExt, materials } = getState()[headType];
         if (SVGCanvasMode === 'draw' || SVGCanvasExt.elem) {

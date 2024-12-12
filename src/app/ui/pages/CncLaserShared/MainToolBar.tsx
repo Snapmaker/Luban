@@ -29,7 +29,7 @@ import SelectCaptureMode, { MODE_THICKNESS_COMPENSATION } from '../../widgets/La
 import LaserSetBackground from '../../widgets/LaserSetBackground';
 import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
 
-function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setShowWorkspace,
+function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setShowMaterialTesting, setShowWorkspace,
     onChangeSVGClippingMode,
     // onChangeMaterialTestMode,
     onChangeABPositionMode }) {
@@ -422,15 +422,15 @@ function useRenderMainToolBar({ headType, setShowHomePage, setShowJobType, setSh
             });
         }
         // TODO
-        // leftItems.push({
-        //     title: i18n._('key_ui-views-MaterialTestModal-FormComponent-title'),
-        //     type: 'button',
-        //     disabled: isOnABPosition,
-        //     name: 'MaterialTest',
-        //     action: () => {
-        //         dispatch(onChangeMaterialTestMode);
-        //     }
-        // });
+        leftItems.push({
+            title: i18n._('key-Laser/MainToolBar-MaterialTesting'),
+            type: 'button',
+            disabled: isOnABPosition,
+            name: 'MaterialTesting',
+            action: () => {
+                setShowMaterialTesting(true);
+            }
+        });
     }
 
     // CNC specific tools
@@ -644,6 +644,7 @@ useRenderMainToolBar.propTypes = {
     headType: PropTypes.string.isRequired,
     setShowHomePage: PropTypes.func,
     setShowJobType: PropTypes.func,
+    setShowMaterialTesting: PropTypes.func,
     setShowWorkspace: PropTypes.func
 };
 

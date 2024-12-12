@@ -2410,7 +2410,7 @@
     "key_menu_Unhide": "Unhide",
     "key_ui/widgets/CNCPath/CNCPath_Transformation": "Transformation",
     "manualModeDesc": "manualModeDesc",
-    "key_ui-views-MaterialTestModal-FormComponent-title": "Material Test",
+    "key-Laser/MainToolBar-MaterialTesting": "Material Test",
     "key_ui-views-MaterialTestModal-FormComponent-rows": "Rows",
     "key_ui-views-MaterialTestModal-FormComponent-rowCount": "Row Count",
     "key_ui-views-MaterialTestModal-FormComponent-columns": "Columns",
