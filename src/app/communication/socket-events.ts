@@ -113,6 +113,11 @@ enum SocketEvent {
      * Operating System
      */
     ListWiFiNetworks = 'os:list-wifi-networks',
+
+    /**
+     * Octo onResetPort
+     */
+    OnResetPort = 'otco:onResetPort',
 }
 
 export default SocketEvent;

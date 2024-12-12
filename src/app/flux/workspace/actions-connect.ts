@@ -249,7 +249,7 @@ const init = () => {
 const onResetPort = (port:number = 5000) => {
     return async () => {
         return new Promise((res) => {
-            controller.emitEvent('otco:onResetPort', { port }, (e) => {
+            controller.emitEvent(SocketEvent.OnResetPort, { port }, (e) => {
                 res(e);
             });
         });

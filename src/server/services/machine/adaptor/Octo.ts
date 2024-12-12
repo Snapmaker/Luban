@@ -110,6 +110,7 @@ class Octo {
     public onResetPort = (socket: SocketServer, options: ConnectionCloseOptions, callback) => {
         this.port = options.port;
         if (this.server) {
+            log.info(`octo adapter server restart port: ${this.port}`);
             this.onStop();
             this.onStart();
         }

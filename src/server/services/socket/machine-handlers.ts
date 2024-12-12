@@ -83,7 +83,7 @@ function register(socketServer: SocketServer): void {
         [SocketEvent.UpgradeFirmware]: connectionManager.upgradeFirmwareFromFile,
 
         // Octo onResetPort
-        'otco:onResetPort': octo.onResetPort,
+        [SocketEvent.OnResetPort]: octo.onResetPort,
     };
 
     Object.entries(connectionEventsObject).forEach(([key, value]) => {
