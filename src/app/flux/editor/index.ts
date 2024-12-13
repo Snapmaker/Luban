@@ -532,6 +532,7 @@ export const actions = {
             });
 
             controller.on('taskCompleted:cutModel', taskResult => {
+                log.info('taskCompleted:cutModel');
                 if (headType !== taskResult.headType) {
                     return;
                 }
@@ -1659,25 +1660,25 @@ export const actions = {
 
     createElementAndGenToolPath: (headType, params) => async (dispatch, getState) => {
         const { modelGroup, SVGActions, toolPathGroup, coordinateMode, coordinateSize, materials } = getState()[headType];
-        // const { modelGroup, SVGActions, toolPathGroup, coordinateSize, materials } = getState()[headType];
         const { rectRows, speedMin, speedMax, rectHeight, rectCols, powerMin, powerMax, rectWidth } = params;
-
         const origin: Origin = getState()[headType].origin;
 
         const gap = 5;
-
+        const headGap = 10;
+        console.log(`mode:${coordinateMode.value},${coordinateMode.setting.sizeMultiplyFactor.x},${coordinateMode.setting.sizeMultiplyFactor.y}`);
+        console.log(`csx:${coordinateSize.x},csy${coordinateSize.y}`);
+        const maxWidth = (rectCols * (gap + rectWidth)) + rectHeight + (gap + rectHeight);
+        const maxHeight = (rectRows + 3) * rectHeight + rectRows * gap + headGap;
+        console.log(maxHeight);
         const position = {
-            lx: -coordinateSize.x / 2,
-            dy: -coordinateSize.y / 2,
-            x: (coordinateSize.x / 2) * coordinateMode.setting.sizeMultiplyFactor.x,
-            y: (-coordinateSize.y / 2) * coordinateMode.setting.sizeMultiplyFactor.y
+            // TODO 画图在中心位计算坐标 坐标为可能有偏差，具体待验证
+            x: coordinateMode.setting.sizeMultiplyFactor.x * coordinateSize.x / 2 + (coordinateSize.x * 2 - maxWidth) / 2 + rectWidth,
+            y: -coordinateMode.setting.sizeMultiplyFactor.y * coordinateSize.y / 2 + ((maxHeight - headGap) / 2 - rectHeight * 1.5 + coordinateSize.y)
         };
-        const begin = {
-            x: (rectWidth + gap) * rectCols / -2,
-            y: (rectHeight + gap) * rectRows / -2,
-        };
-        if (begin.x < position.lx || begin.y < position.dy) {
-            log.error('越界');
+        // 越界判断，判断pass跟speed 最大高度
+        // 当前只支持工作原点为中心
+        if (maxWidth > coordinateSize.x || maxHeight > coordinateSize.y) {
+            log.error(`越界,xWidth:${maxWidth},y:${maxHeight}`);
             return;
         }
 
@@ -1689,8 +1690,8 @@ export const actions = {
         const wordSpeed = (speedMax - speedMin) / 2 + speedMin;
         const wordPower = (powerMax - powerMin) / 2 + powerMin;
         const createElement = async (text, x, y, w, h, workspeed, fixedPower, needRote) => {
-            const curX = coordinateSize.x * 0.5 + x;
-            const curY = coordinateSize.y * 1.5 + y;
+            const curX = position.x + x;
+            const curY = position.y + y;
             let svg;
             if (text) {
                 svg = await SVGActions.svgContentGroup.addSVGElement({
@@ -1733,28 +1734,36 @@ export const actions = {
             const toolPath = toolPathGroup.createToolPath({ materials, origin });
             toolPath.gcodeConfig.workSpeed = workspeed;
             toolPath.gcodeConfig.fixedPower = fixedPower;
-            toolPathGroup.saveToolPath(toolPath, { materials, origin }, false);
+            toolPath.gcodeConfig.constantPowerMode = true;
+            toolPath.gcodeConfig.auxiliaryAirPump = false;
+            toolPath.gcodeConfig.halfDiodeMode = false;
+            if (toolPathGroup.getToolPath(toolPath.id)) {
+                toolPathGroup.updateToolPath(toolPath.id, toolPath, { materials, origin });
+            } else {
+                toolPathGroup.saveToolPath(toolPath, { materials, origin }, false);
+            }
             modelGroup.selectedModelArray = [];
         };
-        await createElement('Passes', rectCols / 2 * (gap + rectWidth) + 5, -rectRows * (gap + rectHeight) - 10, 20, rectHeight, wordSpeed, wordPower, false);
+        await createElement('Passes', rectCols / 2 * (gap + rectWidth), -rectRows * (gap + rectHeight) - headGap, 20, rectHeight, wordSpeed, wordPower, false);
         await createElement('Power(%)', rectCols / 2 * (gap + rectWidth) + rectHeight, 2 * rectHeight, 25, rectHeight, wordSpeed, wordPower, false);
         await createElement('Speed(mm/m)', -rectWidth - rectHeight / 2, -rectRows / 2 * (gap + rectHeight), 30, rectHeight, wordSpeed, wordPower, true);
         let x = 0;
         let y = 0;
         for (let i = 0; i < rectCols; i++) {
             x += gap + rectWidth;
-            await createElement(`${Math.round(powerMin + i * toolPathBase.power)}`, x + rectWidth / 2, rectHeight / 2, rectHeight, rectWidth, wordSpeed, wordPower, true);
+            await createElement(`${Math.round(powerMin + i * toolPathBase.power)}`, x + rectWidth / 2, rectHeight / 2, rectHeight, rectWidth, wordSpeed, wordPower, false);
             y = 0;
             for (let j = 0; j < rectRows; j++) {
                 y -= gap + rectHeight;
                 if (i === 0) {
-                    await createElement(`${Math.round(speedMin + j * toolPathBase.speed)}`, x - rectWidth, y + rectHeight / 2, rectWidth, rectHeight, wordSpeed, wordPower, false);
-                } else {
-                    await createElement(null, x - rectWidth, y + rectHeight / 2, rectWidth, rectHeight,
-                        speedMin + j * toolPathBase.speed, powerMin + i * toolPathBase.power, false);
+                    await createElement(`${Math.round(speedMin + j * toolPathBase.speed)}`, x - rectWidth, y + rectHeight / 2, rectWidth, rectHeight, wordSpeed, wordPower, true);
                 }
+                await createElement(null, x, y, rectWidth, rectHeight, speedMin + j * toolPathBase.speed,
+                    powerMin + i * toolPathBase.power, false);
             }
         }
+
+        dispatch(projectActions.autoSaveEnvironment(headType));
         dispatch(baseActions.render(headType));
     },
 

@@ -29,14 +29,6 @@ const MaterialTestingView = React.forwardRef<MaterialTestingViewHandle, {}>((_, 
         }
     }, [form]);
 
-    // const getFormData = () => {
-    //     const formIDataBox = document.getElementById('formIDataBox') as HTMLFormElement;
-    //     const formData = new FormData(formIDataBox);
-    //     const dataObject = Object.fromEntries(formData.entries());
-    //     return dataObject;
-    // };
-
-
     const saveFormData = (values: any) => {
         editorStore.set(`${HEAD_LASER}lastMaterialTest`, JSON.stringify(values));
     };
@@ -49,7 +41,7 @@ const MaterialTestingView = React.forwardRef<MaterialTestingViewHandle, {}>((_, 
                 const testParamData = Object.fromEntries(
                     Object.entries(values).map(([key, value]) => [key, Number(value)])
                 );
-                console.log('Form Data:', testParamData);
+                // console.log('Form Data:', testParamData);
                 dispatch(editorActions.createElementAndGenToolPath(HEAD_LASER, testParamData));
             })
             .catch((error) => {
@@ -69,19 +61,19 @@ const MaterialTestingView = React.forwardRef<MaterialTestingViewHandle, {}>((_, 
             name: 'speedMin',
             suffix: 'mm/min',
             label: i18n._('key_ui-views-MaterialTestModal-FormComponent-min'),
-            component: <InputNumber controls={false} className={styles.input} min={0} name="speedMin" defaultValue={600} addonAfter={<span className={styles.suffix}>mm/min</span>} />
+            component: <InputNumber controls={false} className={styles.input} min={0} name="speedMin" defaultValue={600} />
         },
         {
             name: 'speedMax',
             suffix: 'mm/min',
             label: i18n._('key_ui-views-MaterialTestModal-FormComponent-max'),
-            component: <InputNumber controls={false} className={styles.input} min={200} name="speedMax" defaultValue={18000} addonAfter={<span className={styles.suffix}>mm/min</span>} />
+            component: <InputNumber controls={false} className={styles.input} min={200} name="speedMax" defaultValue={18000} />
         },
         {
             name: 'rectHeight',
             suffix: 'mm',
             label: i18n._('key_ui-views-MaterialTestModal-FormComponent-height'),
-            component: <InputNumber controls={false} className={styles.input} min={1} max={30} defaultValue={5} name="rectHeight" addonAfter={<span className={styles.suffix}>mm</span>} />
+            component: <InputNumber controls={false} className={styles.input} min={1} max={30} defaultValue={5} name="rectHeight" />
         },
     ];
     const powerFormItems = [
@@ -90,19 +82,19 @@ const MaterialTestingView = React.forwardRef<MaterialTestingViewHandle, {}>((_, 
             name: 'powerMin',
             suffix: '%',
             label: i18n._('key_ui-views-MaterialTestModal-FormComponent-min'),
-            component: <InputNumber controls={false} className={styles.input} max={100} min={0} defaultValue={10} name="powerMin" addonAfter={<span className={styles.suffix}>%</span>} />
+            component: <InputNumber controls={false} className={styles.input} max={100} min={0} defaultValue={10} name="powerMin" />
         },
         {
             name: 'powerMax',
             suffix: '%',
             label: i18n._('key_ui-views-MaterialTestModal-FormComponent-max'),
-            component: <InputNumber controls={false} className={styles.input} max={100} min={1} defaultValue={100} name="powerMax" addonAfter={<span className={styles.suffix}>%</span>} />
+            component: <InputNumber controls={false} className={styles.input} max={100} min={1} defaultValue={100} name="powerMax" />
         },
         {
             name: 'rectWidth',
             suffix: 'mm',
             label: i18n._('key_ui-views-MaterialTestModal-FormComponent-width'),
-            component: <InputNumber controls={false} className={styles.input} max={30} min={1} defaultValue={5} name="rectWidth" addonAfter={<span className={styles.suffix}>mm</span>} />
+            component: <InputNumber controls={false} className={styles.input} max={30} min={1} defaultValue={5} name="rectWidth" />
         },
     ];
     return (
@@ -123,9 +115,12 @@ const MaterialTestingView = React.forwardRef<MaterialTestingViewHandle, {}>((_, 
                         </div>
                         <Divider className={styles.divider} />
                         {speedFormItems.map((item) => (
-                            <Form.Item name={item.name} key={item.label} label={<span className={styles['input-label']}>{item.label}</span>} colon={false} className={styles['form-item']}>
-                                {item.component}
-                            </Form.Item>
+                            <div className={styles['input-box']}>
+                                <Form.Item name={item.name} key={item.label} label={<span className={styles['input-label']}>{item.label}</span>} colon={false} className={styles['form-item']}>
+                                    {item.component}
+                                </Form.Item>
+                                <div className={styles['input-suffix']}>{item.suffix}</div>
+                            </div>
                         ))}
                     </Col>
                     <Col span={12}>
@@ -142,9 +137,12 @@ const MaterialTestingView = React.forwardRef<MaterialTestingViewHandle, {}>((_, 
                         </div>
                         <Divider className={styles.divider} />
                         {powerFormItems.map((item) => (
-                            <Form.Item name={item.name} key={item.label} label={<span className={styles['input-label']}>{item.label}</span>} colon={false} className={styles['form-item']}>
-                                {item.component}
-                            </Form.Item>
+                            <div className={styles['input-box']}>
+                                <Form.Item name={item.name} key={item.label} label={<span className={styles['input-label']}>{item.label}</span>} colon={false} className={styles['form-item']}>
+                                    {item.component}
+                                </Form.Item>
+                                <div className={styles['input-suffix']}>{item.suffix}</div>
+                            </div>
                         ))}
                     </Col>
                 </Row>
