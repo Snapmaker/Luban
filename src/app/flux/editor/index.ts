@@ -532,7 +532,6 @@ export const actions = {
             });
 
             controller.on('taskCompleted:cutModel', taskResult => {
-                log.info('taskCompleted:cutModel');
                 if (headType !== taskResult.headType) {
                     return;
                 }
@@ -1665,11 +1664,8 @@ export const actions = {
 
         const gap = 5;
         const headGap = 10;
-        console.log(`mode:${coordinateMode.value},${coordinateMode.setting.sizeMultiplyFactor.x},${coordinateMode.setting.sizeMultiplyFactor.y}`);
-        console.log(`csx:${coordinateSize.x},csy${coordinateSize.y}`);
         const maxWidth = (rectCols * (gap + rectWidth)) + rectHeight + (gap + rectHeight);
         const maxHeight = (rectRows + 3) * rectHeight + rectRows * gap + headGap;
-        console.log(maxHeight);
         const position = {
             // TODO 画图在中心位计算坐标 坐标为可能有偏差，具体待验证
             x: coordinateMode.setting.sizeMultiplyFactor.x * coordinateSize.x / 2 + (coordinateSize.x * 2 - maxWidth) / 2 + rectWidth,
