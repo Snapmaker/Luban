@@ -70,6 +70,7 @@ jobs:
             -   name: Deploy Windows release
                 uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
+                    overwrite: true
                     upload_url: https://api.github.com/repos/leo-songye-li/Luban/releases/assets/205643800/assets{?name,label}
                     release_id: 205643800
                     asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-win-x64.exe
