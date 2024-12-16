@@ -41,7 +41,6 @@ const MaterialTestingView = React.forwardRef<MaterialTestingViewHandle, {}>((_, 
                 const testParamData = Object.fromEntries(
                     Object.entries(values).map(([key, value]) => [key, Number(value)])
                 );
-                // console.log('Form Data:', testParamData);
                 dispatch(editorActions.createElementAndGenToolPath(HEAD_LASER, testParamData));
             })
             .catch((error) => {

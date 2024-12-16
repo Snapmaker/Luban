@@ -156,7 +156,6 @@ const convertTextToSvg = async (options) => {
 
     return new Promise((resolve, reject) => {
         const targetPath = `${process.env.Tmpdir}/${uploadName}`;
-        console.log(`${process.env.Tmpdir}`);
         fs.writeFile(targetPath, svgString, (err) => {
             if (err) {
                 log.error(err);
