@@ -13,6 +13,7 @@ import GoHomeModal from './modals/GoHomeModal';
 import SelectMachineModal from './modals/SelectMachineModal';
 import NetworkConnection from './NetworkConnection';
 import SerialConnection from './SerialConnection';
+import { machineStore } from '../../../store/local-storage';
 
 
 /**
@@ -59,6 +60,12 @@ const Connection: React.FC = () => {
             controller.subscribeDiscover(connectionType, false);
         };
     }, [isConnected, connectionType]);
+
+    useEffect(() => {
+        // set octo port from local
+        const storeOctoPort = machineStore.get('octo-port');
+        if (storeOctoPort) dispatch(connectActions.onResetPort(storeOctoPort));
+    }, []);
 
     return (
         <div>
