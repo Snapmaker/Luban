@@ -37,6 +37,13 @@ jobs:
                 with:
                     node-version: 16
 
+            -   name: install
+                run: |
+                    npm install -g npm@^9
+                    npm install
+            -   name: build
+                run: npm run build
+
             -   name: Init Props
                 run: |
                     $PRODUCT_NAME="Snapmaker Luban"
@@ -44,13 +51,6 @@ jobs:
                     $PACKAGE_VERSION= node -e "console.log(require('./src/package.json').version)"
                     $RELEASE="$PACKAGE_NAME-$PACKAGE_VERSION"
                     echo "SM_RELEASE=$RELEASE" >> $env:GITHUB_ENV
-
-            -   name: install
-                run: |
-                    npm install -g npm@^9
-                    npm install
-            -   name: build
-                run: npm run build
 
             # ----------------------------------------------------------------
             # Build Windows x64
@@ -71,8 +71,8 @@ jobs:
                 uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
                     overwrite: true
-                    upload_url: https://api.github.com/repos/leo-songye-li/Luban/releases/assets/205643800/assets{?name,label}
-                    release_id: 205643800
+                    upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
+                    release_id: 180614211
                     asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-win-x64.exe
                     asset_name: ${{ env.SM_RELEASE }}-win-x64.exe
                     asset_content_type: application/octet-stream
@@ -96,7 +96,7 @@ jobs:
                run: git submodule update --init --recursive
 
            -   name: Set up Python
-               uses: actions/setup-python@v3
+               uses: actions/setup-python@v2
                with:
                    python-version: 3.11
 
@@ -109,6 +109,14 @@ jobs:
                with:
                    node-version: 16
 
+           # install setuptools to reintroduce distutils missing in Python 3.12
+           # https://github.com/nodejs/node-gyp/issues/2869
+           -   run: pip install setuptools
+           -   run: npm install -g npm@^9
+           -   run: npm install
+
+           -   run: npm run build
+
            -   name: Init Props
                run: |
                     PRODUCT_NAME="Snapmaker Luban"
@@ -117,13 +125,6 @@ jobs:
                     RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}
                     echo "SM_RELEASE=$RELEASE" >> $GITHUB_ENV
 
-           # install setuptools to reintroduce distutils missing in Python 3.12
-           # https://github.com/nodejs/node-gyp/issues/2869
-           -   run: pip install setuptools
-           -   run: npm install -g npm@^9
-           -   run: npm install
-
-           -   run: npm run build
 
            # ----------------------------------------------------------------
            # Build macOS x64 & arm64
@@ -147,8 +148,8 @@ jobs:
            -    name: Deploy mac-arm64-dmg nightly
                 uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
-                   upload_url: https://api.github.com/repos/leo-songye-li/Luban/releases/assets/205643800/assets{?name,label}
-                   release_id: 205643800
+                   upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
+                   release_id: 180614211
                    asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-arm64.dmg
                    asset_name: ${{ env.SM_RELEASE }}-mac-arm64.dmg
                    asset_content_type: application/octet-stream
@@ -163,8 +164,8 @@ jobs:
            -    name: Deploy mac-arm64-zip nightly
                 uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
-                   upload_url: https://api.github.com/repos/leo-songye-li/Luban/releases/assets/205643800/assets{?name,label}
-                   release_id: 205643800
+                   upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
+                   release_id: 180614211
                    asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-arm64.zip
                    asset_name: ${{ env.SM_RELEASE }}-mac-arm64.zip
                    asset_content_type: application/octet-stream
@@ -181,8 +182,8 @@ jobs:
            -    name: Deploy mac-x64-dmg nightly
                 uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
-                   upload_url: https://api.github.com/repos/leo-songye-li/Luban/releases/assets/205643800/assets{?name,label}
-                   release_id: 205643800
+                   upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
+                   release_id: 180614211
                    asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-x64.dmg
                    asset_name: ${{ env.SM_RELEASE }}-mac-x64.dmg
                    asset_content_type: application/octet-stream
@@ -197,8 +198,8 @@ jobs:
            -    name: Deploy mac-x64-dmg nightly
                 uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
-                   upload_url: https://api.github.com/repos/leo-songye-li/Luban/releases/assets/205643800/assets{?name,label}
-                   release_id: 205643800
+                   upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
+                   release_id: 180614211
                    asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-mac-x64.zip
                    asset_name: ${{ env.SM_RELEASE }}-mac-x64.zip
                    asset_content_type: application/octet-stream
@@ -265,8 +266,8 @@ jobs:
             -   name: Deploy Linux-deb nightly
                 uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
-                    upload_url: https://api.github.com/repos/leo-songye-li/Luban/releases/assets/205643800/assets{?name,label}
-                    release_id: 205643800
+                    upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
+                    release_id: 180614211
                     asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-linux-amd64.deb
                     asset_name: ${{ env.SM_RELEASE }}-linux-amd64.deb
                     asset_content_type: application/octet-stream
@@ -282,8 +283,8 @@ jobs:
             -   name: Deploy Linux-rpm nightly
                 uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
-                    upload_url: https://api.github.com/repos/leo-songye-li/Luban/releases/assets/205643800/assets{?name,label}
-                    release_id: 205643800
+                    upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
+                    release_id: 180614211
                     asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-linux.x86_64.rpm
                     asset_name: ${{ env.SM_RELEASE }}-linux.x86_64.rpm
                     asset_content_type: application/octet-stream
@@ -300,8 +301,8 @@ jobs:
             -   name: Deploy Linux-tar nightly
                 uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
-                    upload_url: https://api.github.com/repos/leo-songye-li/Luban/releases/assets/205643800/assets{?name,label}
-                    release_id: 205643800
+                    upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
+                    release_id: 180614211
                     asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-linux-x64.tar.gz
                     asset_name: ${{ env.SM_RELEASE }}-linux-x64.tar.gz
                     asset_content_type: application/octet-stream

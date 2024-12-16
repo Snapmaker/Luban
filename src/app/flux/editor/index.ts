@@ -1731,7 +1731,7 @@ export const actions = {
             toolPath.gcodeConfig.workSpeed = workspeed;
             toolPath.gcodeConfig.fixedPower = fixedPower;
             toolPath.gcodeConfig.constantPowerMode = true;
-            toolPath.gcodeConfig.auxiliaryAirPump = false;
+            toolPath.gcodeConfig.auxiliaryAirPump = true;
             toolPath.gcodeConfig.halfDiodeMode = false;
             if (toolPathGroup.getToolPath(toolPath.id)) {
                 toolPathGroup.updateToolPath(toolPath.id, toolPath, { materials, origin });
