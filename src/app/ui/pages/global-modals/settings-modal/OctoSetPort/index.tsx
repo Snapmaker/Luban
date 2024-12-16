@@ -17,9 +17,10 @@ const OctoSetPort: React.FC = () => {
     const [port, setPort] = useState(storeOctoPort);
 
     const onSave = async () => {
-        if (!port) setPort(storeOctoPort);
-        await dispatch(connectActions.onResetPort(port));
-        machineStore.set('octo-port', port);
+        if (port) {
+            await dispatch(connectActions.onResetPort(port));
+            machineStore.set('octo-port', port);
+        }
     };
 
     const handleChangePort = (e) => {
