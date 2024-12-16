@@ -2412,7 +2412,7 @@
     "key_menu_Unhide": "表示",
     "key_ui/widgets/CNCPath/CNCPath_Transformation": "変換",
     "manualModeDesc": "",
-    "key_ui-views-MaterialTestModal-FormComponent-title": "材料テスト",
+    "key-Laser/MainToolBar-MaterialTesting": "材料テスト",
     "key_ui-views-MaterialTestModal-FormComponent-rows": "行",
     "key_ui-views-MaterialTestModal-FormComponent-rowCount": "行数",
     "key_ui-views-MaterialTestModal-FormComponent-columns": "列",

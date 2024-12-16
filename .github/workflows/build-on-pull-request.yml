@@ -37,6 +37,13 @@ jobs:
                 with:
                     node-version: 16
 
+            -   name: install
+                run: |
+                    npm install -g npm@^9
+                    npm install
+            -   name: build
+                run: npm run build
+
             -   name: Init Props
                 run: |
                     $PRODUCT_NAME="Snapmaker Luban"
@@ -44,13 +51,6 @@ jobs:
                     $PACKAGE_VERSION= node -e "console.log(require('./src/package.json').version)"
                     $RELEASE="$PACKAGE_NAME-$PACKAGE_VERSION"
                     echo "SM_RELEASE=$RELEASE" >> $env:GITHUB_ENV
-
-            -   name: install
-                run: |
-                    npm install -g npm@^9
-                    npm install
-            -   name: build
-                run: npm run build
 
             # ----------------------------------------------------------------
             # Build Windows x64
@@ -70,6 +70,7 @@ jobs:
             -   name: Deploy Windows release
                 uses: WebFreak001/deploy-nightly@v3.2.0
                 with:
+                    overwrite: true
                     upload_url: https://uploads.github.com/repos/Snapmaker/Luban/releases/180614211/assets{?name,label}
                     release_id: 180614211
                     asset_path: ${{ github.workspace }}/output/${{ env.SM_RELEASE }}-win-x64.exe
@@ -95,7 +96,7 @@ jobs:
                run: git submodule update --init --recursive
 
            -   name: Set up Python
-               uses: actions/setup-python@v3
+               uses: actions/setup-python@v2
                with:
                    python-version: 3.11
 
@@ -108,6 +109,14 @@ jobs:
                with:
                    node-version: 16
 
+           # install setuptools to reintroduce distutils missing in Python 3.12
+           # https://github.com/nodejs/node-gyp/issues/2869
+           -   run: pip install setuptools
+           -   run: npm install -g npm@^9
+           -   run: npm install
+
+           -   run: npm run build
+
            -   name: Init Props
                run: |
                     PRODUCT_NAME="Snapmaker Luban"
@@ -116,13 +125,6 @@ jobs:
                     RELEASE=${PACKAGE_NAME}-${PACKAGE_VERSION}
                     echo "SM_RELEASE=$RELEASE" >> $GITHUB_ENV
 
-           # install setuptools to reintroduce distutils missing in Python 3.12
-           # https://github.com/nodejs/node-gyp/issues/2869
-           -   run: pip install setuptools
-           -   run: npm install -g npm@^9
-           -   run: npm install
-
-           -   run: npm run build
 
            # ----------------------------------------------------------------
            # Build macOS x64 & arm64

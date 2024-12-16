@@ -2412,7 +2412,7 @@
     "key_menu_Unhide": "Scopri",
     "key_ui/widgets/CNCPath/CNCPath_Transformation": "Trasformazione",
     "manualModeDesc": "",
-    "key_ui-views-MaterialTestModal-FormComponent-title": "Test del Materiale",
+    "key-Laser/MainToolBar-MaterialTesting": "Test del Materiale",
     "key_ui-views-MaterialTestModal-FormComponent-rows": "Righe",
     "key_ui-views-MaterialTestModal-FormComponent-rowCount": "Conteggio Righe",
     "key_ui-views-MaterialTestModal-FormComponent-columns": "Colonne",

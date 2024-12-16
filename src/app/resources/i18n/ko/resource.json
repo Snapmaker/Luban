@@ -2412,7 +2412,7 @@
     "key_menu_Unhide": "숨김 해제",
     "key_ui/widgets/CNCPath/CNCPath_Transformation": "변형",
     "manualModeDesc": "",
-    "key_ui-views-MaterialTestModal-FormComponent-title": "재료 테스트",
+    "key-Laser/MainToolBar-MaterialTesting": "재료 테스트",
     "key_ui-views-MaterialTestModal-FormComponent-rows": "행",
     "key_ui-views-MaterialTestModal-FormComponent-rowCount": "행 수",
     "key_ui-views-MaterialTestModal-FormComponent-columns": "열",

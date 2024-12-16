@@ -24,6 +24,7 @@ import HomePage from '../HomePage';
 import Workspace from '../Workspace';
 import StarterGuide from './StarterGuide';
 import JobSetupModal from './modals/JobSetupModal';
+import MaterialTestingModal from '../../views/MaterialTesting/MaterialTestingModal';
 import ProjectOversizeMessage from './modals/ProjectOversizeMessage';
 import { SnapmakerRayMachine } from '../../../machines';
 import { LaserWorkspaceRay } from '../laser-workspace-ray';
@@ -66,6 +67,7 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
     const [showHomePage, setShowHomePage] = useState(false);
     const [showWorkspace, setShowWorkspace] = useState(false);
     const [showJobType, setShowJobType] = useState(true);
+    const [showMaterialTesting, setShowMaterialTesting] = useState(true);
 
     const [pageMode, setPageMode] = useState(PageMode.Default);
 
@@ -88,6 +90,10 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
     useEffect(() => {
         setShowJobType(!!location?.state?.shouldShowJobType);
     }, [location?.state?.shouldShowJobType]);
+
+    useEffect(() => {
+        setShowMaterialTesting(!!location?.state?.shouldShowMaterialTesting);
+    }, [location?.state?.shouldShowMaterialTesting]);
 
     // Starter Guide
     const [showStarterGuide, setShowStarterGuide] = useState(false);
@@ -124,6 +130,7 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
         headType: HEAD_LASER,
         setShowHomePage,
         setShowJobType,
+        setShowMaterialTesting,
         setShowWorkspace,
         onChangeSVGClippingMode,
         onChangeABPositionMode
@@ -288,6 +295,13 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
                 showJobType && (
                     <JobSetupModal
                         onClose={() => setShowJobType(false)}
+                    />
+                )
+            }
+            {/* Job Setup: Workpiece & Origin */
+                showMaterialTesting && (
+                    <MaterialTestingModal
+                        onClose={() => setShowMaterialTesting(false)}
                     />
                 )
             }

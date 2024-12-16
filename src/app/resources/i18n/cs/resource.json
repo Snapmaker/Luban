@@ -2412,7 +2412,7 @@
     "key_menu_Unhide": "",
     "key_ui/widgets/CNCPath/CNCPath_Transformation": "",
     "manualModeDesc": "",
-    "key_ui-views-MaterialTestModal-FormComponent-title": "Materiálový test",
+    "key-Laser/MainToolBar-MaterialTesting": "Materiálový test",
     "key_ui-views-MaterialTestModal-FormComponent-rows": "Řádky",
     "key_ui-views-MaterialTestModal-FormComponent-rowCount": "Počet řádků",
     "key_ui-views-MaterialTestModal-FormComponent-columns": "Sloupce",
