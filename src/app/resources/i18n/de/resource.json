@@ -2412,7 +2412,7 @@
     "key_menu_Unhide": "Einblenden",
     "key_ui/widgets/CNCPath/CNCPath_Transformation": "Umwandlung",
     "manualModeDesc": "Oberfläche manueller Modus",
-    "key_ui-views-MaterialTestModal-FormComponent-title": "Materialtest",
+    "key-Laser/MainToolBar-MaterialTesting": "Materialtest",
     "key_ui-views-MaterialTestModal-FormComponent-rows": "Reihen",
     "key_ui-views-MaterialTestModal-FormComponent-rowCount": "Reihenzahl",
     "key_ui-views-MaterialTestModal-FormComponent-columns": "Spalten",
