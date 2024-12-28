@@ -1728,13 +1728,10 @@ export const actions = {
             }
             modelGroup.selectedModelArray.push(newSVGModel);
             const toolPath = toolPathGroup.createToolPath({ materials, origin });
+            toolPath.gcodeConfig = gcodeConfig;
+            toolPath.toolParams = toolParams;
             toolPath.gcodeConfig.workSpeed = workspeed;
             toolPath.gcodeConfig.fixedPower = fixedPower;
-            toolPath.gcodeConfig.constantPowerMode = true;
-            toolPath.gcodeConfig.auxiliaryAirPump = true;
-            toolPath.gcodeConfig.halfDiodeMode = false;
-            //TODO 临时指定，需要沟通是否需要修改方案
-            toolPath.gcodeConfig.multiPasses = 1;
             if (toolPathGroup.getToolPath(toolPath.id)) {
                 toolPathGroup.updateToolPath(toolPath.id, toolPath, { materials, origin });
             } else {
