@@ -24,11 +24,11 @@ import HomePage from '../HomePage';
 import Workspace from '../Workspace';
 import StarterGuide from './StarterGuide';
 import JobSetupModal from './modals/JobSetupModal';
-import MaterialTestingModal from '../../views/MaterialTesting/MaterialTestingModal';
 import ProjectOversizeMessage from './modals/ProjectOversizeMessage';
 import { SnapmakerRayMachine } from '../../../machines';
 import { LaserWorkspaceRay } from '../laser-workspace-ray';
 import { PageMode } from '../PageMode';
+import MaterialTestConfigurations from '../../views/MaterialTestConfigurations/MaterialTestConfigurations';
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp, .dxf';
 const pageHeadType = HEAD_LASER;
@@ -67,7 +67,7 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
     const [showHomePage, setShowHomePage] = useState(false);
     const [showWorkspace, setShowWorkspace] = useState(false);
     const [showJobType, setShowJobType] = useState(true);
-    const [showMaterialTesting, setShowMaterialTesting] = useState(true);
+    const [showMaterialTest, setShowMaterialTest] = useState(false);
 
     const [pageMode, setPageMode] = useState(PageMode.Default);
 
@@ -76,7 +76,10 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
     const thumbnail = useRef();
 
     useEffect(() => {
+        setShowMaterialTest(false);
         dispatch(laserActions.init());
+        // MaterialTestConfigurations show after laserActions init
+        setShowMaterialTest(true);
         logPageView({
             pathname: '/laser',
         });
@@ -92,8 +95,8 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
     }, [location?.state?.shouldShowJobType]);
 
     useEffect(() => {
-        setShowMaterialTesting(!!location?.state?.shouldShowMaterialTesting);
-    }, [location?.state?.shouldShowMaterialTesting]);
+        setShowMaterialTest(!!location?.state?.shouldShowMaterialTest);
+    }, [location?.state?.shouldShowMaterialTest]);
 
     // Starter Guide
     const [showStarterGuide, setShowStarterGuide] = useState(false);
@@ -130,7 +133,7 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
         headType: HEAD_LASER,
         setShowHomePage,
         setShowJobType,
-        setShowMaterialTesting,
+        setShowMaterialTest,
         setShowWorkspace,
         onChangeSVGClippingMode,
         onChangeABPositionMode
@@ -298,10 +301,10 @@ const LaserMainPage: React.FC<LaserMainPageProps> = ({ location }) => {
                     />
                 )
             }
-            {/* Job Setup: Workpiece & Origin */
-                showMaterialTesting && (
-                    <MaterialTestingModal
-                        onClose={() => setShowMaterialTesting(false)}
+            {/* MaterialTest Setup: Workpiece & Origin */
+                showMaterialTest && (
+                    <MaterialTestConfigurations
+                        onClose={() => setShowMaterialTest(false)}
                     />
                 )
             }
