@@ -76,6 +76,7 @@ import { actions as appGlobalActions } from '../app-global';
 import UpdateHrefOperation2D from '../operation-history/UpdateHrefOperation2D';
 import { toast } from '../../ui/components/Toast';
 import { makeSceneToast } from '../../ui/views/toasts/SceneToast';
+import AddMaterialTestGenerate from '../operation-history/AddMaterialTestGenerate';
 
 
 declare type HeadType = 'laser' | 'cnc';
@@ -1660,6 +1661,7 @@ export const actions = {
     },
 
     createElementAndGenToolPath: (headType, params, gcodeConfig, toolParams) => async (dispatch, getState) => {
+        dispatch(actions.resetProcessState(headType));
         const { modelGroup, SVGActions, toolPathGroup, coordinateMode, coordinateSize, materials } = getState()[headType];
         const { rectRows, speedMin, speedMax, rectHeight, rectCols, powerMin, powerMax, rectWidth } = params;
         const origin: Origin = getState()[headType].origin;
@@ -1682,13 +1684,15 @@ export const actions = {
         }
 
         const toolPathBase = {
-            speed: Math.round((speedMax - speedMin) / ((rectRows - 1) || 1)),
-            power: Math.round((powerMax - powerMin) / ((rectCols - 1) || 1)),
+            speed: (speedMax - speedMin) / ((rectRows - 1) || 1),
+            power: (powerMax - powerMin) / ((rectCols - 1) || 1),
         };
 
         const wordSpeed = Math.round((speedMax - speedMin) / 3 + speedMin);
         const wordPower = Math.round((powerMax - powerMin) / 2 + powerMin);
         const mergeList = [];
+        const backupModels = [];
+        const backupToolPath = [];
         const createToolPath = (models, ws, fp) => {
             modelGroup.selectedModelArray = models;
             const toolPath = toolPathGroup.createToolPath({ materials, origin });
@@ -1702,6 +1706,7 @@ export const actions = {
             } else {
                 toolPathGroup.saveToolPath(toolPath, { materials, origin }, false);
             }
+            backupToolPath.push(toolPath);
             modelGroup.selectedModelArray = [];
         };
         const createElement = async (text, x, y, w, h, ws, fp, needRote) => {
@@ -1745,6 +1750,7 @@ export const actions = {
             if (needRote) {
                 await SVGActions.rotateElementsImmediately([textElement], { newAngle: -90 });
             }
+            backupModels.push(newSVGModel);
             if (text) {
                 mergeList.push(newSVGModel);
             } else {
@@ -1765,18 +1771,24 @@ export const actions = {
                 const curSpeed = Math.round(speedMin + j * toolPathBase.speed);
                 if (i === 0) {
                     await createElement(`${curSpeed}`, x - rectWidth, y + rectHeight / 2, rectWidth, rectHeight, null, null, true);
-                    console.log(`(${i},${j})`);
                 }
                 if (j === 0) {
                     await createElement(`${curPower}`, x + rectWidth / 2, rectHeight / 2, rectHeight, rectWidth, null, null, false);
-                    console.log(`(${i},${j})`);
                 }
                 await createElement(null, x, y, rectWidth, rectHeight, curSpeed, curPower, false);
-                console.log(`(${i},${j})`);
             }
         }
         createToolPath(mergeList, wordSpeed, wordPower);
-        dispatch(projectActions.autoSaveEnvironment(headType));
+        const operation = new AddMaterialTestGenerate({
+            toolPathGroup: toolPathGroup,
+            modelGroup: modelGroup,
+            svgActions: SVGActions,
+            models: backupModels
+        });
+        const operations = new CompoundOperation();
+        operations.push(operation);
+        dispatch(operationHistoryActions.setOperations(headType, operations));
+        dispatch(baseActions.render(headType));
     },
 
     selectAllElements: headType => async (dispatch, getState) => {

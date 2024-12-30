@@ -211,7 +211,6 @@ const MaterialTestConfigurations: React.FC<MaterialTestConfigurationsProps> = ({
                     const nFormData = Object.fromEntries(Object.entries(values).map(([key, value]) => [key, Number(value)]));
                     saveFormData(values); // 保存数据到 localStorage
                     dispatch(editorActions.createElementAndGenToolPath(HEAD_LASER, nFormData, gcodeConfig, toolParams));
-                    dispatch(editorActions.refreshToolPathPreview(HEAD_LASER));
                 })
                 .catch((error) => {
                     console.error('Validation Failed:', error);
