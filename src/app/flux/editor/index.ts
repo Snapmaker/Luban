@@ -1682,13 +1682,29 @@ export const actions = {
         }
 
         const toolPathBase = {
-            speed: (speedMax - speedMin) / ((rectRows - 1) || 1),
-            power: (powerMax - powerMin) / ((rectCols - 1) || 1),
+            speed: Math.round((speedMax - speedMin) / ((rectRows - 1) || 1)),
+            power: Math.round((powerMax - powerMin) / ((rectCols - 1) || 1)),
         };
 
-        const wordSpeed = (speedMax - speedMin) / 2 + speedMin;
-        const wordPower = (powerMax - powerMin) / 2 + powerMin;
-        const createElement = async (text, x, y, w, h, workspeed, fixedPower, needRote) => {
+        const wordSpeed = Math.round((speedMax - speedMin) / 3 + speedMin);
+        const wordPower = Math.round((powerMax - powerMin) / 2 + powerMin);
+        const mergeList = [];
+        const createToolPath = (models, ws, fp) => {
+            modelGroup.selectedModelArray = models;
+            const toolPath = toolPathGroup.createToolPath({ materials, origin });
+            toolPath.name = models.length > 1 ? `${models[0].modelName}-${models[models.length - 1].modelName}` : models[0].modelName;
+            toolPath.gcodeConfig = gcodeConfig;
+            toolPath.toolParams = toolParams;
+            toolPath.gcodeConfig.workSpeed = ws;
+            toolPath.gcodeConfig.fixedPower = fp;
+            if (toolPathGroup.getToolPath(toolPath.id)) {
+                toolPathGroup.updateToolPath(toolPath.id, toolPath, { materials, origin });
+            } else {
+                toolPathGroup.saveToolPath(toolPath, { materials, origin }, false);
+            }
+            modelGroup.selectedModelArray = [];
+        };
+        const createElement = async (text, x, y, w, h, ws, fp, needRote) => {
             const curX = position.x + x;
             const curY = position.y + y;
             let svg;
@@ -1729,38 +1745,37 @@ export const actions = {
             if (needRote) {
                 await SVGActions.rotateElementsImmediately([textElement], { newAngle: -90 });
             }
-            modelGroup.selectedModelArray.push(newSVGModel);
-            const toolPath = toolPathGroup.createToolPath({ materials, origin });
-            toolPath.gcodeConfig = gcodeConfig;
-            toolPath.toolParams = toolParams;
-            toolPath.gcodeConfig.workSpeed = workspeed;
-            toolPath.gcodeConfig.fixedPower = fixedPower;
-            if (toolPathGroup.getToolPath(toolPath.id)) {
-                toolPathGroup.updateToolPath(toolPath.id, toolPath, { materials, origin });
+            if (text) {
+                mergeList.push(newSVGModel);
             } else {
-                toolPathGroup.saveToolPath(toolPath, { materials, origin }, false);
+                createToolPath([newSVGModel], ws, fp);
             }
-            modelGroup.selectedModelArray = [];
         };
-        await createElement('Passes', rectCols / 2 * (widthGap + rectWidth), -rectRows * (widthGap + rectHeight) - HeightGap, 20, rectHeight, wordSpeed, wordPower, false);
-        await createElement('Power(%)', rectCols / 2 * (widthGap + rectWidth) + rectHeight, 2 * rectHeight, 25, rectHeight, wordSpeed, wordPower, false);
-        await createElement('Speed(mm/m)', -rectWidth - rectHeight / 2, -rectRows / 2 * (widthGap + rectHeight), 30, rectHeight, wordSpeed, wordPower, true);
+        await createElement('Passes', rectCols / 2 * (widthGap + rectWidth), -rectRows * (widthGap + rectHeight) - HeightGap, 20, rectHeight, null, null, false);
+        await createElement('Power(%)', rectCols / 2 * (widthGap + rectWidth) + rectHeight, 2 * rectHeight, 25, rectHeight, null, null, false);
+        await createElement('Speed(mm/m)', -rectWidth - rectHeight / 2, -rectRows / 2 * (widthGap + rectHeight), 30, rectHeight, null, null, true);
         let x = 0;
         let y = 0;
         for (let i = 0; i < rectCols; i++) {
             x += widthGap + rectWidth;
-            await createElement(`${Math.round(powerMin + i * toolPathBase.power)}`, x + rectWidth / 2, rectHeight / 2, rectHeight, rectWidth, wordSpeed, wordPower, false);
             y = 0;
+            const curPower = Math.round(powerMin + i * toolPathBase.power);
             for (let j = 0; j < rectRows; j++) {
                 y -= widthGap + rectHeight;
+                const curSpeed = Math.round(speedMin + j * toolPathBase.speed);
                 if (i === 0) {
-                    await createElement(`${Math.round(speedMin + j * toolPathBase.speed)}`, x - rectWidth, y + rectHeight / 2, rectWidth, rectHeight, wordSpeed, wordPower, true);
+                    await createElement(`${curSpeed}`, x - rectWidth, y + rectHeight / 2, rectWidth, rectHeight, null, null, true);
+                    console.log(`(${i},${j})`);
                 }
-                await createElement(null, x, y, rectWidth, rectHeight, speedMin + j * toolPathBase.speed,
-                    powerMin + i * toolPathBase.power, false);
+                if (j === 0) {
+                    await createElement(`${curPower}`, x + rectWidth / 2, rectHeight / 2, rectHeight, rectWidth, null, null, false);
+                    console.log(`(${i},${j})`);
+                }
+                await createElement(null, x, y, rectWidth, rectHeight, curSpeed, curPower, false);
+                console.log(`(${i},${j})`);
             }
         }
-
+        createToolPath(mergeList, wordSpeed, wordPower);
         dispatch(projectActions.autoSaveEnvironment(headType));
     },
 

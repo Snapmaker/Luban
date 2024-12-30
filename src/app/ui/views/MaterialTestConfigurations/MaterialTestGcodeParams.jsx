@@ -6,7 +6,6 @@ import i18n from '../../../lib/i18n';
 import SvgIcon from '../../components/SvgIcon';
 import ToolParameters from '../ToolPathConfigurations/cnc/ToolParameters';
 import { toHump } from '../../../../shared/lib/utils';
-import PresentSelector from '../ToolPathConfigurations/laser/PresentSelector';
 
 class MaterialTestGcodeParams extends PureComponent {
     static propTypes = {
@@ -15,11 +14,11 @@ class MaterialTestGcodeParams extends PureComponent {
         updateGcodeConfig: PropTypes.func.isRequired,
         updateToolConfig: PropTypes.func.isRequired,
 
-        toolDefinitions: PropTypes.array.isRequired,
-        setCurrentToolDefinition: PropTypes.func.isRequired,
-        isModifiedDefinition: PropTypes.bool.isRequired,
-        setCurrentValueAsProfile: PropTypes.func.isRequired,
-        isModel: PropTypes.bool,
+        // toolDefinitions: PropTypes.array.isRequired,
+        // setCurrentToolDefinition: PropTypes.func.isRequired,
+        // isModifiedDefinition: PropTypes.bool.isRequired,
+        // setCurrentValueAsProfile: PropTypes.func.isRequired,
+        // isModel: PropTypes.bool,
         zOffsetEnabled: PropTypes.bool,
         halfDiodeModeEnabled: PropTypes.bool,
         auxiliaryAirPumpEnabled: PropTypes.bool,
@@ -166,14 +165,6 @@ class MaterialTestGcodeParams extends PureComponent {
                         />
                         <span>{i18n._('Preset')}</span>
                     </div>
-                    <PresentSelector
-                        toolDefinition={this.props.activeToolDefinition}
-                        toolDefinitions={this.props.toolDefinitions}
-                        setCurrentToolDefinition={this.props.setCurrentToolDefinition}
-                        isModifiedDefinition={this.props.isModifiedDefinition}
-                        setCurrentValueAsProfile={this.props.setCurrentValueAsProfile}
-                        isModel={this.props.isModel}
-                    />
                     <ToolParameters
                         settings={laserDefinitionMethod}
                         updateToolConfig={this.props.updateToolConfig}
