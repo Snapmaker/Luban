@@ -105,7 +105,7 @@ class MaterialTestParameters extends PureComponent {
                 name: 'rectHeight',
                 suffix: 'mm',
                 label: i18n._('key_ui-views-MaterialTestModal-FormComponent-height'),
-                component: <InputNumber controls={false} className={formStyles.input} min={1} max={30} name="rectHeight" />
+                component: <InputNumber controls={false} className={formStyles.input} min={2} max={12} name="rectHeight" />
             },
         ];
         const powerFormItems = [
@@ -126,7 +126,7 @@ class MaterialTestParameters extends PureComponent {
                 name: 'rectWidth',
                 suffix: 'mm',
                 label: i18n._('key_ui-views-MaterialTestModal-FormComponent-width'),
-                component: <InputNumber controls={false} className={formStyles.input} max={30} min={1} name="rectWidth" />
+                component: <InputNumber controls={false} className={formStyles.input} min={2} max={12} name="rectWidth" />
             },
         ];
         const zOffsetEnabled = activeMachine.metadata.size.z > 0;
