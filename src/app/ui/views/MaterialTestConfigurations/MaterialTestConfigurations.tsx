@@ -10,8 +10,6 @@ import styles from '../ToolPathConfigurations/styles.styl';
 
 import {
     HEAD_LASER,
-    LEVEL_ONE_POWER_LASER_FOR_SM2,
-    LEVEL_TWO_POWER_LASER_FOR_SM2
 } from '../../../constants/machines';
 import i18n from '../../../lib/i18n';
 import { actions as editorActions } from '../../../flux/editor';
@@ -21,21 +19,8 @@ import { toHump } from '../../../../shared/lib/utils';
 import MaterialTestParameters from './MaterialTestParameters';
 import { editorStore } from '../../../store/local-storage';
 
-function getDefaultDefinition(laserToolHead, toolDefinitions = []) {
-    let res;
-    const lastDefinitionId = editorStore.get(`${HEAD_LASER}LastDefinitionId`);
-    // modelMode default is vector
-    if (lastDefinitionId) {
-        res = toolDefinitions.find(d => d?.definitionId === lastDefinitionId);
-    } else if (laserToolHead === LEVEL_ONE_POWER_LASER_FOR_SM2) {
-        res = toolDefinitions.find(d => d?.definitionId === 'basswood.cutting_1.5mm');
-    } else if (laserToolHead === LEVEL_TWO_POWER_LASER_FOR_SM2) {
-        res = toolDefinitions.find(d => d?.definitionId === 'basswood.cutting_3mm');
-    }
-    if (!res) {
-        res = toolDefinitions[0];
-    }
-    return res;
+function getDefaultDefinition(toolDefinitions = []) {
+    return toolDefinitions.find(d => d?.definitionId === 'material_test.default_engraving');
 }
 
 function getDefaultFormData() {
@@ -63,11 +48,10 @@ interface MaterialTestConfigurationsProps {
 
 const MaterialTestConfigurations: React.FC<MaterialTestConfigurationsProps> = ({ onClose }) => {
     const toolDefinitions = useSelector(state => state[HEAD_LASER]?.toolDefinitions, shallowEqual);
-    const laserToolHead = useSelector(state => state?.machine?.toolHead?.laserToolhead, shallowEqual);
     const materials = useSelector(state => state[HEAD_LASER]?.materials, shallowEqual);
     const dispatch = useDispatch();
 
-    const [currentToolDefinition, setCurrentToolDefinition] = useState(getDefaultDefinition(laserToolHead, toolDefinitions));
+    const [currentToolDefinition, setCurrentToolDefinition] = useState(getDefaultDefinition(toolDefinitions));
 
     /**
      *
