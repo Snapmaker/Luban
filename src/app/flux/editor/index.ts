@@ -1665,23 +1665,35 @@ export const actions = {
         const { modelGroup, SVGActions, toolPathGroup, coordinateMode, coordinateSize, materials } = getState()[headType];
         const { rectRows, speedMin, speedMax, rectHeight, rectCols, powerMin, powerMax, rectWidth } = params;
         const origin: Origin = getState()[headType].origin;
-
-        const widthGap = 5;
-        const HeightGap = 10;
-        const maxWidth = (rectCols * (widthGap + rectWidth)) + rectHeight + (widthGap + rectHeight);
-        const maxHeight = (rectRows + 3) * rectHeight + rectRows * widthGap + HeightGap;
-        const position = {
-            // TODO 画图在中心位计算坐标 坐标为可能有偏差，具体待验证
-            x: coordinateMode.setting.sizeMultiplyFactor.x * coordinateSize.x / 2 + (coordinateSize.x * 2 - maxWidth) / 2 + rectWidth,
-            y: -coordinateMode.setting.sizeMultiplyFactor.y * coordinateSize.y / 2 + ((maxHeight - HeightGap) / 2 - rectHeight * 1.5 + coordinateSize.y)
+        const rectGap = 6;
+        const titleGap = 2;
+        // headTitleGap just use between head title and rects
+        const headTitleGap = 4;
+        const baseStyle = {
+            titleHeight: 3,
+            titleFontSize: 8.6,
+            numHeight: 2,
+            numFontSize: 5.8,
         };
-        // 越界判断，判断pass跟speed 最大高度
-        // 当前只支持工作原点为中心
+        if ((rectHeight < rectWidth ? rectHeight : rectWidth) > 6) {
+            baseStyle.titleHeight = 4;
+            baseStyle.titleFontSize = 11.2;
+            baseStyle.numHeight = 3;
+            baseStyle.numFontSize = 8.6;
+        }
+        const maxWidth = rectCols * (rectWidth + rectGap) - rectGap + titleGap * 2 + baseStyle.numHeight + baseStyle.titleHeight;
+        const maxHeight = rectRows * (rectHeight + rectGap) - rectGap + headTitleGap + (titleGap + baseStyle.titleHeight) * 2 + baseStyle.numHeight;
+
+        // 越界判断
         if (maxWidth > coordinateSize.x || maxHeight > coordinateSize.y) {
             toast(makeSceneToast('warning', 'Cannot creat too much rect'));
             log.error(`越界,xWidth:${maxWidth},y:${maxHeight}`);
             return;
         }
+        const position = {
+            x: coordinateSize.x + coordinateMode.setting.sizeMultiplyFactor.x * coordinateSize.x / 2 - maxWidth / 2,
+            y: coordinateSize.y - coordinateMode.setting.sizeMultiplyFactor.y * coordinateSize.y / 2 + maxHeight / 2
+        };
 
         const toolPathBase = {
             speed: (speedMax - speedMin) / ((rectRows - 1) || 1),
@@ -1709,73 +1721,72 @@ export const actions = {
             backupToolPath.push(toolPath);
             modelGroup.selectedModelArray = [];
         };
-        const createElement = async (text, x, y, w, h, ws, fp, needRote) => {
+        const createTextElement = async (text, x, y, h, fontSize, needRote) => {
             const curX = position.x + x;
             const curY = position.y + y;
-            let svg;
-            if (text) {
-                svg = await SVGActions.svgContentGroup.addSVGElement({
-                    element: 'text',
-                    attr: {
-                        x: curX,
-                        y: curY,
-                        'font-size': 24,
-                        'font-family': 'Arial Black',
-                        style: 'Regular',
-                        alignment: 'left',
-                        textContent: text,
-                        width: w,
-                        height: h,
-                    }
-                });
-            } else {
-                svg = await SVGActions.svgContentGroup.addSVGElement({
-                    element: 'rect',
-                    attr: {
-                        x: curX,
-                        y: curY,
-                        fill: '#ffffff',
-                        'fill-opacity': '0',
-                        opacity: '1',
-                        stroke: '#000000',
-                        'stroke-width': '0.2756410256410256',
-                        width: w,
-                        height: h,
-                    }
-                });
-            }
+            const svg = await SVGActions.svgContentGroup.addSVGElement({
+                element: 'text',
+                attr: {
+                    x: curX,
+                    y: curY,
+                    'font-size': fontSize,
+                    'font-family': 'Arial Black',
+                    style: 'Aril-Regular',
+                    alignment: 'left',
+                    textContent: text,
+                    height: h,
+                }
+            });
             const newSVGModel = await SVGActions.createModelFromElement(svg);
             const textElement = document.getElementById(svg.id);
-            await SVGActions.resizeElementsImmediately([textElement], { newWidth: w, newHeight: h });
+            await SVGActions.resizeElementsImmediately([textElement], { newHeight: h });
             if (needRote) {
                 await SVGActions.rotateElementsImmediately([textElement], { newAngle: -90 });
             }
             backupModels.push(newSVGModel);
-            if (text) {
-                mergeList.push(newSVGModel);
-            } else {
-                createToolPath([newSVGModel], ws, fp);
-            }
+            mergeList.push(newSVGModel);
         };
-        await createElement('Passes', rectCols / 2 * (widthGap + rectWidth), -rectRows * (widthGap + rectHeight) - HeightGap, 20, rectHeight, null, null, false);
-        await createElement('Power(%)', rectCols / 2 * (widthGap + rectWidth) + rectHeight, 2 * rectHeight, 25, rectHeight, null, null, false);
-        await createElement('Speed(mm/m)', -rectWidth - rectHeight / 2, -rectRows / 2 * (widthGap + rectHeight), 30, rectHeight, null, null, true);
-        let x = 0;
-        let y = 0;
+        const createRectElement = async (x, y, w, h, ws, fp) => {
+            const curX = position.x + x;
+            const curY = position.y + y;
+            const svg = await SVGActions.svgContentGroup.addSVGElement({
+                element: 'rect',
+                attr: {
+                    x: curX,
+                    y: curY,
+                    fill: '#ffffff',
+                    'fill-opacity': '0',
+                    opacity: '1',
+                    stroke: '#000000',
+                    'stroke-width': '0.2756410256410256',
+                    width: w,
+                    height: h,
+                }
+            });
+            const newSVGModel = await SVGActions.createModelFromElement(svg);
+            const textElement = document.getElementById(svg.id);
+            await SVGActions.resizeElementsImmediately([textElement], { newWidth: w, newHeight: h });
+            backupModels.push(newSVGModel);
+            createToolPath([newSVGModel], ws, fp);
+        };
+        await createTextElement(`Passes : ${gcodeConfig.multiPasses}`, maxWidth / 2, -maxHeight + baseStyle.titleHeight / 2, baseStyle.titleHeight, baseStyle.titleFontSize, false);
+        await createTextElement('Power(%)', maxWidth / 2, -baseStyle.titleHeight / 2, baseStyle.titleHeight, baseStyle.titleFontSize, false);
+        await createTextElement('Speed(mm/m)', baseStyle.titleHeight / 2, -maxHeight / 2, baseStyle.titleHeight, baseStyle.titleFontSize, true);
+        const basicX = baseStyle.titleHeight + baseStyle.numHeight + titleGap * 2;
+        const basicY = -(baseStyle.titleHeight + baseStyle.numHeight + titleGap * 2);
         for (let i = 0; i < rectCols; i++) {
-            x += widthGap + rectWidth;
-            y = 0;
+            const x = basicX + i * (rectWidth + rectGap);
             const curPower = Math.round(powerMin + i * toolPathBase.power);
             for (let j = 0; j < rectRows; j++) {
-                y -= widthGap + rectHeight;
+                const y = basicY - j * (rectGap + rectHeight);
                 const curSpeed = Math.round(speedMin + j * toolPathBase.speed);
                 if (i === 0) {
-                    await createElement(`${curSpeed}`, x - rectWidth, y + rectHeight / 2, rectWidth, rectHeight, null, null, true);
+                    await createTextElement(`${curSpeed}`, x - (titleGap + baseStyle.numHeight / 2), y - rectHeight / 2, baseStyle.numHeight, baseStyle.numFontSize, true);
                 }
                 if (j === 0) {
-                    await createElement(`${curPower}`, x + rectWidth / 2, rectHeight / 2, rectHeight, rectWidth, null, null, false);
+                    await createTextElement(`${curPower}`, x + rectWidth / 2, y + titleGap + baseStyle.numHeight / 2, baseStyle.numHeight, baseStyle.numFontSize, false);
                 }
-                await createElement(null, x, y, rectWidth, rectHeight, curSpeed, curPower, false);
+                await createRectElement(x, y - rectHeight, rectWidth, rectHeight, curSpeed, curPower);
             }
         }
         createToolPath(mergeList, wordSpeed, wordPower);
