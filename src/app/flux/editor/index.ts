@@ -1662,9 +1662,28 @@ export const actions = {
 
     createElementAndGenToolPath: (headType, params, gcodeConfig, toolParams) => async (dispatch, getState) => {
         dispatch(actions.resetProcessState(headType));
-        const { modelGroup, SVGActions, toolPathGroup, coordinateMode, coordinateSize, materials } = getState()[headType];
+        const { progressStatesManager, modelGroup, SVGActions, toolPathGroup, coordinateMode, coordinateSize, materials } = getState()[headType];
         const { rectRows, speedMin, speedMax, rectHeight, rectCols, powerMin, powerMax, rectWidth } = params;
         const origin: Origin = getState()[headType].origin;
+
+        if (!progressStatesManager.inProgress()) {
+            progressStatesManager.startProgress(PROCESS_STAGE.CNC_LASER_PROCESS_IMAGE, [1]);
+        } else {
+            progressStatesManager.startNextStep();
+        }
+
+        const progress = (p) => {
+            dispatch(
+                actions.updateState(headType, {
+                    stage: STEP_STAGE.CNC_LASER_PROCESSING_IMAGE,
+                    progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_PROCESSING_IMAGE, p)
+                })
+            );
+            if (p === 1) {
+                progressStatesManager.finishProgress(true);
+            }
+        };
+
         const rectGap = 6;
         const titleGap = 2;
         // headTitleGap just use between head title and rects
@@ -1683,7 +1702,7 @@ export const actions = {
         }
         const maxWidth = rectCols * (rectWidth + rectGap) - rectGap + titleGap * 2 + baseStyle.numHeight + baseStyle.titleHeight;
         const maxHeight = rectRows * (rectHeight + rectGap) - rectGap + headTitleGap + (titleGap + baseStyle.titleHeight) * 2 + baseStyle.numHeight;
-
+        progress(0.05);
         // 越界判断
         if (maxWidth > coordinateSize.x || maxHeight > coordinateSize.y) {
             toast(makeSceneToast('warning', 'Cannot creat too much rect'));
@@ -1769,9 +1788,11 @@ export const actions = {
             backupModels.push(newSVGModel);
             createToolPath([newSVGModel], ws, fp);
         };
+
         await createTextElement(`Passes : ${gcodeConfig.multiPasses}`, maxWidth / 2, -maxHeight + baseStyle.titleHeight / 2, baseStyle.titleHeight, baseStyle.titleFontSize, false);
         await createTextElement('Power(%)', maxWidth / 2, -baseStyle.titleHeight / 2, baseStyle.titleHeight, baseStyle.titleFontSize, false);
         await createTextElement('Speed(mm/m)', baseStyle.titleHeight / 2, -maxHeight / 2, baseStyle.titleHeight, baseStyle.titleFontSize, true);
+        progress(0.1);
         const basicX = baseStyle.titleHeight + baseStyle.numHeight + titleGap * 2;
         const basicY = -(baseStyle.titleHeight + baseStyle.numHeight + titleGap * 2);
         for (let i = 0; i < rectCols; i++) {
@@ -1788,8 +1809,10 @@ export const actions = {
                 }
                 await createRectElement(x, y - rectHeight, rectWidth, rectHeight, curSpeed, curPower);
             }
+            progress(0.1 + (i + 1) * (0.9 / rectCols));
         }
         createToolPath(mergeList, wordSpeed, wordPower);
+        progress(0.95);
         const operation = new AddMaterialTestGenerate({
             toolPathGroup: toolPathGroup,
             modelGroup: modelGroup,
@@ -1799,6 +1822,7 @@ export const actions = {
         const operations = new CompoundOperation();
         operations.push(operation);
         dispatch(operationHistoryActions.setOperations(headType, operations));
+        progress(1);
         dispatch(baseActions.render(headType));
     },
 
