@@ -202,7 +202,6 @@ const MaterialTestConfigurations: React.FC<MaterialTestConfigurationsProps> = ({
             onClose && onClose();
         },
         onDuplicateToolNameDefinition: async (inputValue) => {
-            //TODO 复制,不关注
             const newToolDefinition = {
                 ...currentToolDefinition,
                 name: inputValue
@@ -210,7 +209,6 @@ const MaterialTestConfigurations: React.FC<MaterialTestConfigurationsProps> = ({
             await dispatch(editorActions.duplicateToolListDefinition(HEAD_LASER, newToolDefinition));
         },
         setCurrentValueAsProfile: () => {
-            //TODO 不关注
             const activeToolDefinition = currentToolDefinition;
             const definitionsWithSameCategory = toolDefinitions.filter(d => d.category === activeToolDefinition.category);
             // make sure name is not repeated
