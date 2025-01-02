@@ -1673,15 +1673,19 @@ export const actions = {
         }
 
         const progress = (p) => {
+            if (p === 1) {
+                progressStatesManager.finishProgress(true);
+            }
+            if (p === -1) {
+                progressStatesManager.finishProgress(false);
+                p = 1;
+            }
             dispatch(
                 actions.updateState(headType, {
                     stage: STEP_STAGE.CNC_LASER_PROCESSING_IMAGE,
                     progress: progressStatesManager.updateProgress(STEP_STAGE.CNC_LASER_PROCESSING_IMAGE, p)
                 })
             );
-            if (p === 1) {
-                progressStatesManager.finishProgress(true);
-            }
         };
 
         const rectGap = 6;
@@ -1705,8 +1709,9 @@ export const actions = {
         progress(0.05);
         // 越界判断
         if (maxWidth > coordinateSize.x || maxHeight > coordinateSize.y) {
+            progress(-1);
             toast(makeSceneToast('warning', 'Cannot creat too much rect'));
-            log.error(`越界,xWidth:${maxWidth},y:${maxHeight}`);
+            log.error(`越界,svgWidth:${maxWidth},svgHeight:${maxHeight}`);
             return;
         }
         const position = {
