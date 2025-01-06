@@ -192,8 +192,8 @@ const MaterialTestConfigurations: React.FC<MaterialTestConfigurationsProps> = ({
             }
             form.validateFields()
                 .then((values) => {
-                    const nFormData = Object.fromEntries(Object.entries(values).map(([key, value]) => [key, Number(value)]));
-                    saveFormData(values); // 保存数据到 localStorage
+                    const nFormData = Object.fromEntries(Object.entries(values).map(([key, value]) => [key, value !== null && value !== undefined && value !== '' ? Number(value) : formData[key]]));
+                    saveFormData(nFormData); // 保存数据到 localStorage
                     dispatch(editorActions.createElementAndGenToolPath(HEAD_LASER, nFormData, gcodeConfig, toolParams));
                 })
                 .catch((error) => {
