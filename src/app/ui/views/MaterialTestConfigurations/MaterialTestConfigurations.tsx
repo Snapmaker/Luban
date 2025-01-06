@@ -263,7 +263,7 @@ const MaterialTestConfigurations: React.FC<MaterialTestConfigurationsProps> = ({
                     {i18n._('key-Laser/MainToolBar-MaterialTesting')}
                     {/* </Modal.Title> */}
                 </Modal.Header>
-                <Modal.Body style={{ height: '540px', overflow: 'initial' }}>
+                <Modal.Body style={{ height: '540px', width: '470px', overflow: 'initial' }}>
                     <MaterialTestParameters
                         setCurrentToolDefinition={(definition) => actions.setToolDefinitionAndRemember(definition)}
                         gcodeConfig={gcodeConfig}

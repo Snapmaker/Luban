@@ -1693,11 +1693,17 @@ export const actions = {
         // headTitleGap just use between head title and rects
         const headTitleGap = 4;
         const baseStyle = {
-            titleHeight: 3,
-            titleFontSize: 8.6,
+            titleHeight: 2.5,
+            titleFontSize: 7,
             numHeight: 2,
             numFontSize: 5.8,
         };
+        if ((rectHeight < rectWidth ? rectHeight : rectWidth) > 4) {
+            baseStyle.titleHeight = 3;
+            baseStyle.titleFontSize = 8.5;
+            baseStyle.numHeight = 2;
+            baseStyle.numFontSize = 5.8;
+        }
         if ((rectHeight < rectWidth ? rectHeight : rectWidth) > 6) {
             baseStyle.titleHeight = 4;
             baseStyle.titleFontSize = 11.2;
@@ -1708,15 +1714,16 @@ export const actions = {
         const maxHeight = rectRows * (rectHeight + rectGap) - rectGap + headTitleGap + (titleGap + baseStyle.titleHeight) * 2 + baseStyle.numHeight;
         progress(0.05);
         // 越界判断
+        console.log(`maxWidth:${maxWidth},maxHeight:${maxHeight}`);
         if (maxWidth > coordinateSize.x || maxHeight > coordinateSize.y) {
             progress(-1);
             toast(makeSceneToast('warning', 'Cannot creat too much rect'));
-            log.error(`越界,svgWidth:${maxWidth},svgHeight:${maxHeight}`);
             return;
         }
+
         const position = {
-            x: coordinateSize.x + coordinateMode.setting.sizeMultiplyFactor.x * coordinateSize.x / 2 - maxWidth / 2,
-            y: coordinateSize.y - coordinateMode.setting.sizeMultiplyFactor.y * coordinateSize.y / 2 + maxHeight / 2
+            x: SVGActions.size.x + coordinateMode.setting.sizeMultiplyFactor.x * coordinateSize.x / 2 - maxWidth / 2,
+            y: SVGActions.size.y - coordinateMode.setting.sizeMultiplyFactor.y * coordinateSize.y / 2 + maxHeight / 2
         };
 
         const toolPathBase = {
@@ -1754,8 +1761,8 @@ export const actions = {
                     x: curX,
                     y: curY,
                     'font-size': fontSize,
-                    'font-family': 'Arial Black',
-                    style: 'Aril-Regular',
+                    'font-family': 'Aril regular',
+                    style: 'Regular',
                     alignment: 'left',
                     textContent: text,
                     height: h,
