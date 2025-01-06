@@ -1697,27 +1697,29 @@ export const actions = {
             titleFontSize: 7,
             numHeight: 2,
             numFontSize: 5.8,
+            maxWidth: 14.9,
         };
         if ((rectHeight < rectWidth ? rectHeight : rectWidth) > 4) {
             baseStyle.titleHeight = 3;
             baseStyle.titleFontSize = 8.5;
             baseStyle.numHeight = 2;
             baseStyle.numFontSize = 5.8;
+            baseStyle.maxWidth = 18.1;
         }
         if ((rectHeight < rectWidth ? rectHeight : rectWidth) > 6) {
             baseStyle.titleHeight = 4;
             baseStyle.titleFontSize = 11.2;
             baseStyle.numHeight = 3;
             baseStyle.numFontSize = 8.6;
+            baseStyle.maxWidth = 23.8;
         }
         const maxWidth = rectCols * (rectWidth + rectGap) - rectGap + titleGap * 2 + baseStyle.numHeight + baseStyle.titleHeight;
         const maxHeight = rectRows * (rectHeight + rectGap) - rectGap + headTitleGap + (titleGap + baseStyle.titleHeight) * 2 + baseStyle.numHeight;
         progress(0.05);
         // 越界判断
-        console.log(`maxWidth:${maxWidth},maxHeight:${maxHeight}`);
-        if (maxWidth > coordinateSize.x || maxHeight > coordinateSize.y) {
+        if (coordinateSize.x < baseStyle.maxWidth || maxWidth > coordinateSize.x || maxHeight > coordinateSize.y) {
             progress(-1);
-            toast(makeSceneToast('warning', 'Cannot creat too much rect'));
+            toast(makeSceneToast('warning', `Need more workspace,limit width:${coordinateSize.x < baseStyle.maxWidth ? baseStyle.maxWidth : maxWidth},limit height:${maxHeight}`));
             return;
         }
 
