@@ -1763,7 +1763,7 @@ export const actions = {
                     x: curX,
                     y: curY,
                     'font-size': fontSize,
-                    'font-family': 'Aril regular',
+                    'font-family': 'Arial',
                     style: 'Regular',
                     alignment: 'left',
                     textContent: text,
