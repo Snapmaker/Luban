@@ -93,7 +93,7 @@ class MaterialTestParameters extends PureComponent {
                 name: 'speedMin',
                 suffix: 'mm/min',
                 label: i18n._('key_ui-views-MaterialTestModal-FormComponent-min'),
-                component: <InputNumber controls={false} className={formStyles.input} min={1} name="speedMin" />
+                component: <InputNumber controls={false} className={formStyles.input} min={1} max={30000} name="speedMin" />
             },
             {
                 name: 'speedMax',
