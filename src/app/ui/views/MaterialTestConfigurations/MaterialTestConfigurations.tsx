@@ -29,11 +29,11 @@ function getDefaultFormData() {
         return Object.fromEntries(Object.entries(JSON.parse(storeData)).map(([key, value]) => [key, Number(value)]));
     } else {
         return {
-            rectRows: 10,
+            rectRows: 5,
             speedMin: 600,
-            speedMax: 18000,
+            speedMax: 7200,
             rectHeight: 5,
-            rectCols: 10,
+            rectCols: 5,
             powerMin: 10,
             powerMax: 100,
             rectWidth: 5,
