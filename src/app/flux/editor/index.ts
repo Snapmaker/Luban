@@ -1694,32 +1694,32 @@ export const actions = {
         const headTitleGap = 4;
         const baseStyle = {
             titleHeight: 2.5,
-            titleFontSize: 7,
+            titleFontSize: 5,
             numHeight: 2,
-            numFontSize: 5.8,
-            maxWidth: 14.9,
+            numFontSize: 4,
+            maxWidth: 16
         };
         if ((rectHeight < rectWidth ? rectHeight : rectWidth) > 4) {
             baseStyle.titleHeight = 3;
             baseStyle.titleFontSize = 8.5;
             baseStyle.numHeight = 2;
             baseStyle.numFontSize = 5.8;
-            baseStyle.maxWidth = 18.1;
+            baseStyle.maxWidth = 17.9;
         }
         if ((rectHeight < rectWidth ? rectHeight : rectWidth) > 6) {
             baseStyle.titleHeight = 4;
             baseStyle.titleFontSize = 11.2;
             baseStyle.numHeight = 3;
             baseStyle.numFontSize = 8.6;
-            baseStyle.maxWidth = 23.8;
+            baseStyle.maxWidth = 23.6;
         }
-        const maxWidth = rectCols * (rectWidth + rectGap) - rectGap + titleGap * 2 + baseStyle.numHeight + baseStyle.titleHeight;
+        const maxWidth = rectCols * (rectWidth + rectGap) - rectGap + titleGap * 2 + baseStyle.numHeight + baseStyle.titleHeight + (rectWidth > 3 ? 0 : 1);
         const maxHeight = rectRows * (rectHeight + rectGap) - rectGap + headTitleGap + (titleGap + baseStyle.titleHeight) * 2 + baseStyle.numHeight;
         progress(0.05);
         // 越界判断
-        if (coordinateSize.x < baseStyle.maxWidth || maxWidth > coordinateSize.x || maxHeight > coordinateSize.y) {
+        if (maxWidth > Math.max(coordinateSize.x, baseStyle.maxWidth) || maxHeight > coordinateSize.y) {
             progress(-1);
-            toast(makeSceneToast('warning', `Need more workspace,limit width:${coordinateSize.x < baseStyle.maxWidth ? baseStyle.maxWidth : maxWidth},limit height:${maxHeight}`));
+            toast(makeSceneToast('warning', `Need more workspace,limit width:${Math.max(coordinateSize.x, baseStyle.maxWidth, maxWidth)},limit height:${maxHeight}`));
             return;
         }
 
@@ -1772,7 +1772,6 @@ export const actions = {
             });
             const newSVGModel = await SVGActions.createModelFromElement(svg);
             const textElement = document.getElementById(svg.id);
-            await SVGActions.resizeElementsImmediately([textElement], { newHeight: h });
             if (needRote) {
                 await SVGActions.rotateElementsImmediately([textElement], { newAngle: -90 });
             }
