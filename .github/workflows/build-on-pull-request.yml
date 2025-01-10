@@ -221,22 +221,28 @@ jobs:
             -   name: Checkout submodules
                 run: git submodule update --init --recursive
 
+            -   name: Install system dependencies
+                run: |
+                    sudo apt-get update
+                    sudo apt-get install -y python3 make g++ build-essential fontconfig libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
+
             -   name: Set up Python
-                uses: actions/setup-python@v3
+                uses: actions/setup-python@v2
                 with:
-                   python-version: 3.11
+                  python-version: 3.11
 
             -   name: Install dependencies
                 run: |
-                   python -m pip install --upgrade pip
+                  sudo ln -sf /usr/bin/python3 /usr/bin/python
+                  python -m pip install --upgrade pip
 
             -   name: Use Node.js 16
                 uses: actions/setup-node@v3
                 with:
                     node-version: 16
 
-            -   run: npm install -g npm@^9
-            -   run: npm install
+            -   run: npm install -g npm@^9 --unsafe-perm
+            -   run: npm install --unsafe-perm
 
             -   run: npm run build
 
