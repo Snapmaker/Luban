@@ -9,7 +9,7 @@ import { HEAD_PRINTING } from '../../../constants';
 
 const log = logger('service:machine:adapter:Octo');
 
-const maxMemory = 64 * 1024 * 1024; // 64MB
+const maxMemory = 512 * 1024 * 1024; // 512MB
 interface ConnectionCloseOptions {
     port?: number;
 }
