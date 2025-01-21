@@ -132,6 +132,7 @@ jobs:
            -   name: Build macOS Binaries
                run: npm run build:mac
                env:
+                   TEAMID: ${{ secrets.TEAM_ID_MACOS }}
                    CSC_LINK: ${{ secrets.CSC_LINK_MACOS }}
                    CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD_MACOS }}
                    APPLEID: ${{ secrets.APPLEID }}

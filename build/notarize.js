@@ -16,7 +16,7 @@ module.exports = async function notarizing(context) {
 
     const appName = context.packager.appInfo.productFilename;
 
-    const teamId = 'CTHX7X38C3';
+    const teamId = process.env.TEAMID;;
     const appleId = process.env.APPLEID;
     const appleIdPassword = process.env.APPLEIDPASS;
 
