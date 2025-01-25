@@ -739,9 +739,8 @@ class DefinitionManager {
             || printTemp;
         const bedTempLayer0 = settings.material_bed_temperature_layer_0.default_value;
         /**
-         * 1.set bed temperature and not wait to reach the target temperature
+         * 1.set bed temperature and wait to reach the target temperature
          * 2.set hotend temperature and wait to reach the target temperature
-         * 3.set bed temperature and wait to reach the target temperature
          * bed:
          * M190 wait
          * M140 not wait
@@ -756,14 +755,14 @@ class DefinitionManager {
 
         const gcode = [';Start GCode begin'];
         gcode.push('G28 ;home');
-        gcode.push(`M104 S${printTempLayer0}`);
         if (machineHeatedBed) {
             gcode.push(`M140 S${bedTempLayer0}`);
         }
-        gcode.push(`M109 S${printTempLayer0} ;Wait for Hotend Temperature`);
         if (machineHeatedBed) {
             gcode.push(`M190 S${bedTempLayer0} ;Wait for Bed Temperature`);
         }
+        gcode.push(`M104 S${printTempLayer0}`);
+        gcode.push(`M109 S${printTempLayer0} ;Wait for Hotend Temperature`);
 
         gcode.push('G90 ;absolute positioning');
         gcode.push('G0 X-10 Y-10 F3000');
