@@ -75,6 +75,18 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace,
 
     const { isConnected } = useSelector((state: RootState) => state.workspace);
     const { headType } = useSelector((state: RootState) => state.workspace);
+    const moduleOriginOffset = useSelector((state: RootState) => {
+        const rtnModuleOriginOffset = { x: 0, y: 0, z: 0 };
+        const modules = state.machine.activeMachine?.metadata?.modules || [];
+        for (const module of modules) {
+            if (module.moduleOriginOffset) {
+                rtnModuleOriginOffset.x += module.moduleOriginOffset[0];
+                rtnModuleOriginOffset.y += module.moduleOriginOffset[1];
+                rtnModuleOriginOffset.z += module.moduleOriginOffset[2];
+            }
+        }
+        return rtnModuleOriginOffset;
+    });
 
     const server: MachineAgent = useSelector((state: RootState) => state.workspace.server);
     const {
@@ -439,6 +451,7 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace,
                 <DisplayPanel
                     workPosition={workPosition}
                     originOffset={state.originOffset}
+                    moduleOriginOffset={moduleOriginOffset}
                     headType={headType}
                     executeGcode={actions.executeGcode}
                     state={state}
@@ -466,6 +479,7 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace,
                 state={state}
                 workPosition={workPosition}
                 originOffset={state.originOffset}
+                moduleOriginOffset={moduleOriginOffset}
                 actions={actions}
                 executeGcode={actions.executeGcode}
                 isNotInWorkspace={isNotInWorkspace}

@@ -55,6 +55,7 @@ export declare type MachineModuleOptions = {
     identifier: string;
 
     workRangeOffset?: number[];
+    moduleOriginOffset?: number[];
 };
 
 

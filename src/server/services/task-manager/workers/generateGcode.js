@@ -236,10 +236,28 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, jobOffsetMode, serie
     }
 
     if (headType === 'laser' && jobOffsetMode === JobOffsetMode.Crosshair) {
+        // TODO: these G-Codes are not currently implemented, we manually handle
+        // the work offset calculation using the machine module definition.
         headerGcodes.push(
             'M2003', // crosshair offset
             'M2004', // move
         );
+        // TODO: support end of job macro hooks to enable better automation
+        const moduleOriginOffset = { x: 0, y: 0, z: 0 };
+        const modules = metadata?.modules || [];
+        for (const module of modules) {
+            if (module.moduleOriginOffset) {
+                moduleOriginOffset.x += module.moduleOriginOffset[0];
+                moduleOriginOffset.y += module.moduleOriginOffset[1];
+                moduleOriginOffset.z += module.moduleOriginOffset[2];
+            }
+        }
+        const endOfJob = [
+            'G90',
+            `G0 X${-moduleOriginOffset.x} Y${-moduleOriginOffset.y} Z${-moduleOriginOffset.z + 100} F${gcodeConfig.jogSpeed}`
+        ];
+        writeStream.write(endOfJob.join('\n'));
+        fileTotalLines += endOfJob.length;
     }
 
     // header end
