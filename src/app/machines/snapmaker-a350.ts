@@ -1,6 +1,6 @@
 import { Machine, MachineType } from '@snapmaker/luban-platform';
 
-import { quickSwapKitModule, bracingKitModule } from './snapmaker-2-modules';
+import { quickSwapKitModule, bracingKitModule, moduleCrosshair } from './snapmaker-2-modules';
 import {
     L20WLaserToolModule,
     L2WLaserToolModule,
@@ -138,6 +138,10 @@ export const machine: Machine = {
             {
                 identifier: bracingKitModule.identifier,
                 workRangeOffset: [0, -12, -6],
+            },
+            {
+                identifier: moduleCrosshair.identifier,
+                moduleOriginOffset: [-21.6, 0.4, 0],
             }
         ],
 

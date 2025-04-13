@@ -82,8 +82,9 @@ class DisplayPanel extends PureComponent {
     };
 
     render() {
-        const { state, workPosition, originOffset, headType } = this.props;
+        const { state, workPosition, originOffset, moduleOriginOffset, headType } = this.props;
         const { x, y, z, b } = originOffset;
+        const { x: x1, y: y1, z: z1 } = moduleOriginOffset;
         const { units, canClick, axes } = state;
         const lengthUnits = (units === METRIC_UNITS) ? i18n._('key-Workspace/Control/DisplayPanel-mm') : i18n._('key-Workspace/Control/DisplayPanel-in');
         let machinePositionX = (Math.round((parseFloat(workPosition.x) - x) * 1000) / 1000).toFixed(3);
@@ -95,6 +96,10 @@ class DisplayPanel extends PureComponent {
             machinePositionY = workPosition.y;
             machinePositionZ = workPosition.z;
         }
+        const workPositionX = (parseFloat(workPosition.x) + x1).toFixed(3);
+        const workPositionY = (parseFloat(workPosition.y) + y1).toFixed(3);
+        const workPositionZ = (parseFloat(workPosition.z) + z1).toFixed(3);
+        const workPositionB = (parseFloat(workPosition.b) + 0).toFixed(3);
         return (
             <div className={classNames(styles['coordinate-panel'], 'margin-bottom-16')}>
                 <table className="table table-bordered " style={{
@@ -121,9 +126,9 @@ class DisplayPanel extends PureComponent {
                                 </td>
                                 <td className={styles['field-position']}>
                                     <div>
-                                        <span className={styles['integer-part']}>{workPosition.x.split('.')[0]}</span>
+                                        <span className={styles['integer-part']}>{workPositionX.split('.')[0]}</span>
                                         <span className={styles['decimal-point']}>.</span>
-                                        <span className={styles['fractional-part']}>{workPosition.x.split('.')[1]}</span>
+                                        <span className={styles['fractional-part']}>{workPositionX.split('.')[1]}</span>
                                     </div>
                                     <span className={styles.unit}>{lengthUnits}</span>
                                 </td>
@@ -133,9 +138,21 @@ class DisplayPanel extends PureComponent {
                                         title={'X'}
                                         disabled={!canClick}
                                         menus={[
-                                            { key: 'G0 X0', title: i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On X Axis (G0 X0)') },
                                             {
-                                                key: 'G92 X0',
+                                                key: [
+                                                    'G90',
+                                                    `G0 X${-x1}`,
+                                                ].join('\n'),
+                                                title: i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On X Axis (G0 X0)')
+                                            },
+                                            {
+                                                key: [
+                                                    'G91',
+                                                    `G0 X${x1}`,
+                                                    'G90',
+                                                    'G92 X0',
+                                                    `G0 X${-x1}`,
+                                                ].join('\n'),
                                                 title: i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary X Axis (G92 X0)'),
                                                 isSetOrigin: true
                                             }
@@ -155,9 +172,9 @@ class DisplayPanel extends PureComponent {
                                 <td className={styles['field-position']}>
                                     <span className={styles.unit}>{lengthUnits}</span>
                                     <div>
-                                        <span className={styles['integer-part']}>{workPosition.y.split('.')[0]}</span>
+                                        <span className={styles['integer-part']}>{workPositionY.split('.')[0]}</span>
                                         <span className={styles['decimal-point']}>.</span>
-                                        <span className={styles['fractional-part']}>{workPosition.y.split('.')[1]}</span>
+                                        <span className={styles['fractional-part']}>{workPositionY.split('.')[1]}</span>
                                     </div>
                                 </td>
                                 <td className={styles.action}>
@@ -166,9 +183,21 @@ class DisplayPanel extends PureComponent {
                                         title={'Y'}
                                         disabled={!canClick}
                                         menus={[
-                                            { key: 'G0 Y0', title: i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On Y Axis (G0 Y0)') },
                                             {
-                                                key: 'G92 Y0',
+                                                key: [
+                                                    'G90',
+                                                    `G0 Y${-y1}`,
+                                                ].join('\n'),
+                                                title: i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On Y Axis (G0 Y0)')
+                                            },
+                                            {
+                                                key: [
+                                                    'G91',
+                                                    `G0 Y${y1}`,
+                                                    'G90',
+                                                    'G92 Y0',
+                                                    `G0 Y${-y1}`,
+                                                ].join('\n'),
                                                 title: i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary Y Axis (G92 Y0)'),
                                                 isSetOrigin: true
                                             }
@@ -187,9 +216,9 @@ class DisplayPanel extends PureComponent {
                                 </td>
                                 <td className={styles['field-position']}>
                                     <div>
-                                        <span className={styles['integer-part']}>{workPosition.z.split('.')[0]}</span>
+                                        <span className={styles['integer-part']}>{workPositionZ.split('.')[0]}</span>
                                         <span className={styles['decimal-point']}>.</span>
-                                        <span className={styles['fractional-part']}>{workPosition.z.split('.')[1]}</span>
+                                        <span className={styles['fractional-part']}>{workPositionZ.split('.')[1]}</span>
                                     </div>
                                     <span className={styles.unit}>{lengthUnits}</span>
                                 </td>
@@ -199,9 +228,21 @@ class DisplayPanel extends PureComponent {
                                         title={'Z'}
                                         disabled={!canClick}
                                         menus={[
-                                            { key: 'G0 Z0', title: i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On Z Axis (G0 Z0)') },
                                             {
-                                                key: 'G92 Z0',
+                                                key: [
+                                                    'G90',
+                                                    `G0 Z${-z1}`,
+                                                ].join('\n'),
+                                                title: i18n._('key-Workspace/Control/DisplayPanel-Go To Work Zero On Z Axis (G0 Z0)')
+                                            },
+                                            {
+                                                key: [
+                                                    'G91',
+                                                    `G0 Z${z1}`,
+                                                    'G90',
+                                                    'G92 Z0',
+                                                    `G0 Z${-z1}`,
+                                                ].join('\n'),
                                                 title: i18n._('key-Workspace/Control/DisplayPanel-Zero Out Temporary Z Axis (G92 Z0)'),
                                                 isSetOrigin: true
                                             }
@@ -220,9 +261,9 @@ class DisplayPanel extends PureComponent {
                                 </td>
                                 <td className={styles['field-position']}>
                                     <div>
-                                        <span className={styles['integer-part']}>{(workPosition.b || '').split('.')[0]}</span>
+                                        <span className={styles['integer-part']}>{(workPositionB || '').split('.')[0]}</span>
                                         <span className={styles['decimal-point']}>.</span>
-                                        <span className={styles['fractional-part']}>{(workPosition.b || '').split('.')[1]}</span>
+                                        <span className={styles['fractional-part']}>{(workPositionB || '').split('.')[1]}</span>
                                     </div>
                                     <span className={styles.unit}>°</span>
                                 </td>

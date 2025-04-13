@@ -10,12 +10,19 @@ import TipTrigger from '../../components/TipTrigger';
 import { SnapmakerArtisanMachine } from '../../../machines';
 
 const MotionButtonGroup = (props) => {
-    const { actions, workPosition, runBoundary, executeGcode, disabled } = props;
+    const { actions, workPosition, moduleOriginOffset, runBoundary, executeGcode, disabled } = props;
     const { activeMachine } = useSelector((state) => state.workspace);
+    const { x: x1, y: y1, z: z1 } = moduleOriginOffset;
 
 
     const setOriginWork = () => {
-        let gcode = 'G92 X0 Y0 Z0 B0';
+        let gcode = [
+            'G91',
+            `G0 X${x1} Y${y1} Z${z1}`,
+            'G90',
+            'G92 X0 Y0 Z0 B0',
+            `G0 X${-x1} Y${-y1} Z${-z1}`,
+        ].join('\n');
         // Fixme: hard code for artisan asking to store current work origin which is about Power Loss Recovery
         if (includes([SnapmakerArtisanMachine], activeMachine)) {
             gcode += '\nM500';
@@ -64,12 +71,12 @@ const MotionButtonGroup = (props) => {
                     priority="level-three"
                     onClick={() => {
                         if (props.isConnectedRay) {
-                            actions.move({ z: 0, x: 0, y: 0, b: 0 }, true);
+                            actions.move({ z: -z1, x: -x1, y: -y1, b: 0 }, true);
                         } else {
                             if (workPosition.z > 0) {
-                                actions.move({ x: 0, y: 0, b: 0, z: 0 });
+                                actions.move({ x: -x1, y: -y1, b: 0, z: -z1 });
                             } else {
-                                actions.move({ z: 0, x: 0, y: 0, b: 0 });
+                                actions.move({ z: -z1, x: -x1, y: -y1, b: 0 });
                             }
                         }
                     }}
@@ -100,6 +107,7 @@ const MotionButtonGroup = (props) => {
 MotionButtonGroup.propTypes = {
     disabled: PropTypes.bool,
     workPosition: PropTypes.object,
+    moduleOriginOffset: PropTypes.object,
     actions: PropTypes.object,
     runBoundary: PropTypes.func,
     executeGcode: PropTypes.func,
