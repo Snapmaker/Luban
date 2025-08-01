@@ -33,7 +33,12 @@ export const getRawDefinition = (req, res) => {
     }
 
     const filename = `${definitionId}.def.json`;
-    const configDir = `${DataStorage.configDir}/${configPath}/${filename}`;
+    const configDir = path.resolve(DataStorage.configDir, configPath, filename);
+    if (!configDir.startsWith(DataStorage.configDir)) {
+        res.status(ERR_BAD_REQUEST).send({ err: 'Invalid path.' });
+        return;
+    }
+
     try {
         const readFileSync = fs.readFileSync(configDir);
         const parse = JSON.parse(readFileSync);
@@ -121,8 +126,13 @@ export const createDefinition = async (req, res) => {
     definitionLoader.fromObject(definition);
     const configPath = isPublicProfile(definitionLoader.definitionId) ? headType : (req.body.configPath ?? '');
 
-    const filePath = path.join(`${DataStorage.configDir}/${configPath}`, `${definitionLoader.definitionId}.def.json`);
-    const backupPath = path.join(`${DataStorage.activeConfigDir}/${configPath}`, `${definitionLoader.definitionId}.def.json`);
+    const filePath = path.resolve(DataStorage.configDir, configPath, `${definitionLoader.definitionId}.def.json`);
+    const backupPath = path.resolve(DataStorage.activeConfigDir, configPath, `${definitionLoader.definitionId}.def.json`);
+    if (!filePath.startsWith(DataStorage.configDir) || !backupPath.startsWith(DataStorage.activeConfigDir)) {
+        res.status(ERR_BAD_REQUEST).send({ err: 'Invalid path.' });
+        return;
+    }
+
     const data = JSON.stringify(definitionLoader.toJSON(), null, 2);
     if (!fs.existsSync(backupPath)) {
         try {
@@ -171,10 +181,15 @@ export const updateDefaultDefinition = (req, res) => {
 
     let filePath = '';
     if (isPublicProfile(definitionId)) {
-        filePath = path.join(`${DataStorage.defaultConfigDir}/${headType}`, `${definitionId}.def.json`);
+        filePath = path.resolve(DataStorage.defaultConfigDir, headType, `${definitionId}.def.json`);
     } else {
-        filePath = path.join(`${DataStorage.defaultConfigDir}/${configPath}`, `${definitionId}.def.json`);
+        filePath = path.resolve(DataStorage.defaultConfigDir, configPath, `${definitionId}.def.json`);
     }
+    if (!filePath.startsWith(DataStorage.defaultConfigDir)) {
+        res.status(ERR_BAD_REQUEST).send({ err: 'Invalid path.' });
+        return;
+    }
+
     const data = JSON.stringify(definitionLoader.toJSON(), null, 2);
     fs.writeFile(filePath, data, 'utf8', (err) => {
         if (err) {
@@ -194,7 +209,12 @@ export const createTmpDefinition = (req, res) => {
     definitionLoader.fromObject(definition);
 
     const uploadName = `${filename ?? definitionLoader.definitionId}.def.json`;
-    const filePath = path.join(`${DataStorage.tmpDir}`, uploadName);
+    const filePath = path.resolve(DataStorage.tmpDir, uploadName);
+    if (!filePath.startsWith(DataStorage.tmpDir)) {
+        res.status(ERR_BAD_REQUEST).send({ err: 'Invalid path.' });
+        return;
+    }
+
     fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
         if (err) {
             log.error(err);
@@ -212,8 +232,13 @@ export const removeDefinition = (req, res) => {
     const { definitionId } = req.params;
     const configPath = req.body.configPath;
 
-    const filePath = path.join(`${DataStorage.configDir}/${configPath}`, `${definitionId}.def.json`);
-    const backupPath = path.join(`${DataStorage.activeConfigDir}/${configPath}`, `${definitionId}.def.json`);
+    const filePath = path.resolve(DataStorage.configDir, configPath, `${definitionId}.def.json`);
+    const backupPath = path.resolve(DataStorage.activeConfigDir, configPath, `${definitionId}.def.json`);
+    if (!filePath.startsWith(DataStorage.configDir) || !backupPath.startsWith(DataStorage.activeConfigDir)) {
+        res.status(ERR_BAD_REQUEST).send({ err: 'Invalid path.' });
+        return;
+    }
+
     fs.unlink(filePath, (err) => {
         if (err) {
             log.error(err);
@@ -270,12 +295,17 @@ export const updateDefinition = async (req, res) => {
     let filePath = '';
     let activeRecoverPath = '';
     if (isPublicProfile(definitionId)) {
-        filePath = path.join(`${DataStorage.configDir}/${headType}`, `${definitionId}.def.json`);
-        activeRecoverPath = path.join(`${DataStorage.activeConfigDir}/${headType}`, `${definitionId}.def.json`);
+        filePath = path.resolve(DataStorage.configDir, headType, `${definitionId}.def.json`);
+        activeRecoverPath = path.resolve(DataStorage.activeConfigDir, headType, `${definitionId}.def.json`);
     } else {
-        filePath = path.join(`${DataStorage.configDir}/${configPath}`, `${definitionId}.def.json`);
-        activeRecoverPath = path.join(`${DataStorage.activeConfigDir}/${configPath}`, `${definitionId}.def.json`);
+        filePath = path.resolve(DataStorage.configDir, configPath, `${definitionId}.def.json`);
+        activeRecoverPath = path.resolve(DataStorage.activeConfigDir, configPath, `${definitionId}.def.json`);
     }
+    if (!filePath.startsWith(DataStorage.configDir) || !activeRecoverPath.startsWith(DataStorage.activeConfigDir)) {
+        res.status(ERR_BAD_REQUEST).send({ err: 'Invalid path.' });
+        return;
+    }
+
     if (!fs.existsSync(DataStorage.activeConfigDir)) {
         try {
             await fs.copy(DataStorage.configDir, DataStorage.activeConfigDir);
@@ -308,7 +338,7 @@ const isSourceFormDefault = (obj) => {
 export const uploadDefinition = (req, res) => {
     const { headType } = req.params;
     const { definitionId, uploadName, configPath } = req.body;
-    const readFileSync = fs.readFileSync(`${DataStorage.tmpDir}/${uploadName}`, 'utf-8');
+    const readFileSync = fs.readFileSync(path.resolve(DataStorage.tmpDir, uploadName), 'utf-8');
     let obj;
     try {
         obj = JSON.parse(readFileSync);
@@ -322,7 +352,7 @@ export const uploadDefinition = (req, res) => {
         obj = {};
     }
 
-    if (!obj.inherits || !fs.existsSync(`${DataStorage.configDir}/${headType}/${obj.inherits}.json`)) {
+    if (!obj.inherits || !fs.existsSync(path.resolve(DataStorage.configDir, headType, `${obj.inherits}.json`))) {
         obj.inherits = 'snapmaker2';
     }
 
@@ -334,8 +364,13 @@ export const uploadDefinition = (req, res) => {
     const definitionLoader = new DefinitionLoader();
     try {
         definitionLoader.loadJSON(headType, definitionId, obj);
-        const filePath = path.join(`${DataStorage.configDir}/${configPath}`, `${definitionId}.def.json`);
-        const backupPath = path.join(`${DataStorage.activeConfigDir}/${configPath}`, `${definitionId}.def.json`);
+        const filePath = path.resolve(DataStorage.configDir, configPath, `${definitionId}.def.json`);
+        const backupPath = path.resolve(DataStorage.activeConfigDir, configPath, `${definitionId}.def.json`);
+        if (!filePath.startsWith(DataStorage.configDir) || !backupPath.startsWith(DataStorage.activeConfigDir)) {
+            res.status(ERR_BAD_REQUEST).send({ err: 'Invalid path.' });
+            return;
+        }
+
         const data = JSON.stringify(definitionLoader.toJSON(), null, 2);
         const callback = () => {
             fsWriteFile(backupPath, data, res, (err) => {
@@ -366,7 +401,7 @@ export const getParameterDoc = (req, res) => {
         const langDir = lang.toUpperCase() === 'ZH-CN' ? 'CN' : lang.toUpperCase();
 
         const fileRelativePath = `${langDir}/${category}/${key}.md`;
-        const filePath = `${DataStorage.getParameterDocumentDir()}/${fileRelativePath}`;
+        const filePath = path.resolve(DataStorage.getParameterDocumentDir(), fileRelativePath);
 
         let content;
         if (fs.existsSync(filePath)) {
@@ -374,7 +409,7 @@ export const getParameterDoc = (req, res) => {
         } else if (lang !== 'en') {
             log.info(`Request: "${fileRelativePath}"\nNo documentation was found for the user's language ${lang}. An English version was given.`);
 
-            const filePathEN = `${DataStorage.getParameterDocumentDir()}/EN/${category}/${key}.md`;
+            const filePathEN = path.resolve(DataStorage.getParameterDocumentDir(), 'EN', category, `${key}.md`);
             content = fs.readFileSync(filePathEN, 'utf-8');
         }
 

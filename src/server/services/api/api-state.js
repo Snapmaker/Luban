@@ -20,7 +20,7 @@ export const get = (req, res) => {
     }
 
     const value = config.get(key);
-    res.send(value);
+    res.json(value); // Changed from res.send(value) to res.json(value)
 };
 
 export const unset = (req, res) => {

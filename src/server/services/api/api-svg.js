@@ -8,7 +8,7 @@ export const convertRasterToSvg = async (req, res) => {
     // options: { filename, vectorThreshold, invert, turdSize }
     const options = req.body;
     const result = await convertRaster(options);
-    res.send(result);
+    res.send(escapeHtml(result)); // Escape the result before sending
 };
 
 export const convertTextToSvg = async (req, res) => {
@@ -16,7 +16,7 @@ export const convertTextToSvg = async (req, res) => {
     const options = req.body;
     try {
         const result = await convertText(options);
-        res.send(result);
+        res.send(escapeHtml(result)); // Escape the result before sending
     } catch (e) {
         log.error(`Fail to convert text to SVG: ${e}`);
         res.status(ERR_INTERNAL_SERVER_ERROR).send({
@@ -29,5 +29,15 @@ export const convertOneLineTextToSvg = async (req, res) => {
     // options: { text, font, name, size, sourceWidth, sourceHeight }
     const options = req.body;
     const result = await convertOneLineText(options);
-    res.send(result);
+    res.send(escapeHtml(result)); // Escape the result before sending
 };
+
+// Helper function to escape HTML
+function escapeHtml(unsafe) {
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}

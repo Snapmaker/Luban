@@ -102,6 +102,12 @@ export const saveMissing = (req, res) => {
     const lng = req.params.lng;
     const ns = req.params.ns;
 
+    // Validate and sanitize the input to prevent path traversal
+    if (!/^[a-zA-Z0-9_-]+$/.test(lng) || !/^[a-zA-Z0-9_-]+$/.test(ns)) {
+        res.status(400).send('Invalid language or namespace');
+        return;
+    }
+
     const mergedFile = path.join(settings.assets.app.path, 'i18n', lng, `${ns}.json`);
     const mergedObject = JSON.parse(fs.readFileSync(mergedFile, 'utf8'));
 
