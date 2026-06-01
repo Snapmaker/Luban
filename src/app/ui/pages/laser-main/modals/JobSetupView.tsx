@@ -41,6 +41,7 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
     const toolIdentifer = toolHead.laserToolhead;
 
     // const machineToolOptions = getMachineToolOptions(activeMachine?.identifier, toolIdentifer);
+    const activeModules = useSelector((state: RootState) => state.machine.modules);
 
     const materials = useSelector((state: RootState) => state[HEAD_LASER]?.materials, shallowEqual) as Materials;
     const origin = useSelector((state: RootState) => state[HEAD_LASER].origin, shallowEqual) as Origin;
@@ -192,8 +193,36 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
     /**
      * Other parameters calculated
      */
-    const maxX = activeMachine?.metadata.size.x || 0;
-    const maxY = activeMachine?.metadata.size.y || 0;
+
+    let offsetX = 0;
+    let offsetY = 0;
+
+    // Loop through active modules just like FDM to find QuickSwap/Bracing offsets
+    if (activeModules && activeMachine && activeMachine.metadata && activeMachine.metadata.modules) {
+        for (const machineModuleOptions of activeMachine.metadata.modules || []) {
+            const identifier = machineModuleOptions.identifier;
+            // Check if this module is currently active on the machine
+            if (activeModules && activeModules.indexOf(identifier) >= 0) {
+                if (machineModuleOptions?.workRangeOffset) {
+                    // Subtract the offsets from the maximum allowable width and depth
+                    offsetX = Math.abs(machineModuleOptions.workRangeOffset[0]);
+                    offsetY = Math.abs(machineModuleOptions.workRangeOffset[1]);
+                }
+            }
+        }
+    }
+
+    /**
+      * Clamp the X and Y axis to values that take the module offsets into account,
+      * for both the user-input and the workpiece itself
+      */
+
+    const maxX = (activeMachine?.metadata.size.x - offsetX) || 0;
+    const maxY = (activeMachine?.metadata.size.y - offsetY) || 0;
+
+    workpiece.size.x = Math.min(workpiece.size.x, maxX);
+    workpiece.size.y = Math.min(workpiece.size.y, maxY);
+
 
     // FIXME: Add image to origin options
     let imgOF3axisCoordinateMode = '';
