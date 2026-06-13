@@ -504,7 +504,7 @@ class MarlinController extends EventEmitter {
             }, 1000);
         });
         this.controller.on('cnc:highpower', (res) => {
-            // log.info(`controller.on('cnc:highpower'): source=${this.history.writeSource}, res=${JSON.stringify(res)}`);
+            log.info(`controller.on('cnc:highpower'): source=${this.history.writeSource}, res=${JSON.stringify(res)}`);
         });
         this.controller.on('laser10w:state', (res) => {
             if (res.laser10WErrorState !== undefined) {

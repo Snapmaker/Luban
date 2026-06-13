@@ -92,7 +92,7 @@ class RayMachineInstance extends MachineInstance {
 
         const isNewVersion = !isNil(machineInfo?.masterControlFirmwareVersion) && gt(machineInfo?.masterControlFirmwareVersion?.slice(1), '1.6.8');
         state.isRayNewVersion = isNewVersion;
-        log.info('connected Ray with version: ', machineInfo?.masterControlFirmwareVersion);
+        log.info(`connected Ray with version: ${machineInfo?.masterControlFirmwareVersion}`);
 
         //
         // Get Coordinate Info

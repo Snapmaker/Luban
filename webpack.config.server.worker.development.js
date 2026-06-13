@@ -32,7 +32,6 @@ module.exports = {
     mode: 'development',
     devtool: 'eval-source-map',
     target: 'node',
-    watch: true,
     context: path.resolve(__dirname, './src/server'),
     entry: path.resolve(__dirname, './src/server/services/task-manager/Pool.worker.js'),
     output: {
@@ -74,12 +73,7 @@ module.exports = {
         modules: [NODE_MODULES]
     },
     node: {
-        console: true,
-        global: true,
-        process: true,
-        Buffer: true,
         __filename: true, // Use relative path
-        __dirname: true, // Use relative path
-        setImmediate: true
+        __dirname: true // Use relative path
     }
 };

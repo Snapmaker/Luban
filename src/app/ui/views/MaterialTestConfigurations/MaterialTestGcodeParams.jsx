@@ -209,7 +209,7 @@ class MaterialTestGcodeParams extends PureComponent {
                         styleSize="large"
                     />
                 </div>
-                {/*路径*/}
+                {/* 路径*/}
                 {pathType === 'path' && (
                     <div>
                         <div className="border-bottom-normal padding-bottom-4 margin-vertical-16">

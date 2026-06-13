@@ -88,7 +88,7 @@ const _getResult = (err, res: request.Response): Result => {
     };
 };
 // let timeoutHandle = null;
-const intervalHandle = null;
+// const intervalHandle = null;
 
 
 export type StateOptions = {
@@ -198,13 +198,13 @@ class SstpHttpChannel extends Channel implements
                         return;
                     }
 
-                    const { series } = data;
+                    const { series } = data as any;
                     const machine = findMachine(series);
                     this.state.series = machine ? machine.identifier : null;
 
-                    let headType = data.headType;
+                    let headType = (data as any).headType;
                     let toolHead: string;
-                    switch (data.headType) {
+                    switch ((data as any).headType) {
                         case 1:
                             headType = HEAD_PRINTING;
                             toolHead = SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2;
@@ -318,7 +318,7 @@ class SstpHttpChannel extends Channel implements
         this.heartBeatWorker = workerManager.heartBeat([{
             host: this.host,
             token: this.token
-        }], (result: object) => {
+        }], (result: any) => {
             if (result.status === 'offline') {
                 log.info(`[wifi connection offline]: msg=${result.msg}`);
                 this.clearAllInterval();
@@ -336,24 +336,25 @@ class SstpHttpChannel extends Channel implements
                 return;
             }
 
+            const dataAny = data as any;
             const state = {
                 ...data,
                 ...this.state,
                 gcodePrintingInfo: this.getGcodePrintingInfo(data),
-                isHomed: data?.homed,
-                status: data.status.toLowerCase(),
-                airPurifier: !isNil(data.airPurifierSwitch),
+                isHomed: dataAny?.homed,
+                status: dataAny.status.toLowerCase(),
+                airPurifier: !isNil(dataAny.airPurifierSwitch),
                 pos: {
-                    x: data.x,
-                    y: data.y,
-                    z: data.z,
-                    b: data.b,
-                    isFourAxis: !isNil(data.b)
+                    x: dataAny.x,
+                    y: dataAny.y,
+                    z: dataAny.z,
+                    b: dataAny.b,
+                    isFourAxis: !isNil(dataAny.b)
                 },
                 originOffset: {
-                    x: data.offsetX,
-                    y: data.offsetY,
-                    z: data.offsetZ,
+                    x: dataAny.offsetX,
+                    y: dataAny.offsetY,
+                    z: dataAny.offsetZ,
                 }
             };
             if (waitConfirm) {
@@ -361,7 +362,7 @@ class SstpHttpChannel extends Channel implements
 
                 this.socket && this.socket.emit('connection:connected', {
                     state,
-                    err: state?.err,
+                    err: (state as any)?.err,
                     type: ConnectionType.WiFi,
                 });
             } else {
@@ -569,10 +570,10 @@ class SstpHttpChannel extends Channel implements
             .timeout(1000)
             .end((err, res) => {
                 const result = _getResult(err, res);
-                const data = result?.data;
+                const data = result?.data as any;
                 if (!err) {
                     this.socket && this.socket.emit('machine:module-list', {
-                        moduleList: data.moduleList || [],
+                        moduleList: data?.moduleList || [],
                     });
                 }
             });
@@ -587,10 +588,10 @@ class SstpHttpChannel extends Channel implements
             .timeout(1000)
             .end((err, res) => {
                 const result = _getResult(err, res);
-                const data = result?.data;
+                const data = result?.data as any;
                 if (!err) {
                     this.socket && this.socket.emit('machine:module-info', {
-                        moduleInfo: data.moduleInfo || [],
+                        moduleInfo: data?.moduleInfo || [],
                     });
                 }
             });
@@ -857,7 +858,7 @@ class SstpHttpChannel extends Channel implements
         request
             .get(api)
             .end((err, res) => {
-                const currentModuleStatus = _getResult(err, res)?.data;
+                const currentModuleStatus = _getResult(err, res)?.data as any;
                 if (!isEqual(this.moduleSettings, currentModuleStatus)) {
                     this.moduleSettings = currentModuleStatus;
                     this.socket && this.socket.emit('Marlin:settings', {
