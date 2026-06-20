@@ -14,6 +14,7 @@ import JogDistance from './JogDistance';
 import JogPad from './JogPad';
 import MotionButtonGroup from './MotionButtonGroup';
 import ABPositionButtonGroup from './ABPositionButtonGroup';
+import { showConfirmWithCheckbox } from './components/ConfirmWithCheckbox';
 import styles from './styles.styl';
 import { SnapmakerRayMachine } from '../../../machines';
 import { L2WLaserToolModule } from '../../../machines/snapmaker-2-toolheads';
@@ -105,12 +106,18 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
     const goHome = useCallback(() => {
         if (isConnectedRay) {
             dispatch(workspaceActions.updateState({ isMoving: true }));
-
             setTimeout(() => { dispatch(workspaceActions.updateState({ isMoving: false })); }, 2000);
-            return dispatch(workspaceActions.executeGcode('$H')) as unknown as Promise<void>;
-        } else {
-            return dispatch(workspaceActions.executeGcodeAutoHome(true));
+            dispatch(workspaceActions.executeGcode('$H'));
+            return;
         }
+        // Confirm before homing; the "fast homing" option lives inside the modal.
+        showConfirmWithCheckbox({
+            title: i18n._('key-Workspace/Console-Home'),
+            message: i18n._('Home the machine? With fast homing on, make sure the workspace is clear.'),
+            checkboxLabel: i18n._('Fast homing (workspace clear)'),
+            defaultChecked: false,
+            onConfirm: (fast) => dispatch(workspaceActions.executeGcodeAutoHome(true, fast)),
+        });
     }, [dispatch, workspaceActions, isConnectedRay]);
 
     useEffect(() => {

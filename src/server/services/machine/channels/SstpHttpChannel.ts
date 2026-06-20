@@ -19,6 +19,7 @@ import workerManager from '../../task-manager/workerManager';
 import { ConnectionType, EventOptions } from '../types';
 import Channel, { CncChannelInterface, ExecuteGcodeResult, FileChannelInterface, LaserChannelInterface, UploadFileOptions } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
+import { deriveHeadStatus } from './laserState';
 
 let waitConfirm: boolean;
 const log = logger('machine:channels:SstpHttpChannel');
@@ -88,7 +89,7 @@ const _getResult = (err, res: request.Response): Result => {
     };
 };
 // let timeoutHandle = null;
-const intervalHandle = null;
+// const intervalHandle = null;
 
 
 export type StateOptions = {
@@ -98,6 +99,7 @@ export type StateOptions = {
 };
 
 export type GcodeResult = {
+    ok?: boolean;
     text?: string;
     data?: string;
     msg?: string;
@@ -144,9 +146,11 @@ class SstpHttpChannel extends Channel implements
             .forEach(intervalRef => clearInterval(intervalRef));
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public onConnection = () => {
-        this.stopHeartBeat();
+        // Intentionally a no-op: this fires for EVERY new client socket (2nd window, socket.io
+        // reconnect). Previously it called stopHeartBeat(), which killed the status poller of an
+        // already-connected machine and froze the UI (audit R4 / 01-F12). The poller lifecycle is
+        // owned by startHeartbeat()/connectionClose(); startHeartbeat() already cycles the worker.
     };
 
     public onDisconnection = () => {
@@ -198,13 +202,13 @@ class SstpHttpChannel extends Channel implements
                         return;
                     }
 
-                    const { series } = data;
+                    const { series } = data as any;
                     const machine = findMachine(series);
                     this.state.series = machine ? machine.identifier : null;
 
-                    let headType = data.headType;
+                    let headType = (data as any).headType;
                     let toolHead: string;
-                    switch (data.headType) {
+                    switch ((data as any).headType) {
                         case 1:
                             headType = HEAD_PRINTING;
                             toolHead = SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2;
@@ -318,7 +322,7 @@ class SstpHttpChannel extends Channel implements
         this.heartBeatWorker = workerManager.heartBeat([{
             host: this.host,
             token: this.token
-        }], (result: object) => {
+        }], (result: any) => {
             if (result.status === 'offline') {
                 log.info(`[wifi connection offline]: msg=${result.msg}`);
                 this.clearAllInterval();
@@ -336,24 +340,28 @@ class SstpHttpChannel extends Channel implements
                 return;
             }
 
+            const dataAny = data as any;
             const state = {
                 ...data,
                 ...this.state,
                 gcodePrintingInfo: this.getGcodePrintingInfo(data),
-                isHomed: data?.homed,
-                status: data.status.toLowerCase(),
-                airPurifier: !isNil(data.airPurifierSwitch),
+                isHomed: dataAny?.homed,
+                // HTTP /api/v1/status has no boolean laser on/off; derive it from numeric laserPower
+                // so the UI laser toggle reflects machine state (audit R9 / 01-F2).
+                headStatus: deriveHeadStatus(dataAny?.laserPower),
+                status: dataAny.status.toLowerCase(),
+                airPurifier: !isNil(dataAny.airPurifierSwitch),
                 pos: {
-                    x: data.x,
-                    y: data.y,
-                    z: data.z,
-                    b: data.b,
-                    isFourAxis: !isNil(data.b)
+                    x: dataAny.x,
+                    y: dataAny.y,
+                    z: dataAny.z,
+                    b: dataAny.b,
+                    isFourAxis: !isNil(dataAny.b)
                 },
                 originOffset: {
-                    x: data.offsetX,
-                    y: data.offsetY,
-                    z: data.offsetZ,
+                    x: dataAny.offsetX,
+                    y: dataAny.offsetY,
+                    z: dataAny.offsetZ,
                 }
             };
             if (waitConfirm) {
@@ -361,7 +369,7 @@ class SstpHttpChannel extends Channel implements
 
                 this.socket && this.socket.emit('connection:connected', {
                     state,
-                    err: state?.err,
+                    err: (state as any)?.err,
                     type: ConnectionType.WiFi,
                 });
             } else {
@@ -394,9 +402,14 @@ class SstpHttpChannel extends Channel implements
                 .end((err, res) => {
                     const { code, data, text } = _getResult(err, res);
                     if (err) {
-                        resolve({ code });
+                        // Surface genuine failures so callers can detect them (audit 04-F9).
+                        // Codes 202/203 are non-fatal machine statuses (see _getResult) that the rest
+                        // of the channel tolerates — treat them as success so we don't truncate
+                        // modal sequences (G53/G28/G54) or cancel valid jobs on a transient busy reply.
+                        const ok = code === 202 || code === 203;
+                        resolve({ ok, code, text });
                     } else {
-                        resolve({ data, text });
+                        resolve({ ok: true, data, text });
                     }
                 });
         });
@@ -412,15 +425,27 @@ class SstpHttpChannel extends Channel implements
         while (this.gcodeQueue.length > 0) {
             const splice = this.gcodeQueue.splice(0, 1)[0];
             const results = [];
+            let failed = false;
             for (const code of splice.gcodes) {
-                const { text } = await this._executeGcode(code) as GcodeResult;
+                // Skip blank lines. A multi-line gcode string can contain empty segments (e.g. a
+                // leading/trailing newline), and POSTing an empty `code` makes the machine error.
+                if (!code || !code.trim()) {
+                    continue;
+                }
+                const { ok, text } = await this._executeGcode(code) as GcodeResult;
                 if (text) {
                     results.push(text);
+                }
+                // Track failure so the caller (e.g. startGcode's job-prep abort, audit 04-F9) can
+                // react — but do NOT break: every line of a normal multi-line command (e.g. a
+                // jog's G91/G0/G90) must still be sent, or the move itself gets skipped.
+                if (ok === false) {
+                    failed = true;
                 }
             }
 
             splice.callback && splice.callback({
-                result: 0,
+                result: failed ? -1 : 0,
                 text: results.join('\n'),
             });
         }
@@ -569,10 +594,10 @@ class SstpHttpChannel extends Channel implements
             .timeout(1000)
             .end((err, res) => {
                 const result = _getResult(err, res);
-                const data = result?.data;
+                const data = result?.data as any;
                 if (!err) {
                     this.socket && this.socket.emit('machine:module-list', {
-                        moduleList: data.moduleList || [],
+                        moduleList: data?.moduleList || [],
                     });
                 }
             });
@@ -587,10 +612,10 @@ class SstpHttpChannel extends Channel implements
             .timeout(1000)
             .end((err, res) => {
                 const result = _getResult(err, res);
-                const data = result?.data;
+                const data = result?.data as any;
                 if (!err) {
                     this.socket && this.socket.emit('machine:module-info', {
-                        moduleInfo: data.moduleInfo || [],
+                        moduleInfo: data?.moduleInfo || [],
                     });
                 }
             });
@@ -857,7 +882,13 @@ class SstpHttpChannel extends Channel implements
         request
             .get(api)
             .end((err, res) => {
-                const currentModuleStatus = _getResult(err, res)?.data;
+                const currentModuleStatus = _getResult(err, res)?.data as any;
+                // On a failed/empty poll, do NOT cache undefined or emit a settings object whose
+                // fields are all undefined — that overwrites good enclosure values in redux until
+                // the next good poll (audit R20 / 01-F7). Skip and keep the last known values.
+                if (err || isNil(currentModuleStatus)) {
+                    return;
+                }
                 if (!isEqual(this.moduleSettings, currentModuleStatus)) {
                     this.moduleSettings = currentModuleStatus;
                     this.socket && this.socket.emit('Marlin:settings', {

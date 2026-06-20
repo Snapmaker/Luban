@@ -132,9 +132,21 @@ class ExtractSquareTrace extends React.PureComponent {
             this.props.changeCanTakePhoto(false);
             const { address } = this.props.server;
 
-            const resPro = await api.getCameraCalibration({ 'address': address, 'toolHead': this.props.toolHead.laserToolhead });
+            let resPro;
+            try {
+                resPro = await api.getCameraCalibration({ 'address': address, 'toolHead': this.props.toolHead.laserToolhead });
+            } catch (e) {
+                // Restore the work coordinate system; a bare G53 left active makes the next absolute
+                // move execute in machine space and plunge to machine Z0 (audit R7 / 02-F3).
+                log.error(`getCameraCalibration error: ${e}`);
+                this.props.executeGcodeG54(this.props.series, this.props.headType);
+                this.props.changeCanTakePhoto(true);
+                return;
+            }
             if (!resPro.body.res) {
                 log.error('Unable to get calibration matrix');
+                this.props.executeGcodeG54(this.props.series, this.props.headType);
+                this.props.changeCanTakePhoto(true);
                 return;
             }
             const resData = JSON.parse(resPro.body.res.text);
@@ -255,6 +267,12 @@ class ExtractSquareTrace extends React.PureComponent {
                     });
                     this.props.executeGcodeG54(this.props.series, this.props.headType);
                 }
+                this.props.changeCanTakePhoto(true);
+            }).catch((e) => {
+                // Always restore G54 even if photo capture / stitching fails, so we never leave the
+                // machine in modal G53 machine-space (audit R7 / 02-F3).
+                log.error(`Camera aid capture failed: ${e}`);
+                this.props.executeGcodeG54(this.props.series, this.props.headType);
                 this.props.changeCanTakePhoto(true);
             });
         },

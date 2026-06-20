@@ -16,6 +16,10 @@ import { actions as workspaceActions } from '../../../flux/workspace';
 import { MachineAgent } from '../../../flux/workspace/MachineAgent';
 import usePrevious from '../../../lib/hooks/previous';
 import { in2mm, mm2in } from '../../../lib/units';
+import { sequenceGoToOrigin } from '../../../lib/goToOriginSequence';
+import { originMoveNeedsConfirm } from '../../../lib/originPlausibility';
+import i18n from '../../../lib/i18n';
+import { showConfirmWithCheckbox } from './components/ConfirmWithCheckbox';
 import ControlPanel from './ControlPanel';
 import DisplayPanel from './DisplayPanel';
 import { DEFAULT_AXES, DISTANCE_MAX, DISTANCE_MIN, DISTANCE_STEP } from './constants';
@@ -248,6 +252,31 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace,
         },
         executeGcode: (gcode) => {
             dispatch(workspaceActions.executeGcode(gcode));
+        },
+        // Go To Work Origin as two SEQUENCED moves so the head never travels diagonally into the
+        // bed (audit R6 / 02-F2). Above the origin: XY first then descend Z; at/below: raise Z first.
+        // Sent as one atomic multi-line executeGcode so the HTTP channel runs them strictly in order.
+        goToWorkOrigin: () => {
+            const parsedZ = parseFloat(state.workPosition?.z);
+            const currentZ = Number.isFinite(parsedZ) ? parsedZ : 0;
+            // Always confirm; the "diagonal move" option lives in the modal. If the move would
+            // descend well below the current Z (stale origin after material/toolhead change, R10),
+            // surface a stronger warning in the same modal.
+            const descending = originMoveNeedsConfirm({ currentZ, targetZ: 0 });
+            showConfirmWithCheckbox({
+                title: i18n._('key-Workspace/Control/MotionButton-Go To Work Origin'),
+                message: descending
+                    ? i18n._('Warning: the saved work origin is below the current position. If the material thickness or toolhead changed since it was set, the head may drive into the workpiece. Continue?')
+                    : i18n._('key-Workspace/Control/MotionButton-Move the head to the last saved work origin.'),
+                checkboxLabel: i18n._('Diagonal move (workspace clear)'),
+                defaultChecked: false,
+                onConfirm: (diagonal) => {
+                    // diagonal=true => single all-axis G0 (hypotenuse); false => Z sequenced separately
+                    // to avoid a diagonal bed plunge (audit R6).
+                    const lines = sequenceGoToOrigin({ z: currentZ }, state.jogSpeed, diagonal);
+                    actions.executeGcode(lines.join('\n'));
+                },
+            });
         },
         coordinateMove: (gcode, moveOrders, jogSpeed) => {
             serverRef.current.coordinateMove(moveOrders, gcode, jogSpeed, headType);

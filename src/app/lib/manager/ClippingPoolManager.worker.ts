@@ -1,9 +1,20 @@
 import { delay } from 'lodash';
 import { Pool, spawn, Transfer, Worker } from 'threads';
-import { PoolEventType } from 'threads/dist/master/pool-types';
 import { Box3, BufferAttribute, BufferGeometry, Line3, Matrix4, Plane, Vector3 } from 'three';
 import { MeshBVH } from 'three-mesh-bvh';
 import { expandBuffer, pointToBuffer } from '../buffer-utils';
+
+// Define PoolEventType locally since it's not exported by threads package
+enum PoolEventType {
+    initialized = 'initialized',
+    taskCanceled = 'taskCanceled',
+    taskCompleted = 'taskCompleted',
+    taskFailed = 'taskFailed',
+    taskQueued = 'taskQueued',
+    taskQueueDrained = 'taskQueueDrained',
+    taskStart = 'taskStart',
+    terminated = 'terminated'
+}
 
 type TPoint = { x: number, y: number, z?: number }
 

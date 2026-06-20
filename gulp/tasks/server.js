@@ -30,16 +30,16 @@ export function serverBuildDevelopment(cb) {
 export function serverStartDevelopment(cb) {
     const args = (process.env.ARGS && process.env.ARGS.split(' ')) || [];
 
-    nodemon({
+    let started = false;
+
+    const nm = nodemon({
         restartable: 'rs',
         script: './output/src/main',
-        // script: './bin/cli',
-        args: args,
+        args,
         ignore: ['.git', 'node_modules/**/node_modules'],
         delay: 8000,
         verbose: true,
         exec: 'electron --inspect --trace-warnings',
-        // exec: 'electron --inspect-brk',
         execMap: {
             js: 'node --harmony',
         },
@@ -56,23 +56,33 @@ export function serverStartDevelopment(cb) {
             NODE_ENV: 'development',
         },
         ext: 'js json ts',
-        // tasks: ['serverBuildDevelopment'],
         tasks: [],
-        done: cb,
         stdout: false,
-    })
-        .once('quit', (code) => {
-            log('nodedmon has quit with code', code);
-            process.exit();
-        })
-        .on('restart', (files) => {
-            log('App restarted due to: ', files);
-        })
-        .on('readable', function handleReadable() {
-            this.stdout.pipe(process.stdout);
-            this.stderr.pipe(process.stderr);
-        });
+    });
+
+    nm.on('start', () => {
+        if (!started) {
+            started = true;
+            cb(); // ✅ signal gulp ONCE
+        }
+    });
+
+    nm.on('restart', (files) => {
+        log('App restarted due to: ', files);
+    });
+
+    nm.on('quit', (code) => {
+        log('nodemon quit with code', code);
+        // ❌ no process.exit()
+    });
+
+    nm.on('readable', function () {
+        this.stdout?.pipe(process.stdout);
+        this.stderr?.pipe(process.stderr);
+    });
 }
+
+
 
 //
 // Production Copy

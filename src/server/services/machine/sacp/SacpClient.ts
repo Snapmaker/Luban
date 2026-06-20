@@ -1449,7 +1449,7 @@ export default class SacpClient extends Dispatcher {
     public async setMotorPowerHoldMode(motorPowerMode: MotorPowerMode) {
         const buffer = Buffer.alloc(1);
         writeUint8(buffer, 0, motorPowerMode);
-        return this.send(0x01, 0x48, PeerId.CONTROLLER, buffer).then(({ response, packet }) => {
+        return this.send(0x01, 0x48, PeerId.CONTROLLER, buffer).then(({ response }) => {
             return readUint8(response.data);
         });
     }

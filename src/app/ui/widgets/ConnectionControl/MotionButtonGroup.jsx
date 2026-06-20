@@ -10,7 +10,7 @@ import TipTrigger from '../../components/TipTrigger';
 import { SnapmakerArtisanMachine } from '../../../machines';
 
 const MotionButtonGroup = (props) => {
-    const { actions, workPosition, runBoundary, executeGcode, disabled } = props;
+    const { actions, runBoundary, executeGcode, disabled } = props;
     const { activeMachine } = useSelector((state) => state.workspace);
 
 
@@ -66,11 +66,8 @@ const MotionButtonGroup = (props) => {
                         if (props.isConnectedRay) {
                             actions.move({ z: 0, x: 0, y: 0, b: 0 }, true);
                         } else {
-                            if (workPosition.z > 0) {
-                                actions.move({ x: 0, y: 0, b: 0, z: 0 });
-                            } else {
-                                actions.move({ z: 0, x: 0, y: 0, b: 0 });
-                            }
+                            // Opens a confirm modal containing the "diagonal move" option (audit R6).
+                            actions.goToWorkOrigin();
                         }
                     }}
                     disabled={disabled}
@@ -99,7 +96,6 @@ const MotionButtonGroup = (props) => {
 
 MotionButtonGroup.propTypes = {
     disabled: PropTypes.bool,
-    workPosition: PropTypes.object,
     actions: PropTypes.object,
     runBoundary: PropTypes.func,
     executeGcode: PropTypes.func,

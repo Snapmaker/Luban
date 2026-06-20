@@ -225,7 +225,7 @@ export function getOriginReferenceOptions(workpieceShape: WorkpieceShape, origin
     } else if (workpieceShape === WorkpieceShape.Cylinder) {
         return [
             {
-                label: i18n._(COORDINATE_MODE_BOTTOM_CENTER),
+                label: i18n._(COORDINATE_MODE_BOTTOM_CENTER.label),
                 value: COORDINATE_MODE_BOTTOM_CENTER.value,
                 mode: COORDINATE_MODE_BOTTOM_CENTER,
             }

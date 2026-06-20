@@ -15,7 +15,6 @@ import {
 } from '../../../app/machines';
 import DataStorage from '../../DataStorage';
 import {
-    HEAD_CNC,
     HEAD_LASER,
     HEAD_PRINTING,
     LEVEL_ONE_POWER_LASER_FOR_SM2,
@@ -30,11 +29,13 @@ import Channel, {
     AirPurifierChannelInterface,
     CncChannelInterface,
     EnclosureChannelInterface,
+    ExecuteGcodeResult,
     FileChannelInterface,
     LaserChannelInterface,
     NetworkServiceChannelInterface,
     SystemChannelInterface
 } from './channels/Channel';
+
 import { ChannelEvent } from './channels/ChannelEvent';
 import { sacpSerialChannel } from './channels/SacpSerialChannel';
 import { sacpTcpChannel } from './channels/SacpTcpChannel';
@@ -52,6 +53,11 @@ import { ConnectionType } from './types';
 import SacpChannelBase from './channels/SacpChannel';
 import { L2WLaserToolModule } from '../../../app/machines/snapmaker-2-toolheads';
 import { octo } from './adaptor/Octo';
+import { buildSetWorkOriginGcode } from './setWorkOriginGcode';
+
+// Union type for all possible channel implementations
+// Using 'any' to allow all channel types to be assigned
+type FullChannel = Channel & Record<string, any>;
 
 const log = logger('lib:ConnectionManager');
 
@@ -110,7 +116,7 @@ class ConnectionManager {
     private protocol: NetworkProtocol | SerialPortProtocol = NetworkProtocol.Unknown;
 
     // channel used to communicate with machine
-    private channel: Channel = null;
+    private channel: FullChannel = null;
 
     // connected machine instance to handle life cycle
     private machineInstance: MachineInstance = null;
@@ -734,9 +740,18 @@ class ConnectionManager {
 
             // Move, Upload, Start
             Promise.all(promises)
-                .then(() => {
+                .then((results) => {
+                    // Abort if any preparatory move (e.g. G53/G0 Z<focal+thickness>/G54) failed.
+                    // Previously HTTP executeGcode always reported success, so a failed Z-focus move
+                    // was invisible and the job started at the wrong Z (audit 04-F9 / R8).
+                    const prepFailed = (results || []).some((r) => r && (r as ExecuteGcodeResult).result !== 0);
+                    if (prepFailed) {
+                        log.error('startGcode: preparatory move failed; aborting job start.');
+                        socket.emit(SocketEvent.StartGCode, { err: 'failed', text: 'Failed to set work position/origin before starting; job aborted.' });
+                        return;
+                    }
                     this.channel.uploadGcodeFile(gcodeFilePath, headType, renderName, (msg) => {
-                        log.info('uploadGcodeFile result:' + msg);
+                        log.info(`uploadGcodeFile result:${msg}`);
                         if (msg) {
                             socket.emit(SocketEvent.StartGCode, { err: 'failed', text: msg || 'Failed to upload file' });
                             // FIXME: Add abort message
@@ -746,6 +761,10 @@ class ConnectionManager {
                         }
                         this.channel.startGcode(options);
                     });
+                })
+                .catch((e) => {
+                    log.error(`startGcode: preparatory sequence error; aborting job start. ${e}`);
+                    socket.emit(SocketEvent.StartGCode, { err: 'failed', text: 'Error preparing machine before start; job aborted.' });
                 });
         } else {
             // Serial port
@@ -1285,23 +1304,46 @@ M3`;
     //
 
     public goHome = async (socket, options, callback) => {
-        const { headType } = options;
+        const { headType, fastHome } = options;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort, NetworkProtocol.SacpOverUDP], this.protocol)) {
+            // TODO(fast-home/SACP): SACP homing would need the M1028 feedrate bump applied here too.
             this.channel.goHome(headType);
             socket && socket.emit('move:status', { isHoming: true });
         } else {
-            await this.executeGcode(socket, { gcode: 'G53' });
-            await this.executeGcode(socket, { gcode: 'G28' });
-
-            callback && callback();
-
-            // ?
+            // Emit homing-start BEFORE G28 so the UI shows the modal during homing, then homing-finish
+            // AFTER it completes. Previously isHoming:true was emitted after G28 and isHoming:false was
+            // never emitted on HTTP, so the modal stuck and homing looked stalled (audit R5 / 02-F5).
             if (this.connectionType === ConnectionType.WiFi) {
                 socket && socket.emit('move:status', { isHoming: true });
             }
-            if (headType === HEAD_LASER || headType === HEAD_CNC) {
-                await this.executeGcode(socket, { gcode: 'G54' });
+
+            // Fast homing (opt-in, "workspace clear"): temporarily raise the firmware homing feedrate
+            // via M1028 S1 (mm/s; stock homing speeds are XY 50 / Z 10). We set the per-axis MAX
+            // feedrates (DEFAULT_MAX_FEEDRATE = X120 Y120 Z40 in firmware); the planner clamps to these
+            // anyway, so higher values have no effect and these are inherently safe. The slow endstop
+            // "bump" is unaffected, so accuracy is preserved. Restored to defaults after G28; the
+            // controller queues these in order, so the raise applies to G28 and the restore runs after.
+            if (fastHome) {
+                await this.executeGcode(socket, { gcode: 'M1028 S1 X120 Y120 Z40' });
             }
+
+            await this.executeGcode(socket, { gcode: 'G53' });
+            await this.executeGcode(socket, { gcode: 'G28' });
+
+            if (fastHome) {
+                await this.executeGcode(socket, { gcode: 'M1028 S1 X50 Y50 Z10' });
+            }
+
+            // Always restore the work coordinate system after homing — not just for laser/CNC. Leaving
+            // the machine in modal G53 (machine space) makes the next absolute move plunge to machine
+            // Z0 (audit R7 / 02-F3). A printing head re-selecting G54 is harmless.
+            await this.executeGcode(socket, { gcode: 'G54' });
+
+            if (this.connectionType === ConnectionType.WiFi) {
+                socket && socket.emit('move:status', { isHoming: false });
+            }
+
+            callback && callback();
         }
     };
 
@@ -1324,13 +1366,12 @@ M3`;
     public setWorkOrigin = async (socket, options, callback) => {
         const { xPosition, yPosition, zPosition, bPosition } = options;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            // TODO(R13/SACP): SacpChannel.setWorkOrigin drops zero-valued axes the same way
+            // (truthiness gating). Apply the Number.isFinite fix there when the SACP path is tackled.
             this.channel.setWorkOrigin({ xPosition, yPosition, zPosition, bPosition });
         } else {
-            let gcode = 'G92 ';
-            xPosition && (gcode += `X${xPosition || 0} `);
-            yPosition && (gcode += `Y${yPosition || 0}  `);
-            zPosition && (gcode += `Z${zPosition || 0} `);
-            bPosition && (gcode += `B${bPosition || 0} `);
+            // Include axes set to exactly 0 (audit R13 / 02-F11); truthiness gating dropped them.
+            const gcode = buildSetWorkOriginGcode({ x: xPosition, y: yPosition, z: zPosition, b: bPosition });
             await this.executeGcode(socket, { gcode });
             callback && callback();
         }

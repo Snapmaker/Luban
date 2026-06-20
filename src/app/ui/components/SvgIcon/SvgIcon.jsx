@@ -3,13 +3,16 @@ import { noop } from 'lodash';
 import includes from 'lodash/includes';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
-import * as Icons from 'snapmaker-react-icon';
+import * as PackageIcons from 'snapmaker-react-icon';
 import styles from './styles.styl';
 
-// FIXME: This is just a temporary solution. The correct approach would be to move this component into the xxx dependency library.
+// MainToolbarAbPosition isn't published in snapmaker-react-icon yet, so merge the locally-bundled
+// copy into a plain icon map. Mutating the imported ES module namespace (Icons.X = ...) warns under
+// webpack 5 (read-only namespace) and is a no-op there — that was the "export 'MainToolbarAbPosition'
+// was not found" build warning. The correct long-term fix is to publish the icon in the dependency.
 import MainToolbarAbPosition from './Icons/MainToolbarAbPosition';
 
-Icons.MainToolbarAbPosition = MainToolbarAbPosition;
+const Icons = { ...PackageIcons, MainToolbarAbPosition };
 
 
 
