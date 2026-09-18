@@ -74,8 +74,8 @@ const StartProject: React.FC = () => {
         setBeginSelected(type);
     };
 
-    const handleNewFile = async (isRotate: boolean, headType) => {
-        UniApi.Event.emit('appbar-menu:new-file', { headType, isRotate });
+    const handleNewFile = async (isRotate: boolean, headType, isBelt = false) => {
+        UniApi.Event.emit('appbar-menu:new-file', { headType, isRotate, isBelt });
     };
 
     const isMultiFunctionMachine = activeMachine && activeMachine.machineType === MachineType.MultiFuncionPrinter;
@@ -158,6 +158,16 @@ const StartProject: React.FC = () => {
                                                             priority="level-three"
                                                         >
                                                             {i18n._('key-HomePage/Begin-4-axis')}
+                                                        </Button>
+                                                        <Button
+                                                            onClick={() => {
+                                                                handleNewFile(true, HEAD_LASER, true);
+                                                            }}
+                                                            className={classNames(styles['four-axis-select'])}
+                                                            type="default"
+                                                            priority="level-three"
+                                                        >
+                                                            {i18n._('key-HomePage/Begin-Belt')}
                                                         </Button>
                                                     </div>
                                                 </div>

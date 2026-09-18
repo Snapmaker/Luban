@@ -5,6 +5,7 @@ import path from 'path';
 import { pathWithRandomSuffix } from '../../../../shared/lib/random-utils';
 import { isNull } from '../../../../shared/lib/utils';
 import { GcodeGenerator } from '../../../lib/GcodeGenerator';
+import { transformBeltGcode } from '../../../lib/GcodeGenerator/beltTransform';
 import logger from '../../../lib/logger';
 import sendMessage from '../utils/sendMessage';
 import settings from '../../../config/settings';
@@ -111,10 +112,18 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, jobOffsetMode, serie
 
     let isRotate;
     let diameter;
+    let isBelt = false;
+    // Accumulated extents of the belt-transformed motion, used to rewrite the
+    // header boundary fields so the machine frames the remapped area.
+    let beltExtents = null;
 
     for (let i = 0; i < toolPaths.length; i++) {
         const toolPath = toolPaths[i];
         const { toolPathFiles, gcodeConfig } = toolPath;
+        // Belt mode is a JS-side flag carried on the toolpath's materials (the
+        // native engine does not know about it), so read it here rather than off
+        // the engine-produced toolPathObj.
+        const toolPathIsBelt = Boolean(toolPath.materials && toolPath.materials.isBelt);
 
         for (let j = 0; j < toolPathFiles.length; j++) {
             const toolPathFilePath = `${process.env.Tmpdir}/${toolPathFiles[j]}`;
@@ -131,6 +140,24 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, jobOffsetMode, serie
                 }
             } else {
                 gcodeLines = gcodeGenerator.parseAsCNC(toolPathObj, gcodeConfig);
+            }
+
+            // Belt (sideways-rollers) mode: relabel the rotary motion so the
+            // laser sweep runs on X and the belt feed on B, and remember the
+            // transformed extents so the header bounds match the real motion.
+            if (headType === 'laser' && toolPathIsBelt) {
+                const belt = transformBeltGcode(gcodeLines);
+                gcodeLines = belt.lines;
+                if (belt.extents) {
+                    if (beltExtents === null) {
+                        beltExtents = { ...belt.extents };
+                    } else {
+                        beltExtents.minX = Math.min(beltExtents.minX, belt.extents.minX);
+                        beltExtents.maxX = Math.max(beltExtents.maxX, belt.extents.maxX);
+                        beltExtents.minB = Math.min(beltExtents.minB, belt.extents.minB);
+                        beltExtents.maxB = Math.max(beltExtents.maxB, belt.extents.maxB);
+                    }
+                }
             }
 
             const renderMethod = gcodeConfig.movementMode === 'greyscale-dot' ? 'point' : 'line';
@@ -160,6 +187,7 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, jobOffsetMode, serie
 
             isRotate = toolPathObj.isRotate;
             diameter = toolPathObj.diameter;
+            isBelt = isBelt || toolPathIsBelt;
 
             const { positionX = 0, positionY = 0, rotationB = 0 } = toolPathObj;
             toolPathObj.boundingBox.max.x += positionX;
@@ -189,6 +217,17 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, jobOffsetMode, serie
         sendMessage({ status: 'progress', value: (i + 1) / toolPathFiles.length });
     }
 
+    // Belt mode: the accumulated boundingBox describes the original rotary
+    // motion (Y + B). Replace it with the transformed extents so the machine's
+    // pre-run boundary/frame check frames the remapped motion: X = laser sweep,
+    // B = belt feed, Y/Z unused.
+    if (isBelt && beltExtents) {
+        boundingBox = {
+            max: { x: beltExtents.maxX, y: 0, z: 0, b: beltExtents.maxB },
+            min: { x: beltExtents.minX, y: 0, z: 0, b: beltExtents.minB },
+        };
+    }
+
     const { gcodeConfig, thumbnail } = toolPaths[0];
     const renderMethod = gcodeConfig.movementMode === 'greyscale-dot' ? 'point' : 'line';
     const maxPowerNumber = metadata?.gcodeFlavor === 'grbl' ? 1000 : 255;
@@ -209,6 +248,7 @@ const generateGcode = ({ toolPaths, size, toolHead, origin, jobOffsetMode, serie
         + ';file_total_lines: fileTotalLines\n'
         + `;estimated_time(s): ${estimatedTime}\n`
         + `;is_rotate: ${isRotate}\n`
+        + `;is_belt: ${isBelt}\n`
         + `;diameter: ${diameter}\n`
         + `;max_x(mm): ${boundingBox.max.x}\n`
         + `;max_y(mm): ${boundingBox.max.y}\n`

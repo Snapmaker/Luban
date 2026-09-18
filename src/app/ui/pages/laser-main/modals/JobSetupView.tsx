@@ -34,6 +34,17 @@ export type JobSetupViewHandle = {
     onChange: () => void;
 }
 
+// Laser job mode shown as a selector in Job Setup. These map onto the existing
+// workpiece shape + belt flag rather than being a new stored concept:
+//   ThreeAxis -> Rectangle workpiece (flat bed)
+//   FourAxis  -> Cylinder workpiece (rotary)
+//   Belt      -> Cylinder workpiece + isBelt (rotary module driving a belt)
+enum LaserJobMode {
+    ThreeAxis = '3-axis',
+    FourAxis = '4-axis',
+    Belt = 'belt',
+}
+
 const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
     const activeMachine = useSelector((state: RootState) => state.machine.activeMachine) as Machine;
 
@@ -60,10 +71,35 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
         }
     });
 
+    // Belt (sideways-rollers) mode. Only meaningful for rotary/cylinder jobs.
+    const [isBelt, setIsBelt] = useState<boolean>(Boolean(materials.isBelt));
+    useEffect(() => {
+        setIsBelt(Boolean(materials.isBelt));
+    }, [materials.isBelt]);
+
+    // The job mode the user picks: a flat 3-axis bed, a rotary 4th axis, or a
+    // sideways-rollers belt (a rotary variant). It maps onto the workpiece shape
+    // plus the belt flag: 3-axis -> Rectangle; 4-axis/Belt -> Cylinder.
+    let jobMode: LaserJobMode = LaserJobMode.ThreeAxis;
+    if (workpiece.shape === WorkpieceShape.Cylinder) {
+        jobMode = isBelt ? LaserJobMode.Belt : LaserJobMode.FourAxis;
+    }
+
     const setWorkpieceShape = useCallback((shape: WorkpieceShape) => {
         updateWorkpiece({
             shape,
         });
+    }, [updateWorkpiece]);
+
+    const onChangeJobMode = useCallback((mode: LaserJobMode) => {
+        if (mode === LaserJobMode.ThreeAxis) {
+            setIsBelt(false);
+            updateWorkpiece({ shape: WorkpieceShape.Rectangle });
+        } else {
+            // Both 4-axis and Belt are cylinder jobs; Belt additionally sets the flag.
+            setIsBelt(mode === LaserJobMode.Belt);
+            updateWorkpiece({ shape: WorkpieceShape.Cylinder });
+        }
     }, [updateWorkpiece]);
 
     const setWorkpieceSize = useCallback((size: RectangleWorkpieceSize | CylinderWorkpieceSize) => {
@@ -217,6 +253,7 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
                     HEAD_LASER,
                     workpiece.shape,
                     workpiece.size,
+                    { isBelt: workpiece.shape === WorkpieceShape.Cylinder ? isBelt : false },
                 ));
 
                 dispatch(editorActions.updateWorkpieceObject(HEAD_LASER));
@@ -264,13 +301,41 @@ const JobSetupView = React.forwardRef<JobSetupViewHandle, {}>((_, ref) => {
         workpiece.shape,
         workpiece.size,
 
+        isBelt,
+
         selectedOrigin,
 
         selectedJobOffsetMode,
     ]);
 
+    const jobModeOptions = useMemo(() => ([
+        { value: LaserJobMode.ThreeAxis, label: i18n._('key-CncLaser/JobSetup-Mode 3-axis') },
+        { value: LaserJobMode.FourAxis, label: i18n._('key-CncLaser/JobSetup-Mode 4-axis') },
+        { value: LaserJobMode.Belt, label: i18n._('key-CncLaser/JobSetup-Mode Belt') },
+    ]), []);
+
     return (
         <div className="margin-left-50">
+            <div className="margin-bottom-16">
+                <div className="margin-bottom-8 font-weight-bold">
+                    {i18n._('key-CncLaser/JobSetup-Job Mode')}
+                </div>
+                <TipTrigger
+                    title={i18n._('key-CncLaser/JobSetup-Job Mode')}
+                    content={i18n._('key-CncLaser/JobSetup-Belt Mode Tip')}
+                >
+                    <Select
+                        backspaceRemoves={false}
+                        clearable={false}
+                        size="240px"
+                        isGroup={false}
+                        disabled={inProgress || settingSizeDisabled}
+                        options={jobModeOptions}
+                        value={jobMode}
+                        onChange={(option) => onChangeJobMode(option.value as LaserJobMode)}
+                    />
+                </TipTrigger>
+            </div>
             <div>
                 <div className="margin-bottom-16 font-weight-bold">
                     {i18n._('key-Term/Workpiece Size')}
