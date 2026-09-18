@@ -12,6 +12,10 @@ import {
 // legacy
 export type Materials = {
     isRotate: boolean;
+    // Belt (sideways-rollers) mode: the rotary B axis drives a conveyor belt
+    // rather than spinning a cylinder. Laser G-code is remapped so the sweep
+    // runs on X and the belt feed on B. Only meaningful when isRotate is true.
+    isBelt?: boolean;
     diameter: number;
     length: number;
     x: number;

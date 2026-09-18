@@ -67,6 +67,7 @@ const INITIAL_STATE = {
 
     materials: {
         isRotate: false,
+        isBelt: false,
         diameter: 40,
         length: 75,
         fixtureLength: 20,

@@ -792,7 +792,7 @@ class AppLayout extends React.PureComponent {
                     Mousetrap.trigger(commands[0]);
                 }
             });
-            UniApi.Event.on('appbar-menu:new-file', async ({ headType, isRotate }) => {
+            UniApi.Event.on('appbar-menu:new-file', async ({ headType, isRotate, isBelt }) => {
                 const oldPathname = this.props.history.location.pathname;
                 const history = this.props.history;
                 const { toolHead, series } = this.props.machineInfo;
@@ -803,6 +803,7 @@ class AppLayout extends React.PureComponent {
                 if (includes([HEAD_LASER, HEAD_CNC], headType)) {
                     await this.props.initializeWorkpiece(headType, {
                         isRotate: isRotate,
+                        isBelt: isBelt,
                     });
 
                     await this.props.initializeOrigin(headType);

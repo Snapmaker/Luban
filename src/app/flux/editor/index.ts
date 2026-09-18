@@ -2404,9 +2404,11 @@ export const actions = {
      *
      * Set default workpiece.
      */
-    initializeWorkpiece: (headType: HeadType, options: { isRotate: boolean }) => {
+    initializeWorkpiece: (headType: HeadType, options: { isRotate: boolean, isBelt?: boolean }) => {
         return async (dispatch, getState) => {
             const isRotate = options.isRotate;
+            // Belt is a rotary (cylinder) job variant; ignore the flag if not rotary.
+            const isBelt = isRotate && Boolean(options.isBelt);
 
             const activeMachine: Machine = getState().machine.activeMachine;
             if (!isRotate) {
@@ -2427,7 +2429,8 @@ export const actions = {
                     {
                         diameter: 40,
                         length: 75,
-                    }
+                    },
+                    { isBelt }
                 ));
                 await dispatch(actions.updateWorkpieceObject(headType));
             }
@@ -2586,8 +2589,8 @@ export const actions = {
     /**
      * Configure workpiece.
      */
-    setWorkpiece: (headType: HeadType, shape: WorkpieceShape, size: RectangleWorkpieceSize | CylinderWorkpieceSize) => {
-        return (dispatch) => {
+    setWorkpiece: (headType: HeadType, shape: WorkpieceShape, size: RectangleWorkpieceSize | CylinderWorkpieceSize, options: { isBelt?: boolean } = {}) => {
+        return (dispatch, getState) => {
             // Update workpiece object, without further validation
             dispatch(actions.updateState(headType, {
                 workpiece: {
@@ -2596,9 +2599,16 @@ export const actions = {
                 }
             }));
 
+            const isRotate = shape === WorkpieceShape.Cylinder;
+            // Belt mode only applies to rotary/cylinder jobs. Preserve the
+            // existing flag when the caller doesn't specify one.
+            const currentMaterials = getState()[headType].materials;
+            const isBelt = isRotate && (options.isBelt ?? currentMaterials?.isBelt ?? false);
+
             dispatch(actions.updateState(headType, {
                 materials: {
-                    isRotate: shape === WorkpieceShape.Cylinder,
+                    isRotate,
+                    isBelt,
                     diameter: (size as CylinderWorkpieceSize).diameter,
                     length: (size as CylinderWorkpieceSize).length,
                     x: (size as RectangleWorkpieceSize).x,
