@@ -121,7 +121,8 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:380px;overflow:auto;f
       var card=cards.get(job.id);if(!card){card=makeCard(job);cards.set(job.id,card);}
       card.badge.textContent=label(job);
       card.meta.textContent=job.kind+' · '+job.id+' · '+new Date(job.createdAt).toLocaleString();
-      card.summary.textContent=job.ending?job.ending.reason:job.error||(job.lastEvent && (job.lastEvent.note||job.lastEvent.phase))||'';
+      card.summary.textContent=(job.ending?job.ending.reason:job.error||(job.lastEvent && (job.lastEvent.note||job.lastEvent.phase))||'')
+        +(job.modalRecovery && job.modalRecovery.recoveryAction?' · G53/G91 may remain ('+(job.modalRecovery.skipReason||job.modalRecovery.status)+'): run '+job.modalRecovery.recoveryAction+' before jogging':'');
       card.stop.hidden=job.id!==snapshot.activeId || group!=='running';
       card.dismiss.hidden=group!=='ready' && group!=='approved';
       card.review.textContent=group==='ready'?'Review / approval':group==='approved'?'View approval':'View plan';

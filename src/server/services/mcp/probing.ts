@@ -22,7 +22,7 @@ import { MARCH_SEGMENT_MM, TRAVEL_FEED, marchSegments } from './procedureLimits'
 import { McpToolError } from './registry';
 import { GcodeChannel, SentGcode, currentGcodeSequence, sendGcodeVisible } from './tools/camera';
 import { PositionSnapshot, assertFreshHeartbeat, getPositionSnapshot, safeTraverseZ } from './tools/machine';
-import { ProcedureAbort, ProcedureStopped } from './procedureAbort';
+import { ProcedureAbort, checkProcedureStop } from './procedureAbort';
 import { TRAVERSE_Z_TOLERANCE_MM, planRaiseToTop } from './traversePlan';
 import { ROTATE_FEED, judgeRotation } from './rotaryMotion';
 import { reliableForMotion } from './machinePosition';
@@ -91,50 +91,16 @@ export function takeStepTrace(since: number | null): string | undefined {
 // isProcedureAbort / isProcedureStopped, never instanceof (see that file).
 export { ProcedureAbort, ProcedureStopped, isProcedureAbort, isProcedureStopped } from './procedureAbort';
 
-// ---------------------------------------------------------------- cooperative stop
-//
-// A procedure is a server-driven loop of <= 1-5 mm settled steps, not a
-// firmware print job: the machine's stop_print cannot end it (job
-// 5ad5fcce6b3a, 2026-09-06 - three stop_gcode_job calls answered ok:false
-// while the scan kept stepping). stop_gcode_job now records a stop REQUEST;
-// every motion primitive checks it before sending, so the procedure stops at
-// the next step boundary (within one <= 1 mm step or one sensor window),
-// throws ProcedureStopped, and the runner's normal abort path raises the head
-// to the traverse height and keeps every completed result. The first check
-// throws and marks the request acknowledged so the abort path's own moves
-// (raise, retreat) are not refused; a program runner sees the request and
-// stops regardless of on_fail.
-interface StopRequest {
-    reason: string;
-    requestedAt: number;
-    acknowledged: boolean;
-}
-
-let stopRequest: StopRequest | null = null;
-
-export function requestProcedureStop(reason: string): StopRequest {
-    if (!stopRequest) {
-        stopRequest = { reason, requestedAt: Date.now(), acknowledged: false };
-    }
-    return stopRequest;
-}
-
-export function clearProcedureStop(): void {
-    stopRequest = null;
-}
-
-export function procedureStopRequested(): StopRequest | null {
-    return stopRequest;
-}
-
-/** Called at every step boundary: throws ProcedureStopped once per request. */
-export function checkProcedureStop(): void {
-    if (stopRequest && !stopRequest.acknowledged) {
-        stopRequest.acknowledged = true;
-        throw new ProcedureStopped(`Stopped on request (${stopRequest.reason}) at a step boundary, `
-            + `${Date.now() - stopRequest.requestedAt} ms after the request. Raising to the traverse height; completed results kept.`);
-    }
-}
+// The cooperative stop-request state lives in procedureAbort.ts (pure, no
+// server imports) so tools/camera.ts can read it without importing this
+// module - camera.ts <-> probing.ts was an import cycle. Re-exported here so
+// every existing importer keeps working; it is the SAME module state.
+export {
+    checkProcedureStop,
+    clearProcedureStop,
+    procedureStopRequested,
+    requestProcedureStop,
+} from './procedureAbort';
 
 export interface StepResult {
     contact: boolean;

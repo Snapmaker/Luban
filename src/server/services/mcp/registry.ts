@@ -1,5 +1,18 @@
 /* eslint-disable camelcase */
-import { manualControlGate } from './manualControl';
+import { isReadOnlyTool, manualControlGate } from './manualControl';
+import {
+    ModalLedger,
+    RecoveryDeps,
+    RecoveryEvidence,
+    classifyFailure,
+    closeLedger,
+    describeEvidence,
+    evidenceIsRelevant,
+    exposureAfterSuccess,
+    hookFailureEvidence,
+    recoverAfterFailure,
+    runWithLedger,
+} from './failureRecovery';
 // MCP tool results are snake_case by convention (confirm_url).
 /**
  * MCP tool registry.
@@ -77,17 +90,98 @@ export class ToolRegistry {
         return this.tools.has(name);
     }
 
+    // Injected by the camera tools (they own the direct send path); without it
+    // failures are reported exactly as before, with no cleanup.
+    private recoveryDeps: RecoveryDeps | null = null;
+
+    public setFailureRecovery(deps: RecoveryDeps | null): void {
+        this.recoveryDeps = deps;
+    }
+
+    /** The injected cleanup runtime, for jobs that end outside a tool call (file jobs, detached runners). */
+    public getFailureRecovery(): RecoveryDeps | null {
+        return this.recoveryDeps;
+    }
+
     public async call(name: string, args: object): Promise<object> {
         const tool = this.tools.get(name);
         if (!tool) {
             throw new McpToolError(`Unknown tool: ${name}`);
         }
         const leave = manualControlGate.enterTool(name);
-        let result: object;
+        // Every direct send made while the handler runs lands on this ledger
+        // (failureRecovery.ts), so a FAILED call can be checked for a G53/G91
+        // it left behind (#221). Successful calls are not touched.
+        const deps = this.recoveryDeps;
+        let startConnection: string | null = null;
         try {
-            result = await tool.handler(args || {});
+            startConnection = deps ? deps.connectionId() : null;
+        } catch (err) {
+            startConnection = null;
+        }
+        // stop_gcode_job is never a mutation here: it must not be followed by cleanup.
+        const ledger = new ModalLedger(name, !isReadOnlyTool(name) && name !== 'stop_gcode_job', startConnection);
+        let result: object | undefined;
+        let threw = false;
+        let thrown: unknown;
+        let evidence: RecoveryEvidence | null = null;
+        try {
+            try {
+                result = await runWithLedger(ledger, async () => tool.handler(args || {}));
+            } catch (err) {
+                threw = true;
+                thrown = err;
+            }
+            closeLedger(ledger);
+            let kind: ReturnType<typeof classifyFailure> = null;
+            try {
+                kind = classifyFailure(threw, thrown, result);
+            } catch (err) {
+                // An unreadable error is still a failure; its evidence is best effort.
+                kind = threw ? 'thrown' : null;
+            }
+            if (kind && deps && ledger.mutating) {
+                // Runs while this call still holds the ownership gate, and
+                // never throws: the original failure is what gets reported.
+                const failed = kind;
+                evidence = await recoverAfterFailure(ledger, failed, deps).catch((err) => hookFailureEvidence(ledger, failed, err));
+            } else if (!kind && deps) {
+                // Success: never followed by commands, but a G53/G91 it left is reported
+                // (not a payload still pending for a detached runner, nor under a running job).
+                try {
+                    evidence = exposureAfterSuccess(ledger, deps);
+                } catch (err) {
+                    evidence = null;
+                }
+            }
         } finally {
+            closeLedger(ledger);
             leave();
+        }
+        if (threw) {
+            if (evidenceIsRelevant(evidence) && thrown instanceof Error) {
+                // McpServer serialises only err.message: the original message
+                // stays first and unchanged, the evidence follows it. The same
+                // error object is rethrown, so its class and .partial survive.
+                // An error whose message cannot be rewritten (frozen, getter)
+                // is rethrown untouched rather than replaced.
+                const original = thrown.message;
+                try {
+                    thrown.message = `${original}
+${describeEvidence(evidence)}`;
+                    (thrown as Error & { failureRecovery?: RecoveryEvidence }).failureRecovery = evidence;
+                } catch (err) {
+                    try {
+                        thrown.message = original;
+                    } catch (restoreErr) {
+                        // Nothing more to do: the original error goes out as it is.
+                    }
+                }
+            }
+            throw thrown;
+        }
+        if (evidenceIsRelevant(evidence)) {
+            result = { ...(result as object), failure_recovery: evidence };
         }
         // Every result that carries a confirm_url is a staged job: say how the
         // link is to be handed over, every time, from one place.

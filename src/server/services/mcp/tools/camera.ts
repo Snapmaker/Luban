@@ -31,7 +31,10 @@ import { decodeToGray, trackFeature } from '../tracking';
 import { McpToolError, ToolRegistry } from '../registry';
 import { gateDirectXy, planGotoWorkOrigin } from '../directMovePlan';
 import { clearanceOptions } from '../clearanceContext';
-import { WORK_FRAME_RESTORE_GCODE } from '../frameRecovery';
+import { FrameReading, WORK_FRAME_RESTORE_GCODE, frameRestoreJobRefusal, verifyWorkFrame, workFrameVerificationNote } from '../frameRecovery';
+import { NotSentError, RecoveryDeps, classifyReply, recordModalSend } from '../failureRecovery';
+import { procedureStopRequested } from '../procedureAbort';
+import { manualControlGate } from '../manualControl';
 import { landmarkStore } from '../landmarks';
 import { routeClearanceForPath } from '../routeClearance';
 import { probeFeedService } from '../probeFeed';
@@ -42,12 +45,13 @@ import {
     PositionSnapshot,
     assertWithinTravel,
     getPositionSnapshot,
+    machineBounds,
     motionFloorZ,
     requirePlanningTravel,
     safeTraverseZ,
 } from './machine';
 import { validateStagedEnvelope } from './staging';
-import { reliableForMotion } from '../machinePosition';
+import { outsideBounds, reliableForMotion } from '../machinePosition';
 import { DIRECT_MOVE_FEED, TRACK_PATCH_PX, TRACK_SEARCH_RADIUS_PX, TRAVEL_FEED, TRAVERSE_FEED, clampCount, clampTo } from '../procedureLimits';
 
 // Motion policy (#23, refined): the direct move path is for the odd single
@@ -112,6 +116,19 @@ export interface SendTiming {
     trace?: string;
 }
 
+/** Connection generation for the failure hook's ledger (#221); null when disconnected. */
+function currentConnectionId(): string | null {
+    try {
+        if (!connectionManager.getConnectionStatus().connected) {
+            return null;
+        }
+        const generation = (connectionManager as { getConnectionGeneration?: () => string }).getConnectionGeneration;
+        return typeof generation === 'function' ? generation.call(connectionManager) : 'unversioned';
+    } catch (err) {
+        return null;
+    }
+}
+
 export async function sendGcodeVisible(channel: GcodeChannel, tool: string, gcode: string, timing?: SendTiming): Promise<SentGcode> {
     const sequence = bumpGcodeSequence();
     const sentAt = Date.now();
@@ -159,9 +176,16 @@ export async function sendGcodeVisible(channel: GcodeChannel, tool: string, gcod
     }
     probeFeedService.motionBegin();
     noteDirectGcodeStart();
+    // The tool call's modal ledger (#221): what left, on which channel, and
+    // how it ended - read by the failure hook in ToolRegistry.call().
+    const settleLedger = recordModalSend(currentConnectionId() || 'none', gcode);
     let executed;
     try {
         executed = await channel.executeGcode(gcode);
+        settleLedger(classifyReply(executed));
+    } catch (err) {
+        settleLedger('indeterminate');
+        throw err;
     } finally {
         probeFeedService.motionEnd();
         noteDirectGcodeEnd();
@@ -760,7 +784,73 @@ export async function sendWorkFrameRestore(tool: string): Promise<SentGcode> {
     return executed;
 }
 
+/** The position-of-record fields a frame verification reads (frameRecovery.verifyWorkFrame). */
+function frameReading(snapshot: PositionSnapshot): FrameReading {
+    return {
+        reliability: snapshot.reliability,
+        frame: snapshot.frame,
+        reportedAt: snapshot.machineReportedAt,
+        originOffset: snapshot.originOffset,
+        // `work` is the raw report; read as machine coordinates, is it impossible?
+        rawImpossibleAsMachine: outsideBounds(
+            snapshot.work,
+            machineBounds((connectionManager.getConnectionStatus() as { machineIdentifier?: string | null }).machineIdentifier || null),
+        ).length > 0,
+    };
+}
+
+/**
+ * The runtime side of the failed-call modal cleanup (failureRecovery.ts):
+ * the SAME visible send path, the position of record, and the ownership
+ * signals. Settling waits two status periods, as restore_work_frame does.
+ */
+export const failureRecoveryDeps: RecoveryDeps = {
+    connectionId: currentConnectionId,
+    send: async (label, gcode) => {
+        const channel = connectionManager.getCurrentChannel() as unknown as GcodeChannel;
+        if (!channel || typeof channel.executeGcode !== 'function') {
+            throw new NotSentError('no machine channel with a direct command path');
+        }
+        return sendGcodeVisible(channel, label, gcode);
+    },
+    settle: async () => sleep(FRAME_RESTORE_SETTLE_MS),
+    readPosition: () => {
+        const snapshot = getPositionSnapshot();
+        return { ...frameReading(snapshot), machineStatus: snapshot.machineStatus };
+    },
+    reliableForMotion: (reliability) => reliableForMotion(reliability as PositionSnapshot['reliability']),
+    jobRunning: () => {
+        // starting/started: the controller is executing (or about to execute)
+        // a program, possibly this call's own direct job - either way cleanup
+        // would land inside it, so it is skipped and explained.
+        const job = jobManager.getActive();
+        return !!job && (job.state === 'starting' || job.state === 'started');
+    },
+    // The pendant arms manual control for its jogs and its own frame recovery.
+    manualControl: () => manualControlGate.isManual(),
+    // The real latches, not the error text: crash/overtravel trip (also the
+    // unexpected-contact guard) and a pending procedure stop request.
+    authorityClosed: () => {
+        const trip = probeFeedService.getTrip();
+        if (trip) {
+            return `${trip.kind === 'crash' ? 'crash' : 'overtravel'} alarm latched (${trip.channel})`;
+        }
+        try {
+            probeFeedService.assertNoOvertravel();
+        } catch (err) {
+            return (err as Error).message;
+        }
+        const stop = procedureStopRequested();
+        return stop ? `a procedure stop was requested (${stop.reason})` : null;
+    },
+    now: () => Date.now(),
+};
+
 export function registerCameraTools(registry: ToolRegistry): void {
+    // Guarded: inert test harnesses hand in a bare registry stub.
+    if (typeof registry.setFailureRecovery === 'function') {
+        registry.setFailureRecovery(failureRecoveryDeps);
+    }
     registry.register({
         name: 'list_cameras',
         description: 'List available capture sources: the configured snapshot URL, or DirectShow '
@@ -1234,7 +1324,13 @@ export function registerCameraTools(registry: ToolRegistry): void {
             + 'reports an incoherent or machine-frame position after a job that declared G53 and never selected a '
             + 'work workspace again: the controller keeps reporting machine coordinates while the heartbeat still '
             + 'carries a work-origin offset, so every derived position is rejected until the frame is handed back. '
-            + 'Returns the position of record before and after, re-read two beats later. A re-home is not the remedy.',
+            + 'Returns the position of record before and after, re-read two beats later, and `workspace_verification`: '
+            + '`verified` (a status report taken a poll period after the reply is only possible in the work frame), '
+            + '`consistent-unverified` (reads as work but would also fit the machine frame), `unverifiable-zero-offset` '
+            + '(work offset ~0, both frames read alike), `no-fresh-beat` (nothing judged after the reply yet) or '
+            + '`machine-frame` (still in G53). `recovered` is true only when verified; `note` says what to do next. '
+            + 'Refused, sending nothing, while a job is starting or running: wait for it to end or stop it first. '
+            + 'A re-home is not the remedy.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -1243,27 +1339,40 @@ export function registerCameraTools(registry: ToolRegistry): void {
             additionalProperties: false,
         },
         handler: async (args: { reason?: string }) => {
+            // Never inject G90/G54 into a starting or running job (#229 review).
+            const jobRefusal = frameRestoreJobRefusal(jobManager.getActive());
+            if (jobRefusal) {
+                throw new McpToolError(jobRefusal);
+            }
             const before = getPositionSnapshot();
             const reason = String(args.reason || '').trim();
             const executed = await sendWorkFrameRestore(`restore_work_frame${reason ? ` - ${reason.slice(0, 60)}` : ''}`);
+            const replyAt = Date.now();
             // Two status periods: the judgement needs a beat taken AFTER the
             // workspace change, and the poll runs on its own ~2 s cadence.
             await new Promise((resolve) => setTimeout(resolve, FRAME_RESTORE_SETTLE_MS));
             const after = getPositionSnapshot();
-            const recovered = reliableForMotion(after.reliability) && !reliableForMotion(before.reliability);
+            // The before/after reliability comparison missed the case this tool
+            // exists for: a sustained machine-frame state already reads as
+            // 'heartbeat'. Judge the frame itself, conservatively (#229).
+            const accepted = executed.result === 0;
+            const verification = verifyWorkFrame(frameReading(after), replyAt);
+            const recovered = accepted && verification === 'verified' && reliableForMotion(after.reliability);
             return {
                 sent: WORK_FRAME_RESTORE_GCODE,
                 result: executed.result,
                 text: executed.text || null,
                 before: { reliability: before.reliability, frame: before.frame, machine: before.machine },
                 after: { reliability: after.reliability, frame: after.frame, machine: after.machine },
+                frame_before: before.frame,
+                frame_after: after.frame,
+                workspace_verification: verification,
                 recovered,
                 warnings: after.warnings,
-                note: recovered
-                    ? 'The controller is back in the work workspace and the position of record is usable again.'
-                    : `The position of record is ${after.reliability} after the restore. `
-                        + 'Read get_position again in a couple of seconds; if it has not cleared, call '
-                        + 'query_firmware_position to see which frame the controller is actually in and tell the operator.',
+                note: accepted
+                    ? workFrameVerificationNote(verification, after.reliability)
+                    : `The controller did not accept the restore (result ${executed.result}). The workspace is unknown: `
+                        + 'do not move; call query_firmware_position and tell the operator.',
             };
         },
     });

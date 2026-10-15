@@ -11,6 +11,7 @@ import { JobEnding, McpJobKind, McpJobState, TERMINAL_JOB_STATES } from './jobEn
 import { resolveTelemetryConfig } from './telemetryConfig';
 import { GcodeValidationReport } from './validator';
 import { describeActiveTool } from './activeTool';
+import type { RecoveryEvidence } from './failureRecovery';
 
 const log = logger('service:mcp:jobs');
 
@@ -136,6 +137,26 @@ export interface McpJob {
     runner?: () => Promise<object>;
     /** Workspace state against which this job was staged; old approvals cannot survive a change. */
     workspaceRevision?: number;
+    /**
+     * Modal cleanup evidence for a job that ended outside the call that
+     * started it (#221): a file job, or a detached procedure runner. Null or
+     * absent when the job cannot have left G53/G91 behind.
+     */
+    failureRecovery?: RecoveryEvidence | null;
+    /** File jobs: what start and the status polls established, for judging the modes the file may have left. */
+    modalTrack?: FileJobModalTrack;
+}
+
+export interface FileJobModalTrack {
+    /** Connection generation captured as the job started; null when it could not be read. */
+    startConnection: string | null;
+    /** Highest `currentLine` the status reported while the job ran. */
+    lastLine: number | null;
+    totalLines: number | null;
+    /** Highest progress seen, as a fraction 0..1. */
+    lastProgress: number | null;
+    /** The machine reported `stopping` before it went idle (a touchscreen or controller stop looks like completion). */
+    stoppingSeen: boolean;
 }
 
 function escapeHtml(text: string): string {
@@ -333,6 +354,8 @@ export class JobManager {
             endedAt: job.endedAt,
             error: job.error,
             ending: job.ending,
+            // eslint-disable-next-line camelcase
+            failure_recovery: job.failureRecovery || null,
             terminal: this.isTerminal(job),
             result: job.result,
             eventCount: job.events.length,

@@ -107,6 +107,9 @@ function cameraFixture() {
         '../positionOfRecord': { bumpGcodeSequence: () => 1, noteDirectGcodeStart: () => undefined, noteDirectGcodeEnd: () => undefined, noteFrameRestored: () => undefined },
         '../diagnostics': { recordGcodeTiming: () => undefined },
         '../registry': { McpToolError: Error },
+        '../failureRecovery': { recordModalSend: () => () => undefined, classifyReply: () => 'accepted', NotSentError: Error },
+        '../procedureAbort': { procedureStopRequested: () => null },
+        '../manualControl': { manualControlGate: { isManual: () => false } },
         '../probeFeed': { probeFeedService: {
             assertNoOvertravel: () => { if (alarm.tripped) { throw new Error('alarm'); } },
             motionBegin: () => undefined,

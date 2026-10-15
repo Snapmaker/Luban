@@ -4,7 +4,22 @@ import * as fs from 'fs-extra';
 
 import logger from '../../../lib/logger';
 import { connectionManager } from '../../machine/ConnectionManager';
-import { McpJob, TERMINAL_JOB_STATES, approvalHandoff, jobManager } from '../jobs';
+import { FileJobModalTrack, McpJob, TERMINAL_JOB_STATES, approvalHandoff, jobManager } from '../jobs';
+import {
+    Exposure,
+    JobEndCategory,
+    ModalLedger,
+    RecoveryDeps,
+    RecoveryEvidence,
+    closeLedger,
+    currentLedger,
+    describeEvidence,
+    fileModalExposure,
+    finishDetachedLedger,
+    recoverAfterJobEnd,
+    runWithLedger,
+} from '../failureRecovery';
+import { manualControlGate } from '../manualControl';
 import { clearanceOptions } from '../clearanceContext';
 import { classifyProcedureEnding, countMeasured, planJobStop } from '../jobEnding';
 import { summarizeJobTiming } from '../jobTiming';
@@ -172,6 +187,194 @@ function machineStatus(): string | null {
 
 const log = logger('service:mcp:gcode-jobs');
 
+// ---- Modal cleanup for jobs that end outside the call that started them (#221) ----
+//
+// The registry's hook covers what a tool call sends in its own async context.
+// A file job runs on the controller's interpreter and ends minutes later; a
+// procedure runner is detached from start_gcode_job onto its own ledger.
+// Both are judged here, with the runtime the registry was given (camera.ts
+// injects it), and leave evidence on the job record. Policy: a stop, a trip,
+// a lost connection or a completion NEVER sends anything (evidence plus
+// restore_work_frame); only a job that failed on its own may get the
+// separate, axis-free G90/G54, and only under the call hook's guards.
+
+let recoveryDepsSource: () => RecoveryDeps | null = () => null;
+
+function recoveryDeps(): RecoveryDeps | null {
+    try {
+        return recoveryDepsSource();
+    } catch (err) {
+        return null;
+    }
+}
+
+function connectionNow(): string | null {
+    try {
+        const deps = recoveryDeps();
+        return deps ? deps.connectionId() : null;
+    } catch (err) {
+        return null;
+    }
+}
+
+/** Why command authority is closed (crash/overtravel latch, stop request), or null. */
+function authorityClosedNow(): string | null {
+    try {
+        const deps = recoveryDeps();
+        return deps ? deps.authorityClosed() : null;
+    } catch (err) {
+        return 'the safety latch state could not be read';
+    }
+}
+
+/**
+ * Hold the MCP ownership gate while cleanup may be sent from outside a tool
+ * call, so the pendant cannot arm in the middle of it. When the pendant
+ * already owns control the gate refuses and the deps' manual-control guard
+ * skips the cleanup.
+ */
+async function withRecoveryGate<T>(name: string, fn: () => Promise<T>): Promise<T> {
+    let leave: () => void = () => undefined;
+    try {
+        leave = manualControlGate.enterTool(name);
+    } catch (err) {
+        leave = () => undefined;
+    }
+    try {
+        return await fn();
+    } finally {
+        leave();
+    }
+}
+
+function newModalTrack(): FileJobModalTrack {
+    return { startConnection: connectionNow(), lastLine: null, totalLines: null, lastProgress: null, stoppingSeen: false };
+}
+
+/** Fold one status report's printing info into the job's modal track (highest line / progress seen). */
+function noteFileJobProgress(job: McpJob, info: { sent?: unknown; total?: unknown; progress?: unknown } | null | undefined): void {
+    const track = job.modalTrack;
+    if (!track || !info) {
+        return;
+    }
+    const line = Number(info.sent);
+    if (Number.isFinite(line) && line > 0) {
+        track.lastLine = Math.max(track.lastLine || 0, line);
+    }
+    const total = Number(info.total);
+    if (Number.isFinite(total) && total > 0) {
+        track.totalLines = total;
+    }
+    const raw = Number(info.progress);
+    if (Number.isFinite(raw) && raw > 0) {
+        const fraction = raw <= 1 ? raw : raw / 100;
+        track.lastProgress = Math.max(track.lastProgress || 0, Math.min(fraction, 1));
+    }
+}
+
+function noteModalRecovery(job: McpJob, evidence: RecoveryEvidence): void {
+    jobManager.appendEvent(job, 'modal_recovery', {
+        note: `${evidence.status}${evidence.skip_reason ? ` (${evidence.skip_reason})` : ''}: ${evidence.explanation}`,
+        recovery_action: evidence.recovery_action,
+        modes: evidence.exposure.state,
+    });
+}
+
+/**
+ * Judge a FILE job's end from its program text and how far it was seen to
+ * get, attach the evidence to the job and log it. Never throws: a job ending
+ * must not be broken by its own evidence.
+ */
+export async function judgeFileJobEnd(job: McpJob, category: JobEndCategory, reason: string): Promise<RecoveryEvidence | null> {
+    if (job.kind !== 'file') {
+        return null;
+    }
+    try {
+        const track = job.modalTrack || { ...newModalTrack(), startConnection: null };
+        let program: string | null = null;
+        try {
+            program = fs.readFileSync(job.filePath, 'utf8');
+        } catch (err) {
+            program = null;
+        }
+        const exposure: Exposure = program !== null
+            ? fileModalExposure(program, {
+                lastLine: track.lastLine,
+                totalLines: track.totalLines,
+                lastProgress: track.lastProgress,
+                ranToEnd: category === 'completed' && !track.stoppingSeen,
+            })
+            : {
+                exposed: true,
+                state: { workspace: 'unknown', distance: 'unknown' },
+                pending_payloads: 0,
+                connections: [],
+                reasons: ['the job file could not be read back, so its modes are unknown'],
+            };
+        if (category === 'completed' && track.stoppingSeen) {
+            exposure.reasons.push('the machine reported "stopping" before it went idle: the file may not have run to its end');
+        }
+        const run = async () => recoverAfterJobEnd({
+            jobId: job.id,
+            tool: `file-job:${job.name}`,
+            category,
+            reason,
+            exposure,
+            startConnection: track.startConnection,
+        }, recoveryDeps());
+        const evidence = category === 'failed' ? await withRecoveryGate('file-job-modal-recovery', run) : await run();
+        job.failureRecovery = evidence;
+        if (evidence) {
+            noteModalRecovery(job, evidence);
+        }
+        return evidence;
+    } catch (err) {
+        return null;
+    }
+}
+
+/** A detached runner's own ledger, owned by the start_gcode_job call that launches it; null if unavailable. */
+function runnerLedgerFor(job: McpJob): ModalLedger | null {
+    try {
+        return new ModalLedger(`procedure:${job.name}`, true, connectionNow(), currentLedger());
+    } catch (err) {
+        return null;
+    }
+}
+
+/** Close a runner's ledger and judge it like a tool call; evidence lands on the job. Never throws. */
+async function settleRunnerLedger(job: McpJob, ledger: ModalLedger | null, outcome: { threw: boolean; thrown?: unknown }): Promise<RecoveryEvidence | null> {
+    if (!ledger) {
+        return null;
+    }
+    try {
+        const run = async () => finishDetachedLedger(ledger, outcome, recoveryDeps(), job.id);
+        const evidence = outcome.threw ? await withRecoveryGate('procedure-modal-recovery', run) : await run();
+        job.failureRecovery = evidence;
+        if (evidence) {
+            noteModalRecovery(job, evidence);
+        }
+        return evidence;
+    } catch (err) {
+        return null;
+    } finally {
+        try {
+            closeLedger(ledger);
+        } catch (err) {
+            // Idempotent; nothing to report.
+        }
+    }
+}
+
+/** The original error first, then the job's evidence - the same shape the registry gives a failed call. */
+function withEvidence(error: Error, evidence: RecoveryEvidence | null): Error {
+    if (evidence) {
+        error.message = `${error.message}\n${describeEvidence(evidence)}`;
+        (error as Error & { failureRecovery?: RecoveryEvidence }).failureRecovery = evidence;
+    }
+    return error;
+}
+
 // File jobs run on the machine's own interpreter, which reports progress only
 // through the heartbeat - nothing calls back when the job ends, so a started
 // file job previously stayed "started" forever (observed 2026-09-02, job
@@ -225,6 +428,9 @@ function watchFileJobCompletion(job: McpJob): void {
                 jobManager.appendEvent(job, 'completion_unverified', { note: job.error });
                 log.warn(`MCP file job ${job.id}: ${job.error}`);
                 release();
+                // Never sends: the job was not seen to end and authority is not established.
+                const closed = authorityClosedNow();
+                judgeFileJobEnd(job, closed ? 'authority-closed' : 'connection-lost', closed || job.error).catch(() => undefined);
             }
             return;
         }
@@ -237,9 +443,14 @@ function watchFileJobCompletion(job: McpJob): void {
                 jobManager.appendEvent(job, 'paused', { note: 'machine paused the file job - enclosure door interlock or operator pause; it resumes from the machine' });
             }
             lastStatus = status;
+            if (status === 'stopping' && job.modalTrack) {
+                job.modalTrack.stoppingSeen = true;
+            }
             // Progress from the heartbeat, recorded every 5 % so the event
             // log shows the job advancing without a reader having to poll.
-            const state = connectionManager.getLatestMachineState() as { gcodePrintingInfo?: { progress?: number } } | null;
+            const state = connectionManager.getLatestMachineState() as { gcodePrintingInfo?: { progress?: number; sent?: number; total?: number } } | null;
+            // How far the parser got: bounds which modes the file may have left (#221).
+            noteFileJobProgress(job, state ? state.gcodePrintingInfo : null);
             const raw = state && state.gcodePrintingInfo ? Number(state.gcodePrintingInfo.progress) : NaN;
             if (Number.isFinite(raw)) {
                 const percent = Math.round((raw <= 1 ? raw * 100 : raw));
@@ -269,6 +480,9 @@ function watchFileJobCompletion(job: McpJob): void {
                 log.info(`MCP file job ${job.id} completed: heartbeat idle for ${idleStreak}s`
                     + `${sawActive ? '' : ' (job too short for an active heartbeat to be observed)'}`);
                 release();
+                // Never sends: a completion that left G53/G91 is reported, not second-guessed.
+                const closed = authorityClosedNow();
+                judgeFileJobEnd(job, closed ? 'authority-closed' : 'completed', closed || job.ending.reason).catch(() => undefined);
             }
             return;
         }
@@ -344,6 +558,7 @@ export async function stopGcodeJob(args: { job_id?: string; wait_ms?: number }, 
         throw new McpToolError('The connected channel does not support stopping jobs.');
     }
     const stopped = await channel.stopGcodeJob();
+    let evidence: RecoveryEvidence | null = null;
     if (stopped.ok) {
         job.state = 'stopped';
         job.endedAt = Date.now();
@@ -352,6 +567,8 @@ export async function stopGcodeJob(args: { job_id?: string; wait_ms?: number }, 
         if (jobManager.getActive() === job) {
             jobManager.setActive(null);
         }
+        // A stop closes command authority: the file's modes are reported, never cleaned up (#221).
+        evidence = await judgeFileJobEnd(job, 'stopped', job.ending.reason);
     }
     return {
         ok: stopped.ok,
@@ -361,10 +578,13 @@ export async function stopGcodeJob(args: { job_id?: string; wait_ms?: number }, 
         text: stopped.text || null,
         note: plan.note,
         job: jobManager.describe(job),
+        ...(evidence ? { failure_recovery: evidence } : {}),
     };
 }
 
 export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: () => string): void {
+    // Read lazily: the camera tools inject the runtime, possibly after this registers.
+    recoveryDepsSource = () => (typeof registry.getFailureRecovery === 'function' ? registry.getFailureRecovery() : null);
     registry.register({
         name: 'validate_gcode',
         description: 'Statically inspect G-code: motion extents, feeds, spindle commands and '
@@ -596,8 +816,17 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 // a bounded time and returns the result if it arrived, else a
                 // "running" status to long-poll with get_gcode_job_status.
                 clearProcedureStop();
-                const finished = job.runner()
-                    .then((outcome) => {
+                // The runner is detached from this call's modal ledger (#221):
+                // it gets its own, owned by this call while the call waits, so
+                // a step still pending when this call returns "running" cannot
+                // make the start look exposed, and the runner's own failure is
+                // judged when IT ends (settleRunnerLedger), inside or outside
+                // this call's wait.
+                const runner = job.runner;
+                const runnerLedger = runnerLedgerFor(job);
+                const launched = runnerLedger ? runWithLedger(runnerLedger, async () => runner()) : runner();
+                const finished = launched
+                    .then(async (outcome) => {
                         // Where the time went, from the job's own events, so
                         // agents optimise from the record (get_job_timing has
                         // the same for running/failed jobs).
@@ -606,9 +835,11 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                         job.endedAt = Date.now();
                         job.ending = { kind: 'completed', reason: 'procedure finished', at: job.endedAt, measured: countMeasured(outcome) };
                         jobManager.appendEvent(job, 'completed', { note: 'procedure finished; result stored on the job' });
-                        return { ok: true as const, outcome };
+                        // Success is never followed by commands; a G53/G91 it left is reported.
+                        const evidence = await settleRunnerLedger(job, runnerLedger, { threw: false });
+                        return { ok: true as const, outcome, evidence };
                     })
-                    .catch((err: Error) => {
+                    .catch(async (err: Error) => {
                         // What the procedure measured before it ended stays on
                         // the record (stations, contacts, completed ops).
                         const partial = (err as { partial?: object }).partial;
@@ -635,9 +866,17 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                             jobManager.appendEvent(job, 'failed', { note: err.message, ending: job.ending });
                             log.error(`Procedure job ${job.id} failed (${job.ending.kind}): ${err.message}`);
                         }
-                        return { ok: false as const, error: err.message };
+                        // Judged with the job already terminal and the stop
+                        // request still visible: a stop/trip is never cleaned
+                        // up; a failure on its own gets the call hook's guarded
+                        // G90/G54. Reported on the job either way.
+                        const evidence = await settleRunnerLedger(job, runnerLedger, { threw: true, thrown: err });
+                        return { ok: false as const, error: err.message, evidence };
                     })
                     .finally(() => {
+                        if (runnerLedger) {
+                            closeLedger(runnerLedger);
+                        }
                         clearProcedureStop();
                         if (jobManager.getActive() === job) {
                             jobManager.setActive(null);
@@ -658,11 +897,14 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                     };
                 }
                 if (!settledInTime.ok) {
-                    throw new McpToolError(settledInTime.error);
+                    // The runner's own evidence travels with its error (this
+                    // call's ledger saw none of the runner's sends).
+                    throw withEvidence(new McpToolError(settledInTime.error), settledInTime.evidence);
                 }
                 return {
                     job: jobManager.describe(job),
                     result: settledInTime.outcome,
+                    ...(settledInTime.evidence ? { failure_recovery: settledInTime.evidence } : {}),
                 };
             }
 
@@ -787,6 +1029,9 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             }
             jobManager.appendEvent(job, 'uploaded', { note: `${job.name}.nc uploaded to the machine` });
 
+            // The connection the file will run on (#221): a later job-end judgement
+            // must never treat a reconnected controller as the one that ran it.
+            job.modalTrack = newModalTrack();
             const started = await channel.startGcodeJob();
             if (!started.ok) {
                 job.state = 'start_failed';

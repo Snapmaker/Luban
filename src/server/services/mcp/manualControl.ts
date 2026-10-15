@@ -1,6 +1,11 @@
 // Pure ownership gate: manual USB input and MCP mutations cannot overlap.
 const READ_ONLY = /^(get_|list_|validate_)/;
 
+/** True for tools that never mutate machine or job state (no ownership needed). */
+export function isReadOnlyTool(name: string): boolean {
+    return READ_ONLY.test(name);
+}
+
 export class ManualControlGate {
     private mutations = 0;
 
@@ -21,6 +26,11 @@ export class ManualControlGate {
         }
         this.mutations += 1;
         return () => { this.mutations -= 1; };
+    }
+
+    /** True while the USB pendant owns manual control. */
+    public isManual(): boolean {
+        return this.manual;
     }
 
     public acquire(onStop: () => void = () => undefined): void {

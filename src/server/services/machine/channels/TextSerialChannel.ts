@@ -21,6 +21,24 @@ class TextSerialChannel extends Channel implements
 
     private controller: MarlinController = null;
 
+    // Bumped at every port open/close this channel performs. MarlinController
+    // also closes the port on its own (serial 'close'), and every reopen
+    // creates a new serial connection object, so a change in that object is
+    // counted as well when the generation is read.
+    private connectionGeneration = 0;
+
+    private observedPort: unknown = null;
+
+    /** Read-only: lets callers tell a reconnected session from the one they started on. */
+    public getConnectionGeneration(): number {
+        const port = (this.controller as unknown as { serialport?: unknown } | null)?.serialport ?? null;
+        if (port !== this.observedPort) {
+            this.observedPort = port;
+            this.connectionGeneration++;
+        }
+        return this.connectionGeneration;
+    }
+
     public getController(): MarlinController {
         return this.controller;
     }
@@ -82,6 +100,7 @@ class TextSerialChannel extends Channel implements
                     }
 
                     this.controller = controller;
+                    this.connectionGeneration++;
 
                     this.emit(ChannelEvent.Connected);
 
@@ -100,6 +119,8 @@ class TextSerialChannel extends Channel implements
         if (controller.state.headType === HEAD_LASER) {
             controller.writeln('M5');
         }
+
+        this.connectionGeneration++;
 
         return new Promise((resolve) => {
             controller.close();

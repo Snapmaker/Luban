@@ -129,6 +129,11 @@ class SstpHttpChannel extends Channel implements
 
     private connectionGeneration = 0;
 
+    /** Read-only: lets callers tell a reconnected session from the one they started on. */
+    public getConnectionGeneration(): number {
+        return this.connectionGeneration;
+    }
+
     private heartbeatGeneration = 0;
 
     private gcodeQueue: GCodeQueueItem[] = [];

@@ -337,7 +337,7 @@ export function noteMachineDisconnected(): void {
 }
 
 /** Machine travel as the bounds a derived position must stay within (+/- BOUNDS_MARGIN_MM). */
-function machineBounds(identifier: string | null) {
+export function machineBounds(identifier: string | null) {
     const size = getMachineSizeByIdentifier(identifier);
     return size ? { min: { x: 0, y: 0, z: 0 }, max: { x: size.x, y: size.y, z: size.z } } : null;
 }
