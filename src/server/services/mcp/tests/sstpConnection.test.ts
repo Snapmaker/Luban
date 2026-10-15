@@ -265,6 +265,39 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
             assert.deepStrictEqual(sent, ['G53']);
         }
     }],
+    ['blank lines in jog batches never become empty HTTP commands', async () => {
+        for (const angle of [5, -5]) {
+            for (const newline of ['\n', '\r\n']) {
+                const { channel, replies, sent } = fixture();
+                const commands = ['G91', `G0 B${angle}  F1500`, 'G90'];
+                replies.push(...commands.map(() => ({ res: { status: 200, text: 'ok' } })));
+                const result = await channel.executeGcode(['', ' \t', commands[0], '', commands[1], '\t', commands[2], ''].join(newline));
+                assert.strictEqual(result.result, 0);
+                assert.deepStrictEqual(sent.map(command => command.trim()), commands);
+                assert.strictEqual(result.text, 'ok\nok\nok');
+            }
+        }
+    }],
+    ['empty and whitespace-only batches succeed without HTTP requests', async () => {
+        const { channel, requests } = fixture();
+        for (const gcode of ['', '\n', ' \t\r\n \n']) {
+            const result = await channel.executeGcode(gcode);
+            assert.strictEqual(result.result, 0);
+            assert.strictEqual(result.text, '');
+        }
+        assert.strictEqual(requests.length, 0);
+    }],
+    ['real command failures still stop jog batches containing blank lines', async () => {
+        const { channel, replies, sent } = fixture();
+        replies.push(
+            { res: { status: 200, text: 'ok' } },
+            { res: { status: 400, text: 'Rejected jog' } },
+        );
+        const result = await channel.executeGcode('\nG91\n \t\nG0 B5 F1500\nG90\n');
+        assert.strictEqual(result.result, -1);
+        assert(result.text.includes('Controller request failed (400)'));
+        assert.deepStrictEqual(sent, ['G91', 'G0 B5 F1500']);
+    }],
     ['successful controller text is retained for M114 and M503 S', async () => {
         const { channel, replies } = fixture();
         replies.push({ res: { status: 200, text: 'X:1 Y:2 Z:3' } }, { res: { status: 200, text: 'configuration' } });

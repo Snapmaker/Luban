@@ -146,7 +146,9 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
 
         // Relative move G-code
         const gcode = [
-            `\nG91\n${gCommand} ${gcodeAxis} F${jogSpeed}\nG90\n`
+            'G91',
+            `${gCommand} ${gcodeAxis} F${jogSpeed}`,
+            'G90',
         ].join('\n');
 
         // server.coordinateMove(moveOrders, gcode, jogSpeed, headType);
