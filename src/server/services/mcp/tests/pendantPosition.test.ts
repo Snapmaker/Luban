@@ -35,7 +35,7 @@ function snapshot(now = 5200): PositionSnapshot {
         machineReportedAt: judged.machineReportedAt,
         reasons: judged.reasons,
         warnings: judged.reasons,
-        judged: { accepted: judged.accepted, rejectedReason: judged.rejectedReason, derived: judged.derived },
+        judged: { accepted: judged.accepted, rejectedReason: judged.rejectedReason, derived: judged.derived, declaredRun: judged.declaredRun },
         b: 0,
         isFourAxis: true,
         isHomed: true,

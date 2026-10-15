@@ -6,6 +6,7 @@ import SacpClient from '../sacp/SacpClient';
 import { ChannelEvent } from './ChannelEvent';
 import SacpChannelBase from './SacpChannel';
 import { ExecuteGcodeResult } from './Channel';
+import { gcodeLease } from '../gcodeLease';
 
 const log = logger('machine:channels:SacpUdpChannel');
 
@@ -120,6 +121,8 @@ class SacpUdpChannel extends SacpChannelBase {
      * Generic execute G-code commands.
      */
     public async executeGcode(gcode: string): Promise<ExecuteGcodeResult> {
+        const refusal = gcodeLease.refusal(gcode);
+        if (refusal) { return { result: -1, text: refusal }; }
         const result = await this.sacpClient.executeGcode(gcode);
 
         // if any gcode line fails, then fails

@@ -7,6 +7,7 @@ import Channel, { CncChannelInterface, ExecuteGcodeResult, LaserChannelInterface
 import { ChannelEvent } from './ChannelEvent';
 import { L20WLaserToolModule, L40WLaserToolModule } from '../../../../app/machines/snapmaker-2-toolheads';
 import { HEAD_LASER } from '../../../constants';
+import { gcodeLease } from '../gcodeLease';
 
 const log = logger('machine:channels:TextSerialChannel');
 
@@ -114,6 +115,8 @@ class TextSerialChannel extends Channel implements
     }
 
     public async executeGcode(gcode: string): Promise<ExecuteGcodeResult> {
+        const refusal = gcodeLease.refusal(gcode);
+        if (refusal) { return { result: -1, text: refusal }; }
         const gcodeLines = gcode.split('\n');
 
         const controller = this.controller;

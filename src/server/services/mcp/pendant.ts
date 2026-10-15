@@ -67,13 +67,18 @@ export function parsePendantInput(line: string): PendantInput {
     return p;
 }
 
+// Same value as envelopeChecks POSITION_EPSILON_MM; kept local so this module stays import-free.
+const EDGE_TOLERANCE_MM = 0.05;
+
 export function validateJogBounds(bounds: JogBounds, current: JogPosition): void {
     if (!bounds || typeof bounds !== 'object') { throw new Error('Machine XYZ bounds are required.'); }
     for (const axis of ['x', 'y', 'z'] as const) {
         const lo = bounds[`${axis}Min`];
         const hi = bounds[`${axis}Max`];
+        // Heartbeat noise at a travel edge (e.g. Y -0.000005 with travel clipped to Y0)
+        // must not refuse the arm.
         if (!Number.isFinite(lo) || !Number.isFinite(hi) || hi <= lo
-            || current[axis] < lo || current[axis] > hi) {
+            || current[axis] < lo - EDGE_TOLERANCE_MM || current[axis] > hi + EDGE_TOLERANCE_MM) {
             throw new Error(`Invalid machine ${axis.toUpperCase()} envelope ${lo}..${hi}; must be finite, ordered and contain current position ${current[axis]}.`);
         }
     }
@@ -159,7 +164,14 @@ export class PendantSession {
         }
     }
 
-    public target(current: JogPosition, now: number, overheadMs = 0): { position: JogPosition; feed: number; durationMs: number; distanceMm: number } | null {
+    /**
+     * The next segment from `current`. `segmentCapMs`, when given, replaces the
+     * overhead-compensated ceiling: pipelined jogging (pendantRuntime) has no
+     * per-segment stop to compensate and bounds its whole queue instead. The
+     * operator's maxSegmentMs still caps every segment either way.
+     */
+    public target(current: JogPosition, now: number, overheadMs = 0, segmentCapMs?: number)
+        : { position: JogPosition; feed: number; durationMs: number; distanceMm: number } | null {
         if (!this.armed) { return null; }
         if (now >= this.expiresAt || now - this.receivedAt > 900) {
             this.disarm();
@@ -176,7 +188,8 @@ export class PendantSession {
         // operator's time limit, never over one second. No queued trajectory.
         // Reserve measured controller/transport overhead plus 100 ms, so the
         // whole request aims to finish inside a second, not just its G1 travel.
-        const ceilingMs = Math.min(this.maxSegmentMs, Math.max(50, 900 - Math.max(0, overheadMs)));
+        const ceilingMs = segmentCapMs !== undefined ? Math.min(this.maxSegmentMs, Math.max(50, segmentCapMs))
+            : Math.min(this.maxSegmentMs, Math.max(50, 900 - Math.max(0, overheadMs)));
         const durationMs = Math.min(ceilingMs, 100 + Math.max(0, now - this.changedAt - 100) * 0.8);
         const feed = Math.max(1, Math.round(p.feed * Math.min(1, magnitude)));
         const distance = feed * durationMs / 60000;
@@ -187,7 +200,12 @@ export class PendantSession {
         };
         this.limitedAxes = [];
         for (const axis of ['x', 'y', 'z'] as const) {
-            const clipped = Math.max(this.bounds[`${axis}Min`], Math.min(this.bounds[`${axis}Max`], position[axis]));
+            let clipped = Math.max(this.bounds[`${axis}Min`], Math.min(this.bounds[`${axis}Max`], position[axis]));
+            // A head already outside the bounds (heartbeat noise, or a DRO correction after
+            // overtravel) is never pulled by the clamp: unrequested or opposite moves hold.
+            if (clipped !== current[axis] && Math.sign(clipped - current[axis]) !== Math.sign(position[axis] - current[axis])) {
+                clipped = current[axis];
+            }
             if (clipped !== position[axis]) { this.limitedAxes.push(axis.toUpperCase()); }
             position[axis] = clipped;
         }
@@ -195,4 +213,32 @@ export class PendantSession {
         if (distanceMm < 0.001) { return null; }
         return { position, feed, durationMs: distanceMm / feed * 60000, distanceMm };
     }
+}
+
+/**
+ * Pipelined jogging assumes the controller runs X/Y at the commanded feed with
+ * at least `minAccel` acceleration. Judge the firmware's own `M503 S` report
+ * (Marlin `M203` max feed mm/s, `M201` max acceleration, `M204` P/T
+ * acceleration) against that. null when every value is present and
+ * sufficient; otherwise the reason pipelining must stay off. Pure.
+ */
+export function firmwareMotionProblem(m503: string, maxFeedMmMin: number, minAccel: number): string | null {
+    const num = (re: RegExp): number[] | null => {
+        const m = m503.match(re);
+        return m ? m.slice(1).map(Number) : null;
+    };
+    const feeds = num(/M203\s+X(-?[\d.]+)\s+Y(-?[\d.]+)/);
+    const maxAccel = num(/M201\s+X(-?[\d.]+)\s+Y(-?[\d.]+)/);
+    const accel = num(/M204\s+P(-?[\d.]+)(?:\s+R-?[\d.]+)?\s+T(-?[\d.]+)/);
+    if (!feeds || !maxAccel || !accel || [...feeds, ...maxAccel, ...accel].some((v) => !Number.isFinite(v))) {
+        return 'M503 S did not report M203 X/Y, M201 X/Y and M204 P/T, so the controller\'s motion limits are unknown.';
+    }
+    const needFeed = maxFeedMmMin / 60;
+    if (Math.min(...feeds) < needFeed) {
+        return `Controller max feed X/Y ${feeds.join('/')} mm/s is below the pendant's ${needFeed} mm/s (M203).`;
+    }
+    if (Math.min(...maxAccel, ...accel) < minAccel) {
+        return `Controller acceleration (M201 X/Y ${maxAccel.join('/')}, M204 P/T ${accel.join('/')} mm/s²) is below the model's ${minAccel} mm/s².`;
+    }
+    return null;
 }

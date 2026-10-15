@@ -72,6 +72,7 @@ import Channel, {
 } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from '../../../../app/machines/snapmaker-2-toolheads';
+import { gcodeLease } from '../gcodeLease';
 
 const log = logger('machine:channels:SacpChannel');
 
@@ -229,6 +230,8 @@ class SacpChannelBase extends Channel implements
      * Generic execute G-code commands.
      */
     public async executeGcode(gcode: string): Promise<ExecuteGcodeResult> {
+        const refusal = gcodeLease.refusal(gcode);
+        if (refusal) { return { result: -1, text: refusal }; }
         const gcodeLines = gcode.split('\n');
 
         const promises = [];

@@ -25,7 +25,7 @@ import { AXES, Axis, NullableXyz, OffsetJudgement, Xyz, judgeOffsetReport, ZERO_
 
 export type Reliability = 'verified' | 'heartbeat' | 'cached-offset' | 'awaiting-resync' | 'stale';
 export type FrameJudgement = 'machine-frame' | 'work-frame' | 'undetermined';
-export type RejectReason = 'out-of-bounds' | 'frame-flip' | 'no-offset-yet';
+export type RejectReason = 'out-of-bounds' | 'frame-flip' | 'no-offset-yet' | 'declared-run-ambiguous';
 
 /** A derived machine coordinate this far outside the travel is a bug, not a position (operator, 2026-09-14). */
 export const BOUNDS_MARGIN_MM = 50;
@@ -55,6 +55,20 @@ export interface MachineBounds {
     max: Xyz;
 }
 
+/**
+ * A run that holds the machine workspace on purpose (the USB pendant's queued
+ * G53 window, pendantRuntime.ts). Beats received inside it report MACHINE
+ * coordinates, so they are judged as such instead of by the work-frame rules,
+ * which would accept an in-bounds G53 beat as a work position (off by the
+ * offset) or reject it and hold a stale position. The holder declares it only
+ * between its G53 reply and its closing G54 send, and gives the envelope the
+ * machine must be inside.
+ */
+export interface DeclaredMachineFrameRun {
+    envelope: MachineBounds;
+    marginMm: number;
+}
+
 export interface AcceptedPosition {
     machine: Xyz;
     reportedAt: number;
@@ -80,6 +94,8 @@ export interface BeatInput {
     verified: Xyz | null;
     /** Consecutive PRIOR beats that carried the machine-frame signature (judgeBeatStateful keeps it). */
     machineFrameStreak: number;
+    /** Set while a declared machine-frame run covers this beat. */
+    declaredRun?: DeclaredMachineFrameRun | null;
 }
 
 export interface BeatJudgement {
@@ -105,6 +121,8 @@ export interface BeatJudgement {
      * workspace. The caller counts these to decide when it is not a transient.
      */
     machineFrameSuspect: boolean;
+    /** Judged under a declared machine-frame run (raw = machine coordinates). */
+    declaredRun: boolean;
 }
 
 function complete(v: NullableXyz): v is Xyz {
@@ -168,6 +186,67 @@ function nextAcceptedFrom(
 
 const NULLS: NullableXyz = { x: null, y: null, z: null };
 
+/**
+ * A beat inside a declared machine-frame run: raw IS the machine position when
+ * it lies inside the run's envelope. If the work-frame reading (raw - offset)
+ * would ALSO lie inside it and the offset can tell the frames apart, the beat
+ * may have been sampled before the G53 took effect: it is ambiguous, set aside,
+ * and the last accepted position is held. Neither reading inside: set aside.
+ */
+function judgeDeclaredRun(input: BeatInput, offset: OffsetJudgement, derived: NullableXyz, stale: boolean): BeatJudgement {
+    const run = input.declaredRun as DeclaredMachineFrameRun;
+    const reasons: string[] = [];
+    const inside = (p: NullableXyz) => complete(p) && outsideBounds(p, run.envelope, run.marginMm).length === 0;
+    const distinguishable = AXES.some((axis) => Math.abs(offset.offset[axis]) > MACHINE_FRAME_OFFSET_TOLERANCE_MM);
+    const asMachine = inside(input.raw);
+    const accepted = asMachine && (!distinguishable || !inside(derived));
+    let machine: NullableXyz;
+    let machineReportedAt: number | null;
+    let reliability: Reliability;
+    let frame: FrameJudgement;
+    if (input.verified) {
+        machine = { ...input.verified };
+        machineReportedAt = input.reportedAt;
+        frame = 'machine-frame';
+        reliability = 'verified';
+    } else if (accepted) {
+        machine = { ...(input.raw as Xyz) };
+        machineReportedAt = input.reportedAt;
+        frame = 'machine-frame';
+        reliability = 'heartbeat';
+        reasons.push('Declared machine-frame run (USB pendant queued jog): the report carries machine coordinates and is used as such.');
+    } else {
+        machine = input.lastAccepted ? { ...input.lastAccepted.machine } : { ...NULLS };
+        machineReportedAt = input.lastAccepted ? input.lastAccepted.reportedAt : null;
+        frame = 'undetermined';
+        reliability = 'awaiting-resync';
+        reasons.push(asMachine
+            ? 'Declared machine-frame run: this report reads as inside the run envelope in BOTH frames, so it may predate the '
+                + 'G53. Set aside; the last accepted position is held.'
+            : 'Declared machine-frame run: this report is outside the run envelope as machine coordinates. Set aside; the last '
+                + 'accepted position is held.');
+    }
+    if (stale) {
+        reliability = 'stale';
+        reasons.push(`STALE: the last status report is ${((input.now - input.reportedAt) / 1000).toFixed(0)}s old.`);
+    }
+    return {
+        machine,
+        machineReportedAt,
+        frame,
+        reliability,
+        accepted,
+        rejectedReason: accepted ? null : 'declared-run-ambiguous',
+        offset,
+        derived,
+        outsideAxes: [],
+        reasons,
+        machineFrameSuspect: false,
+        declaredRun: true,
+        nextAccepted: stale || !accepted ? input.lastAccepted : { machine: { ...(input.raw as Xyz) }, reportedAt: input.reportedAt },
+    };
+}
+
 /** Judge one status report. Pure. */
 export function judgeBeat(input: BeatInput): BeatJudgement {
     const offset = judgeOffsetReport(input.offsetReported, input.cachedOffset, input.zeroStreak);
@@ -209,6 +288,9 @@ export function judgeBeat(input: BeatInput): BeatJudgement {
     }
 
     const stale = input.now - input.reportedAt > input.staleMs;
+    if (input.declaredRun && rejectedReason !== 'no-offset-yet') {
+        return judgeDeclaredRun(input, offset, derived, stale);
+    }
     const accepted = rejectedReason === null && complete(derived);
 
     // The machine-frame signature: the raw fields read as a legal machine
@@ -287,9 +369,11 @@ export function judgeBeat(input: BeatInput): BeatJudgement {
         outsideAxes,
         reasons,
         machineFrameSuspect,
+        declaredRun: false,
         nextAccepted: nextAcceptedFrom(input, derived, accepted, stale, sustainedMachineFrame),
     };
 }
+
 
 
 /** True when the judgement allows motion to be staged or started on its machine position. */
@@ -313,6 +397,8 @@ export interface JudgeContext {
     verified: Xyz | null;
     /** No direct gcode in flight or recently replied - only such beats count toward believing a zero offset. */
     directGcodeQuiet: boolean;
+    /** A declared machine-frame run covering this beat (by its receive time), if any. */
+    declaredRun?: DeclaredMachineFrameRun | null;
 }
 
 export interface MachinePositionState {
@@ -399,7 +485,12 @@ export function judgeBeatStateful(state: MachinePositionState, beat: RawBeat, ct
             lastAccepted: state.lastAccepted,
         };
     }
-    const input: BeatInput = { ...(state.lastInput as Omit<BeatInput, 'now' | 'verified'>), now: ctx.now, verified: ctx.verified, bounds: ctx.bounds, staleMs: ctx.staleMs };
+    const input: BeatInput = { ...(state.lastInput as Omit<BeatInput, 'now' | 'verified'>),
+        now: ctx.now,
+        verified: ctx.verified,
+        bounds: ctx.bounds,
+        staleMs: ctx.staleMs,
+        declaredRun: ctx.declaredRun ?? null };
     const judgement = judgeBeat(input);
 
     if (isNewBeat) {
@@ -419,7 +510,8 @@ export function judgeBeatStateful(state: MachinePositionState, beat: RawBeat, ct
         // machine-frame artefact the next correct beat differs from it by
         // exactly the offset (the return from the G53 window) and would be
         // mistaken for a flip itself, costing a second beat.
-        if (judgement.accepted && complete(beat.raw)) {
+        // A declared-run beat is machine-frame raw: never the work-frame flip reference.
+        if (judgement.accepted && !judgement.declaredRun && complete(beat.raw)) {
             state.previousRaw = { x: beat.raw.x, y: beat.raw.y, z: beat.raw.z };
         }
         state.machineFrameStreak = judgement.machineFrameSuspect ? state.machineFrameStreak + 1 : 0;

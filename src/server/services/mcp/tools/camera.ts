@@ -26,7 +26,7 @@ import { cameraModelStore } from '../cameraModelStore';
 import { cameraStreamService } from '../cameraStream';
 import { recordGcodeTiming } from '../diagnostics';
 import { jobManager } from '../jobs';
-import { bumpGcodeSequence, noteDirectGcodeEnd, noteDirectGcodeStart } from '../positionOfRecord';
+import { bumpGcodeSequence, noteDirectGcodeEnd, noteDirectGcodeStart, noteFrameRestored } from '../positionOfRecord';
 import { decodeToGray, trackFeature } from '../tracking';
 import { McpToolError, ToolRegistry } from '../registry';
 import { gateDirectXy, planGotoWorkOrigin } from '../directMovePlan';
@@ -692,6 +692,7 @@ export async function homeMachine(tool: string, waitUntilHomed: boolean = true, 
     if (executed.result !== 0) {
         throw new McpToolError(`Homing rejected by controller: ${executed.text || executed.result}`);
     }
+    noteFrameRestored(); // G54 acknowledged after G28; a verified position must still follow.
 
     if (!waitUntilHomed) {
         return {
@@ -752,7 +753,11 @@ export async function sendWorkFrameRestore(tool: string): Promise<SentGcode> {
     if (!channel || typeof channel.executeGcode !== 'function') {
         throw new McpToolError('No machine connected, or the channel does not support direct commands.');
     }
-    return sendGcodeVisible(channel, tool, WORK_FRAME_RESTORE_GCODE);
+    const executed = await sendGcodeVisible(channel, tool, WORK_FRAME_RESTORE_GCODE);
+    // G54 synchronizes the planner, so an acknowledged restore also means no
+    // queued motion is left; a fresh verified position still has to follow.
+    if (executed.result === 0) { noteFrameRestored(); }
+    return executed;
 }
 
 export function registerCameraTools(registry: ToolRegistry): void {

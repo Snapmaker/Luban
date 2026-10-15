@@ -21,6 +21,7 @@ import Channel, { CncChannelInterface, ExecuteGcodeResult, FileChannelInterface,
 import { ChannelEvent } from './ChannelEvent';
 import { connectionDiagnostics, diagnosticId } from '../connectionDiagnostics';
 import { httpEvidence } from '../connectionDiagnosticState';
+import { gcodeLease } from '../gcodeLease';
 
 let waitConfirm: boolean;
 const log = logger('machine:channels:SstpHttpChannel');
@@ -626,6 +627,8 @@ class SstpHttpChannel extends Channel implements
      * Generic execute G-code commands.
      */
     public async executeGcode(gcode: string): Promise<ExecuteGcodeResult> {
+        const refusal = gcodeLease.refusal(gcode);
+        if (refusal) { return { result: -1, text: refusal }; }
         return new Promise((resolve) => {
             // enqueue G-code execution
             const split = gcode.split('\n');
@@ -794,6 +797,8 @@ class SstpHttpChannel extends Channel implements
     public startGcode = (options: EventOptions) => {
         log.info('Starting print...');
         const { eventName } = options;
+        const refusal = gcodeLease.refusal('start job');
+        if (refusal) { this.socket && this.socket.emit(eventName, { msg: refusal, code: 409, text: refusal }); return; }
         const api = `${this.host}/api/v1/start_print`;
         request
             .post(api)
@@ -811,6 +816,8 @@ class SstpHttpChannel extends Channel implements
      * result rather than a socket emit (MCP job gate).
      */
     public async startGcodeJob(): Promise<{ ok: boolean; code?: number; text?: string }> {
+        const refusal = gcodeLease.refusal('start job');
+        if (refusal) { return { ok: false, code: 409, text: refusal }; }
         const api = `${this.host}/api/v1/start_print`;
         return new Promise((resolve) => {
             request
@@ -840,6 +847,8 @@ class SstpHttpChannel extends Channel implements
 
     public resumeGcode = (options: EventOptions) => {
         const { eventName } = options;
+        const refusal = gcodeLease.refusal('resume job');
+        if (refusal) { this.socket && this.socket.emit(eventName, { msg: refusal, code: 409, text: refusal }); return; }
         const api = `${this.host}/api/v1/resume_print`;
         request
             .post(api)
@@ -936,6 +945,8 @@ class SstpHttpChannel extends Channel implements
 
     public getLaserMaterialThickness = (options: EventOptions) => {
         const { x, y, feedRate, eventName } = options;
+        const refusal = gcodeLease.refusal('laser material thickness probe');
+        if (refusal) { this.socket && this.socket.emit(eventName, { msg: refusal, code: 409, text: refusal }); return; }
         const api = `${this.host}/api/request_Laser_Material_Thickness?token=${this.token}&x=${x}&y=${y}&feedRate=${feedRate}`;
         const req = request.get(api);
         this.getLaserMaterialThicknessReq = req;
@@ -1024,6 +1035,8 @@ class SstpHttpChannel extends Channel implements
 
     public updateZOffset = (options: EventOptions) => {
         const { zOffset, eventName } = options;
+        const refusal = gcodeLease.refusal('override Z offset');
+        if (refusal) { this.socket && this.socket.emit(eventName, { msg: refusal, code: 409, text: refusal }); return; }
         const api = `${this.host}/api/v1/override_z_offset`;
         request
             .post(api)
@@ -1035,6 +1048,8 @@ class SstpHttpChannel extends Channel implements
     };
 
     public loadFilament = (options: EventOptions, eventName: string) => {
+        const refusal = gcodeLease.refusal('load filament');
+        if (refusal) { this.socket && this.socket.emit(eventName, { msg: refusal, code: 409, text: refusal }); return; }
         const api = `${this.host}/api/v1/filament_load`;
         request
             .post(api)
@@ -1046,6 +1061,8 @@ class SstpHttpChannel extends Channel implements
 
     public unloadFilament = (options: EventOptions) => {
         const { eventName } = options;
+        const refusal = gcodeLease.refusal('unload filament');
+        if (refusal) { this.socket && this.socket.emit(eventName, { msg: refusal, code: 409, text: refusal }); return; }
         const api = `${this.host}/api/v1/filament_unload`;
         request
             .post(api)
@@ -1057,6 +1074,8 @@ class SstpHttpChannel extends Channel implements
 
     public updateWorkSpeedFactor = (options: EventOptions) => {
         const { eventName, workSpeedValue } = options;
+        const refusal = gcodeLease.refusal('override work speed');
+        if (refusal) { this.socket && this.socket.emit(eventName, { msg: refusal, code: 409, text: refusal }); return; }
         const api = `${this.host}/api/v1/override_work_speed`;
         request
             .post(api)
@@ -1069,6 +1088,8 @@ class SstpHttpChannel extends Channel implements
 
     public updateLaserPower = (options: EventOptions) => {
         const { eventName, laserPower } = options;
+        const refusal = gcodeLease.refusal('override laser power');
+        if (refusal) { this.socket && this.socket.emit(eventName, { msg: refusal, code: 409, text: refusal }); return; }
         const api = `${this.host}/api/v1/override_laser_power`;
         request
             .post(api)

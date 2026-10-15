@@ -1,6 +1,6 @@
 import assert from 'assert';
 import { ManualControlGate } from '../manualControl';
-import { JogBounds, PendantInput, PendantSession, parsePendantInput, validateJogBounds } from '../pendant';
+import { JogBounds, PendantInput, PendantSession, firmwareMotionProblem, parsePendantInput, validateJogBounds } from '../pendant';
 
 const bounds: JogBounds = { xMin: 0, xMax: 20, yMin: 0, yMax: 20, zMin: 0, zMax: 20 };
 const current = { x: 10, y: 10, z: 10 };
@@ -9,6 +9,24 @@ const frame = (over: Partial<PendantInput> = {}): PendantInput => ({
 });
 
 export const tests: Array<[string, () => void]> = [
+    ['the bounds clamp never pulls a head that starts outside them', () => {
+        const session = new PendantSession();
+        const outside = { x: 10, y: -0.4, z: 10 };
+        session.arm({ ...bounds, yMin: -0.4 }, outside, 1000);
+        session.bounds = bounds; // DRO corrected to just outside the envelope after arming
+        session.receive(frame({ seq: 1 }), 1010);
+        session.receive(frame({ seq: 2, y: -1, deadman: true }), 1020);
+        assert.equal(session.target(outside, 1300), null);
+        session.receive(frame({ seq: 3, y: 1, deadman: true }), 1400);
+        const inward = session.target(outside, 1700);
+        assert.ok(inward && inward.position.y > outside.y);
+    }],
+    ['envelope accepts heartbeat noise within 0.05 mm of an edge, refuses beyond', () => {
+        const edge: JogBounds = { xMin: -19, xMax: 339, yMin: 0, yMax: 342, zMin: 280, zMax: 328 };
+        validateJogBounds(edge, { x: 10, y: -0.0000051269531127218215, z: 327.999 });
+        validateJogBounds(edge, { x: 339.04, y: 342.04, z: 328.04 });
+        assert.throws(() => validateJogBounds(edge, { x: 10, y: -0.06, z: 300 }), /contain current position/);
+    }],
     ['wire protocol rejects nonfinite axes, strings, bad mode, feed, version and oversized frames', () => {
         for (const over of [{ x: null }, { y: '1' }, { z: 2 }, { feed: 3001 }, { feed: 59 }, { feed: 0 }, { v: 2 },
             { mode: 'z', feed: 1001 },
@@ -71,6 +89,10 @@ export const tests: Array<[string, () => void]> = [
         assert.equal(fast?.durationMs, 900);
         assert.equal(fast?.distanceMm, 45);
         assert.equal(session.target(current, 3000, 400)?.durationMs, 500);
+        // Pipelined runs pass their own cap: it replaces the overhead ceiling but
+        // never exceeds the operator's maxSegmentMs.
+        assert.equal(session.target(current, 3000, 800, 425)?.durationMs, 425);
+        assert.equal(session.target(current, 3000, 0, 5000)?.durationMs, 1000);
         session.receive(frame({ seq: 3, x: -0.5, feed: 300, deadman: true }), 3010);
         const changed = session.target(current, 3010);
         assert.equal(changed?.durationMs, 100);
@@ -134,5 +156,14 @@ export const tests: Array<[string, () => void]> = [
         assert.throws(() => gate.acquire());
         gate.release();
         gate.enterTool('home')();
+    }],
+    ['firmware motion limits must be reported and fit the pipelining model', () => {
+        const snapmaker = 'echo:; Maximum feedrates (units/s):\necho:  M203 X120.00 Y120.00 Z40.00 E45.00\n'
+            + 'echo:  M201 X3000 Y3000 Z100 E10000\necho:  M204 P1000.00 R1000.00 T1000.00\nok';
+        assert.equal(firmwareMotionProblem(snapmaker, 3000, 500), null);
+        assert.match(String(firmwareMotionProblem(snapmaker.replace('M203 X120.00', 'M203 X40.00'), 3000, 500)), /max feed/);
+        assert.match(String(firmwareMotionProblem(snapmaker.replace('T1000.00', 'T400.00'), 3000, 500)), /acceleration/);
+        assert.match(String(firmwareMotionProblem(snapmaker.replace('M201 X3000 Y3000', 'M201 X3000 Y300'), 3000, 500)), /acceleration/);
+        assert.match(String(firmwareMotionProblem('ok', 3000, 500)), /unknown/);
     }],
 ];

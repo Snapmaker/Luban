@@ -370,3 +370,78 @@ export function describeReport(raw: NullableXyz, offset: Xyz, offsetSource: stri
     return `raw (${raw.x}, ${raw.y}, ${raw.z}) with offset (${offset.x}, ${offset.y}, ${offset.z}) from ${offsetSource}`
         + ` -> as work-frame machine (${w.x}, ${w.y}, ${w.z}); as machine-frame (${raw.x}, ${raw.y}, ${raw.z})`;
 }
+
+// Frame-uncertainty latch (USB pendant queued runs, 2026-10-05 review): set
+// BEFORE a run sends its G53, so a lost reply still counts as "machine frame
+// may be selected". It survives reconnection, refuses motion through
+// requireReliableMachine (tools/machine.ts), shows in get_position warnings and
+// diagnostics, and clears only after a successful G54 / G90+G54 restore
+// (noteFrameRestored) AND a verified fresh position taken after it.
+export interface FrameLatch {
+    reason: string;
+    since: number;
+    /** When a work-frame restore was last acknowledged; null until then. */
+    restoredAt: number | null;
+}
+
+/** A heartbeat must be received this long after the restore to count as sampled after it. */
+export const FRAME_LATCH_BEAT_MS = 1000;
+
+let frameLatch: FrameLatch | null = null;
+
+// tools/machine.ts persists the latch across Luban restarts through this hook.
+let frameLatchListener: ((latch: FrameLatch | null) => void) | null = null;
+
+export function onFrameLatchChange(listener: ((latch: FrameLatch | null) => void) | null): void {
+    frameLatchListener = listener;
+}
+
+function notifyFrameLatch(): void {
+    if (frameLatchListener) {
+        frameLatchListener(frameLatch ? { ...frameLatch } : null);
+    }
+}
+
+export function latchFrameUncertain(reason: string, now: number = Date.now()): void {
+    frameLatch = { reason, since: now, restoredAt: null };
+    notifyFrameLatch();
+}
+
+export function noteFrameRestored(now: number = Date.now()): void {
+    if (frameLatch) {
+        frameLatch.restoredAt = now;
+        notifyFrameLatch();
+    }
+}
+
+export function getFrameLatch(): FrameLatch | null {
+    return frameLatch ? { ...frameLatch } : null;
+}
+
+export function clearFrameLatch(): void {
+    if (frameLatch) {
+        frameLatch = null;
+        notifyFrameLatch();
+    }
+}
+
+/**
+ * Pure: whether this evidence verifies a fresh position after the restore. A
+ * controller-verified arrival (echo or settled heartbeat, not an estimate)
+ * recorded after the restore, or an accepted work-frame beat with a reported
+ * offset received at least FRAME_LATCH_BEAT_MS after it.
+ */
+export function frameLatchVerified(
+    latch: FrameLatch,
+    rec: PositionOfRecord | null,
+    beat: { accepted: boolean; frame: string; offsetSource: string; reportedAt: number; declaredRun: boolean }
+): boolean {
+    if (latch.restoredAt === null) {
+        return false;
+    }
+    if (rec && rec.source !== 'estimated' && rec.at >= latch.restoredAt) {
+        return true;
+    }
+    return beat.accepted && !beat.declaredRun && beat.frame === 'work-frame' && beat.offsetSource === 'heartbeat'
+        && beat.reportedAt >= latch.restoredAt + FRAME_LATCH_BEAT_MS;
+}

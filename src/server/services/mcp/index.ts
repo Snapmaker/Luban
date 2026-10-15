@@ -369,7 +369,9 @@ export function startMcpService(socketServer?: McpBroadcaster): void {
 }
 
 export function stopMcpService(): void {
-    pendantRuntime.shutdown();
+    // Resolves once a queued pendant run has settled and restored G54; the machine
+    // connection outlives the MCP service, so the restore still reaches the controller.
+    pendantRuntime.shutdown().catch((err: Error) => log.warn(`Pendant shutdown: ${err.message}`));
     cameraStreamService.shutdown();
     vibrationCaptureService.shutdown();
     vibrationFeedService.shutdown();

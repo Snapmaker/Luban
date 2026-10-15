@@ -233,8 +233,8 @@ export const tests: Array<[string, () => Promise<void>]> = [
         assert.equal(f.element('yMin').value, -1);
         assert.equal(f.element('yMax').value, 343);
         await f.element('fill-xy').onclick?.();
-        assert.match(f.element('effective').textContent, /X -19.000 to 330.000/);
-        assert.match(f.element('effective').textContent, /Z 280.000 to 328.000/);
+        assert.match(f.element('effective').textContent, /X -20.000 to 331.000/);
+        assert.match(f.element('effective').textContent, /Z 280.000 to 329.000/);
         assert.match(f.element('exclusions').textContent, /rotary-axis: X 135 to 205.*requires Z ≥ 328.000/);
         assert.ok(f.element('exclusions').textContent.includes('\n'));
         f.element('clear').checked = true;

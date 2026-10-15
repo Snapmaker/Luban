@@ -55,6 +55,7 @@ import { octo } from './adaptor/Octo';
 
 import { connectionDiagnostics, diagnosticId } from './connectionDiagnostics';
 import { safeIdentifier, safeTarget } from './connectionDiagnosticState';
+import { gcodeLease } from './gcodeLease';
 
 const log = logger('lib:ConnectionManager');
 
@@ -850,10 +851,22 @@ class ConnectionManager {
      */
     public startGcodeAction = async (socket: SocketServer, options) => {
         log.info('gcode action begin');
+        const leaseRefusal = gcodeLease.refusal('start job');
+        if (leaseRefusal) {
+            log.warn(leaseRefusal);
+            options?.eventName && socket && socket.emit(options.eventName, { err: true, msg: leaseRefusal });
+            return;
+        }
         this.channel.startGcode(options);
     };
 
     public startGcode = async (socket: SocketServer, options) => {
+        const leaseRefusal = gcodeLease.refusal('start job');
+        if (leaseRefusal) {
+            log.warn(leaseRefusal);
+            socket && socket.emit(options?.eventName || 'connection:startGcode', { err: true, msg: leaseRefusal });
+            return;
+        }
         const {
             headType, isRotate, toolHead, isLaserPrintAutoMode, materialThickness, laserFocalLength, renderName, eventName, materialThicknessSource
         } = options;
@@ -1031,6 +1044,12 @@ G1 Z${pos.z}
     };
 
     public resumeGcode = async (socket: SocketServer, options, callback) => {
+        const leaseRefusal = gcodeLease.refusal('resume job');
+        if (leaseRefusal) {
+            log.warn(leaseRefusal);
+            callback && callback({ msg: leaseRefusal, code: 409 });
+            return;
+        }
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const success = await this.channel.resumeGcode(callback);
             if (success) {
@@ -1492,6 +1511,11 @@ M3`;
     //
 
     public goHome = async (socket, options, callback) => {
+        const leaseRefusal = gcodeLease.refusal('home');
+        if (leaseRefusal) {
+            log.warn(leaseRefusal);
+            return;
+        }
         const { headType } = options;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort, NetworkProtocol.SacpOverUDP], this.protocol)) {
             this.channel.goHome(headType);
@@ -1513,6 +1537,11 @@ M3`;
     };
 
     public coordinateMove = async (socket, options, callback) => {
+        const leaseRefusal = gcodeLease.refusal('coordinate move');
+        if (leaseRefusal) {
+            log.warn(leaseRefusal);
+            return;
+        }
         const { moveOrders, gcode, jogSpeed, headType } = options;
         // const { moveOrders, gcode, context, cmd, jogSpeed, headType } = options;
 
@@ -1529,6 +1558,11 @@ M3`;
     };
 
     public setWorkOrigin = async (socket, options, callback) => {
+        const leaseRefusal = gcodeLease.refusal('set work origin');
+        if (leaseRefusal) {
+            log.warn(leaseRefusal);
+            return;
+        }
         const { xPosition, yPosition, zPosition, bPosition } = options;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.setWorkOrigin({ xPosition, yPosition, zPosition, bPosition });
