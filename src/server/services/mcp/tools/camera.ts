@@ -33,6 +33,7 @@ import { gateDirectXy, planGotoWorkOrigin } from '../directMovePlan';
 import { clearanceOptions } from '../clearanceContext';
 import { FrameReading, WORK_FRAME_RESTORE_GCODE, frameRestoreJobRefusal, verifyWorkFrame, workFrameVerificationNote } from '../frameRecovery';
 import { NotSentError, RecoveryDeps, classifyReply, recordModalSend } from '../failureRecovery';
+import { gcodeLease } from '../../machine/gcodeLease';
 import { procedureStopRequested } from '../procedureAbort';
 import { manualControlGate } from '../manualControl';
 import { landmarkStore } from '../landmarks';
@@ -828,6 +829,10 @@ export const failureRecoveryDeps: RecoveryDeps = {
     },
     // The pendant arms manual control for its jogs and its own frame recovery.
     manualControl: () => manualControlGate.isManual(),
+    // The pendant's queued run holds the gcode lease from before its G53 to its
+    // closing G54; cleanup sent inside that window would be read in the wrong
+    // frame. (The recovery hold is the frame latch, which the hook reads itself.)
+    leaseHolder: () => gcodeLease.status().held?.owner ?? null,
     // The real latches, not the error text: crash/overtravel trip (also the
     // unexpected-contact guard) and a pending procedure stop request.
     authorityClosed: () => {

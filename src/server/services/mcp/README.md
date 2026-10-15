@@ -1020,6 +1020,28 @@ These are agent release requirements, not new runtime checks in `validate_gcode`
   echo (still physically valid, but the cleanup sends voided the echo record: re-read
   `get_position`) or its frame is proven. Anything skipped or unverified names
   `restore_work_frame` as the no-motion recovery, to call once no job is starting or running.
+- **One recovery design with the USB pendant** (2026-10-05). The hook, the pendant's queued
+  runs and the restart carry-over share ONE record that the controller may still have `G53`
+  selected: the frame-uncertainty latch in `positionOfRecord.ts`. The gcode lease's recovery
+  hold (`machine/gcodeLease.ts`) is that latch, read directly, not a second state. So:
+  - the hook never sends into the pendant's lease or into a recovery hold: a held lease, or a
+    latch already set, is `another-operation-active` (nothing sent, the explanation names the
+    holder or the latch, and a second restore is never sent on top of the one the operator or
+    agent owes);
+  - whenever G53 is or may be active and the hook did not verify G54 (skipped, failed, or
+    accepted but unverified), it raises that latch (before its own sends, as the pendant does
+    before its G53), with the same effect everywhere: pendant arming refused, every MCP motion
+    tool refused by `requireReliableMachine`, the `FRAME UNCERTAIN` line in `get_position`
+    warnings (one wording, `frameRecovery.describeFrameLatch`), `frameUncertain` and
+    `gcodeLease.recovery` in `get_mcp_diagnostics`, and `position.frame_uncertain` in the
+    evidence; `position.trustworthy` is false while the latch stands;
+  - an accepted G54 is recorded as the restore (`noteFrameRestored`), and the latch clears only
+    where `restore_work_frame`'s does: in `getPositionSnapshot`, on a verified position after
+    the restore (a work-frame beat with a reported offset at least 1 s later, or a verified
+    echo). Clearing releases the pendant's held crash guard and ends the lease's hold.
+  - `G90` is never claimed verified (`frameRecovery.DISTANCE_MODE_WARNING`, the same text in
+    both places). `feed_override` reports the last accepted `M220 S<n>` on the direct path,
+    which persists on the controller after the pendant run that sent it.
 - **Jobs that end outside the call that started them** (#221). A procedure runner is detached
   from `start_gcode_job`'s ledger onto its own, so a step still pending when the call returns
   `running` is not the start's exposure; when the runner ends (inside the 25 s start wait or
@@ -1976,14 +1998,27 @@ window (`probing.ts` `enterMachineFrame` / `queueMachineMove` / `settleQueuedMac
 settles once; the pendant README states its stop-latency bounds. While a run holds the window, an
 exclusive gcode lease (`machine/gcodeLease.ts`) refuses every other command. It covers every
 channel's `executeGcode`, the SSTP job and override endpoints (including the MCP file-job start)
-and ConnectionManager's job, jog, home and origin entry points. After a failed restore it becomes
-a recovery hold that admits only frame recovery, homing, position queries and job stop.
+and ConnectionManager's job, jog, home and origin entry points, and it shortens every HTTP
+request to 10 s while held (`PIPELINE_REQUEST_TIMEOUT_MS`), so a hung request fails the run
+instead of blocking recovery for the channel's 300 s. After a failed restore the frame latch
+becomes a recovery hold that admits only frame recovery (`restore_work_frame` or the pendant
+page's Restore work frame), Luban's own UI Home button as the whole `G53`/`G28`/`G54` sequence
+(a bare `G53` or `G28` is refused; the button sends its three requests inside
+`runAsHomeSequence`), position queries, spindle off and job stop. The MCP `home` tool and the
+pendant page's Home are NOT routes out: both go through `requireReliableMachine`, which refuses
+on any latch, and a re-home is not the remedy for a frame problem anyway.
 
 By default a run commands at most the approved segment duration before it settles. The A350
 heartbeat reports the planner's queued target, so it cannot confirm execution mid-run.
-`M220 S100` persists after jogging. The tracker judges in-run beats as machine coordinates
+`M220 S100` persists after jogging: `/pendant/status` shows it as `pipeline.feedOverride` and the
+failed-call evidence as `feed_override`. The tracker judges in-run beats as machine coordinates
 (`declareMachineFrameRun`, `machinePosition.ts` `judgeDeclaredRun`).
 
 A persistent `frameUncertain` latch (`positionOfRecord.ts`) survives Luban restarts and shows in
-`get_position` warnings and in `get_mcp_diagnostics`. It refuses all motion until the work frame is restored and a fresh position
-verified.
+`get_position` warnings and in `get_mcp_diagnostics`. It refuses all motion until the work frame
+is restored and a fresh position verified. It is the same latch the failed-call cleanup hook
+raises and clears (see "Failed calls" above), and the lease's recovery hold IS the latch: the
+hold cannot outlive it, because `holdForRecovery` re-raises the latch if a beat cleared it
+mid-run. The latch file (`mcp-frame-latch.json`) is written whole (temp file and rename); a file
+that exists but cannot be read raises the latch on startup. The pendant's held crash guard is
+released whenever the latch clears, with or without a USB pendant open.

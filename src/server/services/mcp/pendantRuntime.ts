@@ -16,7 +16,8 @@ import { JogBounds, JogPosition, PENDANT_FEED_MAX, PendantSession, firmwareMotio
 import { pendantPage } from './pendantPage';
 import { pendantPosition } from './pendantPosition';
 import { pendantSettings, updatePendantSettings } from './pendantSettings';
-import { currentGcodeSequence, getFrameLatch, getPositionOfRecord, getTrustedOffset, latchFrameUncertain } from './positionOfRecord';
+import { getFeedOverride } from './failureRecovery';
+import { currentGcodeSequence, getFrameLatch, getPositionOfRecord, getTrustedOffset, latchFrameUncertain, onFrameLatchChange } from './positionOfRecord';
 import { probeFeedService } from './probeFeed';
 import {
     assertMachineReadyForProcedure, enterMachineFrame, moveMachineSettled, queueMachineMove, readFirmwareMotionConfig, settleQueuedMachineMoves, sleep,
@@ -100,8 +101,13 @@ const pipelineRunBudgetMs = (maxSegmentMs: number): number => {
     const raw = typeof process !== 'undefined' ? Number(process.env?.LUBAN_PENDANT_PIPELINE_RUN_MS) : NaN;
     return Number.isFinite(raw) ? Math.max(maxSegmentMs, Math.min(PIPELINE_RUN_MAX_MS, raw)) : maxSegmentMs;
 };
-// After a restore, wait this long for the verified position before ready() may refuse.
-const FRAME_VERIFY_WAIT_MS = 3000;
+// After a restore, wait this long for the verified position before ready() may
+// refuse. Only a WORK-frame reading clears the latch (positionOfRecord.ts
+// frameLatchVerified): the settle's own echo is read inside the G53 window, so
+// the clearing beat is the first heartbeat at least 1 s after the restore,
+// which on the 2 s poll can arrive up to 3 s after it; the extra second covers
+// HTTP jitter. Nothing moves while this waits.
+const FRAME_VERIFY_WAIT_MS = 4000;
 const PIPELINE_POLL_MS = 10;
 // A run needs a heartbeat at most this old (the WiFi poll is 2 s); older ends the run.
 export const PIPELINE_HEARTBEAT_MAX_AGE_MS = 2500;
@@ -114,6 +120,12 @@ const PIPELINE_DECLARE_GUARD_MS = 300;
 // The lease never lapses while the run may have G53 selected; `finally` releases it,
 // or hands it to a recovery hold when the work frame could not be restored.
 const PIPELINE_LEASE_TTL_MS = Infinity;
+// While the lease is held, every HTTP request times out this soon instead of the
+// channel's 300 s, so a hung request fails the run (which raises the latch and
+// admits Restore work frame) rather than blocking recovery for five minutes. A
+// run commands at most PIPELINE_RUN_MAX_MS of travel, so a healthy settle is far
+// shorter than this. Not yet run on hardware.
+export const PIPELINE_REQUEST_TIMEOUT_MS = 10000;
 
 interface RunSegment { from: JogPosition; to: JogPosition; start: number; end: number; cum: number; len: number }
 
@@ -178,6 +190,15 @@ export class PendantRuntime {
 
     // Crash-guard brackets kept open after a run could not prove its queue drained.
     private heldMotionGuard = 0;
+
+    public constructor() {
+        // The latch clears only after an acknowledged restore AND a verified
+        // position, whoever restored (this pendant, MCP restore_work_frame, the
+        // failed-call cleanup, a UI home): that is the proof the queue drained,
+        // so the held crash guard is released here - with or without a USB
+        // pendant open, not only from tick().
+        onFrameLatchChange((latch) => { if (!latch) { this.releaseHeldMotionGuard(); } });
+    }
 
     private position(): JogPosition {
         const p = getPositionSnapshot();
@@ -538,7 +559,6 @@ export class PendantRuntime {
             });
         }
         this.release();
-        if (this.heldMotionGuard && !getFrameLatch()) { this.releaseHeldMotionGuard(); }
         if (this.busy || !this.session.armed) { return; }
         const latch = getFrameLatch();
         // A restore was acknowledged; its verified position is still arriving. Hold, do not disarm.
@@ -699,7 +719,7 @@ export class PendantRuntime {
         const startedAt = Date.now();
         let leaseId: number;
         try {
-            leaseId = gcodeLease.acquire('the USB pendant (queued jog)', PIPELINE_LEASE_TTL_MS);
+            leaseId = gcodeLease.acquire('the USB pendant (queued jog)', PIPELINE_LEASE_TTL_MS, Date.now(), PIPELINE_REQUEST_TIMEOUT_MS);
         } catch (err) {
             this.disarm(`Queued jog refused: ${(err as Error).message}`);
             return;
@@ -826,7 +846,10 @@ export class PendantRuntime {
                         // clears the latch without waiting for (or disarming on) the next heartbeat.
                         if (!totals.segments && !uncertain) {
                             try {
-                                await leased(async () => verifyRestoredPosition('usb_pendant:pipeline-close', from));
+                                const proved = await leased(async () => verifyRestoredPosition('usb_pendant:pipeline-close', from));
+                                if (!proved) {
+                                    log.warn('Queued jog: M114 did not verify the restored position in the work frame; waiting for a verified beat.');
+                                }
                             } catch (err) {
                                 log.warn(`Queued jog: M114 did not verify the restored position: ${(err as Error).message}`);
                             }
@@ -843,7 +866,8 @@ export class PendantRuntime {
                 gcodeLease.release(leaseId);
             } else {
                 // The machine workspace may still be selected: refuse everything but recovery
-                // (restore, homing, position queries, job stop) until the latch clears.
+                // (restore, homing, position queries, job stop) until the latch clears. The
+                // hold IS the latch; this re-raises it if a beat cleared it meanwhile.
                 gcodeLease.holdForRecovery('a queued pendant jog could not restore the work frame', leaseId);
             }
             // The crash guard stays armed while queued motion may still be running.
@@ -916,7 +940,9 @@ export class PendantRuntime {
                 maxSegmentMs: this.session.maxSegmentMs,
                 limitedAxes: this.session.limitedAxes,
                 lastJog: this.lastJog,
-                pipeline: this.pipeline,
+                // feedOverride: the last accepted M220 S<n> on the direct path; it persists
+                // on the controller after the run, armed or not, until it is set again.
+                pipeline: { ...this.pipeline, feedOverride: getFeedOverride() },
                 inputAgeMs: Date.now() - this.session.receivedAt,
                 port: this.port?.path || null,
                 firmware: this.firmware ?? null,

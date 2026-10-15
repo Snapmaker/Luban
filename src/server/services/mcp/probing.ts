@@ -12,6 +12,7 @@ import {
     getPositionOfRecord,
     getTrustedOffset,
     judgeRecheck,
+    judgeRestoredEcho,
     machineFromReport,
     matchFrameWithOffsets,
     setPositionOfRecord,
@@ -213,10 +214,13 @@ G54;`;
     if (options.onReply) {
         options.onReply();
     }
-    const arrived = (machine: NullableXyz, source: PositionSource) => {
+    const arrived = (machine: NullableXyz, source: PositionSource, frame: 'work-frame' | 'machine-frame') => {
         const full = completeTarget(machine, target);
         if (full) {
-            setPositionOfRecord(full, source, executed.sequence, tool);
+            // The frame the report was read in travels with the record: a
+            // machine-frame echo (taken inside the G53 window) proves the
+            // arrival but never clears the frame latch (positionOfRecord.ts).
+            setPositionOfRecord(full, source, executed.sequence, tool, frame);
         }
         traceMark(`engine-exit:${source}`);
     };
@@ -240,7 +244,7 @@ G54;`;
             if (match.frame === 'work-frame') {
                 setTrustedOffset(match.offset);
             }
-            arrived(machineFromReport(echo, match.offset, match.frame), 'echo');
+            arrived(machineFromReport(echo, match.offset, match.frame), 'echo', match.frame);
             return;
         }
         traceMark('echo-miss');
@@ -316,7 +320,7 @@ G54;`;
                 if (match.frame === 'work-frame') {
                     setTrustedOffset(match.offset);
                 }
-                arrived(machineFromReport(now.work, match.offset, match.frame), 'heartbeat');
+                arrived(machineFromReport(now.work, match.offset, match.frame), 'heartbeat', match.frame);
                 return;
             }
         }
@@ -528,10 +532,14 @@ export async function settleQueuedMachineMoves(tool: string, last: Xyz, feed: nu
 
 /**
  * After a no-motion G90/G54 restore that queued nothing, prove the position:
- * M114's reply must match `expected` (machine coordinates) in either frame,
- * judged with the engine's trusted offset first. A match becomes the position
- * of record (source `echo`), which clears the frame-uncertainty latch. Returns
- * whether it matched; no motion either way.
+ * M114's reply must match `expected` (machine coordinates) read in the WORK
+ * frame, judged with the engine's trusted offset first. A match becomes the
+ * position of record (source `echo`), which clears the frame-uncertainty
+ * latch. A reply that only matches as raw MACHINE coordinates is what a
+ * controller still in G53 would say, so it is refused (2026-10-05 review); with
+ * a ~0 offset the two readings coincide and matchFrame already reports
+ * work-frame - nothing can tell them apart then. Returns whether it matched;
+ * no motion either way.
  */
 export async function verifyRestoredPosition(tool: string, expected: Xyz): Promise<boolean> {
     const executed = await sendGcodeVisible(getDirectChannel(), tool, 'M114');
@@ -546,12 +554,12 @@ export async function verifyRestoredPosition(tool: string, expected: Xyz): Promi
     } catch (err) {
         // No heartbeat: only the trusted offset can judge the reply.
     }
-    const match = matchFrameWithOffsets(echo, offsets, expected, ECHO_TOLERANCE_MM);
-    const full = match ? completeTarget(machineFromReport(echo, match.offset, match.frame), expected) : null;
+    const full = judgeRestoredEcho(echo, offsets, expected, ECHO_TOLERANCE_MM);
     if (!full) {
         return false;
     }
-    setPositionOfRecord(full, 'echo', executed.sequence, tool);
+    // judgeRestoredEcho admits only a work-frame reading, so this record may clear the latch.
+    setPositionOfRecord(full, 'echo', executed.sequence, tool, 'work-frame');
     return true;
 }
 

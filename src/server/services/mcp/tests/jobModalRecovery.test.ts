@@ -17,6 +17,7 @@ import {
 } from '../failureRecovery';
 import * as jobEnding from '../jobEnding';
 import type { JobManager, McpJob } from '../jobs';
+import { clearFrameLatch, frameLatchVerified, getFrameLatch } from '../positionOfRecord';
 import { McpToolError, ToolRegistry } from '../registry';
 import { isolatedModule } from './jobDashboard.test';
 
@@ -34,6 +35,9 @@ interface Fake {
 }
 
 function fake(): Fake {
+    // The frame latch is the real shared one: start clear, and let readPosition
+    // apply getPositionSnapshot's clearing rule to the fake beat.
+    clearFrameLatch();
     const sent: Fake['sent'] = [];
     const state: Fake['state'] = {
         connection: CONN,
@@ -55,10 +59,21 @@ function fake(): Fake {
             return { result: 0, text: 'ok' };
         },
         settle: async () => undefined,
-        readPosition: () => state.reading,
+        readPosition: () => {
+            const latch = getFrameLatch();
+            if (latch && frameLatchVerified(latch, null, { accepted: state.reading.frame !== 'undetermined',
+                frame: state.reading.frame,
+                offsetSource: 'heartbeat',
+                reportedAt: state.reading.reportedAt ?? 0,
+                declaredRun: false })) {
+                clearFrameLatch();
+            }
+            return state.reading;
+        },
         reliableForMotion: (r) => r === 'verified' || r === 'heartbeat',
         jobRunning: () => state.jobRunning,
         manualControl: () => false,
+        leaseHolder: () => null,
         authorityClosed: () => state.authorityClosed,
         now: () => 1000,
     };
@@ -286,6 +301,33 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.ok(job.events.some((e) => e.phase === 'modal_recovery'));
     }],
 
+    ['an unreadable job file is judged conservatively: G53 possible, nothing sent, the shared frame latch raised', async () => {
+        clearFrameLatch();
+        const files = new Map<string, string>();
+        const manager = managerFixture(files);
+        const { judgeFileJobEnd } = gcodeTools(manager, files, { count: 0 });
+        const validation = { warnings: [], extents: {}, spindle: {}, motionLineCount: 0 } as unknown as McpJob['validation'];
+        // The program itself never selects G53; what matters is that it cannot be read back.
+        const job = manager.submit(G91_FILE, 'unreadable file', 'cnc', validation);
+        job.state = 'started';
+        job.modalTrack = { startConnection: CONN, lastLine: 3, totalLines: 8, lastProgress: null, stoppingSeen: false };
+        const read = files.get.bind(files);
+        files.get = (name: string) => { if (name === job.filePath) { throw new Error('EACCES'); } return read(name); };
+        const ev = await judgeFileJobEnd(job, 'completed', 'done') as RecoveryEvidence;
+        assert.equal(ev.exposure.g53_possible, true, 'explicit, not the "absent means possible" default');
+        // Field by field: the object was built in the vm-loaded module's realm.
+        assert.equal(ev.exposure.state.workspace, 'unknown');
+        assert.equal(ev.exposure.state.distance, 'unknown');
+        assert.ok(ev.exposure.reasons.some((r) => /could not be read back/.test(r)));
+        assert.equal(ev.skip_reason, 'job-completed-with-modal-exposure');
+        const latch = getFrameLatch();
+        assert.ok(latch, 'the shared latch is raised');
+        assert.match(String(latch?.reason), /file-job:unreadable[ _]file \(job [0-9a-f]+\) may have left the machine workspace \(G53\) selected/);
+        assert.deepEqual(ev.position.frame_uncertain, latch);
+        assert.equal(job.failureRecovery, ev);
+        clearFrameLatch();
+    }],
+
     ['a procedure runner that fails inside the start wait gets its own guarded cleanup, reported on the start error', async () => {
         const files = new Map<string, string>();
         const manager = managerFixture(files);
@@ -330,5 +372,40 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.equal(result.failure_recovery, undefined, 'the runner\'s pending G53 is not the start call\'s exposure');
         assert.equal(f.sent.length, 0);
         finish();
+    }],
+
+    ['a file job that ends with G53 in play raises the shared frame latch; a failed one that is cleaned up and verified clears it', async () => {
+        const left = ['G90', 'G53', 'G0 Z300', 'G0 X200 Y200'].join('\n');
+        // Completed in G53: nothing sent, but the latch is the same one the pendant and the hook use.
+        const f = fake();
+        const completed = await judge('completed', fileModalExposure(left, { lastLine: 4, totalLines: 4, lastProgress: 1, ranToEnd: true }), f);
+        assert.equal(completed?.skip_reason, 'job-completed-with-modal-exposure');
+        assert.equal(f.sent.length, 0);
+        const latch = getFrameLatch();
+        assert.ok(latch);
+        assert.match(String(latch?.reason), /file-job:test \(job job1\) may have left the machine workspace \(G53\) selected/);
+        assert.deepEqual(completed?.position.frame_uncertain, latch);
+        assert.ok(completed?.warnings.some((w) => /^FRAME UNCERTAIN: /.test(w)));
+        // A stopped job behind an existing latch leaves it as it is.
+        const stopped = await judge('stopped', fileModalExposure(left, LINES_UNKNOWN), f);
+        assert.equal(stopped?.skip_reason, 'stopped-or-tripped');
+        assert.equal(getFrameLatch()?.reason, latch?.reason);
+        // A job that failed on its own, guards met: G90/G54 go out, the beat after verifies, the latch clears.
+        const g = fake();
+        const failed = await judge('failed', fileModalExposure(left, { lastLine: 3, totalLines: 4, lastProgress: 0.5, ranToEnd: false }), g);
+        assert.deepEqual(g.sent.map((s) => s.gcode), ['G90', 'G54']);
+        assert.equal(failed?.status, 'attempted');
+        assert.equal(failed?.resulting_modes?.workspace_verified, true);
+        assert.equal(getFrameLatch(), null, 'cleared through the snapshot rule');
+        assert.equal(failed?.position.frame_uncertain, null);
+        // And a failed job while the pendant holds the lease is skipped, nothing sent, latch raised.
+        const h = fake();
+        h.deps.leaseHolder = () => 'the USB pendant (queued jog)';
+        const held = await judge('failed', fileModalExposure(left, { lastLine: 3, totalLines: 4, lastProgress: 0.5, ranToEnd: false }), h);
+        assert.equal(h.sent.length, 0);
+        assert.equal(held?.skip_reason, 'another-operation-active');
+        assert.match(String(held?.explanation), /gcode lease is held by the USB pendant/);
+        assert.ok(getFrameLatch());
+        clearFrameLatch();
     }],
 ];

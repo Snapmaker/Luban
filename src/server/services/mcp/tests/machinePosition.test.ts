@@ -337,9 +337,19 @@ export const tests: Array<[string, () => void]> = [
         noteFrameRestored(T0 + 2000);
         const restored = getFrameLatch();
         if (!restored) { throw new Error('latch lost'); }
-        assert.equal(frameLatchVerified(restored, echo, { ...beat, accepted: false }), true, 'an echo after the restore');
-        assert.equal(frameLatchVerified(restored, { ...echo, at: T0 + 1000 }, { ...beat, accepted: false }), false, 'an echo from before it');
-        assert.equal(frameLatchVerified(restored, { ...echo, source: 'estimated' }, { ...beat, accepted: false }), false, 'an estimate');
+        // The record must have been READ in the work frame: the pendant's settle writes a
+        // machine-frame echo (taken inside the G53 window) after the G54 reply, and that
+        // proves the arrival, not the workspace (2026-10-05 review).
+        assert.equal(frameLatchVerified(restored, echo, { ...beat, accepted: false }), false, 'an echo with no frame never clears it');
+        assert.equal(frameLatchVerified(restored, { ...echo, frame: 'machine-frame' }, { ...beat, accepted: false }), false,
+            'a machine-frame echo after the restore does not clear it');
+        assert.equal(frameLatchVerified(restored, { ...echo, frame: 'work-frame' }, { ...beat, accepted: false }), true, 'a work-frame echo after the restore');
+        assert.equal(frameLatchVerified(restored, { ...echo, frame: 'work-frame', source: 'heartbeat' }, { ...beat, accepted: false }), true,
+            'a settled work-frame heartbeat record');
+        assert.equal(frameLatchVerified(restored, { ...echo, frame: 'machine-frame' }, beat), true,
+            'a later work-frame heartbeat clears it even while the machine-frame echo record stands');
+        assert.equal(frameLatchVerified(restored, { ...echo, frame: 'work-frame', at: T0 + 1000 }, { ...beat, accepted: false }), false, 'an echo from before it');
+        assert.equal(frameLatchVerified(restored, { ...echo, frame: 'work-frame', source: 'estimated' }, { ...beat, accepted: false }), false, 'an estimate');
         assert.equal(frameLatchVerified(restored, null, beat), true, 'a work-frame beat well after the restore');
         assert.equal(frameLatchVerified(restored, null, { ...beat, reportedAt: T0 + 2500 }), false, 'a beat that may predate it');
         assert.equal(frameLatchVerified(restored, null, { ...beat, declaredRun: true }), false);

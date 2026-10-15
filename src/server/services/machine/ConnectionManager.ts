@@ -56,6 +56,7 @@ import { octo } from './adaptor/Octo';
 import { connectionDiagnostics, diagnosticId } from './connectionDiagnostics';
 import { safeIdentifier, safeTarget } from './connectionDiagnosticState';
 import { gcodeLease } from './gcodeLease';
+import { noteFrameRestored } from '../mcp/positionOfRecord';
 
 const log = logger('lib:ConnectionManager');
 
@@ -1547,18 +1548,28 @@ M3`;
             this.channel.goHome(headType);
             socket && socket.emit('move:status', { isHoming: true });
         } else {
-            await this.executeGcode(socket, { gcode: 'G53' });
-            await this.executeGcode(socket, { gcode: 'G28' });
+            // The three lines go out as separate requests; runAsHomeSequence lets
+            // them pass a frame-recovery hold as the whole G53/G28/G54 sequence
+            // (a bare G53 or G28 alone is refused there).
+            await gcodeLease.runAsHomeSequence(async () => {
+                await this.executeGcode(socket, { gcode: 'G53' });
+                await this.executeGcode(socket, { gcode: 'G28' });
 
-            callback && callback();
+                callback && callback();
 
-            // ?
-            if (this.connectionType === ConnectionType.WiFi) {
-                socket && socket.emit('move:status', { isHoming: true });
-            }
-            if (headType === HEAD_LASER || headType === HEAD_CNC) {
-                await this.executeGcode(socket, { gcode: 'G54' });
-            }
+                // ?
+                if (this.connectionType === ConnectionType.WiFi) {
+                    socket && socket.emit('move:status', { isHoming: true });
+                }
+                if (headType === HEAD_LASER || headType === HEAD_CNC) {
+                    // An accepted G54 after G28 is a work-frame restore: the
+                    // frame-uncertainty latch records it, and a verified position
+                    // after it clears the latch (tools/machine.ts).
+                    await this.executeGcode(socket, { gcode: 'G54' }, (response) => {
+                        if ((response as { err?: number | null }).err === null) { noteFrameRestored(); }
+                    });
+                }
+            });
         }
     };
 

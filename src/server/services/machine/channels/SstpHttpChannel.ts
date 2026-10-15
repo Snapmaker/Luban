@@ -550,7 +550,10 @@ class SstpHttpChannel extends Channel implements
         connectionDiagnostics.record('command_requested', { sessionId, attemptId, requestId, phase });
         return new Promise((resolve) => {
             const req = request.post(api);
-            req.timeout(300000)
+            // A lease holder (the pendant's queued run) sets a shorter per-request
+            // timeout, so a hung request cannot block the hold-time Restore for
+            // the full 300 s: the timeout fails the run, which raises the latch.
+            req.timeout(gcodeLease.requestTimeoutMs(300000))
                 .send(`token=${this.token}`)
                 .send(`code=${gcode}`)
                 // .send(formData)

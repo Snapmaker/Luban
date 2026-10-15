@@ -9,15 +9,22 @@ import {
     assessExposure,
     classifyFailure,
     classifyReply,
+    clearFeedOverride,
     detachFromLedger,
+    getFeedOverride,
     modalWords,
     recordModalSend,
 } from '../failureRecovery';
+import { clearFrameLatch, frameLatchVerified, getFrameLatch, latchFrameUncertain } from '../positionOfRecord';
 import { McpToolError, ToolRegistry } from '../registry';
 
 // Inert: no machine, no server. A "send" inside a handler goes through
 // recordModalSend exactly as sendGcodeVisible does, and the cleanup's own
 // sends land in `sent`, stamped with the connection generation at the time.
+// The frame latch is the REAL shared one (positionOfRecord.ts): each harness
+// starts with it clear, and its readPosition applies the same clearing rule
+// getPositionSnapshot does (frameLatchVerified), so a verified cleanup clears
+// the latch through the production path.
 
 interface Harness {
     registry: ToolRegistry;
@@ -29,11 +36,14 @@ interface Harness {
         reading: PositionReading | null;
         jobRunning: boolean;
         authorityClosed: string | null;
+        leaseHolder: string | null;
         clock: number;
     };
 }
 
 function harness(): Harness {
+    clearFrameLatch();
+    clearFeedOverride();
     const connA = '3.1';
     const sent: Array<{ connection: string | null; gcode: string }> = [];
     const state: Harness['state'] = {
@@ -49,6 +59,7 @@ function harness(): Harness {
         },
         jobRunning: false,
         authorityClosed: null,
+        leaseHolder: null,
         clock: 1000,
     };
     const deps: RecoveryDeps = {
@@ -58,10 +69,22 @@ function harness(): Harness {
             return state.reply(gcode);
         },
         settle: async () => undefined,
-        readPosition: () => state.reading,
+        readPosition: () => {
+            // What getPositionSnapshot does with the beat it judged.
+            const latch = getFrameLatch();
+            if (latch && state.reading && frameLatchVerified(latch, null, { accepted: state.reading.frame !== 'undetermined',
+                frame: state.reading.frame,
+                offsetSource: 'heartbeat',
+                reportedAt: state.reading.reportedAt ?? 0,
+                declaredRun: false })) {
+                clearFrameLatch();
+            }
+            return state.reading;
+        },
         reliableForMotion: (r) => r === 'verified' || r === 'heartbeat' || r === 'cached-offset',
         jobRunning: () => state.jobRunning,
         manualControl: () => false,
+        leaseHolder: () => state.leaseHolder,
         authorityClosed: () => state.authorityClosed,
         now: () => state.clock,
     };
@@ -260,10 +283,13 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.equal(err.failureRecovery?.recovery_action, 'restore_work_frame');
     }],
 
-    ['a stale beat does not verify the frame, but a verified position survives a delayed heartbeat', async () => {
+    ['a stale beat does not verify the frame; a verified echo stays physically valid but the frame latch withholds trust', async () => {
         const h = harness();
         // A real `verified` reading is an echo labelled machine-frame
-        // (machinePosition.ts); the only beat predates the cleanup reply.
+        // (machinePosition.ts); the only beat predates the cleanup reply. The
+        // delayed heartbeat does not invalidate the echo (the note says so and
+        // names it physically valid); what withholds trust is the shared frame
+        // latch, raised before the G54 and cleared only by a beat after it.
         h.state.reading = {
             reliability: 'verified', frame: 'machine-frame', reportedAt: 500, originOffset: { x: 120, y: 0, z: 0 }, machineStatus: 'idle', rawImpossibleAsMachine: true,
         };
@@ -271,9 +297,13 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         const ev = (await callExpectingError(h, 'g53_tool')).failureRecovery as RecoveryEvidence;
         assert.deepEqual(h.sent.map((s) => s.gcode), ['G90', 'G54']);
         assert.equal(ev.resulting_modes?.workspace_verified, false, 'a stale beat is not verification');
-        assert.equal(ev.position.trustworthy, true, 'a verified position is not invalidated by a delayed heartbeat');
+        assert.equal(ev.position.trustworthy, false, 'the latch stands until a beat after the restore verifies it');
+        assert.ok(ev.position.frame_uncertain, 'the shared latch is reported');
+        assert.ok(ev.position.frame_uncertain?.restoredAt !== null, 'the accepted G54 is recorded as the restore');
+        assert.ok(/physically\s+still valid/.test(ev.position.note), 'the echo is not invalidated by the heartbeat');
         assert.ok(/voided that echo record/.test(ev.position.note), 'says the cleanup sends voided the echo record');
         assert.ok(/get_position/.test(ev.position.note));
+        assert.ok(ev.warnings.some((w) => /FRAME UNCERTAIN/.test(w)), 'the same wording get_position shows');
         assert.equal(ev.recovery_action, 'restore_work_frame');
     }],
 
@@ -372,6 +402,7 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
             reliableForMotion: () => { throw new Error('judge exploded'); },
             jobRunning: () => false,
             manualControl: () => false,
+            leaseHolder: () => null,
             authorityClosed: () => null,
             now: () => 1000,
         });
@@ -655,5 +686,139 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         const err = await callExpectingError(h, 'move_tool');
         assert.equal(err, frozen);
         assert.equal(err.message, 'original');
+    }],
+
+    // --- One recovery design with the pendant (2026-10-05): the gcode lease,
+    // the shared frame latch and the hook's cleanup.
+
+    ['cleanup is never sent inside the pendant\'s gcode lease: skipped as another operation, and the shared latch is raised', async () => {
+        const h = harness();
+        h.state.leaseHolder = 'the USB pendant (queued jog)';
+        failingTool(h, 'move_tool', [['G53', 'accepted'], ['G1 X10 F500', 'rejected']]);
+        const ev = (await callExpectingError(h, 'move_tool')).failureRecovery as RecoveryEvidence;
+        assert.equal(h.sent.length, 0, 'nothing lands in the pendant\'s G53 window');
+        assert.equal(ev.status, 'skipped');
+        assert.equal(ev.skip_reason, 'another-operation-active');
+        assert.match(ev.explanation, /gcode lease is held by the USB pendant \(queued jog\)/);
+        const latch = getFrameLatch();
+        assert.ok(latch, 'G53 may be active and nothing verified it away: the one shared latch is raised');
+        assert.equal(latch?.restoredAt, null);
+        assert.match(String(latch?.reason),
+            /move_tool may have left the machine workspace \(G53\) selected and its cleanup was skipped \(another-operation-active\)/);
+        assert.deepEqual(ev.position.frame_uncertain, latch);
+        assert.equal(ev.position.trustworthy, false);
+        assert.ok(ev.warnings.some((w) => /^FRAME UNCERTAIN: /.test(w)), 'the same wording as get_position');
+        assert.equal(ev.recovery_action, 'restore_work_frame');
+    }],
+
+    ['a latch already set (a recovery hold) skips the cleanup with nothing sent: one restore, never a duplicate', async () => {
+        const h = harness();
+        latchFrameUncertain('A queued USB pendant jog selected the machine workspace (G53).');
+        failingTool(h, 'move_tool', [['G53', 'accepted'], ['G1 X10 F500', 'rejected']]);
+        const ev = (await callExpectingError(h, 'move_tool')).failureRecovery as RecoveryEvidence;
+        assert.equal(h.sent.length, 0);
+        assert.equal(ev.skip_reason, 'another-operation-active');
+        assert.match(ev.explanation, /latch is already set .*A queued USB pendant jog/);
+        assert.match(ev.explanation, /would duplicate that restore/);
+        assert.equal(getFrameLatch()?.reason, 'A queued USB pendant jog selected the machine workspace (G53).', 'the pendant\'s latch is left as it was');
+        assert.ok(ev.warnings.some((w) => /^FRAME UNCERTAIN: A queued USB pendant jog/.test(w)));
+    }],
+
+    ['the latch is raised before the cleanup sends, and a rejected G54 leaves it raised with no restore recorded', async () => {
+        const h = harness();
+        const seen: Array<[string, boolean, number | null | undefined]> = [];
+        h.state.reply = (gcode) => {
+            seen.push([gcode, !!getFrameLatch(), getFrameLatch()?.restoredAt]);
+            return gcode === 'G54' ? { result: -1, text: 'error:20' } : { result: 0, text: 'ok' };
+        };
+        failingTool(h, 'move_tool', [['G53', 'accepted'], ['G1 X10 F500', 'rejected']]);
+        const ev = (await callExpectingError(h, 'move_tool')).failureRecovery as RecoveryEvidence;
+        assert.deepEqual(seen, [['G90', true, null], ['G54', true, null]], 'latched before the first send, like the pendant before its G53');
+        assert.equal(ev.status, 'failed');
+        const latch = getFrameLatch();
+        assert.ok(latch);
+        assert.equal(latch?.restoredAt, null, 'a rejected G54 is not a restore');
+        assert.match(String(latch?.reason), /move_tool failed after it may have selected the machine workspace \(G53\)/);
+        assert.deepEqual(ev.position.frame_uncertain, latch);
+        assert.ok(ev.warnings.some((w) => /^FRAME UNCERTAIN: /.test(w)));
+        assert.ok(ev.warnings.some((w) => /Modal cleanup INCOMPLETE/.test(w)));
+    }],
+
+    ['a verified cleanup records the restore and the beat after it clears the latch through the position snapshot', async () => {
+        const h = harness();
+        failingTool(h, 'move_tool', [['G53', 'accepted'], ['G1 X10 F500', 'rejected']]);
+        const ev = (await callExpectingError(h, 'move_tool')).failureRecovery as RecoveryEvidence;
+        assert.deepEqual(h.sent.map((s) => s.gcode), ['G90', 'G54']);
+        assert.equal(ev.resulting_modes?.workspace_verified, true);
+        assert.equal(getFrameLatch(), null, 'cleared by the snapshot rule (frameLatchVerified), the restore_work_frame path');
+        assert.equal(ev.position.frame_uncertain, null);
+        assert.equal(ev.position.trustworthy, true);
+        assert.ok(!ev.warnings.some((w) => /FRAME UNCERTAIN/.test(w)));
+    }],
+
+    ['an accepted but unverified cleanup keeps the latch with the restore recorded, so motion waits for a fresh beat', async () => {
+        const h = harness();
+        // The only beat predates the cleanup reply: no-fresh-beat.
+        h.state.reading = { ...(h.state.reading as PositionReading), reportedAt: 500 };
+        failingTool(h, 'move_tool', [['G53', 'accepted'], ['G1 X10 F500', 'rejected']]);
+        const ev = (await callExpectingError(h, 'move_tool')).failureRecovery as RecoveryEvidence;
+        assert.equal(ev.status, 'attempted');
+        assert.equal(ev.resulting_modes?.workspace_verified, false);
+        const latch = getFrameLatch();
+        assert.ok(latch, 'still latched');
+        assert.equal(latch?.restoredAt, h.state.clock, 'the accepted G54 is the recorded restore');
+        assert.equal(ev.position.trustworthy, false);
+        assert.ok(ev.warnings.some((w) => /^FRAME UNCERTAIN: .*The work frame was restored; motion is refused until a fresh position is verified/.test(w)));
+        // The next verified beat clears it, with nothing more sent.
+        h.state.reading = { ...(h.state.reading as PositionReading), reportedAt: h.state.clock + 2500 };
+        h.registry.setFailureRecovery(null);
+        assert.equal(h.sent.length, 2);
+    }],
+
+    ['a G91-only exposure restores G90 without touching the latch; a bare M220 S<n> is noted as persisting', async () => {
+        const h = harness();
+        failingTool(h, 'rel_tool', [['G91\nG1 X1 F300', 'rejected']]);
+        const ev = (await callExpectingError(h, 'rel_tool')).failureRecovery as RecoveryEvidence;
+        assert.deepEqual(h.sent.map((s) => s.gcode), ['G90']);
+        assert.equal(getFrameLatch(), null, 'no G53 in play: the latch is not for distance mode');
+        assert.equal(ev.feed_override, null);
+        // The pendant's run asserts M220 S100 on the direct path (no ledger); the note survives for the evidence.
+        recordModalSend('3.1', 'M220 S100\nG90\nG53;')('accepted');
+        assert.equal(getFeedOverride()?.gcode, 'M220 S100');
+        const g = harness();
+        recordModalSend('3.1', 'M220 S100\nG90\nG53;')('accepted');
+        failingTool(g, 'move_tool', [['G53', 'accepted'], ['G1 X10 F500', 'rejected']]);
+        const after = (await callExpectingError(g, 'move_tool')).failureRecovery as RecoveryEvidence;
+        assert.equal(after.feed_override?.gcode, 'M220 S100');
+        assert.ok(after.warnings.some((w) => /M220 S100 was sent at .* and PERSISTS/.test(w)));
+        clearFeedOverride();
+        recordModalSend('3.1', 'M220 S50')('not-sent');
+        assert.equal(getFeedOverride(), null, 'a payload that never left changed nothing');
+    }],
+
+    ['an M220 in a payload that was not fully accepted is recorded as uncertain: SSTP stops at the first failure without saying which', async () => {
+        const h = harness();
+        // The pendant's `M220 S100 / G90 / G53;` with the G53 rejected: the M220 ran first, or was itself the failure.
+        recordModalSend('3.1', 'M220 S100\nG90\nG53;')('rejected');
+        const doubt = getFeedOverride();
+        assert.equal(doubt?.gcode, 'M220 S100');
+        assert.equal(doubt?.certain, false);
+        assert.match(String(doubt?.note), /stops at the first failure and does not report which line failed/);
+        failingTool(h, 'move_tool', [['G53', 'accepted'], ['G1 X10 F500', 'rejected']]);
+        const ev = (await callExpectingError(h, 'move_tool')).failureRecovery as RecoveryEvidence;
+        assert.equal(ev.feed_override?.certain, false);
+        assert.ok(ev.warnings.some((w) => /M220 S100 was sent .* but the payload carrying it was not fully accepted.*may or may not be in force/.test(w)));
+        // An indeterminate payload (transport error) is the same doubt; a certain record of the same word is not downgraded.
+        clearFeedOverride();
+        recordModalSend('3.1', 'M220 S100')('indeterminate');
+        assert.equal(getFeedOverride()?.certain, false);
+        recordModalSend('3.1', 'M220 S100')('accepted');
+        assert.equal(getFeedOverride()?.certain, true);
+        recordModalSend('3.1', 'M220 S100\nG90\nG53;')('rejected');
+        assert.equal(getFeedOverride()?.certain, true, 'S100 is already known to be in force');
+        recordModalSend('3.1', 'M220 S80\nG90')('rejected');
+        assert.equal(getFeedOverride()?.gcode, 'M220 S80');
+        assert.equal(getFeedOverride()?.certain, false, 'a different value in doubt replaces it');
+        clearFeedOverride();
     }],
 ];

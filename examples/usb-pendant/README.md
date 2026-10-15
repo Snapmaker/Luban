@@ -197,14 +197,18 @@ The Snapmaker build's `M220` reports nothing, so the feed override cannot be
 read. Each run therefore sends `M220 S100`. **That setting persists after
 jogging.** Any reduced touchscreen speed percentage is overridden for later file
 jobs too, so set it again before a job that relies on it. The page shows this
-warning whenever pipelining is active.
+warning whenever pipelining is active, `/pendant/status` reports the last
+accepted override as `pipeline.feedOverride` (armed or not), and an MCP tool's
+`failure_recovery` evidence carries it as `feed_override`.
 
 **The run's guards:**
 
 - **Exclusive lease** (`machine/gcodeLease.ts`). It is held from before the G53
   until the closing G54, and it does not lapse while the run may have G53
-  selected. The channel request timeout is 300 s, and `finally` releases the
-  lease.
+  selected. While it is held every HTTP request times out after 10 s instead of
+  the channel's 300 s, so a hung request fails the run (which raises the latch
+  and admits Restore work frame) instead of blocking recovery; `finally`
+  releases the lease.
   - **What it refuses:**
     - every channel's `executeGcode`;
     - the SSTP job and override endpoints: start, resume, work-speed, laser-power
@@ -216,21 +220,38 @@ warning whenever pipelining is active.
   - **What it does not cover:** file upload and `prepare_print` (no motion), job
     pause and stop (allowed on purpose), status polls, and enclosure and
     air-purifier controls.
-  - **If the restore fails:** the lease becomes a recovery hold. It accepts only
-    `G90`/`G53`/`G54`/`G28`, `M5`, `M114`, `M400`, `M503`, homing and job
-    stop/pause until the frame latch clears.
+  - **If the restore fails:** the lease hands over to the recovery hold. The hold
+    IS the frame-uncertainty latch (below), read directly, so it cannot outlive
+    it: `holdForRecovery` re-raises the latch if a verified beat had cleared it
+    between the G54 acknowledgement and the failed fallback restore. It accepts
+    only `G90`/`G54`, `M5`, `M114`, `M400`, `M503`, job stop/pause, and Luban's
+    own UI Home button as the whole `G53`/`G28`/`G54` sequence (it sends its
+    three requests inside `runAsHomeSequence`, and its accepted `G54` marks the
+    frame restored; a bare `G53` or `G28` is refused). The ways out are
+    **Restore work frame** (this page or MCP `restore_work_frame`) and that UI
+    Home button. This page's **Home** and the MCP `home` tool are refused while
+    the frame is uncertain: both check the position first, and a re-home is not
+    the remedy for a frame problem.
 - **Frame-uncertainty latch.** It is set before the G53 is sent and persisted
-  across Luban restarts. On startup it returns together with the recovery hold.
+  across Luban restarts (`mcp-frame-latch.json`, written whole; a file that
+  exists but cannot be read raises the latch). On startup it returns, and with
+  it the recovery hold. It is the same latch the MCP failed-call cleanup raises
+  for a tool, runner or file job that may have left `G53`, so the two recoveries
+  are one design: one record, one refusal, one clearing path.
   - **Every exit path restores G54:** the normal settle; a no-motion `G90`/`G54`
     after a lost reply or a failed settle; an awaited `shutdown()`.
   - **A run that queued nothing** (stick released, obstacle hold or a Z switch
     straight after the G53) restores and then proves the position with `M114`.
-    It stays armed.
+    The reply must read as a WORK-frame position; one that matches only as raw
+    machine coordinates is what a controller still in G53 would say, and is not
+    accepted (with a ~0 work offset the two readings coincide and nothing can
+    tell them apart). It stays armed.
   - **Clearing:** the latch clears only after an acknowledged restore AND a
     verified position. Until then pendant arming and all MCP motion are refused.
-    It appears in `get_position` warnings and in diagnostics.
-  - **If the restore fails,** the crash guard also stays armed until the latch
-    clears.
+    It appears in `get_position` warnings and in diagnostics. The crash guard
+    held after a failed restore is released when the latch clears, whoever
+    restored (this page, MCP `restore_work_frame`, the failed-call cleanup or a
+    home) and whether or not the USB pendant is still open.
 - **Segments and queue model.** Each segment is at most (approved duration −
   150 ms) / 2. Marlin never replans a block it is already executing, so the next
   segment has to arrive before the one ahead starts. Luban sends a segment only

@@ -28,7 +28,12 @@ function fixture(a350 = false, options: { pipeline?: boolean; runMs?: number } =
     let m503 = 'echo:  M203 X120.00 Y120.00 Z40.00 E45.00\necho:  M201 X3000 Y3000 Z100 E10000\necho:  M204 P1000.00 R1000.00 T1000.00';
     let enterFail = false;
     let settleFail = false;
+    // The settle's G54 is acknowledged (restore recorded), a beat verifies the latch
+    // away, and THEN the echo check throws: the review's hold dead-end scenario.
+    let settleAckThenFail = false;
     let restoreFail = false;
+    // M114 after a zero-segment restore matches only as machine coordinates (refused).
+    let verifyFail = false;
     let reportAgeMs = 0;
     let latch: { reason: string; restoredAt: number | null } | null = null;
     let runNo = 0;
@@ -40,11 +45,19 @@ function fixture(a350 = false, options: { pipeline?: boolean; runMs?: number } =
     let onQueue: ((count: number) => void) | null = null;
     const declared: string[] = [];
     let declaredNow = false;
-    const lease = new GcodeLease();
+    const frames: string[] = [];
+    // The fixture's own latch copy: the lease reads it as its recovery hold and
+    // re-raises it through holdForRecovery, exactly as the real binding does.
+    const latchListeners: Array<(value: typeof latch) => void> = [];
+    const raiseLatch = (reason: string) => {
+        latch = { reason, restoredAt: null }; frames.push('latch');
+        for (const listener of latchListeners) { listener(latch); }
+    };
+    const lease = new GcodeLease({ get: () => (latch ? { ...latch, since: 0 } : null), raise: raiseLatch });
     const leaseChecks: Array<string | null> = [];
     const held: Array<() => void> = [];
     const queued: Queued[] = [];
-    const frames: string[] = [];
+    let feedOverride: object | null = null;
     let settledAt: { x: number; y: number; z: number } | null = null;
     let streaming: object | null = null;
     let streamUntil = 0;
@@ -53,7 +66,7 @@ function fixture(a350 = false, options: { pipeline?: boolean; runMs?: number } =
     // Assigned below, once the USB stream and the executor exist.
     const hooks = { stream: (): void => undefined,
         drainEnd: (): number => now,
-        clearLatch: (): void => { if (latch) { latch = null; lease.endRecovery(); } } };
+        clearLatch: (): void => { if (latch) { latch = null; for (const listener of latchListeners) { listener(null); } } } };
     let epoch = 1;
     let tick: (() => void) | null = null;
     let finish: (() => void) | null = null;
@@ -117,11 +130,13 @@ function fixture(a350 = false, options: { pipeline?: boolean; runMs?: number } =
         './pendantPage': { pendantPage },
         './pendantSettings': { pendantSettings: () => ({}), updatePendantSettings: (args: object) => settingsChanges.push(args) },
         '../machine/gcodeLease': { gcodeLease: lease },
+        './failureRecovery': { getFeedOverride: () => feedOverride },
         './positionOfRecord': { currentGcodeSequence: () => 0,
             getTrustedOffset: () => null,
             getPositionOfRecord: () => (estimated ? { source: 'estimated' } : null),
             getFrameLatch: () => latch,
-            latchFrameUncertain: (reason: string) => { latch = { reason, restoredAt: null }; frames.push('latch'); } },
+            latchFrameUncertain: raiseLatch,
+            onFrameLatchChange: (listener: (value: typeof latch) => void) => { latchListeners.push(listener); return () => undefined; } },
         './probeFeed': { probeFeedService: { assertNoOvertravel: () => undefined, motionBegin: () => { motion += 1; }, motionEnd: () => { motion -= 1; } } },
         './probing': { assertMachineReadyForProcedure: () => { if (readyError) { throw Error('not idle'); } },
             moveMachineSettled: async (_label: string, position: { x: number; y: number; z: number }) => {
@@ -134,6 +149,7 @@ function fixture(a350 = false, options: { pipeline?: boolean; runMs?: number } =
                 now += rttMs; hooks.stream();
                 if (onEnter) { onEnter(); }
                 if (enterFail) { throw Error('transport_error after the request was sent'); }
+                feedOverride = { gcode: 'M220 S100', at: now, connection: 'c', certain: true, note: null }; // What recordModalSend notes for the accepted payload.
                 return { result: 0 };
             },
             queueMachineMove: async (_tool: string, target: { x: number; y: number; z: number }, feed: number) => {
@@ -146,10 +162,21 @@ function fixture(a350 = false, options: { pipeline?: boolean; runMs?: number } =
                 if (onQueue) { onQueue(queued.length); }
                 return { result: 0 };
             },
-            verifyRestoredPosition: async () => { frames.push('verify'); hooks.clearLatch(); return true; },
+            verifyRestoredPosition: async () => {
+                frames.push('verify');
+                if (verifyFail) { return false; }
+                hooks.clearLatch();
+                return true;
+            },
             settleQueuedMachineMoves: async (_tool: string, last: { x: number; y: number; z: number }, _feed: number, onRestored?: () => void) => {
                 frames.push('settle');
                 if (settleFail) { throw Error('Overtravel tripwire latched.'); }
+                if (settleAckThenFail) {
+                    if (latch) { latch.restoredAt = now; }
+                    if (onRestored) { onRestored(); }
+                    hooks.clearLatch(); // A verified beat arrived before the echo check.
+                    throw Error('the echo did not match the queued endpoint');
+                }
                 settledAt = { ...last };
                 Object.assign(machine, last); // Arrived: the next heartbeat shows it.
                 now = Math.max(now + 4 * rttMs, hooks.drainEnd() + rttMs / 2) + settleExtraMs;
@@ -308,13 +335,18 @@ function fixture(a350 = false, options: { pipeline?: boolean; runMs?: number } =
         setM503: (text: string) => { m503 = text; },
         failEnter: () => { enterFail = true; },
         failSettle: () => { settleFail = true; },
+        failSettleAfterAck: () => { settleAckThenFail = true; },
+        failVerify: () => { verifyFail = true; },
         failRestore: (fail = true) => { restoreFail = fail; },
         setReportAge: (ms: number) => { reportAgeMs = ms; },
         setBeat: (value: { machine: { x: number; y: number; z: number }; reportedAt: number } | null) => { beat = value; },
         onQueue: (fn: ((count: number) => void) | null) => { onQueue = fn; },
         onEnter: (fn: (() => void) | null) => { onEnter = fn; },
         setSpeed: (value: number) => { speed = value; },
-        verifiedBeat: () => hooks.clearLatch()
+        verifiedBeat: () => hooks.clearLatch(),
+        // A beat verified the latch away while the run was still open (the dead-end scenario).
+        clearLatchSilently: () => { latch = null; },
+        latchListeners,
     };
 }
 
@@ -1035,7 +1067,13 @@ export const tests: Array<[string, () => Promise<void>]> = [
         const after = await readStatus(crash);
         assert.equal(after.armed, false); assert.match(after.error, /did not settle: Overtravel/);
         assert.ok(crash.latch()?.restoredAt); assert.equal(crash.motion(), 0);
-        assert.equal(crash.lease.status().held, null); assert.equal(crash.lease.status().recovery, null);
+        // The lease is released; the recovery hold is the latch itself, so UI commands
+        // stay refused until the beat after the restore verifies it, then pass.
+        assert.equal(crash.lease.status().held, null); assert.ok(crash.lease.status().recovery);
+        assert.match(String(crash.lease.refusal('G0 X0 Y0')), /machine workspace/);
+        crash.verifiedBeat();
+        assert.equal(crash.lease.status().recovery, null);
+        assert.equal(crash.lease.refusal('G0 X0 Y0'), null);
     }],
     ['if the restore also fails, the latch, crash guard and a recovery lease hold until a verified restore', async () => {
         const f = fixture(false, { pipeline: true });
@@ -1084,5 +1122,61 @@ export const tests: Array<[string, () => Promise<void>]> = [
         assert.equal(status.dro.reliability, 'estimated');
         assert.equal((await f.arm()).status, 400);
         assert.equal(f.moves(), 0);
+    }],
+    ['the hold dead end: a beat clears the latch between the G54 acknowledgement and a failed fallback restore, and the hold re-raises it', async () => {
+        const f = fixture(false, { pipeline: true });
+        f.failSettleAfterAck(); f.failRestore();
+        await startRun(f);
+        const after = await readStatus(f);
+        assert.equal(after.armed, false); assert.match(after.error, /could not restore the work frame/);
+        assert.deepEqual(f.frames, ['latch', 'enter', 'settle', 'restore', 'latch'], 're-raised by holdForRecovery');
+        assert.ok(f.latch(), 'the hold cannot outlive its latch'); assert.equal(f.latch()?.restoredAt, null);
+        assert.match(String(f.latch()?.reason), /could not restore the work frame/);
+        assert.ok(f.lease.status().recovery); assert.equal(f.lease.status().held, null);
+        assert.match(String(f.lease.refusal('G0 X0 Y0')), /machine workspace/);
+        assert.equal(f.motion(), 1, 'crash guard held while queued motion may run');
+        f.input();
+        assert.equal((await f.request('/pendant/arm', { clearanceConfirmed: true, bounds: wide })).status, 400);
+        // Restore work frame succeeds and a verified beat follows: latch, hold and guard all clear.
+        f.failRestore(false);
+        assert.equal((await f.request('/pendant/restore-frame', {})).status, 200);
+        assert.ok(f.latch()?.restoredAt);
+        f.verifiedBeat();
+        assert.equal(f.latch(), null); assert.equal(f.lease.status().recovery, null); assert.equal(f.motion(), 0);
+        f.input();
+        assert.equal((await f.request('/pendant/arm', { clearanceConfirmed: true, bounds: wide })).status, 200);
+    }],
+    ['the held crash guard is released when the latch clears, even after the USB pendant was closed', async () => {
+        const f = fixture(false, { pipeline: true });
+        f.failSettle(); f.failRestore();
+        await startRun(f);
+        assert.equal(f.motion(), 1);
+        await f.runtime.shutdown(); // No port, no timer, no tick from here on.
+        assert.equal(f.motion(), 1, 'closing the pendant does not release a guard the latch still justifies');
+        assert.equal(f.latchListeners.length, 1, 'the runtime subscribed to latch changes');
+        f.verifiedBeat(); // An MCP restore_work_frame plus its verified beat clears the latch...
+        assert.equal(f.motion(), 0, '...and the guard goes with it, with no tick');
+    }],
+    ['pendant status reports the persisting M220 override after a run, armed or not', async () => {
+        const f = fixture(false, { pipeline: true });
+        await startRun(f);
+        assert.equal((await readStatus(f)).pipeline.feedOverride.gcode, 'M220 S100');
+        await f.request('/pendant/disarm', {});
+        const status = await readStatus(f);
+        assert.equal(status.armed, false);
+        assert.equal(status.pipeline.feedOverride.gcode, 'M220 S100', 'still shown: the controller keeps it');
+    }],
+    ['a zero-segment run whose M114 reads only as machine coordinates stays latched until a verified beat', async () => {
+        const f = fixture(false, { pipeline: true });
+        f.failVerify();
+        f.onEnter(() => { f.stopStream(); f.input(); });
+        await startRun(f);
+        assert.deepEqual(f.frames, ['latch', 'enter', 'restore', 'verify']);
+        assert.ok(f.latch(), 'not proven: a G53 reading is not a position');
+        assert.ok(f.latch()?.restoredAt, 'the restore itself was acknowledged');
+        assert.ok(f.logs.some((line) => /did not verify the restored position in the work frame/.test(line)));
+        assert.equal((await readStatus(f)).armed, true, 'held, not disarmed: the beat may still verify it');
+        f.verifiedBeat();
+        assert.equal(f.latch(), null);
     }],
 ];

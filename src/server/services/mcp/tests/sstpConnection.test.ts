@@ -51,10 +51,11 @@ function fixture() {
     const sent: string[] = [];
     const replies: Array<{ err?: object; res?: object }> = [];
     const requests: Array<{ method: string; url: string }> = [];
+    const timeouts: number[] = [];
     const request = (method: string, url: string) => {
         requests.push({ method, url });
         const req = {
-            timeout: () => req,
+            timeout: (ms: number) => { timeouts.push(ms); return req; },
             query: () => req,
             send: (value: string) => { if (value.startsWith('code=')) { sent.push(value.slice(5)); } return req; },
             end: (callback: (err?: object, res?: object) => void) => { const reply = replies.shift(); callback(reply?.err, reply?.res); },
@@ -89,7 +90,7 @@ function fixture() {
     const channel = new HttpChannel();
     channel.socket = new EventEmitter();
     channel.getGcodePrintingInfo = () => ({});
-    return { channel, workers, replies, sent, requests, diagnostics, diagnosticModule, lease };
+    return { channel, workers, replies, sent, requests, timeouts, diagnostics, diagnosticModule, lease };
 }
 
 function cameraFixture() {
@@ -211,6 +212,20 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.equal(lease.refusal('M5', 5) !== null, true);
         assert.equal(lease.refusal('M5', 11), null);
         assert.equal(lease.status(11).expired, 1);
+    }],
+    ['while the pendant holds the lease every execute_code request uses its shorter timeout, not the channel\'s 300 s', async () => {
+        const { channel, replies, lease, timeouts } = fixture();
+        replies.push({ res: { status: 200, text: 'ok' } });
+        await channel.executeGcode('M114');
+        assert.equal(timeouts.slice(-1)[0], 300000);
+        const id = lease.acquire('the USB pendant (queued jog)', Infinity, Date.now(), 10000);
+        replies.push({ res: { status: 200, text: 'ok' } });
+        await lease.runAs(id, async () => channel.executeGcode('G1 X1 Y1 Z1 F600;'));
+        assert.equal(timeouts.slice(-1)[0], 10000, 'a hung request fails the run instead of blocking recovery');
+        lease.release(id);
+        replies.push({ res: { status: 200, text: 'ok' } });
+        await channel.executeGcode('G54');
+        assert.equal(timeouts.slice(-1)[0], 300000);
     }],
     ['failed commands retain status and timing evidence without leaking error URLs', async () => {
         const { channel, replies, diagnostics } = fixture();

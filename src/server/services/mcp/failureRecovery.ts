@@ -23,11 +23,19 @@
 import { AsyncLocalStorage } from 'async_hooks';
 
 import { isProcedureStopped } from './procedureAbort';
-import { WorkspaceVerification, verifyWorkFrame } from './frameRecovery';
+import { DISTANCE_MODE_WARNING, WorkspaceVerification, describeFrameLatch, verifyWorkFrame } from './frameRecovery';
+import { FrameLatch, getFrameLatch, latchFrameUncertain, noteFrameRestored } from './positionOfRecord';
 
 // The workspace-verification rule is restore_work_frame's (frameRecovery.ts),
 // shared so the two can never drift.
 export { FRAME_VERIFY_MIN_BEAT_DELAY_MS, FRAME_VERIFY_MIN_OFFSET_MM } from './frameRecovery';
+
+// The frame-uncertainty latch (positionOfRecord.ts) is shared with the USB
+// pendant's queued runs and the restart carry-over: ONE record that G53 may be
+// selected. This hook raises it before its own G54 (a lost reply still counts),
+// marks the restore acknowledged, and leaves the clearing to getPositionSnapshot
+// (tools/machine.ts) - the same path restore_work_frame uses - so a verified
+// cleanup also releases the pendant's held crash guard and the lease's hold.
 
 /** The explicit no-motion recovery an agent or operator can run afterwards. */
 export const MANUAL_RECOVERY = 'restore_work_frame';
@@ -173,10 +181,74 @@ export function closeLedger(ledger: ModalLedger): void {
     openLedgers.delete(ledger);
 }
 
-/** Called by the direct send path for every payload; a no-op outside a tool call. */
+/**
+ * `M220 S<n>` is a modal override too, and it PERSISTS on the controller after
+ * the run that sent it (the pendant's queued jogs assert `M220 S100` because
+ * this build's M220 reports nothing). It is noted from every direct send, with
+ * or without a ledger, so failure_recovery evidence and the pendant status can
+ * both show it.
+ */
+export interface FeedOverride {
+    gcode: string;
+    at: number;
+    connection: string;
+    /**
+     * True when the whole payload was accepted. SSTP runs a payload line by
+     * line and stops at the first failure, and its reply does not say which
+     * line failed, so an M220 in a payload that was rejected or went
+     * indeterminate MAY have run: recorded with certain=false and `note`.
+     */
+    certain: boolean;
+    note: string | null;
+}
+
+let feedOverride: FeedOverride | null = null;
+const FEED_OVERRIDE_WORD = /(?:^|\n)\s*(M220\s+S\d+(?:\.\d+)?)\s*;?\s*(?:\n|$)/i;
+
+export function getFeedOverride(): FeedOverride | null {
+    return feedOverride ? { ...feedOverride } : null;
+}
+
+/** Forget the noted override (tests, or after the operator restores the touchscreen speed). */
+export function clearFeedOverride(): void {
+    feedOverride = null;
+}
+
+const FEED_OVERRIDE_UNCERTAIN = 'the payload carrying it was not fully accepted; SSTP runs lines in order, stops at the first '
+    + 'failure and does not report which line failed, so the override may or may not be in force';
+
+function feedOverrideWarning(override: FeedOverride): string {
+    const when = `at ${new Date(override.at).toISOString()} (connection ${override.connection})`;
+    if (!override.certain) {
+        return `${override.gcode} was sent ${when} but ${FEED_OVERRIDE_UNCERTAIN}. If it ran it PERSISTS: the controller keeps a feed `
+            + 'override for later file jobs too, so a reduced touchscreen speed % would be overridden until it is set again.';
+    }
+    return `${override.gcode} was sent ${when} and PERSISTS: the controller keeps that feed override for later file jobs too, so a `
+        + 'reduced touchscreen speed % is overridden until it is set again.';
+}
+
+/** Called by the direct send path for every payload; the ledger part is a no-op outside a tool call. */
 export function recordModalSend(connection: string, gcode: string): (outcome: SendOutcome) => void {
     const ledger = storage.getStore();
-    return ledger ? ledger.record(connection, gcode) : () => undefined;
+    const settle = ledger ? ledger.record(connection, gcode) : () => undefined;
+    const override = FEED_OVERRIDE_WORD.exec(String(gcode));
+    if (!override) {
+        return settle;
+    }
+    const word = override[1].replace(/\s+/g, ' ').toUpperCase();
+    return (outcome: SendOutcome) => {
+        settle(outcome);
+        if (outcome === 'accepted') {
+            feedOverride = { gcode: word, at: Date.now(), connection, certain: true, note: null };
+        } else if (outcome === 'rejected' || outcome === 'indeterminate') {
+            // The M220 line may have run before the line that failed (or it was
+            // the failed line itself); a certain record of the same word already
+            // in force is not downgraded by that doubt.
+            if (!(feedOverride && feedOverride.certain && feedOverride.gcode === word)) {
+                feedOverride = { gcode: word, at: Date.now(), connection, certain: false, note: FEED_OVERRIDE_UNCERTAIN };
+            }
+        }
+    };
 }
 
 /** The ledger of the tool call (or detached runner) this code is running in, or null. */
@@ -384,6 +456,13 @@ export interface RecoveryDeps {
     jobRunning(): boolean;
     manualControl(): boolean;
     /**
+     * Who holds the exclusive gcode lease (machine/gcodeLease.ts) right now -
+     * the USB pendant's queued run between its G53 and its closing G54 - or
+     * null. Cleanup inside that window would be read in the wrong frame. The
+     * lease's recovery HOLD is the frame latch, which this module reads itself.
+     */
+    leaseHolder(): string | null;
+    /**
      * Why command authority is closed (crash/overtravel latch, unexpected
      * contact, a procedure stop request), or null. Read from the real state,
      * not from the error text; re-checked before every cleanup send.
@@ -412,14 +491,23 @@ export interface RecoveryEvidence {
     commands: CommandEvidence[];
     connection: { at_start: string | null; operation: string[]; at_cleanup: string | null };
     resulting_modes: { workspace: string; distance: string; workspace_verified: boolean; distance_verified: false } | null;
-    position: { reliability: string | null; frame: string | null; trustworthy: boolean; note: string };
+    position: {
+        reliability: string | null;
+        frame: string | null;
+        trustworthy: boolean;
+        note: string;
+        /** The shared frame-uncertainty latch after this evidence was judged; motion and pendant arming are refused while set. */
+        frame_uncertain: FrameLatch | null;
+    };
+    /** The last accepted `M220 S<n>` on the direct path; it persists on the controller. */
+    feed_override: FeedOverride | null;
     recovery_action: string | null;
     warnings: string[];
 }
 
-const MODE_WARNING = 'Distance mode cannot be observed in status reports: an accepted G90 is not proof the controller '
-    + 'is absolute. Every later program must declare G90 or G91 itself; never infer that relative or machine-coordinate '
-    + 'motion is safe from this cleanup or from a heartbeat.';
+// One wording for "G90 is never verified" (frameRecovery.ts), shared with the
+// get_position side so the two statements cannot drift.
+const MODE_WARNING = DISTANCE_MODE_WARNING;
 
 /** The injected send reported that nothing went out (NotSentError, matched by its message prefix). */
 function notSentError(error: string, reply: unknown): boolean {
@@ -482,6 +570,12 @@ function authorityProblem(ctx: OperationContext, deps: RecoveryDeps): [SkipReaso
     if (safe(() => deps.manualControl(), true)) {
         return ['manual-control-active', 'The USB pendant owns manual control.'];
     }
+    const lease = safe(() => deps.leaseHolder(), 'an unreadable lease');
+    if (lease) {
+        return ['another-operation-active', `Another operation holds command authority: the gcode lease is held by ${lease}, `
+            + 'which may have the machine workspace selected until it restores G54 itself. Cleanup sent now would land inside '
+            + 'its window and be read in the wrong frame.'];
+    }
     const others = otherMutatingOperations(ctx.self);
     const jobRunning = safe(() => deps.jobRunning(), true);
     if (others.length || jobRunning) {
@@ -491,8 +585,15 @@ function authorityProblem(ctx: OperationContext, deps: RecoveryDeps): [SkipReaso
     return null;
 }
 
+/** The evidence fields every outcome shares: the noted feed override and its warning. */
+function sharedEvidence(): { feed_override: FeedOverride | null; warnings: string[] } {
+    const override = getFeedOverride();
+    return { feed_override: override, warnings: override ? [feedOverrideWarning(override)] : [] };
+}
+
 function skeleton(ctx: OperationContext, failureKind: FailureKind | 'none', deps: RecoveryDeps | null): RecoveryEvidence {
     const { exposure } = ctx;
+    const shared = sharedEvidence();
     return {
         status: 'skipped',
         failure_kind: failureKind,
@@ -504,10 +605,44 @@ function skeleton(ctx: OperationContext, failureKind: FailureKind | 'none', deps
         commands: [],
         connection: { at_start: ctx.startConnection, operation: exposure.connections, at_cleanup: deps ? safe(() => deps.connectionId(), null) : null },
         resulting_modes: null,
-        position: { reliability: null, frame: null, trustworthy: false, note: 'not read' },
+        position: { reliability: null, frame: null, trustworthy: false, note: 'not read', frame_uncertain: getFrameLatch() },
+        feed_override: shared.feed_override,
         recovery_action: null,
-        warnings: [],
+        warnings: shared.warnings,
     };
+}
+
+/**
+ * The frame latch is the one record that G53 may be selected. Evidence that
+ * leaves G53 possible and unverified raises it when nothing else has (the
+ * pendant, a restart, an earlier call), reports it, and marks the position
+ * untrustworthy while it stands. A verified cleanup never clears it here: the
+ * position snapshot does, exactly as for restore_work_frame.
+ */
+function reportFrameLatch(evidence: RecoveryEvidence, now: number): RecoveryEvidence {
+    const unverified = g53Exposed(evidence.exposure) && !(evidence.resulting_modes && evidence.resulting_modes.workspace_verified);
+    if (unverified && !getFrameLatch()) {
+        let how: string;
+        if (evidence.status === 'attempted') {
+            how = 'its cleanup was accepted but is not verified';
+        } else if (evidence.status === 'failed') {
+            how = 'its cleanup failed';
+        } else {
+            how = `its cleanup was skipped (${evidence.skip_reason})`;
+        }
+        latchFrameUncertain(`${evidence.tool}${evidence.job_id ? ` (job ${evidence.job_id})` : ''} may have left the machine workspace `
+            + `(G53) selected and ${how}.`, now);
+    }
+    const latch = getFrameLatch();
+    evidence.position.frame_uncertain = latch;
+    if (latch) {
+        evidence.position.trustworthy = false;
+        if (unverified) {
+            evidence.recovery_action = MANUAL_RECOVERY;
+            evidence.warnings.push(describeFrameLatch(latch));
+        }
+    }
+    return evidence;
 }
 
 /** Record a skip on `evidence`, with the manual recovery and warnings wherever the controller may be left exposed. */
@@ -543,7 +678,7 @@ const WORKSPACE_TEXT: Record<WorkspaceVerification, string> = {
     'no-fresh-beat': 'G54 accepted, workspace unverified (no status report judged after the cleanup yet)',
 };
 
-async function recoverOperation(ctx: OperationContext, failureKind: FailureKind, deps: RecoveryDeps): Promise<RecoveryEvidence> {
+async function decideAndRecover(ctx: OperationContext, failureKind: FailureKind, deps: RecoveryDeps): Promise<RecoveryEvidence> {
     const { exposure } = ctx;
     const evidence = skeleton(ctx, failureKind, deps);
     const skip = (reason: SkipReason, explanation: string): RecoveryEvidence => skipped(evidence, reason, explanation);
@@ -577,6 +712,15 @@ async function recoverOperation(ctx: OperationContext, failureKind: FailureKind,
         return skip('workspace-selection-unknown', 'Only a G55-G59 selection is in doubt and the distance mode is G90: '
             + 'there is nothing to restore.');
     }
+    // The frame latch already set (by the pendant, a restart, or an earlier
+    // call) means a recovery hold is in force: its restore is the operator's
+    // or the agent's one restore_work_frame, never a second G90/G54 from here.
+    const prior = getFrameLatch();
+    if (prior) {
+        return skip('another-operation-active', 'Another operation holds command authority: the frame-uncertainty latch is already '
+            + `set (${prior.reason}) and its recovery hold admits only ${MANUAL_RECOVERY}, Luban's UI Home and queries. A second cleanup `
+            + `would duplicate that restore, so nothing was sent; call ${MANUAL_RECOVERY} once the controller is idle.`);
+    }
     const problem = sendProblem(ctx, deps);
     if (problem) {
         return skip(problem[0], problem[1]);
@@ -586,11 +730,19 @@ async function recoverOperation(ctx: OperationContext, failureKind: FailureKind,
     }
 
     evidence.status = 'attempted';
-    evidence.explanation = `Restoring ${restoreCommands(exposure).join(' then ')} as separate commands with no axis words.`;
+    const commands = restoreCommands(exposure);
+    evidence.explanation = `Restoring ${commands.join(' then ')} as separate commands with no axis words.`;
+    const sentG54 = commands.includes('G54');
+    if (sentG54) {
+        // Raised BEFORE the sends, as the pendant does before its G53: a lost
+        // reply to the G54 still leaves the machine workspace possible.
+        latchFrameUncertain(`${ctx.tool}${ctx.jobId ? ` (job ${ctx.jobId})` : ''} failed after it may have selected the machine `
+            + 'workspace (G53); the failed-call cleanup is restoring G90 then G54.', safe(() => deps.now(), Date.now()));
+    }
     const label = `failure-recovery:${ctx.tool}`;
     let ok = true;
     let lastReplyAt = 0;
-    for (const gcode of restoreCommands(exposure)) {
+    for (const gcode of commands) {
         const blocked = ok ? sendProblem(ctx, deps) : null;
         if (!ok || blocked) {
             evidence.commands.push({ gcode, outcome: 'not-sent', reply: blocked ? `blocked: ${blocked[0]}` : null });
@@ -609,6 +761,11 @@ async function recoverOperation(ctx: OperationContext, failureKind: FailureKind,
         const outcome = error !== null && notSentError(error, reply) ? 'not-sent' : classifyReply(reply);
         evidence.commands.push({ gcode, outcome, reply: error || reply?.text || null });
         ok = outcome === 'accepted';
+        if (ok && gcode === 'G54') {
+            // The same acknowledgement restore_work_frame records: G54 synchronizes
+            // the planner, and a verified position after it clears the latch.
+            noteFrameRestored(lastReplyAt);
+        }
     }
     if (!ok) {
         evidence.status = 'failed';
@@ -624,11 +781,12 @@ async function recoverOperation(ctx: OperationContext, failureKind: FailureKind,
     // beat (>= one poll period after the reply), a work offset beyond 0.5 mm,
     // a work-frame judgement AND the raw report impossible as a machine
     // position. The distance mode has no status field: never claimed
-    // verified. Nothing here sets or clears the position of record.
+    // verified. Nothing here sets or clears the position of record; reading
+    // the position runs the snapshot that clears the frame latch once the
+    // beat after the restore verifies it (tools/machine.ts).
     await deps.settle().catch(() => undefined);
     const reading = safe(() => deps.connectionId(), null) ? safe(() => deps.readPosition(), null) : null;
     const verification = verifyWorkFrame(reading, lastReplyAt);
-    const sentG54 = restoreCommands(exposure).includes('G54');
     const workspaceVerified = sentG54 && verification === 'verified';
     const workspaceText = sentG54 ? WORKSPACE_TEXT[verification] : `${exposure.state.workspace} kept (deliberate selection), not re-verified`;
     evidence.resulting_modes = {
@@ -659,6 +817,7 @@ async function recoverOperation(ctx: OperationContext, failureKind: FailureKind,
             frame: reading.frame,
             trustworthy: reliable && (echo || (reading.frame !== 'machine-frame' && (!sentG54 || workspaceVerified))),
             note,
+            frame_uncertain: getFrameLatch(),
         };
     } else {
         evidence.position.note = 'position could not be read after the cleanup';
@@ -671,6 +830,12 @@ async function recoverOperation(ctx: OperationContext, failureKind: FailureKind,
     }
     evidence.warnings.push(MODE_WARNING);
     return evidence;
+}
+
+/** decideAndRecover plus the shared frame-latch report, for every operation kind. */
+async function recoverOperation(ctx: OperationContext, failureKind: FailureKind, deps: RecoveryDeps): Promise<RecoveryEvidence> {
+    const evidence = await decideAndRecover(ctx, failureKind, deps);
+    return reportFrameLatch(evidence, safe(() => deps.now(), Date.now()));
 }
 
 /**
@@ -699,7 +864,8 @@ export function exposureAfterSuccess(ledger: ModalLedger, deps: RecoveryDeps | n
     if (!exposure.exposed || exposure.pending_payloads > 0 || (deps && safe(() => deps.jobRunning(), false))) {
         return null;
     }
-    return {
+    const shared = sharedEvidence();
+    return reportFrameLatch({
         status: 'skipped',
         failure_kind: 'none',
         tool: ledger.tool,
@@ -709,12 +875,13 @@ export function exposureAfterSuccess(ledger: ModalLedger, deps: RecoveryDeps | n
         commands: [],
         connection: { at_start: ledger.startConnection, operation: exposure.connections, at_cleanup: null },
         resulting_modes: null,
-        position: { reliability: null, frame: null, trustworthy: false, note: 'not read' },
+        position: { reliability: null, frame: null, trustworthy: false, note: 'not read', frame_uncertain: null },
+        feed_override: shared.feed_override,
         recovery_action: MANUAL_RECOVERY,
         warnings: [`The controller may still be in ${exposure.state.workspace}/${exposure.state.distance} after this call. `
             + `Call ${MANUAL_RECOVERY} (no motion) before ordinary jogging, and declare G90/G91 and the workspace in every `
-            + 'later program.', MODE_WARNING],
-    };
+            + 'later program.', MODE_WARNING, ...shared.warnings],
+    }, deps ? safe(() => deps.now(), Date.now()) : Date.now());
 }
 
 /** Evidence when the hook itself failed: whatever it sent, modes and position are unknown. */
@@ -726,7 +893,8 @@ export function hookFailureEvidence(ledger: ModalLedger, failureKind: FailureKin
         connections: [],
         reasons: ['exposure could not be assessed'],
     } as Exposure);
-    return {
+    const shared = safe(() => sharedEvidence(), { feed_override: null, warnings: [] });
+    const evidence: RecoveryEvidence = {
         status: 'failed',
         failure_kind: failureKind,
         tool: ledger.tool,
@@ -737,12 +905,14 @@ export function hookFailureEvidence(ledger: ModalLedger, failureKind: FailureKin
         commands: [],
         connection: { at_start: ledger.startConnection, operation: exposure.connections, at_cleanup: null },
         resulting_modes: null,
-        position: { reliability: null, frame: null, trustworthy: false, note: 'unknown: the cleanup hook failed' },
+        position: { reliability: null, frame: null, trustworthy: false, note: 'unknown: the cleanup hook failed', frame_uncertain: null },
+        feed_override: shared.feed_override,
         recovery_action: MANUAL_RECOVERY,
         warnings: ['The modal cleanup hook failed part way: cleanup commands may or may not have been sent. The workspace, '
             + `distance mode and position are UNKNOWN. Call ${MANUAL_RECOVERY} (no motion) when the controller is idle, then `
-            + 'get_position, before any motion.', MODE_WARNING],
+            + 'get_position, before any motion.', MODE_WARNING, ...shared.warnings],
     };
+    return safe(() => reportFrameLatch(evidence, Date.now()), evidence);
 }
 
 /** True when the evidence is worth showing (a no-op skip is not). */
@@ -942,16 +1112,17 @@ export async function recoverAfterJobEnd(input: JobEndInput, deps: RecoveryDeps 
         self: null,
     };
     const kind = input.failureKind || 'error-result';
+    const clock = (): number => (deps ? safe(() => deps.now(), Date.now()) : Date.now());
     try {
         if (input.category === 'failed') {
             if (!deps) {
-                return skipped(skeleton(ctx, kind, null), 'recovery-unavailable',
-                    `The job failed (${input.reason}) and no cleanup runtime is attached, so nothing was sent.`);
+                return reportFrameLatch(skipped(skeleton(ctx, kind, null), 'recovery-unavailable',
+                    `The job failed (${input.reason}) and no cleanup runtime is attached, so nothing was sent.`), clock());
             }
             if (!input.startConnection) {
-                return skipped(skeleton(ctx, kind, deps), 'connection-replaced', `The job failed (${input.reason}), but its `
+                return reportFrameLatch(skipped(skeleton(ctx, kind, deps), 'connection-replaced', `The job failed (${input.reason}), but its `
                     + 'connection generation at start was not captured, so the current connection cannot be proven to be the '
-                    + 'one it ran on.');
+                    + 'one it ran on.'), clock());
             }
             return await detachFromLedger(async () => recoverOperation(ctx, kind, deps));
         }
@@ -963,20 +1134,20 @@ export async function recoverAfterJobEnd(input: JobEndInput, deps: RecoveryDeps 
             evidence.warnings.push(`The controller may still be in ${ctx.exposure.state.workspace}/${ctx.exposure.state.distance} `
                 + `after this job. Call ${MANUAL_RECOVERY} (no motion) before ordinary jogging, and declare G90/G91 and the `
                 + 'workspace in every later program.', MODE_WARNING);
-            return evidence;
+            return reportFrameLatch(evidence, clock());
         }
         if (input.category === 'stopped') {
-            return skipped(skeleton(ctx, 'stopped', deps), 'stopped-or-tripped', `The job was stopped (${input.reason}). `
-                + 'A stop closes command authority: the controller state needs the operator, so nothing is sent automatically.');
+            return reportFrameLatch(skipped(skeleton(ctx, 'stopped', deps), 'stopped-or-tripped', `The job was stopped (${input.reason}). `
+                + 'A stop closes command authority: the controller state needs the operator, so nothing is sent automatically.'), clock());
         }
         if (input.category === 'authority-closed') {
-            return skipped(skeleton(ctx, 'stopped', deps), 'authority-closed', `Command authority is closed (${input.reason}). `
-                + 'The operator must inspect the machine first; nothing is sent automatically.');
+            return reportFrameLatch(skipped(skeleton(ctx, 'stopped', deps), 'authority-closed', `Command authority is closed (${input.reason}). `
+                + 'The operator must inspect the machine first; nothing is sent automatically.'), clock());
         }
         const now = deps ? safe(() => deps.connectionId(), null) : null;
-        return skipped(skeleton(ctx, 'connection-lost', deps), now && now !== input.startConnection ? 'connection-replaced' : 'disconnected',
+        return reportFrameLatch(skipped(skeleton(ctx, 'connection-lost', deps), now && now !== input.startConnection ? 'connection-replaced' : 'disconnected',
             `The machine state became unreadable while the job ran (${input.reason}); the job was never seen to end, so `
-            + 'command authority is not established and nothing is sent.');
+            + 'command authority is not established and nothing is sent.'), clock());
     } catch (err) {
         const evidence = skeleton(ctx, kind, null);
         evidence.status = 'failed';

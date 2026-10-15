@@ -41,8 +41,11 @@ import {
     latchFrameUncertain,
     onFrameLatchChange,
 } from '../positionOfRecord';
-import { resyncHint } from '../frameRecovery';
+import { describeFrameLatch, resyncHint } from '../frameRecovery';
 import { McpToolError, ToolRegistry } from '../registry';
+import logger from '../../../lib/logger';
+
+const log = logger('service:mcp:machine');
 
 const MACHINES = [
     SnapmakerOriginalMachine,
@@ -251,11 +254,17 @@ export function endMachineFrameRun(): void {
     declaredRun = null;
 }
 
-// The frame-uncertainty latch survives a Luban restart: if Luban stopped while a
-// queued pendant run had G53 selected (or its restore failed), the controller
-// may still be in the machine workspace. On startup the latch is re-raised and
-// the gcode lease holds for recovery: only Restore work frame, homing, position
-// queries and job stop pass until a restore and a verified position clear it.
+// The frame-uncertainty latch survives a Luban restart: if Luban stopped while
+// the controller may have had G53 selected (a queued pendant run, a failed
+// call's cleanup, a restore never verified), it may still be there. On startup
+// the latch is re-raised, and the gcode lease reads the latch as its recovery
+// hold, so only Restore work frame, Luban's UI Home sequence, position queries
+// and job stop pass until a restore and a verified position clear it (the MCP
+// home tool is refused by requireReliableMachine like every other motion). The file is FAIL-SAFE
+// (2026-10-05 review): it is written whole (temp file + rename, never a torn
+// write), and a file that exists but cannot be read or parsed raises the latch
+// rather than being ignored - an unreadable record of uncertainty is still
+// uncertainty.
 const FRAME_LATCH_FILE = 'mcp-frame-latch.json';
 
 function frameLatchPath(): string | null {
@@ -266,25 +275,55 @@ export function persistFrameLatch(latch: FrameLatch | null): void {
     const file = frameLatchPath();
     if (!file) { return; }
     try {
-        if (latch) { fs.writeJsonSync(file, latch); } else if (fs.existsSync(file)) { fs.removeSync(file); }
-    } catch (err) { /* The in-memory latch still refuses motion. */ }
+        if (latch) {
+            const temp = `${file}.tmp`;
+            fs.writeFileSync(temp, `${JSON.stringify(latch)}\n`);
+            fs.renameSync(temp, file);
+        } else if (fs.existsSync(file)) {
+            fs.removeSync(file);
+        }
+    } catch (err) {
+        // The in-memory latch still refuses motion; only the carry-over across a restart is at risk.
+        log.warn(`Could not ${latch ? 'write' : 'remove'} the frame latch file ${file}: ${(err as Error).message}`);
+    }
+}
+
+/** The on-disk latch: null when no file, a latch when readable, 'unreadable' when it exists but cannot be read or parsed. */
+export function readPersistedFrameLatch(): Partial<FrameLatch> | 'unreadable' | null {
+    const file = frameLatchPath();
+    if (!file) { return null; }
+    let exists: boolean;
+    try {
+        exists = fs.existsSync(file);
+    } catch (err) {
+        return 'unreadable';
+    }
+    if (!exists) { return null; }
+    try {
+        const saved = fs.readJsonSync(file) as unknown;
+        if (!saved || typeof saved !== 'object' || Array.isArray(saved)) { return 'unreadable'; }
+        return saved as Partial<FrameLatch>;
+    } catch (err) {
+        return 'unreadable';
+    }
 }
 
 export function restorePersistedFrameLatch(): void {
-    const file = frameLatchPath();
-    try {
-        if (!file || !fs.existsSync(file)) { return; }
-        const saved = fs.readJsonSync(file) as Partial<FrameLatch>;
-        latchFrameUncertain(`Carried over from before Luban restarted: ${String(saved.reason || 'a queued pendant run')} `
-            + 'Restore the work frame before any motion.');
-        gcodeLease.holdForRecovery('frame uncertainty carried over a Luban restart');
-    } catch (err) { /* An unreadable file is treated as no latch. */ }
+    const saved = readPersistedFrameLatch();
+    if (saved === null) { return; }
+    if (saved === 'unreadable') {
+        log.warn(`The frame latch file ${frameLatchPath()} exists but could not be read: raising the latch.`);
+        latchFrameUncertain(`Carried over from before Luban restarted: an unreadable latch file (${FRAME_LATCH_FILE}) says the `
+            + 'machine workspace may have been left selected. Restore the work frame before any motion.');
+        return;
+    }
+    latchFrameUncertain(`Carried over from before Luban restarted: ${String(saved.reason || 'a queued pendant run')} `
+        + 'Restore the work frame before any motion.');
 }
 
-onFrameLatchChange((latch) => {
-    persistFrameLatch(latch);
-    if (!latch) { gcodeLease.endRecovery(); }
-});
+// Persist every change; the lease's recovery hold needs no update because it
+// reads the latch itself (machine/gcodeLease.ts).
+onFrameLatchChange((latch) => persistFrameLatch(latch));
 restorePersistedFrameLatch();
 
 /**
@@ -340,13 +379,6 @@ export function noteMachineDisconnected(): void {
 export function machineBounds(identifier: string | null) {
     const size = getMachineSizeByIdentifier(identifier);
     return size ? { min: { x: 0, y: 0, z: 0 }, max: { x: size.x, y: size.y, z: size.z } } : null;
-}
-
-function frameLatchText(latch: { reason: string; restoredAt: number | null }): string {
-    const next = latch.restoredAt === null
-        ? 'Motion is refused until restore_work_frame (or the pendant\'s Restore work frame) succeeds and a fresh position is verified.'
-        : 'The work frame was restored; motion is refused until a fresh position is verified after it.';
-    return `FRAME UNCERTAIN: ${latch.reason} The controller may still have the machine workspace (G53) selected. ${next}`;
 }
 
 /**
@@ -408,7 +440,7 @@ export function getPositionSnapshot(): PositionSnapshot {
     }
     // Inside the declared run the latch is the expected state; it still refuses motion.
     const openLatch = getFrameLatch();
-    const frameWarnings = openLatch && !judgement.declaredRun ? [frameLatchText(openLatch)] : [];
+    const frameWarnings = openLatch && !judgement.declaredRun ? [describeFrameLatch(openLatch)] : [];
 
     return {
         work,
@@ -517,7 +549,7 @@ export function assertWithinTravel(points: Array<{ label: string; x: number; y: 
 export function requireReliableMachine(position: PositionSnapshot, what: string): void {
     const latch = getFrameLatch();
     if (latch) {
-        throw new McpToolError(`Refusing ${what}: ${frameLatchText(latch)}`);
+        throw new McpToolError(`Refusing ${what}: ${describeFrameLatch(latch)}`);
     }
     if (reliableForMotion(position.reliability)) {
         return;

@@ -51,6 +51,28 @@ export function frameRestoreIsWorthTrying(reliability: ReliabilityName): boolean
     return reliability === 'awaiting-resync' || reliability === 'stale';
 }
 
+/**
+ * The one statement of "workspace uncertain" an agent or operator reads: in
+ * get_position warnings and requireReliableMachine refusals (tools/machine.ts)
+ * and in failure_recovery evidence (failureRecovery.ts). The latch itself lives
+ * in positionOfRecord.ts; this is only its wording.
+ */
+export function describeFrameLatch(latch: { reason: string; restoredAt: number | null }): string {
+    const next = latch.restoredAt === null
+        ? 'Motion is refused until restore_work_frame (or the pendant\'s Restore work frame) succeeds and a fresh position is verified.'
+        : 'The work frame was restored; motion is refused until a fresh position is verified after it.';
+    return `FRAME UNCERTAIN: ${latch.reason} The controller may still have the machine workspace (G53) selected. ${next}`;
+}
+
+/**
+ * The one statement of "distance mode unobservable". No status report shows
+ * G90/G91, so nothing in this server ever claims G90 verified; every program
+ * declares its own distance mode.
+ */
+export const DISTANCE_MODE_WARNING = 'Distance mode cannot be observed in status reports: an accepted G90 is not proof the '
+    + 'controller is absolute. Every later program must declare G90 or G91 itself; never infer that relative or '
+    + 'machine-coordinate motion is safe from this cleanup or from a heartbeat.';
+
 /** A work offset no larger than this on every axis makes the work and machine frames indistinguishable. */
 export const FRAME_VERIFY_MIN_OFFSET_MM = 0.5;
 

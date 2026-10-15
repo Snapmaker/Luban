@@ -310,6 +310,10 @@ export async function judgeFileJobEnd(job: McpJob, category: JobEndCategory, rea
                 pending_payloads: 0,
                 connections: [],
                 reasons: ['the job file could not be read back, so its modes are unknown'],
+                // Conservative on purpose: a file nobody can read back may have
+                // selected G53, so the shared frame latch is raised explicitly
+                // rather than by g53Exposed's "absent means possible" default.
+                g53_possible: true,
             };
         if (category === 'completed' && track.stoppingSeen) {
             exposure.reasons.push('the machine reported "stopping" before it went idle: the file may not have run to its end');
