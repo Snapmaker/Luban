@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+import { manualControlGate } from './manualControl';
 // MCP tool results are snake_case by convention (confirm_url).
 /**
  * MCP tool registry.
@@ -81,7 +82,13 @@ export class ToolRegistry {
         if (!tool) {
             throw new McpToolError(`Unknown tool: ${name}`);
         }
-        const result = await tool.handler(args || {});
+        const leave = manualControlGate.enterTool(name);
+        let result: object;
+        try {
+            result = await tool.handler(args || {});
+        } finally {
+            leave();
+        }
         // Every result that carries a confirm_url is a staged job: say how the
         // link is to be handed over, every time, from one place.
         return withConfirmHandoff(result as { confirm_url?: unknown });

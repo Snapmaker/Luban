@@ -557,7 +557,14 @@ class SstpHttpChannel extends Channel implements
                         durationMs: Date.now() - startedAt });
                     // Request errors can embed credentials in their URL. Retain status/code, never the raw message.
                     const result = _getResult(err, res);
-                    if (err) { result.msg = httpEvidence(err, res).errorCode || 'transport_error'; }
+                    if (err) {
+                        // Preserve the controller's refusal, not the HTTP client's
+                        // generic "Bad Request". Never expose the session token or URLs.
+                        let refusal = res?.text || httpEvidence(err, res).errorCode || 'transport_error';
+                        if (this.token) { refusal = refusal.split(this.token).join('[redacted]'); }
+                        result.msg = refusal.replace(/https?:\/\/[^\s"<>]+/g, '[controller URL]').slice(0, 500);
+                        result.text = result.msg;
+                    }
                     resolve(result);
                 });
         });

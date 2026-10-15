@@ -746,6 +746,15 @@ export async function homeMachine(tool: string, waitUntilHomed: boolean = true, 
         + `Last state: ${JSON.stringify(last && { isHomed: last.isHomed, machineStatus: last.machineStatus })}`);
 }
 
+/** Shared operator/agent frame recovery; deliberately no axis words. */
+export async function sendWorkFrameRestore(tool: string): Promise<SentGcode> {
+    const channel = connectionManager.getCurrentChannel() as unknown as GcodeChannel;
+    if (!channel || typeof channel.executeGcode !== 'function') {
+        throw new McpToolError('No machine connected, or the channel does not support direct commands.');
+    }
+    return sendGcodeVisible(channel, tool, WORK_FRAME_RESTORE_GCODE);
+}
+
 export function registerCameraTools(registry: ToolRegistry): void {
     registry.register({
         name: 'list_cameras',
@@ -1229,17 +1238,9 @@ export function registerCameraTools(registry: ToolRegistry): void {
             additionalProperties: false,
         },
         handler: async (args: { reason?: string }) => {
-            const channel = connectionManager.getCurrentChannel() as unknown as GcodeChannel;
-            if (!channel || typeof channel.executeGcode !== 'function') {
-                throw new McpToolError('No machine connected, or the channel does not support direct commands.');
-            }
             const before = getPositionSnapshot();
             const reason = String(args.reason || '').trim();
-            const executed = await sendGcodeVisible(
-                channel,
-                `restore_work_frame${reason ? ` - ${reason.slice(0, 60)}` : ''}`,
-                WORK_FRAME_RESTORE_GCODE
-            );
+            const executed = await sendWorkFrameRestore(`restore_work_frame${reason ? ` - ${reason.slice(0, 60)}` : ''}`);
             // Two status periods: the judgement needs a beat taken AFTER the
             // workspace change, and the poll runs on its own ~2 s cadence.
             await new Promise((resolve) => setTimeout(resolve, FRAME_RESTORE_SETTLE_MS));

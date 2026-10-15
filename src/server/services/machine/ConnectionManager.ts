@@ -616,16 +616,19 @@ class ConnectionManager {
      *
      * Seperate multiple lines with '\n'.
      */
-    public executeGcode = async (socket: SocketServer, options: ExecuteGCodeOptions) => {
+    public executeGcode = async (socket: SocketServer, options: ExecuteGCodeOptions, callback?: (response: object) => void) => {
         const { gcode } = options;
         log.info(`executeGcode: ${gcode}`);
 
         const { result, text } = await this.channel.executeGcode(gcode);
+        const response = { err: result === 0 ? null : -1, gcode, reply: text };
         if (result === 0) {
-            socket.emit('connection:executeGcode', { err: null, gcode, reply: text });
+            socket.emit('connection:executeGcode', response);
         } else {
-            socket.emit('connection:executeGcode', { err: -1, gcode });
+            log.warn(`Controller rejected G-code: ${text || 'No error detail returned.'}`);
+            socket.emit('connection:executeGcode', response);
         }
+        callback?.(response);
     };
 
     /**

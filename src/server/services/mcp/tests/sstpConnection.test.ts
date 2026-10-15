@@ -182,6 +182,18 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.strictEqual(event?.timedOut, true);
         assert.strictEqual(typeof event?.durationMs, 'number');
     }],
+    ['controller refusal details survive HTTP 400 while tokens and URLs are removed', async () => {
+        const { channel, replies } = fixture();
+        channel.token = 'secret-session';
+        replies.push({ err: { message: 'Bad Request' },
+            res: { status: 400,
+                text: 'Cannot execute G91: busy. token=secret-session http://host/?token=secret-session' } });
+        const result = await channel.executeGcode('G91');
+        assert.equal(result.result, -1);
+        assert.match(result.text, /400.*Cannot execute G91: busy/);
+        assert.ok(!result.text.includes('secret-session'));
+        assert.ok(!result.text.includes('http://'));
+    }],
     ['HTTP failures propagate and stop a multi-line command, instead of returning success', async () => {
         for (const failure of [
             { err: { message: 'Unauthorized' }, res: { status: 401, text: 'Unauthorized' } },

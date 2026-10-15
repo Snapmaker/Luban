@@ -1724,3 +1724,10 @@ for the documentation gaps addressed and the next-evaluation constraints.
 [Probe inspection](docs/probe-inspection.md) documents contact-synchronized photos in sequence
 and surface operations, the continuous camera endpoints, bounded ball-radius shoulder backoff,
 and propagation of held probe aborts through composite programs.
+
+### USB joystick manual control
+
+The local `/pendant` page connects an operator's CircuitPython USB joystick,
+reviews a bounded machine-coordinate jog envelope, and arms a supervised session
+with live DRO feedback. See [firmware, installation, controls and safety model](../../../../examples/usb-pendant/README.md).
+It uses a separate USB data interface and does not expose an MCP arming tool.

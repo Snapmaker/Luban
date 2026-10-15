@@ -17,7 +17,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:380px;overflow:auto;f
 .toast button{float:right;padding:2px 8px;margin-left:10px}#message{min-height:1.4em}details{margin-top:12px}
 @media(max-width:600px){body{padding:14px}header{align-items:flex-start}article{padding:14px}.controls>*{flex:1;text-align:center}}
 </style></head><body>
-<header><div><p class="muted">LUBAN · JOB CONTROLLER</p><h1>Jobs</h1></div><nav><a class="button" href="/camera" target="_blank" rel="noopener">Open camera ↗</a></nav></header>
+<header><div><p class="muted">LUBAN · JOB CONTROLLER</p><h1>Jobs</h1></div><nav><a id="pendant-link" class="button" href="http://localhost:40889/pendant" target="_blank" rel="noopener">USB pendant — Localhost ↗</a><a class="button" href="/camera" target="_blank" rel="noopener">Open camera ↗</a></nav></header>
 <p id="connection" role="status">Connecting…</p>
 <section class="panel" aria-labelledby="notifications-title"><h2 id="notifications-title" style="margin-top:0">Notifications for this tab</h2>
 <div class="controls"><button id="toasts-toggle" aria-pressed="false">Turn on page toasts</button><button id="system-toggle" aria-pressed="false">Turn on system notifications</button></div>
@@ -38,6 +38,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:380px;overflow:auto;f
   var labels={awaiting_confirmation:'Ready for approval',approved:'Approved',starting:'Starting',started:'Running',completed:'Completed',rejected:'Rejected',stopped:'Stopped / cancelled',start_failed:'Failed',submitted:'Ready for approval',failed:'Failed','stop-requested':'Stop requested'};
   var cards=new Map();
   function el(id){return document.getElementById(id);}
+  var pendantUrl=new URL('/pendant',window.location.href);pendantUrl.hostname='localhost';el('pendant-link').href=pendantUrl.href;
   try{var saved=JSON.parse(sessionStorage.getItem(key)||'{}');prefs.toasts=saved.toasts===true;prefs.system=saved.system===true;}catch(e){}
   function save(){try{sessionStorage.setItem(key,JSON.stringify(prefs));}catch(e){}}
   function systemAvailable(){return window.isSecureContext && 'Notification' in window && 'serviceWorker' in navigator;}

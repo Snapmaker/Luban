@@ -12,6 +12,7 @@ import { OAuthShim } from './oauth';
 import { handleJobDashboardRequest } from './jobDashboard';
 import { jobManager } from './jobs';
 import { probeFeedService, resolveActiveProbeConfig } from './probeFeed';
+import { pendantRuntime } from './pendantRuntime';
 import { ToolRegistry } from './registry';
 import { registerCalibrationTools } from './tools/calibration';
 import { registerCameraTools } from './tools/camera';
@@ -293,6 +294,14 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
         }
 
         const url = new URL(req.url || '/', 'http://localhost');
+        if (url.pathname === '/pendant' || url.pathname.startsWith('/pendant/')) {
+            pendantRuntime.handleRequest(req, res, url).catch((err: Error) => {
+                log.error(`Pendant request failed: ${err.message}`);
+                if (!res.headersSent) { res.writeHead(500, { 'Content-Type': 'application/json' }); }
+                res.end(JSON.stringify({ error: 'Pendant request failed.' }));
+            });
+            return;
+        }
         if (url.pathname === '/' || url.pathname === '/jobs' || url.pathname.startsWith('/jobs/')) {
             handleJobDashboardRequest(req, res, url, jobManager, async (id) => stopGcodeJob({ job_id: id, wait_ms: 0 }, 'operator'));
             return;
@@ -348,6 +357,7 @@ export function startMcpService(socketServer?: McpBroadcaster): void {
 }
 
 export function stopMcpService(): void {
+    pendantRuntime.shutdown();
     cameraStreamService.shutdown();
     listeners.stop();
     runningSettings = null;
