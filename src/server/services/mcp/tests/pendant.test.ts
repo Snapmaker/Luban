@@ -10,12 +10,23 @@ const frame = (over: Partial<PendantInput> = {}): PendantInput => ({
 
 export const tests: Array<[string, () => void]> = [
     ['wire protocol rejects nonfinite axes, strings, bad mode, feed, version and oversized frames', () => {
-        for (const over of [{ x: null }, { y: '1' }, { z: 2 }, { feed: 3001 }, { feed: 299 }, { feed: 0 }, { v: 2 },
+        for (const over of [{ x: null }, { y: '1' }, { z: 2 }, { feed: 3001 }, { feed: 59 }, { feed: 0 }, { v: 2 },
+            { mode: 'z', feed: 1001 },
             { mode: 'other' }, { seq: -1 }, { seq: 0.5 }, { deadman: 1 }, { ready: null }, { z: 0.5 }]) {
             assert.throws(() => parsePendantInput(JSON.stringify({ ...frame(), ...over })));
         }
         assert.throws(() => parsePendantInput(' '.repeat(513)));
         assert.deepEqual(parsePendantInput(JSON.stringify(frame())), frame());
+    }],
+    ['rejected frames name the failing field and accept firmware id and event text', () => {
+        assert.throws(() => parsePendantInput(JSON.stringify(frame({ feed: 59 }))), /feed 59 outside 60–3000/);
+        assert.throws(() => parsePendantInput(JSON.stringify(frame({ mode: 'z', feed: 1200 }))), /above the Z-mode limit 1000/);
+        assert.equal(parsePendantInput(JSON.stringify(frame({ feed: 60 }))).feed, 60);
+        assert.equal(parsePendantInput(JSON.stringify(frame({ mode: 'z', feed: 1000 }))).feed, 1000);
+        assert.throws(() => parsePendantInput('{"v":1,'), /not JSON/);
+        assert.throws(() => parsePendantInput(JSON.stringify({ ...frame(), fw: 'x'.repeat(33) })), /: fw\./);
+        const withFw = { ...frame(), fw: 'pendant-2026-10-05', log: 'linked' };
+        assert.deepEqual(parsePendantInput(JSON.stringify(withFw)), withFw);
     }],
     ['no movement before operator arm, real neutral and deadman', () => {
         const session = new PendantSession();

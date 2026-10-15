@@ -66,13 +66,15 @@ but the original 9.x compiled libraries must be restored with the old code.
 | Joystick X | D6 | X jog; inverted as in the original program |
 | Joystick Y | D5 | Y jog |
 | Twist | D9 | Feed adjustment or Z jog |
-| Joystick button | D10, pull-down | Switch twist mode; always reset feed to 300 mm/min |
+| Joystick button | D10, pull-down | Switch twist mode; entering Z mode caps feed at 1000 mm/min |
 | Feather D1 | Built-in, pull-down | Hold to jog; release to stop requesting moves |
 | Feather D2 | Built-in, pull-down | Tap to stop and disarm |
 | Feather D0 | Built-in, pull-up | Tap to switch DRO machine/work frame |
 
-Feed mode starts at 300 mm/min; twist increases/decreases it within 300–3000.
-Z mode uses the reset slow feed. Startup, a mode change, USB loss, a new arm
+Feed starts at 300 mm/min when the Feather boots; in feed mode twist
+increases/decreases it within 60–3000. Entering Z mode caps it at 1000 mm/min
+(a lower feed is kept); returning to feed mode keeps the capped value. Nothing
+else changes the feed. Startup, a mode change, USB loss, a new arm
 or STOP requires all axes centered and D1 released. Button edges are debounced.
 X/Y remain available in both twist modes. No Wi-Fi, homing, origin writes,
 spindle commands or raw G-code come from this controller.
@@ -140,7 +142,8 @@ explicitly arm again. The TFT scrolls Luban's refusal or stop reason.
 
 Twist in feed mode adjusts the displayed feed while connected and disarmed,
 without producing motion intent. Arming, disarming, a mode change, USB loss and
-STOP reset feed to 300 mm/min; centre all axes and release D1 before jogging.
+STOP keep the feed (Z mode caps it at 1000 mm/min); centre all axes and release
+D1 before jogging. The first segment after any change is still short.
 
 The TFT shows reported machine or work XYZ on the left, with **FEED** and its
 larger numeric value beneath on the right, plus twist mode at the top. It blanks stale,
@@ -174,10 +177,15 @@ operator arming, neutral input and held D1 are still required.
 ## Wire protocol and checks
 
 USB data uses newline-delimited JSON at nominal 115200 baud. Input has
-`v:1`, increasing `seq`, normalized `x,y,z`, `mode:feed|z`, `feed:300..3000`,
+`v:1`, increasing `seq`, normalized `x,y,z`, `mode:feed|z`, `feed:60..3000`
+(at most 1000 in Z mode),
 and booleans `ready`, `deadman`, `stop`. Additional diagnostics `raw` contain
 the X/Y/twist ADC samples, and `display` contains the initialized TFT dimensions.
-Feed mode must send Z=0. Luban replies
+Feed mode must send Z=0. Optional `fw` names the firmware build (Luban logs
+it on connect, so a board still running an older `code.py` is visible) and
+optional `log` carries one rare firmware event such as a link change or short
+write. A rejected frame is disarmed with the failing field named, for example
+`Invalid USB pendant frame: feed 1200 above the Z-mode limit 1000 mm/min`. Luban replies
 with `type:dro`, `armed`, `neutral`, `machine`, `work`, `reliability`, `age_ms`,
 `warnings` and an operator message. The board has no authority without the
 operator's armed session and fresh DRO reply.
@@ -187,6 +195,15 @@ python examples/usb-pendant/test_controller.py
 npm run test:mcp
 npm run typecheck:mcp
 ```
+
+To trace the USB link, start Luban with `LUBAN_PENDANT_TRACE=1` (for example
+`LUBAN_PENDANT_TRACE=1 snapmaker-luban` from a terminal). Every received frame,
+every DRO reply and every firmware `log` event is written under
+`service:mcp:pendant` as `[trace] rx …`, `[trace] tx …` and `[trace] feather …`,
+to that console and to `~/.config/snapmaker-luban/Logs/server.log`. That is
+about 30 lines per second, so it is off by default. The normal firmware runs
+without a REPL because the ESP32-S3 has no endpoints left for it, so this trace
+is the serial log.
 
 These tests use simulated input and do not move hardware. Hardware firmware
 version, serial enumeration and real display startup must also be verified.

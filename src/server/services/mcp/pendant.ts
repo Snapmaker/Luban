@@ -12,7 +12,13 @@ export interface PendantInput {
     ready: boolean;
     feedback_ok?: boolean; // eslint-disable-line camelcase -- USB protocol key
     round_trip_ms?: number | null; // eslint-disable-line camelcase -- USB protocol key
+    fw?: string; // Firmware build identifier, logged on connect and change.
+    log?: string; // Rare firmware event (link change, short write), logged only when tracing.
 }
+
+export const PENDANT_FEED_MIN = 60;
+export const PENDANT_FEED_MAX = 3000;
+export const PENDANT_Z_FEED_MAX = 1000;
 
 export interface JogBounds {
     xMin: number; xMax: number;
@@ -22,19 +28,42 @@ export interface JogBounds {
 
 export interface JogPosition { x: number; y: number; z: number }
 
+// The reason names the first failing field so a firmware/host mismatch is diagnosable from the log.
+export function pendantFrameProblem(p: PendantInput): string | null {
+    if (!p || typeof p !== 'object') { return 'not an object'; }
+    if (p.v !== 1) { return `protocol v ${JSON.stringify(p.v)}`; }
+    // Live values (seq, axes, timings) stay out of the reason so a bad stream logs one line, not 20/s.
+    if (!Number.isSafeInteger(p.seq) || p.seq < 0) { return 'seq'; }
+    for (const axis of ['x', 'y', 'z'] as const) {
+        const n = p[axis];
+        if (typeof n !== 'number' || !Number.isFinite(n) || Math.abs(n) > 1) { return `${axis} not a number in -1..1`; }
+    }
+    if (typeof p.feed !== 'number' || !Number.isFinite(p.feed) || p.feed < PENDANT_FEED_MIN || p.feed > PENDANT_FEED_MAX) {
+        return `feed ${JSON.stringify(p.feed)} outside ${PENDANT_FEED_MIN}–${PENDANT_FEED_MAX} mm/min (update the Feather firmware?)`;
+    }
+    if (!['feed', 'z'].includes(p.mode)) { return `mode ${JSON.stringify(p.mode)}`; }
+    if (p.mode === 'z' && p.feed > PENDANT_Z_FEED_MAX) {
+        return `feed ${p.feed} above the Z-mode limit ${PENDANT_Z_FEED_MAX} mm/min (update the Feather firmware?)`;
+    }
+    for (const key of ['deadman', 'stop', 'ready'] as const) {
+        if (typeof p[key] !== 'boolean') { return `${key} not boolean`; }
+    }
+    if (p.feedback_ok !== undefined && typeof p.feedback_ok !== 'boolean') { return 'feedback_ok not boolean'; }
+    if (p.round_trip_ms != null && (!Number.isFinite(p.round_trip_ms) || p.round_trip_ms < 0)) {
+        return 'round_trip_ms';
+    }
+    if (p.mode === 'feed' && p.z !== 0) { return 'nonzero z in feed mode'; }
+    if (p.fw !== undefined && (typeof p.fw !== 'string' || p.fw.length > 32)) { return 'fw'; }
+    if (p.log !== undefined && (typeof p.log !== 'string' || p.log.length > 160)) { return 'log'; }
+    return null;
+}
+
 export function parsePendantInput(line: string): PendantInput {
     if (line.length > 512) { throw new Error('USB frame too long.'); }
-    const p = JSON.parse(line) as PendantInput;
-    if (!p || p.v !== 1 || !Number.isSafeInteger(p.seq) || p.seq < 0
-        || ![p.x, p.y, p.z].every((n) => typeof n === 'number' && Number.isFinite(n) && Math.abs(n) <= 1)
-        || typeof p.feed !== 'number' || !Number.isFinite(p.feed) || p.feed < 300 || p.feed > 3000
-        || !['feed', 'z'].includes(p.mode) || typeof p.deadman !== 'boolean' || typeof p.stop !== 'boolean'
-        || typeof p.ready !== 'boolean'
-        || (p.feedback_ok !== undefined && typeof p.feedback_ok !== 'boolean')
-        || (p.round_trip_ms != null && (!Number.isFinite(p.round_trip_ms) || p.round_trip_ms < 0))
-        || (p.mode === 'feed' && p.z !== 0)) {
-        throw new Error('Invalid USB pendant frame.');
-    }
+    let p: PendantInput;
+    try { p = JSON.parse(line) as PendantInput; } catch (err) { throw new Error('Invalid USB pendant frame: not JSON.'); }
+    const problem = pendantFrameProblem(p);
+    if (problem) { throw new Error(`Invalid USB pendant frame: ${problem}.`); }
     return p;
 }
 

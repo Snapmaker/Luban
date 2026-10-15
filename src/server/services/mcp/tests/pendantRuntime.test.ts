@@ -98,6 +98,8 @@ function fixture(a350 = false) {
         setInterval: (fn: () => void) => { tick = fn; return 1; },
         setImmediate: (fn: () => void) => { immediate = fn; return 1; },
         clearImmediate: () => { immediate = null; },
+        setTimeout: () => 0,
+        clearTimeout: () => undefined,
         clearInterval: () => undefined });
     const runtime = exports.pendantRuntime;
     let token = '';

@@ -23,6 +23,12 @@ import { HEARTBEAT_STALE_MS, connectionEpoch, getMachineSizeByIdentifier, getPos
 
 const log = logger('service:mcp:pendant');
 
+// LUBAN_PENDANT_TRACE=1 logs every USB line in both directions (about 30 lines/s) for debugging.
+// Off by default; watch it on the console that launched Luban or in the server log.
+const traceEnabled = (): boolean => typeof process !== 'undefined' && /^(1|true|on|yes)$/i.test(process.env?.LUBAN_PENDANT_TRACE || '');
+const trace = (message: string): void => { if (traceEnabled()) { log.info(`[trace] ${message}`); } };
+const PORT_LIST_CACHE_MS = 2000;
+
 export class PendantRuntime {
     private session = new PendantSession();
 
@@ -49,6 +55,14 @@ export class PendantRuntime {
     private opening = false;
 
     private pageAliveAt = 0;
+
+    private lastPorts: Array<{ path: string; serialNumber?: string }> = [];
+
+    private portsAt = 0;
+
+    private portsPending: Promise<Array<{ path: string; serialNumber?: string }>> | null = null;
+
+    private firmware: string | null = null;
 
     private timer: ReturnType<typeof setInterval> | null = null;
 
@@ -157,8 +171,26 @@ export class PendantRuntime {
     }
 
     private async ports() {
-        return (await SerialPort.list()).filter((p) => p.vendorId?.toLowerCase() === '239a'
+        const ports = (await SerialPort.list()).filter((p) => p.vendorId?.toLowerCase() === '239a'
             && p.productId?.toLowerCase() === '8124');
+        this.lastPorts = ports;
+        this.portsAt = Date.now();
+        return ports;
+    }
+
+    // Status polls must stay cheap and must never hang: enumerating serial ports can take
+    // hundreds of ms on Linux, so polls reuse the last list and wait at most 1 s for a refresh.
+    private async cachedPorts() {
+        if (!this.portsPending && Date.now() - this.portsAt > PORT_LIST_CACHE_MS) {
+            this.portsPending = this.ports().catch(() => this.lastPorts)
+                .finally(() => { this.portsAt = Date.now(); this.portsPending = null; });
+        }
+        if (!this.portsPending) { return this.lastPorts; }
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        const fallback = new Promise<Array<{ path: string; serialNumber?: string }>>((resolve) => {
+            timer = setTimeout(() => resolve(this.lastPorts), 1000);
+        });
+        try { return await Promise.race([this.portsPending, fallback]); } finally { clearTimeout(timer); }
     }
 
     private async connect(path: string): Promise<void> {
@@ -171,6 +203,7 @@ export class PendantRuntime {
             this.session.reset();
             this.feedbackHealthy = null;
             this.feedbackWritePending = false;
+            this.firmware = null;
             const port = new SerialPort({ path, baudRate: 115200, autoOpen: false });
             this.port = port;
             port.on('error', (err: Error) => { if (port === this.port) { this.disarm(err.message); } });
@@ -184,7 +217,19 @@ export class PendantRuntime {
                 try {
                     for (const line of lines) {
                         if (line.trim()) {
-                            const input = parsePendantInput(line);
+                            trace(`rx ${line.slice(0, 600)}`);
+                            let input;
+                            try { input = parsePendantInput(line); } catch (err) {
+                                if (!traceEnabled() && this.error !== (err as Error).message) {
+                                    log.warn(`Rejected USB frame: ${line.slice(0, 300)}`);
+                                }
+                                throw err;
+                            }
+                            if ((input.fw ?? null) !== this.firmware) {
+                                this.firmware = input.fw ?? null;
+                                log.info(`Feather firmware: ${this.firmware || 'unidentified (pre-fw build)'}`);
+                            }
+                            if (input.log) { trace(`feather ${input.log}`); }
                             this.feedbackHealthy = input.feedback_ok ?? null;
                             this.session.receive(input, Date.now());
                             if (input.stop) { this.disarm('Stopped with Feather D2.'); }
@@ -222,7 +267,7 @@ export class PendantRuntime {
                 // eslint-disable-next-line camelcase -- USB protocol keys
                 age_ms: number | null; position_age_ms?: number; stale_after_ms?: number; warnings: string[] };
             this.feedbackWritePending = true;
-            this.port.write(`${JSON.stringify({ v: 1,
+            const frame = `${JSON.stringify({ v: 1,
                 type: 'dro',
                 armed: this.session.armed,
                 neutral: this.session.neutral,
@@ -236,7 +281,9 @@ export class PendantRuntime {
                 warnings: dro.warnings.length ? [dro.warnings[0].slice(0, 160)] : [],
                 input_seq: this.session.inputSequence >= 0 ? this.session.inputSequence : null,
                 input_age_ms: now - this.session.receivedAt,
-                message: this.error?.slice(0, 240) || null })}\n`, (err) => {
+                message: this.error?.slice(0, 240) || null })}\n`;
+            trace(`tx ${frame.trimEnd()}`);
+            this.port.write(frame, (err) => {
                 this.feedbackWritePending = false;
                 if (err) { this.disarm(err.message); }
             });
@@ -324,6 +371,8 @@ export class PendantRuntime {
                 lastJog: this.lastJog,
                 inputAgeMs: Date.now() - this.session.receivedAt,
                 port: this.port?.path || null,
+                firmware: this.firmware,
+                trace: traceEnabled(),
                 input: this.session.latest,
                 error: this.error,
                 dro: this.dro(),
@@ -332,7 +381,7 @@ export class PendantRuntime {
                 travelBounds,
                 obstacleExclusions: this.obstacleExclusions(),
                 settings: pendantSettings(),
-                ports: await this.ports() }); return;
+                ports: await this.cachedPorts() }); return;
         }
         if (req.method !== 'POST' || req.headers['x-pendant-token'] !== this.token) {
             reply(403, { error: 'Use the local operator page.' }); return;

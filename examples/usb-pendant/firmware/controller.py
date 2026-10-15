@@ -1,8 +1,12 @@
 """Hardware-independent joystick state, usable on CircuitPython and CPython."""
 import math
 
-SLOW_FEED = 300
+# Feed (mm/min) starts at DEFAULT_FEED on boot and is otherwise only changed by twist in
+# feed mode. Entering Z mode caps it at Z_MAX_FEED; nothing else resets it.
+DEFAULT_FEED = 300
+MIN_FEED = 60
 MAX_FEED = 3000
+Z_MAX_FEED = 1000
 
 
 class LinkWatchdog:
@@ -84,7 +88,7 @@ def deadzone(value, zone=0.12):
 class Controller:
     def __init__(self):
         self.mode = "feed"
-        self.feed = SLOW_FEED
+        self.feed = DEFAULT_FEED
         self.neutral_required = True
         self.button_raw = False
         self.button_stable = False
@@ -98,16 +102,16 @@ class Controller:
             self.button_stable = button
             if button:
                 self.mode = "z" if self.mode == "feed" else "feed"
-                self.feed = SLOW_FEED
                 self.neutral_required = True
         if stop or not link:
-            self.feed = SLOW_FEED
             self.neutral_required = True
         if x == 0 and y == 0 and twist == 0 and not held and not stop:
             self.neutral_required = False
         ready = not self.neutral_required
         if ready and self.mode == "feed" and link:
-            self.feed = max(SLOW_FEED, min(MAX_FEED, self.feed + twist * 300 * min(dt, 0.1)))
+            self.feed = max(MIN_FEED, min(MAX_FEED, self.feed + twist * 300 * min(dt, 0.1)))
+        if self.mode == "z":
+            self.feed = min(self.feed, Z_MAX_FEED)
         moving = ready and held and link and armed and not stop
         return {"x": x if moving else 0.0, "y": y if moving else 0.0,
                 "z": twist if moving and self.mode == "z" else 0.0,

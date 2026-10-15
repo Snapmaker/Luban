@@ -9,7 +9,10 @@ import displayio
 import terminalio
 import usb_cdc
 from adafruit_display_text import label
-from controller import Controller, DroDisplay, LinkWatchdog, normalize, deadzone
+from controller import DEFAULT_FEED, Controller, DroDisplay, LinkWatchdog, normalize, deadzone
+
+# Sent in every frame; Luban logs it on connect so a stale code.py/controller.py pair is visible.
+FIRMWARE = "pendant-2026-10-05b"
 
 if usb_cdc.data is None:
     print("Pendant maintenance console. Release D0 and reset to run USB data.")
@@ -50,7 +53,7 @@ for axis, y in zip("XYZ", (33, 60, 87)):
     dro_labels.append(area)
     group.append(area)
 feed_title = label.Label(terminalio.FONT, text="FEED", color=0x55DDFF, x=171, y=33)
-feed_value = label.Label(terminalio.FONT, text="300", scale=3, color=0xFFFFFF, x=171, y=63)
+feed_value = label.Label(terminalio.FONT, text=str(DEFAULT_FEED), scale=3, color=0xFFFFFF, x=171, y=63)
 feed_units = label.Label(terminalio.FONT, text="mm/min", color=0xAAAAAA, x=171, y=87)
 group.append(feed_title)
 group.append(feed_value)
@@ -78,6 +81,7 @@ seq = 0
 frame = "machine"
 frame_was_pressed = False
 was_linked = False
+event = None  # One rare event per frame; Luban logs it only with LUBAN_PENDANT_TRACE=1.
 print("Luban USB joystick v1. Hold D1 to jog, D2 to stop; D0 switches DRO frame.")
 
 while True:
@@ -88,6 +92,7 @@ while True:
         rx += serial.read(min(serial.in_waiting, 4096)) or b""
         if len(rx) > 4096:
             rx = b""
+            event = "rx overflow"
         while b"\n" in rx:
             line, rx = rx.split(b"\n", 1)
             try:
@@ -98,12 +103,12 @@ while True:
                     link_watchdog.acknowledge(message.get("input_seq"), message.get("input_age_ms"), now)
                     dro_display.receive(message, now)
             except (ValueError, UnicodeError):
-                pass
+                event = "bad host line %d bytes" % len(line)
     fresh = link_watchdog.healthy(now, serial.connected, last_dro)
     linked = fresh and dro is not None and dro.get("armed") is True
     if linked != was_linked:
-        controller.feed = 300
         controller.neutral_required = True
+        event = "linked" if linked else "unlinked"
     was_linked = linked
     raw = [axis.value for axis in axes]
     values = [deadzone(normalize(value, centers[i], minimums[i], maximums[i], inverted[i]), zone)
@@ -113,18 +118,23 @@ while True:
     if serial.connected and now - last_send >= 0.05:
         packet.update({"v": 1, "seq": seq, "raw": raw, "dro_frame": frame,
                        "feedback_ok": bool(fresh), "round_trip_ms": link_watchdog.round_trip_ms,
-                       "display": [display.width, display.height]})
+                       "display": [display.width, display.height], "fw": FIRMWARE})
+        if event:
+            packet["log"] = event[:120]
         # Nonblocking: partial frames force a newline and neutral re-arm, never a backlog.
         payload = (json.dumps(packet) + "\n").encode("utf-8")
         try:
             written = serial.write(payload)
             if written == len(payload):
                 link_watchdog.sent(seq, now)
+                event = None
             if written != len(payload):
                 serial.write(b"\n")
                 controller.neutral_required = True
-        except OSError:
+                event = "short write %s/%d" % (written, len(payload))
+        except OSError as err:
             controller.neutral_required = True
+            event = "write error %s" % err
         seq += 1
         last_send = now
     pressed = not frame_button.value

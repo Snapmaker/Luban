@@ -61,7 +61,9 @@ async function pageFixture() {
     let refuse = false;
     const bodyClasses = new Set<string>();
     const posted: Array<{ url: string; body: { bounds?: object } }> = [];
-    let poll = () => undefined;
+    const intervals: Array<() => undefined> = [];
+    let stallStatus = false;
+    let clock = 1000;
     const script = html.match(/<script>([\s\S]*)<\/script>/)?.[1];
     assert.ok(script);
     vm.runInNewContext(script as string, {
@@ -70,9 +72,13 @@ async function pageFixture() {
             getElementById: element,
             createElement: () => new Element(),
             addEventListener: () => undefined },
-        setInterval: (callback: () => undefined) => { poll = callback; },
+        setInterval: (callback: () => undefined) => { intervals.push(callback); },
+        AbortController: class { public signal = {}; public abort() { return undefined; } },
+        setTimeout: () => 0,
+        clearTimeout: () => undefined,
+        Date: { now: () => clock },
         fetch: async (url: string, options?: { body: string }) => {
-            if (!options) { return { ok: true, json: async () => state }; }
+            if (!options) { return stallStatus ? new Promise(() => undefined) : { ok: true, json: async () => state }; }
             posted.push({ url, body: JSON.parse(options.body) });
             if (url.endsWith('/arm')) {
                 if (refuse) { return { ok: false, json: async () => ({ error: 'arm refused: rotary clearance' }) }; }
@@ -89,11 +95,29 @@ async function pageFixture() {
         posted,
         state,
         refuse: () => { refuse = true; },
-        refresh: async () => { poll(); await settle(); },
+        refresh: async () => { intervals[0](); await settle(); },
+        keepalive: async () => { intervals[1](); await settle(); },
+        stallStatus: () => { stallStatus = true; },
+        advance: (ms: number) => { clock += ms; },
         arm: async () => { await element('envelope').onsubmit?.({ preventDefault: () => undefined }); } };
 }
 
 export const tests: Array<[string, () => Promise<void>]> = [
+    ['keepalive has its own timer but stops once status has not rendered for 1.5 s', async () => {
+        const f = await pageFixture();
+        const keepalives = () => f.posted.filter((p) => p.url.endsWith('/keepalive')).length;
+        await f.keepalive();
+        assert.equal(keepalives(), 0);
+        f.element('clear').checked = true;
+        await f.arm();
+        f.stallStatus();
+        await f.refresh();
+        for (let i = 0; i < 3; i += 1) { await f.keepalive(); }
+        assert.equal(keepalives(), 3);
+        f.advance(1600);
+        await f.keepalive();
+        assert.equal(keepalives(), 3);
+    }],
     ['DRO retains labelled values through in-flight motion and refreshes on verified arrival', async () => {
         const f = await pageFixture();
         assert.match(f.element('dro').textContent, /MACHINE: X 10.000/);

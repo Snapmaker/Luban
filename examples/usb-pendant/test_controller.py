@@ -56,10 +56,11 @@ class ControllerTests(unittest.TestCase):
         self.assertGreater(p["feed"], 300)
         self.assertFalse(p["deadman"])
         self.assertEqual((p["x"], p["y"], p["z"]), (0, 0, 0))
+        adjusted = p["feed"]
         p = c.update(0, 0, 1, False, False, False, 2, 0.1, False, armed=False)
-        self.assertEqual(p["feed"], 300)
+        self.assertEqual(p["feed"], adjusted, "USB loss keeps the feed")
         p = c.update(0, 0, 1, False, False, True, 3, 0.1, True, armed=False)
-        self.assertEqual(p["feed"], 300)
+        self.assertEqual(p["feed"], adjusted, "STOP keeps the feed")
 
     def test_calibration_deadzone_and_inversion(self):
         self.assertEqual(deadzone(0.05), 0)
@@ -79,16 +80,17 @@ class ControllerTests(unittest.TestCase):
         self.assertFalse(c.update(1, 0, 0, False, True, False, 3, 0.05, False)["deadman"])
         self.assertFalse(c.update(*args)["deadman"])
 
-    def test_button_debounce_mode_switch_resets_feed_and_blocks_held_twist(self):
+    def test_button_debounce_mode_switch_keeps_low_feed_and_blocks_held_twist(self):
         c = Controller()
         c.update(0, 0, 0, False, False, False, 0, 0.05, True)
         c.update(0, 0, 1, False, False, False, 1, 0.1, True)
         self.assertGreater(c.feed, 300)
         c.update(0, 0, 1, True, True, False, 2, 0.05, True)
         self.assertEqual(c.mode, "feed")
+        kept = c.feed
         p = c.update(0, 0, 1, True, True, False, 2.04, 0.04, True)
         self.assertEqual(c.mode, "z")
-        self.assertEqual(c.feed, 300)
+        self.assertEqual(c.feed, kept, "a feed under 1000 is kept on entering Z mode")
         self.assertEqual(p["z"], 0)
         c.update(0, 0, 0, False, False, False, 3, 0.05, True)
         c.update(0, 0, 0, False, False, False, 3.04, 0.04, True)
@@ -96,7 +98,27 @@ class ControllerTests(unittest.TestCase):
         c.update(0, 0, 0, True, False, False, 5, 0.05, True)
         c.update(0, 0, 0, True, False, False, 5.04, 0.04, True)
         self.assertEqual(c.mode, "feed")
-        self.assertEqual(c.feed, 300)
+        self.assertEqual(c.feed, kept)
+
+    def test_boot_feed_minimum_and_z_mode_cap(self):
+        c = Controller()
+        self.assertEqual(c.update(0, 0, 0, False, False, False, 0, 0.05, True)["feed"], 300)
+        for i in range(100):
+            c.update(0, 0, -1, False, False, False, i + 1, 0.1, True)
+        self.assertEqual(c.feed, 60)
+        for i in range(200):
+            c.update(0, 0, 1, False, False, False, 200 + i, 0.1, True)
+        self.assertEqual(c.feed, 3000)
+        c.update(0, 0, 0, True, False, False, 500, 0.05, True)
+        p = c.update(0, 0, 0, True, False, False, 500.04, 0.04, True)
+        self.assertEqual((p["mode"], p["feed"]), ("z", 1000))
+        c.update(0, 0, 0, False, False, False, 501, 0.05, True)
+        for i in range(20):
+            p = c.update(0, 0, 1, False, False, False, 502 + i, 0.1, True)
+        self.assertEqual(p["feed"], 1000, "twist in Z mode never raises feed")
+        c.update(0, 0, 0, True, False, False, 600, 0.05, True)
+        p = c.update(0, 0, 0, True, False, False, 600.04, 0.04, True)
+        self.assertEqual((p["mode"], p["feed"]), ("feed", 1000))
 
     def test_feed_caps_and_stop_never_moves(self):
         c = Controller()
@@ -105,7 +127,7 @@ class ControllerTests(unittest.TestCase):
             c.update(0, 0, 1, False, True, False, i + 1, 0.1, True)
         self.assertEqual(c.feed, 3000)
         p = c.update(1, 1, 1, False, True, True, 60, 0.1, True)
-        self.assertEqual(p["feed"], 300)
+        self.assertEqual(p["feed"], 3000)
         self.assertFalse(p["deadman"])
         self.assertEqual((p["x"], p["y"], p["z"]), (0, 0, 0))
 
