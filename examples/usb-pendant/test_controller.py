@@ -4,7 +4,7 @@ import pathlib
 import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent / "firmware"))
-from controller import (BLOCKED_COLOR, HELP_COLOR, HELP_TEXT, LIMITED_COLOR, Controller, DroDisplay,
+from controller import (alert_lines, BLOCKED_COLOR, HELP_COLOR, HELP_TEXT, LIMITED_COLOR, Controller, DroDisplay,
                         LinkWatchdog, blocked_text, bottom_row, normalize, deadzone)
 
 
@@ -167,6 +167,30 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(p["feed"], 3000)
         self.assertFalse(p["deadman"])
         self.assertEqual((p["x"], p["y"], p["z"]), (0, 0, 0))
+
+
+    def test_alert_lines_tft_states(self):
+        live = {"message": None}
+        self.assertEqual(alert_lines(live, False, True, "live", False, True), ("! LINK LOST", "WAIT OR RECONNECT"))
+        self.assertEqual(alert_lines(live, True, True, "live", True, True), ("", ""), "linked and live: show the DRO")
+        self.assertEqual(alert_lines(live, True, True, "updating", True, True), ("", ""), "moving keeps the held DRO")
+        held = {"blocked": {"name": "rotary-axis", "requiredZ": 328, "requestedZ": 327.91, "held": True}}
+        self.assertEqual(alert_lines(held, True, True, "live", True, True), ("BLOCKED", "ROTARY-AXIS Z>=328"))
+        self.assertEqual(alert_lines(held, True, True, "live", True, False), ("", ""), "clears when the stick is neutral")
+        limited = {"blocked": {"name": "vise", "requiredZ": 280.05, "held": False}}
+        self.assertEqual(alert_lines(limited, True, True, "live", True, True), ("LIMITED", "VISE Z>=280.05"))
+        inside = {"blocked": {"name": "vise", "requiredZ": 280, "inside": True}}
+        self.assertEqual(alert_lines(inside, True, True, "live", True, False), ("INSIDE", "VISE Z>=280"), "inside shows even when neutral")
+        self.assertEqual(alert_lines({"limit_axes": ["X", "Y"]}, True, True, "live", True, True), ("LIMIT X,Y", "PULL BACK TO MOVE"))
+        self.assertEqual(alert_lines({"message": "Disarmed by operator."}, True, False, "live", True, False), ("RELEASE D1", "THEN RE-ARM + PRESS"))
+        legacy = {"message": "Jog blocked by rotary-axis: requires machine Z at or above 328.000 mm."}
+        self.assertEqual(alert_lines(legacy, True, False, "live", False, False), ("BLOCKED", "ROTARY-AXIS Z>=328"))
+        self.assertEqual(alert_lines({"message": None}, True, False, "stale", False, False), ("WAIT FOR DRO", "MOTION BLOCKED"))
+        self.assertEqual(alert_lines({"message": "Machine travel has unresolved conflicts"}, True, False, "live", False, False), ("! TRAVEL", "REVIEW BOUNDS + RE-ARM"))
+        self.assertEqual(alert_lines({"message": "Disarmed by operator."}, True, False, "live", False, False), ("DISARMED", "ARM THEN PRESS D1"))
+        for title, detail in [alert_lines(held, True, True, "live", True, True), alert_lines(legacy, True, False, "live", False, False)]:
+            self.assertLessEqual(len(title), 13, "scale-3 title fits 240 px")
+            self.assertLessEqual(len(detail), 20, "scale-2 detail fits 240 px")
 
 
 if __name__ == "__main__":

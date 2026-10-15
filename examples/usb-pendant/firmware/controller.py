@@ -1,5 +1,6 @@
 """Hardware-independent joystick state, usable on CircuitPython and CPython."""
 import math
+import re
 
 # Feed (mm/min) starts at DEFAULT_FEED on boot and is otherwise only changed by twist in
 # feed mode. Entering Z mode caps it at Z_MAX_FEED; nothing else resets it.
@@ -69,6 +70,63 @@ def bottom_row(dro, fresh, linked, stick_active, now):
         # Scroll the host's refusal/stop reason across the 38-character bottom row.
         return scroll_row(str(reason), now), HELP_COLOR
     return HELP_TEXT, HELP_COLOR
+
+
+def _short_z(value):
+    if not isinstance(value, (int, float)):
+        return "?"
+    return ("%.2f" % value).rstrip("0").rstrip(".")
+
+
+def obstacle_lines(reason):
+    """Compress a host refusal ("Jog blocked by NAME: requires machine Z at or above N mm")
+    into two readable TFT lines."""
+    text = str(reason or "")
+    marker = "Jog blocked by "
+    if marker not in text:
+        return "BLOCKED", "REVIEW + RE-ARM"
+    detail = text.split(marker, 1)[1]
+    name = detail.split(":", 1)[0].strip().upper()[:12]
+    z_match = re.search(r"machine Z at or above ([0-9.]+) mm", detail)
+    if z_match:
+        return "BLOCKED", (name + " Z>=" + _short_z(float(z_match.group(1))))[:19]
+    return "BLOCKED", name or "REVIEW + RE-ARM"
+
+
+def alert_lines(dro, fresh, linked, dro_state, d1_held, stick_active):
+    """(title, detail) for the TFT's large alert, or ("", "") to show the DRO.
+    Short and actionable; the full diagnostics stay on the web page."""
+    if not fresh:
+        return "! LINK LOST", "WAIT OR RECONNECT"
+    dro = dro if isinstance(dro, dict) else {}
+    blocked = dro.get("blocked")
+    # The host's structured obstacle hold: while the stick pushes into it, or always when
+    # the toolhead is already inside an exclusion (straight Z-up only).
+    if linked and isinstance(blocked, dict) and (stick_active or blocked.get("inside")):
+        name = str(blocked.get("name") or "OBSTACLE").upper()[:12]
+        if blocked.get("inside"):
+            title = "INSIDE"
+        else:
+            title = "BLOCKED" if blocked.get("held", True) else "LIMITED"
+        need = blocked.get("requiredZ")
+        return title, ((name + " Z>=" + _short_z(need)) if need is not None else name)[:19]
+    reason = str(dro.get("message") or "")
+    # After every hard stop the first question is whether the safety key is held.
+    if not linked and d1_held:
+        return "RELEASE D1", "THEN RE-ARM + PRESS"
+    limit_axes = dro.get("limit_axes")
+    if linked and stick_active and isinstance(limit_axes, list) and limit_axes:
+        return ("LIMIT " + ",".join(str(a) for a in limit_axes))[:13], "PULL BACK TO MOVE"
+    if "Jog blocked by " in reason:
+        return obstacle_lines(reason)
+    # "updating" (moving) keeps the held DRO on screen; only a stale or missing DRO blocks.
+    if "position" in reason.lower() or dro_state in ("stale", "unavailable"):
+        return "WAIT FOR DRO", "MOTION BLOCKED"
+    if "travel" in reason.lower() or "bounds" in reason.lower():
+        return "! TRAVEL", "REVIEW BOUNDS + RE-ARM"
+    if not linked:
+        return "DISARMED", "ARM THEN PRESS D1"
+    return "", ""
 
 
 class LinkWatchdog:

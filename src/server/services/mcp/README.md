@@ -1993,19 +1993,30 @@ with live DRO feedback. See [firmware, installation, controls and safety model](
 It uses a separate USB data interface and does not expose an MCP arming tool.
 Settled pendant segments stop between moves because the engine's trailing `G54;` synchronizes
 the controller's planner (Marlin `select_coordinate_system()`). `LUBAN_PENDANT_PIPELINE=1` is an
-opt-in continuous X/Y mode, not yet run on hardware in its current form: ONE hold from D1 press to
+opt-in continuous X/Y/Z mode, not yet run on hardware in its current form: ONE hold from D1 press to
 release or any stop (`pendantRuntime.ts` `continuousHold`, pure pieces in `pendantHold.ts`). One
 `G53` at the press (`probing.ts` `enterMachineFrame`), clock-paced `G1` increments of 100 ms at
 the current feed every 100 ms with at most 200 ms queued ahead by a clock model
-(`queueMachineMove` with `omitZ`: hold increments carry no Z word, so a wrong heartbeat-derived
-record Z fails the close's M114 proof instead of being driven to; the settled path's record-Z word
-is unchanged), and one `G54` at the stop through the shared restore path
+(`queueMachineMove` with `omitZ` for X/Y increments: they carry no Z word, so a wrong
+heartbeat-derived record Z fails the close's M114 proof instead of being driven to; the settled
+path's record-Z word is unchanged), and one `G54` at the stop through the shared restore path
 (`tools/camera.ts` `sendWorkFrameRestore`, then `probing.ts` `verifyRestoredPosition`'s `M114`
-proves the commanded end position and clears the latch). The earlier run/settle design was
+proves the commanded end position and clears the latch; it is retried twice 200 ms apart, and a
+close it still cannot prove is proved on demand by the next press, one work-frame `M114`, no
+motion). Z rides the hold: before the first Z word the hold drains its queue and sends one `M114`
+inside `G53`; its machine X/Y/Z must agree with the dead-reckoned chain within 0.05 mm per axis
+(`zBaselineProblem`), otherwise no Z word is sent and the hold closes. Z increments are
+`G1 X Y Z F` at most F1000 (`capZFeed`, host-side), with the same queue cap, envelope clamp and
+obstacle lookahead (the run-out extends along Z: 3.3 mm at F1000; a straight Z-up climb leaves an
+exclusion). Arming keeps Z on the settled path when `M503 S` reports Z limits that cannot follow
+the clock model (`firmwareZMotionProblem`). The earlier run/settle design was
 retired after hardware feedback (2026-10-05: a second of motion, a 0.5-2 s stop, repeat). Every
 increment is checked from the pendant's own dead-reckoned commanded position against the
 reviewed envelope and the obstacle map including the queued run-out; the position of record is
-blind inside the `G53` window by design. `M114` is polled every 250 ms during a hold and its
+blind inside the `G53` window by design. `M114` is polled every 250 ms during a hold (at least
+every 500 ms while it idles); a reply within 200 ms whose machine position agrees with the hold
+(`holdPositionAgrees`) is position freshness, and the hold's 4.5 s age limit uses the newer of the
+heartbeat and that reply, so a long or idle hold no longer ages out waiting for a beat. Its
 `Count` fields (stepper steps, converted with `M92` steps/mm from `M503 S` or the A350 default,
 minus a per-axis offset learned from an idle `M114` on every arm: the trial A350 counts from its
 homing position, X +19 Y +4 Z +0 mm, so raw counts are never compared to machine coordinates) are

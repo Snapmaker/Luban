@@ -69,6 +69,7 @@ async function pageFixture() {
     const posted: Array<{ url: string; body: { bounds?: object } }> = [];
     const intervals: Array<() => undefined> = [];
     let stallStatus = false;
+    let bodiesRead = 0;
     let clock = 1000;
     const script = html.match(/<script>([\s\S]*)<\/script>/)?.[1];
     assert.ok(script);
@@ -83,15 +84,15 @@ async function pageFixture() {
         setTimeout: () => 0,
         clearTimeout: () => undefined,
         Date: { now: () => clock },
-        fetch: async (url: string, options?: { body: string }) => {
-            if (!options) { return stallStatus ? new Promise(() => undefined) : { ok: true, json: async () => state }; }
+        fetch: async (url: string, options?: { body: string; method?: string }) => {
+            if (!options || !options.method) { return stallStatus ? new Promise(() => undefined) : { ok: true, json: async () => state }; }
             posted.push({ url, body: JSON.parse(options.body) });
             if (url.endsWith('/arm')) {
                 if (refuse) { return { ok: false, json: async () => ({ error: 'arm refused: rotary clearance' }) }; }
                 state.armed = true;
             }
             if (url.endsWith('/disarm')) { state.armed = false; }
-            return { ok: true, json: async () => ({ ok: true }) };
+            return { ok: true, json: async () => ({ ok: true }), text: async () => { bodiesRead += 1; return '{"ok":true}'; } };
         }
     });
     const settle = async () => new Promise<void>((resolve) => setImmediate(resolve));
@@ -104,6 +105,7 @@ async function pageFixture() {
         refresh: async () => { intervals[0](); await settle(); },
         keepalive: async () => { intervals[1](); await settle(); },
         stallStatus: () => { stallStatus = true; },
+        bodiesRead: () => bodiesRead,
         advance: (ms: number) => { clock += ms; },
         arm: async () => { await element('envelope').onsubmit?.({ preventDefault: () => undefined }); } };
 }
@@ -183,6 +185,7 @@ export const tests: Array<[string, () => Promise<void>]> = [
         await f.refresh();
         for (let i = 0; i < 3; i += 1) { await f.keepalive(); }
         assert.equal(keepalives(), 3);
+        assert.equal(f.bodiesRead(), 3, 'every keepalive body is read so its connection is released (Chromium allows six per host)');
         f.advance(1600);
         await f.keepalive();
         assert.equal(keepalives(), 3);

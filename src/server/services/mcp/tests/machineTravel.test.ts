@@ -43,6 +43,15 @@ export const tests: Array<[string, () => void]> = [
         assert.deepEqual(travel.conflicts, []);
     }],
 
+    ['a permitted 1 mm overtravel past a stated end is not a conflict; beyond it is', () => {
+        // Operator rule 2026-10-05: the pendant jogged to Y -1 against a stated Y 0 minimum.
+        const within = travelFor({ size: A350, stated: { xMin: null, xMax: null, yMin: 0, yMax: null }, observed: { x: 100, y: -1 } });
+        assert.deepEqual(within.conflicts, []);
+        assert.equal(within.limits.yMin, 0, 'the stated end still governs planning');
+        const beyondIt = travelFor({ size: A350, stated: { xMin: null, xMax: null, yMin: 0, yMax: null }, observed: { x: 100, y: -1.2 } });
+        assert.equal(beyondIt.conflicts.length, 1);
+        assert.match(beyondIt.conflicts[0], /1 mm overtravel allowance/);
+    }],
     ['an observation outside a stated limit is a conflict, not a silent widening', () => {
         // Someone stated X can only reach 0, but the machine is sitting at -19.
         const travel = travelFor({

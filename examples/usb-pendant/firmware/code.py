@@ -9,10 +9,10 @@ import displayio
 import terminalio
 import usb_cdc
 from adafruit_display_text import label
-from controller import DEFAULT_FEED, Controller, DroDisplay, LinkWatchdog, bottom_row, normalize, deadzone
+from controller import Controller, DroDisplay, LinkWatchdog, alert_lines, normalize, deadzone
 
 # Sent in every frame; Luban logs it on connect so a stale code.py/controller.py pair is visible.
-FIRMWARE = "pendant-2026-10-05d"
+FIRMWARE = "pendant-2026-10-06a"
 
 if usb_cdc.data is None:
     print("Pendant maintenance console. Release D0 and reset to run USB data.")
@@ -45,23 +45,20 @@ background = displayio.Bitmap(display.width, display.height, 1)
 background_palette = displayio.Palette(1)
 background_palette[0] = 0x000000
 group.append(displayio.TileGrid(background, pixel_shader=background_palette))
-header = label.Label(terminalio.FONT, text="TWIST FEED   MACHINE", color=0x55DDFF, x=4, y=9)
+header = label.Label(terminalio.FONT, text="MACHINE F300 LIVE", color=0x55DDFF, x=2, y=8)
 group.append(header)
 dro_labels = []
-for axis, y in zip("XYZ", (33, 60, 87)):
-    area = label.Label(terminalio.FONT, text=axis + "  ---.---", scale=2, color=0xFFFFFF, x=4, y=y)
+for axis, y in zip("XYZ", (29, 56, 83)):
+    # Full-width values use the screen instead of reserving a feed column.
+    area = label.Label(terminalio.FONT, text=axis + " ---.---", scale=3, color=0xFFFFFF, x=2, y=y)
     dro_labels.append(area)
     group.append(area)
-feed_title = label.Label(terminalio.FONT, text="FEED", color=0x55DDFF, x=171, y=33)
-feed_value = label.Label(terminalio.FONT, text=str(DEFAULT_FEED), scale=3, color=0xFFFFFF, x=171, y=63)
-feed_units = label.Label(terminalio.FONT, text="mm/min", color=0xAAAAAA, x=171, y=87)
-group.append(feed_title)
-group.append(feed_value)
-group.append(feed_units)
-status = label.Label(terminalio.FONT, text="USB: waiting for Luban", color=0xFFBB44, x=4, y=113)
-help_text = label.Label(terminalio.FONT, text="D1 hold jog | D2 stop", color=0xAAAAAA, x=4, y=128)
+status = label.Label(terminalio.FONT, text="READY D1 / STOP D2", scale=2, color=0xFFFFFF, x=2, y=116)
 group.append(status)
-group.append(help_text)
+alert_title = label.Label(terminalio.FONT, text="", scale=3, color=0xFFFFFF, x=2, y=52)
+alert_detail = label.Label(terminalio.FONT, text="", scale=2, color=0xFFBB44, x=2, y=91)
+group.append(alert_title)
+group.append(alert_detail)
 display.root_group = group
 serial = usb_cdc.data
 if serial is None:
@@ -145,32 +142,29 @@ while True:
         z_mode = controller.mode == "z"
         background_palette[0] = 0x660011 if z_mode else 0x000000
         header.color = 0xFFFFFF if z_mode else 0x55DDFF
-        header.text = "%s %s" % ("DANGER: TWIST Z" if z_mode else "TWIST:FEED", "MACHINE" if frame == "machine" else "WORK")
-        feed_value.text = str(int(controller.feed))
+        header.text = "%s F%d %s" % ("! Z MODE" if z_mode else ("MACHINE" if frame == "machine" else "WORK"),
+                                      int(controller.feed), "LIVE" if fresh else "LOST")
         dro_state = dro_display.state(frame, now, fresh)
         valid = dro_state == "live"
         position = dro_display.positions.get(frame)
-        for axis, area in zip("xyz", dro_labels):
-            value = position.get(axis) if position else None
-            area.text = axis.upper() + (" %8.3f" % value if value is not None else "  ---.---")
-            area.color = 0xFFFFFF if valid else 0xFFBB44
-        if not fresh:
-            status.text = "USB stale: held DRO" if position else "USB: waiting for Luban"
-        elif dro_state == "updating":
-            status.text = "JOGGING: updating DRO" if linked else "DRO updating: held values"
-        elif dro_state != "live":
-            status.text = "DRO stale: held values" if position else "DRO unavailable"
-        elif not linked:
-            if controller.neutral_required:
-                status.text = "DISARMED: centre axes"
-            else:
-                status.text = "DISARMED: Z needs arm" if controller.mode == "z" else "DISARMED: twist sets feed"
-        elif controller.neutral_required:
-            status.text = "Centre axes; release D1"
-        else:
-            status.text = "JOGGING" if packet["deadman"] else "READY: hold D1 to jog"
-        # Obstacle hold (amber/red) while linked, Luban's reason while not, else help.
         stick_active = packet["deadman"] and (packet["x"] or packet["y"] or packet["z"])
-        help_text.text, help_text.color = bottom_row(dro, fresh, linked, stick_active, now)
+        title, detail = alert_lines(dro if fresh else None, fresh, linked, dro_state, deadman.value, stick_active)
+        if title:
+            # Error states replace the DRO instead of competing with it for a tiny footer.
+            for area in dro_labels:
+                area.text = ""
+            alert_title.text = title
+            alert_detail.text = detail
+            alert_title.color = 0xFFFFFF if title.startswith("!") or title in ("BLOCKED", "INSIDE") else 0xFFBB44
+            alert_detail.color = 0xFFFFFF if title == "RELEASE D1" else 0xFFBB44
+            status.text = ""
+        else:
+            alert_title.text = ""
+            alert_detail.text = ""
+            for axis, area in zip("xyz", dro_labels):
+                value = position.get(axis) if position else None
+                area.text = axis.upper() + (" %.3f" % value if value is not None else " ---.---")
+                area.color = 0xFFFFFF if valid else 0xFFBB44
+            status.text = "JOGGING" if packet["deadman"] else "READY D1 / STOP D2"
         last_display = now
     time.sleep(0.01)

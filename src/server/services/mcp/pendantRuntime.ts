@@ -12,11 +12,16 @@ import { landmarkStore } from './landmarks';
 import { requiredToolheadZ } from './landmarkClearance';
 import { manualControlGate } from './manualControl';
 import { isLoopback } from './McpServer';
-import { JogBounds, JogPosition, PENDANT_FEED_MAX, PendantSession, firmwareMotionProblem, parsePendantInput, validateJogBounds } from './pendant';
+import {
+    JogBounds, JogPosition, PENDANT_FEED_MAX, PENDANT_Z_FEED_MAX, PendantSession, firmwareMotionProblem, parsePendantInput, validateJogBounds,
+} from './pendant';
 import {
     A350_STEPS_PER_MM, CountCheckMode, CountSample, HOLD_COUNT_POLL_MS, HOLD_FEATHER_GAP_MS, HOLD_HEARTBEAT_MAX_AGE_MS, HOLD_MIN_ACCEL, HOLD_MOVE_MS,
-    CountOffset, HOLD_LATE_EVENTS_TO_DISABLE, HOLD_QUEUE_AHEAD_MS, HOLD_REPLY_LATE_MS, HOLD_TICK_MS, HoldQueueModel, countCheckMode, countFault,
+    CountOffset, HOLD_LATE_EVENTS_TO_DISABLE, HOLD_IDLE_CLOSE_MS, HOLD_LATE_REPLIES_TO_STOP, HOLD_POST_CLOSE_GRACE_MS, HOLD_QUEUE_AHEAD_MS,
+    HOLD_CLOSE_PROOF_ATTEMPTS, HOLD_CLOSE_PROOF_RETRY_MS, HOLD_FRESH_REPLY_MS, HOLD_IDLE_POLL_MS, HOLD_ON_DEMAND_PROOF_GAP_MS,
+    HOLD_REPLY_LATE_MS, HOLD_REPLY_STOP_MS, HOLD_TICK_MS, HoldQueueModel, capZFeed, countCheckMode, countFault, firmwareZMotionProblem, holdPositionAgrees,
     countToMachine, countToMm, extendAlong, holdMoveMm, holdRunoutMm, judgeCountSample, learnCountOffset, parseCountReport, parseStepsPerMm,
+    zBaselineProblem,
 } from './pendantHold';
 import { pendantPage } from './pendantPage';
 import { pendantPosition } from './pendantPosition';
@@ -25,7 +30,8 @@ import { getFeedOverride } from './failureRecovery';
 import { currentGcodeSequence, getFrameLatch, getPositionOfRecord, getTrustedOffset, latchFrameUncertain, onFrameLatchChange } from './positionOfRecord';
 import { probeFeedService } from './probeFeed';
 import {
-    assertMachineReadyForProcedure, enterMachineFrame, moveMachineSettled, queryPositionReport, queueMachineMove, readFirmwareMotionConfig, sleep,
+    assertFullFeedrate, assertMachineReadyForProcedure, enterMachineFrame, moveMachineSettled, queryPositionReport, queueMachineMove,
+    readFirmwareMotionConfig, sleep,
     verifyRestoredPosition,
 } from './probing';
 import { homeMachine, sendWorkFrameRestore } from './tools/camera';
@@ -97,19 +103,25 @@ const PIPELINE_LEASE_TTL_MS = Infinity;
 export const PIPELINE_REQUEST_TIMEOUT_MS = 10000;
 // Per-tick records kept for the current or last hold (served at /pendant/hold-trace).
 const HOLD_TRACE_LIMIT = 1200;
+// The on-demand proof between holds takes the lease this long at most (it sends one M114).
+const PROOF_LEASE_TTL_MS = PIPELINE_REQUEST_TIMEOUT_MS + 5000;
 
 /** One decision of the hold loop, for the trace that answers "does Count keep up". */
 interface HoldTick {
     at: number;
-    kind: 'send' | 'wait' | 'count' | 'stop';
+    kind: 'send' | 'wait' | 'count' | 'baseline' | 'stop';
     /** Clock-model outstanding motion after this decision. */
     outstandingMs: number;
     /** Age of the latest Feather report. */
     inputAgeMs: number;
     sent?: JogPosition;
+    /** The increment carried a Z word (only after the hold's Z baseline agreed). */
+    zWord?: boolean;
     feed?: number;
     replyMs?: number;
     count?: CountSample;
+    /** The Z baseline M114: what it reported against the chain, and the refusal if it did not agree. */
+    baseline?: { position: JogPosition | null; chain: JogPosition; execMs: number; problem: string | null };
     reason?: string;
 }
 
@@ -128,6 +140,10 @@ interface HoldSummary {
     lateMoveReplies: number;
     restored: boolean;
     proved: boolean | null;
+    /** Increments that carried a Z word. */
+    zMoves: number;
+    /** 'agreed' once the in-hold M114 proved the chain for Z, the refusal text if it did not, null if no Z was asked for. */
+    zBaseline: string | null;
 }
 
 export class PendantRuntime {
@@ -157,6 +173,39 @@ export class PendantRuntime {
 
     private pageAliveAt = 0;
 
+    // Until this time a rejected position report is the hold's own G53-window poll arriving late.
+    private postHoldGraceUntil = 0;
+
+    // The last hold's end position when its close was proved by M114 in the work frame:
+    // the next press starts from it during the grace instead of waiting for a beat.
+    private lastProvedPosition: JogPosition | null = null;
+
+    // Set when an in-hold M114 baseline disagreed with the dead-reckoned chain: the record Z
+    // is not trusted, so no Z word is sent by either engine until re-arm. The settled engine
+    // always carries an absolute Z word (even for X/Y), so it is refused entirely meanwhile;
+    // X/Y continue through the continuous hold, which omits Z.
+    private zRefused: string | null = null;
+
+    // A D1 press edge (deadman false -> true) not yet acted on: the hold is entered on the press,
+    // with the stick still centred, so G90/G53 (and the Z baseline) are done before the stick moves.
+    private d1PressPending = false;
+
+    private lastInputDeadman = false;
+
+    // Wakes an idle hold's tick sleep as soon as the Feather reports a change, instead of
+    // the next HOLD_TICK_MS tick (trial 2026-10-05 22:21: up to 100 ms of first-move delay).
+    private holdWake: (() => void) | null = null;
+
+    // The last hold's commanded end when its close restored G54 but the M114 proof did not
+    // match: the next press proves it on demand (proveLastHoldClose) instead of waiting for a beat.
+    private lastHoldClose: { chain: JogPosition; latchSince: number | null } | null = null;
+
+    private lastOnDemandProofAt = -Infinity;
+
+    // Send time of the newest prompt M114 whose position agreed with the hold (an in-hold poll,
+    // the Z baseline) or proved a close: position freshness beside the heartbeat (readyInHold).
+    private m114FreshAt = -Infinity;
+
     private lastPorts: Array<{ path: string; serialNumber?: string }> = [];
 
     private portsAt = 0;
@@ -181,6 +230,8 @@ export class PendantRuntime {
     private pipeline = { requested: false,
         active: false,
         disabled: null as string | null,
+        // Why Z stays on the settled engine this arm (firmware Z limits), or null when holds carry Z.
+        zDisabled: null as string | null,
         notice: null as string | null,
         lastHold: null as HoldSummary | null };
 
@@ -231,12 +282,17 @@ export class PendantRuntime {
         return connectionEpoch();
     }
 
-    private ready(): void {
+    private positionWarnings(): string[] {
+        const record = getPositionOfRecord(currentGcodeSequence());
+        const p = getPositionSnapshot();
+        return this.session.armed ? pendantPosition(p, record, getTrustedOffset(), Date.now(), HEARTBEAT_STALE_MS).warnings : p.warnings;
+    }
+
+    private ready(provedPosition = false): void {
         assertMachineReadyForProcedure();
         probeFeedService.assertNoOvertravel();
         const record = getPositionOfRecord(currentGcodeSequence());
-        const p = getPositionSnapshot();
-        const warnings = this.session.armed ? pendantPosition(p, record, getTrustedOffset(), Date.now(), HEARTBEAT_STALE_MS).warnings : p.warnings;
+        const warnings = provedPosition ? [] : this.positionWarnings();
         if (warnings.length) { throw new Error(`Machine position unavailable: ${warnings.join(' ')}`); }
         if (record && record.source === 'estimated') { throw new Error('Last move was only estimated; wait for a verified position.'); }
         if (jobManager.getActive()?.state === 'started') { throw new Error('A machine job is active.'); }
@@ -244,7 +300,7 @@ export class PendantRuntime {
 
     private travelBounds(current: JogPosition = this.position()): JogBounds {
         const travel = requirePlanningTravel('manual jogging', current);
-        if (travel.conflicts.length) { throw new Error('Machine travel has unresolved conflicts.'); }
+        if (travel.conflicts.length) { throw new Error(`Machine travel has unresolved conflicts: ${travel.conflicts.join(' ')}`); }
         const size = getMachineSizeByIdentifier(connectionManager.getConnectionStatus().machineIdentifier);
         if (!size) { throw new Error('Machine travel is unknown.'); }
         // Match stagingFrameContext: A350 profile Z325 excludes its reachable Z328 park.
@@ -515,6 +571,12 @@ export class PendantRuntime {
                             if (input.log) { trace(`feather ${input.log}`); }
                             this.feedbackHealthy = input.feedback_ok ?? null;
                             this.session.receive(input, Date.now());
+                            if (input.deadman && !this.lastInputDeadman) { this.d1PressPending = true; }
+                            if (!input.deadman) { this.d1PressPending = false; }
+                            this.lastInputDeadman = input.deadman;
+                            if (this.holdWake && (!input.deadman || input.stop || Math.hypot(input.x, input.y, input.z) >= 0.01)) {
+                                this.holdWake();
+                            }
                             if (input.stop) { this.disarm('Stopped with Feather D2.'); }
                             if (this.session.armed && input.feedback_ok === false) {
                                 this.disarm('Feather feedback exceeded one second. Centre axes and re-arm after the USB link recovers.');
@@ -565,6 +627,9 @@ export class PendantRuntime {
                 position_age_ms: dro.position_age_ms,
                 stale_after_ms: dro.stale_after_ms,
                 moving: this.busy && this.recovery === null,
+                // PR #233: the TFT names the limited axis while the stick pushes into the envelope edge.
+                // eslint-disable-next-line camelcase -- USB protocol key
+                limit_axes: this.session.limitedAxes,
                 warnings: dro.warnings.length ? [dro.warnings[0].slice(0, 160)] : [],
                 input_seq: this.session.inputSequence >= 0 ? this.session.inputSequence : null,
                 input_age_ms: now - this.session.receivedAt,
@@ -582,16 +647,52 @@ export class PendantRuntime {
         const latest = this.session.latest;
         if (latest && latest.x === 0 && latest.y === 0 && latest.z === 0) { this.holdOffUntilNeutral = false; }
         const latch = getFrameLatch();
+        // The last close was restored but not proved, and the stick asks for motion again: prove
+        // its end position now (M114 in the work frame, no motion) instead of waiting up to
+        // FRAME_VERIFY_WAIT_MS / HOLD_POST_CLOSE_GRACE_MS for a beat. Only a proof lets it go on.
+        if (this.onDemandProofDue(now, latch)) {
+            if (await this.proveLastHoldClose()) { this.queueNextTick(); }
+            return;
+        }
         // A restore was acknowledged; its verified position is still arriving. Hold, do not disarm.
         if (latch && latch.restoredAt !== null && now - latch.restoredAt < FRAME_VERIFY_WAIT_MS) { return; }
-        this.ready();
-        const from = this.position();
+        // A status poll issued inside the hold's G53 window can arrive after the closing G54
+        // (raw machine Z 329 + offset reads Z 541): wait for the next coherent beat, do not
+        // disarm. After the grace the ordinary check applies.
+        // When the close was proved by M114, start the next press from that proved end position.
+        const graced = now < this.postHoldGraceUntil && this.positionWarnings().length > 0;
+        if (graced && !this.lastProvedPosition) { return; }
+        this.ready(graced);
+        const from = graced ? { ...(this.lastProvedPosition as JogPosition) } : this.position();
         const target = this.obstacleSafeTarget(from, this.session.target(from, now, this.commandOverheadMs));
-        if (!target) { this.release(); return; }
+        if (!target) {
+            // Optimistic entry: D1 pressed with the stick centred opens the hold idle (no motion), so the
+            // first increment goes out as soon as the stick moves instead of after G90/G53 round trips.
+            const latestInput = this.session.latest;
+            const centred = !!latestInput && Math.hypot(latestInput.x, latestInput.y, latestInput.z) < 0.01;
+            if (this.d1PressPending && centred && latestInput?.deadman === true && !this.holdOffUntilNeutral
+                && this.pipelineEligible(from, { position: from, feed: 0, durationMs: 0, distanceMm: 0 } as JogTarget)) {
+                this.d1PressPending = false;
+                this.holdPromise = this.continuousHold(from);
+                try { await this.holdPromise; } finally { this.holdPromise = null; }
+                this.queueNextTick();
+                return;
+            }
+            this.release();
+            return;
+        }
+        this.d1PressPending = false;
         if (this.pipelineEligible(from, target) && this.holdAdmits(from, now)) {
             this.holdPromise = this.continuousHold(from);
             try { await this.holdPromise; } finally { this.holdPromise = null; }
             this.queueNextTick();
+            return;
+        }
+        if (this.zRefused) {
+            // Every settled segment carries an absolute Z word from the record Z the baseline refused.
+            const message = `Z refused until re-arm (the in-hold M114 disagreed: ${this.zRefused}). X/Y jog in continuous holds only.`;
+            if (this.error !== message) { this.error = message; log.info(`Settled jog refused: ${message}`); }
+            this.release();
             return;
         }
         this.validateEnvelope(this.session.bounds as JogBounds);
@@ -622,6 +723,61 @@ export class PendantRuntime {
         }
     }
 
+    /**
+     * Whether the next press should prove the last hold's close now: that close
+     * restored G54 but its M114 did not match (lastHoldClose), we are inside its
+     * grace, the stick asks for motion, and the only obstacle is the proof itself
+     * (our own latch with its restore acknowledged, or position warnings from a
+     * late G53-window beat). Rate-limited to one M114 per HOLD_ON_DEMAND_PROOF_GAP_MS.
+     */
+    private onDemandProofDue(now: number, latch: ReturnType<typeof getFrameLatch>): boolean {
+        const close = this.lastHoldClose;
+        if (!close || this.lastProvedPosition || now >= this.postHoldGraceUntil || now - this.lastOnDemandProofAt < HOLD_ON_DEMAND_PROOF_GAP_MS) {
+            return false;
+        }
+        const p = this.session.latest;
+        if (!p || !p.ready || !p.deadman || p.feedback_ok === false || Math.hypot(p.x, p.y, p.z) < 0.01) { return false; }
+        if (latch) { return latch.restoredAt !== null && latch.since === close.latchSince; }
+        return this.positionWarnings().length > 0;
+    }
+
+    /**
+     * The on-demand proof: verifyRestoredPosition (M114 judged in the WORK frame,
+     * the same clearing path the close uses; no motion) against the last close's
+     * commanded end. Under a short lease when one can be taken; while our own
+     * close's latch stands no lease can be (gcodeLease.acquire refuses), and M114
+     * is one of the commands the recovery hold admits. A match clears the latch
+     * and becomes lastProvedPosition; anything else waits for a beat as before.
+     */
+    private async proveLastHoldClose(): Promise<boolean> {
+        const close = this.lastHoldClose as { chain: JogPosition; latchSince: number | null };
+        const sentAt = Date.now();
+        this.lastOnDemandProofAt = sentAt;
+        this.busy = true;
+        let leaseId: number | null = null;
+        try {
+            if (!getFrameLatch()) { leaseId = gcodeLease.acquire('the USB pendant (position proof)', PROOF_LEASE_TTL_MS, sentAt, PIPELINE_REQUEST_TIMEOUT_MS); }
+            const prove = async () => verifyRestoredPosition('usb_pendant:on-demand-proof', close.chain);
+            const proved = leaseId === null ? await prove() : await gcodeLease.runAs(leaseId, prove);
+            if (proved) {
+                this.lastProvedPosition = { ...close.chain };
+                this.lastHoldClose = null;
+                this.m114FreshAt = Math.max(this.m114FreshAt, sentAt);
+                log.info(`Continuous jog: the next press proved the last hold's end position with M114 in ${Date.now() - sentAt} ms; no beat wait.`);
+            } else {
+                log.warn('Continuous jog: the on-demand M114 did not prove the last hold\'s end position; waiting for a verified beat.');
+            }
+            return proved;
+        } catch (err) {
+            log.warn(`Continuous jog: the on-demand M114 proof failed: ${(err as Error).message}; waiting for a verified beat.`);
+            return false;
+        } finally {
+            if (leaseId !== null) { gcodeLease.release(leaseId); }
+            this.busy = false;
+            this.release();
+        }
+    }
+
     // assertMachineReadyForProcedure() minus its position-reliability check: beats
     // inside the hold's G53 window are judged by the declared run (machinePosition.ts),
     // and the hold starts from a ready() position and ends with the shared restore.
@@ -640,15 +796,45 @@ export class PendantRuntime {
         }
         probeFeedService.assertNoOvertravel();
         if (jobManager.getActive()?.state === 'started') { throw new Error('Continuous jog stopped: a machine job is active. Pendant disarmed.'); }
-        if (p.reportAgeMs > HOLD_HEARTBEAT_MAX_AGE_MS) {
-            return `machine heartbeat ${p.reportAgeMs} ms old (limit ${HOLD_HEARTBEAT_MAX_AGE_MS} ms)`;
+        // Position freshness is the newer of the heartbeat and the last prompt M114 that agreed
+        // with the hold (pollCount, the Z baseline, a close proof). A failed, late or disagreeing
+        // M114 never refreshes it, so a faltering connection still stops the hold.
+        // M114 never replaces the heartbeat entirely: machineStatus, homed and head power come
+        // from it, so a beat older than the stale threshold stops the hold regardless.
+        if (p.reportAgeMs > HEARTBEAT_STALE_MS) {
+            return `machine heartbeat ${p.reportAgeMs} ms old (hard limit ${HEARTBEAT_STALE_MS} ms even with fresh M114)`;
+        }
+        const m114AgeMs = Date.now() - this.m114FreshAt;
+        if (Math.min(p.reportAgeMs, m114AgeMs) > HOLD_HEARTBEAT_MAX_AGE_MS) {
+            const m114 = Number.isFinite(m114AgeMs) ? `the last agreeing M114 ${m114AgeMs} ms old` : 'no agreeing M114 yet';
+            return `machine heartbeat ${p.reportAgeMs} ms old and ${m114} (limit ${HOLD_HEARTBEAT_MAX_AGE_MS} ms)`;
         }
         return null;
     }
 
+    /** Age of the freshest position evidence: the heartbeat, or a prompt agreeing M114. */
+    // The idle tick's sleep, cut short by holdWake when the Feather reports stick motion, release or STOP.
+    private async idleSleep(ms: number): Promise<void> {
+        await new Promise<void>((resolve) => {
+            let done = false;
+            const finish = (): void => {
+                if (done) { return; }
+                done = true;
+                if (this.holdWake === finish) { this.holdWake = null; }
+                resolve();
+            };
+            this.holdWake = finish;
+            sleep(ms).then(finish, finish);
+        });
+    }
+
+    private positionFreshAgeMs(): number {
+        return Math.min(getPositionSnapshot().reportAgeMs, Date.now() - this.m114FreshAt);
+    }
+
     /** Read the firmware's motion limits and steps/mm once per arm; the hold stays off unless they fit the model. */
     private async preparePipeline(): Promise<void> {
-        this.pipeline = { ...this.pipeline, requested: false, disabled: null, notice: null };
+        this.pipeline = { ...this.pipeline, requested: false, disabled: null, zDisabled: null, notice: null };
         this.countCheck = { ...this.countCheck,
             mode: requestedCountCheck(),
             stepsPerMm: A350_STEPS_PER_MM,
@@ -657,15 +843,25 @@ export class PendantRuntime {
             countOffsetProblem: null };
         this.lateStreak = 0;
         this.holdOffUntilNeutral = false;
+        this.lastHoldClose = null;
+        this.m114FreshAt = -Infinity;
         if (!pipelineRequested()) { return; }
         let problem: string | null;
+        let zProblem: string | null = null;
         try {
             const m503 = await readFirmwareMotionConfig('usb_pendant:pipeline-check');
             problem = firmwareMotionProblem(m503, PENDANT_FEED_MAX, HOLD_MIN_ACCEL);
+            zProblem = firmwareZMotionProblem(m503, PENDANT_Z_FEED_MAX);
             const steps = parseStepsPerMm(m503);
             if (steps) { this.countCheck = { ...this.countCheck, stepsPerMm: steps, stepsPerMmSource: 'M92' }; }
         } catch (err) {
             problem = `Could not read the controller's motion limits: ${(err as Error).message}`;
+        }
+        if (!problem) {
+            // Once per arm, not per hold: one fewer request between D1 and the first increment.
+            try { await assertFullFeedrate('usb_pendant:pipeline-check'); } catch (err) {
+                problem = `Could not assert a 100 % feed override: ${(err as Error).message}`;
+            }
         }
         if (!problem) { await this.learnCountOffset(); }
         const offsetNote = this.countCheck.countOffset
@@ -675,11 +871,20 @@ export class PendantRuntime {
         const countNote = this.countCheck.mode === 'enforced'
             ? `The M114 Count check is ENFORCED: a Count position more than one increment from the model, or a late M114 reply, stops the hold. ${offsetNote}`
             : `The M114 Count check is in observe mode: it is traced, it never stops a hold (LUBAN_PENDANT_COUNT_CHECK=enforced turns it into a gate). ${offsetNote}`;
+        const zNote = zProblem ? `Z jogs stay on the settled engine: ${zProblem}`
+            : `Z rides the hold too (at most F${PENDANT_Z_FEED_MAX}): the first Z increment of each hold waits for the queue to drain and for an M114 `
+                + 'inside the hold to agree with the hold\'s position; otherwise no Z word is sent and the hold closes.';
         const notice = problem ? null : ['Continuous jogging is on: one G53 when D1 is pressed, clock-paced increments while it is held, one G54 when it is',
-            `released or anything stops the hold; at most ${HOLD_QUEUE_AHEAD_MS} ms of motion is queued ahead. Each hold sends M220 S100, which STAYS`,
+            `released or anything stops the hold; at most ${HOLD_QUEUE_AHEAD_MS} ms of motion is queued ahead. Arming sent M220 S100, which STAYS`,
             'in force afterwards: a reduced touchscreen speed % is overridden for later file jobs too. Set it again before a job that relies on it.',
-            countNote].join(' ');
-        this.pipeline = { ...this.pipeline, requested: true, disabled: problem ? `${problem} Settled jogs only.` : null, notice };
+            'A touchscreen speed change made after arming is not corrected until the next arm (the Count trace shows the lag).',
+            zNote, countNote].join(' ');
+        this.pipeline = { ...this.pipeline,
+            requested: true,
+            disabled: problem ? `${problem} Settled jogs only.` : null,
+            zDisabled: problem ? null : zProblem,
+            notice };
+        if (!problem && zProblem) { log.warn(`Continuous Z jog refused: ${zProblem}`); }
         if (problem) { log.warn(`Continuous jog refused: ${problem}`); } else {
             log.info(`Continuous jog enabled (Count check ${this.countCheck.mode}, steps/mm from ${this.countCheck.stepsPerMmSource}): ${notice}`);
         }
@@ -721,11 +926,13 @@ export class PendantRuntime {
         log.warn(`Count offset unknown: ${problem}. Count is traced raw only.`);
     }
 
-    // X/Y only: a target whose Z differs from the head's by more than G-code rounding is a Z jog (settled path).
+    // A target whose Z differs from the head's by more than G-code rounding is a Z jog: it rides the
+    // hold unless the firmware's Z limits kept Z holds off this arm (then the settled path).
     private pipelineEligible(from: JogPosition, target: JogTarget): boolean {
-        if (!this.pipeline.requested || this.pipeline.disabled || Math.abs(target.position.z - from.z) >= 0.001 || getFrameLatch()) { return false; }
+        if (!this.pipeline.requested || this.pipeline.disabled || getFrameLatch()) { return false; }
+        if (this.pipeline.zDisabled && Math.abs(target.position.z - from.z) >= 0.001) { return false; }
         if (connectionManager.getConnectionStatus().protocol !== 'HTTP') { return false; }
-        try { return getPositionSnapshot().reportAgeMs <= HOLD_HEARTBEAT_MAX_AGE_MS; } catch (err) { return false; }
+        try { return this.positionFreshAgeMs() <= HOLD_HEARTBEAT_MAX_AGE_MS; } catch (err) { return false; }
     }
 
     /**
@@ -741,11 +948,12 @@ export class PendantRuntime {
         if (this.holdOffUntilNeutral) { return false; }
         const origin = this.holdOrigin(from);
         const raw = this.session.target(origin, now, 0, HOLD_MOVE_MS);
-        if (!raw || raw.position.z !== origin.z) { return false; }
-        const hit = this.holdLookahead(origin, raw);
+        if (!raw) { return false; }
+        const capped = capZFeed(origin, raw.position, raw.feed, PENDANT_Z_FEED_MAX);
+        const hit = this.holdLookahead(origin, this.holdPosition(origin, capped.to), capped.feed);
         if (!hit) { return true; }
         this.holdOffUntilNeutral = true;
-        log.info(`Continuous jog not started: the first increment plus ${holdRunoutMm(raw.feed).toFixed(2)} mm of queued run-out at F${raw.feed} `
+        log.info(`Continuous jog not started: the first increment plus ${holdRunoutMm(capped.feed).toFixed(2)} mm of queued run-out at F${capped.feed} `
             + `would reach ${hit.box.name}; settled jogs until the stick returns to neutral.`);
         return false;
     }
@@ -758,19 +966,37 @@ export class PendantRuntime {
 
     /**
      * The hold's obstacle test, side-effect free: the increment from `chain` to
-     * the rounded `raw` target plus the maximum queued run-out beyond it
-     * (HOLD_QUEUE_AHEAD_MS at the increment's feed, clipped to the envelope), or
-     * `chain` itself inside an exclusion below its required Z. Null when clear.
+     * `position` (holdPosition) plus the maximum queued run-out beyond it
+     * (HOLD_QUEUE_AHEAD_MS at the increment's feed, along its own direction, Z
+     * included, clipped to the envelope), or `chain` itself inside an exclusion
+     * below its required Z. Inside one, a straight Z-up climb (isStraightZUp) is
+     * the one increment that is clear, as on the settled path. Null when clear.
      */
-    private holdLookahead(chain: JogPosition, raw: JogTarget): { box: ObstacleExclusion; inside: boolean } | null {
+    private holdLookahead(chain: JogPosition, position: JogPosition, feed: number): { box: ObstacleExclusion; inside: boolean } | null {
         const bounds = this.session.bounds as JogBounds;
-        const position = { ...this.gcodePrecision(raw.position, bounds), z: chain.z };
         const boxes = this.obstacleExclusions();
         const inside = this.obstacleHit(chain, chain, boxes);
-        if (inside) { return { box: inside, inside: true }; }
-        const lookahead = { ...this.gcodePrecision(extendAlong(chain, position, holdRunoutMm(raw.feed)), bounds), z: chain.z };
+        if (inside && !isStraightZUp(chain, position)) { return { box: inside, inside: true }; }
+        const lookahead = this.gcodePrecision(extendAlong(chain, position, holdRunoutMm(feed)), bounds);
+        // An X/Y increment's run-out stays at its own Z (the clamp must not invent a Z component).
+        if (position.z === chain.z) { lookahead.z = chain.z; }
         const hit = this.obstacleHit(chain, lookahead, boxes, true);
         return hit ? { box: hit, inside: false } : null;
+    }
+
+    /**
+     * An increment's end at G-code precision inside the armed envelope. Z
+     * follows the stick only when it asks for Z, and never against it: a head
+     * that reads a hair outside the Z bounds is not moved in Z by the envelope
+     * clamp (the clamped Z is replaced by the chain's own whenever it would
+     * reverse or cancel the request).
+     */
+    private holdPosition(chain: JogPosition, requested: JogPosition): JogPosition {
+        const position = this.gcodePrecision(requested, this.session.bounds as JogBounds);
+        const asked = requested.z - chain.z;
+        const got = position.z - chain.z;
+        if (Math.abs(asked) < 0.001 || Math.abs(got) < 0.001 || Math.sign(got) !== Math.sign(asked)) { position.z = chain.z; }
+        return position;
     }
 
     // G-code precision (three decimals), kept inside the armed envelope.
@@ -791,38 +1017,49 @@ export class PendantRuntime {
      * the increment AND the maximum queued run-out beyond it (HOLD_QUEUE_AHEAD_MS
      * at the increment's feed, clipped to the envelope), so motion already
      * queued when the stop is decided can never enter an exclusion. Inside an
-     * exclusion below its required Z nothing is sent (the hold is X/Y only;
-     * the straight Z-up exit is the settled path's).
+     * exclusion below its required Z only a straight Z-up climb is sent, with
+     * its X/Y pinned to the chain's (the settled path's exit, inside the hold).
+     * An increment with a Z component runs at most F PENDANT_Z_FEED_MAX
+     * (capZFeed), whatever the frame asked for.
      */
     private holdTarget(chain: JogPosition, raw: JogTarget): JogTarget | null {
-        const bounds = this.session.bounds as JogBounds;
-        // Z is pinned to the hold's own Z: the envelope clamp must never turn a head that
-        // reads a hair outside the Z bounds into a Z move (and the G1 carries no Z word).
-        const position = { ...this.gcodePrecision(raw.position, bounds), z: chain.z };
+        const capped = capZFeed(chain, raw.position, raw.feed, PENDANT_Z_FEED_MAX);
+        const position = this.holdPosition(chain, capped.to);
         const distanceMm = Math.hypot(position.x - chain.x, position.y - chain.y, position.z - chain.z);
         if (distanceMm < 0.001) { this.blocked = null; return null; }
-        const target: JogTarget = { position, feed: raw.feed, durationMs: distanceMm / raw.feed * 60000, distanceMm };
-        const found = this.holdLookahead(chain, raw);
-        if (!found) { this.blocked = null; return target; }
+        const found = this.holdLookahead(chain, position, capped.feed);
+        if (!found) {
+            const inside = isStraightZUp(chain, position) ? this.obstacleHit(chain, chain, this.obstacleExclusions()) : null;
+            if (inside) {
+                // Climbing out: exactly vertical, and the DRO keeps saying where it is.
+                position.x = chain.x;
+                position.y = chain.y;
+                this.blocked = this.insideBlocked(inside, chain.z);
+            } else {
+                this.blocked = null;
+            }
+            const distance = Math.hypot(position.x - chain.x, position.y - chain.y, position.z - chain.z);
+            return { position, feed: capped.feed, durationMs: distance / capped.feed * 60000, distanceMm: distance };
+        }
         if (found.inside) {
             const inside = found.box;
             this.blocked = this.insideBlocked(inside, chain.z);
             if (!this.blockedLogged.has(inside.name)) {
                 this.blockedLogged.add(inside.name);
-                log.info(`Continuous jog held inside ${inside.name} at machine Z ${chain.z.toFixed(3)} mm: nothing is sent until the toolhead leaves it (Z-up exits use settled jogs). Still armed.`);
+                log.info(`Continuous jog held inside ${inside.name} at machine Z ${chain.z.toFixed(3)} mm: only a straight Z-up exit is sent until the toolhead leaves it. Still armed.`);
             }
             return null;
         }
         const hit = found.box;
-        const requestedZ = Number(chain.z.toFixed(3));
+        const requestedZ = Number(Math.min(chain.z, position.z).toFixed(3));
         const need = hit.requiredZ === null ? 'no entry, tool clearance unknown' : `Z>=${zUp(hit.requiredZ)} (asked ${zDown(requestedZ)})`;
         this.blocked = { name: hit.name, requiredZ: hit.requiredZ, requestedZ, held: true, inside: false, text: `BLOCKED ${hit.name}: ${need}` };
         if (!this.blockedLogged.has(hit.name)) {
             this.blockedLogged.add(hit.name);
             const needed = hit.requiredZ === null ? 'tool clearance is unknown; the region is excluded'
                 : `requires machine Z at or above ${hit.requiredZ.toFixed(3)} mm`;
-            log.info(`Continuous jog held at ${hit.name}: ${needed}; the next increment plus ${holdRunoutMm(target.feed).toFixed(2)} mm of queued run-out `
-                + `at F${target.feed} would reach it at machine Z ${requestedZ.toFixed(3)} mm. Still armed; nothing further was sent. Later refusals at this obstacle are not logged until the next arm.`);
+            log.info(`Continuous jog held at ${hit.name}: ${needed}; the next increment plus ${holdRunoutMm(capped.feed).toFixed(2)} mm of queued run-out `
+                + `at F${capped.feed} would reach it at machine Z ${requestedZ.toFixed(3)} mm. Still armed; nothing further was sent. Later refusals at this obstacle are not logged until the next arm.`);
         }
         return null;
     }
@@ -845,7 +1082,10 @@ export class PendantRuntime {
         if (!traceEnabled()) { return; }
         let body = tick.reason || '';
         if (tick.kind === 'send') {
-            body = `sent X${tick.sent?.x} Y${tick.sent?.y} F${tick.feed} reply ${tick.replyMs} ms`;
+            body = `sent X${tick.sent?.x} Y${tick.sent?.y}${tick.zWord ? ` Z${tick.sent?.z}` : ''} F${tick.feed} reply ${tick.replyMs} ms`;
+        } else if (tick.kind === 'baseline' && tick.baseline) {
+            const b = tick.baseline;
+            body = `Z baseline M114 ${JSON.stringify(b.position)} chain ${JSON.stringify(b.chain)} reply ${b.execMs} ms ${b.problem ? `REFUSED ${b.problem}` : 'agreed'}`;
         } else if (tick.kind === 'count' && tick.count) {
             const c = tick.count;
             body = `count ${JSON.stringify(c.count)} raw ${JSON.stringify(c.rawMm)} derived ${JSON.stringify(c.derived)} expected ${JSON.stringify(c.expected)} `
@@ -859,11 +1099,15 @@ export class PendantRuntime {
      * tick loop (the HTTP channel serializes it behind the G1 in flight); the
      * sample is traced, shown in /pendant/status, and in 'enforced' mode becomes
      * the hold's fault. The expected executed position is the clock model's at
-     * the send time.
+     * the send time. A prompt reply (HOLD_FRESH_REPLY_MS) whose X/Y/Z (machine
+     * coordinates inside G53) agree with `chain`, the commanded position at the
+     * send time (holdPositionAgrees), is position freshness for readyInHold.
      */
-    private async pollCount(leased: <T>(fn: () => Promise<T>) => Promise<T>, model: HoldQueueModel, feed: number, inputAgeMs: number): Promise<string | null> {
+    private async pollCount(leased: <T>(fn: () => Promise<T>) => Promise<T>, model: HoldQueueModel, chain: JogPosition, feed: number,
+        inputAgeMs: number): Promise<string | null> {
         const sentAt = Date.now();
         const expected = model.expectedAt(sentAt);
+        const commanded = { ...chain };
         const moveMm = holdMoveMm(feed);
         let sample: CountSample;
         try {
@@ -874,7 +1118,11 @@ export class PendantRuntime {
             const rawMm = report.count ? countToMm(report.count, stepsPerMm) : null;
             const derived = report.count && countOffset ? countToMachine(report.count, stepsPerMm, countOffset) : null;
             const judged = judgeCountSample(derived, expected, moveMm, POSITION_EPSILON_MM);
+            const fresh = executed.result === 0 && execMs <= HOLD_FRESH_REPLY_MS
+                && holdPositionAgrees(report.position, commanded, expected, moveMm, POSITION_EPSILON_MM);
+            if (fresh) { this.m114FreshAt = Math.max(this.m114FreshAt, sentAt); }
             sample = { at: sentAt,
+                fresh,
                 execMs,
                 late: execMs > HOLD_TICK_MS,
                 count: report.count,
@@ -887,6 +1135,7 @@ export class PendantRuntime {
                 error: executed.result === 0 ? null : `controller result ${executed.result}: ${executed.text || 'no text'}` };
         } catch (err) {
             sample = { at: sentAt,
+                fresh: false,
                 execMs: Date.now() - sentAt,
                 late: false,
                 count: null,
@@ -904,7 +1153,40 @@ export class PendantRuntime {
     }
 
     /**
-     * Continuous X/Y jogging (opt-in): ONE hold from D1 press to release or to
+     * The hold's Z baseline, taken once per hold before its first Z word, with
+     * nothing queued by the clock model and no other M114 in flight: one M114
+     * through the hold's lease (the same serialized channel as the Count poll),
+     * inside G53, whose X/Y/Z must agree with `chain` within POSITION_EPSILON_MM
+     * on every axis (zBaselineProblem). The chain's Z came from the heartbeat
+     * record; this is what turns it into a controller-confirmed machine Z.
+     * Returns null when Z words may be sent, else the refusal: no Z word is sent
+     * and the caller closes the hold.
+     */
+    private async zBaseline(leased: <T>(fn: () => Promise<T>) => Promise<T>, chain: JogPosition, inputAgeMs: number): Promise<string | null> {
+        const sentAt = Date.now();
+        let position: JogPosition | null = null;
+        let problem: string | null;
+        try {
+            const executed = await leased(async () => queryPositionReport('usb_pendant:z-baseline'));
+            position = executed.result === 0 ? parseCountReport(executed.text).position : null;
+            problem = executed.result === 0 ? zBaselineProblem(position, chain, POSITION_EPSILON_MM)
+                : `the M114 failed (controller result ${executed.result}: ${executed.text || 'no text'})`;
+        } catch (err) {
+            problem = `the M114 failed: ${(err as Error).message}`;
+        }
+        const execMs = Date.now() - sentAt;
+        if (!problem && execMs <= HOLD_FRESH_REPLY_MS) { this.m114FreshAt = Math.max(this.m114FreshAt, sentAt); }
+        this.recordHoldTick({ at: sentAt, kind: 'baseline', outstandingMs: 0, inputAgeMs, baseline: { position, chain: { ...chain }, execMs, problem } });
+        if (problem) {
+            log.warn(`Continuous jog: no Z word sent, the hold's Z could not be confirmed: ${problem}. The hold closes; Z jogs use the settled engine until the stick returns to neutral.`);
+        } else {
+            log.info(`Continuous jog: Z baseline agreed (M114 ${JSON.stringify(position)} vs chain ${JSON.stringify(chain)}, ${execMs} ms); Z words follow.`);
+        }
+        return problem;
+    }
+
+    /**
+     * Continuous X/Y/Z jogging (opt-in): ONE hold from D1 press to release or to
      * any stop, inside one gcode lease acquisition (machine/gcodeLease.ts).
      *  - One G53 at the press (latched BEFORE it is sent, so a lost reply still
      *    counts) and one G54 at the stop, through the shared restore path
@@ -928,11 +1210,22 @@ export class PendantRuntime {
      *    off until re-arm), any lease refusal, a crash or overtravel alarm, a
      *    connection generation change, the latch changing under it, a non-idle
      *    controller, and (in 'enforced' mode) the Count check. At most the
-     *    queued motion runs out. Increments carry no Z word (queueMachineMove
-     *    omitZ): the hold's Z is the heartbeat-derived record Z, and a wrong
-     *    reused offset must fail the close's M114 proof, not move Z.
-     *  - M114 Count is polled every HOLD_COUNT_POLL_MS through the same lease and
-     *    traced; 'observe' (default) never gates.
+     *    queued motion runs out.
+     *  - Z: X/Y increments carry no Z word (queueMachineMove omitZ): until it is
+     *    proved, the hold's Z is the heartbeat-derived record Z, and a wrong
+     *    reused offset must fail the close's M114 proof, not move Z. Before the
+     *    first increment with a Z component the hold drains its queue and sends
+     *    one M114 inside G53 (zBaseline); only if its machine X/Y/Z agree with
+     *    the chain within POSITION_EPSILON_MM do Z increments (`G1 X Y Z F`, at
+     *    most F PENDANT_Z_FEED_MAX) follow. Otherwise nothing with Z is sent and
+     *    the hold closes. Z-down is held at obstacles like X/Y (the lookahead
+     *    includes the Z run-out); a straight Z-up climb leaves an exclusion.
+     *  - M114 is polled every HOLD_COUNT_POLL_MS while moving and every
+     *    HOLD_IDLE_POLL_MS while idle, through the same lease, and traced;
+     *    'observe' (default) never gates. A prompt reply that agrees with the
+     *    hold is position freshness for readyInHold's age check.
+     *  - The close's work-frame M114 proof is retried; a close that still is not
+     *    proved is proved on demand by the next press (proveLastHoldClose).
      */
     private async continuousHold(from: JogPosition): Promise<void> {
         const bounds = this.session.bounds as JogBounds;
@@ -965,18 +1258,40 @@ export class PendantRuntime {
             lateCountReplies: 0,
             lateMoveReplies: 0,
             restored: false,
-            proved: null };
+            proved: null,
+            zMoves: 0,
+            zBaseline: null };
         let chain = origin;
+        let idleSince: number | null = null;
+        // Z words only after this hold's in-hold M114 agreed with the chain (zBaseline).
+        let zProved = false;
+        let zPrefetched = false;
+        this.lastProvedPosition = null;
+        this.lastHoldClose = null;
         let entered = false;
         let restored = false;
         let uncertain = false;
         let latchSince: number | null = null;
         let latchReason: string | null = null;
-        let countPending: Promise<void> | null = null;
+        // The fire-and-forget M114 in flight (an object property, so TypeScript does not narrow it away).
+        const poll: { pending: Promise<void> | null } = { pending: null };
         let countStop: string | null = null;
         let countStopLate = false;
         let lateEvent = false;
+        let consecutiveLate = 0;
         let lastCountAt = -Infinity;
+        // One fire-and-forget M114 (Count, and position freshness) when the last is this old.
+        const pollEvery = (now: number, everyMs: number, feed: number, inputAgeMs: number): void => {
+            if (poll.pending || now - lastCountAt < everyMs) { return; }
+            lastCountAt = now;
+            poll.pending = this.pollCount(leased, model, chain, feed, inputAgeMs).then((fault) => {
+                summary.countSamples += 1;
+                const last = this.countCheck.last;
+                if (last?.late) { summary.lateCountReplies += 1; }
+                if (last && last.lagMm !== null) { summary.maxLagMm = Math.max(summary.maxLagMm ?? 0, last.lagMm); }
+                if (fault && this.countCheck.mode === 'enforced' && !countStop) { countStop = fault; countStopLate = last?.late === true; }
+            }).finally(() => { poll.pending = null; });
+        };
         this.busy = true;
         this.pipeline.active = true;
         this.holdTicks = [];
@@ -1016,18 +1331,85 @@ export class PendantRuntime {
                     }
                     if (inputAgeMs > HOLD_FEATHER_GAP_MS) { summary.stopReason = this.holdReleaseReason(now); break; }
                     const raw = this.session.target(chain, now, 0, HOLD_MOVE_MS);
-                    if (!raw) { summary.stopReason = this.holdReleaseReason(now); break; }
-                    if (raw.position.z !== chain.z) { summary.stopReason = 'Z motion uses settled jogs'; break; }
+                    if (!raw) {
+                        const reason = this.holdReleaseReason(now);
+                        // D1 still held, stick centred: idle in G53 so a reversal needs no close/re-entry.
+                        if (reason === 'stick centred') {
+                            if (idleSince === null) { idleSince = now; }
+                            if (now - idleSince < HOLD_IDLE_CLOSE_MS) {
+                                // Idle with nothing queued: take the Z baseline now, once, so a first Z twist
+                                // streams at once instead of draining and proving first.
+                                if (!zProved && !zPrefetched && !this.zRefused && !this.pipeline.zDisabled
+                                    && model.outstandingMs(now) <= 0 && !poll.pending) {
+                                    zPrefetched = true;
+                                    const problem = await this.zBaseline(leased, chain, inputAgeMs);
+                                    summary.zBaseline = problem || 'agreed';
+                                    if (problem) {
+                                        summary.stopReason = `no Z word sent: ${problem}`;
+                                        this.holdOffUntilNeutral = true;
+                                        this.zRefused = problem;
+                                        log.warn(`Z jogging refused until re-arm: the in-hold M114 baseline disagreed (${problem}).`);
+                                        break;
+                                    }
+                                    zProved = true;
+                                    continue;
+                                }
+                                // Idle in G53: keep proving the position so the hold never ages out waiting for a beat.
+                                // Only when the freshest evidence is going stale (a tick early, as the loop looks again a
+                                // tick from now), so an idle M114 is rarely in flight ahead of the first increment.
+                                if (this.positionFreshAgeMs() > HOLD_IDLE_POLL_MS - HOLD_TICK_MS) { pollEvery(now, 0, summary.feed, inputAgeMs); }
+                                nextTickAt = Math.max(nextTickAt, now) + HOLD_TICK_MS;
+                                await this.idleSleep(Math.max(0, nextTickAt - now));
+                                continue;
+                            }
+                            summary.stopReason = `stick centred for ${HOLD_IDLE_CLOSE_MS} ms`;
+                            break;
+                        }
+                        summary.stopReason = reason;
+                        break;
+                    }
+                    idleSince = null;
+                    if (this.pipeline.zDisabled && raw.position.z !== chain.z) { summary.stopReason = `Z motion uses settled jogs: ${this.pipeline.zDisabled}`; break; }
+                    if (this.zRefused && raw.position.z !== chain.z) {
+                        summary.stopReason = `Z refused until re-arm: ${this.zRefused}`;
+                        this.holdOffUntilNeutral = true;
+                        break;
+                    }
                     const target = this.holdTarget(chain, raw);
                     if (!target) { summary.stopReason = this.blocked ? `held at ${this.blocked.name}` : this.holdReleaseReason(now); break; }
+                    const zWord = Math.abs(target.position.z - chain.z) >= 0.001;
+                    if (zWord && !zProved) {
+                        // The first Z word of the hold waits for the clock model's queue to drain and
+                        // for any Count poll in flight, sending nothing, then proves the chain with M114.
+                        if (model.outstandingMs(now) > 0 || poll.pending) {
+                            this.recordHoldTick({ at: now, kind: 'wait', outstandingMs: Math.round(model.outstandingMs(now)), inputAgeMs, reason: 'Z baseline: draining' });
+                            nextTickAt = Math.max(nextTickAt, now) + HOLD_TICK_MS;
+                            await sleep(Math.max(0, Math.min(nextTickAt, model.endsAtMs) - now));
+                            continue;
+                        }
+                        const problem = await this.zBaseline(leased, chain, inputAgeMs);
+                        summary.zBaseline = problem || 'agreed';
+                        if (problem) {
+                            summary.stopReason = `no Z word sent: ${problem}`;
+                            this.holdOffUntilNeutral = true;
+                            this.zRefused = problem;
+                            log.warn(`Z jogging refused until re-arm: the in-hold M114 baseline disagreed (${problem}).`);
+                            break;
+                        }
+                        zProved = true;
+                        continue; // Re-sample the stick and every stop condition after the round trip.
+                    }
                     const execMs = target.durationMs;
                     if (model.admits(now, execMs)) {
                         this.validateEnvelope(bounds, chain);
                         this.validateJogSegment(chain, target.position);
+                        if (zWord && target.feed > PENDANT_Z_FEED_MAX) { throw new Error(`Continuous jog refused a Z increment at F${target.feed} (Z limit F${PENDANT_Z_FEED_MAX}).`); }
                         const sentAt = Date.now();
                         uncertain = true;
-                        await leased(async () => queueMachineMove('usb_pendant', target.position, target.feed, { omitZ: true }));
+                        // X/Y increments omit the Z word; a Z increment carries the proved chain's Z.
+                        await leased(async () => queueMachineMove('usb_pendant', target.position, target.feed, { omitZ: !zWord }));
                         uncertain = false;
+                        if (zWord) { summary.zMoves += 1; }
                         now = Date.now();
                         const replyMs = now - sentAt;
                         model.sent(sentAt, chain, target.position, execMs);
@@ -1037,9 +1419,19 @@ export class PendantRuntime {
                         summary.commandedMs += execMs;
                         summary.feed = target.feed;
                         summary.maxOutstandingMs = Math.max(summary.maxOutstandingMs, model.outstandingMs(sentAt));
-                        this.recordHoldTick({ at: sentAt, kind: 'send', outstandingMs: Math.round(model.outstandingMs(now)), inputAgeMs, sent: target.position, feed: target.feed, replyMs });
-                        if (replyMs > HOLD_REPLY_LATE_MS) {
-                            summary.lateMoveReplies += 1;
+                        this.recordHoldTick({ at: sentAt,
+                            kind: 'send',
+                            outstandingMs: Math.round(model.outstandingMs(now)),
+                            inputAgeMs,
+                            sent: target.position,
+                            zWord,
+                            feed: target.feed,
+                            replyMs });
+                        if (replyMs > HOLD_REPLY_LATE_MS) { consecutiveLate += 1; } else { consecutiveLate = 0; }
+                        if (replyMs > HOLD_REPLY_LATE_MS) { summary.lateMoveReplies += 1; }
+                        // One Wi-Fi hiccup is tolerated: the queue model is paced by send time, so a
+                        // late reply never admits extra motion. Stop on a very late reply or a streak.
+                        if (replyMs > HOLD_REPLY_STOP_MS || consecutiveLate >= HOLD_LATE_REPLIES_TO_STOP) {
                             summary.stopReason = 'late acknowledgement';
                             lateEvent = true;
                             this.noteLateEvent(`Continuous jog stopped: a queued increment took ${replyMs} ms to be acknowledged (limit ${HOLD_REPLY_LATE_MS} ms): `
@@ -1048,16 +1440,7 @@ export class PendantRuntime {
                         }
                         continue; // The cap may admit another increment at once (priming); re-check first.
                     }
-                    if (!countPending && now - lastCountAt >= HOLD_COUNT_POLL_MS) {
-                        lastCountAt = now;
-                        countPending = this.pollCount(leased, model, summary.feed || raw.feed, inputAgeMs).then((fault) => {
-                            summary.countSamples += 1;
-                            const last = this.countCheck.last;
-                            if (last?.late) { summary.lateCountReplies += 1; }
-                            if (last && last.lagMm !== null) { summary.maxLagMm = Math.max(summary.maxLagMm ?? 0, last.lagMm); }
-                            if (fault && this.countCheck.mode === 'enforced' && !countStop) { countStop = fault; countStopLate = last?.late === true; }
-                        }).finally(() => { countPending = null; });
-                    }
+                    pollEvery(now, HOLD_COUNT_POLL_MS, summary.feed || target.feed, inputAgeMs);
                     this.recordHoldTick({ at: now, kind: 'wait', outstandingMs: Math.round(model.outstandingMs(now)), inputAgeMs });
                     // Wake when the cap admits the next increment, and at least every tick for the stop checks.
                     nextTickAt = Math.max(nextTickAt, now) + HOLD_TICK_MS;
@@ -1079,13 +1462,26 @@ export class PendantRuntime {
                     restored = result.result === 0;
                     if (!restored) { throw new Error(result.text || 'Controller refused the work-frame restore.'); }
                     if (!uncertain) {
-                        try {
-                            summary.proved = await leased(async () => verifyRestoredPosition('usb_pendant:hold-close', chain));
-                            if (!summary.proved) {
-                                log.warn('Continuous jog: M114 did not verify the commanded end position in the work frame; waiting for a verified beat.');
+                        // The proof is retried (HOLD_CLOSE_PROOF_ATTEMPTS, HOLD_CLOSE_PROOF_RETRY_MS apart)
+                        // before falling back to a beat: each try is one read-only M114 under the lease.
+                        for (let attempt = 0; attempt < HOLD_CLOSE_PROOF_ATTEMPTS && !summary.proved; attempt += 1) {
+                            if (attempt) { await sleep(HOLD_CLOSE_PROOF_RETRY_MS); }
+                            const proofAt = Date.now();
+                            try {
+                                summary.proved = await leased(async () => verifyRestoredPosition('usb_pendant:hold-close', chain));
+                            } catch (err) {
+                                summary.proved = false;
+                                log.warn(`Continuous jog: M114 did not verify the commanded end position (try ${attempt + 1}): ${(err as Error).message}`);
                             }
-                        } catch (err) {
-                            log.warn(`Continuous jog: M114 did not verify the commanded end position: ${(err as Error).message}`);
+                            if (summary.proved) {
+                                this.lastProvedPosition = { ...chain };
+                                this.m114FreshAt = Math.max(this.m114FreshAt, proofAt);
+                            }
+                        }
+                        if (!summary.proved) {
+                            this.lastHoldClose = { chain: { ...chain }, latchSince };
+                            log.warn(`Continuous jog: ${HOLD_CLOSE_PROOF_ATTEMPTS} M114 tries did not verify the commanded end position in the work frame; `
+                                + 'the next press proves it on demand, else a verified beat clears it.');
                         }
                     }
                 } catch (err) {
@@ -1094,7 +1490,7 @@ export class PendantRuntime {
                 } finally {
                     endMachineFrameRun();
                 }
-                if (countPending) { await countPending.catch(() => undefined); }
+                if (poll.pending) { await poll.pending.catch(() => undefined); }
             }
         } finally {
             endMachineFrameRun();
@@ -1108,6 +1504,7 @@ export class PendantRuntime {
             }
             // The crash guard stays armed while queued motion may still be running.
             if (!entered || restored) { probeFeedService.motionEnd(); } else { this.heldMotionGuard += 1; }
+            if (entered && restored) { this.postHoldGraceUntil = Date.now() + HOLD_POST_CLOSE_GRACE_MS; }
             summary.restored = restored;
             summary.elapsedMs = Date.now() - startedAt;
             summary.maxOutstandingMs = Math.round(summary.maxOutstandingMs);
@@ -1201,6 +1598,9 @@ export class PendantRuntime {
                     feedOverride: getFeedOverride(),
                     lateEvents: this.lateStreak,
                     holdOffUntilNeutral: this.holdOffUntilNeutral,
+                    // Age of the last prompt M114 that agreed with a hold or proved a close (null: none this arm).
+                    m114FreshAgeMs: Number.isFinite(this.m114FreshAt) ? Date.now() - this.m114FreshAt : null,
+                    idlePollMs: HOLD_IDLE_POLL_MS,
                     countCheck: { ...this.countCheck,
                         countOffsetMm: this.countCheck.countOffset
                             ? { x: this.countCheck.countOffset.x, y: this.countCheck.countOffset.y, z: this.countCheck.countOffset.z } : null,
@@ -1264,6 +1664,7 @@ export class PendantRuntime {
                     manualControlGate.acquire(() => this.disarm('Stopped through MCP.'));
                     this.owned = true;
                     this.session.arm(bounds, this.position(), Date.now(), args.maxSegmentMs ?? 500);
+                    this.zRefused = null;
                     this.pipeline = { ...this.pipeline, requested: false, disabled: null };
                     this.epoch = this.machineEpoch();
                     this.pageAliveAt = Date.now();

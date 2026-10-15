@@ -481,15 +481,28 @@ export async function moveMachineSettled(
 // bound on what it queues.
 
 /**
+ * Assert a 100 % feed override (`M220 S100`). No motion. The Snapmaker build's
+ * M220 reports nothing, so the override cannot be read, and a queue model that
+ * paces by commanded feed needs commanded feed to be real feed. The pendant
+ * sends it once when continuous jogging is armed (it persists on the controller).
+ */
+export async function assertFullFeedrate(tool: string): Promise<SentGcode> {
+    const executed = await sendGcodeVisible(getDirectChannel(), tool, 'M220 S100');
+    if (executed.result !== 0) {
+        throw new ProcedureAbort(`Controller rejected M220 S100: ${executed.text || executed.result}`);
+    }
+    return executed;
+}
+
+/**
  * Select absolute machine coordinates for a hold of queued moves. No motion.
- * `M220 S100` first: the Snapmaker build's M220 reports nothing, so the feed
- * override cannot be read, and the caller's queue model needs commanded feed
- * to be real feed. It is asserted for every hold instead.
+ * G90 and G53 are separate lines: this firmware acts on only the first G word
+ * of a line (an inline G53 is ignored).
  */
 export async function enterMachineFrame(tool: string): Promise<SentGcode> {
     probeFeedService.assertNoOvertravel();
     checkProcedureStop();
-    const executed = await sendGcodeVisible(getDirectChannel(), tool, 'M220 S100\nG90\nG53;');
+    const executed = await sendGcodeVisible(getDirectChannel(), tool, 'G90\nG53;');
     if (executed.result !== 0) {
         throw new ProcedureAbort(`Controller rejected the machine-frame select: ${executed.text || executed.result}`);
     }
