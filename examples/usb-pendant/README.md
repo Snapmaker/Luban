@@ -105,11 +105,35 @@ the operator approves the entire requested corridor, including its Z range, and
 holds D1 for each movement. It does not reuse or broaden an AI job approval.
 Stored obstacle footprints, including a 5 mm XY margin, remain excluded below
 their displayed required machine Z (all heights if tool clearance is unknown).
-A broad envelope may include these exclusions: arming checks the current point,
-and every complete jog segment is checked before transmission. This includes
-diagonals, vertical descents and movement wholly inside a footprint; there is
-no probing exemption. A blocked jog disarms and names the obstacle, required Z
-and attempted Z, without sending that segment. The usual agent motion-floor
+A broad envelope may include these exclusions: every complete jog segment is
+checked before transmission, on the exact 3-decimal target that is sent. This
+includes diagonals, vertical descents and movement wholly inside a footprint;
+there is no probing exemption. The single exception is a **straight Z-up exit**:
+X and Y unchanged (within 0.05 mm) and Z strictly rising, still limited by the
+envelope and travel Z maximum. A segment that would enter an exclusion below its
+required Z is **held, not sent, and the pendant stays armed** (an envelope edge
+clips the same way). In its place Luban sends only motion that stays clear: first
+the approach up to 0.5 mm outside the exclusion (0.1 mm above its required Z),
+then the same stick intent with the offending axis component removed, for example
+X still moves while a Z-down twist over the rotary axis is refused. The dominant
+stick axis is never the one removed, so a Z-down twist with slight X/Y drift holds
+rather than sending only the drift. Every segment
+actually sent passes the complete obstacle check. Nothing is re-sent while the
+stick is unchanged; moving away, staying above the required Z, or centring the
+stick continues normally. The page and TFT name the obstacle, its required Z and
+the requested Z while held; the first hold per obstacle per arm is logged.
+Displayed heights never understate the rule: required Z rounds up and requested
+Z rounds down to 0.01 mm.
+
+Arming is allowed with the toolhead already inside an exclusion below its
+required Z, so the pendant can climb out. Until it leaves, the page and TFT show
+`INSIDE rotary-axis below Z328: Z-up only` and only a straight Z-up exit is sent:
+switch twist to Z mode and twist up. Every other stick motion holds, including Z-up
+with any X/Y component; in feed mode twist only changes feed, so nothing moves.
+Normal motion resumes once Z reaches the required height. Exclusions are
+recomputed for every segment, so a landmark or fitted-tool change while armed
+applies to the next one.
+There is no landmark override on the pendant. The usual agent motion-floor
 rules and staged-job workflow remain in force for AI operations. Pendant control requires homed, idle, coherent fresh position,
 toolhead off and no safety alarm or active job. A reconnect invalidates the arm.
 
@@ -139,6 +163,36 @@ scroll into view, persist through polling, and are logged under
 DRO updates continue as diagnostics. A firmware sequence reset disarms and
 recovers incoming telemetry without waiting for the old counter; centre and
 explicitly arm again. The TFT scrolls Luban's refusal or stop reason.
+
+### Bed plan and obstacle warning
+
+The page draws a plan view of the bed in machine X/Y, Y up as on the A350
+(-19..339 by 0..342, widened to any stored obstacle): the known travel (dashed
+blue), the envelope being reviewed or the armed one (green), each obstacle
+exclusion with its 5 mm margin labelled with its name and `needs Z ≥ N`, and the
+toolhead. The toolhead is a white dot only while the DRO is verified; otherwise a
+hollow amber ring marks the held, stale position. The map follows every status
+poll and every edit to the bounds fields. A table below it lists each exclusion,
+its required toolhead Z, the stored landmark height and basis (physical top,
+minimum toolhead Z, or the legacy toolhead default) and its notes.
+
+An obstacle turns red when the envelope's XY reaches its footprint and the
+envelope's Z minimum is below its required Z. A red warning then appears beside
+the Arm button, for example *Your envelope Z 280–328 overlaps rotary-axis: inside
+X135–205, Y-5–355 (incl. 5 mm margin) the toolhead cannot go below Z328; Z-down
+or entry there below Z328 will be held, not sent.* The warning does not block
+arming: the operator may arm a broad envelope knowingly, and jogs into the
+exclusion are then held as described above. While armed, a hold is shown beside
+the map and in the state line, e.g. `BLOCKED rotary-axis: Z>=328 (asked 327.91)`,
+or `LIMITED …` when only the clear part of the stick motion was sent.
+
+The TFT's bottom row shows the same reason while linked and the stick is
+deflected, red for BLOCKED and amber for LIMITED, scrolling when longer than its
+38 characters. It returns to the grey help text as soon as the stick is centred
+or Luban accepts a full segment. `INSIDE … Z-up only` stays on the row (red)
+while linked, even with the stick centred, until the toolhead leaves the
+exclusion. While disarmed the row still scrolls Luban's
+refusal or stop reason.
 
 Twist in feed mode adjusts the displayed feed while connected and disarmed,
 without producing motion intent. Arming, disarming, a mode change, USB loss and
@@ -187,7 +241,13 @@ optional `log` carries one rare firmware event such as a link change or short
 write. A rejected frame is disarmed with the failing field named, for example
 `Invalid USB pendant frame: feed 1200 above the Z-mode limit 1000 mm/min`. Luban replies
 with `type:dro`, `armed`, `neutral`, `machine`, `work`, `reliability`, `age_ms`,
-`warnings` and an operator message. The board has no authority without the
+`warnings`, an operator `message`, and `blocked`: `null`, or
+`{name, requiredZ, requestedZ, held, inside, text}` while an obstacle is holding
+(`held:true`) or limiting (`held:false`) the stick, or `inside:true` while the
+toolhead is inside an exclusion below its required Z (Z-up only). `requiredZ` is `null` when
+tool clearance is unknown and the footprint is excluded at every height. Luban
+logs the firmware id once per connection, `unidentified (pre-fw build)` for a
+board that sends none. The board has no authority without the
 operator's armed session and fresh DRO reply.
 
 ```powershell

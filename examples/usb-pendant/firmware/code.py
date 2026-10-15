@@ -9,10 +9,10 @@ import displayio
 import terminalio
 import usb_cdc
 from adafruit_display_text import label
-from controller import DEFAULT_FEED, Controller, DroDisplay, LinkWatchdog, normalize, deadzone
+from controller import DEFAULT_FEED, Controller, DroDisplay, LinkWatchdog, bottom_row, normalize, deadzone
 
 # Sent in every frame; Luban logs it on connect so a stale code.py/controller.py pair is visible.
-FIRMWARE = "pendant-2026-10-05b"
+FIRMWARE = "pendant-2026-10-05d"
 
 if usb_cdc.data is None:
     print("Pendant maintenance console. Release D0 and reset to run USB data.")
@@ -169,13 +169,8 @@ while True:
             status.text = "Centre axes; release D1"
         else:
             status.text = "JOGGING" if packet["deadman"] else "READY: hold D1 to jog"
-        reason = dro.get("message") if fresh and dro else None
-        if not linked and reason:
-            # Scroll the host's refusal/stop reason across the 38-character bottom row.
-            text = str(reason)
-            offset = int(now * 4) % (len(text) + 4) if len(text) > 38 else 0
-            help_text.text = (text + "    " + text)[offset:offset + 38]
-        else:
-            help_text.text = "D1 hold jog | D2 stop"
+        # Obstacle hold (amber/red) while linked, Luban's reason while not, else help.
+        stick_active = packet["deadman"] and (packet["x"] or packet["y"] or packet["z"])
+        help_text.text, help_text.color = bottom_row(dro, fresh, linked, stick_active, now)
         last_display = now
     time.sleep(0.01)

@@ -5,7 +5,7 @@ import { SerialPort } from 'serialport';
 import logger from '../../lib/logger';
 import { connectionManager } from '../machine/ConnectionManager';
 import { clearanceOptions } from './clearanceContext';
-import { OBSTACLE_MARGIN_MM, POSITION_EPSILON_MM, segmentHitsBox2D } from './envelopeChecks';
+import { OBSTACLE_MARGIN_MM, POSITION_EPSILON_MM, isStraightZUp, segmentHitsBox2D } from './envelopeChecks';
 import { jobManager } from './jobs';
 import { landmarkStore } from './landmarks';
 import { requiredToolheadZ } from './landmarkClearance';
@@ -28,6 +28,35 @@ const log = logger('service:mcp:pendant');
 const traceEnabled = (): boolean => typeof process !== 'undefined' && /^(1|true|on|yes)$/i.test(process.env?.LUBAN_PENDANT_TRACE || '');
 const trace = (message: string): void => { if (traceEnabled()) { log.info(`[trace] ${message}`); } };
 const PORT_LIST_CACHE_MS = 2000;
+// A shortened approach stops this far outside an obstacle (XY and Z), so heartbeat noise
+// cannot report the held toolhead inside the exclusion it was stopped against.
+const APPROACH_PAD_XY_MM = 0.5;
+const APPROACH_PAD_Z_MM = 0.1;
+const MIN_APPROACH_MM = 0.1;
+// Displayed heights never understate the requirement: required Z rounds up, asked Z down.
+const zUp = (z: number): string => String(Number((Math.ceil(z * 100 - 1e-6) / 100).toFixed(2)));
+const zDown = (z: number): string => String(Number((Math.floor(z * 100 + 1e-6) / 100).toFixed(2)));
+
+interface ObstacleExclusion {
+    name: string;
+    machine: { x0: number; x1: number; y0: number; y1: number };
+    requiredZ: number | null;
+}
+
+type JogTarget = { position: JogPosition; feed: number; durationMs: number; distanceMm: number };
+
+/**
+ * An obstacle that is holding (nothing sent) or limiting (part of the intent sent) the stick,
+ * or, with `inside`, that the toolhead is already inside below its required Z (Z-up only).
+ */
+export interface PendantBlocked {
+    name: string;
+    requiredZ: number | null;
+    requestedZ: number;
+    held: boolean;
+    inside: boolean;
+    text: string;
+}
 
 export class PendantRuntime {
     private session = new PendantSession();
@@ -62,7 +91,12 @@ export class PendantRuntime {
 
     private portsPending: Promise<Array<{ path: string; serialNumber?: string }>> | null = null;
 
-    private firmware: string | null = null;
+    // undefined until the first frame of a connection, so a pre-fw board (null) still logs once.
+    private firmware: string | null | undefined = undefined;
+
+    private blocked: PendantBlocked | null = null;
+
+    private blockedLogged = new Set<string>();
 
     private timer: ReturnType<typeof setInterval> | null = null;
 
@@ -127,7 +161,7 @@ export class PendantRuntime {
         }
     }
 
-    private obstacleExclusions() {
+    private obstacleExclusions(): ObstacleExclusion[] {
         const opts = clearanceOptions();
         return landmarkStore.obstacleBoxes().map((box) => ({
             name: box.name,
@@ -142,17 +176,149 @@ export class PendantRuntime {
         }));
     }
 
-    private validateJogSegment(from: JogPosition, to: JogPosition): void {
-        for (const box of this.obstacleExclusions()) {
-            // Manual jogs get no probing exemption: check the complete segment,
-            // including Z-only descents and moves wholly inside a landmark footprint.
-            if (segmentHitsBox2D(from.x, from.y, to.x, to.y, box.machine, 0)
-                && (box.requiredZ === null || Math.min(from.z, to.z) < box.requiredZ - POSITION_EPSILON_MM)) {
-                const needed = box.requiredZ === null ? 'tool clearance is unknown; this region is excluded'
-                    : `requires machine Z at or above ${box.requiredZ.toFixed(3)} mm`;
-                throw new Error(`Jog blocked by ${box.name}: ${needed}. Requested segment reaches machine Z ${Math.min(from.z, to.z).toFixed(3)} mm. Review the obstacle exclusions before re-arming.`);
+    // Manual jogs get no probing exemption: check the complete segment, including
+    // Z-only descents and moves wholly inside a landmark footprint. The one exception is
+    // a straight Z-up exit (isStraightZUp), which climbs away from anything beneath.
+    // obstacleHit(p, p) is the point check: is p inside an exclusion below its required Z?
+    // With `approach`, each box whose padded volume does not already contain `from` is
+    // widened by APPROACH_PAD_XY_MM and raised by APPROACH_PAD_Z_MM, so a hold stops short
+    // of the exclusion. Only validateJogSegment uses the exact (unpadded) test.
+    private obstacleHit(from: JogPosition, to: JogPosition, boxes: ObstacleExclusion[], approach = false): ObstacleExclusion | null {
+        if (isStraightZUp(from, to)) { return null; }
+        const below = (box: ObstacleExclusion, z: number, padZ: number) => box.requiredZ === null
+            || z < box.requiredZ + padZ - POSITION_EPSILON_MM;
+        for (const box of boxes) {
+            const padded = approach && !(segmentHitsBox2D(from.x, from.y, from.x, from.y, box.machine, APPROACH_PAD_XY_MM)
+                && below(box, from.z, APPROACH_PAD_Z_MM));
+            if (segmentHitsBox2D(from.x, from.y, to.x, to.y, box.machine, padded ? APPROACH_PAD_XY_MM : 0)
+                && below(box, Math.min(from.z, to.z), padded ? APPROACH_PAD_Z_MM : 0)) {
+                return box;
             }
         }
+        return null;
+    }
+
+    private validateJogSegment(from: JogPosition, to: JogPosition): void {
+        const box = this.obstacleHit(from, to, this.obstacleExclusions());
+        if (box) {
+            const needed = box.requiredZ === null ? 'tool clearance is unknown; this region is excluded'
+                : `requires machine Z at or above ${box.requiredZ.toFixed(3)} mm`;
+            throw new Error(`Jog blocked by ${box.name}: ${needed}. Requested segment reaches machine Z ${Math.min(from.z, to.z).toFixed(3)} mm. Review the obstacle exclusions before re-arming.`);
+        }
+    }
+
+    private insideBlocked(box: ObstacleExclusion, z: number): PendantBlocked {
+        return { name: box.name,
+            requiredZ: box.requiredZ,
+            requestedZ: Number(z.toFixed(3)),
+            held: true,
+            inside: true,
+            text: box.requiredZ === null ? `INSIDE ${box.name} (tool unknown): Z-up only`
+                : `INSIDE ${box.name} below Z${zUp(box.requiredZ)}: Z-up only` };
+    }
+
+    /**
+     * Obstacles HOLD the stick instead of disarming. A segment that would enter an
+     * exclusion below its required Z is never sent. In its place this tries, in order:
+     * the longest clear prefix (stopping short of the box by the approach pad), then the
+     * same intent with one or two axis components removed, like envelope clipping, but
+     * never removing the dominant one (a Z-down stick does not turn into its XY drift).
+     * Every alternative is a subset of the operator's own stick motion inside the armed
+     * envelope. Positions are rounded to the 3 decimals moveMachineSettled sends before
+     * any check, and the caller still runs the full validateJogSegment on whatever is
+     * returned. null means hold: stay armed, send nothing, and report the blocking
+     * obstacle until the stick returns to neutral or a full segment is accepted. Inside an
+     * exclusion below its required Z only a straight Z-up exit is sent.
+     * The exclusions are recomputed on every call, so landmark or tool changes while armed
+     * apply to the next segment.
+     */
+    private obstacleSafeTarget(from: JogPosition, raw: JogTarget | null): JogTarget | null {
+        const bounds = this.session.bounds as JogBounds;
+        // G-code precision, kept inside the armed envelope; `toward` truncates toward it.
+        const gcode = (p: JogPosition, toward?: JogPosition): JogPosition => {
+            const out = { ...p };
+            for (const axis of ['x', 'y', 'z'] as const) {
+                const v = p[axis] * 1000;
+                let r = Math.round(v);
+                if (toward !== undefined) { r = p[axis] > toward[axis] ? Math.floor(v) : Math.ceil(v); }
+                r = Math.max(Math.ceil(bounds[`${axis}Min`] * 1000), Math.min(Math.floor(bounds[`${axis}Max`] * 1000), r));
+                out[axis] = Number((r / 1000).toFixed(3));
+            }
+            return out;
+        };
+        const segment = (position: JogPosition, feed: number): JogTarget => {
+            const distanceMm = Math.hypot(position.x - from.x, position.y - from.y, position.z - from.z);
+            return { position, feed, durationMs: distanceMm / feed * 60000, distanceMm };
+        };
+        let target = raw ? segment(gcode(raw.position), raw.feed) : null;
+        if (target && target.distanceMm < 0.001) { target = null; }
+        const boxes = this.obstacleExclusions();
+        const inside = this.obstacleHit(from, from, boxes);
+        if (inside) {
+            // Inside an exclusion below its required Z (armed there, or reported there): only a
+            // straight climb is sent, with its XY pinned to the current point. Everything else
+            // holds, including a climb with any XY component beyond POSITION_EPSILON_MM.
+            this.blocked = this.insideBlocked(inside, from.z);
+            if (!target) { return null; }
+            if (isStraightZUp(from, target.position)) {
+                const climb = gcode({ x: from.x, y: from.y, z: target.position.z });
+                return isStraightZUp(from, climb) ? segment(climb, target.feed) : null;
+            }
+            if (!this.blockedLogged.has(inside.name)) {
+                this.blockedLogged.add(inside.name);
+                log.info(`Jog held inside ${inside.name} at machine Z ${from.z.toFixed(3)} mm: only a straight Z-up exit is sent until the toolhead leaves it. Still armed; that segment was not sent. Later refusals at this obstacle are not logged until the next arm.`);
+            }
+            return null;
+        }
+        if (!target) { this.blocked = null; return null; }
+        const hit = this.obstacleHit(from, target.position, boxes, true);
+        if (!hit) { this.blocked = null; return target; }
+        const clear = (candidate: JogTarget) => candidate.distanceMm >= 0.001 && !this.obstacleHit(from, candidate.position, boxes, true);
+        const end = target.position;
+        const along = (t: number): JogPosition => ({ x: from.x + (end.x - from.x) * t,
+            y: from.y + (end.y - from.y) * t,
+            z: from.z + (end.z - from.z) * t });
+        let chosen: JogTarget | null = null;
+        // Hits are monotonic along a straight segment, so bisection finds the clear prefix.
+        let lo = 0;
+        let hi = 1;
+        for (let i = 0; i < 24; i += 1) {
+            const mid = (lo + hi) / 2;
+            if (this.obstacleHit(from, along(mid), boxes, true)) { hi = mid; } else { lo = mid; }
+        }
+        if (lo * target.distanceMm >= MIN_APPROACH_MM) {
+            const prefix = segment(gcode(along(lo), from), target.feed);
+            if (clear(prefix)) { chosen = prefix; }
+        }
+        // Never drop the dominant requested axis: what is left would be only the minor drift.
+        const delta = { x: Math.abs(end.x - from.x), y: Math.abs(end.y - from.y), z: Math.abs(end.z - from.z) };
+        const dominant = (['x', 'y', 'z'] as const).find((axis) => delta[axis] > 0
+            && (['x', 'y', 'z'] as const).every((other) => other === axis || delta[axis] >= 2 * delta[other]));
+        const drops: Array<Array<'x' | 'y' | 'z'>> = [['z'], ['x'], ['y'], ['x', 'y'], ['x', 'z'], ['y', 'z']];
+        for (const axes of drops) {
+            if (chosen) { break; }
+            if (dominant && axes.includes(dominant)) { continue; }
+            const position = { ...end };
+            for (const axis of axes) { position[axis] = from[axis]; }
+            const candidate = segment(gcode(position), target.feed);
+            if (clear(candidate)) { chosen = candidate; }
+        }
+        const requestedZ = Number(Math.min(from.z, end.z).toFixed(3));
+        const need = hit.requiredZ === null ? 'no entry, tool clearance unknown'
+            : `Z>=${zUp(hit.requiredZ)} (asked ${zDown(requestedZ)})`;
+        this.blocked = { name: hit.name,
+            requiredZ: hit.requiredZ,
+            requestedZ,
+            held: !chosen,
+            inside: false,
+            text: `${chosen ? 'LIMITED' : 'BLOCKED'} ${hit.name}: ${need}` };
+        if (!this.blockedLogged.has(hit.name)) {
+            this.blockedLogged.add(hit.name);
+            const needed = hit.requiredZ === null ? 'tool clearance is unknown; the region is excluded'
+                : `requires machine Z at or above ${hit.requiredZ.toFixed(3)} mm`;
+            log.info(`Jog ${chosen ? 'limited' : 'held'} at ${hit.name}: ${needed}; requested segment reaches machine Z ${requestedZ.toFixed(3)} mm. Still armed; that segment was not sent. Later refusals at this obstacle are not logged until the next arm.`);
+        }
+        return chosen;
     }
 
     private release(): void {
@@ -166,6 +332,7 @@ export class PendantRuntime {
         if (this.nextJog !== null) { clearImmediate(this.nextJog); this.nextJog = null; }
         if (this.session.armed || this.error !== reason) { log.info(`Disarmed: ${reason}`); }
         this.session.disarm();
+        this.blocked = null;
         this.error = reason;
         this.release();
     }
@@ -203,7 +370,7 @@ export class PendantRuntime {
             this.session.reset();
             this.feedbackHealthy = null;
             this.feedbackWritePending = false;
-            this.firmware = null;
+            this.firmware = undefined;
             const port = new SerialPort({ path, baudRate: 115200, autoOpen: false });
             this.port = port;
             port.on('error', (err: Error) => { if (port === this.port) { this.disarm(err.message); } });
@@ -225,7 +392,7 @@ export class PendantRuntime {
                                 }
                                 throw err;
                             }
-                            if ((input.fw ?? null) !== this.firmware) {
+                            if (this.firmware === undefined || (input.fw ?? null) !== this.firmware) {
                                 this.firmware = input.fw ?? null;
                                 log.info(`Feather firmware: ${this.firmware || 'unidentified (pre-fw build)'}`);
                             }
@@ -281,7 +448,9 @@ export class PendantRuntime {
                 warnings: dro.warnings.length ? [dro.warnings[0].slice(0, 160)] : [],
                 input_seq: this.session.inputSequence >= 0 ? this.session.inputSequence : null,
                 input_age_ms: now - this.session.receivedAt,
-                message: this.error?.slice(0, 240) || null })}\n`;
+                // The TFT shows `blocked` on its bottom row while linked; `message` only while not.
+                blocked: this.blocked ? { ...this.blocked, name: this.blocked.name.slice(0, 40), text: this.blocked.text.slice(0, 120) } : null,
+                message: (this.error || this.blocked?.text || '').slice(0, 240) || null })}\n`;
             trace(`tx ${frame.trimEnd()}`);
             this.port.write(frame, (err) => {
                 this.feedbackWritePending = false;
@@ -292,7 +461,7 @@ export class PendantRuntime {
         if (this.busy || !this.session.armed) { return; }
         this.ready();
         const from = this.position();
-        const target = this.session.target(from, now, this.commandOverheadMs);
+        const target = this.obstacleSafeTarget(from, this.session.target(from, now, this.commandOverheadMs));
         if (!target) { this.release(); return; }
         this.validateEnvelope(this.session.bounds as JogBounds);
         this.validateJogSegment(from, target.position);
@@ -371,10 +540,11 @@ export class PendantRuntime {
                 lastJog: this.lastJog,
                 inputAgeMs: Date.now() - this.session.receivedAt,
                 port: this.port?.path || null,
-                firmware: this.firmware,
+                firmware: this.firmware ?? null,
                 trace: traceEnabled(),
                 input: this.session.latest,
                 error: this.error,
+                blocked: this.blocked,
                 dro: this.dro(),
                 bounds: this.session.bounds,
                 defaultBounds: this.defaultBounds(),
@@ -407,14 +577,19 @@ export class PendantRuntime {
                     this.ready();
                     const bounds = this.reviewedBounds(args.bounds);
                     const current = this.position();
-                    this.validateJogSegment(current, current);
+                    // Arming inside an exclusion is allowed so the pendant can climb out:
+                    // until it leaves, only a straight Z-up exit is sent (see obstacleSafeTarget).
+                    const inside = this.obstacleHit(current, current, this.obstacleExclusions());
                     manualControlGate.acquire(() => this.disarm('Stopped through MCP.'));
                     this.owned = true;
                     this.session.arm(bounds, this.position(), Date.now(), args.maxSegmentMs ?? 500);
                     this.epoch = this.machineEpoch();
                     this.pageAliveAt = Date.now();
                     this.error = null;
+                    this.blocked = inside ? this.insideBlocked(inside, current.z) : null;
+                    this.blockedLogged.clear();
                     log.info(`Armed reviewed envelope: ${JSON.stringify(bounds)}`);
+                    if (inside) { log.info(`Armed inside ${inside.name} below its required Z: only straight Z-up exits are sent until the toolhead leaves it.`); }
                     break;
                 }
                 case '/pendant/settings': {
