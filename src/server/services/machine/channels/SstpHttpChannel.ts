@@ -592,7 +592,8 @@ class SstpHttpChannel extends Channel implements
     public async executeGcode(gcode: string): Promise<ExecuteGcodeResult> {
         return new Promise((resolve) => {
             // enqueue G-code execution
-            const split = gcode.split('\n');
+            // The controller rejects empty code parameters; blank formatting must not abort a batch.
+            const split = gcode.split('\n').filter(command => command.trim().length > 0);
             this.gcodeQueue.push({
                 gcodes: split,
                 callback: ({ result, text }) => {

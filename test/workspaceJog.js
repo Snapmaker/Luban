@@ -125,8 +125,10 @@ test('issue 131: first B jog uses the visible custom value with legacy saved set
     t.equal(ui.input('Custom angle').props.value, 5, 'visible angle is 5');
     ui.click('B+');
     t.ok(/G0 B5 /.test(ui.commands[0]), 'first click emits 5 degrees, never hidden 90');
+    t.deepEqual(ui.commands[0].split('\n'), ['G91', 'G0 B5  F1500', 'G90'], 'positive jog contains only executable lines');
     ui.click('B-');
     t.ok(/G0 B-5 /.test(ui.commands[1]), 'negative jog uses the same displayed angle');
+    t.deepEqual(ui.commands[1].split('\n'), ['G91', 'G0 B-5  F1500', 'G90'], 'negative jog contains only executable lines');
     t.equal(ui.saved().selectedAngle, '', 'legacy non-preset value is saved as custom mode');
     t.equal(ui.saved().customAngle, 5, 'custom value is saved separately');
     ui.close();
