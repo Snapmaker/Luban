@@ -10,6 +10,7 @@ import logger from '../../lib/logger';
 import config from '../configstore';
 import { CameraCandidate, describeCaptureFailure, isSnapshotUrl } from './cameraSelection';
 import { McpToolError } from './registry';
+import { readCameraSnapshot, saveCameraSnapshot } from './cameraArtifacts';
 
 const log = logger('service:mcp:camera');
 
@@ -26,6 +27,8 @@ export const FFMPEG_PROVIDER = process.platform === 'win32' ? 'ffmpeg-dshow' : '
 
 export interface CapturedFrame {
     frameId: string;
+    /** Persistent image path for requested captures; video frames alone are not archived. */
+    file?: string;
     imageBase64: string;
     mimeType: string;
     provider: string;
@@ -78,7 +81,7 @@ const FRAME_CACHE_LIMIT = 12;
 const frameCache = new Map<string, { jpg: Buffer; device: string | null }>();
 
 export function cacheFrame(jpg: Buffer, device: string | null = null): string {
-    const frameId = crypto.randomBytes(4).toString('hex');
+    const frameId = crypto.randomBytes(16).toString('hex');
     frameCache.set(frameId, { jpg, device });
     while (frameCache.size > FRAME_CACHE_LIMIT) {
         frameCache.delete(frameCache.keys().next().value);
@@ -95,10 +98,15 @@ export function getCachedFrame(frameId: string): Buffer | null {
     return entry ? entry.jpg : null;
 }
 
-/** Which camera a cached frame was taken from; null when it is not cached (or came from an unnamed source). */
+/** Recent RAM cache with persistent snapshot fallback, including after restart. */
+export function getCapturedFrame(frameId: string): Buffer | null {
+    return getCachedFrame(frameId) || readCameraSnapshot(DataStorage.userDataDir, frameId)?.image || null;
+}
+
+/** Camera provenance from the cache or snapshot archive; null for unknown/unnamed sources. */
 export function getCachedFrameDevice(frameId: string): string | null {
     const entry = frameCache.get(frameId);
-    return entry ? entry.device : null;
+    return entry ? entry.device : readCameraSnapshot(DataStorage.userDataDir, frameId)?.device || null;
 }
 
 export function ffmpegBinary(): string {
@@ -425,9 +433,9 @@ export async function captureFrame(): Promise<CapturedFrame> {
     if (liveSource && liveSource.isActive()) {
         // The stream loop holds the device: its next fresh frame IS the capture.
         log.debug('Capturing frame from the live stream loop');
-        return liveSource.awaitFrame();
+        return saveCameraSnapshot(DataStorage.userDataDir, await liveSource.awaitFrame());
     }
-    return asOneShot(captureOneShot);
+    return saveCameraSnapshot(DataStorage.userDataDir, await asOneShot(captureOneShot));
 }
 
 /**
@@ -435,21 +443,21 @@ export async function captureFrame(): Promise<CapturedFrame> {
  * of each candidate before one is selected, and what select_camera takes to
  * prove the camera it just pinned is the one that was looked at.
  *
- * Nothing sticky is read or written: the configured source is bypassed
+ * No sticky selection is read or written: the configured source is bypassed
  * entirely. When the live stream loop already holds this very device its
  * frame is used (one process per device), and any other device is opened
  * here - which is safe alongside the loop precisely because it is a
- * different device.
+ * different device. The requested snapshot is archived like captureFrame.
  */
 export async function captureFromDevice(device: string): Promise<CapturedFrame> {
     if (liveSource && liveSource.isActive() && liveSource.activeDevice() === device) {
         log.debug(`Capturing frame for "${device}" from the live stream loop that holds it`);
-        return liveSource.awaitFrame();
+        return saveCameraSnapshot(DataStorage.userDataDir, await liveSource.awaitFrame());
     }
     if (isSnapshotUrl(device)) {
-        return asOneShot(async () => captureViaHttp(device));
+        return saveCameraSnapshot(DataStorage.userDataDir, await asOneShot(async () => captureViaHttp(device)));
     }
-    return asOneShot(async () => captureViaFfmpeg(device));
+    return saveCameraSnapshot(DataStorage.userDataDir, await asOneShot(async () => captureViaFfmpeg(device)));
 }
 
 export interface CameraSelection {

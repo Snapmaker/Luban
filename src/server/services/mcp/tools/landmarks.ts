@@ -162,6 +162,9 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                 },
                 probe_effective_length: { type: ['number', 'null'], description: 'Probe effective length in mm (this fitting).' },
                 probe_tip_diameter: { type: ['number', 'null'], description: 'Probe tip diameter in mm.' },
+                probe_stylus_exposed_mm: { type: ['number', 'null'], description: 'Measured exposed stylus length below the body for this fitting. Not overall protrusion. Bounds descents beside walls; reference probe.stylus_exposed_mm in probe_program.' },
+                probe_body_diameter_mm: { type: ['number', 'null'], description: 'Measured body diameter for checking rim/wall access, distinct from the ball. Reference probe.body_diameter_mm in probe_program.' },
+                bed_plane_z: { type: ['number', 'null'], description: 'Measured PHYSICAL machine Z of the bed for camera overlap/mosaics. Never toolhead height or a photo estimate. Does not describe raised workpieces.' },
                 travel_x_min: {
                     type: ['number', 'null'],
                     description: 'Machine X the toolhead can reach at the low end, for THIS rig. Unset = the machine '
@@ -247,6 +250,11 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                         toolProtrusionNote: protrusion.note,
                         clearanceMarginMm: CLEARANCE_MARGIN_MM,
                         onLegacyBasis: legacy.map((l) => l.name),
+                        legacyConsequences: legacy.map((l) => ({ name: l.name,
+                            machine: l.machine,
+                            requiredToolheadZ: l.clearanceZ,
+                            consequence: `Camera waypoints/pose stops below machine toolhead Z${l.clearanceZ} inside this box are dropped or refused; an active tool does not lower this legacy requirement.`,
+                            restatement: { tool: 'set_landmark', name: l.name, obstacle_top_z: '<measured physical top; never copy clearanceZ>', requires: 'Operator instruction and measured/stated physical height; keep the existing bounds.' } })),
                         note: legacy.length
                             ? `${legacy.length} obstacle(s) still state a TOOLHEAD height with some tool length baked `
                                 + 'in, so they are pinned wherever they were set. Re-state each with set_landmark '

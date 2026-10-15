@@ -1,0 +1,3131 @@
+[
+ {
+  "name": "get_connection_status",
+  "description": "Report whether Luban is connected to a machine, and over which channel. Read-only; sends nothing to the machine.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "recover_machine_connection",
+  "description": "Recover stopped HTTP heartbeat polling using only the machine session already held by Luban. Automatically preserves a diagnostic snapshot before recovery. Verifies that session with a read-only status request, then restarts polling. No motion, no /connect request, no new authentication and no touchscreen pairing prompt. Refuses missing/expired credentials or a different active transport. Never use raw backend/socket requests, blank tokens or stored-token edits as a fallback. After success read get_position and require a fresh report before motion.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "get_mcp_diagnostics",
+  "description": "Timing evidence for slow or aborted procedures, read-only: server event-loop stalls, machine heartbeat cadence/gaps/frame flips, direct-gcode pacing (exec and idle ms), sensor pipe latency, the probe feed status and the machine position of record (rejected beats by reason, resyncs, disconnects, the trusted offset), plus server/build identity, connection attempt/session IDs, heartbeat worker lifecycle and snapshots captured before recovery. The same signals appear as job events (event_loop_stall, heartbeat_gap, heartbeat_frame_flip, slow_step, sense_overrun, position-estimated, and idleMs/execMs on gcode events) so read get_gcode_job_status first and use this for the totals.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "get_machine_profile",
+  "description": "Machine profile: build volume, per-toolhead work ranges, and kinematics (which element moves per axis). Defaults to the connected machine, else the one selected in Luban Machine Settings; installed add-on modules (bracing kit, quick-swap) come from those same settings. Read-only.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "identifier": {
+     "type": "string",
+     "description": "Machine identifier, e.g. \"Snapmaker 2.0 A350\". Omit for the connected machine."
+    }
+   },
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "get_position",
+  "description": "The machine POSITION OF RECORD: the judged machine-frame position with its `reliability` (verified | heartbeat | cached-offset | awaiting-resync | stale), the frame it rests on, why (`reasons`), plus the raw work-frame report and originOffset, B, homed/idle flags and the report age. Motion and staging refuse unless reliability is verified/heartbeat/cached-offset; awaiting-resync clears on the next coherent beat (2 s). Never compute machine = work - originOffset yourself. Read-only.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "validate_gcode",
+  "description": "Statically inspect G-code: motion extents, feeds, spindle commands and warnings. Sends nothing to the machine.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "gcode": {
+     "type": "string",
+     "description": "Complete G-code text."
+    }
+   },
+   "required": [
+    "gcode"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "submit_gcode_job",
+  "description": "Stage a G-code job for human confirmation. Returns a validation report and a confirm_url the OPERATOR must open in a browser; approving there mints a one-time code the operator gives you for start_gcode_job. Nothing is sent to the machine yet.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "gcode": {
+     "type": "string",
+     "description": "Complete G-code text."
+    },
+    "name": {
+     "type": "string",
+     "description": "Short job name shown to the operator."
+    },
+    "head_type": {
+     "type": "string",
+     "enum": [
+      "cnc",
+      "laser",
+      "printing"
+     ],
+     "description": "Toolhead kind. Default cnc."
+    },
+    "frame": {
+     "type": "string",
+     "enum": [
+      "machine",
+      "work"
+     ],
+     "description": "Coordinate frame the job runs in. A job that declares its frame in the gcode (G53 on its own line before the first move = machine; G54..G59 = work) needs no argument. A Luban/slicer export that selects no workspace MUST pass frame: \"work\" - the file is never modified. frame: \"machine\" without a literal G53 is refused (the controller runs undeclared files in the selected work workspace). A job that declares nothing and passes nothing is REFUSED: G90/G91 is distance mode, not a frame."
+    }
+   },
+   "required": [
+    "gcode",
+    "name"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "start_gcode_job",
+  "description": "Start an approved job: uploads the file to the machine through the same prepare/start path as \"Start on Luban\" (door interlock applies) and starts it. A file whose machine Z was resolved for G54 (validation.machineZResolvedFor) first selects G54 with no motion and refuses to stream unless its offset Z matches staging (ending workspace-unverified: verify G54, restage). Authorisation is the operator's click on the confirm page. ORDER MATTERS: first deliver the staging result's confirm_url to the operator as the last line of a reply and END THE TURN (see the staging result's `handoff`); only then wait. EITHER pass the one-time code they paste (confirm_token) OR call with wait_for_approval_ms as a BACKGROUND poll after the link is out: the call stays open until they approve (then the job starts at once - nothing to copy), reject, or the wait expires (returns approved: false, timed_out: true - call again to keep waiting; approval is never lost - a timeout is not a reason to withdraw the job or to conclude anything). Never call this with wait_for_approval_ms BEFORE the operator has the link: they cannot click what they have not seen. The hand-off can be disabled in Settings -> MCP Server, in which case only confirm_token works.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "job_id": {
+     "type": "string"
+    },
+    "wait_ms": {
+     "type": "number",
+     "description": "Procedure jobs only: how long to wait for the result before returning a running status (0-120000, default 25000). The runner continues either way; long-poll get_gcode_job_status."
+    },
+    "confirm_token": {
+     "type": "string",
+     "description": "One-time code from the operator (not needed with wait_for_approval_ms)."
+    },
+    "wait_for_approval_ms": {
+     "type": "number",
+     "description": "Wait this long (1-120000, e.g. 110000) for the operator to approve on the confirm page, then start without a code. Times out with approved: false if they have not clicked yet - call again."
+    },
+    "wait_until_moved": {
+     "type": "boolean",
+     "description": "Direct jobs only. Default true: block until the heartbeat verifiably reports the move done. false returns immediately after the controller accepts the command, with position_verified: false - poll get_position afterwards."
+    }
+   },
+   "required": [
+    "job_id"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "move_z",
+  "description": "Request absolute Z motion, executed on the direct path so positions PERSIST (the machine interpreter raises Z to top at the finish position when a file job completes, so a file job cannot hold a working Z - firmware behaviour). Either one target (z) or an ordered list (z_targets, max 20) for a methodical search: the operator approves the EXACT list once, and each start_gcode_job call then executes one step, so you can capture between steps and abandon the series at any point. The confirm page shows current Z, every target, deltas and feed; only the operator one-time code executes anything. NOT door-interlocked - the operator supervises. Spindle must be off; the toolhead always carries a tool.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "z": {
+     "type": "number",
+     "description": "Absolute target Z (single move)."
+    },
+    "z_targets": {
+     "type": "array",
+     "items": {
+      "type": "number"
+     },
+     "minItems": 1,
+     "maxItems": 20,
+     "description": "Ordered absolute Z targets; one approval covers the exact list, one start_gcode_job call per step. Mutually exclusive with z."
+    },
+    "coordinate_system": {
+     "type": "string",
+     "enum": [
+      "work",
+      "machine"
+     ],
+     "description": "Which frame z is in. Default work."
+    },
+    "feed_rate": {
+     "type": "number",
+     "description": "mm/min, default 300, max 600."
+    },
+    "reason": {
+     "type": "string",
+     "description": "Shown to the operator: why this Z motion is needed."
+    },
+    "wait_until_moved": {
+     "type": "boolean",
+     "description": "Staged default for execution (start_gcode_job can override per call). Default true: each step blocks until the heartbeat verifiably reports the target Z. false: steps return on controller accept with position_verified: false - poll get_position."
+    }
+   },
+   "required": [
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "traverse_xy",
+  "description": "Law-2 TRANSPORT: an absolute XY move, or an ordered series (max 20), at the traverse height - staged for ONE operator approval and executed one step per start_gcode_job call on the direct path, exactly like move_z. Refused unless the toolhead is already at or above mcpSafeTraverseZ (328 = home Z) - raise it with move_z (coordinate_system \"machine\") first; there is deliberately no override. Every segment is checked against the stored landmarks and every target against the travel; Z is never written. Default frame MACHINE (G53 declared on every step; work-frame steps declare G54). This is the transport tool - move_and_capture is a <= 100 mm vision nudge, and hand-written file jobs for transport are how a frameless \"G0 Z0\" got staged on 2026-09-12. NOT door-interlocked - the operator supervises.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "x": {
+     "type": "number",
+     "description": "Absolute target X (single move). Omit to keep the current X."
+    },
+    "y": {
+     "type": "number",
+     "description": "Absolute target Y (single move). Omit to keep the current Y."
+    },
+    "targets": {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 20,
+     "items": {
+      "type": "object",
+      "properties": {
+       "x": {
+        "type": "number"
+       },
+       "y": {
+        "type": "number"
+       }
+      },
+      "additionalProperties": false
+     },
+     "description": "Ordered targets {x?, y?} (an omitted axis keeps its previous value); one approval covers the exact list, one start_gcode_job call per step. Mutually exclusive with x/y."
+    },
+    "coordinate_system": {
+     "type": "string",
+     "enum": [
+      "machine",
+      "work"
+     ],
+     "description": "Frame of the targets. Default MACHINE (agents plan in machine coordinates)."
+    },
+    "feed_rate": {
+     "type": "number",
+     "description": "mm/min, default 1500, max 3000."
+    },
+    "reason": {
+     "type": "string",
+     "description": "Shown to the operator: why this transport is needed."
+    },
+    "wait_until_moved": {
+     "type": "boolean",
+     "description": "Staged default for execution (start_gcode_job can override per call). Default true: each step blocks until the heartbeat verifiably reports the target XY. false: steps return on controller accept with position_verified: false - poll get_position."
+    }
+   },
+   "required": [
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "get_job_timing",
+  "description": "Where a job's time went, computed from its event log (works for running, completed and failed jobs; completed procedures also carry it as result.timing): per command kind (coarse, fine, confirm, backoff, retract, hop, descend, raise, ...) the count, feeds, distance, controller time (execMs), motion time (distance / feed), per-batch overhead, idle time and sensor windows; per station the wall time and its kind breakdown; approval wait, run time, median station; settle-waits, slow steps, estimated positions, event-loop stalls and frame flips. Use it to pick parameters (z_safe_delta_mm, coarse feed, confirm_passes, sensor_delay_ms) instead of mining events by hand.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "job_id": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "job_id"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "get_gcode_job_status",
+  "description": "Job record with `ending` - why it ended: completed | stopped-by-agent | stopped-by-operator | withdrawn | rejected-by-operator | crash-alarm | overtravel-alarm | unexpected-contact | controller-rejected | workspace-unverified | timeout | operation-failure | machine-stopped | completion-unverified, with the reason and how many stations/ops were measured - its event log (state changes, runner phases, gcode traffic while active, file-job progress and pauses), the stored procedure result (a stopped or failed run keeps every completed station under result, with result.ending beside it), and live machine progress. File jobs run with spindle telemetry on (mcpSpindleTelemetry) also carry `telemetry`: per commanded S the reported / microphone-tracked RPM (min, median, time below 95 %), the HOLD / BLIP / STRUGGLE verdicts, chatter and runout flags, the audio device and the analysis cost - the series themselves come from get_job_telemetry. LONG-POLL: pass wait_ms (up to 120000) and it returns as soon as the job reaches a terminal state or new events arrive past since_event - use this instead of tight polling or reading server logs. Read-only.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "job_id": {
+     "type": "string"
+    },
+    "wait_ms": {
+     "type": "number",
+     "description": "Block up to this long (0-120000) for a terminal state or new events. Default 0 = return now."
+    },
+    "since_event": {
+     "type": "number",
+     "description": "Return only events at index >= this (the previous response's next_event_index); new events past it also end a wait early. Default 0 = all events."
+    }
+   },
+   "required": [
+    "job_id"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "stop_gcode_job",
+  "description": "Stop a running job. Stopping needs no confirmation. A PROCEDURE (probe_*, probe_program, run_tool_setter, survey) is a server-driven loop, so it stops at the next step boundary (within one <= 1 mm step or sensor window), raises the head to the traverse height and keeps every completed station / contact / op on the job record (result, state \"stopped\"); this call waits up to wait_ms for that. A job that never reached the machine (any kind, awaiting confirmation or approved but not started) is WITHDRAWN: it is marked stopped here and its confirm link dies, so an approval cannot start it later. A file/direct job already handed over is stopped on the machine (firmware stop_print). Result: {ok, stopped, stopping, withdrawn, note, job}.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "job_id": {
+     "type": "string",
+     "description": "Job to stop (procedures: the running procedure; file jobs: the machine stop is global)."
+    },
+    "wait_ms": {
+     "type": "number",
+     "description": "Procedures: how long to wait for the stop to complete (default 20000, max 120000)."
+    }
+   },
+   "required": [
+    "job_id"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "convert_thread_milling_gcode",
+  "description": "Offline conversion of Machining Doctor thread-milling G-code to explicit Snapmaker G0/G1 moves. Supports G2/G3 helices, full circles, G90/G91, metric/inch input, repeated turns and passes. Requires a zero-compensation tool-centre path and work Z already referenced to the fitted tool tip. Select power_percent for the standard CNC head, or cnc_200w_rpm to retain RPM for the 200 W head. Returns a reviewable program, changes, warnings and validation; does not stage or run it. Review the result before submit_gcode_job with head_type cnc and frame work.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "gcode": {
+     "type": "string",
+     "description": "Complete generator output, including M30/M2."
+    },
+    "source_controller": {
+     "type": "string",
+     "enum": [
+      "fanuc",
+      "okuma",
+      "mazak",
+      "haas",
+      "siemens_c",
+      "siemens_d",
+      "mitsubishi",
+      "mori_seiki"
+     ],
+     "description": "Generator controller selection. Default fanuc. Explicit selection is required for Okuma, Mazak and Siemens setup syntax."
+    },
+    "tool_center_path": {
+     "type": "boolean",
+     "const": true,
+     "description": "Explicit declaration: tool-centre path with zero D compensation. D1 is a register number."
+    },
+    "tool_length_applied": {
+     "type": "boolean",
+     "const": true,
+     "description": "Explicit declaration: fitted tool tip is already accounted for in work Z. G43/H is removed, its motion retained."
+    },
+    "spindle_mode": {
+     "type": "string",
+     "enum": [
+      "power_percent",
+      "cnc_200w_rpm"
+     ]
+    },
+    "spindle_power_percent": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 100,
+     "description": "Required only for power_percent. No RPM mapping or feed rescaling is inferred."
+    },
+    "chord_tolerance_mm": {
+     "type": "number",
+     "minimum": 1e-05,
+     "maximum": 0.01,
+     "description": "Arc chord tolerance in mm; default 0.002. Source radius rounding is reported separately."
+    }
+   },
+   "required": [
+    "gcode",
+    "tool_center_path",
+    "tool_length_applied",
+    "spindle_mode"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "list_cameras",
+  "description": "List available capture sources: the configured snapshot URL, or DirectShow video devices found by ffmpeg. Reports which one is selected, and the live MJPEG stream (stream_url: a page the OPERATOR opens in a browser to watch the camera; not for the agent to fetch). To see what each camera is actually looking at, use preview_cameras; to change the choice, select_camera. Read-only.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "capture_frame",
+  "description": "Capture one frame from the workshop camera (configstore: mcpCameraUrl for an HTTP snapshot source, else ffmpeg with mcpCameraDevice/mcpFfmpegPath). The frame is stamped with the firmware-reported position it was taken at, when a machine is connected. While an operator watches the live stream (/camera) the frame comes from that loop (camera.source = \"stream\", one shared device); otherwise this call opens the device itself. No motion.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "get_frame",
+  "description": "Return a frame that was captured earlier, by frame_id: one of the last 12 captures cached in memory (capture_frame, move_and_capture, preview_cameras, visual_servo), or a frame a probe_program `capture` op saved on its job record (result.ops[].result.file - pass that path as `file`; it is read only from the MCP program-frame directory). This is how the frames of a one-approval look-rotate-look program are viewed after it finishes. Read-only, no motion, no new capture.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "frame_id": {
+     "type": "string",
+     "description": "frame_id of a cached frame (from any capture result)."
+    },
+    "file": {
+     "type": "string",
+     "description": "Path a probe_program capture op reported as result.file, for when the frame has left the cache."
+    }
+   },
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "preview_cameras",
+  "description": "Show what each attached camera SEES, one frame per camera, so the right one can be identified before it is selected. Frames come back labelled with the device string and a frame_id; pass that frame_id to select_camera as the evidence for the choice. With two cameras attached, both return perfectly good frames and nothing downstream can tell you picked the wrong one - every measurement is simply wrong - so look first. A camera that cannot be opened is reported as a failure beside the others, never replaced by a substitute frame. Read-only, no motion, and the current selection is left exactly as it is.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "device": {
+     "type": "string",
+     "description": "Preview just this camera (a list_cameras entry, its /dev path or its name). Omit to preview every attached camera."
+    }
+   },
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "select_camera",
+  "description": "Choose which camera every capture uses from here on (persists as mcpCameraDevice, or mcpCameraUrl for a snapshot URL - picking one clears the other, since the URL would otherwise keep winning). Requires confirm_frame_id: the id of a frame that came from THIS camera, from preview_cameras - a wrong camera produces good-looking frames and silently wrong millimetres, so the choice must be made from a picture, not from a device name that reads plausibly. Selecting a different camera marks the solved camera model unverified: its geometry belonged to the old one. Returns a fresh frame from the camera it just selected. No motion.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "device": {
+     "type": "string",
+     "description": "A list_cameras / preview_cameras entry, its /dev path, its friendly name, or an http(s) snapshot URL. Must name exactly one attached camera."
+    },
+    "confirm_frame_id": {
+     "type": "string",
+     "description": "frame_id of a frame taken from this same camera (preview_cameras). Not needed when only one camera is attached, or when re-selecting the camera already in use."
+    },
+    "operator_confirmed": {
+     "type": "boolean",
+     "description": "The OPERATOR - not the model - has confirmed this device is the right camera without a frame. Never pass this on your own judgement."
+    },
+    "reason": {
+     "type": "string",
+     "description": "Why this camera; recorded in the log."
+    },
+    "clear": {
+     "type": "boolean",
+     "description": "Unpin instead of choosing: captures fall back to the last camera that worked. Use with no device."
+    }
+   },
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "set_tool_region",
+  "description": "Update the expectedToolRegion that every capture reports: the fractional box where the endmill images (fixed camera-to-spindle geometry). Refine it from live frames instead of round-tripping through configuration edits. Persists.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "u0": {
+     "type": "number"
+    },
+    "v0": {
+     "type": "number"
+    },
+    "u1": {
+     "type": "number"
+    },
+    "v1": {
+     "type": "number"
+    },
+    "note": {
+     "type": "string",
+     "description": "Provenance: how the box was determined."
+    }
+   },
+   "required": [
+    "u0",
+    "v0",
+    "u1",
+    "v1"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "track_feature",
+  "description": "Template-match a patch between two cached frames (by the frameId each capture reports): give the pixel of a feature in one frame and get its measured pixel in the other, with an NCC confidence score. Use this instead of eyeballing pixel coordinates when deriving calibrations or measuring servo error - hand-estimated pixels were the dominant field error source. A small second-peak gap warns of repetitive-grid ambiguity. No motion, no capture.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "template_frame_id": {
+     "type": "string",
+     "description": "Frame the feature pixel refers to."
+    },
+    "search_frame_id": {
+     "type": "string",
+     "description": "Frame to locate the feature in."
+    },
+    "point": {
+     "type": "object",
+     "properties": {
+      "u": {
+       "type": "number"
+      },
+      "v": {
+       "type": "number"
+      }
+     },
+     "required": [
+      "u",
+      "v"
+     ],
+     "description": "Feature pixel in the template frame."
+    },
+    "patch_size": {
+     "type": "number",
+     "description": "Odd patch edge in px, default 41, max 101."
+    },
+    "search_radius": {
+     "type": "number",
+     "description": "Search half-window in px, default 120, max 250."
+    },
+    "expected_shift": {
+     "type": "object",
+     "properties": {
+      "du": {
+       "type": "number"
+      },
+      "dv": {
+       "type": "number"
+      }
+     },
+     "required": [
+      "du",
+      "dv"
+     ],
+     "description": "Optional predicted pixel shift (e.g. J x commanded move). Breaks ties among near-best candidates on repetitive grids; the response says when the expectation, not the raw score, chose the match."
+    }
+   },
+   "required": [
+    "template_frame_id",
+    "search_frame_id",
+    "point"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "restore_work_frame",
+  "description": "Put the controller back in the WORK workspace (`G90` then `G54` on its own line). NO MOTION: the program carries no axis word, so it is permitted even when the machine position is awaiting-resync or stale - it is the remedy for exactly that state. Use it when get_position reports an incoherent or machine-frame position after a job that declared G53 and never selected a work workspace again: the controller keeps reporting machine coordinates while the heartbeat still carries a work-origin offset, so every derived position is rejected until the frame is handed back. Returns the position of record before and after, re-read two beats later. A re-home is not the remedy.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "reason": {
+     "type": "string",
+     "description": "Why the frame is being restored; logged and shown on the console."
+    }
+   },
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "query_firmware_configuration",
+  "description": "Read the configuration currently used by the firmware with M503 S (not necessarily EEPROM values). No motion or settings changes. Use as a liveness diagnostic if M114 returns no position text. An empty reply or transport error is a failure, never proof of a live machine. Does not reconnect or initiate pairing.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "query_firmware_position",
+  "description": "Ask the firmware directly for its position report (M114) and return the RAW controller response alongside the heartbeat-derived view. This is the authoritative way to establish which coordinate frame the controller is in when heartbeat-derived machine coordinates look wrong (e.g. after homing). Read-only, no motion.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "home",
+  "description": "MACHINE home (G28): drives every axis to its limit switches - this is NOT the work origin; moving to work X0 Y0 is the separate goto_work_origin operation. Z rises first, making this the default first move after (re)connecting: it also clears any stale position state between Luban and the machine, using the same G53;G28;G54 sequence as Luban itself (home in the machine workspace, then reselect workspace 0). WARNING: with the rotary module fitted, G28 also homes B - stock indexed on the rotary WILL rotate (observed -45 to 0 on hardware); warn the operator first. Requires an idle machine with the toolhead off. Waits for the firmware to report homed. Stale position is refused by default; ignore_stale_position may be true ONLY when the operator explicitly demands homing despite stale data. This does not bypass alarms, toolhead/idle checks or verification after homing.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "ignore_stale_position": {
+     "type": "boolean",
+     "default": false,
+     "description": "Only on the operator explicit demand to home despite stale position. Bypasses stale-position rejection only; all other guards and fresh completion verification remain."
+    },
+    "wait_until_moved": {
+     "type": "boolean",
+     "description": "Default true: block ~15-20s until the firmware reports homed and settled. false returns right after G28 is accepted - poll get_position for isHomed before any motion."
+    }
+   },
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "goto_work_origin",
+  "description": "STAGE a move to the WORK origin: one XY move to work X0 Y0 at the CURRENT Z, planned like traverse_xy and approved on the confirm page (operator ruling 2026-09-21: \"goto work origin is a risk\"). The page shows the destination in MACHINE coordinates - work origins are operator-set and die on a machine reboot, so \"work zero\" can be anywhere on the bed - and the move is emitted in the machine frame, so what the page shows is where the head goes even if the origin is re-zeroed before start. Refused while the position of record or the origin offset is not trustworthy (awaiting-resync, stale, cached or assumed offset, warnings), below the motion floor (law 2 - raise with move_z first), outside the toolhead travel, or across a landmark below its clearance. Semantically distinct from home, which drives to the machine limit switches. Z is deliberately not touched: no automatic raise and no descent to work Z0. This move does not establish or verify a milling datum; a coherent offset does not prove physical registration. Choose measurable setup references and check the full approach with the fitted tool/holder; unrecorded fixtures are not certified by this guard. After B rotation, a valid retained WCS may have an obstructed zero or approach: do not automatically return there. Recheck the route in the new orientation, or keep the WCS reference and use a separate verified entry. Follow with start_gcode_job {job_id, wait_for_approval_ms: 110000}. No frame is captured on arrival - call capture_frame after.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "reason": {
+     "type": "string",
+     "description": "Why this move is needed; shown to the operator on the confirm page."
+    },
+    "feed_rate": {
+     "type": "number",
+     "description": "mm/min, default 1500, max 3000."
+    },
+    "wait_until_moved": {
+     "type": "boolean",
+     "description": "Default true: start_gcode_job blocks until the move verifiably settles at the origin. false returns right after the controller accepts it; poll get_position afterwards."
+    }
+   },
+   "required": [
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "move_and_capture",
+  "description": "ONE vision-driven XY reposition: Z-GATED FIRST (operator ruling 2026-09-21), then move, settle-verify, and capture a position-stamped frame. Before any XY is commanded the tool establishes from the position of record that the head is at the safe traverse height (mcpSafeTraverseZ, machine Z328): if it is below, it is raised straight up to it first and the XY is sent only once that raise has settled; if Z cannot be established (unknown, unreliable) the call is refused. This is NOT a transport primitive - travel and sequences belong in staged operator-approved mechanisms (traverse_xy, survey_bed, move_z batches, probing procedures, submit_gcode_job), and rapid sequential calls are refused (pacing guard). Obstacle landmarks are checked at the Z the XY actually runs at. No Z parameter by design. Requires an idle machine, toolhead off, a stated reason. Travel per call is capped (mcpMaxJogDistance, default 100 mm).",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "x": {
+     "type": "number",
+     "description": "Target X. Omit to keep current X."
+    },
+    "y": {
+     "type": "number",
+     "description": "Target Y. Omit to keep current Y."
+    },
+    "reason": {
+     "type": "string",
+     "description": "Why this move is needed; shown to the operator."
+    },
+    "coordinate_system": {
+     "type": "string",
+     "enum": [
+      "work",
+      "machine"
+     ],
+     "description": "Which coordinates x/y are in. Default work."
+    },
+    "feed_rate": {
+     "type": "number",
+     "description": "mm/min, default 1500, max 3000."
+    },
+    "operator_confirmed_clearance": {
+     "type": "boolean",
+     "description": "Set true ONLY when the human operator has explicitly confirmed the current Z and an obstacle-free path at this Z: the XY then runs at the CURRENT Z (no raise to the traverse height) and the homed-first requirement is skipped. The one escape hatch - never on the model's own judgment."
+    },
+    "wait_until_moved": {
+     "type": "boolean",
+     "description": "Default true: settle at the target and capture there. false returns right after the controller accepts the move - no settle, NO FRAME, position_verified: false; poll get_position afterwards."
+    },
+    "capture": {
+     "type": "boolean",
+     "description": "Default true. false still settles and verifies the position but skips the frame - a plain verified move. (The XY travel cap per call is the configstore key mcpMaxJogDistance, default 100mm.)"
+    }
+   },
+   "required": [
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "camera_program",
+  "description": "Stage one composite camera procedure under one operator approval. Operations are move_z, survey_bed, move_and_capture, capture, track_feature, fit_calibration, and verify_calibration. Every exact Z, XY corridor, survey waypoint, feature track, residual threshold, and stored calibration is shown on the confirm page. Use machine_z on survey_bed to assert that Z before any XY motion.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "reason": {
+     "type": "string"
+    },
+    "operator_confirmed_clearance": {
+     "type": "boolean"
+    },
+    "ops": {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 80,
+     "items": {
+      "type": "object"
+     }
+    }
+   },
+   "required": [
+    "name",
+    "reason",
+    "ops"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "get_camera_model",
+  "description": "The current camera model and whether it may still be used. The camera is SESSION STATE, not a rig constant: it can sit differently after a power cycle, be knocked, be re-aimed, or be a different camera entirely. So this reports a state (verified | unverified | superseded) and, when it is not usable, WHY and which tool fixes it (verify_camera_model for a check, camera_bootstrap for a full solve). Read-only, no motion, no capture. Plain captures never need a model - a frame finds things, it clears nothing.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "history": {
+     "type": "boolean",
+     "description": "Include superseded models, newest first."
+    }
+   },
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "set_camera_model",
+  "description": "Store a camera model solved from a bootstrap frame set (scripts/camera_bootstrap.py). Stored UNVERIFIED: a model that has only ever agreed with the data it was fitted to has demonstrated nothing, so verify_camera_model must pass it against a pose that was not in the fit before anything converts through it. The previous model is kept as superseded rather than overwritten, so \"was the camera moved between these two jobs?\" stays answerable. Takes a frame to fingerprint the camera it describes.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "offset": {
+     "type": "object",
+     "description": "Optical centre relative to the TOOLHEAD control point, machine axes, mm.",
+     "properties": {
+      "x": {
+       "type": "number"
+      },
+      "y": {
+       "type": "number"
+      },
+      "z": {
+       "type": "number"
+      }
+     },
+     "required": [
+      "x",
+      "y",
+      "z"
+     ]
+    },
+    "rotation": {
+     "type": "array",
+     "description": "3x3 row-major; the COLUMNS are the camera axes in machine axes, and the camera looks along its own +Z.",
+     "items": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      }
+     }
+    },
+    "intrinsics": {
+     "type": "object",
+     "description": "Pinhole, in pixels. k1 only when the targets spanned enough frame to constrain it; otherwise null.",
+     "properties": {
+      "fx": {
+       "type": "number"
+      },
+      "fy": {
+       "type": "number"
+      },
+      "cx": {
+       "type": "number"
+      },
+      "cy": {
+       "type": "number"
+      },
+      "k1": {
+       "type": [
+        "number",
+        "null"
+       ]
+      }
+     },
+     "required": [
+      "fx",
+      "fy",
+      "cx",
+      "cy"
+     ]
+    },
+    "valid_band_z": {
+     "type": "array",
+     "description": "[min, max] machine Z the poses actually covered. Outside it the model extrapolates and says so.",
+     "items": {
+      "type": "number"
+     }
+    },
+    "central_region": {
+     "type": "number",
+     "description": "Fraction of the frame the fit genuinely constrains (0-1). Pixels outside it are refused rather than silently converted - keep it small when k1 could not be fitted."
+    },
+    "residuals": {
+     "type": "object",
+     "properties": {
+      "rms_px": {
+       "type": "number"
+      },
+      "max_px": {
+       "type": "number"
+      },
+      "rms_mm": {
+       "type": "number"
+      },
+      "n_points": {
+       "type": "number"
+      },
+      "n_poses": {
+       "type": "number"
+      }
+     },
+     "required": [
+      "rms_px",
+      "max_px",
+      "rms_mm",
+      "n_points",
+      "n_poses"
+     ]
+    },
+    "survey_id": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "description": "Bootstrap frame set this was solved from."
+    },
+    "targets": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "Which known features were solved against."
+    }
+   },
+   "required": [
+    "offset",
+    "rotation",
+    "intrinsics",
+    "valid_band_z",
+    "central_region",
+    "residuals"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "plan_view_pose",
+  "description": "Where must the TOOLHEAD go to see this machine point? Read-only, no motion, no capture: it answers from the verified camera model, so the direction the camera looks and the SIGN of its offset are measured facts rather than anything remembered. Use it instead of estimating a pose - on 2026-09-19 an assumed \"the camera looks -X, 90-150 mm\" pointed the wrong way and cost three operator approvals to discover. Returns the toolhead XY, the standoff, the field of view at the plane you name, and whether the toolhead Z asked for is outside the band the model was solved over. Move there with traverse_xy.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "target": {
+     "type": "object",
+     "description": "The machine point to centre in the frame. z matters: it is the depth plane the view is solved on.",
+     "properties": {
+      "x": {
+       "type": "number"
+      },
+      "y": {
+       "type": "number"
+      },
+      "z": {
+       "type": "number"
+      }
+     },
+     "required": [
+      "x",
+      "y",
+      "z"
+     ]
+    },
+    "toolhead_z": {
+     "type": "number",
+     "description": "Machine Z to view from. Defaults to the park height."
+    }
+   },
+   "required": [
+    "target"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "camera_bootstrap",
+  "description": "Stage the camera pre-configuration for human approval. The camera is session state - it can sit differently after a power cycle, be knocked, be re-aimed, or be a different camera - so this solves the geometry FROM NOTHING: no assumed direction, offset, field of view or lens. Two stages, one approval each, because the second cannot be planned until someone has looked at the first.\nstage \"search\" (start here): a serpentine grid at the park height across the X band the camera could be looking from, bracketing the tool setter, whose machine XY is known exactly. Which frames contain it, against the toolhead XY of those frames, gives the camera offset INCLUDING ITS SIGN with no prior assumption at all - the only step that means anything without a calibration.\nstage \"poses\": visit the poses that coarse offset implies and sweep Z from the park height down to the motion floor with XY STATIONARY, capturing at every stop. Targets at different heights over that baseline are what turn a flat pixels-per-mm figure into perspective. A pose the TOOLHEAD cannot reach is dropped with a reason and never quietly adjusted, even though the camera looks into keep-outs on purpose.\nFrames are written with a machine-position index; solve them with scripts/camera_bootstrap.py, store with set_camera_model, then prove it with verify_camera_model.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "stage": {
+     "type": "string",
+     "enum": [
+      "search",
+      "poses"
+     ],
+     "description": "Default \"search\"."
+    },
+    "reason": {
+     "type": "string",
+     "description": "Shown to the operator."
+    },
+    "reach_mm": {
+     "type": "number",
+     "description": "search: how far either side of the setter to look, default 200 (40-400)."
+    },
+    "pitch_mm": {
+     "type": "number",
+     "description": "search: grid pitch, default 40 (10-120). Smaller pitch, tighter offset."
+    },
+    "y_span_mm": {
+     "type": "number",
+     "description": "search: Y band around the setter, default 0 (one row)."
+    },
+    "poses": {
+     "type": "array",
+     "description": "poses: 1-12 TOOLHEAD positions to view the targets from.",
+     "items": {
+      "type": "object",
+      "properties": {
+       "label": {
+        "type": "string"
+       },
+       "x": {
+        "type": "number"
+       },
+       "y": {
+        "type": "number"
+       }
+      },
+      "required": [
+       "x",
+       "y"
+      ]
+     }
+    },
+    "step_mm": {
+     "type": "number",
+     "description": "poses: Z step of the sweep, default 2 (minimum 1)."
+    },
+    "floor_z": {
+     "type": "number",
+     "description": "poses: lowest Z of the sweep; never below the motion floor."
+    }
+   },
+   "required": [
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "verify_camera_model",
+  "description": "Check the stored camera model against a target whose machine coordinates are known, at the CURRENT toolhead position, and record the residual. This is the first camera call of any session: the camera may have been knocked, re-aimed or replaced since the last one, and nothing about it survives a power cycle on trust. Pass where the target appears in the frame you just captured (pixel_u/pixel_v) and where it is in machine coordinates; the tool reports how far the model was out, in pixels and millimetres, and marks the model verified or unverified accordingly. NO MOTION - position the toolhead first with traverse_xy.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "target": {
+     "type": "object",
+     "description": "The known machine coordinates of the feature (e.g. the tool setter centre and its plate top).",
+     "properties": {
+      "x": {
+       "type": "number"
+      },
+      "y": {
+       "type": "number"
+      },
+      "z": {
+       "type": "number"
+      }
+     },
+     "required": [
+      "x",
+      "y",
+      "z"
+     ]
+    },
+    "pixel_u": {
+     "type": "number",
+     "description": "Where it actually appears in the frame, x pixels."
+    },
+    "pixel_v": {
+     "type": "number",
+     "description": "Where it actually appears in the frame, y pixels."
+    },
+    "tolerance_px": {
+     "type": "number",
+     "description": "Pass threshold, default 8 px."
+    },
+    "note": {
+     "type": "string",
+     "description": "Which target, and how its pixel was located."
+    }
+   },
+   "required": [
+    "target",
+    "pixel_u",
+    "pixel_v"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "set_camera_calibration",
+  "description": "Persist a pixel-to-machine calibration, keyed by the machine Y it was derived at (the SM2 platform travels in Y, so a mapping is only valid at that Y). matrix maps a pixel delta [du, dv] to the machine XY move [dx, dy] in mm that cancels it - i.e. M = +J^-1 where J is the forward Jacobian (pixel shift per mm of machine move), and visual_servo applies M to error = target - feature. VERIFY THE SIGN before storing: J.(M.e) must reproduce +e, not -e - a flipped M silently drives the servo away from the target. Survives restarts.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "valid_at_y": {
+     "type": "number",
+     "description": "Machine Y the calibration frame was captured at."
+    },
+    "z": {
+     "type": "number",
+     "description": "Machine Z the calibration frame was captured at."
+    },
+    "matrix": {
+     "type": "array",
+     "description": "2x2 row-major: [[m00, m01], [m10, m11]]; [dx, dy] = M . [du, dv].",
+     "items": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+     },
+     "minItems": 2,
+     "maxItems": 2
+    },
+    "notes": {
+     "type": "string",
+     "description": "Free-form provenance: grid used, residuals, tilt."
+    },
+    "surface": {
+     "type": "string",
+     "description": "Physical surface the calibration was derived on (e.g. \"board\", \"bracket\"). A matrix is only valid on its own depth plane - cross-plane use read ~4x wrong on hardware."
+    },
+    "jacobian": {
+     "type": "array",
+     "description": "Optional 2x2 forward Jacobian J (pixel shift per mm) you fitted. When given, the tool checks M.J against +identity and REJECTS a sign-flipped matrix before it can reach hardware.",
+     "items": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+     },
+     "minItems": 2,
+     "maxItems": 2
+    }
+   },
+   "required": [
+    "valid_at_y",
+    "z",
+    "matrix"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "get_camera_calibration",
+  "description": "Fetch calibrations: by id, nearest to a machine Y (within tolerance), or all. Read-only.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "id": {
+     "type": "string"
+    },
+    "y": {
+     "type": "number",
+     "description": "Machine Y to match against valid_at_y."
+    },
+    "tolerance_mm": {
+     "type": "number",
+     "description": "Match tolerance for y, default 2."
+    }
+   },
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "delete_camera_calibration",
+  "description": "Delete one stored calibration by id.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "id": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "id"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "visual_servo",
+  "description": "One visual-servo correction step: computes error = target_pixel - feature_pixel (this exact convention), applies the stored matrix to it, executes the machine XY move through the same guarded single-move path as move_and_capture, and returns the new frame. The iteration loop belongs to the caller. Step size is clamped (max_step_mm, default 5, cap 20). If the pixel error GROWS between consecutive steps with the same calibration and target, the response warns of a likely sign-flipped matrix - stop and re-verify rather than iterating.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "feature_pixel": {
+     "type": "object",
+     "properties": {
+      "u": {
+       "type": "number"
+      },
+      "v": {
+       "type": "number"
+      }
+     },
+     "required": [
+      "u",
+      "v"
+     ],
+     "description": "Where the feature currently images."
+    },
+    "target_pixel": {
+     "type": "object",
+     "properties": {
+      "u": {
+       "type": "number"
+      },
+      "v": {
+       "type": "number"
+      }
+     },
+     "required": [
+      "u",
+      "v"
+     ],
+     "description": "Where the feature should image."
+    },
+    "plane_z": {
+     "type": "number",
+     "description": "Machine Z of the plane the tracked feature sits ON. Given this, and a verified camera model, the pixel-to-machine matrix is derived from the model at this exact pose instead of read from a stored calibration - which is both more accurate and able to say whether it is still about the camera that is plugged in. Omit to use a stored matrix."
+    },
+    "calibration_id": {
+     "type": "string",
+     "description": "Omit to auto-select nearest to the current machine Y."
+    },
+    "max_step_mm": {
+     "type": "number"
+    },
+    "feed_rate": {
+     "type": "number"
+    },
+    "operator_confirmed_clearance": {
+     "type": "boolean",
+     "description": "Set true ONLY when the human operator has explicitly confirmed the current Z and an obstacle-free path at this Z; skips the homed-first requirement."
+    }
+   },
+   "required": [
+    "feature_pixel",
+    "target_pixel"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "set_landmark",
+  "description": "Persist a named scene landmark (tool height checker, rotary span, tool post...) with its machine-coordinate XY extent and a description. Same name replaces. Landmarks near the current position are surfaced with every capture, so identities the operator has stated once are never re-guessed. Record identity from OPERATOR knowledge, not visual analogy.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "name": {
+     "type": "string",
+     "description": "Short unique name, e.g. \"tool-height-checker\"."
+    },
+    "description": {
+     "type": "string",
+     "description": "What it is and how it looks on camera."
+    },
+    "x0": {
+     "type": "number",
+     "description": "Machine-coordinate extent of the feature."
+    },
+    "y0": {
+     "type": "number"
+    },
+    "x1": {
+     "type": "number"
+    },
+    "y1": {
+     "type": "number"
+    },
+    "obstacle_top_z": {
+     "type": "number",
+     "description": "PREFERRED. Marks this landmark as an OBSTACLE by stating the machine Z of the top of the OBSTACLE ITSELF - nothing about the tool. The live tool protrusion and a safety margin are added when a path is checked, so the number stays true across tool changes instead of having to be set for the longest bit ever fitted. Omit for non-obstacles."
+    },
+    "clearance_z": {
+     "type": "number",
+     "description": "LEGACY form of the same thing: the minimum safe TOOLHEAD machine Z when an XY path crosses this box, with tool length already included by whoever set it. Still honoured exactly as before, but prefer obstacle_top_z - a toolhead height has to be re-stated on every tool change and in practice ends up pinned at the machine ceiling."
+    },
+    "notes": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "name",
+    "description",
+    "x0",
+    "y0",
+    "x1",
+    "y1"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "set_probe_geometry",
+  "description": "Store the jig/tool constants a rotary probe_program may reference as the \"axis\" namespace: rotary_axis_x (machine X of the axis line), rotary_axis_z_physical (PHYSICAL machine Z of the axis, e.g. from an opposite-face pair: (topA + topB)/2 - probe length), probe_effective_length (toolhead Z at contact minus this = surface; run_tool_setter accept_probe_contact measures it), probe_tip_diameter. Operator-stated or MEASURED values only, with the reason - like set_landmark. Omit a field to leave it; null clears it. None of these is a prerequisite for probing: only a program that references axis.* needs them; B0-only, stationary or off-rotary work needs nothing here. Stock size is never stored (a rotation's swept radius is a per-program argument).",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "rotary_axis_x": {
+     "type": [
+      "number",
+      "null"
+     ],
+     "description": "Machine X of the rotary axis line."
+    },
+    "rotary_axis_z_physical": {
+     "type": [
+      "number",
+      "null"
+     ],
+     "description": "Physical machine Z of the axis (not a contact Z)."
+    },
+    "rotary_tailstock_y": {
+     "type": [
+      "number",
+      "null"
+     ],
+     "description": "Machine Y of the tailstock centre. With the axis line this is a fully known 3D point, which the camera bootstrap solves against."
+    },
+    "rotary_chuck_face_y": {
+     "type": [
+      "number",
+      "null"
+     ],
+     "description": "Machine Y of the chuck face. Also settles which end is which - \"the non-chuck end\" stops being a guess."
+    },
+    "probe_effective_length": {
+     "type": [
+      "number",
+      "null"
+     ],
+     "description": "Probe effective length in mm (this fitting)."
+    },
+    "probe_tip_diameter": {
+     "type": [
+      "number",
+      "null"
+     ],
+     "description": "Probe tip diameter in mm."
+    },
+    "travel_x_min": {
+     "type": [
+      "number",
+      "null"
+     ],
+     "description": "Machine X the toolhead can reach at the low end, for THIS rig. Unset = the machine definition, widened by positions the toolhead has actually been observed at. State it when the definition is wrong for the rig (an A350 frame runs X -19...339 against a 320 x 350 definition); planners clamp their bands to it."
+    },
+    "travel_x_max": {
+     "type": [
+      "number",
+      "null"
+     ],
+     "description": "Machine X reachable at the high end. See travel_x_min."
+    },
+    "travel_y_min": {
+     "type": [
+      "number",
+      "null"
+     ],
+     "description": "Machine Y reachable at the low end. See travel_x_min."
+    },
+    "travel_y_max": {
+     "type": [
+      "number",
+      "null"
+     ],
+     "description": "Machine Y reachable at the high end. See travel_x_min."
+    },
+    "reason": {
+     "type": "string",
+     "description": "How the values were obtained (which job / measurement / operator statement)."
+    }
+   },
+   "required": [
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "delete_landmark",
+  "description": "Delete one stored landmark by id or name.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "id": {
+     "type": "string",
+     "description": "Landmark id or name."
+    }
+   },
+   "required": [
+    "id"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "get_stored_state",
+  "description": "Everything already known about this machine and bed in one read-only call, so a fresh session orients WITHOUT moving anything: stored calibrations (with surface tags), named landmarks, the expected tool region, motion limits, camera config, and the live connection snapshot. Call this first.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "get_probe_feed_status",
+  "description": "State of the external probe sensor feed (transport mqtt or gpio): configuration, connection, the last reading per channel (toolsetter / overtravel / probe) with its age, and whether the overtravel alarm is latched. Read-only.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "connect_probe_feed",
+  "description": "Connect (or reconnect) to the probe sensor feed using the current settings (environment variables first, then the Settings -> MCP Server fields) over the configured transport - MQTT topics, or direct GPIO pins polled through a Blinka monitor subprocess. Binds the configured toolsetter/overtravel/probe channels and arms the overtravel tripwire (which latches only while a sensor-gated procedure or MCP motion is in progress). Idempotent.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "disconnect_probe_feed",
+  "description": "Disconnect from the probe sensor feed and stop reconnecting. NOTE: this disarms the overtravel tripwire - do not disconnect while any probing procedure could run. A latched overtravel alarm persists across disconnects.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "clear_overtravel_alarm",
+  "description": "Clear the latched safety alarm (overtravel OR crash - a contact sensor firing during motion that expected no contact) that is blocking all motion. ONLY on the operator's explicit word, after they have physically inspected the machine: pass operator_confirmed: true and repeat their words in reason. Refused while the tripped channel still reports triggered.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "operator_confirmed": {
+     "type": "boolean",
+     "description": "true ONLY when the human operator has explicitly said the machine has been inspected and the alarm may be cleared. Never on the model's own judgment."
+    },
+    "reason": {
+     "type": "string",
+     "description": "The operator's words authorising the clear."
+    }
+   },
+   "required": [
+    "operator_confirmed",
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "list_audio_devices",
+  "description": "Every audio capture source on the Luban host (PipeWire/PulseAudio nodes, ALSA cards, DirectShow devices on Windows) with which one is configured for spindle audio telemetry (mcpAudioDevice / LUBAN_MCP_AUDIO_DEVICE) and whether it resolves. The choice is the OPERATOR's, made in Settings -> MCP Server or the configstore: a laptop's built-in microphone hears its fans, not the spindle, so nothing is ever picked automatically and there is no fallback. Read-only, no motion.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "get_job_telemetry",
+  "description": "Spindle telemetry series of a file job (needs mcpSpindleTelemetry): the controller's reported RPM, target RPM, the line it was executing and the S that line commanded, per status report; with mcpSpindleAudio also the microphone-tracked RPM (20 frames/s), its confidence, the RPM relative to the unloaded baseline, the per-frame chatter index (dB, non-harmonic tones with the harmonics masked at that frame's RPM), the running runout index and the frame role - plus the per-commanded-S verdicts and the stored FLAC path. Series are downsampled to max_points with every bucket's min and max kept, so a blip survives. Times are ms since the job started. get_gcode_job_status carries the summary; this is the data. Read-only.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "job_id": {
+     "type": "string"
+    },
+    "since_ms": {
+     "type": "number",
+     "description": "Window start, ms since job start (default 0)."
+    },
+    "until_ms": {
+     "type": "number",
+     "description": "Window end, ms since job start (default: everything)."
+    },
+    "max_points": {
+     "type": "number",
+     "description": "Points per series after min/max downsampling (default 2000, max 20000)."
+    }
+   },
+   "required": [
+    "job_id"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "set_tool_setter_config",
+  "description": "Store the tool setter reference: its centre in MACHINE coordinates, the machine Z at which a known bit triggers it, that bit's length, and the longest bit in use. All values come from the OPERATOR (or a store_as_reference run) - never from visual estimation. The expected trigger Z for any bit follows as triggerZ + (bit length - reference length).",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "center_x": {
+     "type": "number",
+     "description": "Machine X of the setter centre."
+    },
+    "center_y": {
+     "type": "number",
+     "description": "Machine Y of the setter centre."
+    },
+    "trigger_z": {
+     "type": "number",
+     "description": "Machine Z at trigger with the reference bit."
+    },
+    "reference_bit_length_mm": {
+     "type": "number",
+     "description": "Protrusion of the reference bit, mm."
+    },
+    "disc_diameter_mm": {
+     "type": "number",
+     "description": "Diameter of the setter's contact disc, if measured. Nothing here needs it; the camera bootstrap uses it as an absolute scale reference in a frame."
+    },
+    "longest_bit_length_mm": {
+     "type": "number",
+     "description": "Longest bit in use, mm - sets the safe start height."
+    },
+    "floor_margin_mm": {
+     "type": "number",
+     "description": "Allowed descent below the expected trigger Z, default 3."
+    },
+    "tool_change_x": {
+     "type": "number",
+     "description": "Machine X of the tool-change park position (operator preference)."
+    },
+    "tool_change_y": {
+     "type": "number",
+     "description": "Machine Y of the park position; omit if Y does not matter."
+    },
+    "tool_change_z": {
+     "type": "number",
+     "description": "Machine Z of the park position, typically the homing height."
+    },
+    "notes": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "center_x",
+    "center_y",
+    "trigger_z",
+    "reference_bit_length_mm",
+    "longest_bit_length_mm"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "get_tool_setter_config",
+  "description": "The stored tool setter reference (centre, trigger Z, bit lengths, tool-change park position) and the last two measurements. Read-only.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "set_active_tool",
+  "description": "Explicitly establish which tool is fitted for routine route clearance. This is separate from the configured longest bit: it becomes the active protrusion used to compute physical obstacle clearances. The operator must state the protrusion and confirm the tool is fitted.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "protrusion_mm": {
+     "type": "number",
+     "description": "Measured or operator-confirmed protrusion below the toolhead, mm."
+    },
+    "source": {
+     "type": "string",
+     "enum": [
+      "operator",
+      "tool_setter",
+      "spindle_probe"
+     ],
+     "description": "Provenance of the assertion. Measurement procedures write their own source; operator is for an explicit fitted-tool confirmation."
+    },
+    "tool_identity": {
+     "type": "string",
+     "description": "Optional bit/probe identity."
+    },
+    "note": {
+     "type": "string",
+     "description": "Why this value is trusted."
+    },
+    "measurement_job_id": {
+     "type": "string",
+     "description": "Job that produced a measured assertion, when source is tool_setter or spindle_probe."
+    }
+   },
+   "required": [
+    "protrusion_mm",
+    "source"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "get_active_tool",
+  "description": "Read the fitted active-tool assertion and its provenance. Routine physical-obstacle clearance uses this value when present; the configured longest bit remains a fallback for setup safety.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "run_tool_setter",
+  "description": "Stage a tool height measurement against the tool setter for human confirmation. The declared bit_length_mm comes from the OPERATOR. Preconditions: machine homed and idle, probe feed connected (overtravel tripwire armed), toolsetter sensor readable and not triggered. The confirm page shows the full motion envelope; after approval one start_gcode_job call runs the whole server-driven routine: XY to the centre, Z travel to the safe start height, 1 mm sensor-gated descent to a slow zone, 0.1 mm approach to contact, then repeated quick lift-and-retest confirm cycles - then raises STRAIGHT UP to the traverse height (machine Z328, never the start height; result.finalZ) and reports the median trigger Z, the per-pass contacts and spread, and the derived bit length. A hard floor and the overtravel tripwire bound it (~1-2 minutes).",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "bit_length_mm": {
+     "type": "number",
+     "description": "Approximate protrusion of the FITTED bit in mm, as stated by the operator."
+    },
+    "coarse_step_mm": {
+     "type": "number",
+     "description": "Coarse descent step, default 1 (0.2-2)."
+    },
+    "fine_step_mm": {
+     "type": "number",
+     "description": "Fine step, default 0.1 (0.02-0.5)."
+    },
+    "backoff_mm": {
+     "type": "number",
+     "description": "Backoff before the confirm pass, default 0.3."
+    },
+    "sensor_delay_ms": {
+     "type": "number",
+     "description": "Wait for the sensor report after each step, default 200."
+    },
+    "confirm_passes": {
+     "type": "number",
+     "description": "Quick lift-and-retest cycles after first fine contact; the result is their median and the spread is reported. Default 3 (1-10)."
+    },
+    "start_clearance_mm": {
+     "type": "number",
+     "description": "Clearance above the longest-bit trigger height, default 30 (10-150)."
+    },
+    "slow_zone_mm": {
+     "type": "number",
+     "description": "The coarse ladder stops this far above the expected trigger and fine steps take over, capping the press into the setter at one fine step. Default 1."
+    },
+    "store_as_reference": {
+     "type": "boolean",
+     "description": "After a successful run, store the measured trigger Z and this bit length as the new reference (locks in the setter height)."
+    },
+    "stay_at_trigger": {
+     "type": "boolean",
+     "description": "HOLD the tip at the measured trigger (in contact) instead of retreating - for the touchscreen manual-swap wizard, where the operator confirms the matched position there. Send no other motion until they finish."
+    },
+    "start_from_current": {
+     "type": "boolean",
+     "description": "Skip the XY move and Z travel; descend from the CURRENT position (verified over the setter centre within 1.5 mm) - for when the touchscreen wizard has already returned the new tool over the setter."
+    },
+    "accept_probe_contact": {
+     "type": "boolean",
+     "description": "REQUIRED when the fitted tool is the spindle TOUCH PROBE: its own channel fires before the setter switch and pressing on would bend it, so EITHER channel counts as the height confirmation (the result notes which)."
+    },
+    "reason": {
+     "type": "string",
+     "description": "Shown to the operator: why this measurement is needed."
+    }
+   },
+   "required": [
+    "bit_length_mm",
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "goto_tool_change_position",
+  "description": "Stage the move to the operator-set tool-change park position (machine coords from set_tool_setter_config: typically Z at the homing height and X at the far end; Y only if configured). One approval covers two exact steps: Z up first, then X/Y, one start_gcode_job call each. The operator then swaps the tool BY HAND; afterwards run_tool_setter measures the new tool and apply_tool_length_offset shifts the work origin by the length difference.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "reason": {
+     "type": "string",
+     "description": "Shown to the operator."
+    }
+   },
+   "required": [
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "apply_tool_length_offset",
+  "description": "After a tool change: shift the CURRENT work origin Z by the measured length difference between the last two tool setter measurements (new - previous; overridable via explicit old/new trigger Zs), so work Z keeps meaning the same physical plane with the new tool. Stages a single G92 for operator confirmation - nothing moves; the work coordinate frame shifts. This is the sanctioned tool-length transfer: it does what the touchscreen manual tool-change wizard does after its two operator confirmations. The two stored measurements must be an ordered old/new pair taken since the machine last (re)connected (work origins die on a reboot) unless old/new trigger Zs are passed explicitly. Verify with get_position afterwards.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "old_trigger_z": {
+     "type": "number",
+     "description": "Machine trigger Z of the OLD tool. Default: the previous measurement."
+    },
+    "new_trigger_z": {
+     "type": "number",
+     "description": "Machine trigger Z of the NEW tool. Default: the last measurement."
+    },
+    "reason": {
+     "type": "string",
+     "description": "Shown to the operator."
+    }
+   },
+   "required": [
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "set_workspace_origin",
+  "description": "Stage a HUMAN-GATED origin write to an explicitly named G54..G59.3 workspace. origin_machine is the machine XYZ where work XYZ=0 should be, with Z as TOOLHEAD Z for the fitted tool, derived from verified datum measurements. Sets ALL XYZ using firmware G92 from the current stationary pose; no need to visit the origin. NO AXIS MOTION. Requires fresh reliable position, idle/homed machine and toolhead off. Approval shows the target workspace and effects. The runner refuses changed staging state, requires firmware selection acknowledgement and verifies two fresh offset/position readbacks. Leaves the requested workspace selected; other MCP procedures may reselect G54. Existing staged jobs are invalidated; restage after verification. Prefer one established WCS across indexed cuts. Multiple workspaces are discouraged unless necessary, particularly for an existing G-code job. A valid WCS may have an obstructed origin after rotation: this tool does not move there or certify return clearance. After staging, deliver confirm_url; start_gcode_job requires the operator approval. Do not use raw G92/G10 to bypass this tool.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "workspace": {
+     "type": "string",
+     "enum": [
+      "G54",
+      "G55",
+      "G56",
+      "G57",
+      "G58",
+      "G59",
+      "G59.1",
+      "G59.2",
+      "G59.3"
+     ],
+     "description": "Explicit target workspace; normally retain G54. Additional workspaces only when required by the existing setup/job."
+    },
+    "origin_machine": {
+     "type": "object",
+     "properties": {
+      "x": {
+       "type": "number"
+      },
+      "y": {
+       "type": "number"
+      },
+      "z": {
+       "type": "number",
+       "description": "Machine TOOLHEAD Z for work Z0 with the fitted tool; not physical surface height."
+      }
+     },
+     "required": [
+      "x",
+      "y",
+      "z"
+     ],
+     "additionalProperties": false,
+     "description": "Measured/derived work-zero location in machine coordinates. All XYZ are replaced; B and E are never changed. No movement to this point."
+    },
+    "datum_reference": {
+     "type": "string",
+     "description": "Measurement/job references, fitted tool, B orientation and how the datum is established/rechecked; displayed for human review."
+    },
+    "reason": {
+     "type": "string",
+     "description": "Purpose of the change, shown to the operator; explain any non-default workspace required by an existing job."
+    }
+   },
+   "required": [
+    "workspace",
+    "origin_machine",
+    "datum_reference",
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "select_workspace",
+  "description": "Stage a HUMAN-GATED selection of an existing G54..G59.3 workspace without changing any stored origin. NO AXIS MOTION. Requires fresh reliable position, idle/homed machine and toolhead off. Approval shows the target workspace and effects. The runner refuses changed staging state, requires firmware selection acknowledgement and verifies two fresh offset/position readbacks. Leaves the requested workspace selected; other MCP procedures may reselect G54. Existing staged jobs are invalidated; restage after verification. Prefer one established WCS across indexed cuts. Multiple workspaces are discouraged unless necessary, particularly for an existing G-code job. A valid WCS may have an obstructed origin after rotation: this tool does not move there or certify return clearance. After staging, deliver confirm_url; start_gcode_job requires the operator approval. Do not use raw G92/G10 to bypass this tool.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "workspace": {
+     "type": "string",
+     "enum": [
+      "G54",
+      "G55",
+      "G56",
+      "G57",
+      "G58",
+      "G59",
+      "G59.1",
+      "G59.2",
+      "G59.3"
+     ],
+     "description": "Explicit target workspace; normally retain G54. Additional workspaces only when required by the existing setup/job."
+    },
+    "reason": {
+     "type": "string",
+     "description": "Purpose of the change, shown to the operator; explain any non-default workspace required by an existing job."
+    }
+   },
+   "required": [
+    "workspace",
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "probe_point",
+  "description": "Stage a touch-probe point measurement for human confirmation: a single-axis sensor-gated march FROM THE CURRENT POSITION along +/-X, +/-Y or -Z, using the spindle touch probe (probe feed channel). Same staged mechanics as the tool setter: coarse steps to contact, retreat to release, fine steps, quick lift-and-retest confirm cycles - returns the median contact coordinate in machine coords with spread. Position first (move_and_capture / move_z), then stage; the envelope is anchored to the staging position and re-verified before motion. Remember the tip radius on side probes: the surface is one tip-radius beyond the contact centre.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "axis": {
+     "type": "string",
+     "enum": [
+      "x",
+      "y",
+      "z"
+     ],
+     "description": "Axis to march along."
+    },
+    "direction": {
+     "type": "number",
+     "enum": [
+      1,
+      -1
+     ],
+     "description": "Sign of travel; Z is -1 only."
+    },
+    "max_travel_mm": {
+     "type": "number",
+     "description": "REQUIRED hard travel limit (1-150): the march aborts here without contact."
+    },
+    "coarse_step_mm": {
+     "type": "number",
+     "description": "Coarse step, default 1 (0.2-1; never larger - the coarse step is also the press into the probe)."
+    },
+    "fine_step_mm": {
+     "type": "number",
+     "description": "Fine step, default 0.1 (0.02-0.5)."
+    },
+    "backoff_mm": {
+     "type": "number",
+     "description": "Confirm-cycle lift, default 1 (also the confirm re-contact window)."
+    },
+    "sensor_delay_ms": {
+     "type": "number",
+     "description": "Contact-check window per step, default 300."
+    },
+    "confirm_passes": {
+     "type": "number",
+     "description": "Lift-and-retest cycles, default 3 (1-10)."
+    },
+    "reason": {
+     "type": "string",
+     "description": "Shown to the operator: what is being measured and why."
+    }
+   },
+   "required": [
+    "axis",
+    "direction",
+    "max_travel_mm",
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "probe_vector",
+  "description": "Stage a touch-probe march along an ARBITRARY direction for human confirmation: from the CURRENT position along the given (dx, dy, dz) heading - any XY direction, optionally angled downward, never upward. Same staged mechanics as probe_point (coarse steps to contact, retreat to release, fine steps, lift-and-retest confirm cycles); the march is parametrized along the unit vector so every commanded position lies on the approved segment. Returns the median contact as machine XYZ plus the distance along the vector. probe_point is the axis-aligned special case; use this for angled edges, chamfers, polygon faces, and inside-a-hole checks. Position first (top-gantry traverse, operator-confirmed descent), then stage.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "dx": {
+     "type": "number",
+     "description": "Direction X component (machine frame). Magnitude ignored."
+    },
+    "dy": {
+     "type": "number",
+     "description": "Direction Y component."
+    },
+    "dz": {
+     "type": "number",
+     "description": "Direction Z component; must be <= 0 (downward or level)."
+    },
+    "max_travel_mm": {
+     "type": "number",
+     "description": "REQUIRED hard travel limit (1-150) along the vector: the march aborts there without contact. Clamped so the whole segment stays in the machine envelope."
+    },
+    "coarse_step_mm": {
+     "type": "number",
+     "description": "Coarse step, default 1 (0.2-1; never larger - the coarse step is also the press into the probe)."
+    },
+    "fine_step_mm": {
+     "type": "number",
+     "description": "Fine step, default 0.1 (0.02-0.5)."
+    },
+    "backoff_mm": {
+     "type": "number",
+     "description": "Confirm-cycle lift, default 1 (also the confirm re-contact window)."
+    },
+    "sensor_delay_ms": {
+     "type": "number",
+     "description": "Contact-check window per step, default 300."
+    },
+    "confirm_passes": {
+     "type": "number",
+     "description": "Lift-and-retest cycles, default 3 (1-10)."
+    },
+    "reason": {
+     "type": "string",
+     "description": "Shown to the operator: what is being measured and why."
+    }
+   },
+   "required": [
+    "max_travel_mm",
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "probe_sequence",
+  "description": "Stage a whole measurement CIRCUIT as ONE operator approval: an ordered list of steps - hop (XY traverse; the runner always raises to the safe traverse height first), descend (absolute Z at current XY), probe (named sensor-gated march along +/-X/+/-Y/-Z or any downward vector, with the proven coarse/release/fine/confirm mechanics). The plan is simulated at staging so the confirm page enumerates every commanded move with concrete numbers; the runner re-verifies the machine matches the simulation before every march. Contact is expected ONLY during marches - a touch during any hop, raise or descent latches the CRASH alarm. Every number must be measured or operator-stated. Optional capture on a probe step photographs the final contact before retracting. EVERY probe, including a continuing miss, returns to its own start and then raises before the next step. For related local stations prefer surface_path/grid, wall_follow, trace, corner or stock_outline when their geometry fits; one approval does not make this sequence a continuous low path. Results keyed by march name, machine coords only.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "steps": {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 60,
+     "description": "Ordered circuit steps.",
+     "items": {
+      "type": "object",
+      "properties": {
+       "kind": {
+        "type": "string",
+        "enum": [
+         "hop",
+         "descend",
+         "probe"
+        ]
+       },
+       "x": {
+        "type": "number",
+        "description": "hop: target machine X."
+       },
+       "y": {
+        "type": "number",
+        "description": "hop: target machine Y."
+       },
+       "z": {
+        "type": "number",
+        "description": "descend: absolute machine Z."
+       },
+       "name": {
+        "type": "string",
+        "description": "probe: unique result key."
+       },
+       "capture": {
+        "type": "object",
+        "description": "Optional stationary photograph after the final confirm contact, BEFORE retracting. No camera move. A camera failure is recorded and probing continues; stop/alarm still aborts.",
+        "properties": {
+         "settle_ms": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5000,
+          "description": "Settling delay at the probe spot, default 500 ms."
+         },
+         "label": {
+          "type": "string",
+          "description": "Caption saved beside frame, measured contact and actual capture pose."
+         }
+        },
+        "additionalProperties": false
+       },
+       "dx": {
+        "type": "number",
+        "description": "probe: direction X component."
+       },
+       "dy": {
+        "type": "number",
+        "description": "probe: direction Y component."
+       },
+       "dz": {
+        "type": "number",
+        "description": "probe: direction Z component (<= 0)."
+       },
+       "max_travel_mm": {
+        "type": "number",
+        "description": "probe: hard travel limit (1-150)."
+       },
+       "on_miss": {
+        "type": "string",
+        "enum": [
+         "continue",
+         "abort"
+        ],
+        "description": "probe: reaching max_travel_mm without contact records a no_contact result and continues (default) or aborts the sequence. A later reference to a missed probe is refused at that op."
+       }
+      },
+      "required": [
+       "kind"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "coarse_step_mm": {
+     "type": "number",
+     "description": "Coarse step for all marches, default 1 (0.2-2)."
+    },
+    "fine_step_mm": {
+     "type": "number",
+     "description": "Fine step, default 0.1 (0.02-0.5)."
+    },
+    "backoff_mm": {
+     "type": "number",
+     "description": "Confirm-cycle lift, default 1 (also the confirm re-contact window)."
+    },
+    "sensor_delay_ms": {
+     "type": "number",
+     "description": "Contact-check window per step, default 300."
+    },
+    "confirm_passes": {
+     "type": "number",
+     "description": "Lift-and-retest cycles per march, default 3 (1-10)."
+    },
+    "reason": {
+     "type": "string",
+     "description": "Shown to the operator: what the circuit measures and why."
+    }
+   },
+   "required": [
+    "steps",
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "probe_circle",
+  "description": "Stage an N-point circle measurement of a roughly-round vertical feature for human confirmation: radial sensor-gated marches from evenly spaced azimuths, then a least-squares circle fit. OUTSIDE mode (post/boss/pin, default): marches step inward; requires the estimated centre and a MEASURED top height; yields the COMBINED diameter (feature + tip). INSIDE mode (inside: true, a HOLE): the operator first positions the tip INSIDE the hole at the measuring depth; marches step OUTWARD from that staged position to the wall, no hops, ending with a vertical raise out along the entry path; yields hole diameter MINUS tip. Both need the operator's MIN and MAX diameter estimates - they bound every march so a wrong guess aborts instead of pressing on. Residuals expose an out-of-round tip or feature. Outside repositioning obeys motion law 2 (traverse-height hops); a probe touch during a hop or descent latches CRASH. All results in MACHINE coordinates.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "inside": {
+     "type": "boolean",
+     "description": "true = measure a HOLE from inside (tip already positioned in it at depth); false/omitted = measure a feature from outside."
+    },
+    "center_x": {
+     "type": "number",
+     "description": "OUTSIDE mode: estimated feature centre X, machine coords. Ignored inside (the staged position is the march origin)."
+    },
+    "center_y": {
+     "type": "number",
+     "description": "OUTSIDE mode: estimated feature centre Y, machine coords."
+    },
+    "diameter_min_mm": {
+     "type": "number",
+     "description": "Operator's LOWER bound on the feature diameter: marches abort at this radius without contact instead of pressing on."
+    },
+    "diameter_max_mm": {
+     "type": "number",
+     "description": "Operator's UPPER bound on the feature diameter: approaches start approach_clearance_mm beyond this radius."
+    },
+    "top_z_machine": {
+     "type": "number",
+     "description": "OUTSIDE mode (required there): toolhead machine Z at which the probe tip touches the feature TOP - measured (probe_point -Z) or operator-stated, never guessed. Optional record-keeping inside."
+    },
+    "probe_depth_mm": {
+     "type": "number",
+     "description": "Side contacts this far below the top, default 3 (0.5-20)."
+    },
+    "points": {
+     "type": "number",
+     "description": "Contact points around the circle, default 8 (4-16)."
+    },
+    "approach_clearance_mm": {
+     "type": "number",
+     "description": "Start-radius margin beyond max/2, default 5 (1-20). Must exceed the probe tip radius plus a safety margin."
+    },
+    "coarse_step_mm": {
+     "type": "number",
+     "description": "Coarse radial step, default 0.5 (0.2-2)."
+    },
+    "fine_step_mm": {
+     "type": "number",
+     "description": "Fine step, default 0.1 (0.02-0.5)."
+    },
+    "backoff_mm": {
+     "type": "number",
+     "description": "Confirm-cycle lift, default 1 (also the confirm re-contact window)."
+    },
+    "sensor_delay_ms": {
+     "type": "number",
+     "description": "Contact-check window per step, default 300."
+    },
+    "confirm_passes": {
+     "type": "number",
+     "description": "Lift-and-retest cycles per point, default 2 (1-5)."
+    },
+    "reason": {
+     "type": "string",
+     "description": "Shown to the operator: what is being measured and why."
+    }
+   },
+   "required": [
+    "diameter_min_mm",
+    "diameter_max_mm",
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "probe_surface_path",
+  "description": "Stage a TOP-SURFACE FLATNESS scan along a straight line for human confirmation: N stations from a start point to an end point (or direction + length), spaced by count or maximum spacing, each measured with a -Z sensor-gated march of the spindle touch probe (coarse towards the expected contact, fine steps in a slow zone, lift-and-retest confirm, median). Result per station: machine XYZ of contact or no_contact; plus Z min/max/range, the best-fit line (slope in mm per 100 mm and degrees, rise over the length) and flatness as residual peak-to-valley, and a text profile. Purpose: level/flatness of stock along a line, e.g. along a rotary-mounted board. SURFACE ENVELOPE (operator-authorised 2026-09-05; valid only inside this procedure between consecutive stations; other probing procedures have their own bounded links): guarded mode retracts to LAST CONTACT + z_safe_delta_mm (default 20, HARD CAP 20) and hops in <= 10 mm sensor-checked segments expecting NO contact; a touch latches CRASH. Stepped mode uses LAST CONTACT + hop_lift_mm (default 2) and touch-probing links with backoff/lift recovery; contact during a lift holds. Both modes require the next station within max_hop_mm (default 60, HARD CAP 60) - wider spacing/pitch is REFUSED at staging, never split silently. Each -Z march searches from the hop height down to max(last contact - max_drop_mm (default 40, cap 80), floor_z_machine (default start_z_machine - max_drop_mm)); reaching the floor without contact records the station as no_contact and continues with the reference height unchanged (the first station finding nothing aborts). The approach to the FIRST station is a full law-2 move: raise to the safe traverse height, traverse, guarded 1 mm descent to start_z_machine (REQUIRED - a measured or operator-stated toolhead machine Z with the tip just above the surface, never a guess). Ends raised at the traverse height. All numbers MACHINE coordinates; Z values are toolhead Z at contact (surface = Z - probe length).",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "start_x": {
+     "type": "number",
+     "description": "First station machine X."
+    },
+    "start_y": {
+     "type": "number",
+     "description": "First station machine Y."
+    },
+    "end_x": {
+     "type": "number",
+     "description": "Last station machine X (with end_y). Alternative: dx/dy + length_mm."
+    },
+    "end_y": {
+     "type": "number",
+     "description": "Last station machine Y."
+    },
+    "dx": {
+     "type": "number",
+     "description": "Path direction X component (with dy and length_mm) when end_x/end_y are not given. Magnitude ignored."
+    },
+    "dy": {
+     "type": "number",
+     "description": "Path direction Y component."
+    },
+    "length_mm": {
+     "type": "number",
+     "description": "Path length along dx/dy (1-400)."
+    },
+    "stations": {
+     "type": "number",
+     "description": "Station count including both ends (2-400; above 60 the confirm page warns about duration and the event budget). Alternative: spacing_mm."
+    },
+    "spacing_mm": {
+     "type": "number",
+     "description": "MAXIMUM spacing: the length is divided evenly into steps no larger than this, both ends covered. Must give consecutive stations within max_hop_mm or staging refuses."
+    },
+    "capture": {
+     "type": "object",
+     "description": "Optional stationary photograph after the final confirm contact, BEFORE retracting. No camera move. A camera failure is recorded and probing continues; stop/alarm still aborts.",
+     "properties": {
+      "settle_ms": {
+       "type": "number",
+       "minimum": 0,
+       "maximum": 5000,
+       "description": "Settling delay at the probe spot, default 500 ms."
+      },
+      "label": {
+       "type": "string",
+       "description": "Caption saved beside frame, measured contact and actual capture pose."
+      },
+      "stations": {
+       "type": "array",
+       "minItems": 1,
+       "maxItems": 60,
+       "uniqueItems": true,
+       "items": {
+        "type": "integer",
+        "minimum": 1
+       },
+       "description": "1-based scan station indices to photograph; missed stations capture at the search floor."
+      }
+     },
+     "additionalProperties": false,
+     "required": [
+      "stations"
+     ]
+    },
+    "start_z_machine": {
+     "type": "number",
+     "description": "REQUIRED. Toolhead machine Z where the first -Z march starts (probe tip just above the surface) - measured (probe_point -Z, an earlier scan) or operator-stated. Reached by a guarded descent."
+    },
+    "floor_z_machine": {
+     "type": "number",
+     "description": "Absolute deepest toolhead machine Z any march may command. Default start_z_machine - max_drop_mm. State it explicitly (lower) to scan into a deep pocket; must stay within 150 mm of start_z_machine."
+    },
+    "z_safe_delta_mm": {
+     "type": "number",
+     "description": "Guarded mode: retract above the last contact for the next hop. Stepped mode uses hop_lift_mm instead. Default 20, HARD CAP 20 (operator law), min 3. Above the cap = refused."
+    },
+    "max_hop_mm": {
+     "type": "number",
+     "description": "Largest allowed horizontal distance between consecutive stations. Default 60, HARD CAP 60 (operator law). A plan whose spacing/pitch exceeds it is refused at staging."
+    },
+    "max_drop_mm": {
+     "type": "number",
+     "description": "How far below the previous contact one station may search before recording no_contact. Default 40, cap 80 (also bounded by floor_z_machine)."
+    },
+    "coarse_step_mm": {
+     "type": "number",
+     "description": "Coarse -Z step for every march, default 1, range 0.5-1 (operator law: never larger - the coarse step is ALSO the worst-case press into the probe wherever the surface is found by a coarse step, because the controller finishes the step before the runner sees the sensor; inside the slow zone the press is one fine step instead). Values above 1 are clamped to 1."
+    },
+    "fine_step_mm": {
+     "type": "number",
+     "description": "Fine step, default 0.1 (0.02-0.5)."
+    },
+    "backoff_mm": {
+     "type": "number",
+     "description": "Confirm-cycle lift, default 1 (also the confirm re-contact window)."
+    },
+    "sensor_delay_ms": {
+     "type": "number",
+     "description": "Contact-check window per step, default 300, floor 30 (GPIO transport: 50 is ample - the trigger led the controller reply on every contact measured)."
+    },
+    "confirm_passes": {
+     "type": "number",
+     "description": "Lift-and-retest cycles per station, default 3 (1-10)."
+    },
+    "slow_zone_mm": {
+     "type": "number",
+     "description": "Coarse steps stop this far ABOVE the expected contact (the previous station's Z; expected_z_machine for station 1) and fine steps take over, down to slow_zone + 2 x coarse below it (coarse resumes lower). Caps the press into the probe at one fine step where the surface is where expected. Default 1, min 0.3, max z_safe_delta_mm."
+    },
+    "hop_mode": {
+     "type": "string",
+     "enum": [
+      "guarded",
+      "stepped"
+     ],
+     "description": "Travel between stations: \"guarded\" (default) hops at last contact + z_safe_delta_mm expecting no contact (a contact aborts); \"stepped\" travels at last contact + hop_lift_mm as a touch-probing traverse (1 mm steps, probe expected) that backs off with up to one ball radius of extra clearance on a verified incoming path, then lifts in sensor-checked 0.5 mm segments. Contact during a lift holds the program. The height follows the surface in steps, gentle over a slope or one lift at the wall of a hole, instead of a fixed clearance."
+    },
+    "hop_lift_mm": {
+     "type": "number",
+     "description": "stepped hop_mode: lift per contact and travel height above the last contact, default 2 (0.5-10)."
+    },
+    "expected_profile": {
+     "type": "object",
+     "description": "Optional surface MODEL for curved stock: {\"circle\": {\"center_x\", \"center_z_contact\", \"radius\", \"tip_radius\"?}} = a cylinder along machine Y (the rotary axis) with the given axis X, toolhead Z with the tip on the axis (axis.z_contact when the geometry is configured) and stock radius (operator-bounded). Every station then gets its own expected contact Z from the model (slow zone + max_drop band follow it, not the previous station); stations more than 0.7 x radius off the axis are refused (the tip would glance). In a probe_program the numbers may be references."
+    },
+    "expected_z_machine": {
+     "type": "number",
+     "description": "Optional: toolhead machine Z of a MEASURED neighbouring contact (probe_point -Z, a probe_sequence centre, an earlier scan) so station 1 gets the slow zone too. Never inferred (law 3). Without it station 1 uses coarse steps capped at 1 mm."
+    },
+    "reason": {
+     "type": "string",
+     "description": "Shown to the operator: what surface is being scanned and why."
+    }
+   },
+   "required": [
+    "start_x",
+    "start_y",
+    "start_z_machine",
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "probe_surface_grid",
+  "description": "Stage a TOP-SURFACE HEIGHT MAP for human confirmation: a serpentine grid of -Z touches of the spindle touch probe over a region (x/y extents, or centre + size; sampled by maximum pitch or by x_count/y_count), every station a sensor-gated march (coarse towards the expected contact, fine steps in a slow zone, lift-and-retest confirm, median). Result: per-station machine XYZ or no_contact, a zMatrix (rows = ys ascending, cols = xs ascending, null = no contact) with its coordinates, Z min/max/range, the best-fit plane (tilt X/Y in mm per 100 mm and degrees) with per-point residuals and flatness (residual peak-to-valley), and a compact text height map (+Y at the top). Purpose: scan a pocketed box, a log, a wasteboard - anything with a top. SURFACE ENVELOPE (operator-authorised 2026-09-05; valid only inside this procedure between consecutive stations; other probing procedures have their own bounded links): guarded mode retracts to LAST CONTACT + z_safe_delta_mm (default 20, HARD CAP 20) and hops in <= 10 mm sensor-checked segments expecting NO contact; a touch latches CRASH. Stepped mode uses LAST CONTACT + hop_lift_mm (default 2) and touch-probing links with backoff/lift recovery; contact during a lift holds. Both modes require the next station within max_hop_mm (default 60, HARD CAP 60) - wider spacing/pitch is REFUSED at staging, never split silently. Each -Z march searches from the hop height down to max(last contact - max_drop_mm (default 40, cap 80), floor_z_machine (default start_z_machine - max_drop_mm)); reaching the floor without contact records the station as no_contact and continues with the reference height unchanged (the first station finding nothing aborts). The approach to the FIRST station is a full law-2 move: raise to the safe traverse height, traverse, guarded 1 mm descent to start_z_machine (REQUIRED - a measured or operator-stated toolhead machine Z with the tip just above the surface, never a guess). Ends raised at the traverse height. All numbers MACHINE coordinates; Z values are toolhead Z at contact (surface = Z - probe length).",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "x_min": {
+     "type": "number",
+     "description": "Region machine X minimum (with x_max/y_min/y_max). Alternative: center_x/center_y + size."
+    },
+    "x_max": {
+     "type": "number",
+     "description": "Region machine X maximum."
+    },
+    "y_min": {
+     "type": "number",
+     "description": "Region machine Y minimum."
+    },
+    "y_max": {
+     "type": "number",
+     "description": "Region machine Y maximum."
+    },
+    "center_x": {
+     "type": "number",
+     "description": "Region centre machine X (with center_y, size_x_mm[, size_y_mm])."
+    },
+    "center_y": {
+     "type": "number",
+     "description": "Region centre machine Y."
+    },
+    "size_x_mm": {
+     "type": "number",
+     "description": "Region width along X."
+    },
+    "size_y_mm": {
+     "type": "number",
+     "description": "Region depth along Y (default = size_x_mm)."
+    },
+    "pitch_mm": {
+     "type": "number",
+     "description": "MAXIMUM grid pitch on both axes: each extent is divided evenly into steps no larger than this, both edges covered. Must be within max_hop_mm (cap 60) or staging refuses - the operator picks a finer pitch, the plan is never split."
+    },
+    "x_count": {
+     "type": "number",
+     "description": "Number of X lines (2-40) instead of pitch_mm for X."
+    },
+    "y_count": {
+     "type": "number",
+     "description": "Number of Y lines (2-40) instead of pitch_mm for Y. Max 400 stations total."
+    },
+    "capture": {
+     "type": "object",
+     "description": "Optional stationary photograph after the final confirm contact, BEFORE retracting. No camera move. A camera failure is recorded and probing continues; stop/alarm still aborts.",
+     "properties": {
+      "settle_ms": {
+       "type": "number",
+       "minimum": 0,
+       "maximum": 5000,
+       "description": "Settling delay at the probe spot, default 500 ms."
+      },
+      "label": {
+       "type": "string",
+       "description": "Caption saved beside frame, measured contact and actual capture pose."
+      },
+      "stations": {
+       "type": "array",
+       "minItems": 1,
+       "maxItems": 60,
+       "uniqueItems": true,
+       "items": {
+        "type": "integer",
+        "minimum": 1
+       },
+       "description": "1-based scan station indices to photograph; missed stations capture at the search floor."
+      }
+     },
+     "additionalProperties": false,
+     "required": [
+      "stations"
+     ]
+    },
+    "start_z_machine": {
+     "type": "number",
+     "description": "REQUIRED. Toolhead machine Z where the first -Z march starts (probe tip just above the surface) - measured (probe_point -Z, an earlier scan) or operator-stated. Reached by a guarded descent."
+    },
+    "floor_z_machine": {
+     "type": "number",
+     "description": "Absolute deepest toolhead machine Z any march may command. Default start_z_machine - max_drop_mm. State it explicitly (lower) to scan into a deep pocket; must stay within 150 mm of start_z_machine."
+    },
+    "z_safe_delta_mm": {
+     "type": "number",
+     "description": "Guarded mode: retract above the last contact for the next hop. Stepped mode uses hop_lift_mm instead. Default 20, HARD CAP 20 (operator law), min 3. Above the cap = refused."
+    },
+    "max_hop_mm": {
+     "type": "number",
+     "description": "Largest allowed horizontal distance between consecutive stations. Default 60, HARD CAP 60 (operator law). A plan whose spacing/pitch exceeds it is refused at staging."
+    },
+    "max_drop_mm": {
+     "type": "number",
+     "description": "How far below the previous contact one station may search before recording no_contact. Default 40, cap 80 (also bounded by floor_z_machine)."
+    },
+    "coarse_step_mm": {
+     "type": "number",
+     "description": "Coarse -Z step for every march, default 1, range 0.5-1 (operator law: never larger - the coarse step is ALSO the worst-case press into the probe wherever the surface is found by a coarse step, because the controller finishes the step before the runner sees the sensor; inside the slow zone the press is one fine step instead). Values above 1 are clamped to 1."
+    },
+    "fine_step_mm": {
+     "type": "number",
+     "description": "Fine step, default 0.1 (0.02-0.5)."
+    },
+    "backoff_mm": {
+     "type": "number",
+     "description": "Confirm-cycle lift, default 1 (also the confirm re-contact window)."
+    },
+    "sensor_delay_ms": {
+     "type": "number",
+     "description": "Contact-check window per step, default 300, floor 30 (GPIO transport: 50 is ample - the trigger led the controller reply on every contact measured)."
+    },
+    "confirm_passes": {
+     "type": "number",
+     "description": "Lift-and-retest cycles per station, default 3 (1-10)."
+    },
+    "slow_zone_mm": {
+     "type": "number",
+     "description": "Coarse steps stop this far ABOVE the expected contact (the previous station's Z; expected_z_machine for station 1) and fine steps take over, down to slow_zone + 2 x coarse below it (coarse resumes lower). Caps the press into the probe at one fine step where the surface is where expected. Default 1, min 0.3, max z_safe_delta_mm."
+    },
+    "hop_mode": {
+     "type": "string",
+     "enum": [
+      "guarded",
+      "stepped"
+     ],
+     "description": "Travel between stations: \"guarded\" (default) hops at last contact + z_safe_delta_mm expecting no contact (a contact aborts); \"stepped\" travels at last contact + hop_lift_mm as a touch-probing traverse (1 mm steps, probe expected) that backs off with up to one ball radius of extra clearance on a verified incoming path, then lifts in sensor-checked 0.5 mm segments. Contact during a lift holds the program. The height follows the surface in steps, gentle over a slope or one lift at the wall of a hole, instead of a fixed clearance."
+    },
+    "hop_lift_mm": {
+     "type": "number",
+     "description": "stepped hop_mode: lift per contact and travel height above the last contact, default 2 (0.5-10)."
+    },
+    "expected_profile": {
+     "type": "object",
+     "description": "Optional surface MODEL for curved stock: {\"circle\": {\"center_x\", \"center_z_contact\", \"radius\", \"tip_radius\"?}} = a cylinder along machine Y (the rotary axis) with the given axis X, toolhead Z with the tip on the axis (axis.z_contact when the geometry is configured) and stock radius (operator-bounded). Every station then gets its own expected contact Z from the model (slow zone + max_drop band follow it, not the previous station); stations more than 0.7 x radius off the axis are refused (the tip would glance). In a probe_program the numbers may be references."
+    },
+    "expected_z_machine": {
+     "type": "number",
+     "description": "Optional: toolhead machine Z of a MEASURED neighbouring contact (probe_point -Z, a probe_sequence centre, an earlier scan) so station 1 gets the slow zone too. Never inferred (law 3). Without it station 1 uses coarse steps capped at 1 mm."
+    },
+    "reason": {
+     "type": "string",
+     "description": "Shown to the operator: what surface is being scanned and why."
+    }
+   },
+   "required": [
+    "start_z_machine",
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "survey_bed",
+  "description": "Stage a whole-bed camera survey for human confirmation: a serpentine XY grid at the CURRENT Z or at stated z_levels (each at or above the motion floor unless the operator has confirmed clearance), capturing a frame at every waypoint. Stored landmarks are obstacles (law 4): a waypoint the toolhead cannot stand on at a level is DROPPED from that pass and reported (result.dropped), and a link between waypoints that would cross a keep-out at the level is lifted to the park height leg by leg - never planned through. Frames are saved to disk with a machine-position index so the scene can be reviewed as a whole (read the files directly); they do NOT go through the 12-frame cache. Requires a working camera (mcpCameraUrl or ffmpeg).",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "pitch_mm": {
+     "type": "number",
+     "description": "MAXIMUM grid spacing, default 80 (20-160). Each axis span is divided into equal steps no larger than this, so rows and columns are uniform and both edges are covered - no fixed-pitch stub at the far end."
+    },
+    "overlap_fraction": {
+     "type": "number",
+     "description": "Fraction of each frame that must be shared with its neighbour, 0-0.9. Given this, the pitch is DERIVED from the camera model's field of view on plane_z instead of guessed - \"seamless\" is a relationship between pitch and field of view, and a picked number is not one. Needs a verified camera model (camera_bootstrap); pitch_mm then just caps the result."
+    },
+    "machine_z": {
+     "type": "number",
+     "description": "Explicit initial machine Z. The runner verifies this exact Z before any XY motion; use this instead of relying on CURRENT Z."
+    },
+    "plane_z": {
+     "type": "number",
+     "description": "Machine Z of the surface being surveyed, for the field of view and the mosaic index. Default 0 (the bed). A frame cannot tell how far away what it sees is, so this is stated, never inferred."
+    },
+    "margin_mm": {
+     "type": "number",
+     "description": "Inset of the default bounds from the toolhead travel, default 10 (0-50)."
+    },
+    "z_levels": {
+     "type": "array",
+     "description": "Machine Z heights to run the whole grid at, highest first; one approval covers the series. Every level must be at or above the motion floor. Each level is entered with XY STATIONARY, so the grid is a stack of flat passes and never a diagonal. Default: the current Z alone.",
+     "items": {
+      "type": "number"
+     }
+    },
+    "x_min": {
+     "type": "number",
+     "description": "Machine-coord grid bounds. Default: the toolhead travel inset by margin_mm - the travel as stated for this rig (set_probe_geometry travel_*), widened by where the head has been observed, else the machine definition."
+    },
+    "x_max": {
+     "type": "number",
+     "description": "A bound beyond the travel is clipped to it and the clipping REPORTED (result.clipped, and on the confirm page) - never silently planned. To survey reachable overtravel the definition omits (the far-X column the camera angle otherwise misses), state the travel with set_probe_geometry travel_x_max."
+    },
+    "y_min": {
+     "type": "number"
+    },
+    "y_max": {
+     "type": "number"
+    },
+    "operator_confirmed_clearance": {
+     "type": "boolean",
+     "description": "Set true ONLY on the operator's explicit word that the current Z and every z_level clear everything on the bed; required when one is below the motion floor. Stored landmarks are still honoured."
+    },
+    "reason": {
+     "type": "string",
+     "description": "Shown to the operator."
+    }
+   },
+   "required": [
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "probe_stock_outline",
+  "description": "Stage ONE approved procedure that finds a block's top, true outline and CENTRE from an ESTIMATE of where it is and how big it is - no re-probing the centre for every side. 1) TOP: -Z marches at top_points (default 3 along the longer axis around center_x/center_y) from the operator-stated start_z_machine to floor_z_machine; the HIGHEST contact is the top and a sample lower by more than hole_tolerance_mm (default 2) is a hole and ignored (a first probe landing in a drilled hole does not define the surface); between points the probe travels close above the surface as a stepped traverse that lifts hop_lift_mm on contact. 2) SIDES (default all four): horizontal marches toward the stock from overextend_mm (default 5) OUTSIDE the estimate at top - side_depth_mm (default 2), points_per_side (default 3, midpoint first) per side, each up to side_max_travel_mm (default 25 - generous on purpose: the combined error of the centre and width estimate must fit inside it, a short march silently misses the face); a march that finds nothing records no_contact and the procedure continues. 3) FIT: per-side mean and slope -> centre (machine AND work frame), size centre-to-centre and PHYSICAL (minus the tip diameter when set_probe_geometry stored it - external faces lie one tip radius inside their contacts), yaw. Result: top, topSamples, sides, fit, centerMachine, centerWork, sizeMm, sizePhysicalMm, yawDeg, lifts. Also available as probe_program op kind \"stock_outline\".",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "center_x": {
+     "type": "number",
+     "description": "Estimated stock centre, machine X (default: current X)."
+    },
+    "center_y": {
+     "type": "number",
+     "description": "Estimated stock centre, machine Y (default: current Y)."
+    },
+    "size_x_mm": {
+     "type": "number",
+     "description": "REQUIRED estimated size along machine X (2-400)."
+    },
+    "size_y_mm": {
+     "type": "number",
+     "description": "REQUIRED estimated size along machine Y (2-400)."
+    },
+    "overextend_mm": {
+     "type": "number",
+     "description": "Side marches start this far outside the estimated face, default 5 (3-60)."
+    },
+    "side_max_travel_mm": {
+     "type": "number",
+     "description": "Travel of each side march from its start, default max(25, 2 x overextend + 10) (5-150). Must cover overextend + width uncertainty + centre uncertainty + margin; 25 suits a few mm of each."
+    },
+    "start_z_machine": {
+     "type": "number",
+     "description": "REQUIRED toolhead machine Z above the top where the -Z search starts (operator-stated or from an earlier contact; never a guess)."
+    },
+    "floor_z_machine": {
+     "type": "number",
+     "description": "REQUIRED deepest toolhead Z the top search may reach (<= 150 mm below start)."
+    },
+    "top_points": {
+     "type": "number",
+     "description": "Top samples: 1-5, default 3 (centre, +/- a quarter of the longer axis; 4-5 add the shorter axis)."
+    },
+    "hole_tolerance_mm": {
+     "type": "number",
+     "description": "A top sample lower than the highest by more than this is a hole, default 2."
+    },
+    "side_depth_mm": {
+     "type": "number",
+     "description": "Side marches run at (measured top) - this, default 2 (1-40)."
+    },
+    "points_per_side": {
+     "type": "number",
+     "description": "1-4 marches per side over the middle half of the side, midpoint first then away from the corners, default 3."
+    },
+    "sides": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "enum": [
+       "west",
+       "east",
+       "south",
+       "north"
+      ]
+     },
+     "description": "Which sides to probe (west marches +X, east -X, south +Y, north -Y). Default all four."
+    },
+    "hop_lift_mm": {
+     "type": "number",
+     "description": "Stepped traverse lift per contact and height above the last contact, default 2 (0.5-10)."
+    },
+    "coarse_step_mm": {
+     "type": "number",
+     "description": "Coarse step, default 1 (0.2-1; never larger)."
+    },
+    "fine_step_mm": {
+     "type": "number",
+     "description": "Fine step, default 0.1 (0.02-0.5)."
+    },
+    "backoff_mm": {
+     "type": "number",
+     "description": "Confirm-cycle lift, default 1."
+    },
+    "sensor_delay_ms": {
+     "type": "number",
+     "description": "Contact-check window per step, default 300, floor 30 (GPIO: 50)."
+    },
+    "confirm_passes": {
+     "type": "number",
+     "description": "Lift-and-retest cycles per contact, default 3 (1-10)."
+    },
+    "reason": {
+     "type": "string",
+     "description": "Shown to the operator: what is being measured and why."
+    }
+   },
+   "required": [
+    "size_x_mm",
+    "size_y_mm",
+    "start_z_machine",
+    "floor_z_machine",
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "probe_wall_follow",
+  "description": "Stage ONE approved procedure that follows a VERTICAL wall (a pocket side, a boss face) at N stations WITHOUT retreating to the start line between them - probe_surface_path for walls (operator, 2026-09-21). Law 2 to station 1 (raise, hop to start_x/start_y, guarded segmented descent to z_machine - a MEASURED height, top minus depth, never a guess; any contact on the way down aborts). Per station: sensor-gated march along dir_x/dir_y toward the wall up to max_travel_mm; back off standoff_mm (default 2) from the contact; STEP ALONG THE WALL at that standoff to the next station's line (step_mm apart along along_x/along_y, default dir turned +90 deg) as a stepped touch-probing traverse (1 mm steps, probe expected) whose retreat is AWAY from the face and capped at the approved start line - the low traverse only ever runs inside the corridor the marches have proven; the next march starts where the step arrives. A miss records no_contact, retreats to the start line and continues (on_miss default) or aborts. Result: contacts (tip-centre, machine), bumps (the wall turned toward the probe during a step), fit (line through the contacts: direction, normal, residuals per point, rms/max, yaw from the step direction - a residual trend at one end is the wall curving into a corner), surfacePoints (contacts + tip radius along dir, when set_probe_geometry stored the tip). Ends raised at the traverse height. Also probe_program op kind \"wall_follow\".",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "start_x": {
+     "type": "number",
+     "description": "REQUIRED machine X of the first march start, over free space (>= tip radius + margin inside the wall)."
+    },
+    "start_y": {
+     "type": "number",
+     "description": "REQUIRED machine Y of the first march start."
+    },
+    "z_machine": {
+     "type": "number",
+     "description": "REQUIRED toolhead machine Z the wall is probed at: a MEASURED top minus the depth (0..traverse height)."
+    },
+    "dir_x": {
+     "type": "number",
+     "description": "REQUIRED march direction toward the wall (X component; normalised with dir_y)."
+    },
+    "dir_y": {
+     "type": "number",
+     "description": "REQUIRED march direction toward the wall (Y component)."
+    },
+    "along_x": {
+     "type": "number",
+     "description": "Step direction along the wall (made perpendicular to dir). Default: dir turned +90 deg."
+    },
+    "along_y": {
+     "type": "number",
+     "description": "Step direction along the wall (Y component)."
+    },
+    "step_mm": {
+     "type": "number",
+     "description": "Distance between stations along the wall, default 5 (0.5-60)."
+    },
+    "stations": {
+     "type": "number",
+     "description": "Number of stations, default 5 (1-400)."
+    },
+    "max_travel_mm": {
+     "type": "number",
+     "description": "REQUIRED march travel from the start line before a station records no_contact (1-150). Generous: a short march silently misses."
+    },
+    "standoff_mm": {
+     "type": "number",
+     "description": "Back-off from each contact before stepping along, and the lift per bump, default 2 (0.5-10)."
+    },
+    "on_miss": {
+     "type": "string",
+     "enum": [
+      "continue",
+      "abort"
+     ],
+     "description": "A station with no contact: continue (default) or abort."
+    },
+    "line_tolerance_mm": {
+     "type": "number",
+     "description": "Optional (0.02-5): split the contacts into the straight wall at each end and the CORNER between (a contact further than this off its wall's line is a corner point); the result's segments carry the corner's arc fit with residuals."
+    },
+    "coarse_step_mm": {
+     "type": "number",
+     "description": "Coarse step, default 1 (0.2-1; never larger)."
+    },
+    "fine_step_mm": {
+     "type": "number",
+     "description": "Fine step, default 0.1 (0.02-0.5)."
+    },
+    "backoff_mm": {
+     "type": "number",
+     "description": "Confirm-cycle lift, default 1."
+    },
+    "sensor_delay_ms": {
+     "type": "number",
+     "description": "Contact-check window per step, default 300, floor 30 (GPIO: 50)."
+    },
+    "confirm_passes": {
+     "type": "number",
+     "description": "Lift-and-retest cycles per contact, default 3 (1-10)."
+    },
+    "reason": {
+     "type": "string",
+     "description": "Shown to the operator: which wall, and why."
+    }
+   },
+   "required": [
+    "start_x",
+    "start_y",
+    "z_machine",
+    "dir_x",
+    "dir_y",
+    "max_travel_mm",
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "probe_corner",
+  "description": "Stage ONE approved procedure that measures the RADIUS of an internal corner between two walls earlier marches have fitted (operator, 2026-09-21: rounded corners are the normal case - a station in the radius reads a blend). wall_a / wall_b are the fitted TIP-CENTRE lines ({x, y, nx, ny}: a point and the normal toward the free side, as probe_wall_follow returns in fit.point / fit.normal); radius_max_mm is the operator's bound on the physical radius (law 3). 1) Law 2 to the start on the corner's BISECTOR, placed so a fillet as large as the bound plus approach_clearance_mm still leaves it in free space (guarded descent to z_machine, a MEASURED height). 2) Bisector march toward the apex: where it stops gives the radius (rho = reach / (1/sin(angle/2) - 1)); a contact at the apex = SHARP corner, reported, radial pass skipped. 3) Retreat along the bisector (the path just proven) to the arc CENTRE and march RADIALLY at `points` azimuths from wall A's tangent point to wall B's, retreating to the centre between them - every station and link lies on proven ground, nothing is placed inside an unmeasured radius. 4) Circle fit: radius (tip-centre and physical = + tip radius), centre, per-point residuals (an irregular round is reported as large residuals, never hidden). Result: geometry (apex, bisector, interior angle), bisector contact and estimate, centre, radials, fit, radiusTipCentreMm, radiusPhysicalMm. Also probe_program op kind \"corner\".",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "wall_a": {
+     "type": "object",
+     "properties": {
+      "x": {
+       "type": "number"
+      },
+      "y": {
+       "type": "number"
+      },
+      "nx": {
+       "type": "number"
+      },
+      "ny": {
+       "type": "number"
+      }
+     },
+     "required": [
+      "x",
+      "y",
+      "nx",
+      "ny"
+     ],
+     "additionalProperties": false,
+     "description": "REQUIRED: a point on wall A's fitted tip-centre line (machine) and the unit normal toward the free side."
+    },
+    "wall_b": {
+     "type": "object",
+     "properties": {
+      "x": {
+       "type": "number"
+      },
+      "y": {
+       "type": "number"
+      },
+      "nx": {
+       "type": "number"
+      },
+      "ny": {
+       "type": "number"
+      }
+     },
+     "required": [
+      "x",
+      "y",
+      "nx",
+      "ny"
+     ],
+     "additionalProperties": false,
+     "description": "REQUIRED: the same for wall B."
+    },
+    "z_machine": {
+     "type": "number",
+     "description": "REQUIRED toolhead machine Z the walls were probed at (a MEASURED top minus a depth)."
+    },
+    "radius_max_mm": {
+     "type": "number",
+     "description": "REQUIRED bound on the corner's PHYSICAL radius (law 3); places the bisector start in free space (0-200)."
+    },
+    "points": {
+     "type": "number",
+     "description": "Radial stations across the arc, default 5 (3-16)."
+    },
+    "approach_clearance_mm": {
+     "type": "number",
+     "description": "Free space kept beyond the largest possible arc at the bisector start and past the radial travel, default 5 (1-20)."
+    },
+    "coarse_step_mm": {
+     "type": "number",
+     "description": "Coarse step, default 1 (0.2-1; never larger)."
+    },
+    "fine_step_mm": {
+     "type": "number",
+     "description": "Fine step, default 0.1 (0.02-0.5)."
+    },
+    "backoff_mm": {
+     "type": "number",
+     "description": "Confirm-cycle lift, default 1; a radius below it is reported as sharp."
+    },
+    "sensor_delay_ms": {
+     "type": "number",
+     "description": "Contact-check window per step, default 300, floor 30 (GPIO: 50)."
+    },
+    "confirm_passes": {
+     "type": "number",
+     "description": "Lift-and-retest cycles per contact, default 3 (1-10)."
+    },
+    "reason": {
+     "type": "string",
+     "description": "Shown to the operator: which corner, and why."
+    }
+   },
+   "required": [
+    "wall_a",
+    "wall_b",
+    "z_machine",
+    "radius_max_mm",
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "probe_trace_perimeter",
+  "description": "Stage ONE approved procedure that traces the whole INTERNAL PERIMETER of a pocket of UNKNOWN shape from one point known to be inside it (operator spec 2026-09-22). Law 2 to start_x/start_y (raise, hop, guarded descent to z_machine - a MEASURED top minus a depth), a sensor-gated march along dir_x/dir_y (default +X) to the first wall, then a CRAWL with the probe expected on every move and the wall on wall_side (default right = counter-clockwise inside): step fine_step_mm (default 0.1) along the wall, bump toward it until contact (each contact is a perimeter point; the head backs off the one 0.1 mm step that touched - no retreat wastage); a BLOCKED step retreats exactly the step attempted and turns turn_step_deg AWAY from the wall (internal corners, inward curves at 0.1 mm resolution; a full 360 of blocked steps aborts); a wall that falls away for bump_cap_steps turns TOWARD it (outward curves, external corners); on a run proven straight (last straight_points contacts within line_tolerance_mm of a line) the step becomes coarse_step_mm (default 1) and the heading is aligned to the fitted wall; closure = heading turned 360 and back within a coarse step of the first wall point; otherwise it stops with the partial perimeter on max_perimeter_mm (REQUIRED budget, law 3), max_steps, the REQUIRED bounds {x0,y0,x1,y1} the tip centre never leaves (the pocket's outer extent plus a margin for the bump into the wall), or a keep-out. Lift-and-retest CONFIRM cycles run only where they buy accuracy (confirm_at, default [\"first\",\"turns\",\"unexpected\"]: the first wall, after a major direction change, an unexpected contact after a straight run; add \"every\" with accuracy_every_mm for accuracy points) - a routine bump is one sensed contact. Result: perimeter (ordered tip-centre points; normal = the LOCAL wall normal from a line through the neighbouring contacts, surface = + tip radius along it; step kind, confirmed flag), segments (straight walls with collinear runs merged, each with its tip-centre fit and wall surface line; curves with a shape), corners (circle fitted only to the points off BOTH adjacent walls: radius tip-centre + physical, centre, per-point residuals, interior angle; shape arc / sharp / irregular - an IRREGULAR lobe reports no radius but a polyline, line / arc pieces and the one-circle misfit), lengths (tipCentreMm and surfaceMm, the one to compare with CAD), closed, counts, timing. The confirm page states the step count and time estimate (~0.3 s per sensor-checked step on GPIO). Also probe_program op kind \"trace\". The same crawl with the normal flipped traces a boss / the outer stock outline (not yet exposed).",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "start_x": {
+     "type": "number",
+     "description": "REQUIRED machine X of a point KNOWN to be inside the pocket (operator / camera)."
+    },
+    "start_y": {
+     "type": "number",
+     "description": "REQUIRED machine Y of that point."
+    },
+    "z_machine": {
+     "type": "number",
+     "description": "REQUIRED toolhead machine Z of the crawl: a MEASURED top minus a depth, never a guess."
+    },
+    "dir_x": {
+     "type": "number",
+     "description": "First march direction toward a wall, X component (default 1)."
+    },
+    "dir_y": {
+     "type": "number",
+     "description": "First march direction, Y component (default 0)."
+    },
+    "max_travel_mm": {
+     "type": "number",
+     "description": "REQUIRED travel of the first march before it aborts with no wall (1-150)."
+    },
+    "fine_step_mm": {
+     "type": "number",
+     "description": "Step along the wall and bump toward it, default 0.1 (0.05-1)."
+    },
+    "coarse_step_mm": {
+     "type": "number",
+     "description": "Step on a run proven straight, default 1 (up to 5; never below the fine step)."
+    },
+    "turn_step_deg": {
+     "type": "number",
+     "description": "Heading change per blocked step / fallen-away wall, default 10 (2-45)."
+    },
+    "bump_mm": {
+     "type": "number",
+     "description": "Back-off from the first wall before the crawl, default = fine_step_mm."
+    },
+    "bump_cap_steps": {
+     "type": "number",
+     "description": "Fine steps toward the wall before it counts as fallen away, default 3 (1-10)."
+    },
+    "line_tolerance_mm": {
+     "type": "number",
+     "description": "Largest residual for a run to count as straight, default = fine_step_mm (0.02-5)."
+    },
+    "straight_points": {
+     "type": "number",
+     "description": "Contacts the straightness line is fitted over, default 6 (3-20); the window spans that many coarse steps."
+    },
+    "max_perimeter_mm": {
+     "type": "number",
+     "description": "REQUIRED perimeter budget (1-1400), law 3: the crawl stops here with the partial result."
+    },
+    "max_steps": {
+     "type": "number",
+     "description": "Step budget, default 20000 (10-100000)."
+    },
+    "bounds": {
+     "type": "object",
+     "properties": {
+      "x0": {
+       "type": "number"
+      },
+      "y0": {
+       "type": "number"
+      },
+      "x1": {
+       "type": "number"
+      },
+      "y1": {
+       "type": "number"
+      }
+     },
+     "required": [
+      "x0",
+      "y0",
+      "x1",
+      "y1"
+     ],
+     "additionalProperties": false,
+     "description": "REQUIRED machine XY box the tip centre never leaves: the pocket's outer extent as estimated PLUS a margin of at least one step for the bump into the wall."
+    },
+    "wall_side": {
+     "type": "string",
+     "enum": [
+      "right",
+      "left"
+     ],
+     "description": "Which side the wall is kept on while crawling, default right (counter-clockwise round the inside)."
+    },
+    "confirm_at": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "enum": [
+       "first",
+       "turns",
+       "unexpected",
+       "every"
+      ]
+     },
+     "description": "Where lift-and-retest confirm cycles run, default [\"first\",\"turns\",\"unexpected\"]; \"every\" needs accuracy_every_mm."
+    },
+    "accuracy_every_mm": {
+     "type": "number",
+     "description": "With confirm_at \"every\": an accuracy confirm cycle each this many mm of perimeter (1-1400)."
+    },
+    "major_turn_deg": {
+     "type": "number",
+     "description": "Accumulated turn since the last confirm that counts as a major direction change, default 45 (5-180)."
+    },
+    "expected_corners": {
+     "type": "number",
+     "description": "For the time / confirm-cycle estimate only, default 4."
+    },
+    "fine_step_march_mm": {
+     "type": "number",
+     "description": "Ignored (reserved)."
+    },
+    "backoff_mm": {
+     "type": "number",
+     "description": "Confirm-cycle lift, default 1."
+    },
+    "sensor_delay_ms": {
+     "type": "number",
+     "description": "Contact-check window per step, default 300, floor 30 (GPIO: 50 - use it, every step pays it)."
+    },
+    "confirm_passes": {
+     "type": "number",
+     "description": "Lift-and-retest cycles per confirmed contact, default 3 (1-10)."
+    },
+    "reason": {
+     "type": "string",
+     "description": "Shown to the operator: which pocket, and why."
+    }
+   },
+   "required": [
+    "start_x",
+    "start_y",
+    "z_machine",
+    "max_travel_mm",
+    "max_perimeter_mm",
+    "bounds",
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "probe_program",
+  "description": "Stage a COMPOSITE probing program for ONE human approval: an ordered list of operations - rotate_b (turn the rotary axis to an absolute B, toolhead at/above the traverse height), surface_path, surface_grid, sequence, stock_outline, wall_follow, corner and trace (the same arguments as the standalone tools), sequence probe steps and surface scans can request capture before retraction (see their capture schema). capture (one camera frame, stamped with position and B, saved on the job record - view it afterwards with get_frame; give it x/y and it first hops there at the traverse height like a sequence hop, else no motion) and home (machine home, LAST op only; it also homes B) - run by one runner that hands the machine from op to op. Each successful probing op ends raised at the traverse height; references and groups do not retain a low pose between ops. Keep related stations in one suitable surface, wall_follow, trace, corner or stock_outline op to use its local links; sequence raises after every probe. Numbers an op cannot know at staging are REFERENCES to earlier results: {\"from\": \"<opId>.<path>\", \"plus\"?, \"minus\"?, \"between\": [low, high]} - e.g. expected_z_machine: {\"from\": \"c90.top.z\", \"between\": [195, 240]} where c90 is a sequence op with a probe named \"top\" (.x/.y/.z read contactMachine), or start_z_machine: {\"from\": \"ns90.summary.zMean\", \"plus\": 7, \"between\": [200, 250]}. Two-operand forms: {\"mid\": [a, b]} = (a+b)/2 (stock centre from two side contacts), {\"diff\": [a, b], \"scale\"?: 0.5} = (a-b)*scale (width, half-width), {\"min\"|\"max\": [a, b, ...]}; \"plus\"/\"minus\" may be a number or a path. Once set_probe_geometry has stored the rotary axis and probe length, the seeded namespace \"axis\" offers axis.x, axis.z_physical, axis.z_contact (toolhead Z with the tip on the axis), axis.tip_radius, axis.probe_length - so the B90 face height is {\"diff\": [\"s0.east.x\", \"s0.west.x\"], \"scale\": 0.5, \"plus\": \"axis.z_contact\", \"between\": [...]}. A program that references only its own earlier ops (any B0-only, stationary or off-rotary survey) needs NO geometry. The bounds are REQUIRED (law 3): the confirm page shows them with a preview at the mid-point and the runner refuses the op (stopping the program raised, keeping earlier results) if the value resolves outside them. A failed op stops the program unless on_fail: \"skip\"; a held probe contact always stops the program. Result: per-op status and the standalone tool's result object (stations, fits, timing), plus the B schedule. Use it to string the four faces, sides and end of a rotary stock into one approved operation instead of 18 approvals - or \"capture at (x, y), rotate_b 180, capture, home\" to look at both sides of a rotary part under one click.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "name": {
+     "type": "string",
+     "description": "Program name shown to the operator."
+    },
+    "ops": {
+     "type": "array",
+     "description": "Ordered operations. Each: {id, kind, on_fail?, ...args}. kinds: rotate_b {b, require_z_at_least?, swept_radius_mm? (largest reach of THIS stock and clamping about the axis - adds a tip-outside-the-cylinder check)}; capture {x?, y?, settle_ms? (default 500, max 5000), label?} - a frame; with x/y (machine) it raises and hops there first (travel + obstacle checked), without them no motion; home {} - G53;G28;G54, every axis to its switches AND B to 0, allowed only as the last op; surface_path / surface_grid / sequence / stock_outline / wall_follow / corner / trace: the standalone tool arguments, where ANY number (start_z_machine, expected_z_machine, floor_z_machine, start_x/end_x, sequence hop x/y and descend z, expected_profile.circle.*) may be a reference; group {id, for_b: [0, 90, 180, 270], ops: [...]} = the inner ops run once per angle after a rotate_b to it, with the token \"${b}\" in any string replaced by the angle and inner ids without it suffixed \"_b<angle>\" (references between them are rewritten to match). Up to 80 ops after expansion.",
+     "items": {
+      "type": "object"
+     },
+     "minItems": 1,
+     "maxItems": 80
+    },
+    "reason": {
+     "type": "string",
+     "description": "Shown to the operator: what is being measured and why."
+    },
+    "keep_out": {
+     "type": "array",
+     "description": "Transient obstacle boxes for THIS clamping (chuck jaws, tailstock): [{name, machine: {x0, y0, x1, y1}, clearance_z}] with clearance_z the minimum safe TOOLHEAD machine Z over the box. Checked together with the stored landmarks against every hop, descent column and march of every op at staging (law 4); shown on the confirm page; never persisted.",
+     "items": {
+      "type": "object"
+     },
+     "maxItems": 20
+    }
+   },
+   "required": [
+    "name",
+    "ops",
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "run_probing_gcode",
+  "description": "Stage a CAM-generated PROBING PROGRAM (Fusion 360 / FreeCAD / any Grbl-Marlin post, or hand-written) for ONE human approval, run it through the sensor-gated probing engine, and return an inspection report the CAM can read back. The program is PARSED and TRANSLATED, never sent raw (the Snapmaker firmware has no G38 cycle): G38.2/G38.3 -> a coarse/fine/confirm march toward the programmed target (the travel limit), retreating to the cycle start after contact or a continuing miss (no measured-endpoint retention); G38.4/G38.5 -> coarse steps until the probe releases, then on to the target; G0/G1 links -> law 2 (link_mode \"raise\": XY at the safe traverse height with guarded segmented descents; \"stepped\": a touch-probing traverse at the programmed height - over a TOP a contact lifts hop_lift_mm (+Z) and retries, but heading for a SIDE-MARCH station (a pocket wall) a contact is a WALL: back off 1 mm, retreat hop_lift_mm along the path just travelled (never +Z), record it as a link_contact wall point, mark that station BLOCKED and continue; \"wall\" forces the wall behaviour on every link). These local links do not require a full-height return between stations; rotation and successful program completion still use the traverse height. Prefer native surface/wall/trace/outline procedures when they directly fit the measurement. A contact during the guarded descent at a stepped link's destination is a BLOCKED station too (lift back to the link height, continue), never a crash; a blocked station is a normal report outcome (status blocked, blockedBy). top_z_machine (a MEASURED top) caps stepped +Z lifts at the top and makes a raise-mode descent contact AT the top a blocked station. PLANNING CHECK: every station start and link path must keep the tip (stored tip radius) + wall_margin_mm clear of the MEASURED known_walls you declare (lines / corner arcs) - refused otherwise - and of the walls the program's own nominals describe (warned); corner-arc marches report their angle off the radial. A bare G0 B<angle> line -> a 3+2 station (raise to the traverse height, then the verified rotation; B with XYZ, incremental B and A/C refused); G4 dwells; G90/G91, G53, G20/G21 honoured; programmed feeds ignored. Refused: M3/M4 (spindle with the probe fitted), M0/M1, M6, G28, G92/G55-G59, arcs, macro variables. Coordinates are the CAM WCS (work frame) unless frame: \"machine\". Probe metadata in a comment before a cycle - (PROBE id=3 name=top group=boss1 role=x_minus nominal=10,20,0 normal=0,0,1 tol=0.1,-0.1 offset=0) - gives the report nominals, normals, tolerances (lower signed) and surface offset; a (RESULTS documentid=.. modelversion=.. toolpathid=1.00001 toolpath=NAME) comment fills the Fusion results envelope. Without metadata the target is the nominal and the approach direction the normal. TIP CONVENTION (one, everywhere): a contact is the tip REFERENCE point - stylus-centre XY, stylus-BOTTOM Z (the effective length is measured to the tip bottom) - and the SURFACE compared with the nominal is contact + (0,0,r) - r*normal: no correction on a -Z march, one radius on a side march; needs set_probe_geometry's tip diameter (deviation null without it). Result: report (JSON), reportText in report_format (fusion = Fusion 360 inspection results, START/TOOLPATHID/G330/G331/G800/G801/END as Autodesk's own result generator writes them - for Inspect Surface; renishaw = the Renishaw Inspection Plus printout Fusion imports for Probe WCS / Probe Geometry results, features reduced from (PROBE group= role= feature= nominal_size= nominal_center= tol_size= tol_pos=) metadata: SIZE D / POSN X Y Z / OUT OF TOL / OUT OF POS lines; csv; grbl [PRB:] lines; json), files under the app data dir mcp-inspection/.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "gcode": {
+     "type": "string",
+     "description": "The probing program text."
+    },
+    "source": {
+     "type": "string",
+     "description": "Name of the program / CAM operation, for the report and the operator."
+    },
+    "frame": {
+     "type": "string",
+     "enum": [
+      "work",
+      "machine"
+     ],
+     "description": "Coordinate frame of the program: work (CAM WCS, default) or machine."
+    },
+    "link_mode": {
+     "type": "string",
+     "enum": [
+      "raise",
+      "stepped",
+      "wall"
+     ],
+     "description": "How XY links run: \"raise\" (default, law 2 traverse height); \"stepped\" (touch-probing traverse at the programmed height: +Z lift-and-retry toward a top station, wall-aware toward a side-march station); \"wall\" (every link wall-aware: a contact retreats along the path and blocks the station)."
+    },
+    "hop_lift_mm": {
+     "type": "number",
+     "description": "stepped/wall link_mode: lift (+Z, top) or retreat along the path (wall) per contact, default 2 (0.5-10)."
+    },
+    "top_z_machine": {
+     "type": "number",
+     "description": "Optional MEASURED toolhead machine Z of the top surface the stations sit in (never a guess). A stepped +Z lift that would rise above it marks the station blocked instead (the link would leave the pocket); a raise-mode descent contact within one guarded step of it is a blocked station, not a collision."
+    },
+    "known_walls": {
+     "type": "array",
+     "maxItems": 40,
+     "items": {
+      "type": "object",
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "kind": {
+        "type": "string",
+        "enum": [
+         "line",
+         "arc"
+        ]
+       },
+       "a": {
+        "type": "object",
+        "properties": {
+         "x": {
+          "type": "number"
+         },
+         "y": {
+          "type": "number"
+         }
+        },
+        "additionalProperties": false
+       },
+       "b": {
+        "type": "object",
+        "properties": {
+         "x": {
+          "type": "number"
+         },
+         "y": {
+          "type": "number"
+         }
+        },
+        "additionalProperties": false
+       },
+       "normal": {
+        "type": "object",
+        "properties": {
+         "x": {
+          "type": "number"
+         },
+         "y": {
+          "type": "number"
+         }
+        },
+        "additionalProperties": false
+       },
+       "center": {
+        "type": "object",
+        "properties": {
+         "x": {
+          "type": "number"
+         },
+         "y": {
+          "type": "number"
+         }
+        },
+        "additionalProperties": false
+       },
+       "radius": {
+        "type": "number"
+       },
+       "material": {
+        "type": "string",
+        "enum": [
+         "inside",
+         "outside"
+        ]
+       },
+       "from_deg": {
+        "type": "number"
+       },
+       "to_deg": {
+        "type": "number"
+       },
+       "z_top": {
+        "type": "number"
+       },
+       "z_bottom": {
+        "type": "number"
+       }
+      },
+      "additionalProperties": false
+     },
+     "description": "MEASURED walls (from an earlier program's contacts or a fitted arc), in the program frame, for the planning clearance check: {kind: \"line\", a, b, normal (unit vector toward the FREE side)} or {kind: \"arc\", center, radius, material: \"outside\" (pocket corner / lobe) | \"inside\" (boss), from_deg?, to_deg?}; z_top/z_bottom bound the wall in Z. Every station start and link path must keep the tip (stored tip radius) + wall_margin_mm clear of them or the program is refused; a corner-arc march is reported by its angle off the radial from the centre. Walls the program's own (PROBE nominal= normal=) side marches describe are checked too and only warn (CAD intent, extent unknown)."
+    },
+    "wall_margin_mm": {
+     "type": "number",
+     "description": "REQUIRED with known_walls: air beyond the tip radius every station start and link path keeps from them (0-20, the walls' measurement uncertainty)."
+    },
+    "radial_tolerance_deg": {
+     "type": "number",
+     "description": "Optional (0-90): warn when a march into a known arc runs further off the radial from its centre than this."
+    },
+    "on_miss": {
+     "type": "string",
+     "enum": [
+      "abort",
+      "continue"
+     ],
+     "description": "G38.2 without contact: abort (default, Grbl semantics) or record no_contact and continue."
+    },
+    "report_format": {
+     "type": "string",
+     "enum": [
+      "json",
+      "fusion",
+      "renishaw",
+      "csv",
+      "grbl"
+     ],
+     "description": "Primary report rendering, default fusion (Inspect Surface G800/G801); renishaw for Probe WCS / Probe Geometry features. JSON is always stored too."
+    },
+    "coarse_step_mm": {
+     "type": "number",
+     "description": "Coarse step, default 1 (0.2-1; never larger)."
+    },
+    "fine_step_mm": {
+     "type": "number",
+     "description": "Fine step, default 0.1 (0.02-0.5)."
+    },
+    "backoff_mm": {
+     "type": "number",
+     "description": "Confirm-cycle lift, default 1."
+    },
+    "sensor_delay_ms": {
+     "type": "number",
+     "description": "Contact-check window per step, default 300, floor 30 (GPIO: 50)."
+    },
+    "confirm_passes": {
+     "type": "number",
+     "description": "Lift-and-retest cycles per contact, default 3 (1-10)."
+    },
+    "reason": {
+     "type": "string",
+     "description": "Shown to the operator: what this program inspects and why."
+    }
+   },
+   "required": [
+    "gcode",
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ {
+  "name": "get_inspection_report",
+  "description": "Render the inspection report of a finished (or aborted) run_probing_gcode job in another format: fusion (Fusion 360 inspection results, G800 nominal / G801 measured), renishaw (Inspection Plus printout - Fusion Probe WCS / Geometry import, features from group/role metadata), csv, grbl ([PRB:] lines) or json. Also writes the file under the app data dir mcp-inspection/<job>.<ext> and returns its path.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "job_id": {
+     "type": "string"
+    },
+    "format": {
+     "type": "string",
+     "enum": [
+      "json",
+      "fusion",
+      "renishaw",
+      "csv",
+      "grbl"
+     ]
+    }
+   },
+   "required": [
+    "job_id",
+    "format"
+   ],
+   "additionalProperties": false
+  }
+ }
+]

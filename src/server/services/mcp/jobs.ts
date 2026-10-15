@@ -10,6 +10,7 @@ import { JobDashboardFeed, summarizeDashboardJob } from './jobDashboardState';
 import { JobEnding, McpJobKind, McpJobState, TERMINAL_JOB_STATES } from './jobEnding';
 import { resolveTelemetryConfig } from './telemetryConfig';
 import { GcodeValidationReport } from './validator';
+import { describeActiveTool } from './activeTool';
 
 const log = logger('service:mcp:jobs');
 
@@ -88,6 +89,7 @@ export function jobEventLimit(): number {
 
 
 export interface McpJob {
+    activeToolAtStaging?: object;
     id: string;
     name: string;
     kind: McpJobKind;
@@ -174,6 +176,7 @@ export class JobManager {
         fs.writeFileSync(filePath, gcode, 'utf8');
 
         const job: McpJob = {
+            activeToolAtStaging: describeActiveTool(),
             id,
             name: safeName,
             kind,
@@ -508,6 +511,9 @@ export class JobManager {
 
         return `
             <h2>${job.state === 'awaiting_confirmation' ? 'Confirm' : 'Review'} ${{ direct: 'DIRECT move', procedure: 'SERVER-DRIVEN procedure', file: 'G-code job' }[job.kind]}: ${escapeHtml(job.name)}</h2>
+            <details open><summary>Fitted tool and clearance provenance</summary>
+            <p>At staging:</p><pre>${escapeHtml(JSON.stringify(job.activeToolAtStaging || null, null, 2))}</pre>
+            <p>Now (value, source, age and any stale reason):</p><pre>${escapeHtml(JSON.stringify(describeActiveTool(), null, 2))}</pre></details>
             ${job.state === 'awaiting_confirmation'
         ? '<p>Submitted by an agent over MCP. Review before approving - approval mints a one-time code the agent needs to start it.</p>'
         : `<p>Job status: <strong>${escapeHtml(job.state)}</strong>.</p>`}

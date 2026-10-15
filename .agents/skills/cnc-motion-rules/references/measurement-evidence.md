@@ -13,6 +13,14 @@ An agent forgetting a measurement, a new chat, an expired live position, a tool 
 measured transfer, or a new B index does not by itself invalidate the physical survey.
 Historical geometry and current controller position are separate evidence.
 
+Homing turns B to 0. A saved B180 contact does not directly supply a B0 approach height.
+For direct reuse, establish unchanged clamping and return to its B through an authorized
+`probe_program` `rotate_b` op; alternatively use a physically validated rotary transform with
+its uncertainty. A known transform preserves evidence without re-probing every angle. If the
+mounting or transformation is unresolved, use old views to locate the region only, and identify
+the specific missing measurement rather than repeating the whole survey. Age alone (e.g. a
+seven-day cutoff) is not an invalidation rule.
+
 Preserve each contact's source/job, date, XYZ, B, direction, probe calibration and tip convention,
 mounting/datum context, uncertainty and sampled extent. Convert with the calibration that
 applied when measured; never reinterpret old contacts using today's probe length. Keep raw

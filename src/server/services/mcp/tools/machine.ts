@@ -14,6 +14,7 @@ import {
 import DataStorage from '../../../DataStorage';
 import config from '../../configstore';
 import { connectionManager } from '../../machine/ConnectionManager';
+import { invalidateActiveTool } from '../activeTool';
 import {
     FrameJudgement,
     Reliability,
@@ -261,6 +262,7 @@ export function machinePositionDiagnostics() {
  * reboot, so nothing learnt before may leak into the next connection.
  */
 export function noteMachineDisconnected(): void {
+    invalidateActiveTool('Machine disconnected/rebooted; confirm the fitted tool or measure it again.');
     noteDisconnected(machinePosition, Date.now());
     clearPositionOfRecord();
     clearTrustedOffset();

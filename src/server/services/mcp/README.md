@@ -323,7 +323,7 @@ the pipe into JPEGs (`mjpegFanout.ts` walks the marker segments; a naive `FFD9` 
 would end a frame at an EXIF thumbnail) and publishes each into a `FrameHub`. While that
 loop runs, `captureFrame()` in `camera.ts` is served FROM the hub through the
 `LiveFrameSource` hook — `capture_frame`, `move_and_capture`, `visual_servo`, `survey_bed`
-all keep working, position-stamped and cached (`frameId`) exactly as before, with
+all keep working, position-stamped and archived (`frameId` and saved image path), with
 `camera.source = "stream"` — waiting for a frame no older than one frame interval (so a
 post-settle capture never gets a pre-settle frame). When the last viewer leaves the loop
 lingers 5 s, then ends ffmpeg and the tools go back to opening the device themselves
@@ -374,7 +374,7 @@ mcp/
   jobs.ts        JobManager + human confirm pages (/confirm/<id>); job kinds file|direct
   validator.ts   static gcode inspection (extents, spindle, distance-mode hazards) + the FRAME
                  handshake (G53/G54 tracking, resolveJobFrame refuses undeclared jobs)
-  camera.ts      capture providers, frame cache (last 12, frameId), sticky device, LiveFrameSource hook
+  camera.ts      capture providers, 12-frame RAM cache plus persistent requested snapshots, sticky device, LiveFrameSource hook
   cameraStream.ts  live MJPEG view (/camera*): one ffmpeg loop while viewers exist, serves the tools too
   mjpegFanout.ts pure: JPEG stream splitter, FrameHub fan-out (backpressure, fps/client caps, stale, awaitFrame)
   tracking.ts    zero-mean NCC template matching between cached frames
@@ -1307,7 +1307,33 @@ matching), `spindleAudio.ts` (ffmpeg recorder), `spindleTelemetry.ts` (the per-j
   +~10 MB RSS. The session also reports the server process's own CPU share over the job
   (`telemetry.server.cpuPercent`) and ffmpeg's (`telemetry.audio.ffmpegCpuPercent`, /proc).
 
-## Tool surface (66)
+## Tool surface
+
+The live `tools/list` is authoritative; camera operations and fitted-tool clearance are
+documented in [TOOLS.md](docs/TOOLS.md) and the
+[camera operations skill](../../../../.agents/skills/cnc-camera-operations/SKILL.md).
+
+`camera_program` composes explicit Z, surveys, captures, tracking and local 2×2 calibration
+under one approval. Its discriminated operation schema is also validated before staging;
+per-op clearance exceptions cannot implicitly apply to the whole program. An active tool
+never bypasses the camera motion floor. Overlap spacing uses every requested height and the
+physical surface plane; program surveys save frames, standalone surveys can also render mosaics.
+Local Jacobian fitting/inverse checking does not replace camera-model bootstrap and held-out
+verification. Bootstrap now returns confirm URLs and supports excluded holdout poses visited last.
+
+Remote clients read saved bootstrap/survey indexes through `get_camera_capture_set`, then images
+through `get_frame`, including mosaics. Reads are constrained to the camera artifact roots with
+realpath checks. Export the index plus images by basename for the offline Python solver; no
+machine shell access is part of camera operation.
+
+`set_active_tool` / `get_active_tool` establish fitted-tool protrusion for clearance separately
+from probe trigger conversion. A usable active value takes precedence over legacy candidates;
+stale/no active value falls back conservatively. Setter success replaces it with measured
+provenance. Tool-change parking, detected disconnect/reboot and server restart invalidate its
+authority but retain the record; every confirm page shows the staging/current assertion.
+The `probe_stylus_exposed_mm`, `probe_body_diameter_mm` and physical `bed_plane_z` geometry keys
+remove the need to remember these dimensions. `probe_program {dry_run:true}` supplies a
+no-staging event-budget check.
 
 `get_connection_status` · `get_machine_profile` (kinematics, module offsets) ·
 `get_position` (both frames, warnings on incoherent reporting) ·
@@ -1631,12 +1657,10 @@ toolhead camera. Everything a fresh install needs:
 - **Verify wiring** with `.venv/bin/python src/server/services/mcp/gpio_bumptest.py --seconds 90`
   (reads the configstore, prints raw → idle/TRIGGERED, flags a resting-state-triggered
   channel = wrong polarity).
-- **Cameras**: two are attached. The **toolhead camera is the Sonix "USB 2.0 Camera"**
-  (pinned by `/dev/v4l/by-id/usb-Sonix_…-video-index0`); at the homed position it looks
-  straight at the enclosure's aluminium extrusion, which reads as a near-field silver strut
-  on a dark textured background — that IS the toolhead view, not a stray camera. The
-  icspring camera (wide, warm view of the MDF wasteboard) is the other one. `/dev/videoN`
-  numbers reshuffle on replug; always pin the by-id entry.
+- **Cameras**: the attached device set changes between deployments. Identify the toolhead
+  camera from `preview_cameras` frames each session; do not infer it from a historical vendor
+  name or remembered composition. `/dev/videoN` numbers reshuffle on replug; pin the stable
+  by-id entry after frame-backed selection.
 - **Launching**: Ubuntu 24.04 needs the AppArmor `userns` profile the `.deb` postinst
   installs (see Installing); until then `snapmaker-luban --no-sandbox`. To launch into the
   operator's GNOME/RDP session from ssh, borrow `DISPLAY`/`XAUTHORITY`/`WAYLAND_DISPLAY`

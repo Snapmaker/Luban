@@ -16,6 +16,10 @@ import { tests as sstpConnectionTests } from './sstpConnection.test';
 import { tests as bootstrapPlanTests } from './bootstrapPlan.test';
 import { tests as camLinksTests } from './camLinks.test';
 import { tests as cameraGeometryTests } from './cameraGeometry.test';
+import { tests as cameraProgramSchemaTests } from './cameraProgramSchema.test';
+import { tests as cameraArtifactsTests } from './cameraArtifacts.test';
+import { tests as cameraProgramTests } from './cameraProgram.test';
+import { tests as activeToolTests } from './activeTool.test';
 import { tests as cameraModelTests } from './cameraModel.test';
 import { tests as cameraSelectionTests } from './cameraSelection.test';
 import { tests as cornerFitTests } from './cornerFit.test';
@@ -70,6 +74,10 @@ const suites: Array<[string, TestCase[]]> = [
     ['envelopeChecks', envelopeChecksTests],
     ['cameraModel', cameraModelTests],
     ['cameraGeometry', cameraGeometryTests],
+    ['cameraProgramSchema', cameraProgramSchemaTests],
+    ['cameraArtifacts', cameraArtifactsTests],
+    ['cameraProgram', cameraProgramTests],
+    ['activeTool', activeToolTests],
     ['cameraSelection', cameraSelectionTests],
     ['bootstrapPlan', bootstrapPlanTests],
     ['frameRecovery', frameRecoveryTests],

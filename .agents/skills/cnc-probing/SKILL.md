@@ -32,6 +32,18 @@ probe. A model discrepancy, lost context or new B index is not evidence that a s
 
 ## Choose measurements that answer the machining question
 
+**A survey for a future cut is also a datum job.** Ask the intended hole/feature position, size
+and positional tolerance, face/B and clamping continuity in the same question batch. Retrieve
+the prior measurements before deciding what remains. Measure accessible X/Y edges, yaw and Z
+references while the probe is fitted, in the same bounded program where practical. Report datum
+candidates and their tip convention; a survey request authorizes neither a cut nor an origin write.
+
+Justify pitch from what must be resolved. A sampled edge bracket alone has at least ±pitch/2
+uncertainty: ±0.2 mm requires pitch ≤0.4 mm before adding probe uncertainty, not a 2 mm grid.
+Prefer targeted side marches/edge bands over a dense whole-face grid when that answers the hole
+registration question. Use coarse-camera/probe evidence for the fine bounds, stepped links for
+unknown shoulders, and explicitly include the event budget.
+
 Start with the deliverable: which boundaries, depths, remaining material and fixture clearances
 must be known to propose the cut? Include the
 [work datum and its recheck](../cnc-motion-rules/references/work-datums.md): identify accessible
@@ -49,6 +61,11 @@ ball diameter and a stated margin, measured DOWN from the highest surface under 
 (e.g. exposed 21, ball 2.5, margin 2: no floor contact more than 16.5 mm below the highest rim
 under the body) and give every march there a `max_travel_mm` that respects it. Readings at
 another B angle are in the rotated pose ([rotary-axis](references/rotary-axis.md)).
+Read `geometry.fields.probe_stylus_exposed_mm` and `probe_body_diameter_mm`; record measured or
+operator-stated values through `set_probe_geometry`. Program references are
+`probe.stylus_exposed_mm` and `probe.body_diameter_mm`, with mandatory `between` bounds.
+If missing, ask both with the other unknowns. Do not invent a universally safe 5 mm edge descent:
+limit work to approaches with proven body clearance until the reach is known.
 
 **Known surface:** use the valid measured contact to set a guarded `start_z_machine` a little
 above it and `expected_z_machine` at the contact. Do not repeat a long fine search from machine
@@ -184,8 +201,15 @@ completed station under `result` with `ending` saying why.
 keeps the first 20 and the newest tail, while `result` is never trimmed. Cost ≈ 100 + stations ×
 (110 at `z_safe_delta_mm` 20, 60 at 5); a blind −Z find adds ~3 events per mm of travel. When
 the estimate exceeds the limit, ask the operator to raise it (Settings → MCP Server → Diagnostic
-buffers, or `LUBAN_MCP_JOB_EVENT_LIMIT`) in the same question batch as everything else; if they
-decline, stage anyway and read `result`.
+buffers, or `LUBAN_MCP_JOB_EVENT_LIMIT`) in the same question batch as everything else. For stepped
+scans, do not assume the guarded 60/station figure: the program planner budgets 40 + 120 per
+surface station, plus program overhead and other ops (`probeProgram.ts:eventBudgetFor`). Treat it
+as an estimate, not measured elapsed time or a guaranteed cap; use actual prior timings where
+available. `probe_program {dry_run: true, name, reason, ops, keep_out}` returns `eventBudget`,
+`jobEventLimit`, `fitsEventLimit` without a job or confirm page. Compute per job, not by adding
+separate camera/probe jobs against one buffer. If the operator declines a required increase,
+reduce redundant coverage or split the program; staging above its limit is refused. Never
+coarsen away the tolerance requirement just to fit the log.
 
 **Reading a profile.** `summary.highestAt.x` is resolution-limited to half a station and
 ill-conditioned on a gentle crown. For "where is the axis", prefer the symmetry centre (the
@@ -260,6 +284,11 @@ entry point unless the complete return route is clear in the new orientation.
 - **Keep-out for this clamping**: `keep_out: [{"name", "machine": {"x0", "y0", "x1", "y1"},
   "clearance_z"}]` — a VOLUME nothing enters. Stored landmarks are CROSSING obstacles (a hop or
   march wholly inside one is allowed). Never shrink a landmark to make a plan pass.
+  Carry BOTH tailstock and chuck-jaw keep-outs for operations near the rotary, using current
+  clamping extents. Historical examples are tailstock Y<110 and jaws Y>269 over the rotary X
+  box; these are not universal fixture constants. A fine region "near tailstock" must stay
+  outside its volume. If the intended feature overlaps it, resolve access before staging.
+  Axis-centre/tailstock-Y/chuck-face-Y points alone do not supply jaw extents or obstacle tops.
 - **Cylinders across the axis**: `surface_path` with `expected_profile: {"circle": {"center_x",
   "center_z_contact", "radius"}}` (stations > 0.7 R off the axis are refused); along the axis a
   plain path suffices.
@@ -350,6 +379,9 @@ reading. Never reverse the formula to fabricate `old_trigger_z` for a tool chang
 That requires the same-connection measurement pair (or the documented same-tool,
 same-session reuse) in [tool-change](../tool-change/SKILL.md).
 **Any probed surface height = contact toolhead Z − probe length.**
+That conversion retains the uncertainty of the contact method: setter contact and stylus
+trigger on stock have different pretravel. A setter-derived length is not proof of cutting Z0;
+see [probe-length roles](../cnc-motion-rules/SKILL.md#2-coordinate-doctrine) and tool-change.
 The run ends with the head raised straight up to the traverse height (machine Z328, reported as
 `result.finalZ`), never at its start height — the next hop starts from there.
 

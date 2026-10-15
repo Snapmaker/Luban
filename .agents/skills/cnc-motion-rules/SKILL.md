@@ -29,6 +29,8 @@ item, quoting the tool result — not an essay):
    rotates — say so before calling it. `home` runs on the call, with no confirm page (law 6):
    the operator's word in chat is its whole authority, so get that word first. Only an explicit
    demand to home despite stale data permits `home {ignore_stale_position: true}` (§3).
+   `move_z`, `traverse_xy` and procedures refuse while unhomed: only `home` raises an
+   unhomed head through MCP. Homing sets B to 0; saved B180 heights are not B0 approach heights.
 2. **Frame.** Every number you plan with is MACHINE frame, or the job declares the WORK frame
    and the MCP resolves it (§2). Never convert a file's coordinates by hand. No bare `Z`.
 3. **Height.** Any XY move over 1 mm runs at or above the MOTION FLOOR — machine **Z320**
@@ -45,7 +47,12 @@ item, quoting the tool result — not an essay):
    at-or-above, so equal passes. A box the operator states in chat is a planning obstacle
    immediately; write it with `set_landmark` only when they ask; if chat and the store disagree,
    stop and ask which is current.
-5. **Tool.** A tool or the probe is ALWAYS in the spindle. Where is its tip at the Z you plan?
+5. **Tool.** A tool or the probe is ALWAYS in the spindle. Read `get_active_tool`: usable
+   active protrusion governs physical clearances, otherwise the configured worst case applies.
+   Re-read after every setter run or swap. `set_active_tool {protrusion_mm, source: "operator",
+   note}` records the operator's conservative fitted-tool protrusion for CLEARANCE, not contact
+   conversion. An approximate overall length is not a calibrated effective length. Where is
+   the tip at the planned toolhead Z? Legacy boxes still demand their stated toolhead height.
 6. **Authority.** An explicit imperative in the operator's LATEST message is necessary — not
    sufficient. It authorises STAGING; the click on the confirm page authorises the motion. An
    imperative on a rejected position is still refused by the tools (§3). Stale data has one
@@ -100,6 +107,12 @@ item, quoting the tool result — not an essay):
    costs is 8 mm less blind protection for anything on the bed with no landmark — which is why
    an unmapped object taller than the floor minus the tool is the operator's problem to state,
    not the guard's to catch.
+   **A known tool does not clear an unknown scene.** Camera surveys and `camera_program`
+   enforce the motion floor even with an active tool. Earlier PR #219 code incorrectly let a
+   tool-length assertion open sub-floor routes; that is fixed, not permission to use old builds
+   that allow it. Never infer `operator_confirmed_clearance`. In camera programs an explicit
+   exception is scoped to the particular op, never all 80 ops. A legacy toolhead-Z328 box still
+   excludes Z320 captures/pose stops inside it; use park height for coverage there.
 3. **Never fabricate clearance.** Only measured numbers or operator-stated numbers count for
    heights. A photo FINDS things, it clears nothing (incident 1). An unknown height is measured
    from a proven-safe height by a sensor-gated −Z march (§8 example), never assumed — and never
@@ -108,9 +121,14 @@ item, quoting the tool result — not an essay):
    CROSSING obstacles: an XY segment that enters or leaves their box below the toolhead Z it
    demands is refused — at staging for procedures, at call time for direct moves. State a new
    one with `obstacle_top_z`: the top of the obstacle ITSELF, nothing about the tool. The server
-   adds how far the fitted tool hangs below the toolhead (the longest of the last tool-setter
-   measurement, `probe_effective_length` and `longest_bit_length_mm` — a measurement only ever
-   lengthens the requirement) plus a 5 mm margin. With the touch probe fitted, a 250 mm-high
+   adds the usable active tool's protrusion plus a 5 mm margin. Without a usable active tool,
+   it falls back to the longest of the last setter measurement, `probe_effective_length` and
+   `longest_bit_length_mm`. A shorter active tool can LOWER physical-basis clearances: establish
+   it only from the operator's fitted-tool statement or a measurement. `run_tool_setter`
+   replaces it and reports old → new. The record persists, but becomes stale on server restart,
+   detected disconnect/reboot and `goto_tool_change_position`; reaffirm or measure the fitted
+   tool before trusting a shorter value. Home alone does not prove a new tool identity.
+   With the touch probe fitted, a 250 mm-high
    obstacle still demands 328; with a 2 mm engraving bit it demands 257, and that is where the
    machine gets its working room back. If NOTHING is known about the tool, a physically stated
    obstacle is impassable rather than passable — state a tool length. Legacy `clearance_z`
@@ -172,6 +190,22 @@ item, quoting the tool result — not an essay):
    contact for the touchscreen wizard and retreats nowhere.
 
 ## 2. Coordinate doctrine
+
+### Confirm pages and calls
+
+| Calls | Confirm page? | Axis motion? |
+|---|---|---|
+| Transport/Z, `goto_*`, file jobs, probe procedures, `run_tool_setter`, `survey_bed`, both bootstrap stages, `camera_program` | One per staged job, then `start_gcode_job` | Yes; ordinary MCP transport/procedures require homed state |
+| `set_workspace_origin`, `select_workspace`, `apply_tool_length_offset` | One | No; homed state required |
+| `home` | No; explicit operator word | Yes, Z first and B to 0 |
+| `move_and_capture` / a moving `visual_servo` step | No; explicit operator word | Yes, bounded vision correction; Z gate remains mandatory |
+| Captures, previews, stored-frame/index reads, `set_active_tool`, camera selection, model store/verification, `plan_view_pose`, geometry/landmark recording | No | No |
+| `restore_work_frame` | No | No; selects G90/G54 |
+
+Count confirm pages, not tool calls. A `probe_program {dry_run: true}` validates/estimates but
+does not stage or move. A complete sequence whose bounds and clearances are known uses one
+program and one approval, not one page per internal step. Read-only inspection needs no calibration.
+For camera work start with [cnc-camera-operations](../cnc-camera-operations/SKILL.md).
 
 **Two frames exist on the controller.** `G53` selects the MACHINE frame (home = X−19 Y342
 Z328); `G54`–`G59.3` select numbered WORK workspaces whose origin the operator sets. The
@@ -237,14 +271,19 @@ edge (Y340 is 2 mm from the limit) with the margin said aloud.
 
 **Numbers carry their qualifiers or they are not numbers.** Every height states: frame
 (machine), **toolhead Z vs physical surface** (surface = contact Z − probe or tool length), the
-tool fitted, the B angle for anything on the rotary, and the date. **Probe length**: an operator
-naming a length in chat tells you WHICH probe is fitted, not its calibration — read
-`get_stored_state → geometry.probe.effectiveLength`. It is normally set — plan on the stored
-value and do not budget an approval for measuring it. Only after you have READ an empty store do
-you add one measurement (`run_tool_setter accept_probe_contact`, then `set_probe_geometry`,
-§8) and announce it; if store and operator disagree by more than 0.3 mm, ask before converting
-anything. The same subtraction gives a cutting tool's surface height: contact Z − fitted tool
-length, in machine Z. Figures remembered from text (71.1, 71.2, 71.3) are historical.
+tool fitted, the B angle for anything on the rotary, and the date.
+
+**Probe length has two roles.** Clearance uses active protrusion or the fallback longest
+candidate. Contact conversion uses `get_stored_state → geometry.probe.effectiveLength`, with
+its source job/date and contact convention. A conservative approximate 75 mm clearance bound
+does not replace a measured 70.9 mm conversion, nor require another calibration merely because
+the numbers differ. Never write a rough overall length to `set_probe_geometry`.
+Reuse applicable stored calibration; measure if missing or the probe was refitted/swapped.
+The 0.3 mm discrepancy question concerns a claimed *calibrated effective length*, not a rough
+clearance bound. Setter-derived length excludes stylus pretravel on stock, so contact Z minus
+that length carries that uncertainty. Never chain a probe trigger and setter lengths into a
+cutting Z0 without verifying the contact-method difference; read [tool-change](../tool-change/SKILL.md).
+Do not turn a historical pretravel estimate into a correction constant.
 
 ## 3. Position of record — what `get_position` means
 

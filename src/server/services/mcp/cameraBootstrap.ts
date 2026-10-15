@@ -7,7 +7,9 @@ import path from 'path';
 import DataStorage from '../../DataStorage';
 import { BootstrapPose, planPoseSweep, planSearchGrid, sweepStops } from './bootstrapPlan';
 import { captureFrame } from './camera';
+import { cameraFailure, savePartialCameraIndex } from './cameraRecovery';
 import { clearanceOptions } from './clearanceContext';
+import { checkMotion, describeViolations, MotionSegment } from './envelopeChecks';
 import { landmarkStore } from './landmarks';
 import { McpToolError } from './registry';
 import { rotaryAxisPoints } from './rotaryGeometry';
@@ -21,7 +23,7 @@ import {
     MAX_BOOTSTRAP_POSES,
     clampTo,
 } from './procedureLimits';
-import { getPositionSnapshot, motionFloorZ, planningTravel, safeTraverseZ } from './tools/machine';
+import { getPositionSnapshot, motionFloorZ, planningTravel, requireReliableMachine, safeTraverseZ } from './tools/machine';
 import { assertMachineReadyForProcedure, descendInSegments, moveMachineSettled, TRAVEL_FEED } from './probing';
 import { ProbeChannel } from './probeFeed';
 
@@ -94,6 +96,7 @@ export function bootstrapTargets(): BootstrapTarget[] {
 }
 
 export interface BootstrapFrameRecord {
+    holdout?: boolean;
     file: string;
     label: string;
     machine: { x: number; y: number; z: number };
@@ -186,7 +189,7 @@ export function planSearchStage(args: SearchPlanArgs): {
 }
 
 export interface PosePlanArgs {
-    poses?: Array<{ label?: string; x?: number; y?: number }>;
+    poses?: Array<{ label?: string; x?: number; y?: number; holdout?: boolean }>;
     step_mm?: number;
     floor_z?: number;
 }
@@ -203,8 +206,16 @@ export function planPoseStage(args: PosePlanArgs) {
         if (!Number.isFinite(x) || !Number.isFinite(y)) {
             throw new McpToolError(`Pose ${i + 1} needs finite machine x and y (where the TOOLHEAD goes).`);
         }
-        return { label: String(p.label || `pose-${i + 1}`).slice(0, 40), x, y };
+        return { label: String(p.label || `pose-${i + 1}`).slice(0, 40), x, y, holdout: p.holdout === true };
     });
+    // Leave the head at a held-out view, ready for a fresh verification capture.
+    poses.sort((a, b) => Number(a.holdout) - Number(b.holdout));
+    if (new Set(poses.map((pose) => pose.label.replace(/[^\w.-]/g, '_'))).size !== poses.length) {
+        throw new McpToolError('Pose labels must be unique after filename sanitization.');
+    }
+    if (poses.some((pose) => pose.holdout && poses.some((fit) => !fit.holdout && fit.x === pose.x && fit.y === pose.y))) {
+        throw new McpToolError('Holdout XY must differ from every fit pose; a duplicate view is not independent verification.');
+    }
     const position = getPositionSnapshot();
     const { x, y, z } = position.machine;
     if (x === null || y === null || z === null) {
@@ -224,6 +235,10 @@ export function planPoseStage(args: PosePlanArgs) {
     if (!plan.poses.length) {
         throw new McpToolError(`No pose survives the obstacle check: ${plan.dropped.map((d) => `${d.label}: ${d.reason}`).join(' ')}`);
     }
+    if (poses.some((pose) => pose.holdout) && (!plan.poses.some((pose) => pose.holdout)
+        || plan.poses.filter((pose) => !pose.holdout).length < 2)) {
+        throw new McpToolError('Bootstrap needs at least two surviving fit poses and a surviving holdout. Widen the search; do not shrink obstacle boxes.');
+    }
     return { plan, parkZ, floorZ, stops: sweepStops(parkZ, floorZ, Number(args.step_mm) || BOOTSTRAP_SWEEP_STEP_MM) };
 }
 
@@ -232,48 +247,82 @@ export function describeBootstrapGcode(lines: string[]): string {
     return ['G90', 'G53;', ...lines, 'G54;'].join('\n');
 }
 
+/** Check the actual initial lift and every noncontact leg with the current fitted tool. */
+export function validateBootstrapMotion(parkZ: number, points: Array<{ x: number; y: number; z: number }>): void {
+    const snapshot = getPositionSnapshot();
+    requireReliableMachine(snapshot, 'camera bootstrap');
+    const { x, y, z } = snapshot.machine;
+    if (x === null || y === null || z === null) throw new McpToolError('Bootstrap requires a known starting machine position.');
+    let from = { x, y, z };
+    const segments: MotionSegment[] = [{ kind: 'column', what: 'bootstrap initial park', from, to: { x, y, z: parkZ } }];
+    from = { x, y, z: parkZ };
+    points.forEach((to, i) => {
+        segments.push({ kind: from.x === to.x && from.y === to.y ? 'column' : 'hop', what: `bootstrap leg ${i + 1}`, from, to });
+        from = to;
+    });
+    const obstacles = landmarkStore.obstacleBoxes().map((box) => ({ ...box, mode: 'volume' as const }));
+    const violations = checkMotion(segments, obstacles, clearanceOptions());
+    if (violations.length) throw new McpToolError(`Bootstrap envelope: ${describeViolations(violations)}`);
+}
+
+export function bootstrapPosePoints(planned: ReturnType<typeof planPoseStage>): Array<{ x: number; y: number; z: number }> {
+    return planned.plan.poses.flatMap((pose) => [
+        { x: pose.x, y: pose.y, z: planned.parkZ },
+        ...pose.stops.map((stop) => ({ x: pose.x, y: pose.y, z: stop.z })),
+        { x: pose.x, y: pose.y, z: planned.parkZ },
+    ]);
+}
+
 export async function runSearchStage(
     plan: ReturnType<typeof planSearchStage>,
     announce: (phase: string, note: string) => void
 ): Promise<object> {
     assertMachineReadyForProcedure();
+    validateBootstrapMotion(plan.parkZ, plan.waypoints.map((p) => ({ ...p, z: plan.parkZ })));
     const id = crypto.randomBytes(4).toString('hex');
     const dir = bootstrapDir(id);
     fs.ensureDirSync(dir);
     const frames: BootstrapFrameRecord[] = [];
     let device: string | null = null;
-    for (let i = 0; i < plan.waypoints.length; i++) {
-        const w = plan.waypoints[i];
-        announce('search:move', `waypoint ${i + 1}/${plan.waypoints.length} (${w.x}, ${w.y})`);
-        await moveMachineSettled('bootstrap:search', { x: w.x, y: w.y }, TRAVEL_FEED * 4);
-        const frame = await captureFrame();
-        device = frame.device;
-        const file = path.join(dir, `search${String(i + 1).padStart(3, '0')}_x${w.x}_y${w.y}.jpg`);
-        fs.writeFileSync(file, Buffer.from(frame.imageBase64, 'base64'));
-        frames.push({ file, label: 'search', machine: { x: w.x, y: w.y, z: plan.parkZ }, capturedAt: frame.capturedAt });
-    }
-    const index: BootstrapIndex = {
-        bootstrapId: id,
-        stage: 'search',
-        createdAt: Date.now(),
-        camera: { device },
-        parkZ: plan.parkZ,
-        floorZ: plan.parkZ,
-        targets: bootstrapTargets(),
-        frames,
-        note: 'Stage 0. Find which frames contain the tool setter. Its machine XY is known exactly, so the toolhead XY '
+    try {
+        await moveMachineSettled('bootstrap:park', { z: plan.parkZ }, TRAVEL_FEED);
+        for (let i = 0; i < plan.waypoints.length; i++) {
+            const w = plan.waypoints[i];
+            announce('search:move', `waypoint ${i + 1}/${plan.waypoints.length} (${w.x}, ${w.y})`);
+            await moveMachineSettled('bootstrap:search', { x: w.x, y: w.y }, TRAVEL_FEED * 4);
+            const frame = await captureFrame();
+            device = frame.device;
+            const file = path.join(dir, `search${String(i + 1).padStart(3, '0')}_x${w.x}_y${w.y}.jpg`);
+            fs.writeFileSync(file, Buffer.from(frame.imageBase64, 'base64'));
+            frames.push({ file, label: 'search', machine: { x: w.x, y: w.y, z: plan.parkZ }, capturedAt: frame.capturedAt });
+        }
+        const index: BootstrapIndex = {
+            bootstrapId: id,
+            stage: 'search',
+            createdAt: Date.now(),
+            camera: { device },
+            parkZ: plan.parkZ,
+            floorZ: plan.parkZ,
+            targets: bootstrapTargets(),
+            frames,
+            note: 'Stage 0. Find which frames contain the tool setter. Its machine XY is known exactly, so the toolhead XY '
             + 'of the frames that show it gives the camera offset INCLUDING ITS SIGN, to within half the grid pitch, '
             + 'with no prior assumption about where the camera looks. Then plan the pose stage from that.',
-    };
-    fs.writeJsonSync(path.join(dir, 'index.json'), index, { spaces: 2 });
-    return {
-        bootstrapId: id,
-        directory: dir,
-        stage: 'search',
-        frameCount: frames.length,
-        targets: index.targets,
-        next_step: index.note,
-    };
+        };
+        fs.writeJsonSync(path.join(dir, 'index.json'), index, { spaces: 2 });
+        return {
+            bootstrapId: id,
+            directory: dir,
+            stage: 'search',
+            frameCount: frames.length,
+            targets: index.targets,
+            next_step: index.note,
+        };
+    } catch (err) {
+        const partial = { bootstrapId: id, directory: dir, stage: 'search', frames, targets: bootstrapTargets(), camera: { device } };
+        savePartialCameraIndex(dir, partial);
+        return cameraFailure('camera_bootstrap', err, partial);
+    }
 }
 
 export async function runPoseStage(
@@ -281,57 +330,70 @@ export async function runPoseStage(
     announce: (phase: string, note: string) => void
 ): Promise<object> {
     assertMachineReadyForProcedure();
+    validateBootstrapMotion(planned.parkZ, bootstrapPosePoints(planned));
     const id = crypto.randomBytes(4).toString('hex');
     const dir = bootstrapDir(id);
     fs.ensureDirSync(dir);
     const frames: BootstrapFrameRecord[] = [];
     let device: string | null = null;
-    for (const pose of planned.plan.poses) {
-        announce('poses:traverse', `${pose.label} -> (${pose.x}, ${pose.y}) at Z ${planned.parkZ}`);
-        await moveMachineSettled('bootstrap:traverse', { x: pose.x, y: pose.y }, TRAVEL_FEED * 4);
-        let fromZ = planned.parkZ;
-        for (const stop of pose.stops) {
-            if (stop.z !== planned.parkZ) {
-                // XY stationary: the sweep is a vertical baseline, and law 2
-                // is satisfied because nothing moves in XY below the floor.
-                announce('poses:descend', `${pose.label} to Z ${stop.z}`);
-                // Segmented and crash-guarded, like every other descent: the
-                // sweep expects no contact, so a trigger during it is a
-                // collision, not a measurement.
-                await descendInSegments('bootstrap:descend', fromZ, stop.z, PROBE_CHANNELS, SENSOR_DELAY_MS);
+    try {
+        await moveMachineSettled('bootstrap:park', { z: planned.parkZ }, TRAVEL_FEED);
+        for (const pose of planned.plan.poses) {
+            announce('poses:traverse', `${pose.label} -> (${pose.x}, ${pose.y}) at Z ${planned.parkZ}`);
+            await moveMachineSettled('bootstrap:traverse', { x: pose.x, y: pose.y }, TRAVEL_FEED * 4);
+            let fromZ = planned.parkZ;
+            for (const stop of pose.stops) {
+                if (stop.z !== planned.parkZ) {
+                    // XY stationary: the sweep is a vertical baseline, and law 2
+                    // is satisfied because nothing moves in XY below the floor.
+                    announce('poses:descend', `${pose.label} to Z ${stop.z}`);
+                    // Segmented and crash-guarded, like every other descent: the
+                    // sweep expects no contact, so a trigger during it is a
+                    // collision, not a measurement.
+                    await descendInSegments('bootstrap:descend', fromZ, stop.z, PROBE_CHANNELS, SENSOR_DELAY_MS);
+                }
+                const frame = await captureFrame();
+                device = frame.device;
+                const file = path.join(dir, `${pose.label}_z${stop.z}.jpg`.replace(/[^\w.-]/g, '_'));
+                fs.writeFileSync(file, Buffer.from(frame.imageBase64, 'base64'));
+                frames.push({ file,
+                    label: pose.label,
+                    machine: { x: pose.x, y: pose.y, z: stop.z },
+                    capturedAt: frame.capturedAt,
+                    holdout: pose.holdout === true });
+                fromZ = stop.z;
             }
-            const frame = await captureFrame();
-            device = frame.device;
-            const file = path.join(dir, `${pose.label}_z${stop.z}.jpg`.replace(/[^\w.-]/g, '_'));
-            fs.writeFileSync(file, Buffer.from(frame.imageBase64, 'base64'));
-            frames.push({ file, label: pose.label, machine: { x: pose.x, y: pose.y, z: stop.z }, capturedAt: frame.capturedAt });
-            fromZ = stop.z;
+            // Back to the park height before the next XY move, always.
+            announce('poses:raise', `${pose.label} back to Z ${planned.parkZ}`);
+            await moveMachineSettled('bootstrap:raise', { z: planned.parkZ }, TRAVEL_FEED);
         }
-        // Back to the park height before the next XY move, always.
-        announce('poses:raise', `${pose.label} back to Z ${planned.parkZ}`);
-        await moveMachineSettled('bootstrap:raise', { z: planned.parkZ }, TRAVEL_FEED);
+        const index: BootstrapIndex = {
+            bootstrapId: id,
+            stage: 'poses',
+            createdAt: Date.now(),
+            camera: { device },
+            parkZ: planned.parkZ,
+            floorZ: planned.floorZ,
+            targets: bootstrapTargets(),
+            frames,
+            note: 'Stage 1-2. Solve with scripts/camera_bootstrap.py <directory>, then store the result with '
+            + 'set_camera_model and prove it with a fresh capture at a holdout pose (excluded from fitting). Read index remotely with get_camera_capture_set, images with get_frame.',
+        };
+        fs.writeJsonSync(path.join(dir, 'index.json'), index, { spaces: 2 });
+        return {
+            bootstrapId: id,
+            directory: dir,
+            stage: 'poses',
+            frameCount: frames.length,
+            poses: planned.plan.poses,
+            finalMachine: getPositionSnapshot().machine,
+            dropped: planned.plan.dropped,
+            targets: index.targets,
+            next_step: index.note,
+        };
+    } catch (err) {
+        const partial = { bootstrapId: id, directory: dir, stage: 'poses', frames, targets: bootstrapTargets(), camera: { device } };
+        savePartialCameraIndex(dir, partial);
+        return cameraFailure('camera_bootstrap', err, partial);
     }
-    const index: BootstrapIndex = {
-        bootstrapId: id,
-        stage: 'poses',
-        createdAt: Date.now(),
-        camera: { device },
-        parkZ: planned.parkZ,
-        floorZ: planned.floorZ,
-        targets: bootstrapTargets(),
-        frames,
-        note: 'Stage 1-2. Solve with scripts/camera_bootstrap.py <directory>, then store the result with '
-            + 'set_camera_model and prove it with verify_camera_model at a pose that is NOT in this set.',
-    };
-    fs.writeJsonSync(path.join(dir, 'index.json'), index, { spaces: 2 });
-    return {
-        bootstrapId: id,
-        directory: dir,
-        stage: 'poses',
-        frameCount: frames.length,
-        poses: planned.plan.poses,
-        dropped: planned.plan.dropped,
-        targets: index.targets,
-        next_step: index.note,
-    };
 }

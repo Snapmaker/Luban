@@ -127,6 +127,12 @@ export const tests: Array<[string, () => void]> = [
         ], 'the second row runs back the other way');
     }],
 
+    ['holdout identity survives obstacle-aware pose planning', () => {
+        const plan = sweep({ poses: [{ label: 'independent', x: 280, y: 150, holdout: true }] });
+        assert.equal(plan.poses[0].holdout, true);
+        assert.ok(plan.poses[0].stops.length > 1);
+    }],
+
     ['the grid divides evenly rather than leaving a stub at the far edge', () => {
         const grid = planSearchGrid({ xMin: 0, xMax: 250, yMin: 0, yMax: 0, pitchMm: 80 });
         const xs = grid.map((p) => p.x);

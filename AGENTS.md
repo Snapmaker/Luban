@@ -37,6 +37,7 @@ the same directory, so Claude Code and Codex load identical files in this checko
 | [`cnc-motion-rules`](.agents/skills/cnc-motion-rules/SKILL.md) | Always first, for any motion, position or coordinate question |
 | [`cnc-probing`](.agents/skills/cnc-probing/SKILL.md) | Touch-probe measurement, surface scans, probe calibration |
 | [`cnc-visual-alignment`](.agents/skills/cnc-visual-alignment/SKILL.md) | Camera frames, visual servo, locating stock or a datum |
+| [`cnc-camera-operations`](.agents/skills/cnc-camera-operations/SKILL.md) | Camera inspection, remote saved frames, bootstrap and one-approval survey sequences |
 | [`tool-change`](.agents/skills/tool-change/SKILL.md) | Swapping bits without re-touching the stock |
 | [`cnc-thread-milling`](.agents/skills/cnc-thread-milling/SKILL.md) | Thread-milling exports, cutter setup, conversion and staging |
 

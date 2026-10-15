@@ -40,7 +40,7 @@ async function request(manager: object, route: string, method = 'GET', headers =
 }
 
 // Load server-bound code with explicit inert dependencies; never start Luban or connect to hardware.
-function isolatedModule(file: string, dependencies: Record<string, unknown>) {
+export function isolatedModule(file: string, dependencies: Record<string, unknown>) {
     const source = fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
     const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2019, esModuleInterop: true } });
     const exports: Record<string, any> = {}; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -74,6 +74,7 @@ function managerFixture() {
         './jobEnding': jobEnding,
         './jobDashboardState': require('../jobDashboardState'),
         './telemetryConfig': require('../telemetryConfig'),
+        './activeTool': { describeActiveTool: () => ({ active: null }) },
     });
     return loaded;
 }

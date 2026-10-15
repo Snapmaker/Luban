@@ -15,6 +15,7 @@ import { probeFeedService, resolveActiveProbeConfig } from './probeFeed';
 import { ToolRegistry } from './registry';
 import { registerCalibrationTools } from './tools/calibration';
 import { registerCameraTools } from './tools/camera';
+import { registerCameraProgramTool } from './cameraProgram';
 import { registerCameraModelTools } from './tools/cameraModel';
 import { registerCamTools } from './tools/cam';
 import { registerGcodeTools, stopGcodeJob } from './tools/gcode';
@@ -246,7 +247,8 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
     registerGcodeTools(registry, baseUrl);
     registerThreadMillingTools(registry);
     registerCameraTools(registry);
-    registerCameraModelTools(registry);
+    registerCameraProgramTool(registry, baseUrl);
+    registerCameraModelTools(registry, baseUrl);
     registerCalibrationTools(registry);
     registerLandmarkTools(registry);
     registerProbeTools(registry);

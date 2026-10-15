@@ -17,6 +17,7 @@
 import { MotionSegment, ObstacleBox, checkMotion, describeViolations } from './envelopeChecks';
 
 export interface BootstrapPose {
+    holdout?: boolean;
     /** What this pose is for, in the report and the frame index. */
     label: string;
     x: number;
@@ -43,6 +44,7 @@ export interface SweepStop {
 }
 
 export interface PlannedPose {
+    holdout?: boolean;
     label: string;
     x: number;
     y: number;
@@ -154,7 +156,7 @@ export function planPoseSweep(input: PoseSweepInput): PoseSweepPlan {
             continue;
         }
         segments.push(traverse);
-        planned.push({ label: pose.label, x: pose.x, y: pose.y, stops: kept, restriction });
+        planned.push({ label: pose.label, x: pose.x, y: pose.y, stops: kept, restriction, ...(pose.holdout ? { holdout: true } : {}) });
         // 3. back to the park height before the next XY move.
         from = { x: pose.x, y: pose.y, z: parkZ };
     }

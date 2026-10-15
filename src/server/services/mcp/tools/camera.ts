@@ -14,6 +14,7 @@ import {
     captureFromDevice,
     clearCameraSelection,
     getCachedFrame,
+    getCapturedFrame,
     getCachedFrameDevice,
     getCachedFrameIds,
     listCameraCandidates,
@@ -32,8 +33,10 @@ import { gateDirectXy, planGotoWorkOrigin } from '../directMovePlan';
 import { clearanceOptions } from '../clearanceContext';
 import { WORK_FRAME_RESTORE_GCODE } from '../frameRecovery';
 import { landmarkStore } from '../landmarks';
+import { routeClearanceForPath } from '../routeClearance';
 import { probeFeedService } from '../probeFeed';
-import { programFrameRoot } from '../programFrames';
+import { cameraArtifactPath, cameraImageMime, readCameraSnapshot } from '../cameraArtifacts';
+import DataStorage from '../../../DataStorage';
 import {
     assertFreshHeartbeat,
     PositionSnapshot,
@@ -229,6 +232,7 @@ function frameContent(frame: CapturedFrame, meta: object): object {
                     ...meta,
                     camera: {
                         frameId: frame.frameId,
+                        file: frame.file,
                         provider: frame.provider,
                         device: frame.device,
                         capturedAt: frame.capturedAt,
@@ -406,6 +410,22 @@ export async function executeBoundedMoveAndCapture(args: BoundedMoveArgs): Promi
         throw new McpToolError('The connected channel does not support direct moves.');
     }
 
+    if (before.machine.x === null || before.machine.y === null) {
+        throw new McpToolError('Machine XY is unknown; cannot compute the route collision envelope.');
+    }
+
+    const routeClearance = routeClearanceForPath(
+        { x: before.machine.x as number, y: before.machine.y as number },
+        machineTarget,
+    );
+
+    if (!Number.isFinite(routeClearance.minimumZ)) {
+        throw new McpToolError(`XY move refused: ${routeClearance.note}`);
+    }
+    if (routeClearance.minimumZ > Math.max(safeTraverseZ(), before.machine.z || 0)) {
+        throw new McpToolError(`Route requires toolhead Z${routeClearance.minimumZ}, above the current/park height; no automatic raise beyond park is allowed.`);
+    }
+
     // OPERATOR LAW (2026-09-01, after the probe crash; made a hard gate on
     // 2026-09-21 - "move_and_capture should be z gated first"): X/Y happens at
     // the safe traverse height, and that precondition is established BEFORE
@@ -413,14 +433,9 @@ export async function executeBoundedMoveAndCapture(args: BoundedMoveArgs): Promi
     // already required a fresh, reliable one). An unknown Z refuses. A head
     // below the height is raised straight up first - the one move that cannot
     // descend (law 8) - and the XY is sent only once that raise has settled.
-    // The height is the MOTION FLOOR, not the park height (operator ruling
-    // 2026-09-21): a head already above the floor is legal to traverse at and
-    // is not forced up to Z328 for a nudge. Until 2026-09-21 this check ran
-    // after the travel cap and was skipped outright when machine Z was null.
-    // The only escape hatch is operator_confirmed_clearance: the operator's
-    // explicit word for the corridor at the CURRENT Z - never the model's own
-    // judgment, never derived from assumptions about what is on the bed.
-    const gate = gateDirectXy(before.machine.z, motionFloorZ(), args.operator_confirmed_clearance === true);
+    // Direct camera nudges retain the park-height Z gate (law 7); an active
+    // tool or a clearance flag cannot disable it. Staged surveys use the floor.
+    const gate = gateDirectXy(before.machine.z, Math.max(safeTraverseZ(), routeClearance.minimumZ), false);
     if (gate.action === 'refuse' || gate.planZ === null) {
         throw new McpToolError(`XY move refused: ${gate.reason}`);
     }
@@ -538,6 +553,7 @@ export async function executeBoundedMoveAndCapture(args: BoundedMoveArgs): Promi
         raised_first: raisedFirst,
         pacing_warning: pacingWarning,
         note: 'position is firmware-reported after settling, not the commanded target',
+        route_clearance: routeClearance,
     });
 }
 
@@ -765,7 +781,7 @@ export function registerCameraTools(registry: ToolRegistry): void {
             + 'stamped with the firmware-reported position it was taken at, when a machine is '
             + 'connected. While an operator watches the live stream (/camera) the frame comes from '
             + 'that loop (camera.source = "stream", one shared device); otherwise this call opens the '
-            + 'device itself. No motion.',
+            + 'device itself. Requested snapshots are saved to disk and remain retrievable by frame_id or file after the 12-frame RAM cache rolls over or Luban restarts. No motion.',
         inputSchema: { type: 'object', properties: {}, additionalProperties: false },
         handler: async () => {
             const frame = await captureFrame();
@@ -775,16 +791,12 @@ export function registerCameraTools(registry: ToolRegistry): void {
 
     registry.register({
         name: 'get_frame',
-        description: 'Return a frame that was captured earlier, by frame_id: one of the last 12 captures cached in memory '
-            + '(capture_frame, move_and_capture, preview_cameras, visual_servo), or a frame a probe_program `capture` op saved '
-            + 'on its job record (result.ops[].result.file - pass that path as `file`; it is read only from the MCP program-frame '
-            + 'directory). This is how the frames of a one-approval look-rotate-look program are viewed after it finishes. '
-            + 'Read-only, no motion, no new capture.',
+        description: 'Read any saved requested snapshot by frame_id (RAM cache then disk), or an image/mosaic by file from MCP camera capture, program-frame, bootstrap or survey directories. There is NO 12-frame retrieval limit: 12 is only the RAM cache size. Remote agents use get_camera_capture_set for job indexes, then get_frame for images. Read-only, no motion or new capture.',
         inputSchema: {
             type: 'object',
             properties: {
-                frame_id: { type: 'string', description: 'frame_id of a cached frame (from any capture result).' },
-                file: { type: 'string', description: 'Path a probe_program capture op reported as result.file, for when the frame has left the cache.' },
+                frame_id: { type: 'string', description: 'frameId from any requested capture result; archived snapshots survive cache eviction and restart.' },
+                file: { type: 'string', description: 'Image path from a camera/probe program result or a bootstrap/survey index. Server path, not client path.' },
             },
             additionalProperties: false,
         },
@@ -792,35 +804,54 @@ export function registerCameraTools(registry: ToolRegistry): void {
             const frameId = String(args.frame_id || '').trim();
             let jpg = frameId ? getCachedFrame(frameId) : null;
             let source: 'cache' | 'file' = 'cache';
+            let savedFile: string | null = null;
+            if (!jpg && frameId) {
+                const saved = readCameraSnapshot(DataStorage.userDataDir, frameId);
+                if (saved) {
+                    jpg = saved.image;
+                    savedFile = saved.file;
+                    source = 'file';
+                }
+            }
             if (!jpg && args.file) {
-                const file = path.resolve(String(args.file));
-                const root = path.resolve(programFrameRoot());
-                if (!file.startsWith(root + path.sep)) {
-                    throw new McpToolError(`file must be inside the MCP program-frame directory ${root}.`);
-                }
-                if (!fs.existsSync(file)) {
-                    throw new McpToolError(`No frame file at ${file}.`);
-                }
+                const file = cameraArtifactPath(DataStorage.userDataDir, String(args.file), 'image');
                 jpg = fs.readFileSync(file);
+                savedFile = file;
                 source = 'file';
             }
             if (!jpg) {
-                throw new McpToolError(`No cached frame "${frameId}" (the cache keeps the last 12); pass the file path a program capture reported.`);
+                throw new McpToolError(`Frame "${frameId}" was not found in RAM or the snapshot archive. For older job images, pass the saved file path from the job result/index.`);
             }
             return {
                 mcpContent: [
-                    { type: 'image', data: jpg.toString('base64'), mimeType: 'image/jpeg' },
+                    { type: 'image', data: jpg.toString('base64'), mimeType: cameraImageMime(jpg) },
                     {
                         type: 'text',
                         text: JSON.stringify({
                             frame_id: frameId || null,
                             source,
                             device: frameId ? getCachedFrameDevice(frameId) : null,
-                            file: source === 'file' ? args.file : null,
+                            file: savedFile,
                         }),
                     },
                 ],
             };
+        },
+    });
+
+    registry.register({
+        name: 'get_camera_capture_set',
+        description: 'Read the complete position-stamped index of a finished camera_bootstrap or survey_bed. Pass directory from get_gcode_job_status.result. Returns targets, physical plane, dropped poses, frame paths and mosaics as recorded; get_frame reads each image remotely. For an offline solver, save this index.json and the images by basename in a local directory. Read-only; no calibration or motion.',
+        inputSchema: {
+            type: 'object',
+            properties: { directory: { type: 'string', description: 'Server directory returned by the capture job.' } },
+            required: ['directory'],
+            additionalProperties: false,
+        },
+        handler: async (args: { directory?: string }) => {
+            if (!args.directory) throw new McpToolError('directory is required from the saved job result.');
+            const file = cameraArtifactPath(DataStorage.userDataDir, path.join(args.directory, 'index.json'), 'index');
+            return { file, index: JSON.parse(fs.readFileSync(file, 'utf8')), next_step: 'Read images with get_frame {file}; keep their machine stamps and holdout flags. Paths are on the server.' };
         },
     });
 
@@ -984,9 +1015,8 @@ export function registerCameraTools(registry: ToolRegistry): void {
                         + 'showing the right view as confirm_frame_id (or operator_confirmed: true if the '
                         + 'OPERATOR has confirmed the device by name).');
                 }
-                if (!getCachedFrame(frameId)) {
-                    throw new McpToolError(`Frame "${frameId}" is not in the frame cache (it holds the last few `
-                        + `frames: ${getCachedFrameIds().join(', ') || 'none'}). Take a fresh preview_cameras frame.`);
+                if (!getCapturedFrame(frameId)) {
+                    throw new McpToolError(`Frame "${frameId}" is not in the cache or snapshot archive. Take a fresh preview_cameras frame.`);
                 }
                 const frameDevice = getCachedFrameDevice(frameId);
                 if (frameDevice === null) {
@@ -1099,7 +1129,7 @@ export function registerCameraTools(registry: ToolRegistry): void {
 
     registry.register({
         name: 'track_feature',
-        description: 'Template-match a patch between two cached frames (by the frameId each capture '
+        description: 'Template-match a patch between two captured frames (RAM cache or disk archive, by the frameId each capture '
             + 'reports): give the pixel of a feature in one frame and get its measured pixel in the '
             + 'other, with an NCC confidence score. Use this instead of eyeballing pixel coordinates '
             + 'when deriving calibrations or measuring servo error - hand-estimated pixels were the '
@@ -1138,11 +1168,11 @@ export function registerCameraTools(registry: ToolRegistry): void {
             search_radius?: number;
             expected_shift?: { du?: number; dv?: number };
         }) => {
-            const templateJpg = getCachedFrame(String(args.template_frame_id || ''));
-            const searchJpg = getCachedFrame(String(args.search_frame_id || ''));
+            const templateJpg = getCapturedFrame(String(args.template_frame_id || ''));
+            const searchJpg = getCapturedFrame(String(args.search_frame_id || ''));
             if (!templateJpg || !searchJpg) {
                 throw new McpToolError(`Unknown frame id. Cached frames: ${getCachedFrameIds().join(', ') || 'none'} `
-                    + '(the cache holds the last 12 captures of this session).');
+                    + 'No matching saved snapshot was found either. Use frameId from a capture result.');
             }
             const u = Math.round(Number(args.point?.u));
             const v = Math.round(Number(args.point?.v));

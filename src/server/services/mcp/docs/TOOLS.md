@@ -6,6 +6,11 @@ one operator click on the confirm page; direct-call exceptions are governed by
 quote coordinates with their frame (machine vs work). Call `get_stored_state` first in a fresh
 session.
 
+For a compact workflow and exact camera operation fields, see
+[camera operations](../../../../../.agents/skills/cnc-camera-operations/SKILL.md).
+One approval covers a complete bounded program/sequence; do not split safe internal steps into
+separate confirmations. Unhomed transport/procedures refuse; `home` raises Z first and turns B.
+
 ## Orientation and status (read-only)
 
 - `get_stored_state` — everything known in one call: calibrations, landmarks, tool region, limits, camera (incl. `camera.stream.stream_url`, the operator's live view), connection, probe feed. Start here.
@@ -46,10 +51,14 @@ session.
 - `list_cameras` — enumerate capture devices (DirectShow names on Windows, `/dev/v4l/by-id` on Linux), plus `selection` (which camera captures actually use: `url`, `device`, `last_good`, `effective`, `pinned`) and `stream` — `enabled`, `stream_url` (`/camera` page for the OPERATOR's browser; not for the agent to fetch), `running`, `clients`, `fps`.
 - `preview_cameras {device?}` — one frame from EACH attached camera (or just the named one), labelled with its device string and `frame_id`. With two cameras attached both return good-looking frames and nothing downstream can tell which is which — the measurements are simply wrong — so look before you pin. A camera that will not open is reported beside the others, never substituted. Read-only; the selection is untouched.
 - `select_camera {device | clear, confirm_frame_id?, operator_confirmed?, reason?}` — pin which camera every capture uses (`mcpCameraDevice`, or `mcpCameraUrl` for an http(s) snapshot URL — picking one clears the other, since the URL wins wherever both are set). `device` matches a `list_cameras` entry, its `/dev` path (symlink or the node it resolves to), or its friendly name; ambiguous matches and bare indices are refused, never guessed. `confirm_frame_id` must be a frame that came from THAT camera (from `preview_cameras`) — waived only when one camera is attached or the selection is unchanged; `operator_confirmed` is the OPERATOR's word, not the model's. Returns a fresh frame from the camera it just selected, restarts the live stream loop onto it, and — when the camera actually changed — marks the solved camera model unverified, because that geometry belonged to the old camera. `clear: true` unpins.
-- `capture_frame` — position-stamped frame with a `frameId`, the expected tool region, nearby landmarks, `source` (`stream` = served by the live MJPEG loop someone is watching, `one-shot` = this call opened the device) and `stream_url`. Cached (last 12). Works the same whether or not the stream is running.
-- `get_frame {frame_id | file}` — a frame captured earlier: one of the last 12 cached, or a `probe_program` `capture` op's saved file (read only from the program-frame directory). Read-only, no capture, no motion.
+- `capture_frame` — position-stamped frame with a `frameId`, the expected tool region, nearby landmarks, `source` (`stream` = served by the live MJPEG loop someone is watching, `one-shot` = this call opened the device) and `stream_url`. Every requested snapshot is archived under `mcp-camera-captures`; the last 12 also stay in RAM. Returned `camera.file` and `frameId` remain usable after cache eviction and restart. Works the same whether or not the stream is running.
+- `get_frame {frame_id | file}` — any requested snapshot by ID (RAM then disk), or a saved image/mosaic inside MCP camera-capture, program-frame, bootstrap or survey directories. **There is no 12-frame retrieval or survey-size limit**; 12 is only the RAM cache size. JPEG and PNG responses carry their actual MIME type. Server paths are accepted from remote clients; extensions and real paths are constrained. Read-only, no capture/motion.
+Requested snapshots are retained until their archive files are explicitly removed; there is no automatic age/count eviction on disk. Continuous live-video frames are not archived. Frames already lost from the old RAM-only cache cannot be recovered. Survey/programme images have their own saved paths and indexes.
+
+- `get_camera_capture_set {directory}` — read the position-stamped `index.json` from a bootstrap/survey result directory. Returns targets, frames, holdout flags, physical plane and mosaic metadata as recorded. Fetch images with `get_frame`; save the index and images by basename to run the offline solver locally. No SSH/server filesystem access needed.
+- `camera_program {name, reason, ops}` — one staged procedure with 1–80 ordered `{id, kind, ...fields}` ops. The live `ops.items.oneOf` schema defines all fields and rejects unknown fields/references before staging. Kinds: `move_z {machine_z}`, `survey_bed` (standalone fields, no mosaic), `move_and_capture {x,y,machine_z}`, `capture`, `track_feature {template_capture_id,search_capture_id,point:{u,v}}`, `fit_calibration {samples:[{track_id,dx_mm,dy_mm}],max_residual_px?,valid_at_y?,z?,surface?,notes?}`, `verify_calibration {fit_id|jacobian+matrix,tolerance?}`. Tracking uses a 41 px patch and 120 px search. Fit stores a local 2×2 inverse (5 px residual limit default), not the camera model; verification checks M·J only (0.25 default). `operator_confirmed_clearance` is permitted only on specifically cleared survey/move-and-capture ops, never at program level. Result `ops` is keyed by id, with saved `file`/machine positions, tracks, matrices/residuals/store entries; failures retain completed ops and retreat/HOLD outcome. Initial anchor/tool/obstacles/model are rechecked before execution. Deliver the URL last, end the turn, then `start_gcode_job`.
 - `set_tool_region` — tell the server where the tool appears in frame so captures can flag it.
-- `track_feature` — normalised cross-correlation of a template between two cached frames. Use instead of eyeballing pixels.
+- `track_feature` — normalised cross-correlation of a template between two captured frames (RAM or disk). Use instead of eyeballing pixels.
 - `set_camera_calibration` — Y/Z-keyed pixel-to-mm calibration, optional `surface` depth tag and `jacobian`. Sign-flipped matrices are rejected.
 - `get_camera_calibration` / `delete_camera_calibration` — read or remove a stored calibration.
 - `visual_servo` — one clamped step toward a seen target per call. Trips when the error stops shrinking or the response diverges from the calibration prediction (parallax signature).
@@ -58,6 +67,16 @@ session.
 
 ### The camera model (the camera is SESSION STATE, not a rig constant)
 
+`survey_bed.machine_z` is TOOLHEAD machine Z, asserted before XY, mutually exclusive with
+`z_levels`. Active tools do not bypass the floor. A legacy Z328 box still excludes Z320 views
+inside it: inspect dropped/clipped coverage and use park height when necessary. `plane_z` is
+PHYSICAL surface Z at the applicable B, never the toolhead height. `bed_plane_z` is used when
+stored; without either, zero is an unmeasured placeholder for qualitative frames only and no
+metric mosaic is rendered. Overlap requires an explicit/stored plane and a verified model;
+spacing is chosen to satisfy every requested height. Seam mismatch invalidates metric use but
+does not distinguish camera drift from wrong plane, parallax or poor matches. Re-verify a known
+target before re-solving; do not infer a replacement plane from a seam residual.
+
 It can sit differently after every power cycle, be knocked, be re-aimed, or be a different camera. Nothing converts a pixel into a machine coordinate, or a machine coordinate into a pose, until a model is solved AND verified on this connection. Plain captures never need one.
 
 - `get_camera_model {history?}` — the model, its state (verified | unverified | superseded), why it is not usable, and which tool fixes it. Read-only.
@@ -65,6 +84,15 @@ It can sit differently after every power cycle, be knocked, be re-aimed, or be a
 - `camera_bootstrap {stage, reason, ...}` — solve the geometry FROM NOTHING, two staged procedures, one approval each. `stage: "search"`: a grid at the park height bracketing the tool setter, whose machine XY is known exactly - which frames contain it gives the camera offset INCLUDING ITS SIGN with no prior assumption, and it is the only step meaningful without a calibration. `stage: "poses"`: the poses that implies, each sweeping Z from the park height to the motion floor with XY stationary. A pose the TOOLHEAD cannot reach is dropped with a reason, never quietly adjusted.
 - `set_camera_model {offset, rotation, intrinsics, valid_band_z, central_region, residuals, ...}` — store a solve from `scripts/camera_bootstrap.py`. Always stored UNVERIFIED; the previous model is kept superseded, never overwritten.
 - `plan_view_pose {target, toolhead_z?}` — where must the TOOLHEAD go to see this machine point? Returns the pose, the standoff and the field of view, from the model. Use it instead of computing a pose; never carry one between sessions.
+
+Bootstrap poses accept `holdout: true`: choose distinct XY from observed search frames, not
+`plan_view_pose` while the model is unverified. Holdouts run last and the solver excludes all
+their frames. Poses finish at park Z above the last pose; `result.finalMachine` reports it.
+Take a fresh verification capture there after `set_camera_model` (default 8 px threshold).
+Review dropped/restricted poses; at least two useful fit poses plus a holdout must survive,
+and the solve still needs sufficient independent geometry. Search `y_span_mm` defaults to 0;
+widen it when the viewing direction is unknown. Each moving bootstrap stage returns its own
+confirm URL. The solve, model store and verification themselves have no confirm page or motion.
 
 ## Landmarks and scene
 
@@ -79,6 +107,10 @@ It can sit differently after every power cycle, be knocked, be re-aimed, or be a
 - `clear_overtravel_alarm` — reset a latched overtravel trip. Operator's explicit word only.
 
 ## Tool setter and tool change
+
+- `set_active_tool {protrusion_mm, source, note?, tool_identity?, measurement_job_id?}` — record the fitted-tool clearance assertion, no motion/page. Operator source requires the operator's explicit statement; measured sources must match a completed setter job. Protrusion is a conservative distance below the toolhead, not probe contact calibration. A shorter active value lowers physical-basis clearances; legacy toolhead heights remain unchanged and the camera motion floor remains enforced.
+- `get_active_tool` — current usable assertion with source and age, or `active:null`, historical `stored` evidence and `staleReason`. Server restart, detected disconnect/reboot and tool-change parking invalidate it. Reconfirm after the manual swap; never blindly replay the old value.
+- Successful `run_tool_setter` replaces the active tool, returns `active_tool_replaced` old → new, and `get_tool_setter_config` includes it. Re-read before subsequent planning. Every confirm page displays staging and current active-tool provenance.
 
 - `set_tool_setter_config` — setter centre, trigger Z with a reference bit, known bit lengths. Operator-stated values only.
 - `get_tool_setter_config` — read it back.
@@ -100,12 +132,21 @@ It can sit differently after every power cycle, be knocked, be re-aimed, or be a
 - `probe_program` — composite program: an ordered list of operations, derived references, jig geometry, keep-out and groups under one approval. The new-stock survey lives here. Each completed probing op ends raised; references/groups do not fuse local motion between ops. Op kinds: `rotate_b`, `surface_path`, `surface_grid`, `sequence`, `stock_outline`, `wall_follow`, `corner`, `trace`, `capture {x?, y?}` (a position- and B-stamped frame saved on the job record; with x/y it first hops there at the traverse height, travel- and obstacle-checked like a sequence hop, else no motion) and `home` (machine home, last op only, homes B too) — so "capture at (x, y), rotate_b 180, capture, home" is one click.
 - `set_probe_geometry` — jig and tool constants a rotary `probe_program` can reference as the `axis` namespace. Measured or operator-stated, with a reason.
 
+`probe_program {dry_run:true,...}` validates the same plan and returns `eventBudget`,
+`jobEventLimit`, `fitsEventLimit` and a recommended limit without staging or motion. Normal
+staging refuses an oversized budget. Surface ops budget 40 + 120/station plus other op/program
+overhead; use measured timing for runtime, not that count. `set_probe_geometry` also stores
+`probe_stylus_exposed_mm`, `probe_body_diameter_mm` (references `probe.stylus_exposed_mm` and
+`probe.body_diameter_mm`, null refuses bounded references) and measured physical `bed_plane_z`.
+Both tailstock and chuck-jaw keep-out volumes need current measured/operator-stated extents;
+axis-centre points alone cannot generate safe fixture boxes.
+
 ## CAM probing programs
 
 - FreeCAD side: `docs/post/freecad_probe_emitter.py` writes a `run_probing_gcode` program with `(PROBE ...)` nominals, normals and tolerances read straight off the selected faces (the Path Probe operation carries none of that, so it is bypassed, along with the post processor). `frame="machine"` + a measured `App.Placement` for a re-clamped part.
 
 - `run_probing_gcode` — stage a CAM-generated probing program (Fusion 360, FreeCAD, any Grbl/Marlin post, or hand-written). `G38` cycles are translated into staged probes, never sent raw. Default `link_mode: raise` repositions at full height; `stepped`/`wall` provide local links with blocked-station handling. Every G38.2/G38.3 cycle still returns to its own start. Returns an inspection report.
-- `get_inspection_report` — re-render a finished or aborted probing run's report in another format, such as Fusion's.
+- `get_inspection_report` — re-render a finished/aborted **run_probing_gcode** CAM report. For probe_program, probe_sequence and surface scans, read `get_gcode_job_status.result`; unsupported report requests return that pointer.
 
 For tool selection, timing and the limits of local continuation, see [inspection planning](probe-inspection.md#efficient-inspection-planning).
 

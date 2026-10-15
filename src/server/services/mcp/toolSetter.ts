@@ -38,6 +38,7 @@ import {
     resolveMarchParams,
 } from './procedureLimits';
 import { McpToolError } from './registry';
+import { getActiveTool, setActiveTool } from './activeTool';
 import { getPositionSnapshot, motionFloorZ, safeTraverseZ } from './tools/machine';
 
 const log = logger('service:mcp:tool-setter');
@@ -368,6 +369,8 @@ export interface ToolSetterResult {
     /** Machine Z the head was left at: the traverse height on a normal run, the trigger Z when holding. */
     finalZ: number | null;
     note: string;
+    active_tool?: object;
+    active_tool_replaced?: object;
     warning?: string;
 }
 
@@ -385,7 +388,7 @@ const SUCCESS_RETREAT_PHASES: RaiseToTopPhases = {
  * success and abort alike end with a raise STRAIGHT UP to the traverse height
  * (raiseToTop / abortRaiseToTop) when the machine still answers.
  */
-export async function runToolSetterProcedure(plan: ToolSetterPlan): Promise<object> {
+export async function runToolSetterProcedure(plan: ToolSetterPlan, measurementJobId?: string): Promise<object> {
     const contactChannels: ProbeChannel[] = plan.acceptProbeContact ? ['toolsetter', 'probe'] : ['toolsetter'];
     for (const channel of contactChannels) {
         assertChannelReady(channel, 'tool setter');
@@ -601,6 +604,13 @@ export async function runToolSetterProcedure(plan: ToolSetterPlan): Promise<obje
             spreadMm,
             at: Date.now(),
         });
+        const previousActiveTool = getActiveTool();
+        const activeTool = setActiveTool({
+            protrusionMm: derivedBitLengthMm,
+            source: plan.acceptProbeContact ? 'spindle_probe' : 'tool_setter',
+            measurementJobId: measurementJobId || null,
+            note: `Successful run_tool_setter measurement; spread ${spreadMm} mm.`,
+        });
         let storedAsReference = false;
         if (plan.storeAsReference) {
             setToolSetterConfig({
@@ -625,6 +635,8 @@ export async function runToolSetterProcedure(plan: ToolSetterPlan): Promise<obje
                 + `passes [${passContacts.join(', ')}], spread ${spreadMm} mm (+/- ${plan.fineStepMm} mm step `
                 + 'resolution). The derived bit length assumes the stored reference is exact; report it '
                 + `with that uncertainty.${endNote}`,
+            active_tool: activeTool,
+            active_tool_replaced: { previous: previousActiveTool, current: activeTool },
             warning: spreadMm > plan.fineStepMm + 1e-9
                 ? `Confirm passes spread ${spreadMm} mm exceeds one fine step - feed timing was unstable; `
                     + 'consider more confirm_passes or a longer sensor_delay_ms.'

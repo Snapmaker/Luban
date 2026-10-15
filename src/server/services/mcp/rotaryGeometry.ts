@@ -38,6 +38,9 @@ export const GEOMETRY_FIELDS = [
     { field: 'rotary_chuck_face_y', key: 'mcpRotaryChuckFaceY', env: 'LUBAN_MCP_ROTARY_CHUCK_FACE_Y', min: -50, max: 400 },
     { field: 'probe_effective_length', key: 'mcpProbeEffectiveLength', env: 'LUBAN_MCP_PROBE_LENGTH', min: 1, max: 300 },
     { field: 'probe_tip_diameter', key: 'mcpProbeTipDiameter', env: 'LUBAN_MCP_PROBE_TIP_DIAMETER', min: 0.1, max: 30 },
+    { field: 'probe_stylus_exposed_mm', key: 'mcpProbeStylusExposed', env: 'LUBAN_MCP_PROBE_STYLUS_EXPOSED_MM', min: 0.1, max: 300 },
+    { field: 'probe_body_diameter_mm', key: 'mcpProbeBodyDiameter', env: 'LUBAN_MCP_PROBE_BODY_DIAMETER_MM', min: 0.1, max: 100 },
+    { field: 'bed_plane_z', key: 'mcpBedPlaneZ', env: 'LUBAN_MCP_BED_PLANE_Z', min: -100, max: 400 },
     // Toolhead travel for THIS rig (machineTravel.ts). Unset is the normal
     // case: travel then falls back to the machine definition's size box,
     // widened by positions the toolhead has actually been observed at. State
@@ -188,13 +191,15 @@ export interface AxisNamespace {
  * when the rotary axis AND the probe length are known (z_contact needs both);
  * otherwise a reference to axis.* is refused at staging with the tool named.
  */
-export function programSeedNamespaces(): { axis?: AxisNamespace } {
+export function programSeedNamespaces(): { axis?: AxisNamespace; probe: { stylus_exposed_mm: number | null; body_diameter_mm: number | null } } {
+    const dimensions = { stylus_exposed_mm: geometryValue('probe_stylus_exposed_mm'), body_diameter_mm: geometryValue('probe_body_diameter_mm') };
     const rotary = rotaryGeometry();
     const probe = probeGeometry();
     if (!rotary || !probe) {
-        return {};
+        return { probe: dimensions };
     }
     return {
+        probe: dimensions,
         axis: {
             x: rotary.axisX,
             z_physical: rotary.axisZ,

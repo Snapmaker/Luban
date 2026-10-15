@@ -18,6 +18,8 @@ import {
     PosePlanArgs,
     SearchPlanArgs,
     bootstrapTargets,
+    bootstrapPosePoints,
+    validateBootstrapMotion,
     describeBootstrapGcode,
     planPoseStage,
     planSearchStage,
@@ -117,7 +119,7 @@ function parseVec3(raw: unknown, field: string): Vec3 {
     return out;
 }
 
-export function registerCameraModelTools(registry: ToolRegistry): void {
+export function registerCameraModelTools(registry: ToolRegistry, getConfirmBaseUrl: () => string): void {
     registry.register({
         name: 'get_camera_model',
         description: 'The current camera model and whether it may still be used. The camera is SESSION STATE, not a '
@@ -333,7 +335,7 @@ export function registerCameraModelTools(registry: ToolRegistry): void {
             + 'is dropped with a reason and never quietly adjusted, even though the camera looks into keep-outs on '
             + 'purpose.\n'
             + 'Frames are written with a machine-position index; solve them with scripts/camera_bootstrap.py, store '
-            + 'with set_camera_model, then prove it with verify_camera_model.',
+            + 'with set_camera_model, then prove it with verify_camera_model (default 8 px, no motion). Use holdout:true on a pose excluded from the solve; holdouts run last and finish at park Z over the last holdout XY. Choose from observed search views, not plan_view_pose (requires a verified model). Read saved index via get_camera_capture_set and images via get_frame. Inspect dropped/restricted poses before solving.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -351,6 +353,7 @@ export function registerCameraModelTools(registry: ToolRegistry): void {
                             label: { type: 'string' },
                             x: { type: 'number' },
                             y: { type: 'number' },
+                            holdout: { type: 'boolean', description: 'Exclude this pose from fitting; visit holdouts last, finish at park Z for a fresh verification capture.' },
                         },
                         required: ['x', 'y'],
                     },
@@ -384,8 +387,10 @@ export function registerCameraModelTools(registry: ToolRegistry): void {
             const stage = args.stage === 'poses' ? 'poses' : 'search';
             if (stage === 'search') {
                 const plan = planSearchStage(args as SearchPlanArgs);
+                validateBootstrapMotion(plan.parkZ, plan.waypoints.map((p) => ({ ...p, z: plan.parkZ })));
                 const envelope = describeBootstrapGcode([
                     `; CAMERA BOOTSTRAP (search): ${plan.waypoints.length} waypoints at machine Z ${plan.parkZ}, one frame each`,
+                    `G0 Z${plan.parkZ.toFixed(3)}; assert park before any XY`,
                     `; bracketing the tool setter at (${plan.target.machine.x}, ${plan.target.machine.y})`,
                     ...plan.waypoints.map((w, i) => `G0 X${w.x.toFixed(1)} Y${w.y.toFixed(1)}; waypoint ${i + 1} + capture`),
                 ]);
@@ -396,9 +401,12 @@ export function registerCameraModelTools(registry: ToolRegistry): void {
                     validateStagedEnvelope(envelope, 'camera_bootstrap'),
                     'procedure'
                 );
-                job.runner = async () => runSearchStage(plan, (phase, note) => {
-                    jobManager.appendEvent(job, phase, { note });
-                });
+                job.runner = async () => {
+                    validateStagedEnvelope(envelope, 'camera_bootstrap');
+                    return runSearchStage(plan, (phase, note) => {
+                        jobManager.appendEvent(job, phase, { note });
+                    });
+                };
                 const baseStep = 'Ask the operator to approve, then start_gcode_job. Nothing about where the camera '
                     + 'points is assumed by this stage.';
                 const nextStep = plan.clipped.length
@@ -406,6 +414,7 @@ export function registerCameraModelTools(registry: ToolRegistry): void {
                     : baseStep;
                 return {
                     job: jobManager.describe(job),
+                    confirm_url: `${getConfirmBaseUrl()}/confirm/${job.id}`,
                     stage,
                     waypoints: plan.waypoints.length,
                     bounds: plan.bounds,
@@ -426,11 +435,13 @@ export function registerCameraModelTools(registry: ToolRegistry): void {
             }
 
             const planned = planPoseStage(args as PosePlanArgs);
+            validateBootstrapMotion(planned.parkZ, bootstrapPosePoints(planned));
             const envelope = describeBootstrapGcode([
                 `; CAMERA BOOTSTRAP (poses): ${planned.plan.poses.length} poses, Z ${planned.parkZ} -> ${planned.floorZ}`,
+                `G0 Z${planned.parkZ.toFixed(3)}; assert park before any XY`,
                 `; ${planned.plan.captureCount} frames; every XY at Z ${planned.parkZ}, every sweep with XY stationary`,
                 ...planned.plan.poses.flatMap((pose) => [
-                    `G0 X${pose.x.toFixed(1)} Y${pose.y.toFixed(1)}; ${pose.label}`,
+                    `G0 X${pose.x.toFixed(1)} Y${pose.y.toFixed(1)}; ${pose.label}${pose.holdout ? ' HOLDOUT: excluded from fit' : ''}`,
                     ...pose.stops.map((stop) => `G1 Z${stop.z.toFixed(3)}; ${pose.label} capture`),
                     `G1 Z${planned.parkZ.toFixed(3)}; back to the park height`,
                 ]),
@@ -442,11 +453,15 @@ export function registerCameraModelTools(registry: ToolRegistry): void {
                 validateStagedEnvelope(envelope, 'camera_bootstrap'),
                 'procedure'
             );
-            job.runner = async () => runPoseStage(planned, (phase, note) => {
-                jobManager.appendEvent(job, phase, { note });
-            });
+            job.runner = async () => {
+                validateStagedEnvelope(envelope, 'camera_bootstrap');
+                return runPoseStage(planned, (phase, note) => {
+                    jobManager.appendEvent(job, phase, { note });
+                });
+            };
             return {
                 job: jobManager.describe(job),
+                confirm_url: `${getConfirmBaseUrl()}/confirm/${job.id}`,
                 stage,
                 poses: planned.plan.poses,
                 dropped: planned.plan.dropped,

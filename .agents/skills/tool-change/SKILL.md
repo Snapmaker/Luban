@@ -40,6 +40,13 @@ shifted exactly, without ever re-touching the stock.
 
 ## Two flows — ask which one the operator is using
 
+In both flows, a successful `run_tool_setter` replaces the active clearance tool with the
+measured protrusion (`active_tool_replaced` reports old → new). Re-read `get_active_tool`
+after each measurement and after the manual swap; a shorter tool lowers physical-basis
+clearances. Tool-change parking and reconnect/restart mark the persisted assertion stale.
+If the operator wants a conservative longer clearance bound to govern, explicitly reassert
+it with `set_active_tool` after measurement; never overwrite probe contact calibration with it.
+
 Ask it in the same single message as the other unknowns (both tools' approximate protrusion,
 whether the work origin was set with the tool now fitted). Flow A is four approvals — measure
 old, park, measure new, apply — each announced; the swap itself is the operator's hands and

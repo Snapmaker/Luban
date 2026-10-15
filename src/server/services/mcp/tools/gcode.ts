@@ -982,7 +982,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
         name: 'traverse_xy',
         description: 'Law-2 TRANSPORT: an absolute XY move, or an ordered series (max 20), at the traverse height - '
             + 'staged for ONE operator approval and executed one step per start_gcode_job call on the direct path, '
-            + 'exactly like move_z. Refused unless the toolhead is already at or above mcpSafeTraverseZ (328 = home Z) - '
+            + 'exactly like move_z. Refused unless homed and the toolhead is already at or above mcpMotionFloorZ (default 320); stored landmarks may demand higher Z - '
             + 'raise it with move_z (coordinate_system "machine") first; there is deliberately no override. Every '
             + 'segment is checked against the stored landmarks and every target against the travel; Z is never '
             + 'written. Default frame MACHINE (G53 declared on every step; work-frame steps declare G54). This is the '
