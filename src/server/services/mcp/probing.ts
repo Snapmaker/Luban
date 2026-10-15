@@ -1,9 +1,9 @@
 import { connectionManager } from '../machine/ConnectionManager';
 import { mcpBroadcast } from './index';
+import { queuedMoveGcode } from './pendantHold';
 import {
     AXES,
     BeatObservation,
-    noteFrameRestored,
     NullableXyz,
     PositionSource,
     Xyz,
@@ -463,7 +463,7 @@ export async function moveMachineSettled(
     }
 }
 // ---------------------------------------------------------------------------
-// Queued machine-frame moves (USB pendant pipelined jogging, opt-in).
+// Queued machine-frame moves (USB pendant continuous hold, opt-in).
 //
 // Why a settled move always ends at rest: the engine's trailing `G54;` runs
 // select_coordinate_system() in the Snapmaker controller (Marlin
@@ -473,16 +473,18 @@ export async function moveMachineSettled(
 // segment - waits for the G1 to finish, and the planner drains between
 // segments. The controller's G53() handler, by contrast, selects the machine
 // workspace WITHOUT a synchronize, and a plain G1 is acknowledged once it is in
-// the planner (a `G0 B180` + `M114` batch answered in 219 ms during an 18 s
-// rotation, 2026-09-21). These helpers let a caller hold the machine frame
-// across several queued segments and settle ONCE, with the same verified-settle
-// engine, at the end. The caller owns every bound on what it queues.
+// the planner (measured 2026-10-05: replies in 38-69 ms for ~175 ms moves).
+// These helpers let a caller (pendantRuntime.ts continuousHold) hold the
+// machine frame across clock-paced increments; the hold is closed by the
+// shared work-frame restore (tools/camera.ts sendWorkFrameRestore), whose G54
+// synchronizes, and proven by verifyRestoredPosition. The caller owns every
+// bound on what it queues.
 
 /**
- * Select absolute machine coordinates for a run of queued moves. No motion.
+ * Select absolute machine coordinates for a hold of queued moves. No motion.
  * `M220 S100` first: the Snapmaker build's M220 reports nothing, so the feed
  * override cannot be read, and the caller's queue model needs commanded feed
- * to be real feed. It is asserted for every run instead.
+ * to be real feed. It is asserted for every hold instead.
  */
 export async function enterMachineFrame(tool: string): Promise<SentGcode> {
     probeFeedService.assertNoOvertravel();
@@ -497,43 +499,33 @@ export async function enterMachineFrame(tool: string): Promise<SentGcode> {
 /**
  * Queue one absolute G1 in the machine frame that enterMachineFrame selected.
  * Returns when the controller accepted it, normally long before it finishes.
- * Never call it outside such a run: on its own it would move in the work frame.
+ * Never call it outside such a hold: on its own it would move in the work frame.
+ * `omitZ` sends `G1 X Y F` with no Z word (the controller keeps its current Z):
+ * the continuous hold uses it because its Z is the heartbeat-derived record Z,
+ * which may rest on a reused offset; with no Z word a wrong record Z fails the
+ * close's M114 proof instead of being driven to. The settled path's inherited
+ * record-Z word is unchanged here.
  */
-export async function queueMachineMove(tool: string, target: Xyz, feed: number): Promise<SentGcode> {
+export async function queueMachineMove(tool: string, target: Xyz, feed: number, options: { omitZ?: boolean } = {}): Promise<SentGcode> {
     probeFeedService.assertNoOvertravel();
     checkProcedureStop();
-    const words = `X${target.x.toFixed(3)} Y${target.y.toFixed(3)} Z${target.z.toFixed(3)}`;
-    const executed = await sendGcodeVisible(getDirectChannel(), tool, `G1 ${words} F${feed};`);
+    const executed = await sendGcodeVisible(getDirectChannel(), tool, queuedMoveGcode(target, feed, options.omitZ === true));
     if (executed.result !== 0) {
         throw new ProcedureAbort(`Controller rejected the queued move: ${executed.text || executed.result}`);
     }
     return executed;
 }
 
-/**
- * End a run of queued moves: the ordinary settled move to the run's last
- * queued endpoint (a zero-length G1, so no new motion), whose trailing G54
- * waits for the planner to drain, restores the work frame and lets the echo
- * verify the arrival. No procedure-stop check here: a stop must still restore
- * the frame, and this adds no travel to what is already queued.
- */
-export async function settleQueuedMachineMoves(tool: string, last: Xyz, feed: number, onRestored?: () => void): Promise<void> {
-    probeFeedService.motionBegin();
-    try {
-        await moveMachineSettledUnguarded(tool, last, feed, { onReply: () => {
-            noteFrameRestored();
-            if (onRestored) { onRestored(); }
-        } });
-        traceMark('settled-exit');
-    } finally {
-        probeFeedService.motionEnd();
-    }
+/** The firmware's position report (`M114`, read-only), raw: the caller parses it. */
+export async function queryPositionReport(tool: string): Promise<SentGcode> {
+    return sendGcodeVisible(getDirectChannel(), tool, 'M114');
 }
 
 /**
- * After a no-motion G90/G54 restore that queued nothing, prove the position:
- * M114's reply must match `expected` (machine coordinates) read in the WORK
- * frame, judged with the engine's trusted offset first. A match becomes the
+ * After a no-motion G90/G54 restore (the pendant's hold close, whose G54
+ * synchronized the planner), prove the position: M114's reply must match
+ * `expected` (machine coordinates) read in the WORK frame, judged with the
+ * engine's trusted offset first. A match becomes the
  * position of record (source `echo`), which clears the frame-uncertainty
  * latch. A reply that only matches as raw MACHINE coordinates is what a
  * controller still in G53 would say, so it is refused (2026-10-05 review); with
@@ -542,7 +534,7 @@ export async function settleQueuedMachineMoves(tool: string, last: Xyz, feed: nu
  * no motion either way.
  */
 export async function verifyRestoredPosition(tool: string, expected: Xyz): Promise<boolean> {
-    const executed = await sendGcodeVisible(getDirectChannel(), tool, 'M114');
+    const executed = await queryPositionReport(tool);
     const echo = executed.result === 0 ? parseEcho(executed.text) : null;
     if (!echo) {
         return false;

@@ -153,7 +153,7 @@ segment can finish after release/STOP; use the machine's physical emergency
 stop for immediate stopping. A stopped/error session holds its position and
 does not invent a retreat or any extra motion.
 
-### Continuous jogging (opt-in, not yet run on hardware)
+### Continuous jogging (opt-in, not yet run on hardware in this form)
 
 **Why the default moves, stops, moves, stops.** Each settled segment is sent as
 `G90`, `G53;`, `G1 …`, `G54;`, and the HTTP channel sends each line as its own
@@ -162,53 +162,171 @@ request and waits for its reply. On the Snapmaker controller `G54` runs
 workspace changes, so the last reply arrives only once the G1 has finished
 (live 2026-10-05: 0.50 s of motion, 777 ms until the reply). The next segment
 then needs three more round trips before it moves, about 280 ms at rest each time.
-A bare `G53` does not synchronize, and a plain G1 is acknowledged once queued.
+A bare `G53` does not synchronize, and a plain G1 is acknowledged once queued
+(measured: replies in 38–69 ms for moves that take about 175 ms).
 
-Start Luban with `LUBAN_PENDANT_PIPELINE=1` to try continuous X/Y jogging. It is
-read when you arm and is off by default. An X/Y jog then sends `M220 S100`,
-`G90` and `G53` once, queues short G1 segments, and ends with one verified
-settle: the ordinary settled move to the last queued point, whose G54 restores
-the work frame and whose echo verifies the arrival. Z intent always uses the
-settled path, and so does any connection other than the A350's HTTP channel.
+**Why there are no "runs" any more.** The first continuous mode queued about a
+second of segments up front, closed each run with a `G54` that drained the
+planner (about 550 ms), then waited up to 2 s for a verified heartbeat before
+the next run. On the A350 that produced a second of motion, a 0.5–2 s stop,
+repeat, and about half a second of queued motion after D1 was released. The run
+was the cause, so the design is now **one hold**: one `G53` when D1 is pressed,
+clock-paced increments while it is held, one `G54` when it is released or
+anything stops the hold.
 
-**Smoothness trade-off, by default.** Nothing the A350 reports confirms
-execution during a run. Its heartbeat x/y/z is the planner's queued target, 16
-blocks ahead, and arrives every 2 s. So by default each run commands at most the
-approved segment duration (0.5–1 s), then settles and verifies. The backlog can
-then never exceed one approved duration of travel, however slowly the controller
-actually runs. With that default, a run moves no further between stops than one
-settled segment does, so it is not yet smoother than the settled path.
+Start Luban with `LUBAN_PENDANT_PIPELINE=1` to enable it. It is read when you
+arm and is off by default. Z intent always uses the settled path, and so does
+any connection other than the A350's HTTP channel.
 
-After you have verified stop behaviour on hardware, you can raise
-`LUBAN_PENDANT_PIPELINE_RUN_MS`, up to 2000 ms, to get continuous runs. Raising
-it raises the worst-case backlog to the same figure. M114's `Count` fields may
-give a real executed-position signal that would lift this limit safely; that
-signal is unverified, and nothing relies on it yet.
+**The hold (`pendantRuntime.ts` `continuousHold`, constants in `pendantHold.ts`):**
 
-**Arming checks the controller.** Luban reads `M503 S` and keeps pipelining off
-(`pipeline.disabled` in `/pendant/status`) unless all of these are reported and
-fit the model:
+- **One G53 at the press, one G54 at the stop.** The whole hold runs inside one
+  gcode-lease acquisition. The press sends `M220 S100`, `G90`, `G53;` once (the
+  frame latch is raised *before* the send, so a lost reply still counts). The
+  stop sends nothing further, then closes through the shared restore path:
+  `sendWorkFrameRestore` (`G90`/`G54;`, which synchronizes the planner, so its
+  reply arrives once the queued motion has finished), `noteFrameRestored` on
+  acceptance, then `verifyRestoredPosition`'s `M114`, which proves the
+  commanded end position in the work frame and clears the latch at once. If the
+  `M114` cannot prove it, the next verified work-frame heartbeat clears it (up to
+  about 3 s). If the restore fails, the lease hands over to the recovery hold,
+  which is the latch itself. There is no second restore path.
+- **Clock pacing.** Every 100 ms (`HOLD_TICK_MS`) the hold sends one `G1` worth
+  100 ms of travel at the current feed (`HOLD_MOVE_MS`: 0.5 mm at 300 mm/min,
+  5 mm at 3000), following the Feather's latest 20 Hz report. A clock model
+  (`HoldQueueModel`) tracks outstanding motion as sent minus executed by the
+  clock, charging each increment its commanded time from its send time, and
+  never lets more than 200 ms (`HOLD_QUEUE_AHEAD_MS`) be outstanding. Every `G1`
+  reply is awaited before the next is sent, so at most one is unanswered. These
+  are constants, not settings. Increments are `G1 X Y F` with **no Z word** (the
+  controller keeps its current Z): the hold's Z is the heartbeat-derived record
+  Z, which may rest on a reused offset, and with no Z word a wrong record Z makes
+  the close's `M114` proof fail (the latch then waits for a verified beat)
+  instead of being driven to at stick feed. The settled path still sends the
+  record-Z word it always has (hardware-proven, unchanged here); it should get
+  the same treatment once the trial confirms.
+- **The position of record is blind for the hold.** Heartbeats sampled inside
+  the `G53` window are set aside by design, so the record holds at the press
+  position. Every increment is therefore checked from the pendant's own
+  dead-reckoned commanded position (the press position plus every increment
+  sent) against the reviewed envelope (which stands up to travel ±1 mm, never
+  clipped back) and the obstacle map. The obstacle test covers the increment
+  **plus the maximum queued run-out** (200 ms at the increment's feed: 10 mm at
+  3000 mm/min, 1 mm at 300), so motion already queued when the stop is decided
+  can never enter an exclusion. An obstacle stops the hold and the pendant
+  stays armed, as the settled path holds; straight Z-up exits stay on the
+  settled path. The same lookahead runs **before** a hold opens: a stick
+  pointed at a box within one increment plus run-out (15 mm at 3000 mm/min)
+  never sends the `G53`; the settled path jogs toward the pad and holds there
+  as the obstacle hold does, and continuous jogging stays off until the stick
+  returns to neutral (`pipeline.holdOffUntilNeutral`), so a stick held against
+  a box does not open and close a hold several times a second.
+- **Stops at once** (nothing further is sent, then the `G54`): D1 released, the
+  stick centred, a gap of more than 150 ms since the last Feather report
+  (`HOLD_FEATHER_GAP_MS`; the same press resumes with a new hold once reports
+  return within the 900 ms watchdog), the page keepalive lost, a `G1` reply
+  error, timeout or rejection, a `G1` acknowledged later than 200 ms (the
+  controller is holding requests; each late reply stops its hold, and three in
+  a row within one arm turn continuous jogging off until re-arm,
+  `HOLD_LATE_EVENTS_TO_DISABLE`), any lease refusal, a crash or overtravel
+  alarm, a connection generation change, the frame latch changing under the
+  hold, the controller reporting anything but idle, a heartbeat older than
+  4.5 s (two 2 s poll periods plus jitter, so one late poll never flips a hold
+  into a settled burst and back), a switch to Z, and (in `enforced` mode) the
+  Count check. After the stop the queued motion runs out. The clock model
+  charges commanded time only; the controller lags it by its acceleration
+  ramps (at 3000 mm/min and 1000 mm/s² about 75 ms over a hold's first blocks)
+  and by one-way transport (about half a round trip, 20–35 ms), so the
+  worst-case run-out after a release is about 310 ms: 15.5 mm at 3000 mm/min,
+  1.5 mm at 300. If a `G1` reply lands just under the 200 ms late limit the
+  controller may be holding one more block, about 24 mm at 3000 mm/min. Trial
+  data governs these numbers (the Count trace measures the real lag); safety
+  does not rest on them, because queued motion never passes a validated
+  endpoint and the obstacle lookahead adds the run-out on top.
+- **M114 Count check.** During a hold `M114` is polled every 250 ms
+  (`HOLD_COUNT_POLL_MS`) through the same lease (it moves nothing). The reply's
+  `Count X: Y: Z:` fields are stepper counts; they are turned into millimetres
+  with the `M92` steps/mm from the `M503 S` read at arm time, or the A350
+  default of 400 steps/mm when `M503 S` does not report `M92` (the status says
+  which). **Counts are not machine coordinates.** On the trial A350
+  (2026-10-05, four at-rest samples) Count/400 read machine X + 19, Y + 4,
+  Z + 0: machine X263.42 Y0 Z299.67 printed `Count X:112966 Y:1600 Z:119867`.
+  Count X zero is the X home switch at machine X −19, so the counts are
+  measured from the homing position. Luban therefore **learns the per-axis
+  offset on every arm** (`pipeline.countCheck.countOffsetMm`, with
+  `countOffsetLearnedAt`): one `M114` while idle, right after the `M503 S`
+  read, with the reliable position of record the arm just admitted; offset =
+  Count / steps-per-mm − record machine position. Nothing is assumed, and a
+  home between arms (which could reset the counts) is covered by the re-learn.
+  If the arm-time reply has no `Count`, or the `M114` fails, the offset is
+  unknown (`countOffsetProblem` says why): observe mode arms and traces the
+  raw Count only, deriving and judging nothing; enforced mode refuses to arm
+  with that reason rather than gate on an unreadable Count. Each sample records
+  the reply time, the raw Count (steps) and `rawMm` (Count / steps, the Count
+  frame, kept so the trial can see the offset stay constant during motion),
+  the derived machine position (raw minus the learned offset), the reply's own
+  X/Y/Z fields, the clock model's expected executed position at the send time
+  and the XY distance between the two (`lagMm`; it is symmetric, a controller
+  running ahead of the model counts like one behind it).
+  - `countCheck: observe` (the **default**): every sample is traced and shown,
+    and the check never stops a hold. The open-loop clock pacing with the 200 ms
+    cap is the whole behaviour. Observe mode is inert for *gating* only: the
+    poll is still a request on the serialized HTTP channel, which cancels the
+    commands queued behind one that fails, so an `M114` transport failure can
+    still end a hold through the `G1` it cancels (that `G1` is then rejected,
+    and the hold closes through the restore path without an `M114` proof, like
+    any other rejected `G1`).
+  - `countCheck: enforced`: the hold stops when the Count position is more than
+    one increment (plus 0.05 mm) from the expected executed position in either
+    direction (a stall, a touchscreen speed override, a controller slower than
+    its `M503` limits), when the `M114` reply takes longer than one tick
+    (100 ms), or when the reply carries no `Count` fields. An off position or a
+    missing Count turns continuous jogging off until re-arm; a late reply counts
+    as a late event like a late `G1` (three in a row turn it off). Flip it with `LUBAN_PENDANT_COUNT_CHECK=enforced` (read on arm)
+    once hardware has shown that Count keeps up and that `M114` answers promptly
+    during motion. Until then it stays in observe mode on purpose: an unproven
+    gate would only stop good holds.
+- **Trace.** `/pendant/status` shows `pipeline.countCheck` (mode, steps/mm and
+  their source, the pacing constants, the last sample and `lastLagMm`),
+  `pipeline.lastHold` (stop reason, increments, distance, commanded time,
+  maximum outstanding, Count samples, maximum lag, late replies, whether the
+  close restored and proved the position), `pipeline.lateEvents` (the current
+  late-reply streak) and `pipeline.holdOffUntilNeutral`. `/pendant/hold-trace` returns the
+  per-tick records of the current or last hold: each send (target, feed, reply
+  time, outstanding after it, Feather report age), each wait, each Count sample
+  and the stop. With `LUBAN_PENDANT_TRACE=1` the same records go to the log as
+  `[hold] …` lines. The first hardware trial reads these to answer "does Count
+  keep up".
 
-- `M203` X/Y max feed is at least 50 mm/s.
-- `M201` X/Y max acceleration is at least 500 mm/s².
+**Arming checks the controller.** Luban reads `M503 S` and keeps continuous
+jogging off (`pipeline.disabled` in `/pendant/status`) unless all of these are
+reported and fit the model:
+
+- `M203` X/Y max feed is at least 50 mm/s (measured on the A350: 100 mm/s).
+- `M201` X/Y max acceleration is at least 500 mm/s² (measured: 1000).
 - `M204` P/T acceleration is at least 500 mm/s².
 
+The model charges each increment its commanded time only; the limits keep the
+per-increment error bounded (at 1000 mm/s² a 100 ms increment at 3000 mm/min
+spends up to 50 ms accelerating) and the Count check measures whatever remains.
+
 The Snapmaker build's `M220` reports nothing, so the feed override cannot be
-read. Each run therefore sends `M220 S100`. **That setting persists after
+read. Each hold therefore sends `M220 S100`. **That setting persists after
 jogging.** Any reduced touchscreen speed percentage is overridden for later file
 jobs too, so set it again before a job that relies on it. The page shows this
-warning whenever pipelining is active, `/pendant/status` reports the last
-accepted override as `pipeline.feedOverride` (armed or not), and an MCP tool's
-`failure_recovery` evidence carries it as `feed_override`.
+warning whenever continuous jogging is active, `/pendant/status` reports the
+last accepted override as `pipeline.feedOverride` (armed or not), and an MCP
+tool's `failure_recovery` evidence carries it as `feed_override`.
 
-**The run's guards:**
+**The hold's guards:**
 
 - **Exclusive lease** (`machine/gcodeLease.ts`). It is held from before the G53
-  until the closing G54, and it does not lapse while the run may have G53
+  until the closing G54, and it does not lapse while the hold may have G53
   selected. While it is held every HTTP request times out after 10 s instead of
-  the channel's 300 s, so a hung request fails the run (which raises the latch
+  the channel's 300 s, so a hung request fails the hold (which raises the latch
   and admits Restore work frame) instead of blocking recovery; `finally`
-  releases the lease.
+  releases the lease. The hold's own `M114` polls pass because they run as the
+  holder.
   - **What it refuses:**
     - every channel's `executeGcode`;
     - the SSTP job and override endpoints: start, resume, work-speed, laser-power
@@ -223,7 +341,7 @@ accepted override as `pipeline.feedOverride` (armed or not), and an MCP tool's
   - **If the restore fails:** the lease hands over to the recovery hold. The hold
     IS the frame-uncertainty latch (below), read directly, so it cannot outlive
     it: `holdForRecovery` re-raises the latch if a verified beat had cleared it
-    between the G54 acknowledgement and the failed fallback restore. It accepts
+    just before the failed restore. It accepts
     only `G90`/`G54`, `M5`, `M114`, `M400`, `M503`, job stop/pause, and Luban's
     own UI Home button as the whole `G53`/`G28`/`G54` sequence (it sends its
     three requests inside `runAsHomeSequence`, and its accepted `G54` marks the
@@ -237,76 +355,87 @@ accepted override as `pipeline.feedOverride` (armed or not), and an MCP tool's
   exists but cannot be read raises the latch). On startup it returns, and with
   it the recovery hold. It is the same latch the MCP failed-call cleanup raises
   for a tool, runner or file job that may have left `G53`, so the two recoveries
-  are one design: one record, one refusal, one clearing path.
-  - **Every exit path restores G54:** the normal settle; a no-motion `G90`/`G54`
-    after a lost reply or a failed settle; an awaited `shutdown()`.
-  - **A run that queued nothing** (stick released, obstacle hold or a Z switch
-    straight after the G53) restores and then proves the position with `M114`.
-    The reply must read as a WORK-frame position; one that matches only as raw
-    machine coordinates is what a controller still in G53 would say, and is not
-    accepted (with a ~0 work offset the two readings coincide and nothing can
-    tell them apart). It stays armed.
+  are one design: one record, one refusal, one clearing path. The failed-call
+  hook never sends into a held lease, so it never sends into a hold.
+  - **Every exit path restores G54:** the close after any stop; the close after
+    a lost `G53` reply or a rejected `G1` (then without an `M114` proof, since
+    the commanded position is uncertain: the next verified beat clears it); an
+    awaited `shutdown()`.
   - **Clearing:** the latch clears only after an acknowledged restore AND a
-    verified position. Until then pendant arming and all MCP motion are refused.
-    It appears in `get_position` warnings and in diagnostics. The crash guard
-    held after a failed restore is released when the latch clears, whoever
+    verified work-frame position. Until then pendant arming and all MCP motion
+    are refused, and no new hold can start (the lease refuses while the latch
+    stands). It appears in `get_position` warnings and in diagnostics. The crash
+    guard held after a failed restore is released when the latch clears, whoever
     restored (this page, MCP `restore_work_frame`, the failed-call cleanup or a
     home) and whether or not the USB pendant is still open.
-- **Segments and queue model.** Each segment is at most (approved duration −
-  150 ms) / 2. Marlin never replans a block it is already executing, so the next
-  segment has to arrive before the one ahead starts. Luban sends a segment only
-  while the modelled unfinished motion stays within the approved duration, with
-  at most three segments unfinished.
-- **Obstacles.** Every target goes through the obstacle hold and approach logic
-  from the previous queued endpoint, rounded to the three decimals that are sent,
-  and then the full envelope and segment checks. A held or released stick ends
-  the run with a settle.
-- **Heartbeats in a run.** While the run is declared (from its G53 reply to its
-  G54 reply), the tracker judges heartbeats as machine coordinates and sets
-  ambiguous ones aside. A lag check compares them with the queue model. It is
-  **unproven and expected to be inert on the A350**, because its beats show the
-  queued target, and nothing relies on it.
-- **Falling back.** An acknowledgement slower than 400 ms, or a drain that ends
-  more than 300 ms after the modelled end, returns the session to settled jogs
-  until it is re-armed.
-- **Stale heartbeat.** A heartbeat older than 2.5 s ends the run.
-- **If the controller reports anything but idle during queued motion, the run
+- **Heartbeats in a hold.** While the hold is declared (from its G53 reply to its
+  G54), the tracker judges heartbeats as machine coordinates and sets ambiguous
+  ones aside. Nothing in the hold reads them for position; the A350's heartbeat
+  carries the planner's queued target, not the stepper position.
+- **If the controller reports anything but idle during queued motion, the hold
   ends and the pendant disarms.** The page and TFT say so, and you must re-arm. If
   it happens on every jog, this controller reports busy during queued moves:
   restart Luban without `LUBAN_PENDANT_PIPELINE`.
 
-**Stop latency (pipelined X/Y, 3000 mm/min = 50 mm/s).** STOP, a released
-deadman and a centred stick are seen on the next 20 Hz USB frame. No segment is
-sent after that. What is already queued is at most one run's commanded travel,
-and with the default budget that is the approved duration: 0.5 s / 25 mm by
-default, 1.0 s / 50 mm at most. This holds whatever the controller's real speed,
-including a stall or a touchscreen speed override. A slower controller takes
-longer to cover that distance, but cannot be asked to go further. Worst case at
-full speed, from the event to standstill:
+**Stop latency (continuous X/Y).** STOP, a released deadman and a centred stick
+are seen on the next 20 Hz USB frame and acted on within one 100 ms tick. What
+is already queued is at most 200 ms of commanded motion by the clock model;
+with the acceleration ramps and the one-way transport delay above, about 310 ms
+of real motion in the worst case. Worst case from the event to standstill,
+until trial data replaces these estimates:
 
-| Event | Default 0.5 s | Approved 1.0 s |
+| Event | At 300 mm/min | At 3000 mm/min |
 |---|---|---|
-| STOP, deadman release or neutral | about 0.61 s, 28 mm or less | about 1.11 s, 53 mm or less |
-| USB silent (no new segment after 300 ms) | about 0.86 s | about 1.36 s |
-| Browser keepalive lost (disarms at 900 ms) | about 1.46 s | about 1.96 s |
+| STOP, deadman release or neutral | about 0.4 s, 2 mm or less | about 0.4 s, 18 mm or less |
+| USB silent (Feather gap, 150 ms, plus one tick) | about 0.6 s, 3 mm or less | about 0.6 s, 28 mm or less |
+| Browser keepalive lost (disarms at 900 ms, plus one tick) | about 1.3 s, 7 mm or less | about 1.3 s, 66 mm or less |
 
-If you raise `LUBAN_PENDANT_PIPELINE_RUN_MS`, a stalled controller could hold
-that much commanded travel, at most 2 s (100 mm). The settled path's bound is one
+This holds only while the controller executes at the commanded feed. A stalled
+controller or a touchscreen speed override lets the controller's own planner
+queue hold more than the model knows; in observe mode nothing stops that except
+the controller holding `G1` requests once its planner is full (a reply slower
+than 200 ms stops the hold), and the Count trace shows it. The `enforced` Count
+check is what closes that gap once it is proven. The settled path's bound is one
 in-flight segment of up to the approved duration. Z jogs stay settled: at the
 Z-mode limit of 1000 mm/min that is at most 8.3 mm (0.5 s) or 16.7 mm (1 s).
 
-**Still needs hardware verification:**
+**Smoothness caveat.** With 200 ms queued ahead the planner has at most one
+block beyond the executing one. Marlin cannot replan a block it has started,
+so at high feed each block may still be planned to end at a stop (at 3000 mm/min
+the controller needs 50 ms to decelerate). If the first trial shows a ripple at
+high feed but none at 300 mm/min, that is this, and `HOLD_QUEUE_AHEAD_MS` (with
+its run-out) is the constant to revisit, not the tick.
 
-- `G53` does not synchronize, and plain G1 replies arrive once the move is queued.
-- The controller reports idle during queued direct moves.
-- `M503 S` and `M114` text come back through the HTTP API.
-- `M220 S100` is accepted.
+**Already answered by the earlier trial (the #230 build, 2026-10-05):** G53
+does not wait for motion (`M220 S100` / `G90` / `G53` took 160–345 ms for the
+three requests and the G1s started straight after); G1 replies arrive once
+queued (38–69 ms for ~175 ms moves); `M503 S` over HTTP parses (M203 X/Y
+100 mm/s, M201 X/Y 1000); `M220 S100` is accepted; idle is reported during
+queued motion (probably: several queued runs, no non-idle disarm); Count has
+the constant at-rest offset above.
+
+**Still needs hardware verification (the first trial answers these):**
+
+- Is **Count live during motion** (every earlier sample was at rest): `lagMm`
+  stays within one increment while the controller runs at the commanded feed,
+  and `rawMm − derived` stays at the offset learned at arm (X +19, Y +4, Z +0
+  on the trial machine) throughout a hold.
+- Does `M114` answer promptly during motion (reply time under one tick), or does
+  it synchronize the planner (then every poll would stall the queue).
+- Actual run-out after release at F300, F1000 and F3000 against the ~310 ms
+  (15.5 mm at F3000) estimated above.
+- Feather gap detection: a 150 ms gap stops the hold without disarming, and the
+  same press resumes with a new hold once reports return (within the 900 ms
+  watchdog).
+- Smoothness at F3000 with two blocks queued (see the caveat above).
+- The close: `G54` acknowledged after the queued motion drains, and the `M114`
+  proof clears the latch so the next press starts at once.
 
 Marlin has `M410` (quickstop), but Luban does not use it: the Snapmaker build
 lacks the emergency parser, and its behaviour over this channel is unverified.
 Commission continuous jogging with small envelopes and the physical emergency
-stop in reach. Compare `pipeline.lastRun` and `lastJog` in `/pendant/status`
-with what the machine did.
+stop in reach. Compare `pipeline.lastHold`, `/pendant/hold-trace` and `lastJog`
+in `/pendant/status` with what the machine did.
 
 MCP mutations are excluded while the pendant owns control, and a pending MCP
 operation prevents arming. Read-only `get_*`, `list_*`, `validate_*` and

@@ -17,6 +17,7 @@ import { tests as pendantPageTests } from './pendantPage.test';
 import { tests as pendantPositionTests } from './pendantPosition.test';
 import { tests as pendantTests } from './pendant.test';
 import { tests as pendantRuntimeTests } from './pendantRuntime.test';
+import { tests as pendantHoldTests } from './pendantHold.test';
 import { tests as connectionLeaseTests } from './connectionLease.test';
 import { tests as sstpConnectionTests } from './sstpConnection.test';
 import { tests as bootstrapPlanTests } from './bootstrapPlan.test';
@@ -84,6 +85,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['pendantPosition', pendantPositionTests],
     ['pendantPage', pendantPageTests],
     ['pendantSettings', pendantSettingsTests],
+    ['pendantHold', pendantHoldTests],
     ['pendantRuntime', pendantRuntimeTests],
     ['connectionLease', connectionLeaseTests],
     ['sstpConnection', sstpConnectionTests],

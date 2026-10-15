@@ -1993,13 +1993,29 @@ with live DRO feedback. See [firmware, installation, controls and safety model](
 It uses a separate USB data interface and does not expose an MCP arming tool.
 Settled pendant segments stop between moves because the engine's trailing `G54;` synchronizes
 the controller's planner (Marlin `select_coordinate_system()`). `LUBAN_PENDANT_PIPELINE=1` is an
-opt-in, hardware-unverified continuous X/Y mode. It queues bounded G1 segments in one `G53`
-window (`probing.ts` `enterMachineFrame` / `queueMachineMove` / `settleQueuedMachineMoves`) and
-settles once; the pendant README states its stop-latency bounds. While a run holds the window, an
+opt-in continuous X/Y mode, not yet run on hardware in its current form: ONE hold from D1 press to
+release or any stop (`pendantRuntime.ts` `continuousHold`, pure pieces in `pendantHold.ts`). One
+`G53` at the press (`probing.ts` `enterMachineFrame`), clock-paced `G1` increments of 100 ms at
+the current feed every 100 ms with at most 200 ms queued ahead by a clock model
+(`queueMachineMove` with `omitZ`: hold increments carry no Z word, so a wrong heartbeat-derived
+record Z fails the close's M114 proof instead of being driven to; the settled path's record-Z word
+is unchanged), and one `G54` at the stop through the shared restore path
+(`tools/camera.ts` `sendWorkFrameRestore`, then `probing.ts` `verifyRestoredPosition`'s `M114`
+proves the commanded end position and clears the latch). The earlier run/settle design was
+retired after hardware feedback (2026-10-05: a second of motion, a 0.5-2 s stop, repeat). Every
+increment is checked from the pendant's own dead-reckoned commanded position against the
+reviewed envelope and the obstacle map including the queued run-out; the position of record is
+blind inside the `G53` window by design. `M114` is polled every 250 ms during a hold and its
+`Count` fields (stepper steps, converted with `M92` steps/mm from `M503 S` or the A350 default,
+minus a per-axis offset learned from an idle `M114` on every arm: the trial A350 counts from its
+homing position, X +19 Y +4 Z +0 mm, so raw counts are never compared to machine coordinates) are
+traced against the model; the check is `observe` by default and gates only with
+`LUBAN_PENDANT_COUNT_CHECK=enforced` (which refuses to arm when the offset cannot be learned). The pendant README states the stop triggers, the latency
+bounds and what the first hardware trial must answer. While a hold holds the window, an
 exclusive gcode lease (`machine/gcodeLease.ts`) refuses every other command. It covers every
 channel's `executeGcode`, the SSTP job and override endpoints (including the MCP file-job start)
 and ConnectionManager's job, jog, home and origin entry points, and it shortens every HTTP
-request to 10 s while held (`PIPELINE_REQUEST_TIMEOUT_MS`), so a hung request fails the run
+request to 10 s while held (`PIPELINE_REQUEST_TIMEOUT_MS`), so a hung request fails the hold
 instead of blocking recovery for the channel's 300 s. After a failed restore the frame latch
 becomes a recovery hold that admits only frame recovery (`restore_work_frame` or the pendant
 page's Restore work frame), Luban's own UI Home button as the whole `G53`/`G28`/`G54` sequence
@@ -2008,11 +2024,10 @@ page's Restore work frame), Luban's own UI Home button as the whole `G53`/`G28`/
 pendant page's Home are NOT routes out: both go through `requireReliableMachine`, which refuses
 on any latch, and a re-home is not the remedy for a frame problem anyway.
 
-By default a run commands at most the approved segment duration before it settles. The A350
-heartbeat reports the planner's queued target, so it cannot confirm execution mid-run.
 `M220 S100` persists after jogging: `/pendant/status` shows it as `pipeline.feedOverride` and the
-failed-call evidence as `feed_override`. The tracker judges in-run beats as machine coordinates
-(`declareMachineFrameRun`, `machinePosition.ts` `judgeDeclaredRun`).
+failed-call evidence as `feed_override`. The tracker judges in-hold beats as machine coordinates
+(`declareMachineFrameRun`, `machinePosition.ts` `judgeDeclaredRun`); the A350 heartbeat reports
+the planner's queued target, so nothing in the hold reads it for position.
 
 A persistent `frameUncertain` latch (`positionOfRecord.ts`) survives Luban restarts and shows in
 `get_position` warnings and in `get_mcp_diagnostics`. It refuses all motion until the work frame
