@@ -53,13 +53,13 @@ class ControllerTests(unittest.TestCase):
         c = Controller()
         c.update(0, 0, 0, False, False, False, 0, 0.05, True, armed=False)
         p = c.update(1, 1, 1, False, True, False, 1, 0.1, True, armed=False)
-        self.assertGreater(p["feed"], 60)
+        self.assertGreater(p["feed"], 300)
         self.assertFalse(p["deadman"])
         self.assertEqual((p["x"], p["y"], p["z"]), (0, 0, 0))
         p = c.update(0, 0, 1, False, False, False, 2, 0.1, False, armed=False)
-        self.assertEqual(p["feed"], 60)
+        self.assertEqual(p["feed"], 300)
         p = c.update(0, 0, 1, False, False, True, 3, 0.1, True, armed=False)
-        self.assertEqual(p["feed"], 60)
+        self.assertEqual(p["feed"], 300)
 
     def test_calibration_deadzone_and_inversion(self):
         self.assertEqual(deadzone(0.05), 0)
@@ -83,12 +83,12 @@ class ControllerTests(unittest.TestCase):
         c = Controller()
         c.update(0, 0, 0, False, False, False, 0, 0.05, True)
         c.update(0, 0, 1, False, False, False, 1, 0.1, True)
-        self.assertGreater(c.feed, 60)
+        self.assertGreater(c.feed, 300)
         c.update(0, 0, 1, True, True, False, 2, 0.05, True)
         self.assertEqual(c.mode, "feed")
         p = c.update(0, 0, 1, True, True, False, 2.04, 0.04, True)
         self.assertEqual(c.mode, "z")
-        self.assertEqual(c.feed, 60)
+        self.assertEqual(c.feed, 300)
         self.assertEqual(p["z"], 0)
         c.update(0, 0, 0, False, False, False, 3, 0.05, True)
         c.update(0, 0, 0, False, False, False, 3.04, 0.04, True)
@@ -96,16 +96,16 @@ class ControllerTests(unittest.TestCase):
         c.update(0, 0, 0, True, False, False, 5, 0.05, True)
         c.update(0, 0, 0, True, False, False, 5.04, 0.04, True)
         self.assertEqual(c.mode, "feed")
-        self.assertEqual(c.feed, 60)
+        self.assertEqual(c.feed, 300)
 
     def test_feed_caps_and_stop_never_moves(self):
         c = Controller()
         c.update(0, 0, 0, False, False, False, 0, 0.01, True)
-        for i in range(50):
+        for i in range(100):
             c.update(0, 0, 1, False, True, False, i + 1, 0.1, True)
-        self.assertEqual(c.feed, 600)
+        self.assertEqual(c.feed, 3000)
         p = c.update(1, 1, 1, False, True, True, 60, 0.1, True)
-        self.assertEqual(p["feed"], 60)
+        self.assertEqual(p["feed"], 300)
         self.assertFalse(p["deadman"])
         self.assertEqual((p["x"], p["y"], p["z"]), (0, 0, 0))
 

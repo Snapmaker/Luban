@@ -1,8 +1,8 @@
 """Hardware-independent joystick state, usable on CircuitPython and CPython."""
 import math
 
-SLOW_FEED = 60
-MAX_FEED = 600
+SLOW_FEED = 300
+MAX_FEED = 3000
 
 
 class LinkWatchdog:

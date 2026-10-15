@@ -5,12 +5,12 @@ import { JogBounds, PendantInput, PendantSession, parsePendantInput, validateJog
 const bounds: JogBounds = { xMin: 0, xMax: 20, yMin: 0, yMax: 20, zMin: 0, zMax: 20 };
 const current = { x: 10, y: 10, z: 10 };
 const frame = (over: Partial<PendantInput> = {}): PendantInput => ({
-    v: 1, seq: 0, x: 0, y: 0, z: 0, feed: 60, mode: 'feed', deadman: false, stop: false, ready: true, ...over
+    v: 1, seq: 0, x: 0, y: 0, z: 0, feed: 300, mode: 'feed', deadman: false, stop: false, ready: true, ...over
 });
 
 export const tests: Array<[string, () => void]> = [
     ['wire protocol rejects nonfinite axes, strings, bad mode, feed, version and oversized frames', () => {
-        for (const over of [{ x: null }, { y: '1' }, { z: 2 }, { feed: 601 }, { feed: 0 }, { v: 2 },
+        for (const over of [{ x: null }, { y: '1' }, { z: 2 }, { feed: 3001 }, { feed: 299 }, { feed: 0 }, { v: 2 },
             { mode: 'other' }, { seq: -1 }, { seq: 0.5 }, { deadman: 1 }, { ready: null }, { z: 0.5 }]) {
             assert.throws(() => parsePendantInput(JSON.stringify({ ...frame(), ...over })));
         }
@@ -35,39 +35,40 @@ export const tests: Array<[string, () => void]> = [
         const session = new PendantSession();
         session.arm(bounds, current, 1000);
         session.receive(frame(), 1000);
-        session.receive(frame({ seq: 1, x: 1, y: 1, feed: 600, deadman: true }), 1010);
+        session.receive(frame({ seq: 1, x: 1, y: 1, feed: 3000, deadman: true }), 1010);
         const target = session.target(current, 1010);
         assert.ok(target);
         if (!target) { throw new Error('Expected jog target'); }
-        assert.ok(Math.hypot(target.position.x - 10, target.position.y - 10) <= 1.000001);
-        session.receive(frame({ seq: 2, x: -1, feed: 60, deadman: true }), 1020);
+        assert.ok(Math.hypot(target.position.x - 10, target.position.y - 10) <= 5.000001);
+        session.receive(frame({ seq: 2, x: -1, feed: 300, deadman: true }), 1020);
         const latest = session.target(current, 1020);
         assert.ok(latest);
         if (!latest) { throw new Error('Expected latest jog target'); }
-        assert.equal(latest.position.x, 9.9);
+        assert.equal(latest.position.x, 9.5);
         session.receive(frame({ seq: 3 }), 1030);
         assert.equal(session.target(current, 1030), null);
     }],
     ['time-based travel scales with feed, shrinks on changing intent, and reserves measured link overhead', () => {
         const session = new PendantSession();
-        session.arm(bounds, current, 1000, 1000);
+        const wideBounds = { ...bounds, xMax: 100 };
+        session.arm(wideBounds, current, 1000, 1000);
         session.receive(frame(), 1000);
-        session.receive(frame({ seq: 1, x: 1, feed: 600, deadman: true }), 1010);
+        session.receive(frame({ seq: 1, x: 1, feed: 3000, deadman: true }), 1010);
         assert.equal(session.target(current, 1010)?.durationMs, 100);
-        session.receive(frame({ seq: 2, x: 1, feed: 600, deadman: true }), 3000);
+        session.receive(frame({ seq: 2, x: 1, feed: 3000, deadman: true }), 3000);
         const fast = session.target(current, 3000);
         assert.equal(fast?.durationMs, 900);
-        assert.equal(fast?.distanceMm, 9);
+        assert.equal(fast?.distanceMm, 45);
         assert.equal(session.target(current, 3000, 400)?.durationMs, 500);
-        session.receive(frame({ seq: 3, x: -0.5, feed: 600, deadman: true }), 3010);
+        session.receive(frame({ seq: 3, x: -0.5, feed: 300, deadman: true }), 3010);
         const changed = session.target(current, 3010);
         assert.equal(changed?.durationMs, 100);
-        assert.equal(changed?.feed, 300);
-        assert.equal(changed?.distanceMm, 0.5);
-        session.receive(frame({ seq: 4, x: 1, feed: 60, deadman: true }), 3020);
-        session.receive(frame({ seq: 5, x: 1, feed: 60, deadman: true }), 5000);
+        assert.equal(changed?.feed, 150);
+        assert.equal(changed?.distanceMm, 0.25);
+        session.receive(frame({ seq: 4, x: 1, feed: 300, deadman: true }), 3020);
+        session.receive(frame({ seq: 5, x: 1, feed: 300, deadman: true }), 5000);
         const slow = session.target(current, 5000);
-        assert.ok(Math.abs((slow?.distanceMm || 0) - 0.9) < 0.000001);
+        assert.ok(Math.abs((slow?.distanceMm || 0) - 4.5) < 0.000001);
         for (const duration of [499, 1001, NaN]) { assert.throws(() => session.arm(bounds, current, 0, duration)); }
     }],
     ['brief USB jitter pauses new segments without dropping the arm', () => {

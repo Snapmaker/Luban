@@ -42,6 +42,8 @@ export class PendantRuntime {
 
     private feedbackHealthy: boolean | null = null;
 
+    private feedbackWritePending = false;
+
     private owned = false;
 
     private opening = false;
@@ -168,6 +170,7 @@ export class PendantRuntime {
             this.shutdown();
             this.session.reset();
             this.feedbackHealthy = null;
+            this.feedbackWritePending = false;
             const port = new SerialPort({ path, baudRate: 115200, autoOpen: false });
             this.port = port;
             port.on('error', (err: Error) => { if (port === this.port) { this.disarm(err.message); } });
@@ -214,10 +217,11 @@ export class PendantRuntime {
         if (this.session.armed) {
             if (this.machineEpoch() !== this.epoch) { this.disarm('Machine connection changed. Re-arm at centre.'); } else if (now >= this.session.expiresAt) { this.disarm('The 10-minute jog approval expired. Review bounds and re-arm.'); } else if (now - this.pageAliveAt > 900) { this.disarm('Pendant page heartbeat exceeded the one-second limit. Keep the page visible and re-arm.'); } else if (now - this.session.receivedAt > 900) { this.disarm('Feather input exceeded the one-second limit. Check USB, centre axes and re-arm.'); }
         }
-        if (this.port?.isOpen && this.port.writableLength < 1024) {
+        if (this.port?.isOpen && !this.feedbackWritePending && this.port.writableLength < 1024) {
             const dro = this.dro() as { machine: object | null; work: object | null; reliability: string;
                 // eslint-disable-next-line camelcase -- USB protocol keys
                 age_ms: number | null; position_age_ms?: number; stale_after_ms?: number; warnings: string[] };
+            this.feedbackWritePending = true;
             this.port.write(`${JSON.stringify({ v: 1,
                 type: 'dro',
                 armed: this.session.armed,
@@ -233,6 +237,7 @@ export class PendantRuntime {
                 input_seq: this.session.inputSequence >= 0 ? this.session.inputSequence : null,
                 input_age_ms: now - this.session.receivedAt,
                 message: this.error?.slice(0, 240) || null })}\n`, (err) => {
+                this.feedbackWritePending = false;
                 if (err) { this.disarm(err.message); }
             });
         }
@@ -272,6 +277,7 @@ export class PendantRuntime {
         const port = this.port;
         this.port = null;
         this.buffer = '';
+        this.feedbackWritePending = false;
         if (port?.isOpen) { port.close(); }
     }
 

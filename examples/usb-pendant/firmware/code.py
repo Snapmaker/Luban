@@ -50,7 +50,7 @@ for axis, y in zip("XYZ", (33, 60, 87)):
     dro_labels.append(area)
     group.append(area)
 feed_title = label.Label(terminalio.FONT, text="FEED", color=0x55DDFF, x=171, y=33)
-feed_value = label.Label(terminalio.FONT, text="60", scale=3, color=0xFFFFFF, x=171, y=63)
+feed_value = label.Label(terminalio.FONT, text="300", scale=3, color=0xFFFFFF, x=171, y=63)
 feed_units = label.Label(terminalio.FONT, text="mm/min", color=0xAAAAAA, x=171, y=87)
 group.append(feed_title)
 group.append(feed_value)
@@ -102,7 +102,7 @@ while True:
     fresh = link_watchdog.healthy(now, serial.connected, last_dro)
     linked = fresh and dro is not None and dro.get("armed") is True
     if linked != was_linked:
-        controller.feed = 60
+        controller.feed = 300
         controller.neutral_required = True
     was_linked = linked
     raw = [axis.value for axis in axes]

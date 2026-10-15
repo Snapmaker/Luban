@@ -66,12 +66,12 @@ but the original 9.x compiled libraries must be restored with the old code.
 | Joystick X | D6 | X jog; inverted as in the original program |
 | Joystick Y | D5 | Y jog |
 | Twist | D9 | Feed adjustment or Z jog |
-| Joystick button | D10, pull-down | Switch twist mode; always reset feed to 60 mm/min |
+| Joystick button | D10, pull-down | Switch twist mode; always reset feed to 300 mm/min |
 | Feather D1 | Built-in, pull-down | Hold to jog; release to stop requesting moves |
 | Feather D2 | Built-in, pull-down | Tap to stop and disarm |
 | Feather D0 | Built-in, pull-up | Tap to switch DRO machine/work frame |
 
-Feed mode starts at 60 mm/min; twist increases/decreases it within 60–600.
+Feed mode starts at 300 mm/min; twist increases/decreases it within 300–3000.
 Z mode uses the reset slow feed. Startup, a mode change, USB loss, a new arm
 or STOP requires all axes centered and D1 released. Button edges are debounced.
 X/Y remain available in both twist modes. No Wi-Fi, homing, origin writes,
@@ -140,7 +140,7 @@ explicitly arm again. The TFT scrolls Luban's refusal or stop reason.
 
 Twist in feed mode adjusts the displayed feed while connected and disarmed,
 without producing motion intent. Arming, disarming, a mode change, USB loss and
-STOP reset feed to 60 mm/min; centre all axes and release D1 before jogging.
+STOP reset feed to 300 mm/min; centre all axes and release D1 before jogging.
 
 The TFT shows reported machine or work XYZ on the left, with **FEED** and its
 larger numeric value beneath on the right, plus twist mode at the top. It blanks stale,
@@ -174,7 +174,7 @@ operator arming, neutral input and held D1 are still required.
 ## Wire protocol and checks
 
 USB data uses newline-delimited JSON at nominal 115200 baud. Input has
-`v:1`, increasing `seq`, normalized `x,y,z`, `mode:feed|z`, `feed:60..600`,
+`v:1`, increasing `seq`, normalized `x,y,z`, `mode:feed|z`, `feed:300..3000`,
 and booleans `ready`, `deadman`, `stop`. Additional diagnostics `raw` contain
 the X/Y/twist ADC samples, and `display` contains the initialized TFT dimensions.
 Feed mode must send Z=0. Luban replies

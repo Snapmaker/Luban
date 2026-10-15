@@ -120,7 +120,7 @@ function fixture(a350 = false) {
         y: 0,
         z: 0,
         mode: 'feed',
-        feed: 60,
+        feed: 300,
         ready: true,
         deadman: false,
         stop: false,
@@ -257,7 +257,7 @@ export const tests: Array<[string, () => Promise<void>]> = [
             if (kind === 'diagonal') {
                 // Both endpoints miss this tiny padded corner, but the segment crosses it.
                 f.obstacles.push({ name: kind, machine: { x0: 15.04, x1: 15.04, y0: 4.94, y1: 4.94 }, clearanceZ: 20 });
-                f.input({ x: 1, y: -1, deadman: true, feed: 600 });
+                f.input({ x: 1, y: -1, deadman: true, feed: 3000 });
             } else if (kind === 'descent') {
                 f.machine.z = 10;
                 f.obstacles.push({ name: kind, machine: { x0: 10, x1: 11, y0: 10, y1: 11 }, clearanceZ: 10 });

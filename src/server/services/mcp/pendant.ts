@@ -27,7 +27,7 @@ export function parsePendantInput(line: string): PendantInput {
     const p = JSON.parse(line) as PendantInput;
     if (!p || p.v !== 1 || !Number.isSafeInteger(p.seq) || p.seq < 0
         || ![p.x, p.y, p.z].every((n) => typeof n === 'number' && Number.isFinite(n) && Math.abs(n) <= 1)
-        || typeof p.feed !== 'number' || !Number.isFinite(p.feed) || p.feed < 60 || p.feed > 600
+        || typeof p.feed !== 'number' || !Number.isFinite(p.feed) || p.feed < 300 || p.feed > 3000
         || !['feed', 'z'].includes(p.mode) || typeof p.deadman !== 'boolean' || typeof p.stop !== 'boolean'
         || typeof p.ready !== 'boolean'
         || (p.feedback_ok !== undefined && typeof p.feedback_ok !== 'boolean')
