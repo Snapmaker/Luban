@@ -23,6 +23,8 @@ import { registerMachineTools } from './tools/machine';
 import { registerProbeTools } from './tools/probe';
 import { registerProbingTools } from './tools/probing';
 import { registerStatusTools } from './tools/status';
+import { registerTelemetryTools } from './tools/telemetry';
+import { spindleTelemetryService } from './spindleTelemetry';
 import { registerToolSetterTools } from './tools/toolsetter';
 import { registerWorkspaceTools } from './tools/workspace';
 import { registerThreadMillingTools } from './tools/threadMilling';
@@ -248,6 +250,7 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
     registerCalibrationTools(registry);
     registerLandmarkTools(registry);
     registerProbeTools(registry);
+    registerTelemetryTools(registry);
     registerToolSetterTools(registry, baseUrl);
     registerWorkspaceTools(registry, baseUrl);
     registerProbingTools(registry, baseUrl);
@@ -300,6 +303,14 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
         if (url.pathname === '/camera' || url.pathname.startsWith('/camera/')) {
             // Live MJPEG camera view (cameraStream.ts); off = 404
             cameraStreamService.handleRequest(req, res, url);
+            return;
+        }
+        if (url.pathname === '/telemetry/live.json') {
+            // Spindle telemetry of the running (or latest) file job for the
+            // camera page's side panel: latest RPM / noise / chatter values
+            // and two-minute sparkline tails. Read-only.
+            res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+            res.end(req.method === 'HEAD' ? undefined : JSON.stringify(spindleTelemetryService.live()));
             return;
         }
         if (oauth.handleRequest(req, res, url)) {

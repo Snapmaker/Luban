@@ -8,6 +8,7 @@ import logger from '../../lib/logger';
 import config from '../configstore';
 import { JobDashboardFeed, summarizeDashboardJob } from './jobDashboardState';
 import { JobEnding, McpJobKind, McpJobState, TERMINAL_JOB_STATES } from './jobEnding';
+import { resolveTelemetryConfig } from './telemetryConfig';
 import { GcodeValidationReport } from './validator';
 
 const log = logger('service:mcp:jobs');
@@ -54,14 +55,15 @@ export interface JobEvent {
     [detail: string]: unknown;
 }
 
-// A surface scan produces ~4 gcode events per 0.1 mm step; the old 400 cap
-// lost the first three stations of job 1db4902a4cd6 (2026-09-05) before
-// anyone could read them. Long jobs need more, so the cap is a setting:
-// configstore mcpJobEventLimit (Settings -> MCP Server) or the environment
-// LUBAN_MCP_JOB_EVENT_LIMIT. ~700 bytes per event.
-export const DEFAULT_JOB_EVENT_LIMIT = 2000;
-export const MIN_JOB_EVENT_LIMIT = 400;
-export const MAX_JOB_EVENT_LIMIT = 100000;
+// The event cap (default 2000, 100x that with spindle telemetry on, up to
+// 1 000 000) and why it is a setting live in telemetryConfig.ts; the
+// constants are re-exported here because every caller imports them from jobs.
+export {
+    DEFAULT_JOB_EVENT_LIMIT,
+    MAX_JOB_EVENT_LIMIT,
+    MIN_JOB_EVENT_LIMIT,
+    TELEMETRY_JOB_EVENT_LIMIT,
+} from './telemetryConfig';
 
 /**
  * How an approval reaches the agent. 'agent' (default; operator request
@@ -81,13 +83,7 @@ export function approvalHandoff(): ApprovalHandoff {
 }
 
 export function jobEventLimit(): number {
-    const raw = process.env.LUBAN_MCP_JOB_EVENT_LIMIT !== undefined && String(process.env.LUBAN_MCP_JOB_EVENT_LIMIT).trim() !== ''
-        ? Number(process.env.LUBAN_MCP_JOB_EVENT_LIMIT)
-        : Number(config.get('mcpJobEventLimit'));
-    if (!Number.isFinite(raw) || raw <= 0) {
-        return DEFAULT_JOB_EVENT_LIMIT;
-    }
-    return Math.min(Math.max(Math.round(raw), MIN_JOB_EVENT_LIMIT), MAX_JOB_EVENT_LIMIT);
+    return resolveTelemetryConfig(process.env, (key) => config.get(key)).jobEventLimit;
 }
 
 

@@ -11,6 +11,7 @@ import { summarizeJobTiming } from '../jobTiming';
 import { landmarkStore } from '../landmarks';
 import { matchFrame } from '../positionOfRecord';
 import { probeFeedService } from '../probeFeed';
+import { spindleTelemetryService } from '../spindleTelemetry';
 import { clearProcedureStop, procedureStopRequested, requestProcedureStop } from '../probing';
 import { McpToolError, ToolRegistry } from '../registry';
 import { planTraverseXy } from '../traversePlan';
@@ -799,6 +800,8 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             jobManager.appendEvent(job, 'started', { note: 'machine interpreter running the file (door interlock applies)' });
             jobManager.setActive(job);
             watchFileJobCompletion(job);
+            // Opt-in spindle telemetry (status RPM, microphone): observes only.
+            spindleTelemetryService.startForJob(job);
             return {
                 job: jobManager.describe(job),
                 note: 'Job started. Poll get_gcode_job_status with wait_ms to long-poll for progress '
@@ -1150,7 +1153,10 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             + 'workspace-unverified | timeout | operation-failure | machine-stopped | completion-unverified, with the reason and how many stations/ops '
             + 'were measured - its event log (state changes, runner phases, gcode traffic while active, file-job progress and '
             + 'pauses), the stored procedure result (a stopped or failed run keeps every completed station under result, with '
-            + 'result.ending beside it), and live machine progress. '
+            + 'result.ending beside it), and live machine progress. File jobs run with spindle telemetry on '
+            + '(mcpSpindleTelemetry) also carry `telemetry`: per commanded S the reported / microphone-tracked RPM '
+            + '(min, median, time below 95 %), the HOLD / BLIP / STRUGGLE verdicts, chatter and runout flags, the audio '
+            + 'device and the analysis cost - the series themselves come from get_job_telemetry. '
             + 'LONG-POLL: pass wait_ms (up to 120000) and it returns as soon as the job reaches a '
             + 'terminal state or new events arrive past since_event - use this instead of tight '
             + 'polling or reading server logs. Read-only.',
@@ -1198,6 +1204,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 machineStatus: machineStatus(),
                 printingInfo: state ? ((state as { gcodePrintingInfo?: object }).gcodePrintingInfo || null) : null,
                 reportAgeMs: state ? Date.now() - state.timestamp : null,
+                telemetry: spindleTelemetryService.summary(job.id),
             };
         },
     });

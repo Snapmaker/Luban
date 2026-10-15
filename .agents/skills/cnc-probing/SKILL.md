@@ -179,7 +179,8 @@ including held contact. `stop_gcode_job` stops at the next step boundary and kee
 completed station under `result` with `ending` saying why.
 
 **Event budget — compute it the moment you know the station count.** The job keeps
-`mcpJobEventLimit` events (default 2000, `get_mcp_diagnostics → buffers`); beyond it the log
+`mcpJobEventLimit` events (default 2000, 200 000 with spindle telemetry on, max 1 000 000;
+`get_mcp_diagnostics → buffers`); beyond it the log
 keeps the first 20 and the newest tail, while `result` is never trimmed. Cost ≈ 100 + stations ×
 (110 at `z_safe_delta_mm` 20, 60 at 5); a blind −Z find adds ~3 events per mm of travel. When
 the estimate exceeds the limit, ask the operator to raise it (Settings → MCP Server → Diagnostic

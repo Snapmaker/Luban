@@ -73,6 +73,7 @@ function managerFixture() {
         '../configstore': { get: () => undefined },
         './jobEnding': jobEnding,
         './jobDashboardState': require('../jobDashboardState'),
+        './telemetryConfig': require('../telemetryConfig'),
     });
     return loaded;
 }

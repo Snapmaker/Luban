@@ -306,7 +306,8 @@ export function diagnosticsSnapshot() {
             recentLimit: diagnosticsRecentLimit(),
             recentLimitRange: [MIN_RECENT_LIMIT, MAX_RECENT_LIMIT],
             note: 'Settings -> MCP Server (mcpDiagnosticsRecentLimit / LUBAN_MCP_DIAGNOSTICS_RECENT_LIMIT); the job event '
-                + 'log cap is mcpJobEventLimit / LUBAN_MCP_JOB_EVENT_LIMIT.',
+                + 'log cap is mcpJobEventLimit / LUBAN_MCP_JOB_EVENT_LIMIT (default 2000, 200000 with spindle telemetry on, '
+                + 'max 1000000); dense spindle telemetry lives in per-job typed-array rings (get_job_telemetry), not events.',
         },
         note: 'Job events carry the same signals in sequence with the gcode traffic: event_loop_stall, '
             + 'heartbeat_gap, heartbeat_frame_flip, slow_step, sense_overrun, position-estimated; gcode events '

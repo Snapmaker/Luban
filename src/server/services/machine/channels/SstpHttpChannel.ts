@@ -331,6 +331,35 @@ class SstpHttpChannel extends Channel implements
         return this.latestMachineState;
     }
 
+    /**
+     * One extra read of /api/v1/status for spindle telemetry during a file
+     * job (mcp/spindleTelemetry.ts). Deliberately NOT routed through the
+     * heartbeat: it neither updates latestMachineState nor the position of
+     * record, so the 2 s cadence every safety judge assumes is untouched;
+     * the caller only gets the controller's raw report and how long it took.
+     */
+    public async fetchStatus(): Promise<{ data: Record<string, unknown>; durationMs: number; bytes: number }> {
+        if (!this.host || !this.token) {
+            throw new Error('No HTTP machine session.');
+        }
+        const startedAt = Date.now();
+        return new Promise((resolve, reject) => {
+            request
+                .get(`${this.host}/api/v1/status`)
+                .query({ token: this.token, _: startedAt })
+                .timeout(3000)
+                .end((err: Error | null, res: request.Response) => {
+                    const result = _getResult(err, res);
+                    if (result.code !== 200 || !result.data || typeof (result.data as { status?: unknown }).status !== 'string') {
+                        // Never surface the request error: it can carry the token in the URL.
+                        reject(new Error(`status poll failed (${result.code || 'transport error'})`));
+                        return;
+                    }
+                    resolve({ data: result.data, durationMs: Date.now() - startedAt, bytes: res && res.text ? res.text.length : 0 });
+                });
+        });
+    }
+
     public async connectionClose(options: { force: boolean }): Promise<boolean> {
         // TODO: cancel intervals on instance
         this.clearAllInterval();

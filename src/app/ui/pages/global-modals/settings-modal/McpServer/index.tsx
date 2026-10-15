@@ -1,4 +1,4 @@
-import { Input, Radio, Switch } from 'antd';
+import { Input, Radio, Select, Switch } from 'antd';
 import React, { useState, useEffect } from 'react';
 
 import api from '../../../../../api';
@@ -110,6 +110,20 @@ interface McpStatus {
         source: 'env' | 'config' | 'default';
     };
     cameraStream?: McpCameraStreamStatus;
+    spindleTelemetry?: {
+        enabled: boolean;
+        statusPollMs: number;
+        statusPollRange: [number, number];
+        audioEnabled: boolean;
+        audioDevice: string | null;
+        sources: { [field: string]: 'env' | 'config' | 'default' };
+        envNames: { [field: string]: string };
+        devices: Array<{ entry: string; description: string; backend: string; builtIn: boolean; usb: boolean }>;
+        resolves: boolean;
+        resolution: string;
+        guidance: string;
+        error?: string;
+    };
 }
 const MQTT_FIELDS: Array<{ name: keyof McpMqttSettings['values']; labelKey: string; placeholder?: string; channel?: string }> = [
     { name: 'host', labelKey: 'key-App/Settings/McpServer-MQTT host', placeholder: 'io.adafruit.com' },
@@ -178,6 +192,13 @@ const McpServer: React.FC = () => {
     // once on save: off disconnects every viewer. '' fps = server default.
     const [cameraStreamEnabled, setCameraStreamEnabled] = useState(false);
     const [cameraStreamFps, setCameraStreamFps] = useState('');
+    // Spindle telemetry (opt-in, read at the next file-job start). The
+    // microphone is chosen here by name from the host's capture sources;
+    // the server never picks one.
+    const [spindleTelemetry, setSpindleTelemetry] = useState(false);
+    const [spindleStatusPollMs, setSpindleStatusPollMs] = useState('');
+    const [spindleAudio, setSpindleAudio] = useState(false);
+    const [spindleAudioDevice, setSpindleAudioDevice] = useState('');
 
     useEffect(() => {
         api.getMcpStatus()
@@ -206,6 +227,12 @@ const McpServer: React.FC = () => {
                     setCameraStreamFps(body.cameraStream.storedFps === undefined || body.cameraStream.storedFps === null
                         ? '' : String(body.cameraStream.storedFps));
                 }
+                if (body.spindleTelemetry && !body.spindleTelemetry.error) {
+                    setSpindleTelemetry(!!body.spindleTelemetry.enabled);
+                    setSpindleStatusPollMs(body.spindleTelemetry.statusPollMs ? String(body.spindleTelemetry.statusPollMs) : '');
+                    setSpindleAudio(!!body.spindleTelemetry.audioEnabled);
+                    setSpindleAudioDevice(body.spindleTelemetry.audioDevice || '');
+                }
                 const { inverted: mqttInvertedNames, ...mqttValues } = body.mqtt.values;
                 setMqtt({ ...mqttValues });
                 setInverted(parseInvertedFlags(mqttInvertedNames));
@@ -218,6 +245,11 @@ const McpServer: React.FC = () => {
             })
             .catch(() => setStatus(null));
     }, []);
+
+    const telemetryEnv = (field: string) => !!(status && status.spindleTelemetry && status.spindleTelemetry.sources
+        && status.spindleTelemetry.sources[field] === 'env');
+    const telemetryEnvNote = (field: string) => (telemetryEnv(field) && status && status.spindleTelemetry
+        ? ` — ${i18n._('key-App/Settings/McpServer-Overridden by environment variable')} ${status.spindleTelemetry.envNames[field]}` : '');
 
     const onSave = async () => {
         const value = Number(port);
@@ -246,6 +278,12 @@ const McpServer: React.FC = () => {
             buffers: { jobEventLimit, diagnosticsRecentLimit },
             approvalHandoff: approvalHandoffAgent ? 'agent' : 'code',
             cameraStream: { enabled: cameraStreamEnabled, fps: cameraStreamFps },
+            spindleTelemetry: {
+                ...(telemetryEnv('enabled') ? {} : { enabled: spindleTelemetry }),
+                ...(telemetryEnv('statusPollMs') ? {} : { statusPollMs: spindleStatusPollMs }),
+                ...(telemetryEnv('audioEnabled') ? {} : { audioEnabled: spindleAudio }),
+                ...(telemetryEnv('audioDevice') ? {} : { audioDevice: spindleAudioDevice }),
+            },
         });
         // The stream toggle applies immediately; refresh the live URL / state.
         api.getMcpStatus()
@@ -458,11 +496,68 @@ const McpServer: React.FC = () => {
             </div>
 
             <div className="border-bottom-normal padding-bottom-4 margin-top-16">
+                <span>{i18n._('key-App/Settings/McpServer-Spindle telemetry')}</span>
+            </div>
+            <div className="margin-top-8">
+                <div className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-Opt-in. Records the spindle RPM the controller reports during file jobs and, with a microphone, tracks RPM at 20 frames/s to flag sag, blips, chatter and runout per commanded speed. Observes only: it never pauses or stops a job. Applies at the next file job; with telemetry on the job event log default rises to 200000.')}
+                </div>
+                <div className="sm-flex align-center margin-top-8">
+                    <Switch checked={spindleTelemetry} onChange={(checked) => setSpindleTelemetry(checked)} disabled={!enabled || telemetryEnv('enabled')} />
+                    <span className="margin-left-8">{i18n._('key-App/Settings/McpServer-Record status RPM during file jobs')}{telemetryEnvNote('enabled')}</span>
+                </div>
+                <div className="sm-flex align-center margin-top-8">
+                    <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Extra status poll (ms)')}</span>
+                    <Input
+                        value={spindleStatusPollMs}
+                        onChange={(e) => {
+                            if (/^\d*$/.test(e.target.value)) {
+                                setSpindleStatusPollMs(e.target.value);
+                            }
+                        }}
+                        disabled={!enabled || !spindleTelemetry || telemetryEnv('statusPollMs')}
+                        className={styles['port-input']}
+                        placeholder={i18n._('key-App/Settings/McpServer-off')}
+                    />
+                    <span className="margin-left-8">
+                        {status && status.spindleTelemetry && status.spindleTelemetry.statusPollRange ? `${status.spindleTelemetry.statusPollRange[0]}-${status.spindleTelemetry.statusPollRange[1]}; ` : ''}
+                        {i18n._('key-App/Settings/McpServer-empty = the 2 s heartbeat only. Each poll is one /api/v1/status round trip (~25 ms, ~400 bytes) during file jobs only.')}
+                        {telemetryEnvNote('statusPollMs')}
+                    </span>
+                </div>
+                <div className="sm-flex align-center margin-top-8">
+                    <Switch checked={spindleAudio} onChange={(checked) => setSpindleAudio(checked)} disabled={!enabled || !spindleTelemetry || telemetryEnv('audioEnabled')} />
+                    <span className="margin-left-8">{i18n._('key-App/Settings/McpServer-Record a microphone (RPM tracking, chatter, runout; FLAC under the app data dir)')}{telemetryEnvNote('audioEnabled')}</span>
+                </div>
+                <div className="sm-flex align-center margin-top-8">
+                    <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Capture device')}</span>
+                    <Select
+                        style={{ minWidth: 360 }}
+                        value={spindleAudioDevice || undefined}
+                        onChange={(value) => setSpindleAudioDevice(value ? String(value) : '')}
+                        allowClear
+                        showSearch
+                        disabled={!enabled || telemetryEnv('audioDevice')}
+                        placeholder={i18n._('key-App/Settings/McpServer-Choose a microphone by name - nothing is picked for you')}
+                        options={(status && status.spindleTelemetry ? status.spindleTelemetry.devices : []).map((device) => ({
+                            value: device.entry,
+                            label: `${device.description} — ${device.entry}${device.builtIn ? ` (${i18n._('key-App/Settings/McpServer-built-in')})` : ''}${device.usb ? ' (USB)' : ''}`,
+                        }))}
+                    />
+                    <span className="margin-left-8">{telemetryEnvNote('audioDevice')}</span>
+                </div>
+                <div className={styles['port-tips']}>
+                    {status && status.spindleTelemetry ? status.spindleTelemetry.guidance : ''}
+                    {status && status.spindleTelemetry && status.spindleTelemetry.audioDevice ? ` ${i18n._('key-App/Settings/McpServer-Configured device')}: ${status.spindleTelemetry.resolution}.` : ''}
+                </div>
+            </div>
+
+            <div className="border-bottom-normal padding-bottom-4 margin-top-16">
                 <span>{i18n._('key-App/Settings/McpServer-Diagnostic buffers')}</span>
             </div>
             <div className="margin-top-8">
                 <div className={styles['port-tips']}>
-                    {i18n._('key-App/Settings/McpServer-Long procedures (surface scans, bed surveys) write several events per step; raise the job event limit so the whole record survives. Applies immediately; empty = default.')}
+                    {i18n._('key-App/Settings/McpServer-Long procedures (surface scans, bed surveys) write several events per step; raise the job event limit so the whole record survives. Applies immediately; empty = default (2000, or 200000 with spindle telemetry on).')}
                 </div>
                 <div className="sm-flex align-center margin-top-8">
                     <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Job event log (events kept per job)')}</span>
