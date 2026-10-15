@@ -9,6 +9,8 @@ import { listAudioSources } from '../mcp/audioDevices';
 import { describeSourceChoice, matchAudioDevice } from '../mcp/audioSelection';
 import { currentTelemetryConfig, spindleTelemetryService } from '../mcp/spindleTelemetry';
 import { MAX_STATUS_POLL_MS, MIN_STATUS_POLL_MS, TELEMETRY_KEYS } from '../mcp/telemetryConfig';
+import { VIBRATION_KEYS, parseEnvPairs, parseFlag, parseSensors } from '../mcp/vibrationConfig';
+import { currentVibrationConfig, vibrationFeedService } from '../mcp/vibrationFeed';
 
 const ERR_BAD_REQUEST = 400;
 
@@ -194,6 +196,33 @@ async function spindleTelemetrySettings() {
     };
 }
 
+// Accelerometers (vibrationFeed.ts): the bridge, the sensor list (JSON, as
+// stored) and the live feed state. Saving restarts the feed at once.
+function vibrationSettings() {
+    const cfg = currentVibrationConfig();
+    const storedSensors = config.get(VIBRATION_KEYS.sensors.key);
+    let sensorsJson = '';
+    if (typeof storedSensors === 'string') {
+        sensorsJson = storedSensors;
+    } else if (storedSensors !== undefined && storedSensors !== null) {
+        sensorsJson = JSON.stringify(storedSensors, null, 1);
+    }
+    return {
+        enabled: cfg.enabled,
+        transport: cfg.transport,
+        python: config.get(VIBRATION_KEYS.python.key) || '',
+        blinkaEnv: config.get(VIBRATION_KEYS.blinkaEnv.key) || '',
+        serialPort: config.get(VIBRATION_KEYS.serialPort.key) || '',
+        sensorsJson,
+        jobCapture: cfg.jobCapture,
+        resolvedPython: cfg.python,
+        problems: cfg.problems,
+        sources: cfg.sources,
+        envNames: Object.fromEntries(Object.entries(VIBRATION_KEYS).map(([field, names]) => [field, names.env])),
+        live: vibrationFeedService.status(),
+    };
+}
+
 function settingsPayload() {
     return {
         ...getMcpStatus(),
@@ -212,6 +241,11 @@ export const getHealth = (req, res) => {
 
 export const getStatus = async (req, res) => {
     const payload = settingsPayload();
+    try {
+        payload.vibration = vibrationSettings();
+    } catch (err) {
+        payload.vibration = { error: err.message };
+    }
     try {
         payload.spindleTelemetry = await spindleTelemetrySettings();
     } catch (err) {
@@ -249,7 +283,9 @@ export const clearAlarm = (req, res) => {
  * omitted field is left unchanged (the pane omits an untouched password).
  */
 export const updateSettings = (req, res) => {
-    const { enabled, port, allowLan, sensors, mqtt, gpio, transport, buffers, approvalHandoff: handoff, cameraStream, spindleTelemetry } = req.body || {};
+    const {
+        enabled, port, allowLan, sensors, mqtt, gpio, transport, buffers, approvalHandoff: handoff, cameraStream, spindleTelemetry, vibration,
+    } = req.body || {};
 
     const tls = (req.body || {}).https;
     if (tls !== undefined) {
@@ -353,6 +389,54 @@ export const updateSettings = (req, res) => {
             }
         }
     }
+    // Only a real change restarts the feed: every Save sends this block, and
+    // a restart drops the rings and interrupts recording captures.
+    const vibrationBefore = JSON.stringify(currentVibrationConfig());
+    if (vibration && typeof vibration === 'object') {
+        // Accelerometers: validated here so a typo is refused with its reason
+        // instead of leaving a feed that will not start. Empty text clears.
+        if (vibration.sensorsJson !== undefined) {
+            const text = String(vibration.sensorsJson).trim();
+            if (text) {
+                const parsed = parseSensors(text);
+                if (parsed.problems.length) {
+                    res.status(ERR_BAD_REQUEST).send({ msg: `Accelerometer sensors: ${parsed.problems.join('; ')}` });
+                    return;
+                }
+            }
+        }
+        if (vibration.blinkaEnv !== undefined && String(vibration.blinkaEnv).trim()) {
+            const parsedEnv = parseEnvPairs(String(vibration.blinkaEnv));
+            if (typeof parsedEnv === 'string') {
+                res.status(ERR_BAD_REQUEST).send({ msg: `Accelerometer bridge: ${parsedEnv}` });
+                return;
+            }
+        }
+        if (vibration.transport !== undefined && !['', 'blinka', 'serial'].includes(String(vibration.transport))) {
+            res.status(ERR_BAD_REQUEST).send({ msg: 'Accelerometer transport must be blinka or serial' });
+            return;
+        }
+        if (vibration.enabled !== undefined) {
+            config.set(VIBRATION_KEYS.enabled.key, parseFlag(vibration.enabled));
+        }
+        if (vibration.jobCapture !== undefined) {
+            config.set(VIBRATION_KEYS.jobCapture.key, parseFlag(vibration.jobCapture));
+        }
+        const textFields = [
+            ['transport', 'transport'], ['python', 'python'], ['blinkaEnv', 'blinkaEnv'], ['serialPort', 'serialPort'], ['sensorsJson', 'sensors'],
+        ];
+        for (const [field, keyName] of textFields) {
+            if (vibration[field] === undefined) {
+                continue;
+            }
+            const value = String(vibration[field]).trim();
+            if (value === '') {
+                config.unset(VIBRATION_KEYS[keyName].key);
+            } else {
+                config.set(VIBRATION_KEYS[keyName].key, value);
+            }
+        }
+    }
     if (cameraStream && typeof cameraStream === 'object') {
         // Live MJPEG camera view (cameraStream.ts). Applies immediately: off
         // disconnects every stream client; fps / client cap take effect at
@@ -447,6 +531,12 @@ export const updateSettings = (req, res) => {
             }
             config.set(key, value);
         }
+    }
+
+    if (JSON.stringify(currentVibrationConfig()) !== vibrationBefore && getMcpStatus().running) {
+        // Unlike the listeners, the accelerometer feed restarts at once: it
+        // is read-only and owns its own monitor process.
+        vibrationFeedService.reconfigure();
     }
 
     res.send(settingsPayload());

@@ -1,7 +1,7 @@
 {
     "name": "luban-cnc",
     "version": "0.1.0",
-    "description": "Drive a Snapmaker A350 CNC through the Luban MCP server: motion rules, touch probing, camera alignment, tool changes and thread milling.",
+    "description": "Drive a Snapmaker A350 CNC through the Luban MCP server: motion rules, touch probing, camera alignment, tool changes, thread milling and accelerometer diagnostics.",
     "author": {
         "name": "tyeth",
         "url": "https://github.com/tyeth"
@@ -22,7 +22,7 @@
     "interface": {
         "displayName": "Luban CNC",
         "shortDescription": "Operator-gated CNC control of a Snapmaker through Luban MCP",
-        "longDescription": "Connects to the MCP server built into this Luban fork (http://127.0.0.1:40889/mcp, enabled under Settings > MCP Server in the running app) and bundles the CNC skills that go with it. Load cnc-motion-rules before any motion; cnc-probing, cnc-visual-alignment, tool-change and cnc-thread-milling build on it. Every motion is staged for the operator to confirm in Luban. Never leave the machine unattended while it runs.",
+        "longDescription": "Connects to the MCP server built into this Luban fork (http://127.0.0.1:40889/mcp, enabled under Settings > MCP Server in the running app) and bundles the CNC skills that go with it. Load cnc-motion-rules before any motion; cnc-probing, cnc-visual-alignment, tool-change, cnc-thread-milling and cnc-vibration build on it. Every motion is staged for the operator to confirm in Luban. Never leave the machine unattended while it runs.",
         "developerName": "tyeth",
         "category": "Developer Tools",
         "capabilities": [

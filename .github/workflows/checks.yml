@@ -140,3 +140,7 @@ jobs:
             -   name: MCP suite
                 if: success() || failure()
                 run: npm run test:mcp
+
+            -   name: Vibration monitor (Python, simulated sensors)
+                if: success() || failure()
+                run: python -m unittest discover -s src/server/services/mcp/tests -p 'test_vibration_monitor.py' -v

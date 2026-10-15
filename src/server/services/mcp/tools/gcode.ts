@@ -12,6 +12,7 @@ import { landmarkStore } from '../landmarks';
 import { matchFrame } from '../positionOfRecord';
 import { probeFeedService } from '../probeFeed';
 import { spindleTelemetryService } from '../spindleTelemetry';
+import { vibrationCaptureService } from '../vibrationCaptures';
 import { clearProcedureStop, procedureStopRequested, requestProcedureStop } from '../probing';
 import { McpToolError, ToolRegistry } from '../registry';
 import { planTraverseXy } from '../traversePlan';
@@ -802,6 +803,8 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             watchFileJobCompletion(job);
             // Opt-in spindle telemetry (status RPM, microphone): observes only.
             spindleTelemetryService.startForJob(job);
+            // Opt-in accelerometer recording of the job (mcpVibrationJobs): observes only.
+            vibrationCaptureService.startForJob(job);
             return {
                 job: jobManager.describe(job),
                 note: 'Job started. Poll get_gcode_job_status with wait_ms to long-poll for progress '
@@ -1205,6 +1208,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 printingInfo: state ? ((state as { gcodePrintingInfo?: object }).gcodePrintingInfo || null) : null,
                 reportAgeMs: state ? Date.now() - state.timestamp : null,
                 telemetry: spindleTelemetryService.summary(job.id),
+                vibration: await vibrationCaptureService.jobSummary(job.id),
             };
         },
     });

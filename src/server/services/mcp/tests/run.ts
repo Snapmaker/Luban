@@ -65,6 +65,12 @@ import { tests as spindleProgramTests } from './spindleProgram.test';
 import { tests as spindleTrackerTests } from './spindleTracker.test';
 import { tests as telemetryConfigTests } from './telemetryConfig.test';
 import { tests as telemetryRingTests } from './telemetryRing.test';
+import { tests as rotaryGravityTests } from './rotaryGravity.test';
+import { tests as vibrationAnalysisTests } from './vibrationAnalysis.test';
+import { tests as vibrationConfigTests } from './vibrationConfig.test';
+import { tests as vibrationProtocolTests } from './vibrationProtocol.test';
+import { tests as vibrationReportTests } from './vibrationReport.test';
+import { tests as vibrationStreamTests } from './vibrationStream.test';
 
 type TestCase = [string, () => void | Promise<void>];
 
@@ -118,6 +124,12 @@ const suites: Array<[string, TestCase[]]> = [
     ['perimeterAnalysis', perimeterAnalysisTests],
     ['perimeterTrace', perimeterTraceTests],
     ['telemetryRing', telemetryRingTests],
+    ['vibrationAnalysis', vibrationAnalysisTests],
+    ['vibrationReport', vibrationReportTests],
+    ['vibrationConfig', vibrationConfigTests],
+    ['vibrationProtocol', vibrationProtocolTests],
+    ['vibrationStream', vibrationStreamTests],
+    ['rotaryGravity', rotaryGravityTests],
     ['telemetryConfig', telemetryConfigTests],
     ['spindleProgram', spindleProgramTests],
     ['spindleTracker', spindleTrackerTests],

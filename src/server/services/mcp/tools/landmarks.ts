@@ -18,6 +18,8 @@ import {
     restatementAdvice,
 } from '../landmarkClearance';
 import { motionFloorZ, readAppMachineSettings, safeTraverseZ } from './machine';
+import { vibrationCaptureService } from '../vibrationCaptures';
+import { vibrationFeedService } from '../vibrationFeed';
 
 // Named scene landmarks (#50) and the stored-state overview (#53): operator
 // knowledge captured once, surfaced every session, so no agent spends moves
@@ -300,6 +302,20 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                 // Operator-measured jig/tool constants (Settings -> MCP Server ->
                 // Rotary and probe geometry); programs read them as `axis.*`.
                 geometry: geometrySettings(),
+                // Accelerometers: where each one is stuck, whether it streams,
+                // and the rotary chuck's gravity calibration (absolute B).
+                vibration: (() => {
+                    const feed = vibrationFeedService.status() as { enabled: boolean; state: string; sensors: Array<{ [key: string]: unknown }> };
+                    const rotary = vibrationCaptureService.rotaryCalibration();
+                    return {
+                        enabled: feed.enabled,
+                        state: feed.state,
+                        sensors: feed.sensors.map((sensor) => ({
+                            id: sensor.id, location: sensor.location, chip: sensor.chip, state: sensor.state, orientation: sensor.orientation,
+                        })),
+                        rotaryCalibration: rotary ? { sensorId: rotary.sensor_id, createdAt: rotary.created_at, reason: rotary.reason } : null,
+                    };
+                })(),
             };
         },
     });

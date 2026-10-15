@@ -19,3 +19,18 @@ Adafruit-Blinka>=9.2.0
 # "native" (on-board GPIO, e.g. a Pi header); other bridges (BLINKA_MCP2221=1,
 # BLINKA_FT232H=1) bring their own extra packages - see the Blinka docs.
 hidapi>=0.15.0
+
+# Accelerometers (vibrationFeed.ts, transport "blinka"; README "Accelerometers").
+# FIFO-mode chips (LSM6DSOX, LSM6DSO32, ISM330DHCX) need nothing beyond Blinka
+# - the monitor drives their registers itself. Poll-mode chips use their
+# Adafruit drivers; install the ones for the boards you have:
+#   adafruit-circuitpython-lsm6ds     LSM6DS3TR-C, LSM6DS33 (and the FIFO chips in poll mode)
+#   adafruit-circuitpython-lsm9ds1    LSM9DS1
+#   adafruit-circuitpython-bno055     BNO055
+#   adafruit-circuitpython-mpu6050    MPU-6050
+#   adafruit-circuitpython-icm20x     ICM-20948
+#   adafruit-circuitpython-lis3dh     LIS3DH
+#   adafruit-circuitpython-adxl34x    ADXL343/345
+# The accelerometers need their OWN bridge (MCP2221A: BLINKA_MCP2221=1, which
+# also needs hidapi; FT232H: BLINKA_FT232H=1 + pyftdi) - never the probe
+# feed's U2IF board.

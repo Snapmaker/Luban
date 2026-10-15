@@ -150,6 +150,18 @@ axis-centre points alone cannot generate safe fixture boxes.
 
 For tool selection, timing and the limits of local continuation, see [inspection planning](probe-inspection.md#efficient-inspection-planning).
 
+## Accelerometers (read-only; see the README's "Accelerometers" and the `cnc-vibration` skill)
+
+None of these moves anything. Motion a diagnosis needs is staged with the ordinary tools.
+
+- `get_vibration_status {live_s?}` — the feed (transport, each link - the Blinka bridge or each serial board - with its state, bridge, bus load; resource leases; what stops it), each sensor (id, `location`, chip, address/mux, rate, `orientation`, streaming state, measured rate, FIFO overruns, errors), bus load, the stored rotary calibration, captures recording now; `live_s` adds a quick level / tone / gravity look at the last seconds.
+- `capture_vibration {sensors?, duration_s?, lookback_s?, label?, wait?, ...analysis}` — record a window (optionally reaching back into the ring) and return the per-sensor report: acceleration RMS per axis and octave band, velocity RMS (ISO 10816 band), displacement RMS (band stated), tones with direction (`axis_share`, machine axes with an orientation) and amplitude, gravity with its tilt resolution. Waits up to 60 s by default; longer captures return a `capture_id` at once.
+- `get_vibration_capture {capture_id, wait_ms?, sensor?, from_s?, to_s?, ...analysis}` — analyse a capture (also from earlier sessions: raw float32 samples stay on disk), over a sub-window (`from_s`/`to_s`: seconds from the capture's window start, outage-safe) or at another resolution. Analysis arguments, shared with `capture_vibration`: `resolution_hz`, `max_peaks`, `min_prominence_db`; rotation `rpm_hint` (0.80-1.05 x S) or `rpm_min`/`rpm_max`, `flutes` → `rotation` (RPM, confidence, `locked`, harmonics, non-harmonic peaks = chatter candidates); `motion {axis, feed_mm_min, targets?, bin_mm?, references_mm?}` → tones as wavelengths (mm/cycle) and orders against named lengths, movement segments, and with `targets` a position profile per direction (segments and legs must match one-to-one); `baseline_capture_id` + `lever_mm` → tilt change with resolution and significance, lateral displacement at the lever (tilt x lever), level change; `spectrum_points`.
+- `stop_vibration_capture {capture_id, reason?}` — end a recording capture now (recording only).
+- `list_vibration_captures {limit?}` — newest first, with window, job, sensors, controller B at start/end, directory.
+- `measure_rotary_angle {sensor?, duration_s?, label?}` — still reading of the `rotary-chuck` sensor: gravity, stillness, controller B at start/end; with a calibration `absolute_b_deg`, `uncertainty_deg`, `trust_problems` (moved mount, tilted module) and `controller_minus_absolute_deg` (what a power cycle lost). Never rotates B or writes the controller's count.
+- `calibrate_rotary_accelerometer {readings: [{capture_id, b_deg?}], sensor?, reason, clear?}` — fit and store the chuck sensor's calibration from >= 4 still readings spread over >= 180 deg of controller B in ONE power session (axis in the sensor frame, in-plane offset, rotation sense, angle at B0; residual reported). Refuses moving or non-still readings and an undetermined rotation sense. `clear: true` removes it.
+
 ## Standing rules the tools assume
 
 - A tool or probe is always in the spindle; establish which is fitted and never plan as if the collet is empty.

@@ -1307,6 +1307,195 @@ matching), `spindleAudio.ts` (ffmpeg recorder), `spindleTelemetry.ts` (the per-j
   +~10 MB RSS. The session also reports the server process's own CPU share over the job
   (`telemetry.server.cpuPercent`) and ffmpeg's (`telemetry.audio.ffmpegCpuPercent`, /proc).
 
+## Accelerometers (vibration feed, 2026-10-04)
+
+I2C accelerometers stuck on parts of the machine - the toolhead, the tailstock, the rotary
+chuck, the axis carriages - read through their own bridge, analysed with the same FFT
+machinery as the spindle microphone, and turned into answers: how hard each part shakes and in
+which direction, at what frequencies, what turns at that rate (spindle RPM seen through the
+structure), which tones the rotation does not explain (chatter), where along an axis the noise
+lives and what length of component it repeats at (reconditioning a noisy axis), how far a mount
+tilts under load (static deflection), and the rotary chuck's **absolute** angle from gravity
+(the A350's B axis has no home switch and can lose its count over a power cycle).
+
+**Opt-in, read-only.** Off by default. Nothing in the feed or its tools commands, pauses or stops
+the machine, nothing in the motion or probe path waits on it, and motion a diagnosis needs (an
+axis run, a B rotation) is staged through the ordinary tools on the operator's word and recorded
+alongside. The skill [`cnc-vibration`](../../../../.agents/skills/cnc-vibration/SKILL.md) holds
+the procedures.
+
+### Hardware
+
+| Chip (Adafruit board) | Mode | Use |
+|---|---|---|
+| LSM6DSOX (#4438, 9-DoF #4517), ISM330DHCX (#4502, 9-DoF #4569), LSM6DSO32 (#4692, +-32 g) | `fifo` | Spectra: evenly spaced samples at the chip's ODR (12.5-6664 Hz) from its tagged FIFO, gyro optional |
+| LSM6DS3TR-C, LSM6DS33, LSM9DS1, BNO055, MPU-6050, ICM-20948, LIS3DH, ADXL343/345 | `poll` | Gravity and slow vibration: the Adafruit driver read on a timer (default 100 Hz), stamped on arrival and resampled onto an even grid; jitter reported |
+
+Two sensors of one kind share a bus at their two addresses (address jumper); more go behind a
+TCA9548A mux (`mux: {address, channel}`). The sensors need **their own bridge**:
+
+- **`blinka` transport** - the monitor runs on the Luban host under Python + Adafruit Blinka on
+  a USB I2C bridge (`BLINKA_MCP2221=1` for an MCP2221A breakout, `BLINKA_FT232H=1`) or a Pi header
+  (`native`). The config **refuses** the probe feed's bridge: the probe and crash sensors are
+  safety equipment, two processes on one U2IF/MCP2221 HID device contend for it, and a claim
+  leaked mid-open is exactly what wedged the KB2040 on 2026-09-19. Nothing is picked
+  automatically: the Blinka environment is required.
+- **`serial` transport** - CircuitPython boards (QT Py RP2040, Feather, KB2040 running
+  CircuitPython, not U2IF) run the same file as `code.py` and stream over USB serial; Luban
+  sends each its sensor list. Several boards: list their ports comma-separated and give each
+  sensor `"port"`; every board is its own link (monitor, I2C bus, bus budget, reconnects), so
+  one per area of the machine (toolhead, tailstock, rotary, an axis) keeps cables short. The board does the I2C at 400 kHz locally, so this is the right
+  choice for several sensors, high rates, or long cables to the toolhead / tailstock / rotary
+  (I2C over a metre of STEMMA QT is marginal - put the board near the machine).
+
+The monitor is one file, [`vibration_monitor.py`](vibration_monitor.py), CircuitPython- and
+CPython-compatible; the server spawns an embedded copy (`vibrationMonitorSource.ts`, regenerated
+by `node build/embed-vibration-monitor.js`, and a unit test fails while the two differ). For a
+board: copy `vibration_monitor.py` to CIRCUITPY as `code.py`; it waits for Luban's configuration
+and re-initialises whenever a new one arrives (or reads `/vibration_config.json` standalone).
+Poll-mode chips need their Adafruit drivers on the host or the board (`requirements.txt` lists
+them as optional).
+
+**Resources are leased, not shared.** The configuration states the physical resources the
+accelerometers hold - the USB bridge (`usb:BLINKA_MCP2221`), native I2C pins (`pin:SDA`,
+`pin:SCL`; a Raspberry Pi's D2/D3 are those pins), serial ports - and refuses any that the probe
+feed holds, from its stored settings and from the running feed, and an environment that switches
+on more than one bridge. A future SPI feed declares its pins the same way (`pin:SCK`, ...). Each
+FIFO batch is a contiguous run: an overrun or a corrupt FIFO word ends the batch, and the next one
+is marked as a gap.
+
+**Throughput is checked, then reported.** A configuration whose FIFO traffic exceeds ~60 % of
+the bus clock (7-byte words, 9 bit times per byte) is refused before it starts, as are look-back
+rings over 256 MB in total (rings are allocated on the first sample).
+ The heartbeat carries the bus busy fraction and every
+sensor's FIFO overruns; `get_vibration_status` shows them. Over a USB HID bridge each I2C
+transaction is a USB round trip, so a FIFO is read in 9-word (63-byte) chunks; whether one or two
+sensors keep up at 1666 Hz on a given bridge is for the overrun counter to say - drop `odr_hz`
+to 833 (Nyquist 416 Hz still covers an 8000 RPM spindle's 1x-3x) or move to the serial transport
+if it climbs. If a part does not roll its FIFO read address back from 7Eh to 78h the monitor sees
+garbage tags, says so, and falls back to one word per read.
+
+### Configuration
+
+Settings -> MCP Server -> **Accelerometers**, or the configstore / environment (environment
+wins):
+
+| Key | Env | Meaning |
+|---|---|---|
+| `mcpVibration` | `LUBAN_MCP_VIBRATION` | on/off (default off) |
+| `mcpVibrationTransport` | `LUBAN_MCP_VIBRATION_TRANSPORT` | `blinka` (default) or `serial` |
+| `mcpVibrationBlinkaEnv` | `LUBAN_MCP_VIBRATION_BLINKA_ENV` | e.g. `BLINKA_MCP2221=1`; required for blinka |
+| `mcpVibrationPython` | `LUBAN_MCP_VIBRATION_PYTHON` | default: the GPIO transport's interpreter, else `python3` |
+| `mcpVibrationSerialPort` | `LUBAN_MCP_VIBRATION_SERIAL_PORT` | e.g. `/dev/ttyACM1`, `COM7`; several boards comma-separated |
+| `mcpVibrationSensors` | `LUBAN_MCP_VIBRATION_SENSORS` | JSON array, below |
+| `mcpVibrationJobs` | `LUBAN_MCP_VIBRATION_JOBS` | record every file job automatically |
+| `mcpVibrationI2cHz` | `LUBAN_MCP_VIBRATION_I2C_HZ` | bus clock (default 400000) |
+| `mcpVibrationBufferS` | `LUBAN_MCP_VIBRATION_BUFFER_S` | look-back ring per sensor, s (default 120) |
+
+```json
+[
+  {"id": "head", "location": "toolhead", "chip": "lsm6dsox", "odr_hz": 1666, "range_g": 4, "orientation": "x:+x,y:+y,z:+z"},
+  {"id": "tail", "location": "tailstock", "chip": "ism330dhcx", "address": "0x6b", "odr_hz": 1666},
+  {"id": "chuck", "location": "rotary-chuck", "chip": "lsm6dsox", "mux": {"address": "0x70", "channel": 2}, "gyro": true},
+  {"id": "ycar", "location": "y-axis", "chip": "lsm6dso32", "range_g": 8}
+]
+```
+
+`port` (serial, several boards) names the board a sensor hangs off. `gyro` streams the
+gyroscope in FIFO and poll mode alike, on chips that have one. A root-bus sensor may not share an
+address with a sensor behind a mux on the same board (an open channel joins the two buses, so
+both would answer), nor sit at a mux's address.
+
+`location` is one of `toolhead`, `tailstock`, `rotary-chuck` (turns WITH the chuck - the only
+location the absolute-B tools accept), `rotary-body`, `x-axis`, `y-axis`, `z-axis`, `bed`, `frame`,
+`other`. `orientation` (optional) states which machine axis each sensor axis points along; it must
+be a right-handed signed permutation, and with it every tone's direction and the gravity vector
+are also reported in machine axes. Saving restarts the feed at once.
+
+### What the analysis says (and does not)
+
+- **Levels**: acceleration RMS per axis and in octave bands (g), velocity RMS over the ISO 10816
+  band 10 Hz - min(1 kHz, Nyquist) (mm/s), displacement RMS from 20 Hz up (um; lower would
+  integrate sensor noise into microns - the band is in the result).
+- **Tones**: peaks >= 10 dB over a running-median floor, frequency refined by a parabola, with
+  each tone's RMS, velocity and displacement amplitude, and its power share per axis - the
+  direction it shakes in.
+- **Rotation**: a harmonic comb (1x, 2x, 3x, plus the tooth-passing order with `flutes`) over a
+  band from `rpm_hint` (0.80-1.05 x S, the microphone tracker's band) or `rpm_min/rpm_max`,
+  refined from the clear harmonics' own peak frequencies; confidence < 3 or a band-edge fit is
+  "not locked". Locked, the tones it does NOT explain are listed as chatter candidates.
+- **Spatial periods**: with `motion {axis, feed_mm_min}`, every tone becomes a wavelength (mm per
+  cycle). A tone from a screw, belt, bearing or stepper keeps its wavelength when the feed changes;
+  a resonance keeps its frequency. `references_mm` ({"screw lead": 8, ...}, the operator's or a
+  datasheet's numbers, never guessed) gives each tone's order against them.
+- **Position profile**: with `motion.targets` (the machine coordinates visited, in order), the
+  vibration envelope is segmented into movements, matched one-to-one to the legs (a count mismatch
+  maps nothing), and binned by position per direction. Position is linear in time inside each
+  movement, so the acceleration ramps smear the first and last few mm.
+- **Deflection**: an accelerometer cannot see a static translation. It sees (1) **tilt** - the
+  gravity vector's change against a `baseline_capture_id`, with its resolution from the per-second
+  means; `lever_mm` carries it to a lateral displacement at the tool tip, labelled as tilt x lever;
+  and (2) **dynamic displacement** - per tone and over a band. Temperature drift of the zero-g
+  offset limits tilt over long gaps; compare captures taken close together.
+- **Rotary absolute angle**: see `rotaryGravity.ts`. Four or more still readings at controller B
+  angles spread over >= 180 deg (one power session; 0/90/180/270 is ideal - three points over
+  90 deg extrapolate to p95 0.35 deg with 1 mg of noise, four over 270 deg to 0.09 deg) fit the axis in the sensor frame, the
+  accelerometer's in-plane offset (a circle fit - LSM6DS-class offsets are tens of mg, a degree
+  of angle), the rotation sense and the angle at B0; nothing about the mounting is assumed and the
+  residual is reported. A reading is STILL only with >= 3 whole seconds, time-domain vibration
+  < 0.02 g RMS, gravity turning < 0.1 deg between its first and last second (catches a slow B
+  rotation no spectral band sees) and, with a gyro, < 0.5 dps RMS about its zero-rate bias. From then on any still reading gives the chuck's absolute angle and
+  controller B minus absolute B: what a power cycle lost. Trust checks flag a moved mount
+  (in-plane radius) or a tilted module (axial component). **Correcting B is motion and a frame
+  decision** - a rotation staged through the normal tools on the operator's word; nothing here
+  rotates B or writes the controller's count.
+
+### Captures and files
+
+`capture_vibration` records a window (optionally reaching `lookback_s` back into the ring),
+`get_vibration_capture` analyses it again over a sub-window, at another resolution, with a motion
+or a baseline. `from_s`/`to_s` are seconds from the capture's window start, mapped to the raw file
+through a per-sensor time index, so a feed outage inside a capture (counted in `gaps`) does not
+shift later windows; re-analysis reads at most 600 s of raw samples, yielding to the event loop
+between chunks. Raw samples are kept under `<userData>/mcp-vibration/<capture id>/<sensor>.f32`
+(float32 little-endian, interleaved `ax ay az [gx gy gz]`, g and dps; `numpy.fromfile(path,
+'<f4').reshape(-1, 3)`) with `meta.json` beside them (sample rate, controller B and machine status
+at start and end, per-sensor spec). They are not deleted automatically: a new capture is refused while the directory holds more
+than 4 GB, the recording captures together write at most 1 GB of raw samples (each sensor 256 MB
+per capture), and raw samples are written asynchronously - if the disk falls 16 MB behind, that
+raw file stops (the report keeps accumulating) and `raw_stop_reason` says why. Changing the
+accelerometer settings ends every recording capture with that reason. A file job's automatic
+capture (`mcpVibrationJobs`) stops when the job ends (4 h cap) and its summary rides on
+`get_gcode_job_status` as `vibration`.
+
+**Timing.** FIFO samples are spaced at the chip's real ODR (6667 Hz / divider, trimmed by its
+INTERNAL_FREQ_FINE register); after 20 s of stream the rate is re-measured by regression of
+sample count on batch stamps (lower envelope - stamps lag by the read latency) and used when
+within 5 % of the chip's statement. A FIFO overrun or a sequence gap breaks the run and is
+counted, never papered over: the monitor sends what it read before an overrun as its own batch,
+and the first batch of every new monitor run (start, reconnect, a board re-initialising) is
+marked as a gap. A save in Settings restarts the feed only when the resolved configuration
+changed. The monitor never inherits a `BLINKA_*` variable from Luban's own environment, and the
+shared-bridge refusal also checks the bridge the RUNNING probe feed holds. A board's clock is mapped to the host's by the least-delayed batch
+of the last hundred. A sensor's stream survives its monitor: after a reconnect or a board restart
+the first batch is a gap, so a capture spanning the outage counts it and its windows map through
+the time index (`vibrationStream.ts`; `tests/vibrationStream.test.ts` interleaves eight streams
+through a restart, and the monitor's Python tests stream eight sensors over four mux channels).
+
+### Modules and tests
+
+`vibrationConfig.ts` (settings, sensor schema, the shared-bridge refusal), `vibration_monitor.py`
+(+ `vibrationMonitorSource.ts`), `vibrationProtocol.ts` (batch decoding, FIFO clock, poll
+resampler), `vibrationFeed.ts` (transports, rings), `vibrationAnalysis.ts` (Welch PSD, levels,
+peaks, comb, spatial periods, segmentation, position profile), `vibrationReport.ts` (streaming
+per-sensor accumulator and the report), `rotaryGravity.ts` (calibration fit and absolute angle),
+`vibrationCaptures.ts` (captures, files, rotary readings, job captures), `tools/vibration.ts`.
+Pure modules are covered by `tests/vibration*.test.ts` and `tests/rotaryGravity.test.ts` (in
+`npm run test:mcp`); the monitor by `tests/test_vibration_monitor.py` against a simulated
+LSM6DSOX and TCA9548A (`python -m unittest`). The whole chain - monitor, Node feed, clock,
+capture, tools - was run end to end against a simulated IMU injected as a fake Blinka
+`board`/`busio`; **it has not yet run against real sensors** (2026-10-04).
+
 ## Tool surface
 
 The live `tools/list` is authoritative; camera operations and fitted-tool clearance are
@@ -1384,7 +1573,11 @@ scans" above · `survey_bed` (camera grid at the current Z or stated `z_levels`,
 honoured by dropping / lifting with the reasons reported) · **spindle telemetry** (read-only):
 `list_audio_devices` (every capture source with the operator's configured one; never chooses)
 · `get_job_telemetry` (a file job's status-RPM and microphone-RPM / chatter / runout series,
-min/max-downsampled, plus the FLAC path — the summary rides on `get_gcode_job_status`).
+min/max-downsampled, plus the FLAC path — the summary rides on `get_gcode_job_status`) ·
+**accelerometers** (read-only, "Accelerometers" above): `get_vibration_status` ·
+`capture_vibration` · `get_vibration_capture` · `stop_vibration_capture` ·
+`list_vibration_captures` · `measure_rotary_angle` (the chuck's absolute B from gravity) ·
+`calibrate_rotary_accelerometer` (stored state, with a reason).
 
 ## Tool change workflows
 
