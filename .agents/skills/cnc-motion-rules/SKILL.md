@@ -298,6 +298,10 @@ The MCP keeps ONE judged machine position. Read it; never compute your own from 
 | `heartbeat` + `frame: machine-frame` | Three consecutive beats read as a legal MACHINE position while the work reading was impossible: the controller is stuck in the machine workspace. The raw fields ARE the position | allowed — but the work coordinates and the offset are not to be trusted until `restore_work_frame` |
 | `stale` | No report for > 10 s (period 2 s) — the connection has likely dropped unnoticed | **refused**, except user-demanded homing below — recover the session and re-verify |
 
+“Allowed” in this table describes position reliability only. A frame-uncertainty latch, active
+job, competing command lease, alarm or other motion precondition can still refuse the operation;
+a fresh/reliable position does not clear a latch or grant command ownership.
+
 **A stale connection is not a pairing request.** Diagnose through MCP: `get_connection_status`,
 `get_position`, `get_mcp_diagnostics`, then `query_firmware_position` (`M114`) for a fresh
 controller reply. An empty reply or a bare success code is NOT evidence that the machine is
@@ -350,7 +354,9 @@ every beat carries machine coordinates with the work-origin offset still populat
 offset` is impossible, and no amount of waiting fixes it. The server recognises that after
 three such beats and says so in `reasons`, reporting `frame: machine-frame` and using the raw
 fields as the machine position. **The remedy is `restore_work_frame`**: `G90` and `G54`, no
-axis word, permitted precisely because the position is incoherent. A re-home is NOT the remedy,
+axis word, permitted despite incoherent position only when the machine is idle, no active job
+owns the controller and no competing command lease is held. If those conditions are absent,
+report the owner/job and wait; do not force a restore during its work. A re-home is NOT the remedy,
 though it happens to work — it emits a `G54` on the way.
 
 **Frame hygiene stops it happening.** Every machine-frame job hands the frame back: `G53` on its
@@ -411,10 +417,13 @@ start position — expect it, do not act on it.
 - **`apply_tool_length_offset`** — the sanctioned tool-change origin adjustment: a single `G92` shifting
   work Z by (new − old) trigger height, what the touchscreen wizard does after its two operator
   confirmations. Requires a reliable position and a measurement pair from this connection.
-- **`operator_confirmed_clearance`** — on `move_and_capture` only: skips the homed-first guard
-  and the raise-to-park-height gate, so the XY runs at the CURRENT Z in the corridor the operator
-  named. Only on the operator's explicit words, in an emergency; an unknown Z is refused even
-  then. `goto_work_origin` has no such switch — its confirm page is the operator's word.
+- **`operator_confirmed_clearance`** — only where the schema exposes it: standalone
+  `move_and_capture` and `survey_bed`, or an individual `survey_bed`/`move_and_capture` camera
+  program op. Never set a program-wide exception. On the direct move it skips homed-first,
+  but the park-height Z gate remains: a lower head still raises before XY. Staged camera
+  exceptions permit only their explicitly cleared heights and retain the other preconditions. Use only the operator's explicit clearance for
+  that operation, never inferred permission. It does not remove stored obstacles or make an
+  unknown Z safe. `goto_work_origin` has no such switch.
 
 ## 5. Vocabulary (operator-defined)
 

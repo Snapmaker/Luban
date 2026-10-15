@@ -1404,9 +1404,9 @@ export function registerCameraTools(registry: ToolRegistry): void {
     registry.register({
         name: 'query_firmware_position',
         description: 'Ask the firmware directly for its position report (M114) and return the RAW '
-            + 'controller response alongside the heartbeat-derived view. This is the authoritative '
-            + 'way to establish which coordinate frame the controller is in when heartbeat-derived '
-            + 'machine coordinates look wrong (e.g. after homing). Read-only, no motion.',
+            + 'controller response alongside the heartbeat-derived view. M114 reports the selected workspace; '
+            + 'it does not independently identify that workspace or validate an old origin offset. '
+            + 'Returned machine coordinates are derived using the heartbeat offset, not independent frame proof. Read-only, no motion.',
         inputSchema: { type: 'object', properties: {}, additionalProperties: false },
         handler: async () => {
             const channel = connectionManager.getCurrentChannel() as unknown as GcodeChannel;
@@ -1420,8 +1420,9 @@ export function registerCameraTools(registry: ToolRegistry): void {
                 // is the dead-connection signature (observed live 2026-09-02:
                 // the machine had disconnected without the server noticing).
                 throw new McpToolError('M114 returned no position text - the connection is likely dead '
-                    + 'even though the channel accepted the command. Reconnect the machine and verify '
-                    + `get_position is fresh before trusting anything. (raw: ${JSON.stringify(raw)}, `
+                    + 'even though the channel accepted the command. Preserve connection diagnostics, use recover_machine_connection '
+                    + 'for the retained session if available, otherwise ask the operator to reconnect through Luban; '
+                    + `verify get_position is fresh before trusting anything. (raw: ${JSON.stringify(raw)}, `
                     + `result: ${executed.result})`);
             }
             // M114 reports WORK coordinates in the currently selected
@@ -1553,10 +1554,10 @@ export function registerCameraTools(registry: ToolRegistry): void {
                 feed_rate: { type: 'number', description: `mm/min, default ${DEFAULT_FEED_RATE}, max 3000.` },
                 operator_confirmed_clearance: {
                     type: 'boolean',
-                    description: 'Set true ONLY when the human operator has explicitly confirmed the '
-                        + 'current Z and an obstacle-free path at this Z: the XY then runs at the CURRENT Z '
-                        + '(no raise to the traverse height) and the homed-first requirement is skipped. The '
-                        + 'one escape hatch - never on the model\'s own judgment.',
+                    description: 'Set true ONLY when the human operator has explicitly confirmed clearance for this move. '
+                        + 'Skips the homed-first requirement, but NEVER skips the park-height Z gate: a head below '
+                        + 'the safe traverse height still raises before XY. Route clearances and an established Z remain required. '
+                        + 'Never infer this exception from the model\'s own judgment.',
                 },
                 wait_until_moved: {
                     type: 'boolean',

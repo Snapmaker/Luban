@@ -15,6 +15,7 @@ The camera's offset, direction and field of view are measured session state, nev
 |---|---|
 | See what is happening | `list_cameras` → `capture_frame`; share `stream_url` for live viewing. No calibration, movement or confirm page. |
 | Identify/select camera | `preview_cameras` → inspect each frame → `select_camera {device, confirm_frame_id}`. Device names alone do not prove identity. Selection invalidates old geometry. |
+| Recover a requested snapshot | `get_frame {frame_id}` or `get_frame {file: camera.file}` from the original result. Archived IDs survive the 12-frame RAM cache and restarts; retrieve before proposing a replacement capture. |
 | Read saved survey/bootstrap | `get_gcode_job_status {job_id}` → `get_camera_capture_set {directory: result.directory}` → `get_frame {file: index.frames[i].file}`. These are server paths; no motion. |
 | Metric pose or overlapping mosaic | Read `cnc-visual-alignment`: usable model → independent `verify_camera_model`; absent/failed model → search, poses, solve, store, held-out verification. |
 | Whole bed / locate region | `survey_bed`, preferably one pass at the park height if legacy boxes require it. `overlap_fraction` needs a verified model and the physical surface `plane_z`. |
@@ -32,7 +33,8 @@ local shell access does not grant access to the machine server.
 
 Read connection, reliable machine position, homed/idle state, stored landmarks and geometry,
 `get_active_tool`, camera selection/model and diagnostics/event limit. Retrieve existing jobs
-before calling a region unmeasured. State toolhead machine XYZ, B and date.
+before calling a region unmeasured. Retain ordinary snapshot IDs and their `camera.file` paths
+alongside job IDs/indexes so a later chat can retrieve them. State toolhead machine XYZ, B and date.
 
 Resolve these together, only where missing: permission to home if unhomed (B turns to 0), face/B,
 unchanged clamping since saved evidence, feature position/size/tolerance, obstacle extents/heights,
@@ -56,6 +58,16 @@ Timeout is not rejection. `home` and a direct `move_and_capture` need the operat
 word but have **no confirm page**; do not count them as page approvals. Read-only calls, camera
 selection, model storage/verification and active-tool recording have no page and no motion.
 Unhomed `move_z`, traverses and procedures refuse: `home` itself raises Z first and homes B.
+
+Count confirm pages for the proposed path and each optional recovery/refinement branch. If the
+operator sets an approval budget, reserve pages for dependent phases and stop to revise scope
+before exceeding it. Do not promise a fixed total while geometry or recovery remains unknown;
+combine already determined safe steps in one program, keeping evidence-dependent stages separate.
+
+Include the abort outcome in every executable survey plan: preserve completed results and the
+reported retreat/HOLD state. A held contact, overtravel or uncertain retreat means HOLD and report
+the obstruction; never add an outer raise or skip the failed operation. Otherwise use only the
+runner's guarded park/retreat path. Re-read position and safety state before proposing another phase.
 
 ## Composite camera calls: use real fields
 

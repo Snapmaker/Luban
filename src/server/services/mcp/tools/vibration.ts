@@ -319,6 +319,8 @@ export function registerVibrationTools(registry: ToolRegistry): void {
             + 'frame, the accelerometer\'s offset, the rotation sense and the angle at B0, and reports its residual. The B0 of that session '
             + 'becomes the absolute zero from then on. Each reading\'s B is the controller\'s B recorded with it (it must not have moved during '
             + 'the reading); pass b_deg only when the operator states a different value. clear: true removes the stored calibration. '
+            + 'The caller must establish one power session, unchanged B datum and mounting; metadata and fit residual do not prove '
+            + 'this and the tool does not enforce session identity. Record that provenance in reason before fitting. '
             + 'Writes only this calibration (stored state, like set_probe_geometry), with the reason; no motion.',
         inputSchema: {
             type: 'object',

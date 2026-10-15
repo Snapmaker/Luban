@@ -150,7 +150,9 @@ spot, request the photograph in the staged program itself:
 The runner captures without motion after the final confirm contact, before retracting; a
 continuing no-contact station is photographed at its search limit. The result's `capture` contains
 the persistent file, frame ID, actual machine pose/B, timestamp and camera identity, or an explicit
-camera failure. Read `get_frame {file}` for durable evidence (the frame-ID cache holds only 12).
+camera failure. Read `get_frame {file}` for durable evidence. The RAM cache holds only 12 frames;
+requested snapshots also have archived IDs retrievable with `get_frame {frame_id}` after eviction
+or restart. Keep the returned file path for job images; retention lasts until their files are removed.
 The actual final-pass pose can differ from the reported median contact. A camera failure is
 recorded and normal retraction continues; a stop or safety alarm still stops the procedure.
 These options apply to sequence and surface scans, including inside `probe_program`; a standalone

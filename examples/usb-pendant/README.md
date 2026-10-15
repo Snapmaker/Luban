@@ -262,39 +262,31 @@ path.
   as the obstacle hold does, and continuous jogging stays off until the stick
   returns to neutral (`pipeline.holdOffUntilNeutral`), so a stick held against
   a box does not open and close a hold several times a second.
-- **Stops at once** (nothing further is sent, then the `G54`): D1 released, the
-  stick centred, a gap of more than 150 ms since the last Feather report
-  (`HOLD_FEATHER_GAP_MS`; the same press resumes with a new hold once reports
-  return within the 900 ms watchdog), the page keepalive lost, a `G1` reply
-  error, timeout or rejection, a `G1` acknowledged later than 200 ms (the
-  controller is holding requests; each late reply stops its hold, and three in
-  a row within one arm turn continuous jogging off until re-arm,
-  `HOLD_LATE_EVENTS_TO_DISABLE`), any lease refusal, a crash or overtravel
-  alarm, a connection generation change, the frame latch changing under the
-  hold, the controller reporting anything but idle, position evidence older
-  than 4.5 s (the newer of the heartbeat and the last prompt, agreeing `M114`,
-  below; two 2 s poll periods plus jitter, so one late poll never flips a hold
-  into a settled burst and back), a Z baseline that does not agree, and (in
-  `enforced` mode) the Count check. After the stop the queued motion runs out. The clock model
-  charges commanded time only; the controller lags it by its acceleration
-  ramps (at 3000 mm/min and 1000 mm/s² about 75 ms over a hold's first blocks)
-  and by one-way transport (about half a round trip, 20–35 ms), so the
-  worst-case run-out after a release is about 310 ms: 15.5 mm at 3000 mm/min,
-  1.5 mm at 300. If a `G1` reply lands just under the 200 ms late limit the
-  controller may be holding one more block, about 24 mm at 3000 mm/min. Trial
-  data governs these numbers (the Count trace measures the real lag); safety
-  does not rest on them, because queued motion never passes a validated
-  endpoint and the obstacle lookahead adds the run-out on top. **Z** is slower
-  to accelerate (Snapmaker default `M201 Z100` mm/s²): at F1000 the head trails
-  the clock model by about 83 ms (1.4 mm), so the worst-case Z run-out after a
-  release is about 200 + 83 + 35 ms, roughly 5.3 mm at F1000 (1.3 mm at F300),
-  ending in a 0.17 s deceleration; about 0.4 s from the event to standstill.
-  That is still less than one settled Z segment (8.3 mm at 0.5 s).
+- **Stop admitting increments, then drain and restore `G54`:** D1 released,
+  a report gap of more than 250 ms (`HOLD_FEATHER_GAP_MS`), page keepalive lost,
+  a `G1` error/rejection, one increment reply taking more than 700 ms, or two
+  consecutive increment replies taking more than 300 ms. Three consecutive
+  late-event holds within one arm disable continuous jogging until re-arm
+  (`HOLD_LATE_EVENTS_TO_DISABLE`); a hold ending for another reason resets that count.
+  Lease refusal, crash/overtravel, connection generation or frame-latch changes,
+  non-idle controller state, position evidence older than 4.5 s, a disagreeing
+  Z baseline and an enforced Count fault also stop the hold. A report gap can
+  resume as a new hold if reports return within the 900 ms watchdog.
+  A centred stick admits no new increments but retains the idle G53 hold for
+  up to 2 s (`HOLD_IDLE_CLOSE_MS`) while D1 stays held, then closes it; releasing
+  D1 or another stop condition closes it sooner. Centring is not an immediate
+  work-frame restore.
+  These conditions are handled when the runtime regains control; an in-flight
+  request or a starved event loop can delay detection. The 200 ms queue cap
+  accounts for commanded time, not measured physical stopping time. Acceleration,
+  transport, controller buffering and feed overrides can add lag; validate actual
+  run-out on the applicable build rather than treating the cap as a stopping bound.
 - **Position freshness (`M114`).** A hold that idles or runs for long without a
   coherent heartbeat (beats inside the `G53` window are set aside) used to end
   at the 4.5 s age limit and then wait up to 4.5 s more for a beat. Now the
   hold keeps asking the controller itself: `M114` every 250 ms while moving and
-  at least every 500 ms while idling with D1 held (`HOLD_IDLE_POLL_MS`). A
+  while idling with D1 held only as the freshest agreeing position evidence
+  approaches 2 s old (`HOLD_IDLE_POLL_MS`, with one tick of scheduling margin). A
   reply counts as **fresh** only when it answered within 200 ms
   (`HOLD_FRESH_REPLY_MS`) and its machine X/Y/Z agree with the hold: within
   0.05 mm per axis of the commanded chain at the send time, or within one
@@ -305,7 +297,7 @@ path.
   The close's work-frame proof and the on-demand proof count too.
   `pipeline.m114FreshAgeMs` shows the age.
 - **M114 Count check.** During a hold `M114` is polled every 250 ms
-  (`HOLD_COUNT_POLL_MS`; 500 ms while idle) through the same lease (it moves nothing). The reply's
+  (`HOLD_COUNT_POLL_MS`; idle polling uses the evidence-age condition above) through the same lease (it moves nothing). The reply's
   `Count X: Y: Z:` fields are stepper counts; they are turned into millimetres
   with the `M92` steps/mm from the `M503 S` read at arm time, or the A350
   default of 400 steps/mm when `M503 S` does not report `M92` (the status says
@@ -453,28 +445,27 @@ tool's `failure_recovery` evidence carries it as `feed_override`.
   it happens on every jog, this controller reports busy during queued moves:
   restart Luban without `LUBAN_PENDANT_PIPELINE`.
 
-**Stop latency (continuous X/Y/Z).** STOP, a released deadman and a centred stick
-are seen on the next 20 Hz USB frame and acted on within one 100 ms tick. What
-is already queued is at most 200 ms of commanded motion by the clock model;
-with the acceleration ramps and the one-way transport delay above, about 310 ms
-of real motion in the worst case. Worst case from the event to standstill,
-until trial data replaces these estimates:
+**Stop latency (continuous X/Y/Z).** The following are software thresholds,
+not measured event-to-standstill bounds. STOP/deadman/neutral arrive on the
+nominal 20 Hz USB stream and the hold checks inputs at its 100 ms tick when it
+is not waiting on a command. Already admitted motion must still drain.
 
-| Event | At 300 mm/min | At 3000 mm/min |
-|---|---|---|
-| STOP, deadman release or neutral | about 0.4 s, 2 mm or less | about 0.4 s, 18 mm or less |
-| USB silent (Feather gap, 150 ms, plus one tick) | about 0.6 s, 3 mm or less | about 0.6 s, 28 mm or less |
-| Browser keepalive lost (disarms at 900 ms, plus one tick) | about 1.3 s, 7 mm or less | about 1.3 s, 66 mm or less |
-| Z: STOP, deadman release or neutral (Z limit F1000) | about 0.4 s, 1.5 mm or less | at F1000: about 0.5 s, 5.5 mm or less |
+| Event | Runtime response |
+|---|---|
+| STOP or deadman release | Stop admitting increments when observed; drain and close the hold. |
+| Centred stick, D1 held | Stop admitting increments; retain the idle hold for up to 2 s before closing. |
+| USB silent | Stop after a report age greater than 250 ms is observed. |
+| Browser keepalive lost | Disarm when the 900 ms watchdog expires and is serviced. |
+| Slow increment acknowledgement | Stop on one reply >700 ms or two consecutive replies >300 ms. |
 
-This holds only while the controller executes at the commanded feed. A stalled
-controller or a touchscreen speed override lets the controller's own planner
-queue hold more than the model knows; in observe mode nothing stops that except
-the controller holding `G1` requests once its planner is full (a reply slower
-than 200 ms stops the hold), and the Count trace shows it. The `enforced` Count
-check is what closes that gap once it is proven. The settled path's bound is one
-in-flight segment of up to the approved duration: for Z (when Z holds are off)
-at the Z-mode limit of 1000 mm/min that is at most 8.3 mm (0.5 s) or 16.7 mm (1 s).
+The earlier ~310 ms XY / ~5.3 mm Z-at-F1000 estimates modelled queue time,
+acceleration and typical transport only. They did not bound input detection,
+outstanding requests, event-loop stalls, speed overrides or controller buffering;
+they are not physical acceptance evidence. The Count trace can expose lag, but
+`observe` mode does not enforce it, and `enforced` mode still needs hardware
+validation. The settled path admits one segment of the approved commanded duration:
+at Z F1000, 0.5 s corresponds to 8.3 mm and 1 s to 16.7 mm. Those distances
+describe the commanded segment, not a measured stopping envelope.
 
 **Smoothness caveat.** With 200 ms queued ahead the planner has at most one
 block beyond the executing one. Marlin cannot replan a block it has started,
@@ -499,9 +490,9 @@ the constant at-rest offset above.
   on the trial machine) throughout a hold.
 - Does `M114` answer promptly during motion (reply time under one tick), or does
   it synchronize the planner (then every poll would stall the queue).
-- Actual run-out after release at F300, F1000 and F3000 against the ~310 ms
-  (15.5 mm at F3000) estimated above.
-- Feather gap detection: a 150 ms gap stops the hold without disarming, and the
+- Actual event-to-standstill time and distance after release at F300, F1000 and
+  F3000, including input detection and in-flight command delay.
+- Feather gap detection: a gap greater than 250 ms stops the hold without disarming, and the
   same press resumes with a new hold once reports return (within the 900 ms
   watchdog).
 - Smoothness at F3000 with two blocks queued (see the caveat above).
@@ -510,11 +501,12 @@ the constant at-rest offset above.
 - Z in the hold (not yet run on hardware): the baseline `M114` inside `G53`
   agrees with the chain after a drain (`zBaseline: agreed` in
   `pipeline.lastHold`); Z increments run smoothly at F300–F1000 with
-  `M201 Z100`; actual Z run-out after release against the ~5.3 mm at F1000
-  estimated above; a Z-down twist stops one run-out above a box and the settled
+  `M201 Z100`; actual Z event-to-standstill time and distance at F1000;
+  a Z-down twist stops one run-out above a box and the settled
   path then limits the approach.
-- Freshness: `pipeline.m114FreshAgeMs` stays under 500 ms through a long hold or
-  an idle hold, and no hold ends on the age limit while `M114` keeps answering.
+- Freshness: prompt, agreeing replies refresh moving holds on the 250 ms polling
+  cadence; idle polls are conditional on the freshest evidence approaching 2 s.
+  No hold ends on the 4.5 s age limit while fresh, agreeing evidence keeps arriving.
   An unproved close that the next press proves on demand (look for `the next
   press proved the last hold's end position` in the log).
 

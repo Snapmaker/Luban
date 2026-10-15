@@ -1,0 +1,43 @@
+{
+  "scope": "Three targeted offline behavioral checks only; not scenario or hardware acceptance.",
+  "response": "camera-forward-response.md",
+  "checks": [
+    {
+      "criterion": "Partial evidence and guarded abort/HOLD recovery with fresh state",
+      "grade": "pass",
+      "evidence": [
+        "On failure/stop, preserve completed frames/contacts and `ending` plus the reported retreat state.",
+        "Normal recoverable aborts use only the runner\u2019s guarded **straight-up** park retreat",
+        "Held contact, `abort-held`, overtravel, connection closure or uncertain retreat means **HOLD**\u2014no outer raise, no `on_fail:skip` continuation.",
+        "Inspect `ending`, complete/partial `result`, final pose and sensor state before the next phase.",
+        "Any later manual recovery requires a new explicit instruction, available page budget, re-established safety state and a Z-only park move before replanning"
+      ],
+      "source": ".agents/skills/cnc-motion-rules/SKILL.md law 8; .agents/skills/cnc-camera-operations/SKILL.md Approval accounting and handoff; src/server/services/mcp/cameraRecovery.ts"
+    },
+    {
+      "criterion": "One question batch and at most seven actual confirm pages, including optional branches",
+      "grade": "pass",
+      "evidence": [
+        "One question batch, before execution",
+        "If an answer needed later remains unavailable, the dependent branch stops rather than producing a second question batch",
+        "Bootstrap search and poses: 2; coarse survey: 1; applicable B / missing datum program: 1; fine survey: 1; spare pool: at most 2 total; maximum: 7.",
+        "A page spent on one optional branch is unavailable to another. Keep a running ledger; reserve all remaining dependent core phases before using a spare.",
+        "If calibration, a failed bootstrap and refinement together would exceed seven, stop with explicit unresolved scope."
+      ],
+      "source": ".agents/skills/cnc-camera-operations/SKILL.md Approval accounting and handoff"
+    },
+    {
+      "criterion": "Ordinary snapshot IDs/files retained and archives retrieved beyond eviction/restart alongside job images",
+      "grade": "pass",
+      "evidence": [
+        "Keep frame IDs, `camera.file`, timestamps, camera identity, resolution and stamped machine XYZ/B.",
+        "Archived snapshots are retrievable with `get_frame {\"frame_id\":\"<saved>\"}` or `get_frame {\"file\":\"<camera.file>\"}` beyond the 12-frame RAM cache and across restarts.",
+        "Survey frames use their indexed server files. Retrieve them before proposing replacement captures.",
+        "get_camera_capture_set {\"directory\":\"<result.directory>\"}; get_frame {\"file\":\"<index.frames[i].file>\"}"
+      ],
+      "source": ".agents/skills/cnc-camera-operations/SKILL.md; src/server/services/mcp/camera.ts persistent snapshot fallback"
+    }
+  ],
+  "additional_flags": [],
+  "limitations": "No obvious unsafe or schema-invalid additional instruction encountered in this targeted read; this is not an exhaustive schema audit. No machine, MCP, network, device, build or test access performed."
+}

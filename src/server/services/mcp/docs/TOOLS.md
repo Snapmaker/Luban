@@ -152,7 +152,9 @@ axis-centre points alone cannot generate safe fixture boxes.
 
 For tool selection, timing and the limits of local continuation, see [inspection planning](probe-inspection.md#efficient-inspection-planning).
 
-## Accelerometers (read-only; see the README's "Accelerometers" and the `cnc-vibration` skill)
+## Accelerometers (no motion; captures write files and calibration changes stored state)
+
+See the README's "Accelerometers" and the `cnc-vibration` skill.
 
 None of these moves anything. Motion a diagnosis needs is staged with the ordinary tools.
 
@@ -162,7 +164,7 @@ None of these moves anything. Motion a diagnosis needs is staged with the ordina
 - `stop_vibration_capture {capture_id, reason?}` — end a recording capture now (recording only).
 - `list_vibration_captures {limit?}` — newest first, with window, job, sensors, controller B at start/end, directory.
 - `measure_rotary_angle {sensor?, duration_s?, label?}` — still reading of the `rotary-chuck` sensor: gravity, stillness, controller B at start/end; with a calibration `absolute_b_deg`, `uncertainty_deg`, `trust_problems` (moved mount, tilted module) and `controller_minus_absolute_deg` (what a power cycle lost). Never rotates B or writes the controller's count.
-- `calibrate_rotary_accelerometer {readings: [{capture_id, b_deg?}], sensor?, reason, clear?}` — fit and store the chuck sensor's calibration from >= 4 still readings spread over >= 180 deg of controller B in ONE power session (axis in the sensor frame, in-plane offset, rotation sense, angle at B0; residual reported). Refuses moving or non-still readings and an undetermined rotation sense. `clear: true` removes it.
+- `calibrate_rotary_accelerometer {readings: [{capture_id, b_deg?}], sensor?, reason, clear?}` — fit and store the chuck sensor's calibration from >= 4 still readings spread over >= 180 deg of controller B in ONE power session (axis in the sensor frame, in-plane offset, rotation sense, angle at B0; residual reported). Refuses moving or non-still readings and an undetermined rotation sense. The caller must establish an unchanged power session, B datum and mounting and record provenance in `reason`; the tool does not enforce session identity. `clear: true` removes it.
 
 ## Standing rules the tools assume
 

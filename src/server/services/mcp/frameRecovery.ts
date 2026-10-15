@@ -37,11 +37,12 @@ export function resyncHint(reliability: ReliabilityName): string {
     if (reliability === 'awaiting-resync') {
         return ' Wait for the next status report (2 s) and read get_position again. If it persists, the controller is '
             + 'probably still in the machine workspace after a G53 job: call restore_work_frame (no motion, allowed '
-            + 'while the position is incoherent) and read get_position again. query_firmware_position shows which '
-            + 'frame the controller is actually in. A re-home is not the remedy.';
+            + 'while the position is incoherent, but only when idle with no active job or competing lease) and read get_position again. '
+            + 'query_firmware_position provides fresh selected-workspace coordinates, not independent frame proof. A re-home is not the remedy.';
     }
     if (reliability === 'stale') {
-        return ' Reconnect the machine and re-verify get_position before any motion.';
+        return ' Preserve connection diagnostics, then use recover_machine_connection for the retained session if available; '
+            + 'otherwise ask the operator to reconnect through Luban. Re-verify get_position before any motion.';
     }
     return '';
 }
@@ -154,13 +155,14 @@ export function workFrameVerificationNote(verification: WorkspaceVerification, r
                 + 'origin should be set, confirm it with the operator before relying on work coordinates.';
         case 'machine-frame':
             return 'The controller STILL reports in the machine workspace after the restore. Do not move. Check the machine '
-                + 'is idle, call query_firmware_position to see which frame it is in, and tell the operator. A re-home is not '
+                + 'is idle, call query_firmware_position for fresh selected-workspace coordinates, and tell the operator. A re-home is not '
                 + 'the remedy.';
         case 'no-fresh-beat':
         default:
             return `No status report judged after the restore yet (position of record ${reliability}). Wait about 2 s and `
                 + 'read get_position again; if it shows the machine frame, call restore_work_frame again; if it is stale, '
-                + 'reconnect the machine. Do not move until it is coherent.';
+                + 'preserve diagnostics and use recover_machine_connection for the retained session if available, otherwise ask the '
+                + 'operator to reconnect through Luban. Do not move until it is coherent.';
     }
 }
 

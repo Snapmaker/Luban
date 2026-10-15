@@ -1316,8 +1316,9 @@ matching), `spindleAudio.ts` (ffmpeg recorder), `spindleTelemetry.ts` (the per-j
   edge (within 1 %) is a failed lock, not a dip (a clipped run on 2026-09-29 "sagged" to exactly
   0.80 × S), a clipped frame (RMS ≥ −0.5 dBFS) is never a lock and raises one
   `audio_clipping` event per job, and the baseline waits until the free-running RPM has
-  SETTLED (1 s median within 0.5 % of the second before) - the A350 ramps its spindle for
-  ~20 s after `M3`, so a 3 s spin-up dwell is still on the ramp.
+  SETTLED (1 s median within 0.5 % of the second before). The earlier ~20 s ramp interpretation
+  came from tracking the ~125 Hz gantry tone. The later S8000 trace reached ~8010–8030 RPM
+  within 2 s; that observation is not a universal spin-up time or a prescribed dwell.
 - **Events** (low volume, `tool: spindle-telemetry`): `telemetry_started`, `spindle_reach`
   (unloaded > 2 % off S), `spindle_blip` (dip > 3 % under 1 s; first 10 per epoch), `spindle_sag`
   (rolling median < 97 % for > 1 s, emitted *while* it is happening, or loaded median > 3 % down
@@ -1364,8 +1365,8 @@ matching), `spindleAudio.ts` (ffmpeg recorder), `spindleTelemetry.ts` (the per-j
   `cncCurrentSpindleSpeed`, `spindleSpeed`, `currentSpindleSpeed`, `currRpm`, … (SACP writes
   `cncCurrentSpindleSpeed`; serial Marlin `currRpm`) and records the name it found as
   `telemetry.status.rpmField`; when none matches it lists the scalar keys the controller did
-  send (`statusScalarsSeen`) so the list can be extended from evidence. Not yet verified live
-  against the A350's HTTP payload (2026-09-29).
+  send (`statusScalarsSeen`) so the list can be extended from evidence. The A350 HTTP observation
+  above verifies `spindleSpeed` for that session; other transports/firmware may use different fields.
 - **Measured cost** (snapcnclaptop, Celeron N4020, 2026-09-29): a status poll is ~25 ms and
   ~361 B (idle payload) — at 200 ms that is 5 req/s, ≈ 2 KB/s plus headers and ≈ 12 % of the
   controller's HTTP time; at 500 ms 2 req/s / ≈ 5 %. ffmpeg pulse → FLAC + f32le pipe: 5–8 % of
@@ -1385,7 +1386,8 @@ lives and what length of component it repeats at (reconditioning a noisy axis), 
 tilts under load (static deflection), and the rotary chuck's **absolute** angle from gravity
 (the A350's B axis has no home switch and can lose its count over a power cycle).
 
-**Opt-in, read-only.** Off by default. Nothing in the feed or its tools commands, pauses or stops
+**Opt-in, no machine motion.** Captures write files and rotary calibration stores or clears state.
+Off by default. Nothing in the feed or its tools commands, pauses or stops
 the machine, nothing in the motion or probe path waits on it, and motion a diagnosis needs (an
 axis run, a B rotation) is staged through the ordinary tools on the operator's word and recorded
 alongside. The skill [`cnc-vibration`](../../../../.agents/skills/cnc-vibration/SKILL.md) holds
@@ -1509,7 +1511,9 @@ are also reported in machine axes. Saving restarts the feed at once.
   90 deg extrapolate to p95 0.35 deg with 1 mg of noise, four over 270 deg to 0.09 deg) fit the axis in the sensor frame, the
   accelerometer's in-plane offset (a circle fit - LSM6DS-class offsets are tens of mg, a degree
   of angle), the rotation sense and the angle at B0; nothing about the mounting is assumed and the
-  residual is reported. A reading is STILL only with >= 3 whole seconds, time-domain vibration
+  residual is reported. The caller must establish one power session, unchanged B datum and
+  mounting and record that provenance in the calibration reason: the tool does not enforce
+  session identity, and a low residual cannot establish it. A reading is STILL only with >= 3 whole seconds, time-domain vibration
   < 0.02 g RMS, gravity turning < 0.1 deg between its first and last second (catches a slow B
   rotation no spectral band sees) and, with a gyro, < 0.5 dps RMS about its zero-rate bias. From then on any still reading gives the chuck's absolute angle and
   controller B minus absolute B: what a power cycle lost. Trust checks flag a moved mount
@@ -1641,7 +1645,7 @@ honoured by dropping / lifting with the reasons reported) · **spindle telemetry
 `list_audio_devices` (every capture source with the operator's configured one; never chooses)
 · `get_job_telemetry` (a file job's status-RPM and microphone-RPM / chatter / runout series,
 min/max-downsampled, plus the FLAC path — the summary rides on `get_gcode_job_status`) ·
-**accelerometers** (read-only, "Accelerometers" above): `get_vibration_status` ·
+**accelerometers** (no motion; capture/calibration writes, "Accelerometers" above): `get_vibration_status` ·
 `capture_vibration` · `get_vibration_capture` · `stop_vibration_capture` ·
 `list_vibration_captures` · `measure_rotary_angle` (the chuck's absolute B from gravity) ·
 `calibrate_rotary_accelerometer` (stored state, with a reason).
@@ -1993,7 +1997,10 @@ with live DRO feedback. See [firmware, installation, controls and safety model](
 It uses a separate USB data interface and does not expose an MCP arming tool.
 Settled pendant segments stop between moves because the engine's trailing `G54;` synchronizes
 the controller's planner (Marlin `select_coordinate_system()`). `LUBAN_PENDANT_PIPELINE=1` is an
-opt-in continuous X/Y/Z mode, not yet run on hardware in its current form: ONE hold from D1 press to
+opt-in continuous X/Y/Z mode: retained 2026-10-05 logs show 21 XY holds, 375 increments and
+20 immediate endpoint proofs, with one unproved X-limit close. Those logs do not identify the
+exact backend revision and contain no Z increments, so they are partial XY evidence, not
+acceptance of this build or the Z path. ONE hold runs from D1 press to
 release or any stop (`pendantRuntime.ts` `continuousHold`, pure pieces in `pendantHold.ts`). One
 `G53` at the press (`probing.ts` `enterMachineFrame`), clock-paced `G1` increments of 100 ms at
 the current feed every 100 ms with at most 200 ms queued ahead by a clock model
@@ -2013,16 +2020,18 @@ the clock model (`firmwareZMotionProblem`). The earlier run/settle design was
 retired after hardware feedback (2026-10-05: a second of motion, a 0.5-2 s stop, repeat). Every
 increment is checked from the pendant's own dead-reckoned commanded position against the
 reviewed envelope and the obstacle map including the queued run-out; the position of record is
-blind inside the `G53` window by design. `M114` is polled every 250 ms during a hold (at least
-every 500 ms while it idles); a reply within 200 ms whose machine position agrees with the hold
+blind inside the `G53` window by design. `M114` is polled every 250 ms while moving; idle polling
+is conditional on the freshest position evidence approaching 2 s old (one tick of margin).
+A reply within 200 ms whose machine position agrees with the hold
 (`holdPositionAgrees`) is position freshness, and the hold's 4.5 s age limit uses the newer of the
 heartbeat and that reply, so a long or idle hold no longer ages out waiting for a beat. Its
 `Count` fields (stepper steps, converted with `M92` steps/mm from `M503 S` or the A350 default,
 minus a per-axis offset learned from an idle `M114` on every arm: the trial A350 counts from its
 homing position, X +19 Y +4 Z +0 mm, so raw counts are never compared to machine coordinates) are
 traced against the model; the check is `observe` by default and gates only with
-`LUBAN_PENDANT_COUNT_CHECK=enforced` (which refuses to arm when the offset cannot be learned). The pendant README states the stop triggers, the latency
-bounds and what the first hardware trial must answer. While a hold holds the window, an
+`LUBAN_PENDANT_COUNT_CHECK=enforced` (which refuses to arm when the offset cannot be learned).
+The pendant README states the stop thresholds, limitations of timing estimates and remaining
+hardware validation. While a hold holds the window, an
 exclusive gcode lease (`machine/gcodeLease.ts`) refuses every other command. It covers every
 channel's `executeGcode`, the SSTP job and override endpoints (including the MCP file-job start)
 and ConnectionManager's job, jog, home and origin entry points, and it shortens every HTTP

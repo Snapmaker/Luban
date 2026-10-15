@@ -1,6 +1,6 @@
 ---
 name: cnc-vibration
-description: Diagnose the Snapmaker A350 CNC with the accelerometers on the Luban MCP surface - axis noise and reconditioning (where on the rail, which component by spatial period), toolhead vibration and deflection (tilt against a baseline, dynamic displacement), tailstock and cut chatter, spindle RPM through the structure, and the rotary chuck's absolute B angle from gravity (calibration and power-cycle offset). Use for any question about vibration, noise, chatter, rattling, bearings, lead screws, deflection, spindle speed from a sensor, or "where is B really". The vibration tools are read-only; any motion a diagnosis needs goes through cnc-motion-rules first.
+description: Diagnose the Snapmaker A350 CNC with the accelerometers on the Luban MCP surface - axis noise and reconditioning (where on the rail, which component by spatial period), toolhead vibration and deflection (tilt against a baseline, dynamic displacement), tailstock and cut chatter, spindle RPM through the structure, and the rotary chuck's absolute B angle from gravity (calibration and power-cycle offset). Use for any question about vibration, noise, chatter, rattling, bearings, lead screws, deflection, spindle speed from a sensor, or "where is B really". The vibration tools never command motion; captures write files and calibration changes stored state. Any motion a diagnosis needs goes through cnc-motion-rules first.
 ---
 
 # CNC vibration diagnostics (accelerometers)
@@ -9,7 +9,9 @@ The accelerometer tools **record and analyse; they never move anything**. Every 
 needs motion (an axis run, a B rotation, a test cut) uses the ordinary staging tools, under
 [`cnc-motion-rules`](../cnc-motion-rules/SKILL.md) - load it before planning that motion, ask
 for the operator's word, deliver the confirm link, and record alongside. A capture is never a
-reason to move the machine, and a reading is never a reason to write a coordinate.
+reason to move the machine, and a reading is never a reason to write a coordinate. Captures save
+files; `calibrate_rotary_accelerometer` stores or clears calibration, so use it only within the
+operator's requested calibration work, not as an incidental observation.
 
 ## Orient first
 
@@ -81,6 +83,10 @@ toolhead sensor; compare with the microphone telemetry (`get_job_telemetry`) whe
   spread over >= 180 deg (0/90/180/270 is ideal). Each B change is a rotation the operator
   approves through the normal tools; each reading is `measure_rotary_angle`. Then
   `calibrate_rotary_accelerometer {readings: [{capture_id}...], reason: "<who, when, session>"}`.
+  Establish and record that all readings share the same power session, B datum and unchanged
+  mounting before fitting. Capture metadata and a low residual do not prove this: the tool checks
+  stillness and fit geometry, but does not enforce power-session identity. If provenance is
+  missing or conflicting, retain the readings and resolve it before storing a calibration.
   Quote the residual; above ~0.2 deg a reading was not still or a B was misreported.
 - After a power cycle: `measure_rotary_angle` gives `absolute_b_deg` and
   `controller_minus_absolute_deg`. Check `trust_problems` first (a moved sensor or jig voids the
