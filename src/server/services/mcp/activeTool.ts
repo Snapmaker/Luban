@@ -12,6 +12,9 @@ export type ActiveToolStatus = 'operator_confirmed' | 'measured';
  */
 export interface ActiveTool {
     protrusionMm: number;
+    /** Only a toolhead-reference upper bound may shorten physical-obstacle clearance. */
+    clearanceBasis: 'toolhead_reference' | 'unknown';
+    measurementId: string | null;
     source: ActiveToolSource;
     status: ActiveToolStatus;
     measuredAt: number | null;
@@ -46,6 +49,8 @@ function parse(value: unknown): ActiveTool | null {
     }
     return {
         protrusionMm,
+        clearanceBasis: item.clearanceBasis === 'toolhead_reference' ? 'toolhead_reference' : 'unknown',
+        measurementId: item.measurementId ? String(item.measurementId) : null,
         source: source as ActiveToolSource,
         status: status as ActiveToolStatus,
         measuredAt: typeof item.measuredAt === 'number' && Number.isFinite(item.measuredAt) ? item.measuredAt : null,
@@ -71,6 +76,8 @@ export function invalidateActiveTool(reason: string): void {
 
 export function setActiveTool(input: {
     protrusionMm: number;
+    clearanceBasis?: 'toolhead_reference' | 'unknown';
+    measurementId?: string | null;
     source: ActiveToolSource;
     note?: string | null;
     measurementJobId?: string | null;
@@ -83,7 +90,9 @@ export function setActiveTool(input: {
     const at = Number.isFinite(Number(input.at)) ? Number(input.at) : Date.now();
     const measured = input.source !== 'operator';
     const value: ActiveTool = {
-        protrusionMm: Number(input.protrusionMm.toFixed(3)),
+        protrusionMm: input.protrusionMm,
+        clearanceBasis: input.clearanceBasis || 'unknown',
+        measurementId: input.measurementId || null,
         source: input.source,
         status: measured ? 'measured' : 'operator_confirmed',
         measuredAt: measured ? at : null,
@@ -108,12 +117,14 @@ export function describeActiveTool(tool: ActiveTool | null = getActiveTool()): o
             active: null,
             stored: parse(raw()),
             staleReason: parse(raw()) ? staleReason : null,
-            note: 'No active tool is confirmed. Route planners use the legacy configured worst-case values where available and refuse physical obstacles they cannot bound.',
+            note: 'No active tool is confirmed. Route planners use an explicitly configured toolhead-reference maximum where available and refuse physical obstacles they cannot bound.',
         };
     }
     return {
         active: tool,
         ageMs: Date.now() - (tool.measuredAt || tool.confirmedAt || Date.now()),
-        clearanceNote: `Routine route clearance uses the active ${tool.source} tool at ${tool.protrusionMm} mm protrusion (${tool.status}).`,
+        clearanceNote: tool.clearanceBasis === 'toolhead_reference'
+            ? `Routine route clearance uses the active ${tool.source} tool at ${tool.protrusionMm} mm toolhead-reference bound (${tool.status}).`
+            : 'This fitting is recorded, but its length basis is unverified. It cannot shorten physical-obstacle clearance; a collet length or conventional setter offset is not a toolhead-reference bound.',
     };
 }

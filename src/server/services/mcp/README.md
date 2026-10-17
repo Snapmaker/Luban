@@ -511,10 +511,12 @@ it with no decision point, when the operator had authorised "step 1" only. Laws:
    inference finds things; it never clears them.
 4. **Landmarks are obstacles** — a landmark's clearance refuses XY paths crossing its box
    below the toolhead Z it demands. State it with `obstacle_top_z`: the height of the
-   OBSTACLE ITSELF, to which the fitted tool's protrusion and a 5 mm margin are added when a
-   path is checked. The tool is the longest candidate known (last tool-setter measurement,
-   `probe_effective_length`, `longest_bit_length_mm`), so a measurement only ever lengthens
-   the requirement; with none of them known a physically stated obstacle is impassable, not
+   OBSTACLE ITSELF, to which a current toolhead-reference clearance bound and 5 mm margin
+   are added. Only an explicit operator bound or a measured setter datum with bounded
+   uncertainty establishes that reference for a fitting. Otherwise use the separately
+   configured `toolhead_clearance_bound` conservative maximum; stale fitting records,
+   conventional probe offsets and nominal approach estimates cannot supply it. A collet-to-tip
+   measurement is not a toolhead-reference bound. Without one a physical obstacle is not
    passable. Records set with the legacy `clearance_z` are toolhead heights with a tool
    already baked in and are enforced exactly as before until re-stated —
    `get_stored_state.landmarkClearances` lists which ones those are.
@@ -1152,17 +1154,18 @@ These are agent release requirements, not new runtime checks in `validate_gcode`
   calibration is keyed by machine Y AND Z. The board-viewing anchor pose is the pre-home
   park (machine X0/Y0), not machine home. The **gold cylinder at machine Y≈176–340 is the
   TOOL HEIGHT CHECKER** (operator-confirmed; was misidentified twice).
-- **Tool setter: centre at machine (X79, Y293), top-left of bed. MEASURED trigger Z 175.500
-  with the 75 mm reference endmill (three confirm passes agreed, spread 0)** — so the setter
-  SURFACE is machine Z 100.5, and expected trigger Z for a bit of length L is
-  `175.5 + (L − 75)`. Config + measurement history live in `mcpToolSetter`.
-- **Touch probe (measured 2026-09-01): effective length 71.1 mm** (trigger on the setter at
-  machine Z 171.6 ⇒ any surface = probe contact toolhead Z − 71.1). The probe's AXIAL
-  spring is stiffer than the setter's switch, so on the setter the SETTER fires first —
-  measuring the probe there is safe with `accept_probe_contact: true` (either channel
-  confirms). Probe feed latency, hardware-measured: **~120–150 ms** sensor→feed on a local
-  bump test (trigger message 452 ms after move issue incl. ~330 ms motion) — the 200 ms
-  contact windows are correctly sized.
+- **Tool setter (historical)**: centre at machine (X79, Y293), raw trigger toolhead Z175.500
+  with a nominal 75 mm reference endmill (three extra passes agreed). Subtraction defines
+  the **legacy reference convention Z100.5**; it does not independently establish a physical
+  machine plane. Approach prediction remains `175.5 + (nominal approach estimate − 75)`.
+  Config, named datum and immutable fitting measurements live in `mcpToolSetter`.
+- **Touch probe (historical, 2026-09-01)**: raw setter trigger machine Z171.6 gives a
+  conventional offset71.1 against datum100.5. This is neither collet-to-tip nor body-to-tip
+  caliper length. Current procedure results preserve raw toolhead coordinates and add
+  `tipMachineZ = toolheadZ − (setterTriggerZ − setterDatumZ)` with `tipCalibration` provenance.
+  The projection can be conventional or unavailable; inspect its basis/applicability.
+  Setter contact and probe stylus contact can differ in pretravel. Historical MQTT sensor
+  latency was ~120–150ms; do not transfer that timing to a different GPIO setup without evidence.
 - **Camera offset**: the toolhead camera looks roughly **90–150 mm in −X** of the toolhead
   (setup-specific — verify per rig): features at machine X appear in frames taken from
   toolhead X+90..150. The far-X column of a bed survey is therefore the only view of the
@@ -1770,6 +1773,32 @@ Verified example, 2026-09-28: the operator's Pi Luban reconnect produced `Connec
 `X:60.05 Y:111.37 Z:22.80` (work frame), count fields and `ok`, with the exchange in both logs.
 The operator confirmed no touchscreen re-authentication was required. This establishes the
 new session's liveness, not the cause of the earlier morning incident.
+
+
+### Setter datum and fitting evidence
+
+`run_tool_setter` records raw `measuredTriggerZ`, all confirmation contacts, spread, fine step,
+job/date, tool/fitting identity where supplied, and a named datum snapshot. Read these through
+`get_tool_setter_config` or `get_stored_state`; `derivedBitLengthMm` remains a deprecated
+compatibility alias for the setter-derived offset. `bit_length_mm` and the reference/longest
+nominal lengths are approach estimates only. `store_as_reference` retains the existing named
+datum before updating the approach reference, so an estimate cannot recalibrate old geometry.
+
+Configure a measured datum with `setter_datum {id,name,machine_z,basis:"measured",source,
+uncertainty_mm}` only from independent evidence. Existing nominal references are labelled
+`legacy_reference_convention`. Historic records without datum snapshots remain unknown;
+no current datum or synthetic trigger is applied to them retrospectively. Current probe
+procedures capture one fitting calibration per run and expose additive `tipMachineZ` and
+`tipCalibration`; raw contacts, work coordinates and legacy fit fields stay unchanged.
+
+`set_active_tool` accepts `protrusion_reference:"toolhead"|"collet"|"unknown"`. Only an explicit
+current toolhead bound (or measured datum plus uncertainty) supports physical clearance.
+Omitted/collet references cannot shorten it. `toolhead_clearance_bound {mm,source}` in setter
+config is a separately established conservative maximum for allowable tools. Restart, tool
+parking or disconnect invalidates fitting assertions; a previous shorter tool cannot bound an
+unknown replacement. Old `clearance_z` boxes retain their toolhead semantics. Conventional
+survey heights must not be silently mixed with independent bed-referenced obstacle heights.
+Holder/body side envelopes remain separate geometry (issue #187).
 
 ## Development workflow (learned the hard way)
 

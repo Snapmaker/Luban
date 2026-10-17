@@ -47,12 +47,14 @@ item, quoting the tool result — not an essay):
    at-or-above, so equal passes. A box the operator states in chat is a planning obstacle
    immediately; write it with `set_landmark` only when they ask; if chat and the store disagree,
    stop and ask which is current.
-5. **Tool.** A tool or the probe is ALWAYS in the spindle. Read `get_active_tool`: usable
-   active protrusion governs physical clearances, otherwise the configured worst case applies.
-   Re-read after every setter run or swap. `set_active_tool {protrusion_mm, source: "operator",
-   note}` records the operator's conservative fitted-tool protrusion for CLEARANCE, not contact
-   conversion. An approximate overall length is not a calibrated effective length. Where is
-   the tip at the planned toolhead Z? Legacy boxes still demand their stated toolhead height.
+5. **Tool.** A tool or the probe is ALWAYS in the spindle. Read `get_active_tool` and the
+   reported clearance basis. Only a current bound below the MACHINE TOOLHEAD REFERENCE, or
+   the separately configured conservative maximum `toolhead_clearance_bound`, can establish
+   physical clearance. `set_active_tool {protrusion_mm, protrusion_reference: "toolhead",
+   source: "operator", note}` requires the operator's explicit bound and reference. A collet-to-tip
+   caliper measurement is a different quantity. Re-read after a setter run or swap; stale fitting
+   records are evidence, not bounds for an unknown replacement. Legacy toolhead boxes retain
+   their stated height.
 6. **Authority.** An explicit imperative in the operator's LATEST message is necessary — not
    sufficient. It authorises STAGING; the click on the confirm page authorises the motion. An
    imperative on a rejected position is still refused by the tools (§3). Stale data has one
@@ -121,17 +123,16 @@ item, quoting the tool result — not an essay):
    CROSSING obstacles: an XY segment that enters or leaves their box below the toolhead Z it
    demands is refused — at staging for procedures, at call time for direct moves. State a new
    one with `obstacle_top_z`: the top of the obstacle ITSELF, nothing about the tool. The server
-   adds the usable active tool's protrusion plus a 5 mm margin. Without a usable active tool,
-   it falls back to the longest of the last setter measurement, `probe_effective_length` and
-   `longest_bit_length_mm`. A shorter active tool can LOWER physical-basis clearances: establish
-   it only from the operator's fitted-tool statement or a measurement. `run_tool_setter`
-   replaces it and reports old → new. The record persists, but becomes stale on server restart,
-   detected disconnect/reboot and `goto_tool_change_position`; reaffirm or measure the fitted
-   tool before trusting a shorter value. Home alone does not prove a new tool identity.
-   With the touch probe fitted, a 250 mm-high
-   obstacle still demands 328; with a 2 mm engraving bit it demands 257, and that is where the
-   machine gets its working room back. If NOTHING is known about the tool, a physically stated
-   obstacle is impassable rather than passable — state a tool length. Legacy `clearance_z`
+   adds a verified current toolhead-reference clearance bound plus a 5 mm margin. A measured
+   setter datum with bounded uncertainty can establish it for the measured fitting; a nominal
+   setter convention cannot. Without a current bound, only an explicitly configured conservative
+   maximum for allowable tools (`toolhead_clearance_bound`) supplies the fallback. Collet
+   protrusion, `probe_effective_length` and `longest_bit_length_mm` are not that bound.
+   `run_tool_setter` records the new fitting and reports old → new; inspect its clearance basis.
+   Restart, detected disconnect/reboot and tool-change parking make fitted-tool assertions stale.
+   Home alone does not prove tool identity. If the reference/bound is unknown, physically stated
+   obstacles refuse. Never reinterpret a conventional survey height as a bed-measured obstacle
+   height; retain its original datum. Legacy `clearance_z`
    records are toolhead heights with a tool already baked in and are enforced exactly as before;
    `get_stored_state.landmarkClearances` lists which ones still want re-stating. A hop passes
    because it is at or above the requirement (equal passes), never because it is exempt; an
@@ -269,21 +270,26 @@ X −19…339, Y 0…342, Z 0…328. The server ignores such a beat (§3); you n
 with a move, subtract an offset to make it fit, or reinterpret its frame. Plan stations near an
 edge (Y340 is 2 mm from the limit) with the margin said aloud.
 
-**Numbers carry their qualifiers or they are not numbers.** Every height states: frame
-(machine), **toolhead Z vs physical surface** (surface = contact Z − probe or tool length), the
-tool fitted, the B angle for anything on the rotary, and the date.
+**Numbers carry their qualifiers or they are not numbers.** Every height states its frame,
+raw toolhead Z or projected tip Z, setter datum and provenance, tool/fitting, B angle for rotary
+work, date and uncertainty. A nominal reference convention is internally usable but is not an
+independently verified physical machine plane.
 
-**Probe length has two roles.** Clearance uses active protrusion or the fallback longest
-candidate. Contact conversion uses `get_stored_state → geometry.probe.effectiveLength`, with
-its source job/date and contact convention. A conservative approximate 75 mm clearance bound
-does not replace a measured 70.9 mm conversion, nor require another calibration merely because
-the numbers differ. Never write a rough overall length to `set_probe_geometry`.
-Reuse applicable stored calibration; measure if missing or the probe was refitted/swapped.
-The 0.3 mm discrepancy question concerns a claimed *calibrated effective length*, not a rough
-clearance bound. Setter-derived length excludes stylus pretravel on stock, so contact Z minus
-that length carries that uncertainty. Never chain a probe trigger and setter lengths into a
-cutting Z0 without verifying the contact-method difference; read [tool-change](../tool-change/SKILL.md).
-Do not turn a historical pretravel estimate into a correction constant.
+**Raw setter triggers, tip coordinates and clearance bounds are different evidence.**
+`get_tool_setter_config` / `get_stored_state` expose the raw setter measurements, named datum
+and provenance. A result's `tipMachineZ` is `toolheadZ − (setterTriggerZ − setterDatumZ)`;
+read its `tipCalibration` snapshot, including applicability and `physicalReferenceVerified`.
+A null projection leaves the raw contact intact; recover the original evidence before proposing
+new measurement. Never apply today's datum to an old contact that lacks that datum snapshot.
+
+Historical `geometry.probe.effectiveLength` is a legacy conversion offset, not an observable
+collet-to-tip length. Keep applicable old surveys in their recorded convention. A 45 mm collet
+measurement neither replaces a 70.9 mm setter offset nor proves that offset wrong. Do not ask
+for an unqualified "probe length" or repeat a survey merely to rename its provenance.
+Clearance uses the independently established bound in law 4; setter approach estimates establish
+neither that bound nor contact calibration. Setter and stylus contacts can have different pretravel:
+verify the contact-method difference before transferring a cutting Z0; read
+[tool-change](../tool-change/SKILL.md). Never invent a correction from an old pretravel estimate.
 
 ## 3. Position of record — what `get_position` means
 
@@ -378,7 +384,11 @@ start position — expect it, do not act on it.
   consecutive stations): `guarded` retracts to **LAST CONTACT + `z_safe_delta_mm`** (cap 20,
   min 3) and hops in ≤ 10 mm sensor-checked segments; contact is a COLLISION. `stepped` uses
   **LAST CONTACT + `hop_lift_mm`** (default 2, 0.5–10 mm), then touch-probing links that back
-  off and lift on contact, subject to release and lift-contact checks. Either mode limits
+  off and lift on contact, subject to release and lift-contact checks. For a bounded surface
+  survey, the operator's 0.5 mm local lift is within this envelope; it never lowers ordinary
+  transport clearance. Surface adaptive confirmation can use a separate release-verified
+  `backoff_mm: 0.2` retouch when height varies; see the probing skill for uncertainty controls.
+  Either mode limits
   station spacing to `max_hop_mm` (cap 60); these bounds cannot be exceeded by inference.
   Choose by the height change between consecutive stations, not by the surface's name: spacing × steepest
   credible slope ≪ `z_safe_delta_mm` → `guarded`; a station may sit more than `z_safe_delta_mm`
@@ -439,10 +449,12 @@ start position — expect it, do not act on it.
 - **Park height** (a.k.a. traverse height) = `mcpSafeTraverseZ` = machine Z328: where procedures
   perform ordinary transfers and finish; local links use §4 and aborts use law 8.
   `get_stored_state.limits` reports both.
-- **Toolhead Z** = the Z the heartbeat reports for the head; **physical / surface height** =
-  toolhead Z at contact minus the probe (or tool) length.
-- **`bit_length_mm`** (tool setter) = the fitted tool's PROTRUSION from the collet in mm — a
-  length, never a diameter.
+- **Toolhead Z** = the Z the heartbeat reports for the head. **Tip machine Z** is the
+  datum-qualified projection supplied alongside raw contact Z; it is not a toolhead target.
+- **`bit_length_mm`** (legacy setter argument) = approach-only estimate in the configured
+  nominal reference convention. It is neither cutting diameter nor arbitrary collet-to-tip
+  caliper distance. Use applicable setter history/reference evidence; do not guess it low or high.
+  The raw trigger measurement, not this estimate, establishes the new recorded contact.
 - **Camera pose for the board** = pre-home park (machine X0 Y0), not machine home.
 
 ## 6. Recording rules
@@ -522,13 +534,13 @@ submit_gcode_job {"gcode": "<file text>", "name": "pocket.nc", "frame": "work"}
 start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}
 // Poll any running job to its end; ending.kind says why it ended
 get_gcode_job_status {"job_id": "<id>", "wait_ms": 110000, "since_event": <next_event_index>}
-// Tool setter: bit_length_mm is the fitted tool's protrusion (a length, never a diameter)
+// Tool setter: bit_length_mm is an approach-only estimate in the configured reference convention
 run_tool_setter {"bit_length_mm": 40, "reason": "..."}
 start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}
-// Measure the touch probe itself (only after reading an EMPTY store), then record it
+// Measure the fitted probe only if applicable saved evidence is missing/invalidated
 run_tool_setter {"bit_length_mm": 70, "accept_probe_contact": true, "reason": "..."}
 start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}
-set_probe_geometry {"probe_effective_length": 71.28, "reason": "run_tool_setter job <id>, 2026-09-14"}
+// Read result.measurement and its datum snapshot; do not copy a remembered offset into geometry.
 // Tool change, flow A, step 4 of 4: shift work Z by new − old (defaults to the last two measurements)
 apply_tool_length_offset {"reason": "..."}            // or {"old_trigger_z": 100.5, "new_trigger_z": 98.2, "reason": "..."}
 start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}

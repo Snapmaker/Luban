@@ -81,7 +81,7 @@ export interface StationTiming {
     ms: number;
     commands: number;
     byKind: { [kind: string]: { count: number; execMs: number; idleMs: number } };
-    outcome: 'contact' | 'no_contact';
+    outcome: 'contact' | 'no_contact' | 'uncertain';
     approach: 'slow-zone' | 'coarse-contact' | 'unknown';
 }
 
@@ -220,7 +220,7 @@ function summarizeKinds(commands: CommandRecord[]): KindSummary[] {
     return list.sort((a, b) => b.execMs + b.idleMs - (a.execMs + a.idleMs));
 }
 
-const STATION_END = /^(measured|no-contact)-(.+)$/;
+const STATION_END = /^(measured|no-contact|uncertain)-(.+)$/;
 
 function summarizeStations(events: JobEvent[], commands: CommandRecord[]): StationTiming[] {
     const stations: StationTiming[] = [];
@@ -254,7 +254,7 @@ function summarizeStations(events: JobEvent[], commands: CommandRecord[]): Stati
             ms: event.at - windowStart,
             commands: inWindow.length,
             byKind,
-            outcome: m[1] === 'measured' ? 'contact' : 'no_contact',
+            outcome: m[1] === 'measured' ? 'contact' : m[1] === 'uncertain' ? 'uncertain' : 'no_contact',
             approach,
         });
         windowStart = event.at;
@@ -327,6 +327,6 @@ export function summarizeJobTiming(events: JobEvent[]): JobTiming {
         note: 'execMs = send -> controller reply per command batch; motionMs = commanded distance / feed; overheadMs = the '
             + 'difference (controller + transport per batch); idleMs = previous reply -> this send (sensor window + runner); '
             + 'senseMs = the sensor window inside that idle. Stations are delimited by the runner\'s measured-/no-contact- '
-            + 'events. Levers: fewer coarse steps (smaller z_safe_delta_mm), coarse feed, confirm_passes, sensor_delay_ms.',
+            + 'events. Levers: fewer redundant stations, local lift (z_safe_delta_mm guarded / hop_lift_mm stepped), surface confirmation_mode, confirm_passes and transport-appropriate sensor_delay_ms.',
     };
 }

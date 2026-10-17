@@ -411,13 +411,18 @@ ${describeProbeCirclePlanAsGcode(plan)}`;
                 + 'zone the press is one fine step instead). Values above 1 are clamped to 1.',
         },
         fine_step_mm: { type: 'number', description: 'Fine step, default 0.1 (0.02-0.5).' },
-        backoff_mm: { type: 'number', description: 'Confirm-cycle lift, default 1 (also the confirm re-contact window).' },
+        backoff_mm: { type: 'number', description: 'Release-verified confirmation backoff, default 1 (at least fine_step_mm, max 3). 0.2 is supported with fine_step_mm <= 0.2; failure to release aborts before retouch.' },
         sensor_delay_ms: {
             type: 'number',
             description: 'Contact-check window per step, default 300, floor 30 (GPIO transport: 50 is ample - the trigger led '
                 + 'the controller reply on every contact measured).',
         },
-        confirm_passes: { type: 'number', description: 'Lift-and-retest cycles per station, default 3 (1-10).' },
+        confirm_passes: { type: 'number', description: 'Fixed mode: EXTRA lift-and-retest cycles after the initial fine contact, default 3 (1-10); 1 is one extra retouch. Adaptive mode uses exactly one extra retouch when needed.' },
+        confirmation_mode: {
+            type: 'string', enum: ['fixed', 'adaptive'],
+            description: 'Default fixed preserves repeated confirmations. Adaptive uses a single fine contact on routine stations; first station, after a miss, coarse contact, link contact or height change beyond confirmation_tolerance_mm gets one release-verified retouch. Disagreement stops with uncertain evidence, excluded from geometry.',
+        },
+        confirmation_tolerance_mm: { type: 'number', exclusiveMinimum: 0, maximum: 1, description: 'Required for adaptive: explicit height-change and initial/retouch agreement threshold (>0 to 1 mm). This is a confirmation decision threshold, not guaranteed measurement accuracy.' },
         slow_zone_mm: {
             type: 'number',
             description: 'Coarse steps stop this far ABOVE the expected contact (the previous station\'s Z; '
@@ -469,7 +474,7 @@ ${describeProbeSurfacePlanAsGcode(plan)}`;
             plan,
             confirm_url: `${getConfirmBaseUrl()}/confirm/${job.id}`,
             next_step: 'Ask the operator to open confirm_url and review the WHOLE scan: the law-2 exception '
-                + `(hops at last contact + ${plan.zSafeDeltaMm} mm, largest hop ${plan.worstHopMm} mm), every station, `
+                + `(${plan.hopMode} hops at last contact + ${plan.hopMode === 'stepped' ? plan.hopLiftMm : plan.zSafeDeltaMm} mm, largest hop ${plan.worstHopMm} mm), every station, `
                 + `the guarded descent to Z${plan.startZMachine} and the absolute floor Z${plan.absoluteFloorZ}. One approval `
                 + 'covers the circuit; their one-time code passed to start_gcode_job runs it (detached - long-poll '
                 + 'get_gcode_job_status for the result: per-station machine XYZ plus flatness statistics).',

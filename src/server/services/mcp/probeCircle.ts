@@ -38,6 +38,8 @@ import {
     resolveMarchParams,
 } from './procedureLimits';
 import { McpToolError } from './registry';
+import { projectToolTipZ } from './toolDatum';
+import { getProbeTipCalibration } from './toolDatumState';
 import { assertWithinTravel, getPositionSnapshot, requirePlanningTravel, safeTraverseZ } from './tools/machine';
 
 // Circle probing: N sensor-gated radial marches around (or inside) a
@@ -276,6 +278,7 @@ function fitCircle(contacts: { x: number; y: number }[]): CircleFit {
 export async function runProbeCircleProcedure(plan: ProbeCirclePlan): Promise<object> {
     assertChannelReady('probe', 'circle probe');
     assertMachineReadyForProcedure();
+    const tipCalibration = getProbeTipCalibration();
 
     const position = getPositionSnapshot();
     const here = position.machine;
@@ -465,7 +468,8 @@ export async function runProbeCircleProcedure(plan: ProbeCirclePlan): Promise<ob
         const worstSpread = Math.max(...contacts.map((c) => c.spreadMm));
         return {
             inside: plan.inside,
-            contacts,
+            tipCalibration,
+            contacts: contacts.map((r) => ({ ...r, toolheadMachineZ: plan.probeZ, ...projectToolTipZ(plan.probeZ, tipCalibration) })),
             fit: {
                 center: fit.center,
                 fittedDiameterMm: fittedDiameter,

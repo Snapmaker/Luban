@@ -25,7 +25,7 @@ export interface RotaryGeometry {
 }
 
 export interface ProbeGeometry {
-    /** Toolhead Z at contact minus this = physical surface Z. Re-measure after any re-fit. */
+    /** Legacy contact-conversion offset in its recorded datum convention, not caliper protrusion or a physical clearance bound. */
     effectiveLength: number;
     /** Side contacts are centre +/- tipDiameter / 2. */
     tipDiameter: number | null;
@@ -173,14 +173,15 @@ export function geometrySettings() {
         probe: probeGeometry(),
         note: 'Only programs that reference axis.* need these; B0-only and non-rotary work needs none of them. '
             + 'Set with set_probe_geometry after measuring (axis Z from an opposite-face pair, axis X from a side pair, '
-            + 'probe length from run_tool_setter accept_probe_contact).',
+            + 'probe offset from a setter measurement in the SAME documented datum convention). Legacy names do not '
+            + 'verify physical machine Z or current fitting applicability; reconcile existing evidence before measuring again.',
     };
 }
 
 export interface AxisNamespace {
     x: number;
     z_physical: number;
-    /** Toolhead Z at which the probe tip is on the axis line (z_physical + probe length). */
+    /** Legacy axis Z plus probe offset; both must share the documented datum convention. */
     z_contact: number;
     tip_radius: number | null;
     probe_length: number;

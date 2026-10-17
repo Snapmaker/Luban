@@ -11,8 +11,8 @@ description: "Change the CNC tool and keep the work origin true — measure the 
 A tool change replaces the one physical thing the work origin Z was calibrated
 through: the tool tip. The tool setter (fixed switch on the bed, probe feed
 channel `toolsetter`) measures each tool's trigger height, and the difference
-between two measurements IS the length difference — so the work origin can be
-shifted exactly, without ever re-touching the stock.
+between two applicable raw triggers transfers the work Z reference. The shared datum cancels;
+measurement repeatability and contact-method uncertainty still apply.
 
 ## Preconditions
 
@@ -40,17 +40,17 @@ shifted exactly, without ever re-touching the stock.
 
 ## Two flows — ask which one the operator is using
 
-In both flows, a successful `run_tool_setter` replaces the active clearance tool with the
-measured protrusion (`active_tool_replaced` reports old → new). Re-read `get_active_tool`
-after each measurement and after the manual swap; a shorter tool lowers physical-basis
-clearances. Tool-change parking and reconnect/restart mark the persisted assertion stale.
-If the operator wants a conservative longer clearance bound to govern, explicitly reassert
-it with `set_active_tool` after measurement; never overwrite probe contact calibration with it.
+In both flows, a successful `run_tool_setter` records the raw trigger and fitting with its
+named datum snapshot; `active_tool_replaced` reports old → new. Re-read `get_active_tool`.
+Only a physically verified datum with uncertainty or an explicit toolhead-reference bound
+establishes physical clearance. A conventional setter offset or collet-to-tip caliper value
+does not. Parking and reconnect/restart mark fitting assertions stale. A conservative maximum
+can be recorded separately as `toolhead_clearance_bound`; never overwrite contact calibration.
 
-Ask it in the same single message as the other unknowns (both tools' approximate protrusion,
-whether the work origin was set with the tool now fitted). Flow A is four approvals — measure
-old, park, measure new, apply — each announced; the swap itself is the operator's hands and
-their word, never inferred.
+Ask for genuinely missing information in one message: the flow, whether work Z belongs to the
+fitted outgoing tool, and any missing approach estimate **in the configured reference convention**.
+Use saved applicable raw triggers; do not request an unqualified tool/probe "length". Flow A is
+four approvals — measure old, park, measure new, apply. The manual swap requires the operator's word.
 
 **A. MCP-managed offset** (operator at the computer): measure old → park → swap
 → measure new → `apply_tool_length_offset` shifts the work origin. Steps below.
@@ -96,8 +96,9 @@ the reference before cutting. For thread milling, this is the precondition behin
 `tool_length_applied: true`; see [cnc-thread-milling](../cnc-thread-milling/SKILL.md).
 
 1. **Measure the old tool** — `run_tool_setter` with the operator-stated
-   `bit_length_mm` — the tool's PROTRUSION from the collet in mm (a length, never its
-   cutting diameter; declare it low rather than high). Skip only if the last stored measurement
+   `bit_length_mm` — an approach-only estimate in the configured nominal reference convention,
+   never cutting diameter or an arbitrary collet-to-tip distance. Do not bias it low/high: it
+   changes the search window and floor. Skip only if the last stored measurement
    (`get_tool_setter_config` → `measurements.last`) is from this same tool,
    this session, and the operator confirms nothing has moved. A completed run leaves the
    head at the traverse height (machine Z328 — `result.finalZ`), never at its start height,
@@ -112,7 +113,7 @@ the reference before cutting. For thread milling, this is the precondition behin
 2. **Park** — `goto_tool_change_position`. One approval, two
    `start_gcode_job` calls: Z rises to the park height first, then X/Y.
 3. **The operator swaps the tool by hand.** Wait for their word; never infer
-   it. Ask them for the new tool's approximate length.
+   it. Resolve any missing approach estimate in the configured reference convention.
 4. **Measure the new tool** — `run_tool_setter` with the new `bit_length_mm`.
    The measurement history now holds previous = old tool, last = new tool.
 5. **Shift the work origin** — `apply_tool_length_offset {"reason": "..."}` then

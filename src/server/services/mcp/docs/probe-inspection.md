@@ -86,6 +86,36 @@ from the park height. Find unknown surfaces with a sensor-gated march. Bracket t
 coarsely and refine them to the required tolerance; avoid dense resampling of known flat banks.
 Use the previous job response's `next_event_index` for long-polling `since_event`.
 
+### Broad maps and adaptive surface confirmation
+
+For the operator's nominal FR4 broad-warp task, begin with 4×4 (16) points and refine measured
+anomalies or unmet cutting constraints. Do not repeat existing coverage to apply this recipe;
+16 points cannot exclude unsampled local defects or replace edge/datum measurements.
+
+Surface path/grid and their program ops accept `confirmation_mode:"adaptive"` with an explicit
+`confirmation_tolerance_mm` (>0, ≤1). Routine fine contacts use one touch. First station,
+after a miss, coarse contact, a contact-aware link bump or an unexpected height change earns
+one extra retouch. Choose a threshold from the task and sensor uncertainty; it is not a claim
+of absolute accuracy. `backoff_mm:0.2` is supported when `fine_step_mm≤0.2`, and **release must
+be verified before retouch**. A stuck probe holds; disagreeing contacts become uncertain and
+are excluded from accepted geometry. Single observations report `spreadMm:null`.
+
+Use `hop_mode:"stepped", hop_lift_mm:0.5` for the requested small local links, subject to
+existing obstacle, ≤60mm spacing, release and lift-contact checks. `backoff_mm` is separate
+from link height. Guarded `z_safe_delta_mm` still has a 3mm minimum; ordinary entry/exit and
+transport clearance are unchanged. Fixed mode remains default, and `confirm_passes` counts
+EXTRA cycles after the initial fine touch (1 means two observations; 0 is not single-touch).
+Use recorded phase timings, including controller/transport overhead, instead of a fixed
+seconds-per-point estimate. GPIO and MQTT contact-check windows require their own evidence.
+
+### Contact coordinate provenance
+
+Each procedure snapshots the fitted probe's setter calibration before running. Raw toolhead
+contacts remain unchanged; additive `tipMachineZ` and `tipCalibration` preserve trigger,
+datum, fitting, job/date and uncertainty. Legacy offsets retain an unknown or conventional
+basis, not a fabricated physical datum. For uncertain/no-contact stations there is no accepted
+tip point. Keep raw observations and use the original survey's calibration, not today's.
+
 ### Include the milling datum in the probing plan
 
 Before removing the probe, establish how the work frame will be set and rechecked against

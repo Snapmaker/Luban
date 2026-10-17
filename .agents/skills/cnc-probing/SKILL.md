@@ -15,9 +15,9 @@ description: "Plan and run touch-probe measurements through Luban MCP: top profi
 | Item | Value | Note |
 |---|---|---|
 | Park / procedure traverse height | machine Z328 | ordinary transport and successful procedure completion; local links use the procedure’s own envelope |
-| Probe effective length | `geometry.probe.effectiveLength` | never a remembered figure; measure if unset |
-| Tool setter | surface machine Z100.5; trigger 175.5 with the 75 mm reference | `run_tool_setter` |
-| Rotary axis | `geometry.rotary` — a HISTORICAL estimate tied to the probe length, clamping and date it was measured with (this jig: 2026-09-05, 71.3 mm probe, raw stock; ~1 mm off for a later clamping) | physical Z, never a toolhead target; before CAM rotates about it, check it against opposite-face contacts — [rotary-axis](references/rotary-axis.md) |
+| Probe tip calibration | result `tipCalibration`, raw setter history and named datum | reuse applicable fitting evidence; legacy `geometry.probe.effectiveLength` is a conversion offset, not a caliper length |
+| Tool setter | historical trigger Z175.5 minus nominal reference 75 defines convention Z100.5 | read the current named datum; this convention is not independently measured physical Z |
+| Rotary axis | `geometry.rotary` — a HISTORICAL estimate tied to the probe offset/datum, clamping and date it was measured with (this jig: 2026-09-05, 71.3 mm conventional offset, raw stock; ~1 mm off for a later clamping) | physical Z, never a toolhead target; before CAM rotates about it, check it against opposite-face contacts — [rotary-axis](references/rotary-axis.md) |
 | Chuck jaws | reach ~Y269 | a `keep_out` volume for programs |
 | Tailstock | inside the `rotary-axis` box, Y < ~110; height UNMEASURED | measure it (see below), then `set_landmark` |
 
@@ -37,6 +37,13 @@ and positional tolerance, face/B and clamping continuity in the same question ba
 the prior measurements before deciding what remains. Measure accessible X/Y edges, yaw and Z
 references while the probe is fitted, in the same bounded program where practical. Report datum
 candidates and their tip convention; a survey request authorizes neither a cut nor an origin write.
+
+For a broad flatness/warp map of a nominally flat board, start with the smallest useful grid:
+the operator's 2026-10-15 FR4 case called for **4×4 = 16 points**, not an automatic 10×10.
+Retain corners and interior coverage; refine only a measured anomaly or an unresolved cutting
+constraint. Sixteen is a starting choice for that task, not a guarantee against unsampled bow,
+a universal grid size or a reason to repeat points already measured. Edge location and datum
+registration are separate measurements; do not demand an edge-resolution grid over a flat face.
 
 Justify pitch from what must be resolved. A sampled edge bracket alone has at least ±pitch/2
 uncertainty: ±0.2 mm requires pitch ≤0.4 mm before adding probe uncertainty, not a 2 mm grid.
@@ -97,7 +104,7 @@ Which measuring op:
 
 | The operator wants… | Op | Notes |
 |---|---|---|
-| one height | just the `sequence` | report toolhead Z and physical = Z − probe length |
+| one height | just the `sequence` | report raw toolhead Z and datum-qualified `tipMachineZ` |
 | a profile along a line, a crown, "is it level along Y" | `surface_path` | crown X = symmetry centre, see "Reading a profile" |
 | "is it flat", a height map, a pocketed box | `surface_grid` | plane residual peak-to-valley + tilt |
 | where a block is and how big | `stock_outline` | needs an estimated centre and size |
@@ -191,6 +198,30 @@ transfer to ordinary motion or arbitrary operations. Keep parameters within thei
 | `hop_mode` | `guarded` | — | see `cnc-motion-rules` §4: spacing × slope ≪ delta → guarded; steps/pockets/unknown → `stepped` (+ `hop_lift_mm`, default 2) |
 | `coarse_step_mm` | 1 | 1 | also the worst-case press; station 1 is capped at 1 mm unless `expected_z_machine` is given |
 
+**Small lifts and selective retouches are independent controls.** For a bounded surface map,
+`hop_mode: "stepped", hop_lift_mm: 0.5` uses release-verified 0.5 mm local lifts with contact-aware
+links. Do not put 0.5 into guarded `z_safe_delta_mm` (minimum 3), lower the global park/floor,
+or use a low blind traverse. The first approach, final park and fixture/face changes retain
+their normal clearance rules; a held contact prevents further lift or sideways motion.
+
+On servers exposing `confirmation_mode`, use `"adaptive"` for routine surface mapping with an
+explicit `confirmation_tolerance_mm` chosen from the measurement question and sensor resolution.
+An ordinary fine contact agreeing with the expected surface needs no extra retouch. The first
+station, a station after a miss, an unexpected height/coarse contact or a bumped link needs one
+release-verified retouch. `backoff_mm: 0.2` is the short confirmation retreat requested by the
+operator; it must release the probe before another approach. It is **not** an accuracy claim or
+the inter-station hop height. Keep fine steps small enough to resolve the stated threshold.
+A changed height triggers checking; persistent disagreement remains uncertainty and stops the
+scan with its partial evidence, rather than being averaged into a trusted surface.
+
+`confirmation_mode: "fixed"` preserves legacy behavior: `confirm_passes` counts **extra**
+lift/retest cycles after the initial fine contact; one means two touches, and zero does not
+select single-touch mode. Adaptive mode uses its conditional one-retouch policy instead.
+Read each station's confirmation reason/count and observations. A single observation has unknown
+repeatability (`spreadMm: null`), never proven zero error. Flat neighbouring samples do not prove
+the unsampled region flat. If the advertised schema lacks adaptive mode, state that limit;
+do not invent zero-pass semantics or silently run three retouches everywhere.
+
 Contact during a `guarded` hop is a collision already in progress (detected at the end of a ≤ 10
 mm segment); a `no_contact` station records and the scan continues; the first station finding
 nothing aborts. Successful completion raises to 328; abort recovery follows the motion rules,
@@ -219,7 +250,7 @@ midpoint of the two flank stations at each Z level, or of matching plateaus) —
 preserves the crown's X and offsets only the height by the tip radius, so crown-X answers survive
 an unknown tip radius while height answers do not. Quote ± the station pitch / 2 at least.
 For "is it flat", report the plane residual peak-to-valley and the tilt, every Z as toolhead Z
-with physical = Z − probe length, and the B angle. For fixture separation, calculate the signed
+with datum-qualified `tipMachineZ` and the B angle; quote the calibration provenance. For fixture separation, calculate the signed
 coordinate difference and absolute distance from the actual cut before saying closer/farther.
 A tip-centre transition at one X/B is not a material identification or a full cutter/holder clearance;
 state the measured bracket, tip convention and unmeasured extent.
@@ -228,10 +259,14 @@ state the measured bracket, tip convention and unmeasured extent.
 repeated full approaches, local links, fine approaches and confirmations have different costs.
 `execMs` includes motion and controller/transport overhead; `senseMs` is inside `idleMs`, so do
 not add overlapping totals. Use `runMs` for runtime and keep approval/chat gaps separate.
-Reduce redundant stations first; keep the confirmations needed by the measurement tolerance.
-For guarded scans on a surface known to vary less than 5 mm between stations, `z_safe_delta_mm: 5`
-can shorten local approaches. Stepped scans instead use `hop_lift_mm` for their local lift.
-Use the transport-appropriate sensor window above; never raise the coarse feed yourself.
+Reduce redundant stations first, then choose the local link and explicit confirmation policy.
+For the requested broad board map, prefer a bounded 4×4 stepped survey with 0.5 mm lifts and
+adaptive 0.2 mm retouches, subject to measured access, sensor release and the uncertainty threshold.
+Use the transport-appropriate sensor window above: today's recorded GPIO feed used 300 ms defaults
+despite its 10 ms polling. An explicitly selected 50 ms window is the documented GPIO option;
+do not apply it to MQTT or a lagging/unhealthy feed. Never raise the coarse feed yourself.
+Estimate controller transactions and conditional retouches, not just millimetres/feed or a fixed
+seconds-per-station figure. Report predicted savings as estimates until measured on hardware.
 
 ## Whole-stock programs (`probe_program`)
 
@@ -372,18 +407,27 @@ whole program — and compare `derived` with the operator's calipers.
 
 ## Probe calibration (once per probe fitting)
 
-`run_tool_setter` with `accept_probe_contact: true` and a conservative `bit_length_mm`
-(`bit_length_mm` is the fitted tool's PROTRUSION in mm — a length, never a diameter; declare
-LOW). Setter surface = machine Z100.5, so effective length = measured trigger Z − 100.5; store
-it with `set_probe_geometry`. This derives effective length FROM a measured trigger
-and the verified setter reference; the historical 100.5 example is not a fresh
-reading. Never reverse the formula to fabricate `old_trigger_z` for a tool change.
-That requires the same-connection measurement pair (or the documented same-tool,
-same-session reuse) in [tool-change](../tool-change/SKILL.md).
-**Any probed surface height = contact toolhead Z − probe length.**
-That conversion retains the uncertainty of the contact method: setter contact and stylus
-trigger on stock have different pretravel. A setter-derived length is not proof of cutting Z0;
-see [probe-length roles](../cnc-motion-rules/SKILL.md#2-coordinate-doctrine) and tool-change.
+First recover the saved setter record for this fitting. A required new `run_tool_setter`
+uses `accept_probe_contact: true`, a tool/fitting identity where known, and `bit_length_mm`
+only as an approach estimate in the configured nominal reference convention. It is not a
+collet-to-tip caliper distance. Do not declare it low/high as a generic safety rule: it changes
+the expected-contact window and floor. Resolve missing approach evidence in one question batch.
+
+The measurement stores raw trigger toolhead Z, confirming contacts, source job/date and a named
+setter datum snapshot. Procedure contacts retain raw toolhead Z and add `tipMachineZ` plus
+`tipCalibration`. The historical `175.5 − 75 = 100.5` is a **nominal convention**, not a measured
+physical setter plane. A conventional projection stays labelled as such; never silently combine
+it with independently measured bed/obstacle heights. `store_as_reference` changes the approach
+reference while retaining the established datum; an approach estimate must not recalibrate it.
+
+Old offsets and surveys remain evidence in their original convention. Do not overwrite them
+with caliper protrusions, retrofit today's datum onto unknown historical records, or repeat
+covered surveys because labels changed. A missing projection is not a missing raw contact.
+Never reverse the conversion to fabricate an `old_trigger_z`; tool-change transfer requires
+actual old/new raw triggers under the applicable session/fitting rules.
+Setter contact and stylus trigger on stock can have different pretravel: the tip projection is
+not proof of cutting Z0. See [coordinate evidence](../cnc-motion-rules/SKILL.md#2-coordinate-doctrine)
+and [tool-change](../tool-change/SKILL.md).
 The run ends with the head raised straight up to the traverse height (machine Z328, reported as
 `result.finalZ`), never at its start height — the next hop starts from there.
 

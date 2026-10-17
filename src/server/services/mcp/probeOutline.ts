@@ -53,6 +53,8 @@ import {
     resolveMarchParams,
 } from './procedureLimits';
 import { McpToolError } from './registry';
+import { TipCalibrationSnapshot, projectToolTipZ } from './toolDatum';
+import { getProbeTipCalibration } from './toolDatumState';
 import { probeGeometry } from './rotaryGeometry';
 import { assertWithinTravel, getPositionSnapshot, requirePlanningTravel, safeTraverseZ } from './tools/machine';
 import { TRAVERSE_Z_TOLERANCE_MM } from './traversePlan';
@@ -396,6 +398,7 @@ export function describeProbeOutlinePlanAsGcode(plan: ProbeOutlinePlan): string 
 }
 
 export interface OutlineResult {
+    tipCalibration?: TipCalibrationSnapshot;
     tool: 'probe_stock_outline';
     top: ReturnType<typeof estimateTop>;
     topSamples: (TopSample & { spreadMm?: number })[];
@@ -414,6 +417,7 @@ export interface OutlineResult {
 
 export async function runProbeOutlineProcedure(plan: ProbeOutlinePlan): Promise<OutlineResult> {
     assertMachineReadyForProcedure();
+    const tipCalibration = getProbeTipCalibration();
     assertChannelReady('probe', 'stock outline');
     const phases: { phase: string; note?: string }[] = [];
     const announce = makeAnnounce(plan.tool, phases);
@@ -432,8 +436,9 @@ export async function runProbeOutlineProcedure(plan: ProbeOutlinePlan): Promise<
         return {
             tool: plan.tool,
             top,
-            topSamples,
-            sides: contacts,
+            tipCalibration,
+            topSamples: topSamples.map((r) => ({ ...r, ...projectToolTipZ(r.z, tipCalibration) })),
+            sides: contacts.map((r) => ({ ...r, ...projectToolTipZ(r.x !== null && r.y !== null ? r.z : null, tipCalibration) })),
             fit,
             centerMachine: fit.centerMachine,
             centerWork,

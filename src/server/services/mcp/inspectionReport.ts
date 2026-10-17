@@ -12,6 +12,7 @@
 //   stylus radius - Fusion subtracts R along the normal itself), then END.
 
 import { LinkContactRecord } from './camLinks';
+import { TipCalibrationSnapshot } from './toolDatum';
 import { ProbeMeta, ProbeMode, ResultsMeta, Xyz } from './probeGcode';
 
 export type { LinkContactRecord } from './camLinks';
@@ -40,9 +41,12 @@ export interface ProbeResultRecord {
     targetMachine: Xyz;
     /** Unit direction of the cycle. */
     direction: Xyz;
-    /** Tip-centre contact (machine and work frames); null on a miss. */
+    /** Raw toolhead machine contact and unchanged WCS contact; null on a miss. */
     contactMachine: Xyz | null;
     contactWork: Xyz | null;
+    /** Separate tip-bottom projection, retaining the datum applied when measured. */
+    tipMachineZ?: number | null;
+    tipCalibration?: TipCalibrationSnapshot;
     /** Distance travelled to the contact along the direction (mm); null on a miss. */
     travelMm: number | null;
     /** Programmed travel (start to target). */
@@ -69,6 +73,7 @@ export interface InspectionReport {
     endedAt: number;
     frame: { originOffset: Xyz; convention: string };
     tipDiameterMm: number | null;
+    tipCalibration?: TipCalibrationSnapshot;
     /** TIP_CONVENTION, spelled out so a reader of the JSON knows what `contactWork` and the deviations mean. Absent on reports before #175. */
     tipConvention?: string;
     /** Program-level results metadata from a (RESULTS ...) comment, for the Fusion envelope. */

@@ -30,6 +30,8 @@ import {
     abortRaiseToTop,
 } from './probing';
 import { McpToolError } from './registry';
+import { projectToolTipZ } from './toolDatum';
+import { getProbeTipCalibration } from './toolDatumState';
 import { outsideTravel } from './machineTravel';
 import { MARCH_TRAVEL_MM, releaseTimeoutFor, resolveMarchParams, within } from './procedureLimits';
 import { getPositionSnapshot, requirePlanningTravel, safeTraverseZ } from './tools/machine';
@@ -323,6 +325,7 @@ export function describeProbeSequencePlanAsGcode(plan: ProbeSequencePlan): strin
 export async function runProbeSequenceProcedure(plan: ProbeSequencePlan): Promise<object> {
     assertChannelReady('probe', 'probe sequence');
     assertMachineReadyForProcedure();
+    const tipCalibration = getProbeTipCalibration();
 
     const position = getPositionSnapshot();
     const here = position.machine;
@@ -540,7 +543,8 @@ export async function runProbeSequenceProcedure(plan: ProbeSequencePlan): Promis
         const misses = results.filter((r) => r.status === 'no_contact').map((r) => r.name);
         announce('sequence-complete', `${contacts.length} contacts${misses.length ? `, ${misses.length} no_contact (${misses.join(', ')})` : ''}`);
         return {
-            results,
+            tipCalibration,
+            results: results.map((r) => ({ ...r, ...projectToolTipZ(r.contactMachine?.z ?? null, tipCalibration) })),
             contactCount: contacts.length,
             noContactProbes: misses,
             phases,
@@ -558,7 +562,7 @@ export async function runProbeSequenceProcedure(plan: ProbeSequencePlan): Promis
             }
         }
         if (isProcedureAbort(err)) {
-            const partial = { results, phases, aborted: true, abortedAtStep: stepIndex };
+            const partial = { results: results.map((r) => ({ ...r, ...projectToolTipZ(r.contactMachine?.z ?? null, tipCalibration) })), tipCalibration, phases, aborted: true, abortedAtStep: stepIndex };
             const Ctor = isProcedureStopped(err) ? ProcedureStopped : ProcedureAbort;
             throw new Ctor(`Probe sequence aborted at step ${stepIndex}: ${err.message} `
                 + `${results.length} contact(s) measured before the abort are on the job record.`, partial);

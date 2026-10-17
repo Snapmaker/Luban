@@ -110,14 +110,16 @@ confirm URL. The solve, model store and verification themselves have no confirm 
 
 ## Tool setter and tool change
 
-- `set_active_tool {protrusion_mm, source, note?, tool_identity?, measurement_job_id?}` — record the fitted-tool clearance assertion, no motion/page. Operator source requires the operator's explicit statement; measured sources must match a completed setter job. Protrusion is a conservative distance below the toolhead, not probe contact calibration. A shorter active value lowers physical-basis clearances; legacy toolhead heights remain unchanged and the camera motion floor remains enforced.
-- `get_active_tool` — current usable assertion with source and age, or `active:null`, historical `stored` evidence and `staleReason`. Server restart, detected disconnect/reboot and tool-change parking invalidate it. Reconfirm after the manual swap; never blindly replay the old value.
-- Successful `run_tool_setter` replaces the active tool, returns `active_tool_replaced` old → new, and `get_tool_setter_config` includes it. Re-read before subsequent planning. Every confirm page displays staging and current active-tool provenance.
+- `set_active_tool {protrusion_mm, protrusion_reference?, source, note?, tool_identity?, measurement_job_id?}` — records fitting evidence without motion. `protrusion_reference:"toolhead"` requires an explicit conservative distance below the machine toolhead reference. Omitted, `collet` or `unknown` references do not authorize physical clearance. Measured sources must match the current completed setter measurement and verified bound. Legacy toolhead boxes and the camera motion floor remain enforced.
+- `get_active_tool` — current assertion and its clearance basis, or `active:null` with historical evidence and stale reason. Restart, disconnect/reboot and tool-change parking invalidate it; do not blindly replay an old fitting.
+- `set_tool_setter_config` — approach reference/centre, optional named `setter_datum {id,name,machine_z,basis,source,uncertainty_mm?}` and optional independent `toolhead_clearance_bound {mm,source}` conservative maximum. Measured datum basis requires uncertainty. Nominal reference and longest lengths plan approach only. Datum omission preserves the existing convention; clearing the independent bound requires explicit null.
+- `get_tool_setter_config` — config, named datum, raw measurement history and active fitting. Missing historical datum/fitting provenance remains unknown.
+- `run_tool_setter {bit_length_mm, tool_identity?, fitting_id?, ...}` — one approved sensor-gated measurement with raw trigger, confirmation contacts, job/date and datum snapshot. `bit_length_mm` is an approach-only estimate in the configured nominal reference convention, not arbitrary collet protrusion. `store_as_reference` updates approach reference without changing the established datum. `accept_probe_contact:true` identifies a spindle-probe measurement. Successful finish raises to traverse height; `stay_at_trigger` / `start_from_current` support the manual swap wizard.
+- `apply_tool_length_offset` — confirmed `G92` transferring work Z by new-minus-old raw setter trigger. Requires the applicable measurement pair; a shared datum cancels.
 
-- `set_tool_setter_config` — setter centre, trigger Z with a reference bit, known bit lengths. Operator-stated values only.
-- `get_tool_setter_config` — read it back.
-- `run_tool_setter` — tool height measurement as one approved, envelope-bounded routine: sensor-gated 1 mm descent, release, 0.1 mm approach, confirm pass, then a Z-only raise straight up to the traverse height (machine Z328 — never the start height; `result.finalZ`). Hard floor below expected trigger. `store_as_reference` locks the new reference; `stay_at_trigger` / `start_from_current` support the swap wizard.
-- `apply_tool_length_offset` — confirmed `G92` shifting work Z by the new-minus-old tool length. Keeps the work origin true across a swap without re-touching stock.
+Contact/procedure results retain raw toolhead coordinates and add `tipMachineZ` plus the captured
+`tipCalibration`. A conventional projection is labelled; unavailable calibration yields null.
+These fields never retrofit today's datum onto historical surveys or alter work coordinates.
 
 ## Touch-probe procedures (staged, one approval per circuit, results in machine coordinates)
 

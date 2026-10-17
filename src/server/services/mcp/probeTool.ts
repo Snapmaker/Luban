@@ -21,6 +21,8 @@ import {
     knownMachinePosition,
 } from './probing';
 import { McpToolError } from './registry';
+import { TipCalibrationSnapshot, projectToolTipZ } from './toolDatum';
+import { getProbeTipCalibration } from './toolDatumState';
 import { MIN_USEFUL_MARCH_MM, clampRay } from './machineTravel';
 import { MARCH_SEGMENT_MM, MARCH_TRAVEL_MM, releaseTimeoutFor, resolveMarchParams, within } from './procedureLimits';
 import { getPositionSnapshot, requirePlanningTravel, safeTraverseZ } from './tools/machine';
@@ -172,6 +174,8 @@ export interface ProbePointResult {
     axis: ProbeAxis;
     direction: number;
     contactMachine: { x: number; y: number; z: number };
+    tipMachineZ?: number | null;
+    tipCalibration?: TipCalibrationSnapshot;
     contactWorkOffsetApplied: string;
     confirmPassContacts: number[];
     spreadMm: number;
@@ -183,6 +187,7 @@ export interface ProbePointResult {
 export async function runProbePointProcedure(plan: ProbePointPlan): Promise<object> {
     assertChannelReady('probe', 'touch probe');
     assertMachineReadyForProcedure();
+    const tipCalibration = getProbeTipCalibration();
     // The probe is EXPECTED to touch during this procedure; the toolsetter
     // firing instead would be a collision (crash guard). Cleared in finally.
     probeFeedService.setExpectedContact(['probe']);
@@ -329,6 +334,7 @@ export async function runProbePointProcedure(plan: ProbePointPlan): Promise<obje
             axis: plan.axis,
             direction: plan.direction,
             contactMachine,
+            ...projectToolTipZ(contactMachine.z, tipCalibration),
             contactWorkOffsetApplied: `work = machine + originOffset (${JSON.stringify(after.originOffset)})`,
             confirmPassContacts: passContacts,
             spreadMm,

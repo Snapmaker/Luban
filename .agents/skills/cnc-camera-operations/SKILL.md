@@ -47,8 +47,8 @@ blanket resurvey because the chat changed.
 | `machine_z` / `z_levels` | TOOLHEAD machine heights; mutually exclusive. Camera XY stays ≥ motion floor, including with an active tool. A per-op explicit operator exception does not remove stored obstacles. |
 | Park vs floor | Read live limits (this rig commonly 328 vs 320). A legacy box demanding toolhead Z328 still excludes Z320 captures there. Choose park height; do not silently accept holes in required coverage. |
 | `plane_z` | PHYSICAL machine Z of the observed surface, with evidence at the applicable B. Not camera Z or toolhead Z. Stored `bed_plane_z` describes the bed only. No measured plane → qualitative frames, no metric claim. |
-| Conservative fitted-tool protrusion | `set_active_tool {protrusion_mm, source: "operator", note}` on the operator's statement. Clearance only. An approximate overall length must be identified as a conservative protrusion bound, not assumed to be the calibrated length. |
-| `geometry.probe.effectiveLength` | Contact conversion with source/date and trigger convention; an approximate 75 mm clearance bound does not replace a measured 70.9 mm conversion. Setter contact and stylus trigger can have different pretravel. |
+| Conservative fitted-tool bound | `set_active_tool {protrusion_mm, protrusion_reference: "toolhead", source: "operator", note}` requires an explicit distance below the machine toolhead reference. Collet-to-tip or overall caliper lengths do not establish it; unknown physical clearance refuses. |
+| Tip calibration | Read raw setter trigger, named datum and `tipCalibration`; legacy `geometry.probe.effectiveLength` is a conventional offset, not a caliper protrusion. Preserve old surveys in their recorded datum; setter/stylus pretravel uncertainty remains. |
 
 ## Approval accounting and handoff
 

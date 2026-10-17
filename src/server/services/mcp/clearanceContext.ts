@@ -5,23 +5,22 @@
 // that reads them out of the stored state, so every planner asks the same
 // question and gets the same answer.
 import { CLEARANCE_MARGIN_MM } from './landmarkClearance';
-import { getActiveTool, getStoredActiveTool } from './activeTool';
-import { geometryValue } from './rotaryGeometry';
+import { getActiveTool } from './activeTool';
 import { ToolProtrusion, resolveToolProtrusion } from './toolProtrusion';
-import { getMeasurements, getToolSetterConfig } from './toolSetter';
+import { getToolSetterConfig } from './toolSetter';
 
 export function currentToolProtrusion(): ToolProtrusion {
     const active = getActiveTool();
     const cfg = getToolSetterConfig();
-    const last = getMeasurements().last;
     return resolveToolProtrusion({
-        active,
-        staleToolMm: active ? null : getStoredActiveTool()?.protrusionMm,
-        measured: last && last.derivedBitLengthMm !== undefined
-            ? { protrusionMm: last.derivedBitLengthMm, at: last.at }
-            : null,
-        probeEffectiveLengthMm: geometryValue('probe_effective_length'),
-        longestBitLengthMm: cfg ? cfg.longestBitLengthMm : null,
+        active: active?.clearanceBasis === 'toolhead_reference' ? active : null,
+        // A past fitting cannot bound an unknown replacement, even if it was measured.
+        staleToolMm: null,
+        measured: null,
+        // Neither a legacy contact-conversion offset nor an approach estimate
+        // establishes a physical toolhead-reference clearance bound.
+        probeEffectiveLengthMm: null,
+        longestBitLengthMm: cfg?.toolheadClearanceBound?.mm ?? null,
     });
 }
 

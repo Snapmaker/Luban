@@ -20,6 +20,8 @@ import {
     knownMachinePosition,
 } from './probing';
 import { McpToolError } from './registry';
+import { projectToolTipZ } from './toolDatum';
+import { getProbeTipCalibration } from './toolDatumState';
 import { MIN_USEFUL_MARCH_MM, clampRay } from './machineTravel';
 import { MARCH_SEGMENT_MM, MARCH_TRAVEL_MM, releaseTimeoutFor, resolveMarchParams, within } from './procedureLimits';
 import { getPositionSnapshot, requirePlanningTravel, safeTraverseZ } from './tools/machine';
@@ -207,6 +209,7 @@ export function describeProbeVectorPlanAsGcode(plan: ProbeVectorPlan): string {
 export async function runProbeVectorProcedure(plan: ProbeVectorPlan): Promise<object> {
     assertChannelReady('probe', 'vector probe');
     assertMachineReadyForProcedure();
+    const tipCalibration = getProbeTipCalibration();
     probeFeedService.setExpectedContact(['probe']);
 
     const position = getPositionSnapshot();
@@ -342,6 +345,7 @@ export async function runProbeVectorProcedure(plan: ProbeVectorPlan): Promise<ob
             direction: plan.unit,
             contactDistanceMm: measuredS,
             contactMachine,
+            ...projectToolTipZ(contactMachine.z, tipCalibration),
             contactWorkOffsetApplied: `work = machine + originOffset (${JSON.stringify(after.originOffset)})`,
             confirmPassContacts: passContacts,
             spreadMm,

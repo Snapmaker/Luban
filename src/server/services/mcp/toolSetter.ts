@@ -38,7 +38,10 @@ import {
     resolveMarchParams,
 } from './procedureLimits';
 import { McpToolError } from './registry';
-import { getActiveTool, setActiveTool } from './activeTool';
+import { getActiveTool, invalidateActiveTool, setActiveTool } from './activeTool';
+import { SetterDatum, ToolMeasurement, calibrationFromMeasurement, legacySetterDatum, projectToolTipZ } from './toolDatum';
+import { currentSetterDatum, getToolMeasurements, recordToolMeasurement } from './toolDatumState';
+export type { ToolMeasurement } from './toolDatum';
 import { getPositionSnapshot, motionFloorZ, safeTraverseZ } from './tools/machine';
 
 const log = logger('service:mcp:tool-setter');
@@ -74,6 +77,8 @@ export interface ToolSetterConfig {
     centerY: number;
     triggerZ: number; // machine Z at trigger with the reference bit fitted
     referenceBitLengthMm: number;
+    /** Separate coordinate convention; changing an approach reference does not change this datum. */
+    datum?: SetterDatum | null;
     /**
      * Diameter of the setter's contact disc, when the operator has measured
      * it. Nothing in the tool setter needs it; the camera bootstrap does - a
@@ -82,6 +87,7 @@ export interface ToolSetterConfig {
      */
     discDiameterMm?: number;
     longestBitLengthMm: number;
+    toolheadClearanceBound?: { mm: number; source: string } | null;
     floorMarginMm: number; // how far below the expected trigger Z to allow
     // Tool-change park position (machine coords), operator preference: on
     // this setup Z = the homing height and X = the far end; Y is free (null
@@ -92,21 +98,6 @@ export interface ToolSetterConfig {
     notes: string | null;
 }
 
-/** One completed tool setter measurement, kept for tool-change offsets. */
-export interface ToolMeasurement {
-    measuredTriggerZ: number;
-    /** The length DECLARED to plan the descent. */
-    bitLengthMm: number;
-    /**
-     * What the tool actually protrudes, derived from the trigger against the
-     * stored reference. Clearance checks read this (toolProtrusion.ts);
-     * absent on measurements recorded before it was kept.
-     */
-    derivedBitLengthMm?: number;
-    spreadMm: number;
-    at: number;
-}
-
 function rawConfig(): { [key: string]: unknown } {
     const raw = config.get(CONFIG_KEY);
     return raw && typeof raw === 'object' ? (raw as { [key: string]: unknown }) : {};
@@ -115,23 +106,6 @@ function rawConfig(): { [key: string]: unknown } {
 function numberOrNull(value: unknown): number | null {
     return Number.isFinite(Number(value)) && value !== null && value !== '' && value !== undefined
         ? Number(value) : null;
-}
-
-function parseMeasurement(raw: unknown): ToolMeasurement | null {
-    if (!raw || typeof raw !== 'object') {
-        return null;
-    }
-    const m = raw as { [key: string]: unknown };
-    if (!Number.isFinite(Number(m.measuredTriggerZ)) || !Number.isFinite(Number(m.at))) {
-        return null;
-    }
-    return {
-        measuredTriggerZ: Number(m.measuredTriggerZ),
-        bitLengthMm: Number(m.bitLengthMm),
-        derivedBitLengthMm: Number.isFinite(Number(m.derivedBitLengthMm)) ? Number(m.derivedBitLengthMm) : undefined,
-        spreadMm: Number(m.spreadMm) || 0,
-        at: Number(m.at),
-    };
 }
 
 export function getToolSetterConfig(): ToolSetterConfig | null {
@@ -145,10 +119,16 @@ export function getToolSetterConfig(): ToolSetterConfig | null {
         centerY: Number(cfg.centerY),
         triggerZ: Number(cfg.triggerZ),
         referenceBitLengthMm: Number(cfg.referenceBitLengthMm),
+        datum: currentSetterDatum(),
         discDiameterMm: Number.isFinite(Number(cfg.discDiameterMm)) && Number(cfg.discDiameterMm) > 0
             ? Number(cfg.discDiameterMm)
             : undefined,
         longestBitLengthMm: Number(cfg.longestBitLengthMm),
+        toolheadClearanceBound: cfg.toolheadClearanceBound && typeof cfg.toolheadClearanceBound === 'object'
+            && Number.isFinite((cfg.toolheadClearanceBound as { mm: number }).mm)
+            && (cfg.toolheadClearanceBound as { mm: number }).mm > 0
+            && (cfg.toolheadClearanceBound as { source: string }).source
+            ? { ...(cfg.toolheadClearanceBound as { mm: number; source: string }) } : null,
         floorMarginMm: Number.isFinite(Number(cfg.floorMarginMm)) ? Number(cfg.floorMarginMm) : 3,
         changeX: numberOrNull(cfg.changeX),
         changeY: numberOrNull(cfg.changeY),
@@ -159,32 +139,21 @@ export function getToolSetterConfig(): ToolSetterConfig | null {
 
 /** Merge-write: measurement history and unknown fields survive config edits. */
 export function setToolSetterConfig(cfg: ToolSetterConfig): void {
-    config.set(CONFIG_KEY, { ...rawConfig(), ...cfg });
+    const datum = cfg.datum || currentSetterDatum() || legacySetterDatum(cfg.triggerZ, cfg.referenceBitLengthMm);
+    config.set(CONFIG_KEY, { ...rawConfig(), ...cfg, datum });
     log.info(`Tool setter config stored: centre (${cfg.centerX}, ${cfg.centerY}), `
         + `trigger Z ${cfg.triggerZ} with ${cfg.referenceBitLengthMm} mm reference bit`);
 }
 
-export function getMeasurements(): { last: ToolMeasurement | null; previous: ToolMeasurement | null } {
-    const cfg = rawConfig();
-    return {
-        last: parseMeasurement(cfg.lastMeasurement),
-        previous: parseMeasurement(cfg.previousMeasurement),
-    };
-}
+export function getMeasurements() { return getToolMeasurements(); }
 
-/** Record a completed measurement, shifting the old one down a slot. */
-export function recordMeasurement(measurement: ToolMeasurement): void {
-    const cfg = rawConfig();
-    config.set(CONFIG_KEY, {
-        ...cfg,
-        previousMeasurement: cfg.lastMeasurement || null,
-        lastMeasurement: measurement,
-    });
-}
+export function recordMeasurement(measurement: ToolMeasurement): void { recordToolMeasurement(measurement); }
 
 export interface ToolSetterPlan {
     config: ToolSetterConfig;
     bitLengthMm: number;
+    toolIdentity: string | null;
+    fittingId: string | null;
     expectedTriggerZ: number;
     startZ: number;
     /**
@@ -224,6 +193,8 @@ export interface ToolSetterPlan {
  */
 export function planToolSetterRun(args: {
     bit_length_mm?: number;
+    tool_identity?: string;
+    fitting_id?: string;
     coarse_step_mm?: number;
     fine_step_mm?: number;
     backoff_mm?: number;
@@ -244,8 +215,8 @@ export function planToolSetterRun(args: {
     }
     const bitLengthMm = Number(args.bit_length_mm);
     if (!Number.isFinite(bitLengthMm) || bitLengthMm <= 0 || bitLengthMm > MAX_BIT_LENGTH_MM) {
-        throw new McpToolError('bit_length_mm must be the approximate protrusion of the fitted bit in mm '
-            + `(0-${MAX_BIT_LENGTH_MM}), as stated by the operator.`);
+        throw new McpToolError('bit_length_mm must be an approximate approach length in the stored nominal reference convention '
+            + `(0-${MAX_BIT_LENGTH_MM} mm), as stated by the operator; it is not an arbitrary collet-to-tip caliper length.`);
     }
     // The march parameters, with the setter's own backoff (a small disc) and
     // sensor delay (local-broker latency) - procedureLimits.ts has the reasons.
@@ -271,6 +242,8 @@ export function planToolSetterRun(args: {
     return {
         config: cfg,
         bitLengthMm,
+        toolIdentity: args.tool_identity ? String(args.tool_identity).trim() : null,
+        fittingId: args.fitting_id ? String(args.fitting_id).trim() : null,
         expectedTriggerZ,
         startZ,
         endZ: safeTraverseZ(),
@@ -369,7 +342,11 @@ export interface ToolSetterResult {
     /** Machine Z the head was left at: the traverse height on a normal run, the trigger Z when holding. */
     finalZ: number | null;
     note: string;
-    active_tool?: object;
+    active_tool?: object | null;
+    measurement?: ToolMeasurement;
+    setterDerivedOffsetMm?: number | null;
+    tipCalibration?: object;
+    tipMachineZ?: number | null;
     active_tool_replaced?: object;
     warning?: string;
 }
@@ -401,6 +378,7 @@ export async function runToolSetterProcedure(plan: ToolSetterPlan, measurementJo
 
     const phases: { phase: string; z: number; note?: string }[] = [];
     const c = plan.config;
+    const datum = c.datum ? { ...c.datum } : legacySetterDatum(c.triggerZ, c.referenceBitLengthMm);
     const announce = (phase: string, z: number, note?: string) => {
         phases.push({ phase, z: Number(z.toFixed(3)), note });
         mcpBroadcast('mcp:activity', { tool: 'run_tool_setter', phase, z: Number(z.toFixed(3)), note });
@@ -529,6 +507,7 @@ export async function runToolSetterProcedure(plan: ToolSetterPlan, measurementJo
         // shows up as spread between passes instead of biasing the result;
         // the reported trigger Z is the median.
         const passContacts: number[] = [];
+        const passChannels: string[] = [];
         const cycleFloor = Math.max(plan.floorZ, fineContactZ - 0.5);
         let referenceContactZ = fineContactZ;
         for (let pass = 1; pass <= plan.confirmPasses; pass++) {
@@ -548,6 +527,7 @@ export async function runToolSetterProcedure(plan: ToolSetterPlan, measurementJo
                 const sensed = await senseAfter(contactChannels, stepStart, plan.sensorDelayMs);
                 if (sensed.contact) {
                     passContact = currentZ;
+                    passChannels.push(sensed.channel || 'unknown');
                     break;
                 }
             }
@@ -594,27 +574,46 @@ export async function runToolSetterProcedure(plan: ToolSetterPlan, measurementJo
                 : ` Head NOT raised (${raised.note}) - machine Z ${raised.z === null ? 'unknown' : raised.z.toFixed(3)}.`;
         }
 
-        const derivedBitLengthMm = c.referenceBitLengthMm + (measuredZ - c.triggerZ);
-        recordMeasurement({
+        // The approach reference may change, but the coordinate datum is immutable for this run.
+        const derivedBitLengthMm = measuredZ - datum.machineZ;
+        const at = Date.now();
+        const measurement: ToolMeasurement = {
+            id: measurementJobId || `setter-${at}`,
+            jobId: measurementJobId || null,
+            toolIdentity: plan.toolIdentity,
+            fittingId: plan.fittingId || measurementJobId || `fitting-${at}`,
+            source: plan.acceptProbeContact ? 'spindle_probe' : 'tool_setter',
             measuredTriggerZ: measuredZ,
             bitLengthMm: plan.bitLengthMm,
-            // What the tool ACTUALLY protrudes, as opposed to the length that
-            // was declared to plan the descent. Clearance checks read this.
             derivedBitLengthMm: Number(derivedBitLengthMm.toFixed(3)),
-            spreadMm,
-            at: Date.now(),
-        });
+            setterDerivedOffsetMm: Number(derivedBitLengthMm.toFixed(6)),
+            datum: { ...datum },
+            referenceBasis: 'snapshot',
+            confirmPassContacts: [...passContacts], contactChannels: passChannels,
+            fineStepMm: plan.fineStepMm, spreadMm, at,
+        };
+        recordMeasurement(measurement);
+        const calibration = calibrationFromMeasurement(measurement);
         const previousActiveTool = getActiveTool();
-        const activeTool = setActiveTool({
-            protrusionMm: derivedBitLengthMm,
+        const clearanceBound = calibration.physicalReferenceVerified && calibration.uncertaintyMm !== null
+            ? derivedBitLengthMm + calibration.uncertaintyMm : derivedBitLengthMm;
+        const activeTool = clearanceBound > 0 ? setActiveTool({
+            protrusionMm: clearanceBound,
+            clearanceBasis: calibration.physicalReferenceVerified ? 'toolhead_reference' : 'unknown',
+            measurementId: measurement.id,
             source: plan.acceptProbeContact ? 'spindle_probe' : 'tool_setter',
             measurementJobId: measurementJobId || null,
-            note: `Successful run_tool_setter measurement; spread ${spreadMm} mm.`,
-        });
+            toolIdentity: plan.toolIdentity,
+            note: calibration.physicalReferenceVerified
+                ? `Setter-derived toolhead-reference clearance upper bound; includes ${calibration.uncertaintyMm} mm uncertainty.`
+                : 'Conventional setter offset only; does not establish a physical clearance bound.',
+        }) : null;
+        if (!activeTool) invalidateActiveTool('Setter offset is not a positive physical clearance bound; raw measurement retained.');
         let storedAsReference = false;
         if (plan.storeAsReference) {
             setToolSetterConfig({
-                ...c,
+                ...(getToolSetterConfig() || c),
+                datum: currentSetterDatum() || datum,
                 triggerZ: measuredZ,
                 referenceBitLengthMm: plan.bitLengthMm,
             });
@@ -623,6 +622,9 @@ export async function runToolSetterProcedure(plan: ToolSetterPlan, measurementJo
 
         const result: ToolSetterResult = {
             measuredTriggerZ: measuredZ,
+            measurement,
+            setterDerivedOffsetMm: calibration.offsetMm,
+            ...projectToolTipZ(measuredZ, calibration),
             confirmPassContacts: passContacts,
             spreadMm,
             expectedTriggerZ: plan.expectedTriggerZ,
@@ -633,8 +635,7 @@ export async function runToolSetterProcedure(plan: ToolSetterPlan, measurementJo
             finalZ,
             note: `Trigger at machine Z ${measuredZ.toFixed(3)} - median of ${plan.confirmPasses} confirm `
                 + `passes [${passContacts.join(', ')}], spread ${spreadMm} mm (+/- ${plan.fineStepMm} mm step `
-                + 'resolution). The derived bit length assumes the stored reference is exact; report it '
-                + `with that uncertainty.${endNote}`,
+                + `resolution). ${calibration.note} Approach length was used only for descent planning.${endNote}`,
             active_tool: activeTool,
             active_tool_replaced: { previous: previousActiveTool, current: activeTool },
             warning: spreadMm > plan.fineStepMm + 1e-9
