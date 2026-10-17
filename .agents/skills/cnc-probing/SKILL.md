@@ -17,7 +17,7 @@ description: "Plan and run touch-probe measurements through Luban MCP: top profi
 | Park / procedure traverse height | machine Z328 | ordinary transport and successful procedure completion; local links use the procedure’s own envelope |
 | Probe tip calibration | result `tipCalibration`, raw setter history and named datum | reuse applicable fitting evidence; legacy `geometry.probe.effectiveLength` is a conversion offset, not a caliper length |
 | Tool setter | historical trigger Z175.5 minus nominal reference 75 defines convention Z100.5 | read the current named datum; this convention is not independently measured physical Z |
-| Rotary axis | `geometry.rotary` — a HISTORICAL estimate tied to the probe offset/datum, clamping and date it was measured with (this jig: 2026-09-05, 71.3 mm conventional offset, raw stock; ~1 mm off for a later clamping) | physical Z, never a toolhead target; before CAM rotates about it, check it against opposite-face contacts — [rotary-axis](references/rotary-axis.md) |
+| Rotary axis | `geometry.rotary` — a LINE through measured stations (`rotaryAxisPoints`, each with source and date; `yawDeg` / `pitchDeg`, X / Z at `referenceY`), or with `skew: "unmeasured"` the legacy scalars: a HISTORICAL estimate tied to the probe offset/datum, clamping and date it was measured with (this jig: 2026-09-05, 71.3 mm conventional offset, raw stock; ~1 mm off for a later clamping), yaw 0 ASSUMED though the rotary is ~1.2° off machine Y | physical Z, never a toolhead target; before CAM rotates about it, check it against opposite-face contacts and store each station where it was measured (`rotary_axis_point`) — [rotary-axis](references/rotary-axis.md) |
 | Chuck jaws | reach ~Y269 | a `keep_out` volume for programs |
 | Tailstock | inside the `rotary-axis` box, Y < ~110; height UNMEASURED | measure it (see below), then `set_landmark` |
 
@@ -341,8 +341,10 @@ returns to that probe's start, then raises to park before the next step. Results
 
 Geometry is NEVER a prerequisite: a program that references only its own earlier ops needs
 nothing stored. Only `axis.*` references need the rotary axis and probe length — measure and
-store them yourself (`set_probe_geometry`) or write the program without them; a stored axis is
-historical until checked ([rotary-axis](references/rotary-axis.md)). Rotary stock is
+store them yourself (`set_probe_geometry`, one `rotary_axis_point` per Y station measured) or
+write the program without them; a stored axis is historical until checked, and `axis.x` /
+`axis.z_contact` are evaluated at EACH OP'S OWN Y on the stored line, so an unmeasured skew
+hands every op the same X ([rotary-axis](references/rotary-axis.md)). Rotary stock is
 B-dependent (square stock ~12 mm higher at B90); every result carries its B. This changes the
 surface coordinates, not the validity of an established common WCS. Keep one verified work
 frame for indexed cuts when the mounting and rotary registration remain valid; probe only

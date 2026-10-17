@@ -22,6 +22,64 @@ export function isProgramOpKind(kind: unknown): kind is ProgramOpKindName {
     return typeof kind === 'string' && (PROGRAM_OP_KINDS as readonly string[]).includes(kind);
 }
 
+/**
+ * The machine Y an op works at, read from its OWN arguments (issue #155): the
+ * Y the runner evaluates `axis.x` / `axis.z_contact` at when the rotary axis
+ * line is yawed or pitched. One number per op - the centre of a span - with
+ * a note saying which argument(s) it came from, so the job record shows why
+ * this op's axis X differs from the last one's. null when the kind has no
+ * Y of its own (rotate_b, home, a capture where the head is) or the
+ * arguments do not carry one yet (references unresolved, missing).
+ */
+export function opStationY(kind: string, args: { [key: string]: unknown }): { y: number; note: string } | null {
+    const num = (v: unknown): number | null => {
+        const n = Number(v);
+        return v === undefined || v === null || v === '' || typeof v === 'object' || !Number.isFinite(n) ? null : n;
+    };
+    const mid = (a: unknown, b: unknown, note: string): { y: number; note: string } | null => {
+        const ya = num(a);
+        const yb = num(b);
+        return ya === null || yb === null ? null : { y: Number(((ya + yb) / 2).toFixed(3)), note };
+    };
+    const single = (v: unknown, note: string): { y: number; note: string } | null => {
+        const y = num(v);
+        return y === null ? null : { y, note };
+    };
+    if (kind === 'surface_path') {
+        return mid(args.start_y, args.end_y, 'mid of start_y..end_y');
+    }
+    if (kind === 'surface_grid') {
+        return mid(args.y_min, args.y_max, 'mid of y_min..y_max');
+    }
+    if (kind === 'stock_outline') {
+        return single(args.center_y, 'center_y');
+    }
+    if (kind === 'wall_follow' || kind === 'trace') {
+        return single(args.start_y, 'start_y');
+    }
+    if (kind === 'corner') {
+        const a = (args.wall_a || {}) as { y?: unknown };
+        const b = (args.wall_b || {}) as { y?: unknown };
+        return mid(a.y, b.y, 'mid of wall_a.y and wall_b.y');
+    }
+    if (kind === 'sequence') {
+        // The hops carry the Y; probes and descents happen where the last hop went.
+        const steps = Array.isArray(args.steps) ? args.steps as { kind?: unknown; y?: unknown }[] : [];
+        const ys = steps.filter((st) => st && st.kind === 'hop').map((st) => num(st.y)).filter((y): y is number => y !== null);
+        if (!ys.length) {
+            return null;
+        }
+        const lo = Math.min(...ys);
+        const hi = Math.max(...ys);
+        const y = Number((ys.reduce((a, v) => a + v, 0) / ys.length).toFixed(3));
+        return { y, note: ys.length === 1 || hi - lo < 1e-9 ? 'the hops\' Y' : `mean of ${ys.length} hop Y values (${lo}..${hi})` };
+    }
+    if (kind === 'capture') {
+        return single(args.y, 'viewing position y');
+    }
+    return null;
+}
+
 /** The kinds a `group` may repeat per angle: anything but `home` (it ends the program) and a nested group. */
 export function groupableOpKind(kind: unknown): boolean {
     return isProgramOpKind(kind) && kind !== 'home';

@@ -87,9 +87,10 @@ import {
     captureOpArgs,
     homeOrderError,
     isProgramOpKind,
+    opStationY,
 } from './programOps';
 import { McpToolError } from './registry';
-import { missingGeometryNote, programSeedNamespaces } from './rotaryGeometry';
+import { AxisNamespace, axisNamespaceAt, missingGeometryNote, programSeedNamespaces } from './rotaryGeometry';
 import { deriveStockSection } from './stockGeometry';
 import { homeMachine } from './tools/camera';
 import { getPositionSnapshot, requirePlanningTravel, safeTraverseZ } from './tools/machine';
@@ -113,6 +114,18 @@ import { getPositionSnapshot, requirePlanningTravel, safeTraverseZ } from './too
 // record, crash guard, hop envelope, slow zone, segmented descents), a
 // rotation requires the toolhead at or above the safe traverse height, and
 // every operation ends raised at that height.
+//
+// The `axis` namespace is evaluated PER OP (issue #155). The rotary axis is
+// a line that may be yawed / pitched off machine Y, so `axis.x` and
+// `axis.z_contact` depend on Y. The reference grammar stays dotted paths
+// (no `axis.x_at(y)` call syntax: the confirm page prints a formula the
+// operator reads at a glance, and a function call is not one): instead the
+// runner reads the op's own Y station from its arguments (programOps.ts
+// opStationY - start_y..end_y, y_min..y_max, center_y, the hops' Y) and
+// seeds `axis` at that Y before resolving the op's references. The seeded
+// values before op 1 are the line's at its reference Y; an op whose Y the
+// runner cannot read, or an unmeasured skew, resolves there and the job
+// record says so (resolvedRefs / the op-<id>-axis phase).
 
 export { describeRef, isRef, lookupPath, refOpIds, resolveRef, substituteRefs } from './programRefs';
 export type { RefSpec } from './programRefs';
@@ -182,6 +195,44 @@ function checkCaptureView(
     if (violations.length) {
         throw new Error(`${where} (capture): viewing hop refused (law 4, landmarks are obstacles): ${describeViolations(violations)}.`);
     }
+}
+
+/** How the axis line is skewed, for the page and the refusals: the Y its X / Z hold at, yaw and pitch, or that the skew is unmeasured. */
+function describeAxisSkew(axis: AxisNamespace): string {
+    if (axis.skew !== 'measured' || axis.reference_y === null) {
+        return ' (skew UNMEASURED: one X / Z assumed for every Y)';
+    }
+    return ` at Y${axis.at_y ?? axis.reference_y} (yaw ${axis.yaw_deg} deg, pitch ${axis.pitch_deg} deg)`;
+}
+
+/**
+ * The `axis` namespace this op resolves against: the line evaluated at the
+ * op's own Y station when the skew is measured and the op's arguments say
+ * where it works; otherwise the seeded namespace unchanged. References are
+ * resolved once with the seeded namespace to read a Y that is itself a
+ * reference (a Y never depends on axis.x, so this is exact), then the op is
+ * re-resolved at that Y by the caller.
+ */
+function axisForOp(
+    op: ProgramOp,
+    seeded: AxisNamespace | undefined,
+    results: { [opId: string]: unknown }
+): { axis: AxisNamespace | undefined; station: { y: number; note: string } | null } {
+    if (!seeded || seeded.skew !== 'measured' || !op.refs.some((r) => refOpIds(r.ref).includes('axis'))) {
+        return { axis: seeded, station: null };
+    }
+    let firstPass: { [key: string]: unknown };
+    try {
+        ({ args: firstPass } = substituteRefs(op.args, (ref) => resolveRef(ref, results).value));
+    } catch (err) {
+        if (err instanceof RefResolveError) {
+            // Out of bounds at the reference Y; the real resolution below reports it.
+            return { axis: seeded, station: null };
+        }
+        throw err;
+    }
+    const station = opStationY(op.kind, firstPass);
+    return station ? { axis: axisNamespaceAt(seeded, station.y), station } : { axis: seeded, station: null };
 }
 
 /** Job-event estimate per op (measured: 763 events for an 8-station path; a sequence probe ~60). */
@@ -433,7 +484,7 @@ export function planProbeProgram(args: { name?: unknown; ops?: unknown; keep_out
             eventBudget += eventBudgetFor({ kind: 'rotate_b' });
             ops.push({ id, kind, args: { b, require_z_at_least: requireZ, swept_radius_mm: sweptRadius }, on_fail: 'stop', refs: [] });
             const swept = sweptRadius !== null && seeds.axis
-                ? `; swept cylinder (this stock): axis X${seeds.axis.x}, physical Z${seeds.axis.z_physical}, radius ${sweptRadius} -> the probe tip clears it with the toolhead at Z >= ${(seeds.axis.z_contact + sweptRadius).toFixed(3)}`
+                ? `; swept cylinder (this stock): axis X${seeds.axis.x}, physical Z${seeds.axis.z_physical}${describeAxisSkew(seeds.axis)}, radius ${sweptRadius} -> the probe tip clears it with the toolhead at Z >= ${(seeds.axis.z_contact + sweptRadius).toFixed(3)}`
                 : '';
             previews.push({ id, text: describeRotateOp({ b, requireZ, fromB: snapshot.b, rotateFeed: ROTATE_FEED, swept: swept || null }) });
             return;
@@ -636,11 +687,18 @@ export async function runProbeProgramProcedure(plan: ProbeProgramPlan): Promise<
                     // Belt and braces over the Z >= traverse rule: the tip must
                     // be outside this stock's swept cylinder before it turns.
                     const known = knownMachinePosition();
-                    const { x: kx, z: kz } = known.position;
-                    if (kx !== null && kz !== null
-                        && insideSweptCylinder({ x: kx, z: kz }, axis.probe_length, { x: axis.x, zPhysical: axis.z_physical, radius: sweptRadius })) {
-                        throw new ProcedureAbort(`Rotation refused: the probe tip (toolhead machine X${kx} Z${kz}, ${known.source}) is inside the `
-                            + `stock's swept cylinder (axis X${axis.x}, physical Z${axis.z_physical}, radius ${sweptRadius}).`);
+                    const { x: kx, y: ky, z: kz } = known.position;
+                    const swept = {
+                        x: axis.x,
+                        zPhysical: axis.z_physical,
+                        radius: sweptRadius,
+                        referenceY: axis.reference_y,
+                        dxPerMm: axis.dx_per_mm,
+                        dzPerMm: axis.dz_per_mm,
+                    };
+                    if (kx !== null && kz !== null && insideSweptCylinder({ x: kx, y: ky, z: kz }, axis.probe_length, swept)) {
+                        throw new ProcedureAbort(`Rotation refused: the probe tip (toolhead machine X${kx} Y${ky ?? '?'} Z${kz}, ${known.source}) is inside the `
+                            + `stock's swept cylinder (axis X${axis.x}, physical Z${axis.z_physical}${describeAxisSkew(axis)}, radius ${sweptRadius}).`);
                     }
                 }
                 const outcome = await rotateB(`probe_program:${op.id}`, b, requireZ);
@@ -650,10 +708,19 @@ export async function runProbeProgramProcedure(plan: ProbeProgramPlan): Promise<
                 announce(`op-${op.id}-done`, `B ${outcome.from === null ? '?' : outcome.from} -> ${outcome.to} deg (${outcome.verifiedBy}, ${outcome.elapsedMs} ms to reply, ~${outcome.expectedMs} ms needed, settled after ${outcome.settleWaitMs} ms)`);
                 continue;
             }
-            // Resolve references NOW against earlier results, re-plan at the
-            // machine's current (raised) position, run the existing runner.
+            // Resolve references NOW against earlier results - with `axis`
+            // evaluated at THIS op's Y station when the axis line is skewed -
+            // re-plan at the machine's current (raised) position, run the
+            // existing runner.
+            const opAxis = axisForOp(op, plan.seeds.axis, results);
+            const opResults = opAxis.axis ? { ...results, axis: opAxis.axis } : results;
+            if (opAxis.station && opAxis.axis) {
+                announce(`op-${op.id}-axis`, `axis.* evaluated at this op's Y ${opAxis.station.y} (${opAxis.station.note}): `
+                    + `x ${opAxis.axis.x}, z_physical ${opAxis.axis.z_physical}, z_contact ${opAxis.axis.z_contact} `
+                    + `(line yaw ${opAxis.axis.yaw_deg} deg, pitch ${opAxis.axis.pitch_deg} deg, reference Y ${opAxis.axis.reference_y})`);
+            }
             const { args: liveArgs } = substituteRefs(op.args, (ref, path) => {
-                const r = resolveRef(ref, results);
+                const r = resolveRef(ref, opResults);
                 resolved.push({ path, from: describeRef(ref), value: r.value });
                 announce(`op-${op.id}-ref`, `${path} = ${r.source}`);
                 return r.value;
