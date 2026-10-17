@@ -12,6 +12,7 @@ import { resolveTelemetryConfig } from './telemetryConfig';
 import { GcodeValidationReport } from './validator';
 import { describeActiveTool } from './activeTool';
 import type { RecoveryEvidence } from './failureRecovery';
+import type { HoldRecord } from './approachHold';
 
 const log = logger('service:mcp:jobs');
 
@@ -152,6 +153,13 @@ export interface McpJob {
     failureRecovery?: RecoveryEvidence | null;
     /** File jobs: what start and the status polls established, for judging the modes the file may have left. */
     modalTrack?: FileJobModalTrack;
+    /**
+     * A procedure HOLDING for the operator (probe_approach_and_hold, #188):
+     * where, what the sensor reads, the handoff text, what changed during the
+     * hold and how it was released. The job stays `started` while it holds;
+     * stop_gcode_job ends it with a raise.
+     */
+    hold?: HoldRecord | null;
 }
 
 export interface FileJobModalTrack {
@@ -388,6 +396,7 @@ export class JobManager {
             // eslint-disable-next-line camelcase
             failure_recovery: job.failureRecovery || null,
             terminal: this.isTerminal(job),
+            hold: job.hold || null,
             result: job.result,
             eventCount: job.events.length,
             eventsTotal: job.eventSeq,

@@ -27,6 +27,7 @@ import { tests as cameraProgramSchemaTests } from './cameraProgramSchema.test';
 import { tests as cameraArtifactsTests } from './cameraArtifacts.test';
 import { tests as cameraProgramTests } from './cameraProgram.test';
 import { tests as activeToolTests } from './activeTool.test';
+import { tests as approachHoldTests } from './approachHold.test';
 import { tests as cameraModelTests } from './cameraModel.test';
 import { tests as cameraSelectionTests } from './cameraSelection.test';
 import { tests as cornerFitTests } from './cornerFit.test';
@@ -107,6 +108,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['cameraArtifacts', cameraArtifactsTests],
     ['cameraProgram', cameraProgramTests],
     ['activeTool', activeToolTests],
+    ['approachHold', approachHoldTests],
     ['cameraSelection', cameraSelectionTests],
     ['bootstrapPlan', bootstrapPlanTests],
     ['frameRecovery', frameRecoveryTests],

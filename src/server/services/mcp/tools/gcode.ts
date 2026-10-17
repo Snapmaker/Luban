@@ -1614,7 +1614,10 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             + 'run_tool_setter, survey) is a server-driven loop, so it stops at the next step boundary (within one '
             + '<= 1 mm step or sensor window), raises the head to the traverse height and keeps every completed '
             + 'station / contact / op on the job record (result, state "stopped"); this call waits up to wait_ms for '
-            + 'that. A job that never reached the machine (any kind, awaiting confirmation or approved but not '
+            + 'that. A probe_approach_and_hold job HOLDING for the operator (job.hold set) is ENDED by this call: that is the '
+            + 'sanctioned release - back off along the approach vector until the probe releases, then raise straight up to the '
+            + 'traverse height; result keeps the measurement and the hold (hold.released says how it ended). '
+            + 'A job that never reached the machine (any kind, awaiting confirmation or approved but not '
             + 'started) is WITHDRAWN: it is marked stopped here and its confirm link dies, so an approval cannot '
             + 'start it later. A file/direct job already handed over is stopped on the machine (firmware '
             + 'stop_print). Result: {ok, stopped, stopping, withdrawn, note, job}.',
