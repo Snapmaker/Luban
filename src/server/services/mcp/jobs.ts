@@ -101,6 +101,13 @@ export interface McpJob {
     state: McpJobState;
     confirmToken: string | null;
     approvedAt: number | null;
+    /**
+     * Who approved: the operator's click on the confirm page, or a named
+     * policy (safeZPolicy.ts: an XY-only transport with the head already at
+     * the traverse height, operator ruling 2026-10-17 / #241). Null until
+     * approved.
+     */
+    approval: { source: 'operator' | 'policy'; policy?: string; note: string } | null;
     tokenUsed: boolean;
     /** An agent is long-polling start_gcode_job for the approval (approval hand-off); the confirm page says so instead of showing a code to copy. */
     agentWaiting: boolean;
@@ -209,6 +216,7 @@ export class JobManager {
             state: 'awaiting_confirmation',
             confirmToken: null,
             approvedAt: null,
+            approval: null,
             agentWaiting: false,
             tokenUsed: false,
             startedAt: null,
@@ -226,6 +234,28 @@ export class JobManager {
         this.appendEvent(job, 'submitted', { note: `${kind} job staged, awaiting human confirmation` });
         log.info(`MCP job submitted: ${id} (${safeName}), awaiting human confirmation`);
         return job;
+    }
+
+    /**
+     * Approve a just-submitted job under a named POLICY instead of the
+     * operator's click (safeZPolicy.ts; operator ruling 2026-10-17, #241).
+     * The job keeps its record - dashboard, event log, timing, stop - and
+     * mints a token exactly like the page does, so the caller runs it through
+     * the same consumeToken + direct-execution path as an approved job. Only
+     * a job still awaiting confirmation can be policy-approved; the policy
+     * name and the reason are on the record for anyone reading it later.
+     */
+    public approveByPolicy(job: McpJob, policy: string, reason: string): string {
+        if (job.state !== 'awaiting_confirmation') {
+            throw new Error(`Job ${job.id} is ${job.state}; a policy can only approve a job awaiting confirmation.`);
+        }
+        job.confirmToken = crypto.randomBytes(4).toString('hex');
+        job.approvedAt = Date.now();
+        job.state = 'approved';
+        job.approval = { source: 'policy', policy, note: reason };
+        this.appendEvent(job, 'approved', { note: `auto-approved by ${policy}: ${reason}`, policy });
+        log.info(`MCP job ${job.id} auto-approved by ${policy}: ${reason}`);
+        return job.confirmToken;
     }
 
     /** Record something that happened to a job (state change, phase, gcode, progress). */
@@ -350,6 +380,7 @@ export class JobManager {
             state: job.state,
             createdAt: job.createdAt,
             approvedAt: job.approvedAt,
+            approval: job.approval,
             startedAt: job.startedAt,
             endedAt: job.endedAt,
             error: job.error,
@@ -424,6 +455,7 @@ export class JobManager {
             job.confirmToken = crypto.randomBytes(4).toString('hex');
             job.approvedAt = Date.now();
             job.state = 'approved';
+            job.approval = { source: 'operator', note: 'operator approved on the confirm page' };
             this.appendEvent(job, 'approved', { note: 'operator approved on the confirm page' });
             log.info(`MCP job ${job.id} approved by operator`);
             this.page(res, 200, this.approvedPage(job));

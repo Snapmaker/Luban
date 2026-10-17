@@ -4,6 +4,7 @@ import { MAX_MAX_CLIENTS, MAX_STREAM_FPS, MIN_STREAM_FPS, STREAM_ENABLED_KEY, ST
 import { MAX_RECENT_LIMIT, MIN_RECENT_LIMIT, diagnosticsRecentLimit } from '../mcp/diagnostics';
 import { DEFAULT_BLINKA_ENV, resolveGpioFeedConfig } from '../mcp/gpioFeed';
 import { MAX_JOB_EVENT_LIMIT, MIN_JOB_EVENT_LIMIT, approvalHandoff, jobEventLimit } from '../mcp/jobs';
+import { traverseWithoutApprovalAtSafeZ, traverseWithoutApprovalSource } from '../mcp/tools/machine';
 import { probeFeedService, resolveProbeFeedConfig, resolveProbeTransportKind, resolveSensorEnabled } from '../mcp/probeFeed';
 import { listAudioSources } from '../mcp/audioDevices';
 import { describeSourceChoice, matchAudioDevice } from '../mcp/audioSelection';
@@ -156,6 +157,11 @@ function approvalSettings() {
     return {
         handoff: approvalHandoff(),
         source: limitSource('LUBAN_MCP_APPROVAL_HANDOFF', 'mcpApprovalHandoff'),
+        // Approval-free XY transport with the head already at the traverse
+        // height (tools/machine.ts traverseWithoutApprovalAtSafeZ; operator
+        // ruling 2026-10-17, #241). Default on.
+        traverseWithoutApprovalAtSafeZ: traverseWithoutApprovalAtSafeZ(),
+        traverseWithoutApprovalSource: traverseWithoutApprovalSource(),
     };
 }
 
@@ -328,6 +334,15 @@ export const updateSettings = (req, res) => {
         } else {
             res.status(ERR_BAD_REQUEST).send({ msg: `Invalid approvalHandoff: ${handoff} (agent, code or empty)` });
             return;
+        }
+    }
+    const safeZTraverse = (req.body || {}).traverseWithoutApprovalAtSafeZ;
+    if (safeZTraverse !== undefined) {
+        // Read on every traverse_xy / goto_tool_change_position / move_z call: applies at once.
+        if (safeZTraverse === null || safeZTraverse === '') {
+            config.unset('mcpTraverseWithoutApprovalAtSafeZ'); // default: on
+        } else {
+            config.set('mcpTraverseWithoutApprovalAtSafeZ', !!safeZTraverse);
         }
     }
     if (buffers && typeof buffers === 'object') {

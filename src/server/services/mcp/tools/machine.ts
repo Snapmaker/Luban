@@ -177,6 +177,44 @@ export function motionFloorZ(): number {
     return Math.min(floor, safeTraverseZ());
 }
 
+/**
+ * Approval-free transport at the traverse height (operator ruling
+ * 2026-10-17, issue #241: "if we've got to top z there's no approval for
+ * move at top z"). On, an XY-only traverse_xy / the XY step of
+ * goto_tool_change_position / an UP-only move_z runs on the call when the
+ * head is already at or above safeTraverseZ() on a verified, homed position
+ * and the route passed the usual landmark and travel checks (safeZPolicy.ts).
+ * Everything else still stages a confirm page. Default ON for this rig
+ * (the operator's stated preference); configstore
+ * mcpTraverseWithoutApprovalAtSafeZ (Settings -> MCP Server -> Job approval)
+ * or LUBAN_MCP_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z=0/1 turns it off/on.
+ */
+export const DEFAULT_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z = true;
+
+export function traverseWithoutApprovalAtSafeZ(): boolean {
+    const env = String(process.env.LUBAN_MCP_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z || '').trim().toLowerCase();
+    if (env === '0' || env === 'false' || env === 'off') {
+        return false;
+    }
+    if (env === '1' || env === 'true' || env === 'on') {
+        return true;
+    }
+    const stored = config.get('mcpTraverseWithoutApprovalAtSafeZ');
+    if (stored === undefined || stored === null || stored === '') {
+        return DEFAULT_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z;
+    }
+    return stored === true || stored === 'true' || stored === 1 || stored === '1';
+}
+
+export function traverseWithoutApprovalSource(): 'env' | 'config' | 'default' {
+    const env = String(process.env.LUBAN_MCP_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z || '').trim();
+    if (env) {
+        return 'env';
+    }
+    const stored = config.get('mcpTraverseWithoutApprovalAtSafeZ');
+    return stored === undefined || stored === null || stored === '' ? 'default' : 'config';
+}
+
 export interface PositionSnapshot {
     work: { x: number | null; y: number | null; z: number | null };
     machine: { x: number | null; y: number | null; z: number | null };

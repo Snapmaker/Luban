@@ -414,6 +414,9 @@ mcp/
   diagnostics.ts event-loop / heartbeat / gcode / sensor timing; publishes mcp:position
   jobTiming.ts   per-kind timing summary from a job's event log
   traversePlan.ts  pure: traverse_xy planner (law-2 XY transport at the traverse height, landmark-checked)
+  safeZPolicy.ts  pure: the top-Z transport policy (#241) - when traverse_xy / the tool-change
+                 XY step / an up-only move_z run on the call instead of staging a page
+  sequenceLinks.ts  pure: probe_sequence local_links (#242) - hop heights and the low-hop bound
   tests/         `npm run test:mcp` - node:assert tests for the pure modules
   tools/         status, machine, gcode, camera, calibration, probe, toolsetter
 ```
@@ -1999,8 +2002,10 @@ toolhead camera. Everything a fresh install needs:
   long-polls (`wait_ms`, `since_event`) — agents no longer read server logs to learn how a
   job went. Still open: `probe_sequence` aborts drop completed marches into the error text
   (they are now in the events, but not structured).
-- **`traverse_xy` staged batch tool** (law-2-compliant XY transport twin of `move_z`): hops
-  currently need `submit_gcode_job` file jobs or `probe_sequence` hop steps.
+- ~~**`traverse_xy` staged batch tool**~~ — done 2026-09-14; and since 2026-10-17 (#241) it
+  runs on the call, under `mcpTraverseWithoutApprovalAtSafeZ`, when the head is already at the
+  traverse height on a verified homed position (safeZPolicy.ts). `probe_sequence` gained
+  opt-in `local_links` the same day (#242, sequenceLinks.ts).
 - **Console bug**: MCP gcode broadcasts leak into the Workspace console INPUT element with
   raw ANSI codes.
 - **#60 install size**: bundle/asar the main process, squeeze the remaining server externals.
