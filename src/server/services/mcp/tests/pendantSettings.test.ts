@@ -14,7 +14,7 @@ function fixture(initialTool: Partial<ActiveTool> | null = null) {
         './activeTool': { getActiveTool: () => tool,
             describeActiveTool: () => ({ active: tool }),
             clearActiveTool: () => { tool = null; },
-            setActiveTool: (input: { protrusionMm: number; source: string }) => { tool = input; return tool; } },
+            setActiveTool: (input: Partial<ActiveTool>) => { tool = input; return tool; } },
         './clearanceContext': { currentToolProtrusion: () => ({ mm: tool?.protrusionMm || null }) },
         './landmarkClearance': { CLEARANCE_MARGIN_MM: 5 },
         './landmarks': { landmarkStore: {

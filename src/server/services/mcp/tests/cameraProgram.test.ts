@@ -2,6 +2,7 @@
 import { strict as assert } from 'assert';
 import fs from 'fs';
 import path from 'path';
+import { legacySetterDatum } from '../toolDatum';
 
 import { isolatedModule } from './jobDashboard.test';
 import { ToolRegistry } from '../registry';
@@ -157,7 +158,7 @@ tests.push(['bootstrap uses the named physical datum and keeps coarse XY search 
         centerY: 20,
         triggerZ: 175.5,
         referenceBitLengthMm: 75,
-        datum: require('../toolDatum').legacySetterDatum(175.5, 75) };
+        datum: legacySetterDatum(175.5, 75) };
     const dependencies: Record<string, unknown> = {};
     const source = fs.readFileSync(path.join(__dirname, '../cameraBootstrap.ts'), 'utf8');
     for (const match of source.matchAll(/from '([^']+)'/g)) dependencies[match[1]] = {};
