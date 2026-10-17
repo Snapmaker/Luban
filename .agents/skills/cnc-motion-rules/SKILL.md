@@ -222,7 +222,9 @@ as before (`staged_because` says why). Never chain `move_and_capture` hops as tr
    the travel, the start height is BELOW the head (appendix A, 2026-09-16). A COMPLETED
    `run_tool_setter` ends the same way (issue #91): raised straight up to the traverse height,
    `result.finalZ` says where the head is — except `stay_at_trigger`, which holds the tip in
-   contact for the touchscreen wizard and retreats nowhere.
+   contact for the touchscreen wizard and retreats nowhere — and except the stock-side hold,
+   `probe_approach_and_hold` (issue #188, §4), which ends HELD at the datum for the operator's
+   touchscreen work-origin setup; its raise is the next motion, `stop_gcode_job {job_id}`.
 
 ## 2. Coordinate doctrine
 
@@ -469,6 +471,29 @@ start position — expect it, do not act on it.
   measurements/approval, not a low position between ops: each successful probing op ends
   raised. Prefer related stations within a suitable continuous op. Ordinary calls split into
   ≤1 mm increments are not a substitute for a sanctioned probing envelope.
+- **The datum hold — `probe_approach_and_hold`** (issue #188): the one procedure that ends
+  LOW on purpose. One approval covers raise (if below the traverse height) → hop at the
+  traverse height to the stated XY → guarded descent to the stated `start_z_machine` (≤ 5 mm
+  crash-guarded segments, then 1 mm sensor-checked steps; any contact aborts and raises) → a
+  sensor-gated march along the stated vector (default −Z, `max_travel_mm` required) → HOLD.
+  Contact is the datum (`on_contact: "hold"`, default: confirm cycles, median, then held in
+  contact or backed off `backoff_mm`, `hold_at`), or a stated `datum_z_machine` reached with
+  the probe released is the datum (positioning); `on_contact: "abort"` makes a touch UNEXPECTED
+  — the approach stops, reports `unexpected-contact` and raises; an early contact is never
+  permission to continue to the number. The confirm page enumerates every move, the hold, and
+  how the hold is released. While it holds the job stays `started`, `job.hold` carries the held
+  machine position, the measured contact (reported separately — the head is driven to it, never
+  assumed at a median), the sensor state and the handoff text; the agent sends NO motion.
+  **The next motion is the raise, and `stop_gcode_job {job_id}` IS that raise** (law 8): back
+  off along the approach vector until the probe releases (straight −Z: the raise itself), then
+  Z-only to `mcpSafeTraverseZ`; the job ends `stopped` with the measurement and the hold kept in
+  `result` (`hold.released` says how). A probe still triggered after the back-off is HELD, never
+  dragged. Touchscreen jogs during the hold are seen on the heartbeat, reported
+  (`hold.operatorMoved`) and drop the position of record so the release raises Z-only from
+  wherever the head is. It writes no origin: the operator sets it on the touchscreen (or
+  `set_workspace_origin` stages it); afterwards read `get_position.originOffset` to see WHICH
+  axes changed — a Z-only change is not an XYZ setup. Requires the probe feed armed (refused at
+  staging otherwise) and carries the stylus-reach check (`rim_z_machine`, #187).
 - **`set_workspace_origin`** — stage an explicit G54–G59.3 XYZ origin from measured machine
   coordinates, with datum/tool/B evidence and a reason. Human approval is required; no axis
   moves and there is no need to visit work zero. Z is the machine **toolhead** Z at which the

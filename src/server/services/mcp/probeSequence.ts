@@ -31,6 +31,8 @@ import {
 } from './probing';
 import { McpToolError } from './registry';
 import { LocalLinks, hopHeight, isLocalHop, localHopRefusal, resolveLocalLinks } from './sequenceLinks';
+import { StylusReachVerdict, describeStylusReach } from './stylusReach';
+import { requireStylusReach } from './stylusReachGuard';
 import { projectToolTipZ } from './toolDatum';
 import { getProbeTipCalibration } from './toolDatumState';
 import { outsideTravel } from './machineTravel';
@@ -120,6 +122,8 @@ export interface ProbeSequencePlan {
     staged: { x: number; y: number; z: number };
     /** Opt-in local links (#242); null = every hop at the traverse height. */
     localLinks: LocalLinks | null;
+    /** Issue #187: the body-vs-rim verdict at the deepest descend / march limit (refused at staging when it fails). */
+    stylusReach: StylusReachVerdict;
 }
 
 export function planProbeSequence(args: {
@@ -130,6 +134,9 @@ export function planProbeSequence(args: {
     sensor_delay_ms?: number;
     confirm_passes?: number;
     local_links?: unknown;
+    rim_z_machine?: unknown;
+    surface_z_machine?: unknown;
+    reach_margin_mm?: unknown;
 }, extraObstacles: ObstacleBox[] = []): ProbeSequencePlan {
     if (!Array.isArray(args.steps) || args.steps.length < 1 || args.steps.length > 60) {
         throw new McpToolError('steps is required: 1-60 entries of {kind: hop|descend|probe, ...}.');
@@ -161,6 +168,8 @@ export function planProbeSequence(args: {
     const steps: SequenceStep[] = [];
     const names = new Set<string>();
     let probeCount = 0;
+    // The deepest toolhead Z any step commands (issue #187).
+    let deepestZ = z;
     (args.steps as { [key: string]: unknown }[]).forEach((raw, index) => {
         const kind = String(raw.kind || '');
         const at = `steps[${index}]`;
@@ -198,6 +207,7 @@ export function planProbeSequence(args: {
             const segment = clampReported(raw.descent_segment_mm, DESCENT_SEGMENT_MM);
             steps.push({ kind: 'descend', z: dz, segmentMm: segment.value, segmentRequestedMm: segment.clipped ? segment.requested : null });
             virtual.z = dz;
+            deepestZ = Math.min(deepestZ, dz);
         } else if (kind === 'probe') {
             const name = String(raw.name || `probe${probeCount + 1}`);
             if (names.has(name)) {
@@ -235,6 +245,7 @@ export function planProbeSequence(args: {
             if (limit.z < 0) {
                 throw new McpToolError(`${at}: the march's far limit is below machine Z 0 (the bed).`);
             }
+            deepestZ = Math.min(deepestZ, virtual.z, limit.z);
             const onMissRaw = raw.on_miss === undefined ? 'continue' : String(raw.on_miss);
             if (onMissRaw !== 'continue' && onMissRaw !== 'abort') {
                 throw new McpToolError(`${at}: on_miss must be "continue" (default: record no_contact, carry on) or "abort".`);
@@ -285,6 +296,7 @@ export function planProbeSequence(args: {
         hopZ,
         staged,
         localLinks,
+        stylusReach: requireStylusReach(args, Number(deepestZ.toFixed(3)), 'Probe sequence'),
     };
 }
 
@@ -334,6 +346,7 @@ export function describeProbeSequencePlanAsGcode(plan: ProbeSequencePlan): strin
         '; sensors: contact is EXPECTED only during marches - a probe/toolsetter trigger during',
         '; any hop, raise or descent latches the CRASH alarm (feed must be armed).',
         '; overtravel feed trips -> job stop + connection close + latched alarm',
+        describeStylusReach(plan.stylusReach),
         'G90',
         'G53;',
     ];
@@ -652,6 +665,7 @@ export async function runProbeSequenceProcedure(plan: ProbeSequencePlan): Promis
             noContactProbes: misses,
             phases,
             localLinks: plan.localLinks,
+            stylusReach: plan.stylusReach,
             note: `Probe sequence complete: ${contacts.length} contacts${misses.length ? `, ${misses.length} march(es) found nothing within their approved travel (${misses.join(', ')})` : ''}, `
                 + 'all MACHINE coordinates. Worst confirm spread '
                 + `${(contacts.length ? Math.max(...contacts.map((r) => r.spreadMm)) : 0).toFixed(3)} mm.`

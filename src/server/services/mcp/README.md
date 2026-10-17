@@ -1662,7 +1662,9 @@ and untriggered; `store_as_reference` locks the measured Z in as the new referen
 `apply_tool_length_offset` (confirmed G92 shifting work-origin Z by the measured
 new−old tool length difference — flow A only) · **touch-probe procedures** (all staged,
 one approval per circuit, results in MACHINE coordinates): `probe_point` (one axis from the
-current position) · `probe_vector` (any downward/lateral unit vector) · `probe_sequence`
+current position) · `probe_vector` (any downward/lateral unit vector) · `probe_approach_and_hold`
+(guarded approach to the work datum that ends HELD for the touchscreen origin setup — the
+stock-side stay_at_trigger; `stop_gcode_job` is its raise, #188) · `probe_sequence`
 (enumerated hop/descend/probe circuit, law-2 hops) · `probe_circle` (N radial marches +
 least-squares fit, outside or inside a hole) · `probe_surface_path` (N −Z stations along a
 line: per-station contact, best-fit line slope, flatness) · `probe_surface_grid` (serpentine

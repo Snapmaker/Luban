@@ -26,10 +26,12 @@ import { describeProbeCornerPlanAsGcode, planProbeCorner, runProbeCornerProcedur
 import { describeProbeTracePlanAsGcode, planProbeTracePerimeter, runProbeTracePerimeterProcedure } from '../probeTracePerimeter';
 import { describeProbeProgramAsGcode, planProbeProgram, runProbeProgramProcedure } from '../probeProgram';
 import { describeProbeVectorPlanAsGcode, planProbeVector, runProbeVectorProcedure } from '../probeVector';
+import { describeProbeApproachHoldAsGcode, planProbeApproachHold, runProbeApproachHoldProcedure } from '../probeApproachHold';
 import { probeFeedService } from '../probeFeed';
 import { TRAVEL_FEED, assertMachineReadyForProcedure, moveMachineSettled } from '../probing';
 import { McpToolError, ToolRegistry } from '../registry';
 import { geometryValue } from '../rotaryGeometry';
+import { RIM_ARG_SCHEMA } from '../stylusReachGuard';
 import { checkMotion, describeViolations } from '../envelopeChecks';
 import { belowCameraFloor } from '../cameraSafety';
 import { TRAVERSE_Z_TOLERANCE_MM } from '../traversePlan';
@@ -91,6 +93,7 @@ export function registerProbingTools(registry: ToolRegistry, getConfirmBaseUrl: 
                 backoff_mm: { type: 'number', description: 'Confirm-cycle lift, default 1 (also the confirm re-contact window).' },
                 sensor_delay_ms: { type: 'number', description: 'Contact-check window per step, default 300.' },
                 confirm_passes: { type: 'number', description: 'Lift-and-retest cycles, default 3 (1-10).' },
+                ...RIM_ARG_SCHEMA,
                 reason: { type: 'string', description: 'Shown to the operator: what is being measured and why.' },
             },
             required: ['axis', 'direction', 'max_travel_mm', 'reason'],
@@ -152,6 +155,7 @@ ${describeProbePlanAsGcode(plan)}`;
                 backoff_mm: { type: 'number', description: 'Confirm-cycle lift, default 1 (also the confirm re-contact window).' },
                 sensor_delay_ms: { type: 'number', description: 'Contact-check window per step, default 300.' },
                 confirm_passes: { type: 'number', description: 'Lift-and-retest cycles, default 3 (1-10).' },
+                ...RIM_ARG_SCHEMA,
                 reason: { type: 'string', description: 'Shown to the operator: what is being measured and why.' },
             },
             required: ['max_travel_mm', 'reason'],
@@ -182,6 +186,131 @@ ${describeProbeVectorPlanAsGcode(plan)}`;
                 next_step: 'Ask the operator to open confirm_url, review the envelope (anchored to the '
                     + 'current position), and approve. Their one-time code passed to start_gcode_job '
                     + 'runs the march and returns the contact coordinate.',
+            };
+        },
+    });
+
+    registry.register({
+        name: 'probe_approach_and_hold',
+        description: 'Stage ONE approved guarded approach to the work datum that ends HELD for the operator\'s touchscreen '
+            + 'work-origin setup (issue #188) - the stock-side counterpart of run_tool_setter stay_at_trigger. Raise to the '
+            + 'traverse height if below it (law 2), hop to x/y (default: stay), descend in <= 5 mm crash-guarded segments to '
+            + '20 mm above start_z_machine then 1 mm sensor-checked steps to it (ANY contact aborts and raises), then a '
+            + 'sensor-gated march along dx/dy/dz (default straight -Z) with probe_point\'s proven coarse / release / fine / '
+            + 'confirm mechanics. Two ways to end well: CONTACT (on_contact "hold", default - the contact IS the datum: median of '
+            + 'the confirm cycles, spread reported, then HOLD in contact (hold_at "contact") or backed off backoff_mm with the '
+            + 'probe released (hold_at "released")); or the stated datum_z_machine reached WITHOUT contact (positioning to a '
+            + 'measured Z - hold there, released). on_contact "abort" makes any contact UNEXPECTED: the approach stops, is '
+            + 'reported as unexpected-contact and raises - an early contact is never permission to continue to the target. '
+            + 'No datum and no contact within max_travel_mm aborts and raises. THE HOLD: no further motion, the job stays '
+            + '"started", the hold (held position, measured contact, sensor state, handoff text) is on the job record and in '
+            + 'get_gcode_job_status; the agent sends NO motion while it lasts. THE NEXT MOTION IS THE RAISE: stop_gcode_job '
+            + '{job_id} ends the hold - back off along the reverse vector until released (straight -Z: the raise itself), then '
+            + 'raise STRAIGHT UP to the traverse height, job "stopped" with the measurement and hold kept in result (ending '
+            + 'stopped-by-agent). A probe still triggered after the back-off is HELD, never dragged. Touchscreen jogs during '
+            + 'the hold are detected from the heartbeat and reported (operatorMoved); the release then raises Z-only from '
+            + 'wherever the head is. REQUIRES the probe feed connected and the probe channel readable and untriggered (refused '
+            + 'at staging otherwise). Carries the stylus-reach check (rim_z_machine, #187). No origin is written: '
+            + 'set_workspace_origin / the touchscreen do that, and afterwards get_position.originOffset says which axes changed.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                x: { type: 'number', description: 'Machine X to hop to at the traverse height before descending; default the current X.' },
+                y: { type: 'number', description: 'Machine Y to hop to; default the current Y.' },
+                start_z_machine: {
+                    type: 'number',
+                    description: 'REQUIRED toolhead machine Z where the sensor-gated march begins (a measured top + a few mm, or an '
+                        + 'operator-stated clear height) - reached by the guarded descent; never a guess.',
+                },
+                dx: { type: 'number', description: 'March direction X component (machine). Omit all three for straight -Z.' },
+                dy: { type: 'number', description: 'March direction Y component.' },
+                dz: { type: 'number', description: 'March direction Z component, <= 0. Default -1 when dx/dy/dz are all omitted.' },
+                max_travel_mm: { type: 'number', description: 'REQUIRED march envelope along the vector (1-150), clamped to the toolhead travel and machine Z 0; a datum_z_machine inside it shortens it to the datum.' },
+                datum_z_machine: {
+                    type: 'number',
+                    description: 'Optional MEASURED toolhead machine Z to position to: reaching it with the probe released is success '
+                        + '(hold there). Must lie below start_z_machine within max_travel_mm along a downward vector. Without it, only a contact ends well.',
+                },
+                on_contact: {
+                    type: 'string',
+                    enum: ['hold', 'abort'],
+                    description: '"hold" (default): the contact is the datum - confirm cycles, then hold. "abort": contact is unexpected - stop, report unexpected-contact, raise; never continue to the datum.',
+                },
+                hold_at: {
+                    type: 'string',
+                    enum: ['contact', 'released'],
+                    description: 'After a confirmed contact: "contact" (default) holds the tip against the surface (probe triggered); "released" backs off backoff_mm along the reverse vector and holds with the probe released.',
+                },
+                coarse_step_mm: { type: 'number', description: 'Coarse step, default 1 (0.2-1; never larger - the coarse step is also the press into the probe).' },
+                fine_step_mm: { type: 'number', description: 'Fine step, default 0.1 (0.02-0.5).' },
+                backoff_mm: { type: 'number', description: 'Confirm-cycle lift, the released-hold standoff and the release back-off, default 1 (fine step .. 3).' },
+                sensor_delay_ms: { type: 'number', description: 'Contact-check window per step, default 300 (GPIO: 50 is ample).' },
+                confirm_passes: { type: 'number', description: 'Lift-and-retest cycles after the first fine contact, default 3 (1-10).' },
+                ...RIM_ARG_SCHEMA,
+                reason: { type: 'string', description: 'Shown to the operator: which datum, and what they will set from it.' },
+            },
+            required: ['start_z_machine', 'max_travel_mm', 'reason'],
+            additionalProperties: false,
+        },
+        handler: async (args: { [key: string]: unknown }) => {
+            const reason = String(args.reason || '').trim();
+            if (!reason) {
+                throw new McpToolError('reason is required; it is shown to the operator.');
+            }
+            probeFeedService.assertNoOvertravel();
+            const plan = planProbeApproachHold(args);
+            const envelope = `; reason: ${reason}
+${describeProbeApproachHoldAsGcode(plan)}`;
+            const validation = validateStagedEnvelope(envelope, 'probe_approach_and_hold');
+            const job = jobManager.submit(
+                envelope,
+                `approach-and-hold ${plan.datumZ !== null ? `to Z${plan.datumZ}` : `${plan.maxTravelMm}mm`} - ${reason.slice(0, 40)}`,
+                'cnc',
+                validation,
+                'procedure'
+            );
+            job.runner = async () => runProbeApproachHoldProcedure(plan, {
+                onHold: (record) => {
+                    job.hold = record;
+                    jobManager.appendEvent(job, 'holding', {
+                        note: record.handoff,
+                        machine: record.machine,
+                        kind: record.kind,
+                        sensor: record.sensor,
+                        measuredContactMachine: record.measuredContactMachine,
+                    });
+                },
+                onHoldUpdate: (record) => {
+                    job.hold = record;
+                },
+            });
+            return {
+                job: jobManager.describe(job),
+                plan: {
+                    staged: plan.staged,
+                    raise_first: plan.raiseFirst,
+                    target: plan.target,
+                    hop_distance_mm: plan.hopDistanceMm,
+                    start: plan.start,
+                    unit: plan.unit,
+                    max_travel_mm: plan.maxTravelMm,
+                    requested_travel_mm: plan.requestedTravelMm,
+                    travel_clipped_by: plan.travelClippedBy,
+                    limit: plan.limit,
+                    datum_z_machine: plan.datumZ,
+                    deepest_z_machine: plan.deepestZ,
+                    on_contact: plan.onContact,
+                    hold_at: plan.holdAt,
+                    march: plan.march,
+                    stylus_reach: plan.stylusReach,
+                },
+                handoff: 'On completion of the march the head HOLDS (job state "started"); read the hold from get_gcode_job_status (job.hold, '
+                    + 'the "holding" event). The agent sends no motion while it holds. The operator sets the work origin on the touchscreen; '
+                    + 'then the NEXT MOTION IS THE RAISE: stop_gcode_job {job_id}. Then re-read get_position / originOffset to verify which axes changed.',
+                confirm_url: `${getConfirmBaseUrl()}/confirm/${job.id}`,
+                next_step: 'Ask the operator to open confirm_url, review EVERY move (raise, hop, guarded descent, each coarse step, the '
+                    + 'contact handling, the HOLD and how stop_gcode_job releases it) and approve once. Their one-time code passed to '
+                    + 'start_gcode_job runs the approach; the call returns "running" while the hold lasts - long-poll get_gcode_job_status.',
             };
         },
     });
@@ -260,6 +389,7 @@ ${describeProbeVectorPlanAsGcode(plan)}`;
                 backoff_mm: { type: 'number', description: 'Confirm-cycle lift, default 1 (also the confirm re-contact window).' },
                 sensor_delay_ms: { type: 'number', description: 'Contact-check window per step, default 300.' },
                 confirm_passes: { type: 'number', description: 'Lift-and-retest cycles per march, default 3 (1-10).' },
+                ...RIM_ARG_SCHEMA,
                 reason: { type: 'string', description: 'Shown to the operator: what the circuit measures and why.' },
             },
             required: ['steps', 'reason'],
@@ -346,6 +476,7 @@ ${describeProbeSequencePlanAsGcode(plan)}`;
                 backoff_mm: { type: 'number', description: 'Confirm-cycle lift, default 1 (also the confirm re-contact window).' },
                 sensor_delay_ms: { type: 'number', description: 'Contact-check window per step, default 300.' },
                 confirm_passes: { type: 'number', description: 'Lift-and-retest cycles per point, default 2 (1-5).' },
+                ...RIM_ARG_SCHEMA,
                 reason: { type: 'string', description: 'Shown to the operator: what is being measured and why.' },
             },
             required: ['diameter_min_mm', 'diameter_max_mm', 'reason'],
@@ -484,6 +615,7 @@ ${describeProbeCirclePlanAsGcode(plan)}`;
                 + 'centre, an earlier scan) so station 1 gets the slow zone too. Never inferred (law 3). Without it '
                 + 'station 1 uses coarse steps capped at 1 mm.',
         },
+        ...RIM_ARG_SCHEMA,
         reason: { type: 'string', description: 'Shown to the operator: what surface is being scanned and why.' },
     };
     const stageSurfaceScan = (plan: ProbeSurfacePlan, reason: string, label: string) => {
@@ -1119,6 +1251,7 @@ ${describeProbeOutlinePlanAsGcode(plan)}`;
                 backoff_mm: { type: 'number', description: 'Confirm-cycle lift, default 1.' },
                 sensor_delay_ms: { type: 'number', description: 'Contact-check window per step, default 300, floor 30 (GPIO: 50).' },
                 confirm_passes: { type: 'number', description: 'Lift-and-retest cycles per contact, default 3 (1-10).' },
+                ...RIM_ARG_SCHEMA,
                 reason: { type: 'string', description: 'Shown to the operator: which wall, and why.' },
             },
             required: ['start_x', 'start_y', 'z_machine', 'dir_x', 'dir_y', 'max_travel_mm', 'reason'],
@@ -1193,6 +1326,7 @@ ${describeProbeWallFollowPlanAsGcode(plan)}`;
                 backoff_mm: { type: 'number', description: 'Confirm-cycle lift, default 1; a radius below it is reported as sharp.' },
                 sensor_delay_ms: { type: 'number', description: 'Contact-check window per step, default 300, floor 30 (GPIO: 50).' },
                 confirm_passes: { type: 'number', description: 'Lift-and-retest cycles per contact, default 3 (1-10).' },
+                ...RIM_ARG_SCHEMA,
                 reason: { type: 'string', description: 'Shown to the operator: which corner, and why.' },
             },
             required: ['wall_a', 'wall_b', 'z_machine', 'radius_max_mm', 'reason'],
@@ -1289,6 +1423,7 @@ ${describeProbeCornerPlanAsGcode(plan)}`;
                 backoff_mm: { type: 'number', description: 'Confirm-cycle lift, default 1.' },
                 sensor_delay_ms: { type: 'number', description: 'Contact-check window per step, default 300, floor 30 (GPIO: 50 - use it, every step pays it).' },
                 confirm_passes: { type: 'number', description: 'Lift-and-retest cycles per confirmed contact, default 3 (1-10).' },
+                ...RIM_ARG_SCHEMA,
                 reason: { type: 'string', description: 'Shown to the operator: which pocket, and why.' },
             },
             required: ['start_x', 'start_y', 'z_machine', 'max_travel_mm', 'max_perimeter_mm', 'bounds', 'reason'],

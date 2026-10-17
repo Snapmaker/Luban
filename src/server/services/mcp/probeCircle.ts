@@ -39,6 +39,8 @@ import {
     resolveMarchParams,
 } from './procedureLimits';
 import { McpToolError } from './registry';
+import { StylusReachVerdict, describeStylusReach } from './stylusReach';
+import { requireStylusReach } from './stylusReachGuard';
 import { projectToolTipZ } from './toolDatum';
 import { getProbeTipCalibration } from './toolDatumState';
 import { assertWithinTravel, getPositionSnapshot, requirePlanningTravel, safeTraverseZ } from './tools/machine';
@@ -92,6 +94,8 @@ export interface ProbeCirclePlan {
     sensorDelayMs: number;
     confirmPasses: number;
     staged: { x: number; y: number; z: number }; // position at staging
+    /** Issue #187: the body-vs-rim verdict at the side-contact Z (refused at staging when it fails). */
+    stylusReach: StylusReachVerdict;
 }
 
 export function planProbeCircle(args: {
@@ -109,6 +113,9 @@ export function planProbeCircle(args: {
     backoff_mm?: number;
     sensor_delay_ms?: number;
     confirm_passes?: number;
+    rim_z_machine?: unknown;
+    surface_z_machine?: unknown;
+    reach_margin_mm?: unknown;
 }): ProbeCirclePlan {
     const inside = args.inside === true;
     const dMin = Number(args.diameter_min_mm);
@@ -168,6 +175,10 @@ export function planProbeCircle(args: {
         }
     }
 
+    // Issue #187: the side contacts run at probeZ - inside a hole that is a
+    // depth below its rim, and the body must still clear that rim.
+    const stylusReach = requireStylusReach(args, probeZ, 'Circle probe');
+
     const points: ProbeCirclePoint[] = [];
     for (let i = 0; i < pointCount; i++) {
         const azimuth = (360 / pointCount) * i;
@@ -202,6 +213,7 @@ export function planProbeCircle(args: {
         // per azimuth (procedureLimits.ts).
         ...resolveMarchParams(args, { coarse: CIRCLE_COARSE_STEP_MM, passes: CIRCLE_CONFIRM_PASSES }),
         staged,
+        stylusReach,
     };
 }
 
@@ -231,6 +243,7 @@ export function describeProbeCirclePlanAsGcode(plan: ProbeCirclePlan): string {
         '; EVERY LINE IS SENT INDIVIDUALLY and settle-verified; the probe feed is checked after each',
         '; march step. A probe touch during a hop or descent latches the CRASH alarm.',
         '; overtravel feed trips -> job stop + connection close + latched alarm',
+        describeStylusReach(plan.stylusReach),
         'G90',
         'G53;',
     );
@@ -469,6 +482,7 @@ export async function runProbeCircleProcedure(plan: ProbeCirclePlan): Promise<ob
         const worstSpread = Math.max(...contacts.map((c) => c.spreadMm));
         return {
             inside: plan.inside,
+            stylusReach: plan.stylusReach,
             tipCalibration,
             contacts: contacts.map((r) => ({ ...r, toolheadMachineZ: plan.probeZ, ...projectToolTipZ(plan.probeZ, tipCalibration) })),
             fit: {

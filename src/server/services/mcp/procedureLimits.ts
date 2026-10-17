@@ -306,6 +306,19 @@ export const MAX_DWELL_S = 60;
 export const MAX_BIT_LENGTH_MM = 300;
 
 // ---------------------------------------------------------------------------
+// Stylus reach (stylusReach.ts; issue #187)
+// ---------------------------------------------------------------------------
+
+/**
+ * reach_margin_mm: air kept between the probe BODY's first shoulder and the
+ * rim it would land on when the tip reaches the deepest planned contact. The
+ * default is the figure the probing skill has asked agents to write into
+ * their plans; 0 is allowed only when the operator states it, and above 10 mm
+ * the margin refuses every pocket shallower than the stylus itself.
+ */
+export const STYLUS_REACH_MARGIN_MM: Bounded = { default: 2, min: 0, max: 10 };
+
+// ---------------------------------------------------------------------------
 // Surface scans (surfaceScan.ts / probeSurface.ts)
 // ---------------------------------------------------------------------------
 

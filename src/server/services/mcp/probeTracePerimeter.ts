@@ -62,6 +62,8 @@ import {
     within,
 } from './procedureLimits';
 import { McpToolError } from './registry';
+import { StylusReachVerdict, describeStylusReach } from './stylusReach';
+import { requireStylusReach } from './stylusReachGuard';
 import { TipCalibrationSnapshot, projectToolTipZ } from './toolDatum';
 import { getProbeTipCalibration } from './toolDatumState';
 import { probeGeometry } from './rotaryGeometry';
@@ -105,9 +107,14 @@ export interface ProbeTracePlan {
     tipDiameterMm: number | null;
     estimate: ReturnType<typeof estimateTraceTime>;
     confirmAt: ConfirmAt[];
+    /** Issue #187: the body-vs-rim verdict at z_machine (refused at staging when it fails). */
+    stylusReach: StylusReachVerdict;
 }
 
 interface TraceArgs {
+    rim_z_machine?: unknown;
+    surface_z_machine?: unknown;
+    reach_margin_mm?: unknown;
     start_x?: unknown;
     start_y?: unknown;
     z_machine?: unknown;
@@ -301,6 +308,7 @@ export function planProbeTracePerimeter(args: TraceArgs, extraObstacles: Obstacl
             maxTravelMm: maxTravel,
         }),
         confirmAt,
+        stylusReach: requireStylusReach(args, r3(zMachine), 'Perimeter trace'),
     };
     const violations = checkMotion(traceMotion(plan), [...landmarkStore.obstacleBoxes(), ...extraObstacles], { traverseZ: hopZ, ...clearanceOptions() });
     if (violations.length) {
@@ -335,6 +343,7 @@ export function describeProbeTracePlanAsGcode(plan: ProbeTracePlan): string {
             + ' along the normal of the local wall - a line through the neighbouring contacts), straight walls (collinear runs merged) with residuals and surface lines,',
         ';   corners fitted only to the points off BOTH walls (radius, centre, residuals) - or, where no single circle fits, an IRREGULAR lobe as a polyline and',
         ';   line / arc pieces with no radius - closure, tip-centre AND surface perimeter lengths, counts, timing.',
+        describeStylusReach(plan.stylusReach),
         `; anchored at machine (${plan.staged.x.toFixed(2)}, ${plan.staged.y.toFixed(2)}, ${plan.staged.z.toFixed(2)}) - re-verified before motion`,
         'G90',
         'G53;',
@@ -362,6 +371,7 @@ export interface TraceProcedureResult {
     lengths: TraceLengths;
     normals: TraceAnalysis['normals'] | null;
     tipDiameterMm: number | null;
+    stylusReach: StylusReachVerdict;
     timing: { totalMs: number; perStepMs: number | null; confirmCycles: number };
     /**
      * Where the head was left. `parked` = raised to the traverse height;
@@ -431,6 +441,7 @@ export async function runProbeTracePerimeterProcedure(plan: ProbeTracePlan): Pro
             lengths,
             normals: analysis ? analysis.normals : null,
             tipDiameterMm: plan.tipDiameterMm,
+            stylusReach: plan.stylusReach,
             timing: { totalMs, perStepMs: steps ? Math.round(totalMs / steps) : null, confirmCycles: trace ? trace.counts.confirms : 0 },
             endState,
             phases,

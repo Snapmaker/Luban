@@ -28,6 +28,7 @@ import { tests as cameraProgramSchemaTests } from './cameraProgramSchema.test';
 import { tests as cameraArtifactsTests } from './cameraArtifacts.test';
 import { tests as cameraProgramTests } from './cameraProgram.test';
 import { tests as activeToolTests } from './activeTool.test';
+import { tests as approachHoldTests } from './approachHold.test';
 import { tests as cameraModelTests } from './cameraModel.test';
 import { tests as cameraSelectionTests } from './cameraSelection.test';
 import { tests as cornerFitTests } from './cornerFit.test';
@@ -62,6 +63,7 @@ import { tests as rotaryMotionTests } from './rotaryMotion.test';
 import { tests as rotaryAxisLineTests } from './rotaryAxisLine.test';
 import { tests as safeZPolicyTests } from './safeZPolicy.test';
 import { tests as sequenceLinksTests } from './sequenceLinks.test';
+import { tests as stylusReachTests } from './stylusReach.test';
 import { tests as surveyMosaicTests } from './surveyMosaic.test';
 import { tests as surveyPlanTests } from './surveyPlan.test';
 import { tests as toolDatumTests } from './toolDatum.test';
@@ -112,6 +114,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['cameraArtifacts', cameraArtifactsTests],
     ['cameraProgram', cameraProgramTests],
     ['activeTool', activeToolTests],
+    ['approachHold', approachHoldTests],
     ['cameraSelection', cameraSelectionTests],
     ['bootstrapPlan', bootstrapPlanTests],
     ['frameRecovery', frameRecoveryTests],
@@ -129,6 +132,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['rotaryAxisLine', rotaryAxisLineTests],
     ['safeZPolicy', safeZPolicyTests],
     ['sequenceLinks', sequenceLinksTests],
+    ['stylusReach', stylusReachTests],
     ['surveyMosaic', surveyMosaicTests],
     ['surveyPlan', surveyPlanTests],
     ['toolProtrusion', toolProtrusionTests],

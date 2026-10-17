@@ -2,6 +2,7 @@
 // The `axis` namespace is read by agents through snake_case reference paths
 // (axis.z_contact), matching the MCP argument convention.
 import config from '../configstore';
+import { RimArgs, StylusReachVerdict, checkStylusReach, parseReachMargin, parseRimZ } from './stylusReach';
 import { MAX_ROTARY_AXIS_POINTS } from './procedureLimits';
 import {
     AxisNamespace,
@@ -238,6 +239,48 @@ export function probeGeometry(): ProbeGeometry | null {
     return { effectiveLength, tipDiameter: geometryValue('probe_tip_diameter') };
 }
 
+/**
+ * The fitted probe's STYLUS geometry (issue #187): how far the tip sticks out
+ * below the body. Independent of the contact calibration - a probe's tool
+ * length says nothing about its reach into a pocket. Any field may be null
+ * (= not stored); nothing here is a prerequisite for probing on an open
+ * surface, but a -Z march staged inside a known pocket needs the reach to be
+ * checked, and says "stylus reach unknown" when it is not.
+ */
+export interface StylusGeometry {
+    /** probe_stylus_exposed_mm: tip bottom to the first body shoulder. */
+    reachMm: number | null;
+    /** probe_body_diameter_mm: the body that would land on the rim. */
+    bodyDiameterMm: number | null;
+    /** probe_tip_diameter: the ball, subtracted from the reach by the check. */
+    tipDiameterMm: number | null;
+}
+
+export function stylusGeometry(): StylusGeometry {
+    return {
+        reachMm: geometryValue('probe_stylus_exposed_mm'),
+        bodyDiameterMm: geometryValue('probe_body_diameter_mm'),
+        tipDiameterMm: geometryValue('probe_tip_diameter'),
+    };
+}
+
+/**
+ * The stylus-reach verdict for a plan whose deepest commanded toolhead Z is
+ * `deepestZMachine`, from the stored geometry and the tool's rim arguments.
+ * Throws McpToolError-shaped RimArgError text via the caller's mapping; the
+ * caller refuses on `status: 'refused'` with the verdict's numbers.
+ */
+export function stylusReachForPlan(args: RimArgs, deepestZMachine: number): StylusReachVerdict {
+    const stylus = stylusGeometry();
+    return checkStylusReach({
+        reachMm: stylus.reachMm,
+        tipDiameterMm: stylus.tipDiameterMm,
+        rimZMachine: parseRimZ(args),
+        deepestZMachine,
+        marginMm: parseReachMargin(args),
+    });
+}
+
 /** The travel ends stated for this rig; any of them may be null (= not stated). */
 export function statedTravel(): { xMin: number | null; xMax: number | null; yMin: number | null; yMax: number | null } {
     return {
@@ -427,6 +470,15 @@ export function geometrySettings() {
             fit: rotary ? rotary.line.fit : null,
         },
         probe: probeGeometry(),
+        // Issue #187: the reach (tip bottom to the first body shoulder) is
+        // what a pocket-floor probe is checked against; its absence is
+        // reported by every -Z plan as "stylus reach unknown".
+        stylus: {
+            ...stylusGeometry(),
+            note: 'reachMm = probe_stylus_exposed_mm, the exposed stylus below the body (tip bottom to the first body shoulder) '
+                + '- NOT the probe\'s tool length. A -Z march staged with rim_z_machine / surface_z_machine is refused when its '
+                + 'contact depth below that rim exceeds reachMm - tipDiameterMm - reach_margin_mm; null = unknown, body collision not checked.',
+        },
         note: 'Only programs that reference axis.* need these; B0-only and non-rotary work needs none of them. '
             + 'Set with set_probe_geometry after measuring (axis Z from an opposite-face pair, axis X from a side pair, '
             + 'probe offset from a setter measurement in the SAME documented datum convention). Legacy names do not '

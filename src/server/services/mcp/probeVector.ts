@@ -20,6 +20,8 @@ import {
     knownMachinePosition,
 } from './probing';
 import { McpToolError } from './registry';
+import { StylusReachVerdict, describeStylusReach } from './stylusReach';
+import { requireStylusReach } from './stylusReachGuard';
 import { projectToolTipZ } from './toolDatum';
 import { getProbeTipCalibration } from './toolDatumState';
 import { MIN_USEFUL_MARCH_MM, clampRay } from './machineTravel';
@@ -49,6 +51,8 @@ export interface ProbeVectorPlan {
     backoffMm: number;
     sensorDelayMs: number;
     confirmPasses: number;
+    /** Issue #187: the body-vs-rim verdict at the march's deepest Z (refused at staging when it fails). */
+    stylusReach: StylusReachVerdict;
 }
 
 export function planProbeVector(args: {
@@ -61,6 +65,9 @@ export function planProbeVector(args: {
     backoff_mm?: number;
     sensor_delay_ms?: number;
     confirm_passes?: number;
+    rim_z_machine?: unknown;
+    surface_z_machine?: unknown;
+    reach_margin_mm?: unknown;
 }): ProbeVectorPlan {
     const dx = Number(args.dx) || 0;
     const dy = Number(args.dy) || 0;
@@ -115,6 +122,11 @@ export function planProbeVector(args: {
             + `${clippedBy || 'the travel limit'} along this direction.`);
     }
 
+    const limit = {
+        x: Number((start.x + unit.x * travel).toFixed(3)),
+        y: Number((start.y + unit.y * travel).toFixed(3)),
+        z: Number((start.z + unit.z * travel).toFixed(3)),
+    };
     return {
         unit: {
             x: Number(unit.x.toFixed(6)),
@@ -125,11 +137,10 @@ export function planProbeVector(args: {
         maxTravelMm: travel,
         requestedTravelMm: requested,
         travelClippedBy: clippedBy,
-        limit: {
-            x: Number((start.x + unit.x * travel).toFixed(3)),
-            y: Number((start.y + unit.y * travel).toFixed(3)),
-            z: Number((start.z + unit.z * travel).toFixed(3)),
-        },
+        limit,
+        // Issue #187: the far limit is the deepest Z the march can command
+        // (a level march runs at the start Z, a depth when inside a pocket).
+        stylusReach: requireStylusReach(args, Math.min(start.z, limit.z), 'Vector probe'),
         // Coarse / fine / backoff / sensor delay / confirm passes, clamped to
         // the named limits (procedureLimits.ts; operator law 2026-09-05: never 2 mm).
         ...resolveMarchParams(args),
@@ -175,6 +186,7 @@ export function describeProbeVectorPlanAsGcode(plan: ProbeVectorPlan): string {
         `; anchored at machine (${plan.start.x.toFixed(2)}, ${plan.start.y.toFixed(2)}, ${plan.start.z.toFixed(2)})`
             + ' - re-verified before any motion',
         '; overtravel feed trips -> job stop + connection close + latched alarm',
+        describeStylusReach(plan.stylusReach),
         'G90',
         'G53;',
     ];
@@ -350,6 +362,7 @@ export async function runProbeVectorProcedure(plan: ProbeVectorPlan): Promise<ob
             confirmPassContacts: passContacts,
             spreadMm,
             phases,
+            stylusReach: plan.stylusReach,
             note: `Probe contact ${measuredS.toFixed(3)} mm along (${plan.unit.x}, ${plan.unit.y}, `
                 + `${plan.unit.z}) from the start -> machine (${contactMachine.x}, ${contactMachine.y}, `
                 + `${contactMachine.z}) - median of ${plan.confirmPasses} passes [${passContacts.join(', ')}], `
