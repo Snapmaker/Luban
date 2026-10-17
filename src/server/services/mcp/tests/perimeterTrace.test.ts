@@ -1,10 +1,14 @@
 import { strict as assert } from 'assert';
 
+import { releaseRetreatPatience } from '../marchCore';
 import {
+    ConfirmAt,
+    TRACE_CYCLE_SECONDS,
     TraceIo,
     TraceParams,
     TraceResult,
     estimateTraceTime,
+    expectedConfirmCycles,
     insideBounds,
     normalFor,
     rotate,
@@ -277,14 +281,91 @@ export const tests: Array<[string, () => Promise<void> | void]> = [
         assert.ok(every.perimeter.filter((pt) => pt.confirmed).length === every.counts.confirms);
     }],
 
-    ['the time estimate uses T8\'s measured 0.9 s crawl cycle: 330 mm is ~50 min at 0.1 mm, ~6 min with coarse straights', () => {
-        const e = estimateTraceTime({ maxPerimeterMm: 330, fineStepMm: 0.1, coarseStepMm: 1, accuracyEveryMm: null, expectedCorners: 4, maxTravelMm: 40 });
+    ['#185 item 4: the confirm-cycle estimate follows the confirm_at cadence - T8c\'s four-corner lap ran 9, not "1 + one per corner" = 5', () => {
+        const base = {
+            maxPerimeterMm: 330,
+            fineStepMm: 0.1,
+            coarseStepMm: 1,
+            accuracyEveryMm: null,
+            expectedCorners: 4,
+            maxTravelMm: 40,
+            confirmAt: ['first', 'turns', 'unexpected'] as ConfirmAt[],
+            turnStepDeg: 10,
+            majorTurnDeg: 45,
+            straightPoints: 6,
+        };
+        // T8c (job 96cf38d16b74): 9 cycles = the first wall + 2 per corner (the first block, then the contact after the
+        // 5th block, when the heading has turned 45 deg since that confirm).
+        const t8c = expectedConfirmCycles(base);
+        assert.deepEqual(t8c, { total: 9, perCorner: 2, fromTurns: 0, accuracy: 0 });
+        assert.equal(estimateTraceTime(base).confirmCycles, 9);
+        // 'unexpected' alone: one per corner. 'turns' alone: the lap's 360 deg at one per major_turn_deg, corners or not.
+        assert.equal(expectedConfirmCycles({ ...base, confirmAt: ['first', 'unexpected'] }).total, 5);
+        assert.equal(expectedConfirmCycles({ ...base, confirmAt: ['first', 'turns'] }).total, 9);
+        assert.equal(expectedConfirmCycles({ ...base, confirmAt: ['first', 'turns'], expectedCorners: 0 }).total, 9);
+        assert.equal(expectedConfirmCycles({ ...base, confirmAt: ['first', 'turns', 'unexpected'], expectedCorners: 0 }).total, 9);
+        assert.equal(expectedConfirmCycles({ ...base, confirmAt: ['first'] }).total, 1);
+        // A 90 deg major turn fires once per corner at most: the first block confirms, the remaining 8 blocks never reach 90.
+        assert.equal(expectedConfirmCycles({ ...base, majorTurnDeg: 90 }).total, 5);
+        // Finer turn steps change nothing (the cadence is in degrees); a coarser major turn than the corner does.
+        assert.equal(expectedConfirmCycles({ ...base, turnStepDeg: 5 }).total, 9);
+        assert.equal(expectedConfirmCycles({ ...base, majorTurnDeg: 180 }).total, 5);
+        // Accuracy points add the budget over accuracy_every_mm.
+        assert.deepEqual(expectedConfirmCycles({ ...base, confirmAt: ['first', 'every'], accuracyEveryMm: 20 }), { total: 18, perCorner: 0, fromTurns: 0, accuracy: 17 });
+        // The simulated pocket (4 corners + a lobe that turns like one) runs within the estimate's reach.
+        assert.ok(t8c.total >= 5 && t8c.total <= 40);
+    }],
+
+    ['#185 item 4: the time estimate is calibrated on T8c - 1.5 s per contact, 4 s per confirm cycle, the straightness window at fine steps', () => {
+        const e = estimateTraceTime({
+            maxPerimeterMm: 330,
+            fineStepMm: 0.1,
+            coarseStepMm: 1,
+            accuracyEveryMm: null,
+            expectedCorners: 4,
+            maxTravelMm: 40,
+            confirmAt: ['first', 'turns', 'unexpected'],
+            turnStepDeg: 10,
+            majorTurnDeg: 45,
+            straightPoints: 6,
+        });
+        assert.equal(TRACE_CYCLE_SECONDS, 1.5);
         assert.equal(e.worstCycles, 3300);
-        assert.equal(e.bestCycles, 330);
-        assert.equal(e.confirmCycles, 5);
-        assert.equal(e.approachSeconds, 13);
-        assert.ok(e.worstMinutes >= 48 && e.worstMinutes <= 52, `worst ${e.worstMinutes} min`);
-        assert.ok(e.bestMinutes >= 5 && e.bestMinutes <= 7, `best ${e.bestMinutes} min`);
+        // Best case: the 6 mm window after the first wall and after each of the 4 corners is walked at 0.1 mm (300 cycles),
+        // the remaining 300 mm at 1 mm.
+        assert.equal(e.requalifyMm, 30);
+        assert.equal(e.bestCycles, 600);
+        assert.equal(e.confirmCycles, 9);
+        assert.equal(e.approachSeconds, 40);
+        // T8c's 309 mm lap took 24.8 min: inside the band, not under its old floor of 7.
+        assert.ok(e.worstMinutes >= 82 && e.worstMinutes <= 86, `worst ${e.worstMinutes} min`);
+        assert.ok(e.bestMinutes >= 15 && e.bestMinutes <= 17, `best ${e.bestMinutes} min`);
+        // A budget shorter than the windows is all fine steps.
+        const tiny = estimateTraceTime({
+            maxPerimeterMm: 5,
+            fineStepMm: 0.1,
+            coarseStepMm: 1,
+            accuracyEveryMm: null,
+            expectedCorners: 4,
+            maxTravelMm: 0,
+            confirmAt: ['first'],
+            turnStepDeg: 10,
+            majorTurnDeg: 45,
+            straightPoints: 6,
+        });
+        assert.equal(tiny.requalifyMm, 5);
+        assert.equal(tiny.bestCycles, tiny.worstCycles);
+    }],
+
+    ['#185 item 2: a march\'s release retreat waits the standoff window on its first step (sensed-free ground) and the full timeout where the answer is a fault', () => {
+        // T8c's two residual 3.5 s waits: the confirm cycle's coarse contact on its 2nd / 3rd 0.1 mm step, the first step
+        // back still triggered (hysteresis), the next step released at once.
+        assert.equal(releaseRetreatPatience(1, true), 'window');
+        // The step that lands back at the march start, or at the retreat cap, decides the stuck-probe fault.
+        assert.equal(releaseRetreatPatience(1, false), 'timeout');
+        // Every later step is past the last point known free.
+        assert.equal(releaseRetreatPatience(2, true), 'timeout');
+        assert.equal(releaseRetreatPatience(3, false), 'timeout');
     }],
 
     ['T8 standoff: after every contact the tip parks at a RELEASE-VERIFIED standoff, and a wavy wall is crawled without a "stuck probe" abort', async () => {

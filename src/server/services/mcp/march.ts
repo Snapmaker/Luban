@@ -6,9 +6,10 @@ import {
     SteppedIo,
     SteppedTraverseResult,
     linkDescentCore,
+    releaseRetreatPatience,
     steppedTraverseCore,
 } from './marchCore';
-import { GPIO_SENSOR_DELAY_MS, releaseTimeoutFor } from './procedureLimits';
+import { GPIO_SENSOR_DELAY_MS, releaseTimeoutFor, standoffReleaseWindowFor } from './procedureLimits';
 import { probeFeedService } from './probeFeed';
 import {
     COARSE_FEED,
@@ -139,12 +140,22 @@ export async function marchToContact(
     if (coarseContactS === null) {
         return null;
     }
+    // The first step back lands on ground the march sensed free: a probe
+    // still triggered there is answered by the next step, not by the full
+    // timeout (releaseRetreatPatience, #185); the step that decides the
+    // fault keeps the timeout.
+    const releaseWindowMs = standoffReleaseWindowFor(params.sensorDelayMs);
+    const contactS: number = coarseContactS;
+    const canRetreat = (at: number) => at > 1e-9 && contactS - at < MAX_RETREAT_MM + 1e-9;
     let released = false;
-    while (s > 1e-9 && coarseContactS - s < MAX_RETREAT_MM + 1e-9) {
+    let retreatStep = 0;
+    while (canRetreat(s)) {
         const t0 = Date.now();
+        retreatStep += 1;
         s = Math.max(s - params.coarseStepMm, 0);
         await move(`${tag}:release:${name}`, s, COARSE_FEED);
-        const sensed = await senseReleaseAfter('probe', t0, releaseTimeoutMs);
+        const patience = releaseRetreatPatience(retreatStep, canRetreat(s));
+        const sensed = await senseReleaseAfter('probe', t0, patience === 'window' ? releaseWindowMs : releaseTimeoutMs);
         if (!sensed.contact) {
             released = true;
             break;

@@ -421,21 +421,35 @@ the tip retreats along the inward normal one fine step at a time until the probe
 one more (the release-verified standoff — T8 on 2026-09-22 parked one step off the contact, 0.05 mm
 inside a wavy wooden wall, and the next advance rubbed); a retreat step short of the last point known
 free waits at most ~0.5 s for the release, only the step past it waits the full timeout (and aborts if
-still triggered). A blocked step retreats exactly that step; if
+still triggered); a confirm cycle's own lift waits the same ~0.5 s on its first step back (T8c's two
+residual 3.5 s waits were there). A blocked step retreats exactly that step; if
 the probe releases there it is a corner (turn `turn_step_deg` away from the wall), if not it is a RUB
 (the wall came to the tip: the standoff is repaired and the crawl goes on). A wall that falls away
 turns the heading toward it; runs proven straight go at `coarse_step_mm` (1) with the heading aligned
-to the fitted wall. Confirm cycles run ONLY at `confirm_at` (default first / turns / unexpected; add
-`every` + `accuracy_every_mm` for accuracy points); one that ends with the probe still triggered is
+to the fitted wall — proving one costs `straight_points` (6) coarse steps' worth of wall at FINE steps
+after the first wall and after every corner (T8c: 50-60 fine contacts each, half of all fine steps;
+`straight_points: 3` halves that and lets ~R11 and larger curves pass as straight instead of ~R45).
+Confirm cycles run ONLY at `confirm_at` (default first / turns / unexpected; add
+`every` + `accuracy_every_mm` for accuracy points): the first wall, then per corner its first blocked
+step plus one more each `major_turn_deg` (45) turned inside it — 2 per 90 deg corner, 9 for a
+four-corner pocket; one that ends with the probe still triggered is
 skipped as a rub, not reported as a stuck probe. The first wall is found with the normal 1 mm coarse
-march; fine steps belong to the crawl. Time (measured T8): a crawl cycle is 0.9 s — 9 s/mm at 0.1 mm,
-0.93 s/mm at 1 mm — so a 330 mm pocket is ~50 min at 0.1 everywhere and ~6 min with coarse straights;
-the confirm page states the figure. Result: ordered `perimeter` (tip-centre + `surface` one tip radius
+march; fine steps belong to the crawl. Time (measured T8c, job 96cf38d16b74): one contact costs ~1.5 s
+(advance + ~1.7 bumps + ~2 standoff retreats at ~0.27 s of transport overhead each) — 15 s/mm at 0.1
+mm, 1.5 s/mm at 1 mm — and a confirm cycle ~4 s; the per-command overhead is the lever, not runner
+waits (T8c: 1169 s of 1489 s). A 330 mm four-corner pocket is ~16 min with coarse straights (the
+straightness windows at fine steps counted) and ~84 min at 0.1 everywhere; T8c's 309 mm lap took 25.
+The confirm page states the figures. Result: ordered `perimeter` (tip-centre + `surface` one tip radius
 into the material along `normal` — the normal of the LOCAL wall, a line through the neighbouring
 contacts, not the crawl heading, which lagged 30-90 deg after corners), step kind incl. `rub`,
 confirmed), `segments` (straight walls with collinear runs MERGED — T8's 4-wall pocket had come out as
 11 — each with its tip-centre `fit` and wall `surface` line; curves with `shape`), `corners` (circle
-fitted ONLY to the points off BOTH adjacent walls, with `residualsMm`, `fitIndices`, `onWallPoints`;
+fitted to the points off BOTH adjacent walls PLUS the wall-to-arc transition points the circle explains
+better than the wall's line — `extendedPoints`, which may lie inside the walls' index ranges — with
+`residualsMm`, `fitIndices`, `onWallPoints`, `arcSpanDeg` the fit covers and `lowConfidence` when that
+is under 70 deg: a short slice reads its radius to a tenth, not 0.1 mm (T8c's chuck -X fit over 61 deg
+read 4.06 for a ~4.4 corner); a 0.1 mm-gridded r ~3 arc on wavy wood reads +-0.2 mm whichever
+points are taken, so quote the span and residuals with the radius;
 `shape` `arc` / `sharp` / `irregular` — an irregular lobe has NO radius: read its `polyline`, its
 line / arc `pieces` and `singleArc`, the misfit one circle would have had), `lengths` (`tipCentreMm`,
 `surfaceMm` — the one to compare with CAD — and the `surfaceFromTurnMm` cross-check), `closed`,

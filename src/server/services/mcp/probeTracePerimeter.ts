@@ -5,11 +5,13 @@ import { clearanceOptions } from './clearanceContext';
 import { landmarkStore } from './landmarks';
 import { MarchParams, Xyz, makeAnnounce, marchToContact, retreatAlong } from './march';
 import { STEPPED_HOP_FEED } from './marchCore';
-import { PerimeterCorner, PerimeterSegment, TraceAnalysis, TraceLengths, analyseTrace } from './perimeterAnalysis';
+import { CORNER_ARC_SPAN_CONFIDENT_DEG, PerimeterCorner, PerimeterSegment, TraceAnalysis, TraceLengths, analyseTrace } from './perimeterAnalysis';
 import {
     CONFIRM_AT_VALUES,
     ConfirmAt,
     ReleasePatience,
+    TRACE_CONFIRM_SECONDS,
+    TRACE_CYCLE_SECONDS,
     TraceBounds,
     TraceIo,
     TraceParams,
@@ -105,6 +107,8 @@ export interface ProbeTracePlan {
     tipDiameterMm: number | null;
     estimate: ReturnType<typeof estimateTraceTime>;
     confirmAt: ConfirmAt[];
+    /** expected_corners (default 4): the time / confirm-cycle estimate only, never a bound on the crawl. */
+    expectedCorners: number;
 }
 
 interface TraceArgs {
@@ -299,8 +303,13 @@ export function planProbeTracePerimeter(args: TraceArgs, extraObstacles: Obstacl
             accuracyEveryMm: accuracyEvery,
             expectedCorners,
             maxTravelMm: maxTravel,
+            confirmAt,
+            turnStepDeg: turnStep,
+            majorTurnDeg: majorTurn,
+            straightPoints,
         }),
         confirmAt,
+        expectedCorners,
     };
     const violations = checkMotion(traceMotion(plan), [...landmarkStore.obstacleBoxes(), ...extraObstacles], { traverseZ: hopZ, ...clearanceOptions() });
     if (violations.length) {
@@ -326,14 +335,21 @@ export function describeProbeTracePlanAsGcode(plan: ProbeTracePlan): string {
         `;   last point known free waits at most ${standoffReleaseWindowFor(plan.confirmMarch.sensorDelayMs)} ms for the release (then steps again); the step past it `
             + `waits the full ${releaseTimeoutFor(plan.confirmMarch.sensorDelayMs)} ms release timeout and a probe still triggered there ABORTS. A contact on an advance whose`,
         ';   retreat does not release is a RUB, not a block: the standoff is repaired and the crawl goes on; a confirm cycle that ends stuck is skipped, not a fault.',
+        `;   A confirm cycle's own lift back to sensed-free ground waits the same ${standoffReleaseWindowFor(plan.confirmMarch.sensorDelayMs)} ms on its first step (T8c: two 3.5 s waits were there).`,
         `; CONFIRM CYCLES (lift-and-retest, ${plan.confirmMarch.confirmPasses} pass(es)) only at: ${plan.confirmAt.join(', ')}${p.accuracyEveryMm ? ` (every ${p.accuracyEveryMm} mm)` : ''}`
-            + ` - expected about ${e.confirmCycles} (1 first wall + ~1 per corner${p.accuracyEveryMm ? ' + accuracy points' : ''}); every other contact is one sensed ${p.fineStepMm} mm bump.`,
-        `; TIME (measured T8, GPIO, sensor ${plan.confirmMarch.sensorDelayMs} ms: a crawl cycle = advance + bump + retreat = 0.9 s -> 9 s/mm at 0.1 mm, 0.93 s/mm at 1 mm; ~10 s per confirm cycle):`,
-        `;   ${e.bestCycles}..${e.worstCycles} crawl cycles = ${e.bestMinutes}..${e.worstMinutes} min for the full budget (best: coarse on every straight; worst: fine everywhere),`
-            + ` plus ~${e.approachSeconds} s for the first-wall march at ${plan.firstMarch.coarseStepMm} mm coarse steps. Job events exceed the buffer on a long crawl; result.trace is never trimmed.`,
+            + ` - expected about ${e.confirmCycles}: 1 first wall${e.confirms.perCorner ? ` + ${e.confirms.perCorner} per corner x ${plan.expectedCorners} expected`
+                + ` (the first block of each corner, then one per ${p.majorTurnDeg} deg turned inside it at ${p.turnStepDeg} deg steps)` : ''}`
+            + `${e.confirms.fromTurns ? ` + ${e.confirms.fromTurns} per ${p.majorTurnDeg} deg of the lap's turn` : ''}${e.confirms.accuracy ? ` + ${e.confirms.accuracy} accuracy points` : ''};`
+            + ` every other contact is one sensed ${p.fineStepMm} mm bump.`,
+        `; TIME (measured T8c, GPIO, sensor ${plan.confirmMarch.sensorDelayMs} ms: one contact = advance + ~1.7 bumps + ~2 standoff retreats = ${TRACE_CYCLE_SECONDS} s`
+            + ` -> ${r3(TRACE_CYCLE_SECONDS / p.fineStepMm)} s/mm at ${p.fineStepMm} mm, ${r3(TRACE_CYCLE_SECONDS / p.coarseStepMm)} s/mm at ${p.coarseStepMm} mm; ~${TRACE_CONFIRM_SECONDS} s per confirm cycle):`,
+        `;   ${e.bestCycles}..${e.worstCycles} crawl cycles = ${e.bestMinutes}..${e.worstMinutes} min for the full budget (best: coarse on every straight after the ${r3(p.straightPoints * p.coarseStepMm)} mm`
+            + ` straightness window walked at fine steps from the first wall and after each of the ${plan.expectedCorners} expected corners, ${e.requalifyMm} mm in all; worst: fine everywhere),`,
+        `;   plus ~${e.approachSeconds} s for the first-wall march at ${plan.firstMarch.coarseStepMm} mm coarse steps (the law-2 descent is extra). Job events exceed the buffer on a long crawl; result.trace is never trimmed.`,
         `; RESULT: ordered perimeter points (tip-centre${plan.tipDiameterMm === null ? '; no tip diameter stored, so no surface points' : ` and surface = + ${r3(plan.tipDiameterMm / 2)} mm into the material`}`
             + ' along the normal of the local wall - a line through the neighbouring contacts), straight walls (collinear runs merged) with residuals and surface lines,',
-        ';   corners fitted only to the points off BOTH walls (radius, centre, residuals) - or, where no single circle fits, an IRREGULAR lobe as a polyline and',
+        ';   corners fitted to the points off BOTH walls plus the wall-to-arc transition points the circle explains better than the wall (radius, centre, residuals,',
+        `;   the arc span the fit covers - under ${CORNER_ARC_SPAN_CONFIDENT_DEG} deg the radius is flagged LOW CONFIDENCE) - or, where no single circle fits, an IRREGULAR lobe as a polyline and`,
         ';   line / arc pieces with no radius - closure, tip-centre AND surface perimeter lengths, counts, timing.',
         `; anchored at machine (${plan.staged.x.toFixed(2)}, ${plan.staged.y.toFixed(2)}, ${plan.staged.z.toFixed(2)}) - re-verified before motion`,
         'G90',
@@ -402,7 +418,11 @@ export async function runProbeTracePerimeterProcedure(plan: ProbeTracePlan): Pro
             if (c.shape === 'irregular') {
                 return `irregular (${c.pieces ? c.pieces.length : 0} pieces, one-circle rms ${c.singleArc ? c.singleArc.rmsResidualMm.toFixed(2) : '?'})`;
             }
-            return c.radiusTipCentreMm === null ? c.shape : c.radiusTipCentreMm.toFixed(2);
+            if (c.radiusTipCentreMm === null) {
+                return c.shape;
+            }
+            // The span the fit covers decides how far the radius is to be trusted (#185: a 61 deg slice read 0.36 mm small).
+            return `${c.radiusTipCentreMm.toFixed(2)} over ${c.arcSpanDeg === null ? '?' : Math.round(c.arcSpanDeg)} deg${c.lowConfidence ? ' LOW CONFIDENCE' : ''}`;
         };
         const totalMs = Date.now() - startedAt;
         const steps = trace ? trace.counts.fineSteps + trace.counts.coarseSteps + trace.counts.bumps : 0;

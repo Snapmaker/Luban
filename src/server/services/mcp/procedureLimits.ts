@@ -125,7 +125,10 @@ export function releaseTimeoutFor(sensorDelayMs: number, minMs: number = RELEASE
  * wall and the next step released it at once. 500 ms covers the slowest
  * observed release with margin; a release read later only makes the standoff
  * one step longer. The step past the last point known free keeps the full
- * releaseTimeoutFor - that answer is a fault.
+ * releaseTimeoutFor - that answer is a fault. The same window bounds the
+ * FIRST step of a march's release retreat (marchCore.releaseRetreatPatience,
+ * #185): it lands on ground the march sensed free, and T8c's two residual
+ * 3.5 s waits were that step inside confirm cycles.
  */
 export const STANDOFF_RELEASE_WINDOW_MIN_MS = 500;
 

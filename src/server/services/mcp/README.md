@@ -394,7 +394,7 @@ mcp/
   probeOutline.ts probe_stock_outline: top points + side marches -> centre/size/yaw
   probeWallFollow.ts probe_wall_follow: N stations along a vertical wall, step-along at a standoff (wallFollow.ts pure fit)
   probeCorner.ts   probe_corner: internal corner radius - bisector march, radial marches from the fitted centre (cornerFit.ts pure: Kasa fit, run split, corner geometry)
-  probeTracePerimeter.ts probe_trace_perimeter: 0.1 mm crawl round an unknown pocket (perimeterTrace.ts pure: crawl with a release-verified standoff, rub handling, selective confirm cycles, partial result on abort, T8-measured time estimate; perimeterAnalysis.ts pure: the report - local-geometry normals and surfaces, merged walls, corner circles off both walls, irregular lobes as polyline + pieces, tip-centre and surface lengths)
+  probeTracePerimeter.ts probe_trace_perimeter: 0.1 mm crawl round an unknown pocket (perimeterTrace.ts pure: crawl with a release-verified standoff, rub handling, selective confirm cycles, partial result on abort, T8c-measured time and confirm-cycle estimate; perimeterAnalysis.ts pure: the report - local-geometry normals and surfaces, merged walls, corner circles off both walls extended over the wall-to-arc transition with the arc span and a low-confidence flag under 70 deg, irregular lobes as polyline + pieces, tip-centre and surface lengths)
   probeProgram.ts probe_program: many ops, one approval, references between ops
   programRefs.ts pure reference resolution ({from, plus, mid, ...}) with operator bounds
   probeGcode.ts  CAM probing-program parser (G38.x, links, rotations) - pure

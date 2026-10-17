@@ -1,6 +1,8 @@
 import { strict as assert } from 'assert';
 
-import { PerimeterCorner, analyseTrace, anchoredLength, localNormals, segmentPerimeter } from '../perimeterAnalysis';
+import {
+    CORNER_ARC_SPAN_CONFIDENT_DEG, PerimeterCorner, analyseTrace, anchoredLength, arcSpanDeg, localNormals, segmentPerimeter,
+} from '../perimeterAnalysis';
 import {
     ReleasePatience, TraceIo, TracePoint, TracePointKind, TraceResult, emptyTraceCounts, tracePerimeter,
 } from '../perimeterTrace';
@@ -156,23 +158,115 @@ export const tests: Array<[string, () => Promise<void> | void]> = [
         // Residuals are reported, one per fitted point, and small on a true arc.
         assert.ok(chuckPlusX.residualsMm && chuckPlusX.residualsMm.length === chuckPlusX.fitIndices.length);
         assert.ok((chuckPlusX.rmsResidualMm as number) < TOL && (chuckPlusX.maxResidualMm as number) < TOL);
-        // Every fitted point is off both adjacent wall lines by more than the tolerance.
+        // Every fitted point is off both adjacent wall lines by more than the tolerance, except the wall-to-arc
+        // transition points the fit was extended over (#185) - at most extendedPoints of them.
         const lines = analysis.segments.filter((s) => s.kind === 'line');
         const plusX = lines.find((l) => l.kind === 'line' && l.surface && l.surface.normal.x > 0.9);
         const chuck = lines.find((l) => l.kind === 'line' && l.surface && l.surface.normal.y > 0.9);
+        let onAWall = 0;
         for (const i of chuckPlusX.fitIndices) {
             for (const l of [plusX, chuck]) {
                 if (l && l.kind === 'line') {
                     const res = (TIPS[i].x - l.fit.point.x) * l.fit.normal.x + (TIPS[i].y - l.fit.point.y) * l.fit.normal.y;
-                    assert.ok(Math.abs(res) > TOL, `fitted point ${i} is on a wall (${res})`);
+                    if (Math.abs(res) <= TOL) {
+                        onAWall += 1;
+                    }
                 }
             }
         }
+        assert.ok(onAWall <= chuckPlusX.extendedPoints, `${onAWall} fitted points on a wall line, ${chuckPlusX.extendedPoints} extended`);
         assert.ok(chuckPlusX.onWallPoints >= 1, 'the wall tails were left out of the fit');
         const chuckMinusX = cornerNear(analysis.corners, { x: 145.2, y: 243.9 });
         assert.equal(chuckMinusX.shape, 'arc');
         assert.ok(Math.abs((chuckMinusX.radiusPhysicalMm as number) - 4.42) < 0.5, `chuck -X r ${chuckMinusX.radiusPhysicalMm} (own sector fit 4.42)`);
         assert.ok(analysis.corners.every((k) => Math.abs((k.interiorAngleDeg as number) - 90) < 3), 'four square corners');
+    }],
+
+    ['#185 item 1: the fit takes the wall-to-arc transition points the circle explains better than the wall - longer spans, the chuck +X centre closer to the known', () => {
+        // Without the extension the chuck +X fit was 39 points over ~60 deg (r 4.76, centre 0.15 mm off); with it the
+        // transition points on the +X and chuck walls that sit on the circle join the fit.
+        const chuckPlusX = cornerNear(analysis.corners, T8B_KNOWN.chuckXPlusCentre);
+        assert.ok(chuckPlusX.extendedPoints >= 1, `chuck +X extended by ${chuckPlusX.extendedPoints} points`);
+        assert.ok((chuckPlusX.arcSpanDeg as number) >= CORNER_ARC_SPAN_CONFIDENT_DEG, `chuck +X span ${chuckPlusX.arcSpanDeg} deg`);
+        assert.equal(chuckPlusX.lowConfidence, false);
+        const c = chuckPlusX.center as Xy;
+        const off = Math.hypot(c.x - T8B_KNOWN.chuckXPlusCentre.x, c.y - T8B_KNOWN.chuckXPlusCentre.y);
+        assert.ok(off < 0.15, `chuck +X centre ${off.toFixed(3)} mm from the known (was 0.15)`);
+        assert.ok(Math.abs((chuckPlusX.radiusPhysicalMm as number) - T8B_KNOWN.chuckXPlusRadiusPhysicalMm) < 0.1, `chuck +X r ${chuckPlusX.radiusPhysicalMm} vs 4.68 (was 4.76)`);
+        // The extension never exceeds the arc a tangent circle can subtend between the two walls (90 deg + the tolerance band).
+        assert.ok((chuckPlusX.arcSpanDeg as number) <= 96, `span ${chuckPlusX.arcSpanDeg} within the 90 deg corner`);
+        // The fit indices may run into the adjacent walls' ranges, by at most the extended points, and stay in trace order.
+        const lines = analysis.segments.filter((s): s is Extract<typeof s, { kind: 'line' }> => s.kind === 'line');
+        const inWall = chuckPlusX.fitIndices.filter((i) => lines.some((l) => (l.from <= l.to ? i >= l.from && i <= l.to : i >= l.from || i <= l.to)));
+        assert.ok(inWall.length >= 1 && inWall.length <= chuckPlusX.extendedPoints, `${inWall.length} fit points inside wall ranges (extended ${chuckPlusX.extendedPoints})`);
+        assert.ok(chuckPlusX.fitIndices.every((i, k) => k === 0 || i > chuckPlusX.fitIndices[k - 1]), 'fit indices in trace order');
+        // The chuck -X corner (T8c's 61 deg slice read 0.36 small): the span is now well past the confidence line.
+        const chuckMinusX = cornerNear(analysis.corners, { x: 145.2, y: 243.9 });
+        assert.ok((chuckMinusX.arcSpanDeg as number) >= 80 && chuckMinusX.extendedPoints >= 5, `chuck -X span ${chuckMinusX.arcSpanDeg} deg, extended ${chuckMinusX.extendedPoints}`);
+        assert.equal(chuckMinusX.lowConfidence, false);
+        assert.ok((chuckMinusX.rmsResidualMm as number) <= TOL, 'the extended fit still holds its points within the tolerance');
+        // Irregular lobes carry no span and are never flagged.
+        for (const lobe of analysis.corners.filter((k) => k.shape === 'irregular')) {
+            assert.equal(lobe.arcSpanDeg, null);
+            assert.equal(lobe.lowConfidence, false);
+            assert.equal(lobe.extendedPoints, 0);
+        }
+    }],
+
+    ['#185 item 1: a synthetic R3 corner - the full arc fits over ~90 deg; the same corner with only a 60 deg slice of arc is flagged LOW CONFIDENCE', () => {
+        // Tip-centre path with the material on the right: wall A along +X at y = 0, an internal corner arc about (-3, 3)
+        // r 3 from the tangent (-3, 0) to the tangent (0, 3), wall B along +Y at x = 0.
+        const C = { x: -3, y: 3 };
+        const R3 = 3;
+        const build = (arcFromDeg: number, arcToDeg: number): Xy[] => {
+            const pts: Xy[] = [];
+            const start = { x: C.x + R3 * Math.cos((arcFromDeg * Math.PI) / 180), y: C.y + R3 * Math.sin((arcFromDeg * Math.PI) / 180) };
+            const end = { x: C.x + R3 * Math.cos((arcToDeg * Math.PI) / 180), y: C.y + R3 * Math.sin((arcToDeg * Math.PI) / 180) };
+            for (let k = 0; -15 + k * 0.1 < start.x - 1e-9; k++) {
+                pts.push({ x: Number((-15 + k * 0.1).toFixed(3)), y: 0 });
+            }
+            const stepDeg = (0.1 / R3) * (180 / Math.PI);
+            for (let k = 0; arcFromDeg + k * stepDeg <= arcToDeg + 1e-9; k++) {
+                const a = ((arcFromDeg + k * stepDeg) * Math.PI) / 180;
+                pts.push({ x: Number((C.x + R3 * Math.cos(a)).toFixed(3)), y: Number((C.y + R3 * Math.sin(a)).toFixed(3)) });
+            }
+            for (let k = 1; end.y + k * 0.1 <= 15; k++) {
+                pts.push({ x: 0, y: Number((end.y + k * 0.1).toFixed(3)) });
+            }
+            return pts;
+        };
+        const tol = 0.15;
+        const full = segmentPerimeter(build(-90, 0), tol, 4, 1.25, 4, { wallSide: 'right' });
+        assert.equal(full.corners.length, 1, JSON.stringify(full.segments.map((s) => [s.kind, s.from, s.to])));
+        const whole = full.corners[0];
+        assert.equal(whole.shape, 'arc');
+        // The greedy wall extension had absorbed the first acos(1 - tol / r) = 18 deg of arc at each end (a 54 deg
+        // slice); the changepoint gives them back to the arc.
+        assert.ok(whole.extendedPoints >= 10, `extended ${whole.extendedPoints}`);
+        assert.ok((whole.arcSpanDeg as number) >= 85 && (whole.arcSpanDeg as number) <= 96, `full arc span ${whole.arcSpanDeg}`);
+        assert.equal(whole.lowConfidence, false);
+        assert.ok(Math.abs((whole.radiusTipCentreMm as number) - R3) < 0.02, `r ${whole.radiusTipCentreMm}`);
+        assert.ok(Math.hypot((whole.center as Xy).x - C.x, (whole.center as Xy).y - C.y) < 0.02);
+        assert.ok(Math.abs((whole.interiorAngleDeg as number) - 90) < 0.5);
+
+        // Only the middle 60 deg of the arc exists; the walls run straight to where it starts (ledges within the
+        // tolerance of the wall lines). The circle through the slice is right, but a 60 deg sagitta carries it.
+        const slice = segmentPerimeter(build(-75, -15), tol, 4, 1.25, 4, { wallSide: 'right' });
+        assert.equal(slice.corners.length, 1, JSON.stringify(slice.segments.map((s) => [s.kind, s.from, s.to])));
+        const part = slice.corners[0];
+        assert.equal(part.shape, 'arc');
+        assert.ok((part.arcSpanDeg as number) >= 55 && (part.arcSpanDeg as number) < CORNER_ARC_SPAN_CONFIDENT_DEG, `slice span ${part.arcSpanDeg}`);
+        assert.equal(part.lowConfidence, true, 'a fit under 70 deg is low confidence');
+        assert.ok(Math.abs((part.radiusTipCentreMm as number) - R3) < 0.05, `slice r ${part.radiusTipCentreMm}`);
+        // The ledge points on the wall lines stay with the walls (the line explains them exactly).
+        assert.ok(part.fitIndices.every((i) => {
+            const q = build(-75, -15)[i];
+            return Math.hypot(q.x - C.x, q.y - C.y) > R3 - 0.01 && Math.hypot(q.x - C.x, q.y - C.y) < R3 + 0.01;
+        }), 'every fitted point is on the arc');
+
+        // arcSpanDeg sums signed turns about the centre: a zig-zag along the arc does not inflate it.
+        const zig = [0, 10, 5, 20, 15, 30].map((deg) => ({ x: C.x + R3 * Math.cos((deg * Math.PI) / 180), y: C.y + R3 * Math.sin((deg * Math.PI) / 180) }));
+        assert.ok(Math.abs(arcSpanDeg(zig, [0, 1, 2, 3, 4, 5], C) - 30) < 1e-6);
     }],
 
     ['#183 item 4: the free-end lobes are IRREGULAR - no single radius, a polyline and line / arc pieces within the tolerance', () => {

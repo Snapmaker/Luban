@@ -166,6 +166,18 @@ export type PerimeterSegment =
  */
 export type CornerShape = 'arc' | 'sharp' | 'irregular';
 
+/**
+ * An arc fitted over less of the corner than this is LOW CONFIDENCE. T8c
+ * (job 96cf38d16b74, issue #185): the chuck -X corner's circle came from a
+ * 61 deg slice and read r 4.06 for a corner the same points put at ~4.4
+ * (+-0.1 mm); the chuck +X fit over 70 deg read 0.21 low of the known 4.68.
+ * The radius of a short arc rides on its sagitta - r ~ chord^2 / 8 s - and at
+ * 0.1 mm contact noise a tip-centre r ~3 arc under 70 deg is uncertain by a
+ * tenth of its radius. The span is reported with every fit; the flag says
+ * the radius is not to be trusted to the usual 0.1 mm.
+ */
+export const CORNER_ARC_SPAN_CONFIDENT_DEG = 70;
+
 export interface PerimeterCorner {
     /** Perimeter point indices of the curve between two lines (from > to: through the closure seam). */
     from: number;
@@ -179,12 +191,31 @@ export interface PerimeterCorner {
     rmsResidualMm: number | null;
     /** Signed radial residual of each point the circle was fitted to (positive = outside), in `fitIndices` order. */
     residualsMm: number[] | null;
-    /** The points the circle was fitted to: those whose residual from BOTH adjacent wall lines exceeds the tolerance. */
+    /**
+     * The points the circle was fitted to: those whose residual from BOTH
+     * adjacent wall lines exceeds the tolerance, extended over the ends of
+     * the adjacent walls by the transition points the circle explains better
+     * than the wall's line (#185) - so they may run `extendedPoints` into the
+     * walls' index ranges, beyond `from` / `to`.
+     */
     fitIndices: number[];
     /** Curve points left out of the fit because they lie on an adjacent wall's line (the tails the old fit absorbed). */
     onWallPoints: number;
     /** Off-wall points dropped from the ENDS of the fit because they sat off the circle by more than the tolerance (the wall's transition into the arc). */
     trimmedPoints: number;
+    /**
+     * Points taken INTO the fit from the ends of the adjacent walls (#185):
+     * the wall-to-arc transition lies within the tolerance of both the line
+     * and the circle, and the greedy wall extension had given all of it to
+     * the wall - T8c's chuck -X circle was fitted to a 61 deg slice of a 90
+     * deg corner and read 0.36 mm small. Each side's split is the one that
+     * minimises the two models' total squared residual over the transition.
+     */
+    extendedPoints: number;
+    /** The angle the fitted points subtend at the circle's centre (degrees); null unless shape 'arc'. */
+    arcSpanDeg: number | null;
+    /** shape 'arc' with arcSpanDeg under CORNER_ARC_SPAN_CONFIDENT_DEG: the radius rides on a short sagitta and is not to be trusted to 0.1 mm. */
+    lowConfidence: boolean;
     /** Interior angle between the two straight walls the curve joins (degrees). */
     interiorAngleDeg: number | null;
     /** Path length of the curve (tip centre, anchored polyline). */
@@ -377,6 +408,111 @@ function trimmedCircle(points: Xy[], idx: number[], tolMm: number): { used: numb
     return { used, whole, fit };
 }
 
+function radialResidual(fit: CircleFit, q: Xy): number {
+    return Math.hypot(q.x - fit.center.x, q.y - fit.center.y) - fit.radius;
+}
+
+/**
+ * The angle (degrees) the ordered points `idx` subtend at `center`: the sum
+ * of the signed turns between consecutive point vectors, so the fine-step
+ * zig-zag across the arc does not inflate it.
+ */
+export function arcSpanDeg(points: Xy[], idx: number[], center: Xy): number {
+    let total = 0;
+    for (let k = 1; k < idx.length; k++) {
+        const a = points[idx[k - 1]];
+        const b = points[idx[k]];
+        const ta = Math.atan2(a.y - center.y, a.x - center.x);
+        const tb = Math.atan2(b.y - center.y, b.x - center.x);
+        let d = tb - ta;
+        while (d > Math.PI) {
+            d -= 2 * Math.PI;
+        }
+        while (d <= -Math.PI) {
+            d += 2 * Math.PI;
+        }
+        total += d;
+    }
+    return r3((Math.abs(total) * 180) / Math.PI);
+}
+
+/**
+ * Extend an arc's fit set over the ends of its adjacent walls (#185). The
+ * wall-to-arc transition sits within the tolerance of BOTH the wall's line
+ * and the corner's circle; findLines' greedy extension gives every such
+ * point to the wall, and the circle is then fitted to the middle of the
+ * corner only (T8c chuck -X: 61 of 90 deg, r 0.36 mm small). On each side
+ * the candidates are the consecutive points beyond the fit, inside the
+ * wall's run, that lie within the tolerance of the circle fitted so far;
+ * the split chosen is the one that minimises the two models' total squared
+ * residual - a point goes to the model that explains it better, judged over
+ * the whole transition rather than point by point (the contacts zig-zag a
+ * fine step, so a single point decides nothing). An arc tangent to two
+ * walls meeting at interior angle A subtends at most 180 - A: a split whose
+ * points subtend more than that (plus the tolerance band's own width at the
+ * tangent, atan(tol / r) each end) has taken wall points past the tangent
+ * and is not a candidate. The wall segments are not changed: a transition
+ * point may be in both the wall's range and the fit.
+ */
+function extendArcOverWalls(
+    points: Xy[],
+    used: number[],
+    base: CircleFit,
+    before: LineRun | null,
+    after: LineRun | null,
+    tolMm: number,
+    interiorAngleDeg: number | null
+): { used: number[]; fit: CircleFit; extended: number } {
+    if (used.length < 3) {
+        return { used, fit: base, extended: 0 };
+    }
+    const maxSpanDeg = interiorAngleDeg === null
+        ? Infinity
+        : 180 - interiorAngleDeg + (2 * Math.atan(tolMm / base.radius) * 180) / Math.PI;
+    const first = used[0];
+    const last = used[used.length - 1];
+    const zone = (wall: LineRun | null, start: number, step: -1 | 1): number[] => {
+        const out: number[] = [];
+        if (!wall) {
+            return out;
+        }
+        for (let k = start; k >= wall.from && k <= wall.to && k >= 0 && k < points.length; k += step) {
+            if (Math.abs(radialResidual(base, points[k])) > tolMm + 1e-9) {
+                break;
+            }
+            out.push(k);
+        }
+        return out;
+    };
+    const head = zone(before, first - 1, -1);
+    const tail = zone(after, last + 1, 1);
+    if (!head.length && !tail.length) {
+        return { used, fit: base, extended: 0 };
+    }
+    const lineSq = (wall: LineRun, k: number) => residualFrom(wall.fit, points[k]) ** 2;
+    let best: { used: number[]; fit: CircleFit; cost: number; extended: number } | null = null;
+    for (let h = 0; h <= head.length; h++) {
+        for (let t = 0; t <= tail.length; t++) {
+            const set = [...head.slice(0, h).reverse(), ...used, ...tail.slice(0, t)];
+            const fit = fitCircle(set.map((k) => points[k]));
+            if (!fit || fit.rmsResidual > tolMm + 1e-9 || ((h || t) && arcSpanDeg(points, set, fit.center) > maxSpanDeg + 1e-9)) {
+                continue;
+            }
+            let cost = fit.residuals.reduce((acc, r) => acc + r * r, 0);
+            for (let k = h; k < head.length; k++) {
+                cost += lineSq(before as LineRun, head[k]);
+            }
+            for (let k = t; k < tail.length; k++) {
+                cost += lineSq(after as LineRun, tail[k]);
+            }
+            if (!best || cost < best.cost - 1e-12) {
+                best = { used: set, fit, cost, extended: h + t };
+            }
+        }
+    }
+    return best || { used, fit: base, extended: 0 };
+}
+
 /** Douglas-Peucker over points[from..to] (indices into `points`), vertices as indices. */
 function simplify(points: Xy[], idx: number[], tolMm: number): number[] {
     if (idx.length <= 2) {
@@ -562,16 +698,29 @@ export function segmentPerimeter(
         const after = neighbourLine(s, 1);
         const walls = [before, after].filter((l): l is LineRun => !!l);
         const offWalls = idx.filter((k) => walls.every((w) => Math.abs(residualFrom(w.fit, pts[k])) > tolMm + 1e-9));
-        const { used: off, whole, fit } = trimmedCircle(pts, offWalls, tolMm);
+        const trimmed = trimmedCircle(pts, offWalls, tolMm);
+        const { whole } = trimmed;
+        let { used: off, fit } = trimmed;
         let shape: CornerShape = 'sharp';
         if (offWalls.length >= 3) {
             shape = whole && whole.rmsResidual <= tolMm + 1e-9 ? 'arc' : 'irregular';
         }
+        const trimmedPoints = offWalls.length - off.length;
+        const interior = before && after
+            ? r3((Math.acos(Math.max(-1, Math.min(1, -(before.fit.normal.x * after.fit.normal.x + before.fit.normal.y * after.fit.normal.y)))) * 180) / Math.PI)
+            : null;
+        let extended = 0;
+        if (shape === 'arc' && fit) {
+            const grown = extendArcOverWalls(pts, off, fit, before, after, tolMm, interior);
+            off = grown.used;
+            fit = grown.fit;
+            extended = grown.extended;
+        }
+        const span = shape === 'arc' && fit ? arcSpanDeg(pts, off, fit.center) : null;
         segments.push({ kind: 'arc', from: orig(r.from), to: orig(r.to), fit: shape === 'arc' ? fit : null, points: idx.length, shape });
-        if (!before || !after) {
+        if (!before || !after || interior === null) {
             return;
         }
-        const dot = Math.max(-1, Math.min(1, -(before.fit.normal.x * after.fit.normal.x + before.fit.normal.y * after.fit.normal.y)));
         const irregular = shape === 'irregular';
         corners.push({
             from: orig(r.from),
@@ -585,8 +734,11 @@ export function segmentPerimeter(
             residualsMm: shape === 'arc' && fit ? fit.residuals : null,
             fitIndices: off.map(orig),
             onWallPoints: idx.length - offWalls.length,
-            trimmedPoints: offWalls.length - off.length,
-            interiorAngleDeg: r3((Math.acos(dot) * 180) / Math.PI),
+            trimmedPoints,
+            extendedPoints: extended,
+            arcSpanDeg: span,
+            lowConfidence: span !== null && span < CORNER_ARC_SPAN_CONFIDENT_DEG - 1e-9,
+            interiorAngleDeg: interior,
             pathLengthMm: anchoredLength(idx.map((k) => pts[k]), lengthStep),
             singleArc: irregular && fit ? {
                 radiusTipCentreMm: fit.radius,
