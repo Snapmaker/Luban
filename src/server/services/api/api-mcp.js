@@ -1,5 +1,6 @@
 import config from '../configstore';
 import { getMcpHealth, getMcpStatus } from '../mcp';
+import { CA_FILE_CONFIG_KEY } from '../mcp/caTrust';
 import { MAX_MAX_CLIENTS, MAX_STREAM_FPS, MIN_STREAM_FPS, STREAM_ENABLED_KEY, STREAM_FPS_KEY, STREAM_MAX_CLIENTS_KEY, cameraStreamService } from '../mcp/cameraStream';
 import { MAX_RECENT_LIMIT, MIN_RECENT_LIMIT, diagnosticsRecentLimit } from '../mcp/diagnostics';
 import { DEFAULT_BLINKA_ENV, resolveGpioFeedConfig } from '../mcp/gpioFeed';
@@ -296,8 +297,8 @@ export const updateSettings = (req, res) => {
     const tls = (req.body || {}).https;
     if (tls !== undefined) {
         if (!tls || typeof tls !== 'object' || Array.isArray(tls)
-            || ['certFile', 'keyFile'].some((field) => tls[field] !== undefined && typeof tls[field] !== 'string')) {
-            res.status(ERR_BAD_REQUEST).send({ msg: 'https.certFile and https.keyFile must be file path strings.' });
+            || ['certFile', 'keyFile', 'caFile'].some((field) => tls[field] !== undefined && typeof tls[field] !== 'string')) {
+            res.status(ERR_BAD_REQUEST).send({ msg: 'https.certFile, https.keyFile and https.caFile must be file path strings.' });
             return;
         }
     }
@@ -310,7 +311,9 @@ export const updateSettings = (req, res) => {
         config.set('mcpPort', value);
     }
     if (tls) {
-        for (const [field, key] of [['certFile', 'mcpHttpsCert'], ['keyFile', 'mcpHttpsKey']]) {
+        // caFile: the public CA certificate served at /ca.crt for browser
+        // trust (caTrust.ts); optional, read on every request, never a key.
+        for (const [field, key] of [['certFile', 'mcpHttpsCert'], ['keyFile', 'mcpHttpsKey'], ['caFile', CA_FILE_CONFIG_KEY]]) {
             if (tls[field] !== undefined) {
                 const value = tls[field].trim();
                 if (value) { config.set(key, value); } else { config.unset(key); }

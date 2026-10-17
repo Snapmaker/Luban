@@ -4,6 +4,7 @@ import pkg from '../../../package.json';
 import { deriveMcpHealth, McpHealthInput } from '../../../shared/lib/mcpHealth';
 import logger from '../../lib/logger';
 import config from '../configstore';
+import { cachedMkcertCaRoot, handleTrustRequest, loadCaCertificate, mkcertCaRoot, resolveCaFile, resolveCaSetting } from './caTrust';
 import { cameraStreamService } from './cameraStream';
 import { diagnosticsSnapshot, startDiagnostics } from './diagnostics';
 import { McpServer, isTrustedAddress, isTrustedOrigin, localSubnets } from './McpServer';
@@ -186,6 +187,11 @@ export function getMcpStatus() {
     const live = runningSettings || settings;
     const httpsSettings = resolveHttpsFiles(process.env, (key) => config.get(key));
     const httpsBase = listeners.httpsPort ? publicBaseUrl(listeners.httpsPort, live.allowLan, 'https') : null;
+    // The CA trust page lives on the PLAIN HTTP listener (#218): a browser
+    // that does not trust the HTTPS origin yet has to be able to fetch it.
+    const httpBase = publicBaseUrl(listeners.httpPort || live.port, live.allowLan);
+    const caSetting = resolveCaSetting(process.env, (key) => config.get(key));
+    const ca = loadCaCertificate(resolveCaFile(caSetting, cachedMkcertCaRoot()));
     return {
         running: listeners.httpPort !== null || listeners.httpsPort !== null,
         port: listeners.httpPort,
@@ -203,6 +209,20 @@ export function getMcpStatus() {
             jobsUrl: httpsBase ? `${httpsBase}/jobs` : null,
             mcpUrl: httpsBase ? `${httpsBase}/mcp` : null,
             lanUrls: listeners.httpsPort && live.allowLan ? lanUrls(listeners.httpsPort, 'https') : [],
+            // Browser trust (caTrust.ts): the stored CA path, whether env
+            // overrides it, and what /ca.crt would actually serve right now.
+            caFile: caSetting.caFile,
+            caEnvOverride: caSetting.envOverride,
+            ca: {
+                file: ca.file,
+                source: ca.source,
+                ok: ca.ok,
+                error: ca.error,
+                subject: ca.info ? ca.info.subject : null,
+                fingerprint256: ca.info ? ca.info.fingerprint256 : null,
+            },
+            trustUrl: `${httpBase}/trust`,
+            caUrl: `${httpBase}/ca.crt`,
         },
         toolCount: registeredToolCount,
         jobsUrl: `${httpsBase || publicBaseUrl(live.port, live.allowLan)}/jobs`,
@@ -309,7 +329,29 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
             return;
         }
         if (url.pathname === '/' || url.pathname === '/jobs' || url.pathname.startsWith('/jobs/')) {
-            handleJobDashboardRequest(req, res, url, jobManager, async (id) => stopGcodeJob({ job_id: id, wait_ms: 0 }, 'operator'));
+            handleJobDashboardRequest(req, res, url, jobManager, async (id) => stopGcodeJob({ job_id: id, wait_ms: 0 }, 'operator'), () => {
+                // The dashboard links to the CA trust page only once HTTPS is configured.
+                const https = resolveHttpsFiles(process.env, (key) => config.get(key));
+                return https.certFile || https.keyFile ? { url: `${publicBaseUrl(listeners.httpPort || port, settings.allowLan)}/trust` } : null;
+            });
+            return;
+        }
+        if (handleTrustRequest(req, res, url, {
+            // CA certificate download + per-OS install steps, plain HTTP (caTrust.ts).
+            setting: () => resolveCaSetting(process.env, (key) => config.get(key)),
+            caRoot: () => cachedMkcertCaRoot(),
+            httpPort: () => listeners.httpPort,
+            https: () => {
+                const files = resolveHttpsFiles(process.env, (key) => config.get(key));
+                return {
+                    configured: !!(files.certFile || files.keyFile),
+                    running: listeners.httpsPort !== null,
+                    port: listeners.httpsPort,
+                    error: listeners.httpsError,
+                    certFile: files.certFile,
+                };
+            },
+        })) {
             return;
         }
         if (url.pathname.startsWith('/confirm')) {
@@ -338,6 +380,9 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
     };
     listeners.start({ port, allowLan: settings.allowLan, ...resolveHttpsFiles(process.env, (key) => config.get(key)) }, handleRequest);
     startDiagnostics();
+    // Warm the `mkcert -CAROOT` cache so the Settings pane and /trust can
+    // name the CA file on their first request. Absence is not an error.
+    mkcertCaRoot().catch(() => undefined);
 
     // Arm the external probe feed (and its overtravel tripwire) without any
     // agent involvement when it is fully configured. Failure is logged and

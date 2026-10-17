@@ -92,6 +92,14 @@ interface McpStatus {
         error: string | null;
         jobsUrl: string | null;
         lanUrls: string[];
+        configured?: boolean;
+        // Browser trust (#218): the stored CA path, whether env overrides
+        // it, what /ca.crt would serve, and the plain-HTTP trust page.
+        caFile?: string;
+        caEnvOverride?: boolean;
+        ca?: { file: string | null; source: string | null; ok: boolean; error: string | null; subject: string | null; fingerprint256: string | null };
+        trustUrl?: string;
+        caUrl?: string;
     };
     transport: McpTransportSettings;
     sensors: McpSensorSettings;
@@ -194,6 +202,9 @@ const McpServer: React.FC = () => {
     const [allowLan, setAllowLan] = useState(false);
     const [httpsCert, setHttpsCert] = useState('');
     const [httpsKey, setHttpsKey] = useState('');
+    // Public CA certificate served at /ca.crt for browser trust (#218); '' =
+    // find it with `mkcert -CAROOT`.
+    const [httpsCa, setHttpsCa] = useState('');
     const [toolSetterEnabled, setToolSetterEnabled] = useState(true);
     const [probeEnabled, setProbeEnabled] = useState(true);
     const [transport, setTransport] = useState('');
@@ -242,6 +253,7 @@ const McpServer: React.FC = () => {
                 setAllowLan(!!body.settings.allowLan);
                 setHttpsCert(body.https?.certFile || '');
                 setHttpsKey(body.https?.keyFile || '');
+                setHttpsCa(body.https?.caFile || '');
                 if (body.sensors) {
                     setToolSetterEnabled(body.sensors.toolSetter !== false);
                     setProbeEnabled(body.sensors.probe !== false);
@@ -315,6 +327,7 @@ const McpServer: React.FC = () => {
             https: {
                 ...(status?.https?.envOverrides.includes('certFile') ? {} : { certFile: httpsCert }),
                 ...(status?.https?.envOverrides.includes('keyFile') ? {} : { keyFile: httpsKey }),
+                ...(status?.https?.caEnvOverride ? {} : { caFile: httpsCa }),
             },
             sensors: { toolSetter: toolSetterEnabled, probe: probeEnabled },
             transport,
@@ -479,10 +492,40 @@ const McpServer: React.FC = () => {
                     />
                 </label>
                 <p className={styles['port-tips']}>Trust the mkcert CA on each browser/phone and include the server’s LAN IP in the certificate. Clear both paths to turn HTTPS off after restart. Environment overrides: LUBAN_MCP_HTTPS_CERT / LUBAN_MCP_HTTPS_KEY.</p>
+                <label htmlFor="mcp-https-ca" className="sm-flex align-center margin-top-8">
+                    <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-CA certificate file (optional)')}</span>
+                    <Input
+                        id="mcp-https-ca"
+                        value={httpsCa}
+                        onChange={(e) => setHttpsCa(e.target.value)}
+                        disabled={!enabled || !!status?.https?.caEnvOverride}
+                        placeholder="/path/to/rootCA.pem"
+                    />
+                </label>
+                <p className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-The public mkcert root certificate (rootCA.pem) other devices download to trust this server. Leave blank to find it with mkcert -CAROOT. Never the key file: a private key is refused and never served.')}
+                    {status?.https?.caEnvOverride && ` ${i18n._('key-App/Settings/McpServer-Overridden by LUBAN_MCP_HTTPS_CA')}`}
+                </p>
+                {status?.https?.ca && (
+                    <div style={status.https.ca.ok ? {} : { color: '#FF4D4F' }}>
+                        {i18n._('key-App/Settings/McpServer-CA certificate:')}
+                        {' '}
+                        {status.https.ca.ok
+                            ? `${status.https.ca.file} (${status.https.ca.source === 'mkcert' ? 'mkcert -CAROOT' : status.https.ca.source}) · ${status.https.ca.subject}`
+                            : status.https.ca.error}
+                    </div>
+                )}
                 <div>{status?.https?.running ? `HTTPS running on port ${status.https.port}` : 'HTTPS is not running this session.'}</div>
                 {status?.https?.error && <div style={{ color: '#FF4D4F' }}>{status.https.error}</div>}
                 {status?.running && status.jobsUrl && (
                     <p><a href={status.jobsUrl} target="_blank" rel="noopener noreferrer">Open job dashboard</a></p>
+                )}
+                {status?.running && status.https?.configured && status.https.trustUrl && (
+                    <p>
+                        <a href={status.https.trustUrl} target="_blank" rel="noopener noreferrer">
+                            {i18n._('key-App/Settings/McpServer-Trust the HTTPS certificate in a browser (CA download and per-device steps, plain HTTP)')}
+                        </a>
+                    </p>
                 )}
                 {status?.https?.lanUrls.map((url) => <div key={url}>{url}</div>)}
             </div>

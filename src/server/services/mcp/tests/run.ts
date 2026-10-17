@@ -22,6 +22,7 @@ import { tests as connectionLeaseTests } from './connectionLease.test';
 import { tests as sstpConnectionTests } from './sstpConnection.test';
 import { tests as bootstrapPlanTests } from './bootstrapPlan.test';
 import { tests as camLinksTests } from './camLinks.test';
+import { tests as caTrustTests } from './caTrust.test';
 import { tests as cameraGeometryTests } from './cameraGeometry.test';
 import { tests as cameraProgramSchemaTests } from './cameraProgramSchema.test';
 import { tests as cameraArtifactsTests } from './cameraArtifacts.test';
@@ -134,6 +135,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['landmarkClearance', landmarkClearanceTests],
     ['mjpegFanout', mjpegFanoutTests],
     ['mcpListeners', mcpListenersTests],
+    ['caTrust', caTrustTests],
     ['mcpHealth', mcpHealthTests],
     ['marchCore', marchCoreTests],
     ['camLinks', camLinksTests],
