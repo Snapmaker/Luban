@@ -551,6 +551,10 @@ home {}
 // under the same setting (executed_without_approval: true); anything that descends stages.
 move_z {"z": 328, "coordinate_system": "machine", "reason": "..."}
 start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}
+// Fast-then-creep approach under ONE approval (#240): each z_targets entry may carry its own feed_rate
+// (50-600, clamped and REPORTED in result.feed_clamps); plain numbers run at the call's feed_rate. Never a file job.
+move_z {"z_targets": [{"z": 191.5, "feed_rate": 400}, {"z": 181.5, "feed_rate": 60}], "coordinate_system": "machine", "reason": "..."}
+start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}   // once PER STEP
 // Probe sequence with LOCAL LINKS (§4): stations linked at a stated machine Z instead of Z328 between marches.
 // In a probe_program, clearance_z may be {"from": "tops.top.z", "plus": 4, "between": [200, 215]}.
 probe_sequence {"reason": "...", "local_links": {"clearance_z": 208.4, "max_hop_mm": 60},

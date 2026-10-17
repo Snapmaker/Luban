@@ -380,7 +380,10 @@ export const TRANSPORT_REFUSAL = 'Refused: this file is pure transport - a few r
     + 'traverse height, checks every leg against the stored landmarks, and stages the series for one approval) or '
     + '`move_z` for Z. They emit the declared, frame-restoring file for you, which is the file a hand-written transit '
     + 'keeps getting wrong: on 2026-09-19 one was rejected for an undeclared distance mode, restaged, and then left '
-    + 'the controller in the machine workspace for the rest of the session. If this really is not transport - it '
+    + 'the controller in the machine workspace for the rest of the session. A fast-then-slow approach ("F400 to 10 mm '
+    + 'above the stock, then F60 for the last 10 mm") is ONE move_z job with PER-STEP feeds (#240): z_targets: [{z, '
+    + 'feed_rate: 400}, {z, feed_rate: 60}] - each step carries its own F word, one approval, one start_gcode_job per step. '
+    + 'If this really is not transport - it '
     + 'cuts, probes, rotates, or moves in XY and Z together - it will not be refused; only a file that is purely one or the other is.';
 
 /**

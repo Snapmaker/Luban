@@ -37,11 +37,10 @@ import { GcodeChannel, sendGcodeVisible } from './camera';
 import { stagingFrameContext, validateStagedEnvelope } from './staging';
 import { verifyFileJobWorkspace } from './workspace';
 import { TRAVEL_EPSILON_MM } from '../machineTravel';
+import { MoveZPlanError, describeFeedClamps, resolveZTargets } from '../moveZPlan';
 import {
     EVENT_POLL_MS,
     MAX_WAIT_MS,
-    MAX_Z_TARGETS,
-    MOVE_Z_FEED,
     SETTLE_MATCH_MM,
     STOP_WAIT_DEFAULT_MS,
     TRAVERSE_FEED,
@@ -1134,8 +1133,12 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             + 'completes, so a file job cannot hold a working Z - firmware behaviour). '
             + 'Either one target (z) or an ordered list (z_targets, max 20) for a methodical search: '
             + 'the operator approves the EXACT list once, and each start_gcode_job call then executes '
-            + 'one step, so you can capture between steps and abandon the series at any point. The '
-            + 'confirm page shows current Z, every target, deltas and feed; only the operator one-time '
+            + 'one step, so you can capture between steps and abandon the series at any point. Each '
+            + 'z_targets entry is a number or {z, feed_rate} - a PER-STEP feed (#240): the standard fast-then-creep '
+            + 'approach "F400 to 10 mm above the stock, then F60 for the last 10 mm" is ONE job, '
+            + 'z_targets: [{z: 191.5, feed_rate: 400}, {z: 181.5, feed_rate: 60}]; a step without its own feed runs at '
+            + 'feed_rate; every feed is clamped to 50-600 mm/min and every clip is reported (result.feed_clamps and the page). The '
+            + 'confirm page shows current Z, every target, deltas and each step\'s feed; only the operator one-time '
             + 'code executes anything - except an UP-only series to no higher than mcpSafeTraverseZ on a verified, homed '
             + 'position with mcpTraverseWithoutApprovalAtSafeZ on (#241), which runs on the call (executed_without_approval: '
             + 'true); anything that descends stages. NOT door-interlocked - the operator supervises. Spindle must be '
@@ -1146,10 +1149,23 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 z: { type: 'number', description: 'Absolute target Z (single move).' },
                 z_targets: {
                     type: 'array',
-                    items: { type: 'number' },
+                    items: {
+                        anyOf: [
+                            { type: 'number' },
+                            {
+                                type: 'object',
+                                properties: {
+                                    z: { type: 'number', description: 'Absolute target Z of this step.' },
+                                    feed_rate: { type: 'number', description: 'mm/min for THIS step (50-600, clamped and reported); omit to use the call\'s feed_rate.' },
+                                },
+                                required: ['z'],
+                                additionalProperties: false,
+                            },
+                        ],
+                    },
                     minItems: 1,
                     maxItems: 20,
-                    description: 'Ordered absolute Z targets; one approval covers the exact list, '
+                    description: 'Ordered absolute Z targets, each a number or {z, feed_rate?}; one approval covers the exact list, '
                         + 'one start_gcode_job call per step. Mutually exclusive with z.',
                 },
                 coordinate_system: {
@@ -1157,7 +1173,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                     enum: ['work', 'machine'],
                     description: 'Which frame z is in. Default work.',
                 },
-                feed_rate: { type: 'number', description: 'mm/min, default 300, max 600.' },
+                feed_rate: { type: 'number', description: 'mm/min for every step without its own feed_rate, default 300, 50-600 (clamped and reported).' },
                 reason: { type: 'string', description: 'Shown to the operator: why this Z motion is needed.' },
                 wait_until_moved: {
                     type: 'boolean',
@@ -1172,28 +1188,33 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
         },
         handler: async (args: {
             z?: number;
-            z_targets?: number[];
+            z_targets?: (number | { z: number; feed_rate?: number })[];
             coordinate_system?: string;
             feed_rate?: number;
             reason?: string;
             wait_until_moved?: boolean;
         }) => {
             probeFeedService.assertNoOvertravel();
-            if ((args.z === undefined) === (args.z_targets === undefined)) {
-                throw new McpToolError('Provide exactly one of z or z_targets.');
+            // Targets and per-step feeds (#240), every feed clamped to
+            // MOVE_Z_FEED with the clip reported - moveZPlan.ts, pure.
+            let zPlan: ReturnType<typeof resolveZTargets>;
+            try {
+                zPlan = resolveZTargets(args);
+            } catch (err) {
+                if (err instanceof MoveZPlanError) {
+                    throw new McpToolError(err.message);
+                }
+                throw err;
             }
-            const targets = args.z_targets !== undefined
-                ? args.z_targets.map(Number)
-                : [Number(args.z)];
-            if (!targets.length || targets.length > MAX_Z_TARGETS || targets.some((t) => !Number.isFinite(t))) {
-                throw new McpToolError(`Targets must be 1-${MAX_Z_TARGETS} finite numbers.`);
-            }
+            const zSteps = zPlan.steps;
+            const targets = zSteps.map((step) => step.z);
             const targetZ = targets[targets.length - 1];
             const coordinateSystem = args.coordinate_system || 'work';
             if (!['work', 'machine'].includes(coordinateSystem)) {
                 throw new McpToolError('coordinate_system must be "work" or "machine".');
             }
-            const feedRate = clampTo(args.feed_rate, MOVE_Z_FEED);
+            const feedRate = zPlan.defaultFeed;
+            const feedClampLines = describeFeedClamps(zPlan.clamps);
 
             assertFreshHeartbeat('staging a Z move');
             const position = getPositionSnapshot();
@@ -1228,10 +1249,13 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 }
             }
 
-            const stepGcode = (t: number) => (coordinateSystem === 'machine'
-                ? `G90\nG53;\nG1 Z${t.toFixed(3)} F${feedRate};\nG54;`
-                : `G90\nG54;\nG1 Z${t.toFixed(3)} F${feedRate}`);
-            const steps = targets.map(stepGcode);
+            // Each step carries ITS OWN F word: the controller's modal feed
+            // survives between files (A350, 2026-10-05), so a step without
+            // one would run at whatever the previous step set.
+            const stepGcode = (t: number, feed: number) => (coordinateSystem === 'machine'
+                ? `G90\nG53;\nG1 Z${t.toFixed(3)} F${feed};\nG54;`
+                : `G90\nG54;\nG1 Z${t.toFixed(3)} F${feed}`);
+            const steps = zSteps.map((step) => stepGcode(step.z, step.feedRate));
             const isBatch = targets.length > 1;
             const delta = targetZ - currentZ;
             // The gcode preview must let the operator validate the numbers
@@ -1258,11 +1282,13 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             const header = [
                 ...wrapText(`reason: ${args.reason}`, 90).map((row) => `; ${row}`),
                 `; frame: ${coordinateSystem} coords; current ${coordinateSystem} Z ${currentZ.toFixed(3)}`,
-                ...targets.map((t, i) => {
+                ...zSteps.map((step, i) => {
                     const from = i === 0 ? currentZ : targets[i - 1];
-                    const d = t - from;
-                    return `; step ${i + 1}: Z ${from.toFixed(3)} -> ${t.toFixed(3)} (${d >= 0 ? '+' : ''}${d.toFixed(3)} mm) F${feedRate}`;
+                    const d = step.z - from;
+                    const feedNote = step.requestedFeedRate === null ? '' : ' (this step\'s own feed_rate)';
+                    return `; step ${i + 1}: Z ${from.toFixed(3)} -> ${step.z.toFixed(3)} (${d >= 0 ? '+' : ''}${d.toFixed(3)} mm) F${step.feedRate}${feedNote}`;
                 }),
+                ...feedClampLines.map((line) => `; CLAMPED: ${line}`),
                 '; sensors: NO contact expected during these moves - a probe/toolsetter trigger',
                 '; while moving latches the CRASH alarm (probe feed must be armed).',
             ].join('\n');
@@ -1302,6 +1328,8 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                     machine_targets: machineTargets,
                     final_delta_mm: delta,
                     feed_rate: feedRate,
+                    steps: zSteps.map((step) => ({ z: step.z, feed_rate: step.feedRate })),
+                    feed_clamps: zPlan.clamps,
                     coordinate_system: coordinateSystem,
                     steps_executed: run.stepsExecuted,
                     position: run.settle.position,
@@ -1319,6 +1347,8 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 targets,
                 final_delta_mm: delta,
                 feed_rate: feedRate,
+                steps: zSteps.map((step) => ({ z: step.z, feed_rate: step.feedRate })),
+                feed_clamps: zPlan.clamps,
                 coordinate_system: coordinateSystem,
                 staged_because: policy.reason,
                 confirm_url: `${getConfirmBaseUrl()}/confirm/${job.id}`,

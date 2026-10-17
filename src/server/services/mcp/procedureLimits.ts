@@ -31,6 +31,25 @@ export function clampTo(raw: unknown, limit: Bounded): number {
     return Math.min(Math.max(Number(raw) || limit.default, limit.min), limit.max);
 }
 
+/**
+ * clampTo that also says what it did, so the caller can REPORT a clip (on the
+ * confirm page and in the result) instead of silently planning the capped
+ * value. `requested` is the finite, non-zero number the caller typed, or null
+ * when the default was used (absent, non-numeric or 0 - clampTo's idiom).
+ */
+export interface ClampReport {
+    value: number;
+    requested: number | null;
+    clipped: boolean;
+}
+
+export function clampReported(raw: unknown, limit: Bounded): ClampReport {
+    const typed = Number(raw);
+    const requested = raw === undefined || raw === null || raw === '' || !Number.isFinite(typed) || typed === 0 ? null : typed;
+    const value = clampTo(raw, limit);
+    return { value, requested, clipped: requested !== null && value !== requested };
+}
+
 /** clampTo for a count. */
 export function clampCount(raw: unknown, limit: Bounded): number {
     return Math.min(Math.max(Math.round(Number(raw) || limit.default), limit.min), limit.max);
