@@ -16,6 +16,7 @@ description: "Plan and run touch-probe measurements through Luban MCP: top profi
 |---|---|---|
 | Park / procedure traverse height | machine Z328 | ordinary transport and successful procedure completion; local links use the procedure’s own envelope |
 | Probe tip calibration | result `tipCalibration`, raw setter history and named datum | reuse applicable fitting evidence; legacy `geometry.probe.effectiveLength` is a conversion offset, not a caliper length |
+| Probe stylus reach | `geometry.stylus.reachMm` = `probe_stylus_exposed_mm` (tip bottom to the first body shoulder), with `tipDiameterMm` and `bodyDiameterMm` | **probe tool length ≠ tip length**: the calibrated contact offset says nothing about how far the tip reaches below the ~10 mm body. `null` = every −Z plan reports "stylus reach unknown: body collision not checked"; measure the fitted probe and store it with `set_probe_geometry` (issue #187) |
 | Tool setter | historical trigger Z175.5 minus nominal reference 75 defines convention Z100.5 | read the current named datum; this convention is not independently measured physical Z |
 | Rotary axis | `geometry.rotary` — a HISTORICAL estimate tied to the probe offset/datum, clamping and date it was measured with (this jig: 2026-09-05, 71.3 mm conventional offset, raw stock; ~1 mm off for a later clamping) | physical Z, never a toolhead target; before CAM rotates about it, check it against opposite-face contacts — [rotary-axis](references/rotary-axis.md) |
 | Chuck jaws | reach ~Y269 | a `keep_out` volume for programs |
@@ -71,11 +72,29 @@ ball diameter and a stated margin, measured DOWN from the highest surface under 
 (e.g. exposed 21, ball 2.5, margin 2: no floor contact more than 16.5 mm below the highest rim
 under the body) and give every march there a `max_travel_mm` that respects it. Readings at
 another B angle are in the rotated pose ([rotary-axis](references/rotary-axis.md)).
-Read `geometry.fields.probe_stylus_exposed_mm` and `probe_body_diameter_mm`; record measured or
-operator-stated values through `set_probe_geometry`. Program references are
+Read `geometry.stylus` (`reachMm` = `probe_stylus_exposed_mm`, `bodyDiameterMm`, `tipDiameterMm`);
+record measured or operator-stated values through `set_probe_geometry`. Program references are
 `probe.stylus_exposed_mm` and `probe.body_diameter_mm`, with mandatory `between` bounds.
 If missing, ask both with the other unknowns. Do not invent a universally safe 5 mm edge descent:
 limit work to approaches with proven body clearance until the reach is known.
+
+**Probe tool length ≠ tip length (issue #187).** On 2026-10 an agent staged a floor probe of an
+internal pocket deeper than the stylus; only the march's abort at its no-contact limit kept the
+probe body off the rim. The tool length used for Z calibration (setter offset, `tipMachineZ`) is
+the distance from the toolhead reference to the tip — it says nothing about how much stylus is
+exposed below the body. **Every −Z or in-pocket plan is now checked at staging**: pass
+`rim_z_machine` (alias `surface_z_machine`) — the toolhead Z at which the tip touches the highest
+surface under the probe BODY, measured or operator-stated, a bounded reference in a
+`probe_program` — on `probe_point`, `probe_vector`, `probe_sequence`, the surface scans,
+`probe_circle`, `probe_corner`, `probe_wall_follow` and `probe_trace_perimeter`. With a
+stored reach the tool REFUSES when the deepest commanded Z
+(march limit, `floor_z_machine`, `z_machine`, circle depth) lies more than
+`reachMm − tipDiameterMm − reach_margin_mm` (default margin 2, 0–10) below that rim, quoting the
+numbers and the toolhead Z below which the body lands. With no stored reach the result and the
+confirm page say **"stylus reach unknown: body collision not checked"** — read that line before
+approving anything inside a pocket, and store the reach rather than approving past it. A plan
+with no rim stated is not checked (`rim-unknown` in `result.stylusReach`): stating the rim is
+the agent's job whenever the march starts below a surrounding surface.
 
 **Known surface:** use the valid measured contact to set a guarded `start_z_machine` a little
 above it and `expected_z_machine` at the contact. Do not repeat a long fine search from machine

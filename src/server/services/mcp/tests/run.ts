@@ -57,6 +57,7 @@ import { tests as programOpsTests } from './programOps.test';
 import { tests as rotaryMotionTests } from './rotaryMotion.test';
 import { tests as safeZPolicyTests } from './safeZPolicy.test';
 import { tests as sequenceLinksTests } from './sequenceLinks.test';
+import { tests as stylusReachTests } from './stylusReach.test';
 import { tests as surveyMosaicTests } from './surveyMosaic.test';
 import { tests as surveyPlanTests } from './surveyPlan.test';
 import { tests as toolDatumTests } from './toolDatum.test';
@@ -121,6 +122,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['rotaryMotion', rotaryMotionTests],
     ['safeZPolicy', safeZPolicyTests],
     ['sequenceLinks', sequenceLinksTests],
+    ['stylusReach', stylusReachTests],
     ['surveyMosaic', surveyMosaicTests],
     ['surveyPlan', surveyPlanTests],
     ['toolProtrusion', toolProtrusionTests],

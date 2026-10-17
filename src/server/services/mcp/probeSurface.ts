@@ -48,6 +48,8 @@ import {
 } from './procedureLimits';
 import { McpToolError } from './registry';
 import { probeGeometry } from './rotaryGeometry';
+import { StylusReachVerdict, describeStylusReach } from './stylusReach';
+import { requireStylusReach } from './stylusReachGuard';
 import { TipCalibrationSnapshot, projectToolTipZ } from './toolDatum';
 import { getProbeTipCalibration } from './toolDatumState';
 import {
@@ -139,6 +141,8 @@ export interface ProbeSurfacePlan {
     expectedZMachine: number | null;
     /** floor_z_machine was given explicitly: station 1 may search down to it (not just start_z - max_drop). */
     floorExplicit: boolean;
+    /** Issue #187: the body-vs-rim verdict at the absolute floor (refused at staging when it fails). */
+    stylusReach: StylusReachVerdict;
     /**
      * Expected contact PROFILE (mcp/48): per-station expected Z from a model
      * of the surface (a cylinder along the rotary axis) instead of the
@@ -175,6 +179,9 @@ export interface ProbeSurfacePlan {
 
 interface CommonArgs {
     capture?: unknown;
+    rim_z_machine?: unknown;
+    surface_z_machine?: unknown;
+    reach_margin_mm?: unknown;
     start_z_machine?: unknown;
     floor_z_machine?: unknown;
     z_safe_delta_mm?: unknown;
@@ -297,6 +304,9 @@ function finishPlan(
     if (startZ - floorZ > MAX_DESCENT_BAND_MM) {
         throw new McpToolError(`start_z_machine - floor_z_machine = ${(startZ - floorZ).toFixed(1)} mm exceeds ${MAX_DESCENT_BAND_MM} mm.`);
     }
+    // Issue #187: the floor is the deepest toolhead Z any station may command;
+    // inside a pocket the body must clear the rim at that depth.
+    const stylusReach = requireStylusReach(args, Number(floorZ.toFixed(3)), 'Surface scan');
 
     const position = getPositionSnapshot();
     assertWithinTravel(
@@ -366,6 +376,7 @@ function finishPlan(
         slowZoneMm: clampTo(args.slow_zone_mm, { ...SURFACE_SLOW_ZONE_MM, max: env.zSafeDeltaMm }),
         expectedZMachine: profile && expectedZ === null ? circleExpectedZ(profile, stations[0].x) : expectedZ,
         floorExplicit: args.floor_z_machine !== undefined && args.floor_z_machine !== null && args.floor_z_machine !== '',
+        stylusReach,
         profile,
         hopMode,
         hopLiftMm,
@@ -489,6 +500,7 @@ export function describeProbeSurfacePlanAsGcode(plan: ProbeSurfacePlan): string 
                 + `rough program estimate ${40 + plan.stations.length * 120} job events before captures (the stored result is never trimmed).`]
             : []),
         '; overtravel feed trips -> job stop + connection close + latched alarm',
+        describeStylusReach(plan.stylusReach),
         'G90',
         'G53;',
         `G1 Z${plan.hopZ.toFixed(3)} F${TRAVEL_FEED}; raise to the safe traverse height (law 2)`,
@@ -776,6 +788,7 @@ function buildResult(
         kind: plan.kind,
         tool: plan.tool,
         tipCalibration,
+        stylusReach: plan.stylusReach,
         stations: results.map((r) => ({ ...r, ...projectToolTipZ(r.z, tipCalibration) })),
         contactCount: contacts.length,
         noContactStations: noContact,

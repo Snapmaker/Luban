@@ -45,6 +45,8 @@ import {
     within,
 } from './procedureLimits';
 import { McpToolError } from './registry';
+import { StylusReachVerdict, describeStylusReach } from './stylusReach';
+import { requireStylusReach } from './stylusReachGuard';
 import { TipCalibrationSnapshot, projectToolTipZ } from './toolDatum';
 import { getProbeTipCalibration } from './toolDatumState';
 import { probeGeometry } from './rotaryGeometry';
@@ -101,9 +103,14 @@ export interface ProbeWallFollowPlan {
     hopZ: number;
     staged: Xyz;
     tipDiameterMm: number | null;
+    /** Issue #187: the body-vs-rim verdict at z_machine (refused at staging when it fails). */
+    stylusReach: StylusReachVerdict;
 }
 
 interface WallFollowArgs {
+    rim_z_machine?: unknown;
+    surface_z_machine?: unknown;
+    reach_margin_mm?: unknown;
     line_tolerance_mm?: unknown;
     start_x?: unknown;
     start_y?: unknown;
@@ -224,6 +231,7 @@ export function planProbeWallFollow(args: WallFollowArgs, extraObstacles: Obstac
         hopZ,
         staged: { x, y, z },
         tipDiameterMm: geometry ? geometry.tipDiameter : null,
+        stylusReach: requireStylusReach(args, r3(zMachine), 'Wall follow'),
     };
     const violations = checkMotion(wallFollowMotion(plan), [...landmarkStore.obstacleBoxes(), ...extraObstacles], { traverseZ: hopZ, ...clearanceOptions() });
     if (violations.length) {
@@ -247,6 +255,7 @@ export function describeProbeWallFollowPlanAsGcode(plan: ProbeWallFollowPlan): s
         `;    empty space); the next march starts where the step arrives. A miss records no_contact${plan.onMiss === 'abort' ? ' and ABORTS (on_miss: abort)' : ', retreats to the start line and continues'}.`,
         `; 3) FIT: line through the contacts (direction, normal, residuals, yaw)${plan.tipDiameterMm === null ? '' : `; the physical wall is ${r3(plan.tipDiameterMm / 2)} mm beyond each contact along the march`}.`,
         `; march: sensor ${plan.march.sensorDelayMs} ms, backoff ${plan.march.backoffMm}; ends raised at Z${plan.hopZ} (also on any abort, law 8)`,
+        describeStylusReach(plan.stylusReach),
         `; anchored at machine (${plan.staged.x.toFixed(2)}, ${plan.staged.y.toFixed(2)}, ${plan.staged.z.toFixed(2)}) - re-verified before motion`,
         'G90',
         'G53;',
@@ -299,6 +308,7 @@ export interface WallFollowResult {
      */
     segments: WallRunSplit | null;
     tipDiameterMm: number | null;
+    stylusReach: StylusReachVerdict;
     /** Contacts pushed one tip radius along the march: the physical wall. null without a stored tip diameter. */
     surfacePoints: Xy[] | null;
     phases: { phase: string; note?: string }[];
@@ -334,6 +344,7 @@ export async function runProbeWallFollowProcedure(plan: ProbeWallFollowPlan): Pr
             fit,
             segments,
             tipDiameterMm: plan.tipDiameterMm,
+            stylusReach: plan.stylusReach,
             surfacePoints: tipR === null
                 ? null
                 : hits.map((c) => ({ x: r3(c.contactMachine.x + plan.dir.x * tipR), y: r3(c.contactMachine.y + plan.dir.y * tipR) })),

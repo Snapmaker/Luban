@@ -30,6 +30,7 @@ import { probeFeedService } from '../probeFeed';
 import { TRAVEL_FEED, assertMachineReadyForProcedure, moveMachineSettled } from '../probing';
 import { McpToolError, ToolRegistry } from '../registry';
 import { geometryValue } from '../rotaryGeometry';
+import { RIM_ARG_SCHEMA } from '../stylusReachGuard';
 import { checkMotion, describeViolations } from '../envelopeChecks';
 import { belowCameraFloor } from '../cameraSafety';
 import { TRAVERSE_Z_TOLERANCE_MM } from '../traversePlan';
@@ -91,6 +92,7 @@ export function registerProbingTools(registry: ToolRegistry, getConfirmBaseUrl: 
                 backoff_mm: { type: 'number', description: 'Confirm-cycle lift, default 1 (also the confirm re-contact window).' },
                 sensor_delay_ms: { type: 'number', description: 'Contact-check window per step, default 300.' },
                 confirm_passes: { type: 'number', description: 'Lift-and-retest cycles, default 3 (1-10).' },
+                ...RIM_ARG_SCHEMA,
                 reason: { type: 'string', description: 'Shown to the operator: what is being measured and why.' },
             },
             required: ['axis', 'direction', 'max_travel_mm', 'reason'],
@@ -152,6 +154,7 @@ ${describeProbePlanAsGcode(plan)}`;
                 backoff_mm: { type: 'number', description: 'Confirm-cycle lift, default 1 (also the confirm re-contact window).' },
                 sensor_delay_ms: { type: 'number', description: 'Contact-check window per step, default 300.' },
                 confirm_passes: { type: 'number', description: 'Lift-and-retest cycles, default 3 (1-10).' },
+                ...RIM_ARG_SCHEMA,
                 reason: { type: 'string', description: 'Shown to the operator: what is being measured and why.' },
             },
             required: ['max_travel_mm', 'reason'],
@@ -255,6 +258,7 @@ ${describeProbeVectorPlanAsGcode(plan)}`;
                 backoff_mm: { type: 'number', description: 'Confirm-cycle lift, default 1 (also the confirm re-contact window).' },
                 sensor_delay_ms: { type: 'number', description: 'Contact-check window per step, default 300.' },
                 confirm_passes: { type: 'number', description: 'Lift-and-retest cycles per march, default 3 (1-10).' },
+                ...RIM_ARG_SCHEMA,
                 reason: { type: 'string', description: 'Shown to the operator: what the circuit measures and why.' },
             },
             required: ['steps', 'reason'],
@@ -341,6 +345,7 @@ ${describeProbeSequencePlanAsGcode(plan)}`;
                 backoff_mm: { type: 'number', description: 'Confirm-cycle lift, default 1 (also the confirm re-contact window).' },
                 sensor_delay_ms: { type: 'number', description: 'Contact-check window per step, default 300.' },
                 confirm_passes: { type: 'number', description: 'Lift-and-retest cycles per point, default 2 (1-5).' },
+                ...RIM_ARG_SCHEMA,
                 reason: { type: 'string', description: 'Shown to the operator: what is being measured and why.' },
             },
             required: ['diameter_min_mm', 'diameter_max_mm', 'reason'],
@@ -473,6 +478,7 @@ ${describeProbeCirclePlanAsGcode(plan)}`;
                 + 'centre, an earlier scan) so station 1 gets the slow zone too. Never inferred (law 3). Without it '
                 + 'station 1 uses coarse steps capped at 1 mm.',
         },
+        ...RIM_ARG_SCHEMA,
         reason: { type: 'string', description: 'Shown to the operator: what surface is being scanned and why.' },
     };
     const stageSurfaceScan = (plan: ProbeSurfacePlan, reason: string, label: string) => {
@@ -1108,6 +1114,7 @@ ${describeProbeOutlinePlanAsGcode(plan)}`;
                 backoff_mm: { type: 'number', description: 'Confirm-cycle lift, default 1.' },
                 sensor_delay_ms: { type: 'number', description: 'Contact-check window per step, default 300, floor 30 (GPIO: 50).' },
                 confirm_passes: { type: 'number', description: 'Lift-and-retest cycles per contact, default 3 (1-10).' },
+                ...RIM_ARG_SCHEMA,
                 reason: { type: 'string', description: 'Shown to the operator: which wall, and why.' },
             },
             required: ['start_x', 'start_y', 'z_machine', 'dir_x', 'dir_y', 'max_travel_mm', 'reason'],
@@ -1182,6 +1189,7 @@ ${describeProbeWallFollowPlanAsGcode(plan)}`;
                 backoff_mm: { type: 'number', description: 'Confirm-cycle lift, default 1; a radius below it is reported as sharp.' },
                 sensor_delay_ms: { type: 'number', description: 'Contact-check window per step, default 300, floor 30 (GPIO: 50).' },
                 confirm_passes: { type: 'number', description: 'Lift-and-retest cycles per contact, default 3 (1-10).' },
+                ...RIM_ARG_SCHEMA,
                 reason: { type: 'string', description: 'Shown to the operator: which corner, and why.' },
             },
             required: ['wall_a', 'wall_b', 'z_machine', 'radius_max_mm', 'reason'],
@@ -1278,6 +1286,7 @@ ${describeProbeCornerPlanAsGcode(plan)}`;
                 backoff_mm: { type: 'number', description: 'Confirm-cycle lift, default 1.' },
                 sensor_delay_ms: { type: 'number', description: 'Contact-check window per step, default 300, floor 30 (GPIO: 50 - use it, every step pays it).' },
                 confirm_passes: { type: 'number', description: 'Lift-and-retest cycles per confirmed contact, default 3 (1-10).' },
+                ...RIM_ARG_SCHEMA,
                 reason: { type: 'string', description: 'Shown to the operator: which pocket, and why.' },
             },
             required: ['start_x', 'start_y', 'z_machine', 'max_travel_mm', 'max_perimeter_mm', 'bounds', 'reason'],

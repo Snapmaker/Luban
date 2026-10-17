@@ -46,6 +46,8 @@ import {
     resolveMarchParams,
 } from './procedureLimits';
 import { McpToolError } from './registry';
+import { StylusReachVerdict, describeStylusReach } from './stylusReach';
+import { requireStylusReach } from './stylusReachGuard';
 import { TipCalibrationSnapshot, projectToolTipZ } from './toolDatum';
 import { getProbeTipCalibration } from './toolDatumState';
 import { probeGeometry } from './rotaryGeometry';
@@ -102,9 +104,14 @@ export interface ProbeCornerPlan {
     hopZ: number;
     staged: Xyz;
     tipDiameterMm: number | null;
+    /** Issue #187: the body-vs-rim verdict at z_machine (refused at staging when it fails). */
+    stylusReach: StylusReachVerdict;
 }
 
 interface CornerArgs {
+    rim_z_machine?: unknown;
+    surface_z_machine?: unknown;
+    reach_margin_mm?: unknown;
     wall_a?: unknown;
     wall_b?: unknown;
     z_machine?: unknown;
@@ -214,6 +221,7 @@ export function planProbeCorner(args: CornerArgs, extraObstacles: ObstacleBox[] 
         hopZ,
         staged: { x, y, z },
         tipDiameterMm,
+        stylusReach: requireStylusReach(args, r3(zMachine), 'Corner probe'),
     };
     const violations = checkMotion(cornerMotion(plan), [...landmarkStore.obstacleBoxes(), ...extraObstacles], { traverseZ: hopZ, ...clearanceOptions() });
     if (violations.length) {
@@ -238,6 +246,7 @@ export function describeProbeCornerPlanAsGcode(plan: ProbeCornerPlan): string {
         ';    Every station and link lies on the bisector or at the centre - ground a march has proven; nothing is placed inside an unmeasured radius.',
         `; 4) FIT: circle through the contacts - radius, centre, per-point residuals${plan.tipDiameterMm === null ? '' : `; physical radius = tip-centre radius + ${r3(plan.tipDiameterMm / 2)}`}.`,
         `; ends raised at Z${plan.hopZ} (also on any abort, law 8)`,
+        describeStylusReach(plan.stylusReach),
         `; anchored at machine (${plan.staged.x.toFixed(2)}, ${plan.staged.y.toFixed(2)}, ${plan.staged.z.toFixed(2)}) - re-verified before motion`,
         'G90',
         'G53;',
@@ -272,6 +281,7 @@ export interface CornerResult {
     /** + tip radius (internal corner); null without a stored tip diameter. */
     radiusPhysicalMm: number | null;
     tipDiameterMm: number | null;
+    stylusReach: StylusReachVerdict;
     phases: { phase: string; note?: string }[];
     note: string;
     aborted?: boolean;
@@ -315,6 +325,7 @@ export async function runProbeCornerProcedure(plan: ProbeCornerPlan): Promise<Co
             radiusTipCentreMm: rho === null ? null : r3(rho),
             radiusPhysicalMm: rho === null || tipR === null ? null : r3(rho + tipR),
             tipDiameterMm: plan.tipDiameterMm,
+            stylusReach: plan.stylusReach,
             phases,
             note: `${aborted ? 'ABORTED. ' : ''}${sharp ? 'SHARP corner (the bisector march reached the apex). ' : ''}`
                 + `${fit ? `Arc through ${fit.points} contact(s): tip-centre radius ${fit.radius} mm about (${fit.center.x}, ${fit.center.y}), residuals rms ${fit.rmsResidual} / max ${fit.maxResidual} mm`
