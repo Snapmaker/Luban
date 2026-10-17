@@ -19,6 +19,7 @@ import { registerCameraTools } from './tools/camera';
 import { registerCameraProgramTool } from './cameraProgram';
 import { registerCameraModelTools } from './tools/cameraModel';
 import { registerCamTools } from './tools/cam';
+import { registerEnclosureTools } from './tools/enclosure';
 import { registerGcodeTools, stopGcodeJob } from './tools/gcode';
 import { registerLandmarkTools } from './tools/landmarks';
 import { registerMachineTools } from './tools/machine';
@@ -247,6 +248,7 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
     const registry = new ToolRegistry();
     registerStatusTools(registry);
     registerMachineTools(registry);
+    registerEnclosureTools(registry);
     const baseUrl = () => publicBaseUrl(listeners.httpsPort || port, settings.allowLan, listeners.httpsPort ? 'https' : 'http');
     registerGcodeTools(registry, baseUrl);
     registerThreadMillingTools(registry);

@@ -102,6 +102,11 @@ confirm URL. The solve, model store and verification themselves have no confirm 
 - `set_landmark` — name a scene feature by machine extent, optionally with `clearance_z`. Landmarks are obstacles: planners refuse XY paths that cross them below clearance.
 - `delete_landmark` — remove one.
 
+## Enclosure (no motion, no confirm page)
+
+- `get_enclosure_status` — `present` (the machine reports the enclosure module online), `light_percent`, `fan_percent`, `door_detection` (SACP: `door_detection_by_head`), `door_open` (serial only), `source` and a `reason` when absent. Read-only; the same enclosure query Luban already polls.
+- `set_enclosure_light {percent 0-100 | state "on"|"off"}` / `set_enclosure_fan {…}` — LED strip / exhaust fan through the same channel call as the Workspace enclosure widget (SSTP `/api/v1/enclosure`, SACP EnclosureInfo, serial `M1010`), never a hand-typed M-code. Runs on the call (no motion). Refused when not connected or when `present` is false. Returns `requested_percent`, `reported_percent`, `readback_matches` and the status `before`/`after`; a stale readback catches up on the next report — re-read, do not resend. The Snapmaker 2.0 enclosure drives both at 0 or 100.
+
 ## Probe feed (external sensors: tool setter, overtravel switch, touch probe)
 
 - `get_probe_feed_status` — transport, per-channel last readings, tripwire state.

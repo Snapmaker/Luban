@@ -31,6 +31,7 @@ import { tests as cameraModelTests } from './cameraModel.test';
 import { tests as cameraSelectionTests } from './cameraSelection.test';
 import { tests as cornerFitTests } from './cornerFit.test';
 import { tests as directMovePlanTests } from './directMovePlan.test';
+import { tests as enclosureTests } from './enclosure.test';
 import { tests as envelopeChecksTests } from './envelopeChecks.test';
 import { tests as gpioFeedTests } from './gpioFeed.test';
 import { tests as frameRecoveryTests } from './frameRecovery.test';
@@ -114,6 +115,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['probeFeedHealth', probeFeedHealthTests],
     ['gpioFeed', gpioFeedTests],
     ['probeInspection', probeInspectionTests],
+    ['enclosure', enclosureTests],
     ['surfaceConfirmation', surfaceConfirmationTests],
     ['procedureLimits', procedureLimitsTests],
     ['programOps', programOpsTests],
