@@ -30,6 +30,7 @@ import { spindleTelemetryService } from '../spindleTelemetry';
 import { vibrationCaptureService } from '../vibrationCaptures';
 import { clearProcedureStop, procedureStopRequested, requestProcedureStop } from '../probing';
 import { McpToolError, ToolRegistry } from '../registry';
+import { decideSafeZRaise, decideSafeZTraverse } from '../safeZPolicy';
 import { planTraverseXy } from '../traversePlan';
 import { JobFrame, TRANSPORT_REFUSAL, isPureTransport, resolveJobFrame, suggestGcode, validateGcode } from '../validator';
 import { GcodeChannel, sendGcodeVisible } from './camera';
@@ -54,6 +55,7 @@ import {
     motionFloorZ,
     requirePlanningTravel,
     safeTraverseZ,
+    traverseWithoutApprovalAtSafeZ,
 } from './machine';
 
 // Motion policy (#23): compound motion leaves this process only as a G-code
@@ -186,6 +188,121 @@ function machineStatus(): string | null {
 }
 
 const log = logger('service:mcp:gcode-jobs');
+
+type DirectSettle = { position: PositionSnapshot | null; verified: boolean; warning?: string };
+
+/**
+ * Execute ONE approved step of a direct job (or its whole single move) over
+ * the realtime path, exactly as start_gcode_job always has: the staged
+ * text's comment header is stripped (the controller never replied to a
+ * payload led by comment lines - hung live 2026-09-02, job e34b19a913ff),
+ * the job is the active job while the move is in flight, the arrival is
+ * verified against the heartbeat unless `shouldWait` is false, and a
+ * controller refusal ends the job as start_failed. A batch re-arms its token
+ * for the remaining steps; the last step completes the job.
+ */
+async function executeDirectStep(job: McpJob, channel: GcodeChannel, shouldWait: boolean): Promise<{ settle: DirectSettle; remainingSteps: number }> {
+    job.state = 'starting';
+    const issuedAt = Date.now();
+    job.startedAt = job.startedAt || issuedAt;
+    const batch = Array.isArray(job.steps) && job.steps.length > 0 ? job.steps : null;
+    const stepIndex = job.nextStep ?? 0;
+    const gcodeText = batch
+        ? batch[stepIndex]
+        : fs.readFileSync(job.filePath, 'utf8');
+    const executable = gcodeText
+        .split(/\r?\n/)
+        .filter((line) => {
+            const trimmed = line.trim();
+            return trimmed.length > 0 && !trimmed.startsWith(';');
+        })
+        .join('\n');
+    jobManager.appendEvent(job, 'started', { note: batch ? `direct step ${stepIndex + 1}/${batch.length}` : 'direct move' });
+    jobManager.setActive(job);
+    let settle: DirectSettle;
+    try {
+        const executed = await sendGcodeVisible(channel, `direct:${job.name}`, executable);
+        if (executed.result !== 0) {
+            job.state = 'start_failed';
+            job.error = `Controller rejected the move: ${executed.text || executed.result}`;
+            job.endedAt = Date.now();
+            job.ending = { kind: 'controller-rejected', reason: job.error, at: job.endedAt };
+            jobManager.appendEvent(job, 'failed', { note: job.error });
+            throw new McpToolError(job.error);
+        }
+        settle = !shouldWait
+            ? {
+                position: null,
+                verified: false,
+                warning: 'wait_until_moved was false: the move was accepted but not awaited - '
+                    + 'poll get_position (or query_firmware_position) before relying on position.',
+            }
+            : await waitForStableHeartbeat(issuedAt, parseDirectTarget(executable));
+        jobManager.appendEvent(job, 'settled', { position: settle.position, verified: settle.verified });
+    } finally {
+        jobManager.setActive(null);
+    }
+    if (batch) {
+        job.nextStep = stepIndex + 1;
+        if (job.nextStep < batch.length) {
+            // Same operator-approved list; keep the token usable for the
+            // remaining steps.
+            job.tokenUsed = false;
+            job.state = 'started';
+            return { settle, remainingSteps: batch.length - job.nextStep };
+        }
+    }
+    job.state = 'completed';
+    job.endedAt = Date.now();
+    job.ending = { kind: 'completed', reason: 'direct move(s) done and settled', at: job.endedAt };
+    jobManager.appendEvent(job, 'completed', { note: 'direct move(s) done' });
+    return { settle, remainingSteps: 0 };
+}
+
+/**
+ * Run a POLICY-approved direct job to completion on the staging call itself
+ * (safeZPolicy.ts; operator ruling 2026-10-17, #241). The caller has already
+ * made every check the staging path makes (fresh heartbeat, idle, homed,
+ * toolhead off, travel, landmarks) and approved the job under a named policy;
+ * this consumes that token through the same consumeToken + executeDirectStep
+ * path an operator-approved job takes, step after step, so the job record,
+ * the console `reason` broadcast and stop_gcode_job behave identically. Only
+ * the confirm page is missing.
+ */
+export async function runPolicyApprovedDirectJob(job: McpJob, token: string, shouldWait: boolean): Promise<{
+    settle: DirectSettle;
+    stepsExecuted: number;
+}> {
+    const active = jobManager.getActive();
+    if (active && active !== job && active.state === 'started') {
+        throw new McpToolError('Another job or step is still active; wait for it to finish before this transport.');
+    }
+    const channel = connectionManager.getCurrentChannel() as unknown as GcodeChannel;
+    if (!channel || typeof channel.executeGcode !== 'function') {
+        throw new McpToolError('The connected channel does not support direct moves.');
+    }
+    const verdict = jobManager.consumeToken(job, token);
+    if (!verdict.ok) {
+        throw new McpToolError(verdict.reason || 'Policy approval could not be consumed.');
+    }
+    let stepsExecuted = 0;
+    let outcome = await executeDirectStep(job, channel, shouldWait);
+    stepsExecuted += 1;
+    while (outcome.remainingSteps > 0) {
+        // The series was approved as one list; a stop request between steps
+        // (stop_gcode_job withdraws / machine-stops the job) ends it here.
+        if (job.state !== 'started' || job.confirmToken === null) {
+            break;
+        }
+        const next = jobManager.consumeToken(job, job.confirmToken);
+        if (!next.ok) {
+            throw new McpToolError(`Series interrupted after ${stepsExecuted} step(s): ${next.reason}`);
+        }
+        outcome = await executeDirectStep(job, channel, shouldWait);
+        stepsExecuted += 1;
+    }
+    return { settle: outcome.settle, stepsExecuted };
+}
 
 // ---- Modal cleanup for jobs that end outside the call that started them (#221) ----
 //
@@ -920,80 +1037,26 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 // operator approved exactly this gcode on the confirm page.
                 // For a batch, each call executes ONE approved step; the
                 // token stays valid for the remaining steps (within its TTL).
-                job.state = 'starting';
-                const issuedAt = Date.now();
-                job.startedAt = job.startedAt || issuedAt;
-                const batch = Array.isArray(job.steps) && job.steps.length > 0 ? job.steps : null;
-                const stepIndex = job.nextStep ?? 0;
-                const gcodeText = batch
-                    ? batch[stepIndex]
-                    : fs.readFileSync(job.filePath, 'utf8');
-                // The staged text carries a human-facing comment header for
-                // the confirm page; the realtime execute path must get pure
-                // commands - the controller never replied to a payload led by
-                // comment lines (hung live, 2026-09-02, job e34b19a913ff).
-                const executable = gcodeText
-                    .split(/\r?\n/)
-                    .filter((line) => {
-                        const trimmed = line.trim();
-                        return trimmed.length > 0 && !trimmed.startsWith(';');
-                    })
-                    .join('\n');
-                jobManager.appendEvent(job, 'started', { note: batch ? `direct step ${stepIndex + 1}/${batch.length}` : 'direct move' });
-                jobManager.setActive(job);
-                let settle;
-                try {
-                    const executed = await sendGcodeVisible(channel as GcodeChannel, `direct:${job.name}`, executable);
-                    if (executed.result !== 0) {
-                        job.state = 'start_failed';
-                        job.error = `Controller rejected the move: ${executed.text || executed.result}`;
-                        job.endedAt = Date.now();
-                        job.ending = { kind: 'controller-rejected', reason: job.error, at: job.endedAt };
-                        jobManager.appendEvent(job, 'failed', { note: job.error });
-                        throw new McpToolError(job.error);
-                    }
-                    const shouldWait = args.wait_until_moved !== undefined
-                        ? args.wait_until_moved !== false
-                        : job.waitUntilMoved !== false;
-                    settle = !shouldWait
-                        ? {
-                            position: null,
-                            verified: false,
-                            warning: 'wait_until_moved was false: the move was accepted but not awaited - '
-                                + 'poll get_position (or query_firmware_position) before relying on position.',
-                        }
-                        : await waitForStableHeartbeat(issuedAt, parseDirectTarget(executable));
-                    jobManager.appendEvent(job, 'settled', { position: settle.position, verified: settle.verified });
-                } finally {
-                    jobManager.setActive(null);
+                const shouldWait = args.wait_until_moved !== undefined
+                    ? args.wait_until_moved !== false
+                    : job.waitUntilMoved !== false;
+                const outcome = await executeDirectStep(job, channel as GcodeChannel, shouldWait);
+                if (outcome.remainingSteps > 0) {
+                    return {
+                        job: jobManager.describe(job),
+                        position: outcome.settle.position,
+                        position_verified: outcome.settle.verified,
+                        warning: outcome.settle.warning,
+                        remaining_steps: outcome.remainingSteps,
+                        note: 'Step executed and settled. Call start_gcode_job again with the same '
+                            + 'job_id and code for the next approved step; positions persist.',
+                    };
                 }
-                if (batch) {
-                    job.nextStep = stepIndex + 1;
-                    if (job.nextStep < batch.length) {
-                        // Same operator-approved list; keep the token usable
-                        // for the remaining steps.
-                        job.tokenUsed = false;
-                        job.state = 'started';
-                        return {
-                            job: jobManager.describe(job),
-                            position: settle.position,
-                            position_verified: settle.verified,
-                            warning: settle.warning,
-                            remaining_steps: batch.length - job.nextStep,
-                            note: 'Step executed and settled. Call start_gcode_job again with the same '
-                                + 'job_id and code for the next approved step; positions persist.',
-                        };
-                    }
-                }
-                job.state = 'completed';
-                job.endedAt = Date.now();
-                job.ending = { kind: 'completed', reason: 'direct move(s) done and settled', at: job.endedAt };
-                jobManager.appendEvent(job, 'completed', { note: 'direct move(s) done' });
                 return {
                     job: jobManager.describe(job),
-                    position: settle.position,
-                    position_verified: settle.verified,
-                    warning: settle.warning,
+                    position: outcome.settle.position,
+                    position_verified: outcome.settle.verified,
+                    warning: outcome.settle.warning,
                     note: 'Direct move executed; the position persists (no end-of-job park).',
                 };
             }
@@ -1073,7 +1136,9 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             + 'the operator approves the EXACT list once, and each start_gcode_job call then executes '
             + 'one step, so you can capture between steps and abandon the series at any point. The '
             + 'confirm page shows current Z, every target, deltas and feed; only the operator one-time '
-            + 'code executes anything. NOT door-interlocked - the operator supervises. Spindle must be '
+            + 'code executes anything - except an UP-only series to no higher than mcpSafeTraverseZ on a verified, homed '
+            + 'position with mcpTraverseWithoutApprovalAtSafeZ on (#241), which runs on the call (executed_without_approval: '
+            + 'true); anything that descends stages. NOT door-interlocked - the operator supervises. Spindle must be '
             + 'off; the toolhead always carries a tool.',
         inputSchema: {
             type: 'object',
@@ -1210,6 +1275,44 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             const job = jobManager.submit(reviewText, name, 'cnc', validation, 'direct', isBatch ? steps : undefined);
             job.waitUntilMoved = args.wait_until_moved !== false;
 
+            // The optional half of #241: a Z-only move that can only go UP, to
+            // no higher than the traverse height, is the "retreat first" half
+            // of law 2 - the one Z move that cannot descend (raiseToTop's own
+            // reasoning). With the setting on and a verified, homed position
+            // it runs on the call; a series that dips anywhere, or overshoots
+            // the top, stages as before.
+            const machineTargets = targets.map((t) => (coordinateSystem === 'machine' ? t : t - position.originOffset.z));
+            const policy = decideSafeZRaise({
+                enabled: traverseWithoutApprovalAtSafeZ(),
+                reliability: position.reliability,
+                homed: position.isHomed,
+                currentZ: position.machine.z,
+                traverseZ: safeTraverseZ(),
+                machineTargets,
+            });
+            if (policy.allowed) {
+                const token = jobManager.approveByPolicy(job, policy.policy, policy.reason);
+                const run = await runPolicyApprovedDirectJob(job, token, args.wait_until_moved !== false);
+                return {
+                    job: jobManager.describe(job),
+                    executed_without_approval: true,
+                    approval: { source: 'policy', policy: policy.policy, reason: policy.reason },
+                    current_z: currentZ,
+                    targets,
+                    machine_targets: machineTargets,
+                    final_delta_mm: delta,
+                    feed_rate: feedRate,
+                    coordinate_system: coordinateSystem,
+                    steps_executed: run.stepsExecuted,
+                    position: run.settle.position,
+                    position_verified: run.settle.verified,
+                    warning: run.settle.warning,
+                    note: `Executed on the call under ${policy.policy} (no confirm page): a Z-only, UP-only move to no higher than the `
+                        + `traverse height ${safeTraverseZ()} on a ${position.reliability} position. The job is on the dashboard with this reason. `
+                        + 'Turn this off in Settings -> MCP Server -> Job approval.',
+                };
+            }
+
             return {
                 job: jobManager.describe(job),
                 current_z: currentZ,
@@ -1217,6 +1320,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 final_delta_mm: delta,
                 feed_rate: feedRate,
                 coordinate_system: coordinateSystem,
+                staged_because: policy.reason,
                 confirm_url: `${getConfirmBaseUrl()}/confirm/${job.id}`,
                 next_step: isBatch
                     ? 'Ask the operator to open confirm_url, review the DIRECT-move banner and the full '
@@ -1234,7 +1338,12 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
         name: 'traverse_xy',
         description: 'Law-2 TRANSPORT: an absolute XY move, or an ordered series (max 20), at the traverse height - '
             + 'staged for ONE operator approval and executed one step per start_gcode_job call on the direct path, '
-            + 'exactly like move_z. Refused unless homed and the toolhead is already at or above mcpMotionFloorZ (default 320); stored landmarks may demand higher Z - '
+            + 'exactly like move_z. TOP-Z POLICY (operator ruling 2026-10-17, #241; setting mcpTraverseWithoutApprovalAtSafeZ, '
+            + 'default on): when the head is ALREADY at or above mcpSafeTraverseZ (328) on a verified/heartbeat, homed position '
+            + 'and the route passes the landmark and travel checks, the call EXECUTES the move(s) itself and returns '
+            + 'executed_without_approval: true - no confirm page, no start_gcode_job; the job record (dashboard, log, '
+            + 'stop_gcode_job) is kept and marked approved by policy. Otherwise it stages as described and staged_because says why. '
+            + 'Refused unless homed and the toolhead is already at or above mcpMotionFloorZ (default 320); stored landmarks may demand higher Z - '
             + 'raise it with move_z (coordinate_system "machine") first; there is deliberately no override. Every '
             + 'segment is checked against the stored landmarks and every target against the travel; Z is never '
             + 'written. Default frame MACHINE (G53 declared on every step; work-frame steps declare G54). This is the '
@@ -1343,9 +1452,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             const stepGcodes = isBatch ? plan.steps.map((step) => step.gcode) : undefined;
             const job = jobManager.submit(plan.reviewText, plan.name, 'cnc', validation, 'direct', stepGcodes);
             job.waitUntilMoved = args.wait_until_moved !== false;
-
-            return {
-                job: jobManager.describe(job),
+            const summary = {
                 current_machine: { x: mx, y: my, z: mz },
                 traverse_z: safeTraverseZ(),
                 coordinate_system: coordinateSystem,
@@ -1357,6 +1464,45 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 })),
                 total_distance_mm: Number(plan.totalDistanceMm.toFixed(1)),
                 travel: { ...travel.limits, conflicts: travel.conflicts },
+            };
+
+            // Operator ruling 2026-10-17 (#241): with the head ALREADY at the
+            // traverse height on a verified, homed position, an XY-only
+            // transport whose route just passed the landmark and travel checks
+            // runs on the call - the page would add nothing. The job record,
+            // the console reason and stop_gcode_job are unchanged; only the
+            // click is gone. Anything else stages exactly as before.
+            const policy = decideSafeZTraverse({
+                enabled: traverseWithoutApprovalAtSafeZ(),
+                reliability: position.reliability,
+                homed: position.isHomed,
+                currentZ: mz,
+                traverseZ: safeTraverseZ(),
+            });
+            if (policy.allowed) {
+                const token = jobManager.approveByPolicy(job, policy.policy, policy.reason);
+                const run = await runPolicyApprovedDirectJob(job, token, args.wait_until_moved !== false);
+                return {
+                    job: jobManager.describe(job),
+                    executed_without_approval: true,
+                    approval: { source: 'policy', policy: policy.policy, reason: policy.reason },
+                    ran_at_machine_z: mz,
+                    ...summary,
+                    steps_executed: run.stepsExecuted,
+                    position: run.settle.position,
+                    position_verified: run.settle.verified,
+                    warning: run.settle.warning,
+                    note: `Executed on the call under ${policy.policy} (no confirm page): the head was already at the traverse height `
+                        + `(machine Z ${mz.toFixed(3)}) on a ${position.reliability} position, Z was never written, and every leg was `
+                        + 'checked against the landmarks and the travel. The job is on the dashboard with this reason; stop_gcode_job '
+                        + 'still applies to a running series. Turn this off in Settings -> MCP Server -> Job approval.',
+                };
+            }
+
+            return {
+                job: jobManager.describe(job),
+                ...summary,
+                staged_because: policy.reason,
                 confirm_url: `${getConfirmBaseUrl()}/confirm/${job.id}`,
                 next_step: isBatch
                     ? 'Ask the operator to open confirm_url, review the DIRECT-move banner, the frame and every leg, and '

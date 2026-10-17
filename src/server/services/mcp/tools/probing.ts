@@ -197,13 +197,30 @@ ${describeProbeVectorPlanAsGcode(plan)}`;
             + 'every march. Contact is expected ONLY during marches - a touch during any hop, raise '
             + 'or descent latches the CRASH alarm. Every number must be measured or operator-stated. '
             + 'Optional capture on a probe step photographs the final contact before retracting. '
-            + 'EVERY probe, including a continuing miss, returns to its own start and then raises before the next step. '
-            + 'For related local stations prefer surface_path/grid, wall_follow, trace, corner or stock_outline when their '
-            + 'geometry fits; one approval does not make this sequence a continuous low path. '
+            + 'By default EVERY probe, including a continuing miss, returns to its own start and then raises to the traverse height before the next step. '
+            + 'OPT-IN local_links {clearance_z, max_hop_mm?} (issue #242): once the top of the region is measured (or stated by the operator), '
+            + 'the hops between stations run at that toolhead machine Z instead - after a march the probe retreats to its start and the next hop '
+            + 'raises only to max(clearance_z, where it is), moves <= max_hop_mm (cap 60; split longer links with an extra hop step), and the following '
+            + 'descend is a few guarded mm, not ~124. Every low hop is checked against landmarks/keep-outs at its height at staging and enumerated on the '
+            + 'confirm page; the first hop and the final exit are still at the traverse height. In a probe_program clearance_z may be a bounded reference '
+            + '(e.g. {"from": "tops.top.z", "plus": 4, "between": [...]}). '
+            + 'For related local stations surface_path/grid, wall_follow, trace, corner or stock_outline may still fit better when their geometry does. '
             + 'Results keyed by march name, machine coords only.',
         inputSchema: {
             type: 'object',
             properties: {
+                local_links: {
+                    type: 'object',
+                    description: 'Opt-in continuous low path between stations: {clearance_z: toolhead MACHINE Z the low hops run at (a measured top '
+                        + '+ 3-5 mm; must be below the traverse height), max_hop_mm?: longest low hop, default 60, cap 60}. Omit for the default '
+                        + 'raise-to-traverse-height between every station.',
+                    properties: {
+                        clearance_z: { type: 'number', description: 'Toolhead machine Z for the low hops (measured or operator-stated; a reference in a probe_program).' },
+                        max_hop_mm: { type: 'number', description: 'Longest allowed low hop, default 60 (cap 60); longer links need an intermediate hop step.' },
+                    },
+                    required: ['clearance_z'],
+                    additionalProperties: false,
+                },
                 steps: {
                     type: 'array',
                     minItems: 1,

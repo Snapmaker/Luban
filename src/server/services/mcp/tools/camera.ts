@@ -1535,8 +1535,9 @@ export function registerCameraTools(registry: ToolRegistry): void {
             + 'establishes from the position of record that the head is at the safe traverse height '
             + '(mcpSafeTraverseZ, machine Z328): if it is below, it is raised straight up to it first and the '
             + 'XY is sent only once that raise has settled; if Z cannot be established (unknown, unreliable) '
-            + 'the call is refused. This is NOT a transport primitive - travel and sequences belong in staged '
-            + 'operator-approved mechanisms (traverse_xy, survey_bed, move_z batches, probing procedures, '
+            + 'the call is refused. This is NOT a transport primitive - travel and sequences belong in traverse_xy '
+            + '(which itself runs on the call at the traverse height under mcpTraverseWithoutApprovalAtSafeZ, #241) and the staged '
+            + 'operator-approved mechanisms (survey_bed, move_z batches, probing procedures, '
             + 'submit_gcode_job), and rapid sequential calls are refused (pacing guard). Obstacle landmarks '
             + 'are checked at the Z the XY actually runs at. No Z parameter by design. Requires an idle machine, toolhead '
             + `off, a stated reason. Travel per call is capped (mcpMaxJogDistance, default ${DEFAULT_MAX_TRAVEL_MM} mm).`,

@@ -17,15 +17,17 @@ from the toolset. Keep all motion within the selected procedure's approved bound
 | Block top and sides | `probe_stock_outline` | Stepped top links; local standoff links on the same side; full raise/reposition when changing sides. Needs a suitable block estimate and valid approach geometry. |
 | Planned mixed directions / CAM stations | `run_probing_gcode` | `link_mode: stepped` or `wall` enables local links and blocked-station handling. G38.2/G38.3 cycles still return to their own starts, including misses. Default `raise` uses full-height XY links. Read `cam-probing.md` for constraints. |
 | Isolated axis/vector measurement | `probe_point` / `probe_vector` | Returns to the march start and raises on success. Vector probing supports polygon faces but does not itself follow the polygon. |
-| Explicit independent approaches | `probe_sequence` | Every probe returns to its own start and raises, including `on_miss: continue`. One approval does not mean local continuation. |
+| Explicit independent approaches | `probe_sequence` | By default every probe returns to its own start and raises, including `on_miss: continue`. Opt-in `local_links: {clearance_z, max_hop_mm?}` (#242) links stations at a stated toolhead machine Z above the measured top instead: retreat to the march start, raise only to max(clearance, current Z), hop ≤ `max_hop_mm` (cap 60), a few guarded mm of descent. Checked against landmarks/keep-outs at that height; first hop and final exit at the traverse height. In a program `clearance_z` may reference an earlier top touch. |
 | Multiple operations / B orientations / measured dependencies | `probe_program` | References feed earlier results into later bounded plans. Each successful probing op ends raised; groups and one approval do not fuse motion between ops. |
 
 A same-column find → side probe → deeper search can cross these composition boundaries.
 First ask whether a supported wall, surface, outline or CAM circuit expresses the intended
-measurements safely. If not, record the exact transition that requires a return; do not invent
-an endpoint-retention option or promise that batching will eliminate it. The shared internal
-`marchToContact` primitive leaves retreat policy to its caller, but is not an agent-callable
-motion tool. A miss does not make its entire surrounding region clear.
+measurements safely. If not, a `probe_sequence` with `local_links` is the sanctioned way to keep
+independent stations low between marches once the top is measured; record any transition that
+still requires a full return (a change of face or B, an unmeasured fixture) rather than inventing
+an option the schema does not advertise. The shared internal `marchToContact` primitive leaves
+retreat policy to its caller, but is not an agent-callable motion tool. A miss does not make its
+entire surrounding region clear.
 
 ## Choose samples and an exit condition
 

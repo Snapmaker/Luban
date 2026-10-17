@@ -224,19 +224,29 @@ export function describeViolations(violations: Violation[]): string {
 export function sequenceMotion(plan: {
     hopZ: number;
     staged: { x: number; y: number; z: number };
-    steps: ({ kind: 'hop'; x: number; y: number }
+    /**
+     * A hop's `z` is the height it runs at (the planner's local link, #242);
+     * absent = the traverse height. A probe's `endZ` is where the sequence is
+     * after the march's retreat (its start height when local links keep it
+     * low); absent = raised to the traverse height, as every sequence did
+     * before local links.
+     */
+    steps: ({ kind: 'hop'; x: number; y: number; z?: number }
         | { kind: 'descend'; z: number }
-        | { kind: 'probe'; name: string; unit: { x: number; y: number; z: number }; maxTravelMm: number; start: { x: number; y: number; z: number } })[];
+        | { kind: 'probe'; name: string; unit: { x: number; y: number; z: number }; maxTravelMm: number; start: { x: number; y: number; z: number }; endZ?: number })[];
 }): MotionSegment[] {
     const out: MotionSegment[] = [];
     const virtual = { x: plan.staged.x, y: plan.staged.y, z: plan.hopZ };
     plan.steps.forEach((step, index) => {
         const at = `steps[${index}]`;
         if (step.kind === 'hop') {
-            out.push({ kind: 'hop', what: `${at} hop`, from: { ...virtual, z: plan.hopZ }, to: { x: step.x, y: step.y, z: plan.hopZ } });
+            // A local link below the traverse height is checked like any low
+            // segment - against every box at ITS height (law 4), no exemption.
+            const z = step.z === undefined ? plan.hopZ : step.z;
+            out.push({ kind: 'hop', what: `${at} hop`, from: { ...virtual, z }, to: { x: step.x, y: step.y, z } });
             virtual.x = step.x;
             virtual.y = step.y;
-            virtual.z = plan.hopZ;
+            virtual.z = z;
         } else if (step.kind === 'descend') {
             out.push({ kind: 'column', what: `${at} descend column`, from: { ...virtual }, to: { x: virtual.x, y: virtual.y, z: step.z } });
             virtual.z = step.z;
@@ -250,7 +260,7 @@ export function sequenceMotion(plan: {
             out.push({ kind: 'march', what: `${at} probe "${step.name}" march`, from: { ...s }, to: limit });
             virtual.x = s.x;
             virtual.y = s.y;
-            virtual.z = plan.hopZ;
+            virtual.z = step.endZ === undefined ? plan.hopZ : step.endZ;
         }
     });
     return out;

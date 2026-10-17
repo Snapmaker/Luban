@@ -76,8 +76,14 @@ item, quoting the tool result — not an essay):
    after the answer, never before it.
 
 **Fast path.** For a transit that starts at or above Z328 and writes no Z, `get_position` +
-`get_stored_state` discharge items 1–5 in one breath: quote the two results and stage
-`traverse_xy` (§8). One approval, no questions.
+`get_stored_state` discharge items 1–5 in one breath: quote the two results and call
+`traverse_xy` (§8). With `mcpTraverseWithoutApprovalAtSafeZ` on (the shipped default; operator
+ruling 2026-10-17, "if we've got to top z there's no approval for move at top z") it RUNS ON THE
+CALL when the position is verified/heartbeat, homed, already at or above the traverse height and
+the route passes the landmark and travel checks — the result says
+`executed_without_approval: true`, there is no confirm page and no `start_gcode_job`. Below the
+traverse height, on a cached/stale position, or with the setting off it stages for one approval
+as before (`staged_because` says why). Never chain `move_and_capture` hops as transport.
 
 ## 1. The eight motion laws
 
@@ -155,7 +161,17 @@ item, quoting the tool result — not an essay):
    ruling, 2026-09-21): `home` — homing is safe: Z rises first, then every axis to its switch,
    B included; it still needs the operator's explicit word (law 1) and a reliable position
    unless they explicitly demand the stale-position exception (§3), and you say the stock will turn before calling it — and `move_and_capture`, the
-   ≤ 100 mm vision nudge, which is Z-gated inside the tool (law 7). Everything else that moves
+   ≤ 100 mm vision nudge, which is Z-gated inside the tool (law 7). **A third case is the
+   top-Z transport policy** (operator ruling 2026-10-17, issue #241; setting
+   `mcpTraverseWithoutApprovalAtSafeZ`, default on): `traverse_xy`, the XY step of
+   `goto_tool_change_position` (its no-op Z step skipped) and an UP-only `move_z` to no higher
+   than the traverse height run on the call when the position of record is verified/heartbeat,
+   the machine is homed, the head is ALREADY at or above `mcpSafeTraverseZ` (328) and the route
+   passed the landmark and travel checks. The job record still exists (dashboard, log, timing,
+   `stop_gcode_job`), marked `approval.source: "policy"`; the result says
+   `executed_without_approval: true`. Any other transport — below the top, a cached or stale
+   position, a landmark above the head, a Z that descends — stages a page exactly as before, and
+   the result's `staged_because` tells you which condition failed. Everything else that moves
    the head reaches the operator as a page. **Order:
    stage → deliver the confirm URL as the LAST LINE of your message, alone, plain, one
    sentence above it saying what they are approving, no tool call after it in the same turn
@@ -197,6 +213,7 @@ item, quoting the tool result — not an essay):
 | Calls | Confirm page? | Axis motion? |
 |---|---|---|
 | Transport/Z, `goto_*`, file jobs, probe procedures, `run_tool_setter`, `survey_bed`, both bootstrap stages, `camera_program` | One per staged job, then `start_gcode_job` | Yes; ordinary MCP transport/procedures require homed state |
+| `traverse_xy` / `goto_tool_change_position` XY step / UP-only `move_z` with the head already at or above the traverse height on a verified homed position, route checked (`mcpTraverseWithoutApprovalAtSafeZ` on, the default) | No; runs on the call, job record marked approved by policy (law 6) | Yes, XY at the top or Z straight up; otherwise it stages as the row above |
 | `set_workspace_origin`, `select_workspace`, `apply_tool_length_offset` | One | No; homed state required |
 | `home` | No; explicit operator word | Yes, Z first and B to 0 |
 | `move_and_capture` / a moving `visual_servo` step | No; explicit operator word | Yes, bounded vision correction; Z gate remains mandatory |
@@ -411,8 +428,15 @@ start position — expect it, do not act on it.
   (outside circles use full-height repositioning). Use each procedure's entry conditions,
   limits and recovery policy; none grants an arbitrary low XY move. See `cnc-probing`'s
   [planning reference](../cnc-probing/references/planning.md).
-- **Composition boundary:** `probe_sequence` returns to each probe's start and raises after
-  every probe, including continuing misses. `probe_program` references and groups share
+- **Composition boundary:** by default `probe_sequence` returns to each probe's start and raises
+  after every probe, including continuing misses. **Opt-in local links** (issue #242,
+  2026-10-17): `probe_sequence {local_links: {clearance_z, max_hop_mm?}}` is a sanctioned
+  envelope of its own — the operator approves, on the one page, hops between stations at a
+  stated toolhead machine Z (a measured top + 3–5 mm; in a program a bounded reference to an
+  earlier top touch), each ≤ `max_hop_mm` (cap 60, split longer links with an extra hop step),
+  checked at staging against every landmark and keep-out at that height; after a march the probe
+  retreats to its start and the next hop raises only to max(clearance, where it is); the first
+  hop and the final exit are at the traverse height. `probe_program` references and groups share
   measurements/approval, not a low position between ops: each successful probing op ends
   raised. Prefer related stations within a suitable continuous op. Ordinary calls split into
   ≤1 mm increments are not a substitute for a sanctioned probing envelope.
@@ -511,8 +535,11 @@ turns: the staging result's `confirm_url` goes to the operator FIRST (last line,
 the start call waits in the background afterwards or takes their pasted code.
 
 ```jsonc
-// Transport at the traverse height (default frame machine; series form: "targets": [{"x","y"}, ...])
+// Transport at the traverse height (default frame machine; series form: "targets": [{"x","y"}, ...]).
+// Head already at/above Z328 on a verified homed position + mcpTraverseWithoutApprovalAtSafeZ on (default):
+// the call EXECUTES the move (result executed_without_approval: true) - no page, no start_gcode_job.
 traverse_xy {"x": 290, "y": 105, "coordinate_system": "machine", "reason": "..."}
+// Otherwise (below the top, cached/stale position, setting off) the same call stages one approval:
 start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}
 // Work origin: XY to work (0, 0) at the current Z, STAGED - the page shows the MACHINE destination
 goto_work_origin {"reason": "..."}
@@ -520,8 +547,17 @@ start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}
 // Machine home runs ON THE CALL - no confirm page, no start_gcode_job (operator ruling 2026-09-21: safe).
 // Needs the operator's explicit word (law 1) and a reliable position; homes B too - say the stock will turn.
 home {}
-// Z, one operator-confirmed step per target
+// Z, one operator-confirmed step per target. An UP-only move to no higher than Z328 runs on the call
+// under the same setting (executed_without_approval: true); anything that descends stages.
 move_z {"z": 328, "coordinate_system": "machine", "reason": "..."}
+start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}
+// Probe sequence with LOCAL LINKS (§4): stations linked at a stated machine Z instead of Z328 between marches.
+// In a probe_program, clearance_z may be {"from": "tops.top.z", "plus": 4, "between": [200, 215]}.
+probe_sequence {"reason": "...", "local_links": {"clearance_z": 208.4, "max_hop_mm": 60},
+  "steps": [{"kind": "hop", "x": 100, "y": 100}, {"kind": "descend", "z": 203},
+            {"kind": "probe", "name": "w", "dx": 1, "max_travel_mm": 10},
+            {"kind": "hop", "x": 150, "y": 100}, {"kind": "descend", "z": 203},
+            {"kind": "probe", "name": "e", "dx": -1, "max_travel_mm": 10}]}
 start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}
 // Offline thread-milling conversion: only after verifying the declarations and actual head.
 // This RPM example requires the 200 W head; standard-head percentage arguments are in cnc-thread-milling.

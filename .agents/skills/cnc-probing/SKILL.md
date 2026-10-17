@@ -44,6 +44,9 @@ Retain corners and interior coverage; refine only a measured anomaly or an unres
 constraint. Sixteen is a starting choice for that task, not a guarantee against unsampled bow,
 a universal grid size or a reason to repeat points already measured. Edge location and datum
 registration are separate measurements; do not demand an edge-resolution grid over a flat face.
+Conversely, once a map or earlier tops show the plane flat within the job's tolerance, **one**
+top touch near the work verifies it on a later day — not one per edge (see "Re-locating a known
+part" below).
 
 Justify pitch from what must be resolved. A sampled edge bracket alone has at least ±pitch/2
 uncertainty: ±0.2 mm requires pitch ≤0.4 mm before adding probe uncertainty, not a 2 mm grid.
@@ -89,11 +92,21 @@ uniform sampling of a known flat bank adds time without resolving the unknown ed
 and rotations; a nominal coarse step can still contain several controller transactions.
 
 **Choose the movement pattern before batching calls.** For adjacent measurements of the same
-feature, use the appropriate continuous procedure below. `sequence` returns to each march's
-start and raises after **every probe**, including a continuing miss. `probe_program` shares
-approval and measured references, but each completed probing op still finishes raised; it does
-not fuse their paths. Keep related stations inside one suitable op. Unknown fixtures and changes
-of face or B can justify full clearance. Small XY increments alone do not prove a route clear.
+feature, use the appropriate continuous procedure below. By default `sequence` returns to each
+march's start and raises to Z328 after **every probe**, including a continuing miss — about
+59 s of travel per station on the A350 (6 s raise, hop, ~20 s of 5 mm descent segments and ~19 s
+of 1 mm guarded steps; measured 2026-10-17, issue #242). Once the top of the region is known —
+an earlier top touch in the same program, a recent height map, or an operator-stated height —
+add `local_links: {clearance_z, max_hop_mm?}` to the sequence: the hops between stations run at
+that toolhead machine Z (top + 3–5 mm), each ≤ `max_hop_mm` (cap 60; add an intermediate hop
+step for longer links), and the following descent is a few guarded millimetres. In a
+`probe_program` make `clearance_z` a bounded reference to the top touch, e.g.
+`{"from": "tops.top.z", "plus": 4, "between": [200, 215]}`. The staging check still refuses a low
+hop under any landmark or keep-out whose clearance is above it; the first hop and the final
+exit stay at the traverse height. `probe_program` shares approval and measured references, but
+each completed probing op still finishes raised; it does not fuse paths between ops. Keep
+related stations inside one suitable op. Unknown fixtures and changes of face or B can justify
+full clearance. Small XY increments alone do not prove a route clear.
 
 For the complete capability/retreat comparison and timing decisions, read
 [planning and local continuation](references/planning.md) when arranging multiple probes or
@@ -113,6 +126,35 @@ Which measuring op:
 | the whole perimeter of a pocket of UNKNOWN shape | `trace` (`probe_trace_perimeter`) | 0.1 mm crawl from a point inside; needs `bounds` + `max_perimeter_mm` |
 | a VERTICAL post/boss/hole diameter and centre | `probe_circle` | vertical-axis features only — a cylinder lying along Y is a `surface_path` across it |
 | edges of stock of estimated size | `sequence` side marches | start outside the bounded stock; shorten air travel using applicable measured edges |
+
+### Re-locating a known part (re-registration)
+
+A part whose geometry is known — a PCB re-taped by hand, a fixture put back after a tool change,
+a stock whose outline was measured last session — needs X, Y, θ and the top height, not a survey.
+The 2026-10-17 FR4 job spent 16 minutes on 10 contacts (4 tops, 6 edge marches, each a full
+return to Z328) for what 3–4 contacts and one `probe_circle` would have fixed. The recipe:
+
+1. **One top touch** near the work (a one-probe `sequence`, −Z) confirms the height — enough when
+   a recent height map or earlier tops show the plane flat within the job's tolerance (the
+   2026-10-17 board: 84 points within 0.2 mm, then 4 fresh tops within 0.05 mm that added
+   nothing). One touch per edge is not needed for a flat plane. Reuse the saved map's numbers for
+   `expected_z_machine` / `start_z_machine` instead of re-probing them.
+2. **One inside `probe_circle`** on a known milled hole (a 4.3 mm M4 hole will do for a 2 mm
+   ball probe) gives X and Y of a datum in one op, with local returns between radials.
+3. **Two sides**: one edge **pair** along one side (two touches a known distance apart give θ)
+   plus **one** touch on a perpendicular side. With the hole that fixes X, Y and θ; the second
+   side's position comes from the known geometry.
+4. **Opposite-edge pairs are only for calibrating probe pre-travel**, not for registration: the
+   fitted pre-travel on 2026-10-17 was about 0.085 mm in X and 0.12 mm in Y. Do it when the probe
+   has just been fitted or the tolerance is tighter than the stored pre-travel; otherwise use the
+   stored value and say so.
+5. Put the top touch, the circle and the edge touches in **one `probe_program`**, with the edge
+   `sequence` carrying `local_links` referenced to the top touch, and **prefer the composite ops**
+   (`probe_corner`, `probe_stock_outline`, `probe_circle`, `probe_wall_follow`) where the geometry
+   fits — they already carry the local links a hand-built sequence lacks by default.
+
+Expected cost on the A350: the whole re-registration in roughly 4–5 minutes instead of 16; the
+edge stations at about 25–30 s each instead of about 96 s.
 
 **Unknown Z, no stored axis, no operator number** (the common "scan that thing" case): the only
 lawful route is the sensor-gated −Z march from the traverse height inside the program above.

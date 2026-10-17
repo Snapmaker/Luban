@@ -15,9 +15,21 @@ import {
     runToolSetterProcedure,
     setToolSetterConfig,
 } from '../toolSetter';
-import { MAX_TOOL_LENGTH_DELTA_MM, TOOL_SETTER_FLOOR_MARGIN_MM, within } from '../procedureLimits';
+import { MAX_TOOL_LENGTH_DELTA_MM, TOOL_SETTER_FLOOR_MARGIN_MM, TRAVERSE_FEED, within } from '../procedureLimits';
+import { clearanceOptions } from '../clearanceContext';
+import { landmarkStore } from '../landmarks';
+import { decideSafeZTraverse } from '../safeZPolicy';
+import { TRAVERSE_Z_TOLERANCE_MM, planTraverseXy } from '../traversePlan';
+import { runPolicyApprovedDirectJob } from './gcode';
 import { validateStagedEnvelope } from './staging';
-import { getPositionSnapshot, machinePositionDiagnostics, requireReliableMachine } from './machine';
+import {
+    getPositionSnapshot,
+    machinePositionDiagnostics,
+    requirePlanningTravel,
+    requireReliableMachine,
+    safeTraverseZ,
+    traverseWithoutApprovalAtSafeZ,
+} from './machine';
 
 export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUrl: () => string): void {
     registry.register({
@@ -335,7 +347,10 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
         name: 'goto_tool_change_position',
         description: 'Stage the move to the operator-set tool-change park position (machine coords '
             + 'from set_tool_setter_config: typically Z at the homing height and X at the far end; '
-            + 'Y only if configured). One approval covers two exact steps: Z up first, then X/Y, one start_gcode_job call each. The operator then '
+            + 'Y only if configured). One approval covers two exact steps: Z up first, then X/Y, one start_gcode_job call each. '
+            + 'If the head is ALREADY at the park Z (= at or above the traverse height) on a verified, homed position and '
+            + 'mcpTraverseWithoutApprovalAtSafeZ is on (operator ruling 2026-10-17, #241), the no-op Z step is skipped and the XY leg runs '
+            + 'on the call after the landmark/travel checks, with no confirm page (result executed_without_approval: true). The operator then '
             + 'swaps the tool BY HAND; afterwards run_tool_setter measures the new tool and '
             + 'apply_tool_length_offset shifts the work origin by the length difference.',
         inputSchema: {
@@ -367,6 +382,71 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
                 throw new McpToolError('Toolhead appears to be on; refusing the tool-change move.');
             }
 
+            // Operator ruling 2026-10-17 (#241): with the head already at the
+            // park Z - which is at or above the traverse height - on a
+            // verified, homed position, the Z step is a no-op and the XY leg
+            // is exactly the transport traverse_xy runs without a page: plan
+            // it through the same planner (travel + landmark checks at the
+            // current Z; a landmark above the head refuses, never auto-runs)
+            // and execute it on the call. Otherwise stage both steps as before.
+            const { x: mx, y: my, z: mz } = position.machine;
+            const atParkZ = mx !== null && my !== null && mz !== null
+                && Math.abs(mz - cfg.changeZ) <= TRAVERSE_Z_TOLERANCE_MM;
+            const policy = decideSafeZTraverse({
+                enabled: traverseWithoutApprovalAtSafeZ(),
+                reliability: position.reliability,
+                homed: position.isHomed,
+                currentZ: mz,
+                traverseZ: safeTraverseZ(),
+            });
+            if (atParkZ && policy.allowed) {
+                const travel = requirePlanningTravel('the tool-change park move', { x: mx, y: my });
+                let plan;
+                try {
+                    plan = planTraverseXy({
+                        targets: [{ x: cfg.changeX, ...(cfg.changeY !== null ? { y: cfg.changeY } : {}) }],
+                        frame: 'machine',
+                        currentMachine: { x: mx as number, y: my as number, z: mz as number },
+                        originOffset: position.originOffset,
+                        travel: travel.limits,
+                        traverseZ: safeTraverseZ(),
+                        feedRate: TRAVERSE_FEED.default,
+                        obstacles: landmarkStore.obstacleBoxes(),
+                        ...clearanceOptions(),
+                        reason: `tool-change park: ${String(args.reason)}`,
+                    });
+                } catch (err) {
+                    if ((err as Error).name === 'TraversePlanError') {
+                        throw new McpToolError(`Tool-change park XY leg refused: ${(err as Error).message}`);
+                    }
+                    throw err;
+                }
+                invalidateActiveTool('Tool-change park requested; confirm the fitted tool after the manual swap.');
+                const validation = validateStagedEnvelope(plan.reviewText, 'goto_tool_change_position');
+                const job = jobManager.submit(
+                    plan.reviewText,
+                    `tool-change park X${cfg.changeX} (already at Z${cfg.changeZ}) - ${String(args.reason).slice(0, 40)}`,
+                    'cnc',
+                    validation,
+                    'direct'
+                );
+                const token = jobManager.approveByPolicy(job, policy.policy, `${policy.reason}; head already at the park Z ${cfg.changeZ}`);
+                const run = await runPolicyApprovedDirectJob(job, token, true);
+                return {
+                    job: jobManager.describe(job),
+                    executed_without_approval: true,
+                    approval: { source: 'policy', policy: policy.policy, reason: policy.reason },
+                    park: { x: cfg.changeX, y: cfg.changeY, z: cfg.changeZ },
+                    z_step_skipped: `already at the park Z (machine Z ${(mz as number).toFixed(3)} vs ${cfg.changeZ})`,
+                    distance_mm: Number(plan.totalDistanceMm.toFixed(1)),
+                    position: run.settle.position,
+                    position_verified: run.settle.verified,
+                    warning: run.settle.warning,
+                    next_step: `Moved to the park position on the call under ${policy.policy} (no confirm page). The operator swaps `
+                        + 'the tool by hand; measure it with run_tool_setter and finish with apply_tool_length_offset.',
+                };
+            }
+
             // Z clears first, at the move_z feed cap; XY travels as a rapid
             // only once at height. One approval covers both exact steps.
             const steps = [
@@ -387,6 +467,7 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
             return {
                 job: jobManager.describe(job),
                 park: { x: cfg.changeX, y: cfg.changeY, z: cfg.changeZ },
+                staged_because: atParkZ ? policy.reason : `the head is at machine Z ${mz === null ? 'unknown' : mz.toFixed(3)}, not the park Z ${cfg.changeZ}`,
                 confirm_url: `${getConfirmBaseUrl()}/confirm/${job.id}`,
                 next_step: 'Operator approves once; call start_gcode_job with the code TWICE (Z step, '
                     + 'then XY step). Then the operator swaps the tool by hand; measure it with '

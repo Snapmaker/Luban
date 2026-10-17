@@ -108,6 +108,8 @@ interface McpStatus {
     approval?: {
         handoff: 'agent' | 'code';
         source: 'env' | 'config' | 'default';
+        traverseWithoutApprovalAtSafeZ?: boolean;
+        traverseWithoutApprovalSource?: 'env' | 'config' | 'default';
     };
     cameraStream?: McpCameraStreamStatus;
     vibration?: {
@@ -207,6 +209,8 @@ const McpServer: React.FC = () => {
     const [diagnosticsRecentLimit, setDiagnosticsRecentLimit] = useState('');
     // Job approval hand-off: true = a waiting agent starts on the operator's click.
     const [approvalHandoffAgent, setApprovalHandoffAgent] = useState(true);
+    // Approval-free XY transport with the head already at the traverse height (#241). Default on.
+    const [traverseAtSafeZ, setTraverseAtSafeZ] = useState(true);
     // Live MJPEG camera view served by the MCP server (/camera). Applies at
     // once on save: off disconnects every viewer. '' fps = server default.
     const [cameraStreamEnabled, setCameraStreamEnabled] = useState(false);
@@ -249,6 +253,7 @@ const McpServer: React.FC = () => {
                 }
                 if (body.approval) {
                     setApprovalHandoffAgent(body.approval.handoff !== 'code');
+                    setTraverseAtSafeZ(body.approval.traverseWithoutApprovalAtSafeZ !== false);
                 }
                 if (body.cameraStream) {
                     setCameraStreamEnabled(!!body.cameraStream.enabled);
@@ -317,6 +322,7 @@ const McpServer: React.FC = () => {
             gpio: gpioUpdate,
             buffers: { jobEventLimit, diagnosticsRecentLimit },
             approvalHandoff: approvalHandoffAgent ? 'agent' : 'code',
+            ...(status?.approval?.traverseWithoutApprovalSource === 'env' ? {} : { traverseWithoutApprovalAtSafeZ: traverseAtSafeZ }),
             cameraStream: { enabled: cameraStreamEnabled, fps: cameraStreamFps },
             spindleTelemetry: {
                 ...(telemetryEnv('enabled') ? {} : { enabled: spindleTelemetry }),
@@ -496,6 +502,18 @@ const McpServer: React.FC = () => {
                 <div className={styles['port-tips']}>
                     {i18n._('key-App/Settings/McpServer-Off: the confirm page shows a one-time code you must relay to the agent yourself. Either way only your click in the browser authorises motion.')}
                     {status && status.approval && status.approval.source === 'env' ? ` — ${i18n._('key-App/Settings/McpServer-Overridden by environment variable')} LUBAN_MCP_APPROVAL_HANDOFF` : ''}
+                </div>
+                <div className="sm-flex align-center margin-top-8">
+                    <Switch
+                        checked={traverseAtSafeZ}
+                        onChange={(checked) => setTraverseAtSafeZ(checked)}
+                        disabled={!enabled || !!(status && status.approval && status.approval.traverseWithoutApprovalSource === 'env')}
+                    />
+                    <span className="margin-left-8">{i18n._('key-App/Settings/McpServer-Run XY transport without a confirm page when the head is already at the traverse height')}</span>
+                </div>
+                <div className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-Applies to traverse_xy, the XY step of goto_tool_change_position and an up-only move_z, only on a verified homed position at or above mcpSafeTraverseZ, after the usual landmark and travel checks. The job still appears on the dashboard, marked as approved by policy. Off: every transport stages a confirm page.')}
+                    {status && status.approval && status.approval.traverseWithoutApprovalSource === 'env' ? ` — ${i18n._('key-App/Settings/McpServer-Overridden by environment variable')} LUBAN_MCP_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z` : ''}
                 </div>
             </div>
 

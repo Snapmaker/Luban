@@ -11,6 +11,8 @@ export function summarizeDashboardJob(job: McpJob) {
         state: job.state,
         createdAt: job.createdAt,
         approvedAt: job.approvedAt,
+        // 'operator' (the click) or 'policy' with its name (safeZPolicy.ts, #241).
+        approval: job.approval,
         startedAt: job.startedAt,
         endedAt: job.endedAt,
         ending: job.ending,
