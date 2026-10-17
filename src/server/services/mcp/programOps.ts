@@ -13,7 +13,8 @@
 // allowed only as the LAST op because it moves every axis to its switches
 // and homes B: nothing measured after it would relate to what came before.
 
-import { Bounded, CAPTURE_SETTLE_MS, clampTo } from './procedureLimits';
+import { MotionSegment, sequenceMotion } from './envelopeChecks';
+import { Bounded, CAPTURE_SETTLE_MS, MAX_STATED_MACHINE_Z_MM, clampTo } from './procedureLimits';
 
 export const PROGRAM_OP_KINDS = ['rotate_b', 'surface_path', 'surface_grid', 'sequence', 'stock_outline', 'wall_follow', 'corner', 'trace', 'capture', 'home'] as const;
 export type ProgramOpKindName = typeof PROGRAM_OP_KINDS[number];
@@ -40,14 +41,33 @@ export interface CaptureOpArgs {
      * motion"), so this is the one way a program positions the camera.
      */
     view: { x: number; y: number } | null;
+    /**
+     * A toolhead MACHINE Z to frame from (#177): a measured or operator-
+     * stated height (in a program a bounded reference), never a guess. Frames
+     * from the traverse height cannot resolve a contact point or a pocket
+     * wall. After the viewing hop (or from where the previous op left the
+     * head) the runner descends to it as a probe_sequence descend step does -
+     * fast segments to DESCENT_GUARD_MM above, then 1 mm sensor-checked steps,
+     * any contact aborts - settles, takes the frame stamped with that Z and
+     * raises STRAIGHT back to the traverse height, so the op still ends
+     * raised. null = frame from where the head is.
+     */
+    z: number | null;
 }
 
 /** Normalise a `capture` op's arguments; every other key is refused so a typo cannot pass silently. */
 export function captureOpArgs(raw: { [key: string]: unknown }, where: string): CaptureOpArgs {
-    const allowed = ['settle_ms', 'label', 'x', 'y'];
+    const allowed = ['settle_ms', 'label', 'x', 'y', 'z'];
     const unknown = Object.keys(raw).filter((k) => !allowed.includes(k));
     if (unknown.length) {
-        throw new Error(`${where} (capture): unknown argument(s) ${unknown.join(', ')} - a capture takes settle_ms, label and an optional viewing position x/y (machine, hopped to at the traverse height).`);
+        throw new Error(`${where} (capture): unknown argument(s) ${unknown.join(', ')} - a capture takes settle_ms, label, an optional viewing position x/y (machine, hopped to at the traverse height) and an optional z (a measured or operator-stated toolhead machine Z to descend to for the frame).`);
+    }
+    let z: number | null = null;
+    if (raw.z !== undefined && raw.z !== null) {
+        z = Number(raw.z);
+        if (typeof raw.z === 'boolean' || raw.z === '' || !Number.isFinite(z) || z < 0 || z > MAX_STATED_MACHINE_Z_MM) {
+            throw new Error(`${where} (capture): z must be a toolhead MACHINE Z in 0..${MAX_STATED_MACHINE_Z_MM} - measured or operator-stated, never a guess; omit it to frame from where the head is.`);
+        }
     }
     const label = raw.label === undefined || raw.label === null ? null : String(raw.label).trim().slice(0, 120) || null;
     const hasX = raw.x !== undefined && raw.x !== null;
@@ -61,7 +81,31 @@ export function captureOpArgs(raw: { [key: string]: unknown }, where: string): C
         }
         view = { x, y };
     }
-    return { settle_ms: clampTo(raw.settle_ms, CAPTURE_SETTLE_MS as Bounded), label, view };
+    return { settle_ms: clampTo(raw.settle_ms, CAPTURE_SETTLE_MS as Bounded), label, view, z };
+}
+
+/**
+ * The moves a capture op commands, as the envelope check sees them: the
+ * viewing hop at the traverse height (a sequence hop in every respect) and,
+ * with a stated z, the descent column at the viewing XY - or at `from`'s XY
+ * when there is no view - from the traverse height down to z. Checked with
+ * the stored landmarks and the program's keep-out boxes (law 4: a column
+ * into a VOLUME is refused; a CROSSING landmark allows a column inside it).
+ * Empty for a capture that moves nothing.
+ */
+export function captureMotion(
+    capture: Pick<CaptureOpArgs, 'view' | 'z'>,
+    from: { x: number; y: number; z: number },
+    hopZ: number
+): MotionSegment[] {
+    const steps: ({ kind: 'hop'; x: number; y: number } | { kind: 'descend'; z: number })[] = [];
+    if (capture.view) {
+        steps.push({ kind: 'hop', x: capture.view.x, y: capture.view.y });
+    }
+    if (capture.z !== null) {
+        steps.push({ kind: 'descend', z: capture.z });
+    }
+    return sequenceMotion({ hopZ, staged: from, steps });
 }
 
 /**

@@ -19,7 +19,7 @@ import {
     setTrustedOffset,
 } from './positionOfRecord';
 import { ProbeChannel, probeFeedService, resolveSensorEnabled, sensorLabel } from './probeFeed';
-import { MARCH_SEGMENT_MM, TRAVEL_FEED, marchSegments } from './procedureLimits';
+import { COARSE_FEED, DESCENT_GUARD_MM, MARCH_SEGMENT_MM, TRAVEL_FEED, marchSegments } from './procedureLimits';
 import { McpToolError } from './registry';
 import { GcodeChannel, SentGcode, currentGcodeSequence, sendGcodeVisible } from './tools/camera';
 import { PositionSnapshot, assertFreshHeartbeat, getPositionSnapshot, safeTraverseZ } from './tools/machine';
@@ -1026,4 +1026,59 @@ export async function descendInSegments(
     // it: surface it here rather than at the caller's next move.
     probeFeedService.assertNoOvertravel();
     return { segments };
+}
+
+export interface GuardedDescentOutcome {
+    /** Verified machine Z the descent started from. */
+    fromZ: number;
+    /** Fast segments sent above the guard band. */
+    segments: number;
+    /** Sensor-checked 1 mm steps sent inside it. */
+    guardSteps: number;
+}
+
+/**
+ * The descent to a STATED toolhead machine Z that expects NO contact, as
+ * probe_sequence's descend step does it (operator, 2026-09-02): from the
+ * verified position (knownMachinePosition - a single heartbeat never decides
+ * a descent, job 42df7b9351b7), descendInSegments to DESCENT_GUARD_MM above
+ * the target, then 1 mm steps at the coarse feed, each followed by a serial
+ * sensor read - any contact aborts with the machine held. Refuses to RISE: a
+ * head already below the target is a plan that does not match the machine.
+ * Callers clear the expected-contact set first (a descent expects nothing).
+ */
+export async function guardedDescent(
+    tool: string,
+    toZ: number,
+    channels: ProbeChannel | ProbeChannel[],
+    sensorDelayMs: number
+): Promise<GuardedDescentOutcome> {
+    const known = knownMachinePosition();
+    const zNow = known.position.z;
+    if (zNow === null) {
+        throw new ProcedureAbort(`${tool}: machine Z unknown before the descent to Z${toZ.toFixed(3)} - refusing to guess.`);
+    }
+    if (zNow < toZ - RECHECK_TOLERANCE_MM) {
+        throw new ProcedureAbort(`${tool}: the toolhead is at machine Z${zNow} (${known.source}), BELOW the stated Z${toZ.toFixed(3)} - `
+            + 'a descent never rises. Re-stage from a verified position.');
+    }
+    const guardTop = toZ + DESCENT_GUARD_MM;
+    let segments = 0;
+    if (zNow > guardTop + TRAVERSE_Z_TOLERANCE_MM) {
+        ({ segments } = await descendInSegments(tool, zNow, guardTop, channels, sensorDelayMs));
+    }
+    let gz = Math.min(Math.max(zNow, toZ), guardTop);
+    let guardSteps = 0;
+    while (gz - toZ > 1e-9) {
+        const t0 = Date.now();
+        gz = Math.max(gz - 1, toZ);
+        guardSteps += 1;
+        await moveMachineSettled(`${tool}:guard`, { z: Number(gz.toFixed(3)) }, COARSE_FEED);
+        const sensed = await senseAfter(channels, t0, sensorDelayMs);
+        if (sensed.contact) {
+            throw new ProcedureAbort(`UNEXPECTED CONTACT (${sensed.channel}) during the guarded descent at Z${gz.toFixed(3)} - something is `
+                + 'where the plan says nothing should be. Machine held.');
+        }
+    }
+    return { fromZ: zNow, segments, guardSteps };
 }

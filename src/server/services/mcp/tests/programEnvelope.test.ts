@@ -1,6 +1,6 @@
 import { strict as assert } from 'assert';
 
-import { TRAVEL_FEED } from '../procedureLimits';
+import { COARSE_FEED, DESCENT_GUARD_MM, TRAVEL_FEED } from '../procedureLimits';
 import {
     ProgramEnvelope,
     describeCaptureOp,
@@ -35,7 +35,9 @@ function program(over: Partial<ProgramEnvelope> = {}): ProgramEnvelope {
 }
 
 // Job 96baca79b3b8 (2026-09-21): ONE capture op viewing from machine (190, 140).
-const VIEW = { settle_ms: 500, label: null, view: { x: 190, y: 140 } };
+const VIEW = { settle_ms: 500, label: null, view: { x: 190, y: 140 }, z: null };
+// Issue #177: the same view, framed from a stated toolhead machine Z (a measured top + 7).
+const VIEW_AT_Z = { settle_ms: 500, label: 'pocket wall', view: { x: 190, y: 140 }, z: 215 };
 function captureOnlyProgram(): ProgramEnvelope {
     return program({
         ops: [{ id: 'look', kind: 'capture', on_fail: 'stop', args: { x: 190, y: 140, settle_ms: 500, label: null } }],
@@ -89,10 +91,45 @@ export const tests: Array<[string, () => void]> = [
         assert.ok(!body.includes('(no motion)'), 'a viewing capture is not "no motion"');
     }],
 
+    ['issue #177: a capture at a stated Z renders the column as the moves the runner sends, the frame, and the straight raise back', () => {
+        const text = describeCaptureOp(VIEW_AT_Z, HOP_Z);
+        const motion = text.split('\n').filter((l) => /^G[01]\b/.test(l)).map((l) => l.split(';')[0].trim());
+        assert.equal(motion[0], `G1 Z328.000 F${TRAVEL_FEED}`, 'raise first');
+        assert.equal(motion[1], `G1 X190.000 Y140.000 F${TRAVEL_FEED}`, 'then the hop');
+        assert.equal(motion[2], `G1 Z${(215 + DESCENT_GUARD_MM).toFixed(3)} F${TRAVEL_FEED}`, 'fast segments to the guard band');
+        const guarded = motion.slice(3, -1);
+        assert.equal(guarded.length, DESCENT_GUARD_MM, 'one sensor-checked step per mm of the guard band');
+        assert.equal(guarded[0], `G1 Z234.000 F${COARSE_FEED}`);
+        assert.equal(guarded[guarded.length - 1], `G1 Z215.000 F${COARSE_FEED}`, 'the last step lands on the stated Z');
+        assert.equal(motion[motion.length - 1], `G1 Z328.000 F${TRAVEL_FEED}`, 'raise STRAIGHT back to the traverse height');
+        assert.ok(text.includes('STATED toolhead machine Z215'), text);
+        assert.ok(text.includes('ANY contact during the descent aborts'), text);
+        assert.ok(text.includes('stamped with the machine position (Z215)'), text);
+        assert.ok(text.includes('<= 5 mm segments'), 'the page states the segment length');
+        // Whole program: the Z extents reach the stated Z and the header counts the descent.
+        const body = describeProbeProgramAsGcode(program({
+            ops: [{ id: 'low', kind: 'capture', on_fail: 'stop', args: { x: 190, y: 140, z: 215, settle_ms: 500, label: 'pocket wall' } }],
+            previews: [{ id: 'low', text }],
+            captures: ['low'],
+        }));
+        const report = validateGcode(body);
+        assert.deepEqual(report.extents.z, { min: 215, max: 328 });
+        assert.deepEqual(report.feedRates, { min: COARSE_FEED, max: TRAVEL_FEED });
+        assert.equal(report.frame.declared, 'machine');
+        assert.equal(report.frame.mixed, false);
+        assert.ok(body.includes('1 of them FIRST hop to a viewing position at Z328'), body);
+        assert.ok(body.includes('1 of them DESCEND to a stated Z for the frame'), body);
+        // Without a view the column stands where the previous op left the head.
+        const columnOnly = describeCaptureOp({ ...VIEW_AT_Z, view: null }, HOP_Z);
+        assert.ok(columnOnly.includes('from the XY where the previous op left the head'), columnOnly);
+        assert.ok(!columnOnly.includes('X190.000'), 'no hop');
+        assert.ok(!columnOnly.includes('NO MOTION'), 'a descent is motion');
+    }],
+
     ['a capture with no viewing position moves nothing: only the closing raise is motion', () => {
         const body = describeProbeProgramAsGcode(program({
             ops: [{ id: 'snap', kind: 'capture', on_fail: 'stop', args: { x: null, y: null, settle_ms: 500, label: 'after turn' } }],
-            previews: [{ id: 'snap', text: describeCaptureOp({ settle_ms: 500, label: 'after turn', view: null }, HOP_Z) }],
+            previews: [{ id: 'snap', text: describeCaptureOp({ settle_ms: 500, label: 'after turn', view: null, z: null }, HOP_Z) }],
             captures: ['snap'],
         }));
         const report = validateGcode(body);

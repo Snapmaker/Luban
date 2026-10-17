@@ -184,6 +184,14 @@ export function marchSegments(fromS: number, toS: number, segmentMm: number = MA
     return out;
 }
 
+/**
+ * A guarded descent's final approach: fast segments stop this far above the
+ * stated target and 1 mm sensor-checked steps take over (operator,
+ * 2026-09-02). Shared by probe_sequence's descend step, the surface scans'
+ * approach to station 1, the bounded procedures' station descents and a
+ * probe_program capture at a stated Z (#177).
+ */
+export const DESCENT_GUARD_MM = 20;
 /** How far a single march may run before it aborts with no contact. */
 export const MARCH_TRAVEL_MM: Range = { min: 1, max: 150 };
 /** start_z_machine - floor_z_machine: the deepest a -Z search may go. */

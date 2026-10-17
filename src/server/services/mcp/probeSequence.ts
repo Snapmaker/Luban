@@ -34,7 +34,7 @@ import { LocalLinks, hopHeight, isLocalHop, localHopRefusal, resolveLocalLinks }
 import { projectToolTipZ } from './toolDatum';
 import { getProbeTipCalibration } from './toolDatumState';
 import { outsideTravel } from './machineTravel';
-import { MARCH_TRAVEL_MM, releaseTimeoutFor, resolveMarchParams, within } from './procedureLimits';
+import { DESCENT_GUARD_MM, MARCH_TRAVEL_MM, releaseTimeoutFor, resolveMarchParams, within } from './procedureLimits';
 import { getPositionSnapshot, requirePlanningTravel, safeTraverseZ } from './tools/machine';
 import { TRAVERSE_Z_TOLERANCE_MM } from './traversePlan';
 
@@ -103,7 +103,7 @@ interface SequenceStepProbe {
 }
 type SequenceStep = SequenceStepHop | SequenceStepDescend | SequenceStepProbe;
 
-export const DESCENT_GUARD_MM = 20;
+export { DESCENT_GUARD_MM } from './procedureLimits';
 
 export interface ProbeSequencePlan {
     steps: SequenceStep[];
