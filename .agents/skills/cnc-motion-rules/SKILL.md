@@ -219,6 +219,7 @@ as before (`staged_because` says why). Never chain `move_and_capture` hops as tr
 | `move_and_capture` / a moving `visual_servo` step | No; explicit operator word | Yes, bounded vision correction; Z gate remains mandatory |
 | Captures, previews, stored-frame/index reads, `set_active_tool`, camera selection, model store/verification, `plan_view_pose`, geometry/landmark recording | No | No |
 | `restore_work_frame` | No | No; selects G90/G54 |
+| `set_enclosure_light`, `set_enclosure_fan`, `get_enclosure_status` | No | No motion; enclosure LED strip / exhaust fan through Luban's own channel call, refused when the machine reports no enclosure |
 
 Count confirm pages, not tool calls. A `probe_program {dry_run: true}` validates/estimates but
 does not stage or move. A complete sequence whose bounds and clearances are known uses one

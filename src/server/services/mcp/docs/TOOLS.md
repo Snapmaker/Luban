@@ -70,6 +70,7 @@ Requested snapshots are retained until their archive files are explicitly remove
 - `visual_servo` — one clamped step toward a seen target per call. Trips when the error stops shrinking or the response diverges from the calibration prediction (parallax signature).
 - `survey_bed` — approved serpentine XY camera grid at gantry height; whole-bed mosaic for finding stock and fixtures. New: `overlap_fraction` + `plane_z` derive the pitch from the camera model's real field of view ("seamless" is a relationship between pitch and field of view, and a picked pitch is not one); `z_levels` runs the grid at several heights under ONE approval, each entered with XY stationary; with a verified model each pass is composed into `mosaic_z<Z>.jpg` indexed in machine coordinates, and the seams double as a drift check that marks the model unverified when overlapping frames disagree.
 - *(not a tool)* Live view for humans: `GET /camera` on the MCP port (`stream_url` above) — MJPEG at `/camera/stream.mjpeg`, one JPEG at `/camera/snapshot.jpg`, `/camera/status.json`. Same LAN gate as `/mcp`; off (Settings → MCP Server → Camera) = 404.
+- *(not a tool)* Browser trust for the HTTPS listener: `GET /trust` (per-OS install steps) and `GET /ca.crt` (the public mkcert CA) on the plain HTTP port, linked from the job dashboard and Settings → MCP Server once HTTPS is configured. Hand the `/trust` link to an operator whose browser refuses the HTTPS confirm/dashboard pages or their system notifications; the key is never served.
 
 ### The camera model (the camera is SESSION STATE, not a rig constant)
 
@@ -104,6 +105,11 @@ confirm URL. The solve, model store and verification themselves have no confirm 
 
 - `set_landmark` — name a scene feature by machine extent, optionally with `clearance_z`. Landmarks are obstacles: planners refuse XY paths that cross them below clearance.
 - `delete_landmark` — remove one.
+
+## Enclosure (no motion, no confirm page)
+
+- `get_enclosure_status` — `present` (the machine reports the enclosure module online), `light_percent`, `fan_percent`, `door_detection` (SACP: `door_detection_by_head`), `door_open` (serial only), `source` and a `reason` when absent. Read-only; the same enclosure query Luban already polls.
+- `set_enclosure_light {percent 0-100 | state "on"|"off"}` / `set_enclosure_fan {…}` — LED strip / exhaust fan through the same channel call as the Workspace enclosure widget (SSTP `/api/v1/enclosure`, SACP EnclosureInfo, serial `M1010`), never a hand-typed M-code. Runs on the call (no motion). Refused when not connected or when `present` is false. Returns `requested_percent`, `reported_percent`, `readback_matches` and the status `before`/`after`; a stale readback catches up on the next report — re-read, do not resend. The Snapmaker 2.0 enclosure drives both at 0 or 100.
 
 ## Probe feed (external sensors: tool setter, overtravel switch, touch probe)
 
