@@ -5,6 +5,7 @@ import { connectionManager } from '../../machine/ConnectionManager';
 import { calibrationStore } from '../calibration';
 import { cameraStreamService } from '../cameraStream';
 import { Landmark, landmarkStore } from '../landmarks';
+import { gcodeUploads, jobInbox } from '../jobs';
 import { probeFeedService } from '../probeFeed';
 import { McpToolError, ToolRegistry } from '../registry';
 import { GEOMETRY_FIELDS, ROTARY_AXIS_POINTS_FIELD, geometrySettings, setGeometryValues } from '../rotaryGeometry';
@@ -352,6 +353,27 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                         };
                     })(),
                 },
+                // Where a large program goes (#237): the inbox directories
+                // gcode_path may name, the size cap, and uploads in flight.
+                jobIntake: (() => {
+                    const inbox = jobInbox();
+                    const limits = gcodeUploads.limits;
+                    return {
+                        inboxDir: inbox.inboxDir,
+                        inboxProblem: inbox.inboxProblem,
+                        extraInboxDir: inbox.extraDir,
+                        extraInboxSource: inbox.extraSource,
+                        extraInboxProblem: inbox.extraProblem,
+                        allowedDirs: inbox.roots.map((root) => root.dir),
+                        maxProgramBytes: limits.maxBytes,
+                        uploadChunkMaxBytes: limits.chunkMaxBytes,
+                        uploadIdleExpiryMs: limits.idleExpiryMs,
+                        openUploads: gcodeUploads.list(),
+                        note: 'submit_gcode_job / validate_gcode take exactly one of gcode (inline, small), gcode_path (a file in allowedDirs, '
+                            + 'read by the Luban server) or upload_id (begin_gcode_upload / append_gcode_chunk / finish_gcode_upload). '
+                            + 'Write a real CAM file into inboxDir and pass its name; never emit it as one argument.',
+                    };
+                })(),
                 // From Luban's Machine Settings (machine.json), never a private key.
                 machineSettings: readAppMachineSettings(),
                 installedModules: (readAppMachineSettings() || { modules: [] }).modules,
