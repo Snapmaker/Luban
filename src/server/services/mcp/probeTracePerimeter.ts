@@ -64,6 +64,8 @@ import {
     within,
 } from './procedureLimits';
 import { McpToolError } from './registry';
+import { StylusReachVerdict, describeStylusReach } from './stylusReach';
+import { requireStylusReach } from './stylusReachGuard';
 import { TipCalibrationSnapshot, projectToolTipZ } from './toolDatum';
 import { getProbeTipCalibration } from './toolDatumState';
 import { probeGeometry } from './rotaryGeometry';
@@ -109,9 +111,14 @@ export interface ProbeTracePlan {
     confirmAt: ConfirmAt[];
     /** expected_corners (default 4): the time / confirm-cycle estimate only, never a bound on the crawl. */
     expectedCorners: number;
+    /** Issue #187: the body-vs-rim verdict at z_machine (refused at staging when it fails). */
+    stylusReach: StylusReachVerdict;
 }
 
 interface TraceArgs {
+    rim_z_machine?: unknown;
+    surface_z_machine?: unknown;
+    reach_margin_mm?: unknown;
     start_x?: unknown;
     start_y?: unknown;
     z_machine?: unknown;
@@ -310,6 +317,7 @@ export function planProbeTracePerimeter(args: TraceArgs, extraObstacles: Obstacl
         }),
         confirmAt,
         expectedCorners,
+        stylusReach: requireStylusReach(args, r3(zMachine), 'Perimeter trace'),
     };
     const violations = checkMotion(traceMotion(plan), [...landmarkStore.obstacleBoxes(), ...extraObstacles], { traverseZ: hopZ, ...clearanceOptions() });
     if (violations.length) {
@@ -351,12 +359,13 @@ export function describeProbeTracePlanAsGcode(plan: ProbeTracePlan): string {
         ';   corners fitted to the points off BOTH walls plus the wall-to-arc transition points the circle explains better than the wall (radius, centre, residuals,',
         `;   the arc span the fit covers - under ${CORNER_ARC_SPAN_CONFIDENT_DEG} deg the radius is flagged LOW CONFIDENCE) - or, where no single circle fits, an IRREGULAR lobe as a polyline and`,
         ';   line / arc pieces with no radius - closure, tip-centre AND surface perimeter lengths, counts, timing.',
+        describeStylusReach(plan.stylusReach),
         `; anchored at machine (${plan.staged.x.toFixed(2)}, ${plan.staged.y.toFixed(2)}, ${plan.staged.z.toFixed(2)}) - re-verified before motion`,
         'G90',
         'G53;',
         `G1 Z${plan.hopZ.toFixed(3)} F${TRAVEL_FEED}; raise to the safe traverse height (law 2)`,
         `G1 X${plan.start.x.toFixed(3)} Y${plan.start.y.toFixed(3)} F${TRAVEL_FEED}; traverse to the start (inside the pocket)`,
-        `G1 Z${Math.min(plan.zMachine + DESCENT_GUARD_MM, plan.hopZ).toFixed(3)} F${TRAVEL_FEED}; descend in <= ${DESCENT_SEGMENT_MM} mm segments (crash guard armed)`,
+        `G1 Z${Math.min(plan.zMachine + DESCENT_GUARD_MM, plan.hopZ).toFixed(3)} F${TRAVEL_FEED}; descend in <= ${DESCENT_SEGMENT_MM.default} mm segments (crash guard armed)`,
         `G1 Z${plan.zMachine.toFixed(3)} F${COARSE_FEED}; guarded 1 mm steps (ANY contact aborts: the start is not over free space)`,
         `G1 X${r3(plan.start.x + plan.dir.x * plan.maxTravelMm).toFixed(3)} Y${r3(plan.start.y + plan.dir.y * plan.maxTravelMm).toFixed(3)} F${COARSE_FEED}; first-wall march limit (contact expected before it)`,
         `; ... crawl: G1 steps of ${p.fineStepMm} / ${p.coarseStepMm} mm at F${STEPPED_HOP_FEED} inside the bounds above, each followed by a sensor read; retreats of one step at F${TRAVEL_FEED}`,
@@ -378,6 +387,7 @@ export interface TraceProcedureResult {
     lengths: TraceLengths;
     normals: TraceAnalysis['normals'] | null;
     tipDiameterMm: number | null;
+    stylusReach: StylusReachVerdict;
     timing: { totalMs: number; perStepMs: number | null; confirmCycles: number };
     /**
      * Where the head was left. `parked` = raised to the traverse height;
@@ -451,6 +461,7 @@ export async function runProbeTracePerimeterProcedure(plan: ProbeTracePlan): Pro
             lengths,
             normals: analysis ? analysis.normals : null,
             tipDiameterMm: plan.tipDiameterMm,
+            stylusReach: plan.stylusReach,
             timing: { totalMs, perStepMs: steps ? Math.round(totalMs / steps) : null, confirmCycles: trace ? trace.counts.confirms : 0 },
             endState,
             phases,

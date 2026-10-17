@@ -54,6 +54,15 @@ export interface GcodeValidationReport {
         onCommands: number; // M3/M4 count
         offCommands: number; // M5 count
         maxS: number | null;
+        /**
+         * M3/M4 still in force when the file ends - never turned off, or turned
+         * on again after the last M5. A CAM post always ends `M5`; a file that
+         * does not is the signature of a truncated paste (2026-10-15: an agent
+         * submitted the first part of a 295 KB V-carve and the only sign was
+         * the old "M3 without M5" warning). spindleRefusal() turns it into a
+         * refusal at staging (#237).
+         */
+        onAtEnd: boolean;
     };
     usesRelativeMotion: boolean; // any G91 present
     assumesDistanceMode: boolean; // motion before any G90/G91
@@ -134,6 +143,11 @@ function parseLine(line: string): ParsedLine {
         }
     }
     return { codes, words };
+}
+
+/** Does this line carry a motion code (G0..G3)? Shared with the program identity lines (gcodeIntake.ts). */
+export function lineHasMotion(line: string): boolean {
+    return parseLine(line).codes.some((code) => MOTION_RE.test(code));
 }
 
 function extend(range: { min: number; max: number } | null, value: number): { min: number; max: number } {
@@ -306,7 +320,11 @@ export function validateGcode(gcode: string): GcodeValidationReport {
         warnings.push('Contains arcs (G2/G3); extents are computed from endpoints only and may understate the true envelope.');
     }
     if (onCommands > 0 && offCommands === 0) {
-        warnings.push('Spindle/laser is turned on (M3/M4) but never turned off (M5).');
+        warnings.push('Spindle/laser is turned on (M3/M4) but never turned off (M5): submit_gcode_job and validate_gcode refuse this - '
+            + 'a complete CAM file ends M5, so this is the signature of a truncated program.');
+    } else if (spindleOn) {
+        warnings.push('The file ends with the spindle/laser still running (an M3/M4 after the last M5): submit_gcode_job and '
+            + 'validate_gcode refuse this - a complete CAM file ends M5, so this is the signature of a truncated program.');
     }
     if (minZWithSpindleOn !== null && minZWithSpindleOn < 0) {
         warnings.push(`Cutting below Z0 with spindle on (min Z ${minZWithSpindleOn}). Verify Z0 is the stock top.`);
@@ -351,7 +369,7 @@ export function validateGcode(gcode: string): GcodeValidationReport {
         motionLineCount,
         extents: { x, y, z, b },
         feedRates: feed,
-        spindle: { onCommands, offCommands, maxS },
+        spindle: { onCommands, offCommands, maxS, onAtEnd: spindleOn },
         usesRelativeMotion,
         assumesDistanceMode: motionBeforeDistanceMode,
         endsInRelativeMode: relativeMode,
@@ -372,6 +390,28 @@ export function validateGcode(gcode: string): GcodeValidationReport {
 
 const NEWLINE = '\n';
 
+/**
+ * The refusal for a program that ends with its spindle running. Pure, from
+ * the report alone, so validate_gcode and submit_gcode_job give the same
+ * answer and the test suite can hold them to it. The job is never edited
+ * to add an M5: the agent must supply the whole file (gcode_path or a
+ * chunked upload when it is too big for one argument), and the identity
+ * lines on the result say what was actually received.
+ */
+export function spindleRefusal(report: GcodeValidationReport): string | null {
+    if (!report.spindle.onAtEnd) {
+        return null;
+    }
+    const how = report.spindle.offCommands === 0
+        ? `the spindle/laser is turned on (M3/M4 x${report.spindle.onCommands}) and never turned off - there is no M5 anywhere in the file`
+        : `the file ends with the spindle/laser still running - an M3/M4 after the last M5 (on x${report.spindle.onCommands}, off x${report.spindle.offCommands})`;
+    return `Refused: ${how}. Every complete CAM program ends M5, so this is the signature of a TRUNCATED program `
+        + '(an inline paste cut short, a partial file, an upload finished early). The MCP never adds an M5 for you. Compare the '
+        + `received identity (${report.lineCount} lines, ${report.motionLineCount} motion lines, SHA-256 and last motion line on the result) `
+        + 'with the file you generated; if the whole file really is this, fix the program. If it is longer, submit it whole through '
+        + 'gcode_path (a file in the MCP jobs inbox) or begin_gcode_upload / append_gcode_chunk / finish_gcode_upload instead of one gcode argument.';
+}
+
 /** The most motion lines a hand-authored TRANSIT plausibly has; beyond it, the file is doing something. */
 export const MAX_TRANSPORT_MOTION_LINES = 8;
 
@@ -380,7 +420,10 @@ export const TRANSPORT_REFUSAL = 'Refused: this file is pure transport - a few r
     + 'traverse height, checks every leg against the stored landmarks, and stages the series for one approval) or '
     + '`move_z` for Z. They emit the declared, frame-restoring file for you, which is the file a hand-written transit '
     + 'keeps getting wrong: on 2026-09-19 one was rejected for an undeclared distance mode, restaged, and then left '
-    + 'the controller in the machine workspace for the rest of the session. If this really is not transport - it '
+    + 'the controller in the machine workspace for the rest of the session. A fast-then-slow approach ("F400 to 10 mm '
+    + 'above the stock, then F60 for the last 10 mm") is ONE move_z job with PER-STEP feeds (#240): z_targets: [{z, '
+    + 'feed_rate: 400}, {z, feed_rate: 60}] - each step carries its own F word, one approval, one start_gcode_job per step. '
+    + 'If this really is not transport - it '
     + 'cuts, probes, rotates, or moves in XY and Z together - it will not be refused; only a file that is purely one or the other is.';
 
 /**

@@ -45,6 +45,8 @@ import {
     within,
 } from './procedureLimits';
 import { McpToolError } from './registry';
+import { StylusReachVerdict, describeStylusReach } from './stylusReach';
+import { requireStylusReach } from './stylusReachGuard';
 import { TipCalibrationSnapshot, projectToolTipZ } from './toolDatum';
 import { getProbeTipCalibration } from './toolDatumState';
 import { probeGeometry } from './rotaryGeometry';
@@ -101,9 +103,14 @@ export interface ProbeWallFollowPlan {
     hopZ: number;
     staged: Xyz;
     tipDiameterMm: number | null;
+    /** Issue #187: the body-vs-rim verdict at z_machine (refused at staging when it fails). */
+    stylusReach: StylusReachVerdict;
 }
 
 interface WallFollowArgs {
+    rim_z_machine?: unknown;
+    surface_z_machine?: unknown;
+    reach_margin_mm?: unknown;
     line_tolerance_mm?: unknown;
     start_x?: unknown;
     start_y?: unknown;
@@ -224,6 +231,7 @@ export function planProbeWallFollow(args: WallFollowArgs, extraObstacles: Obstac
         hopZ,
         staged: { x, y, z },
         tipDiameterMm: geometry ? geometry.tipDiameter : null,
+        stylusReach: requireStylusReach(args, r3(zMachine), 'Wall follow'),
     };
     const violations = checkMotion(wallFollowMotion(plan), [...landmarkStore.obstacleBoxes(), ...extraObstacles], { traverseZ: hopZ, ...clearanceOptions() });
     if (violations.length) {
@@ -239,7 +247,7 @@ export function describeProbeWallFollowPlanAsGcode(plan: ProbeWallFollowPlan): s
     const lines = [
         `; WALL FOLLOW: ${plan.stations.length} station(s) along a vertical wall at toolhead Z${plan.zMachine}, start line from (${first.start.x}, ${first.start.y}) `
             + `to (${last.start.x}, ${last.start.y}), ${plan.stepMm} mm apart along (${plan.along.x}, ${plan.along.y}); marches toward (${plan.dir.x}, ${plan.dir.y}) up to ${plan.maxTravelMm} mm`,
-        `; 1) law 2 to station "${first.label}": raise to Z${plan.hopZ}, traverse, descend in <= ${DESCENT_SEGMENT_MM} mm segments then guarded 1 mm steps to Z${plan.zMachine}`,
+        `; 1) law 2 to station "${first.label}": raise to Z${plan.hopZ}, traverse, descend in <= ${DESCENT_SEGMENT_MM.default} mm segments then guarded 1 mm steps to Z${plan.zMachine}`,
         ';    (ANY contact on the way down aborts: the start must be over free space).',
         `; 2) per station: march to the wall (${plan.march.coarseStepMm} mm steps F${COARSE_FEED}, release, ${plan.march.fineStepMm} fine, ${plan.march.confirmPasses} confirm pass(es)); `
             + `back off ${plan.standoffMm} mm from the contact; STEP ALONG THE WALL at that standoff to the next station's line as a stepped traverse (1 mm steps F300,`,
@@ -247,12 +255,13 @@ export function describeProbeWallFollowPlanAsGcode(plan: ProbeWallFollowPlan): s
         `;    empty space); the next march starts where the step arrives. A miss records no_contact${plan.onMiss === 'abort' ? ' and ABORTS (on_miss: abort)' : ', retreats to the start line and continues'}.`,
         `; 3) FIT: line through the contacts (direction, normal, residuals, yaw)${plan.tipDiameterMm === null ? '' : `; the physical wall is ${r3(plan.tipDiameterMm / 2)} mm beyond each contact along the march`}.`,
         `; march: sensor ${plan.march.sensorDelayMs} ms, backoff ${plan.march.backoffMm}; ends raised at Z${plan.hopZ} (also on any abort, law 8)`,
+        describeStylusReach(plan.stylusReach),
         `; anchored at machine (${plan.staged.x.toFixed(2)}, ${plan.staged.y.toFixed(2)}, ${plan.staged.z.toFixed(2)}) - re-verified before motion`,
         'G90',
         'G53;',
         `G1 Z${plan.hopZ.toFixed(3)} F${TRAVEL_FEED}; raise to the safe traverse height (law 2)`,
         `G1 X${first.start.x.toFixed(3)} Y${first.start.y.toFixed(3)} F${TRAVEL_FEED}; traverse to station "${first.label}" start`,
-        `G1 Z${Math.min(plan.zMachine + DESCENT_GUARD_MM, plan.hopZ).toFixed(3)} F${TRAVEL_FEED}; descend in <= ${DESCENT_SEGMENT_MM} mm segments (crash guard armed)`,
+        `G1 Z${Math.min(plan.zMachine + DESCENT_GUARD_MM, plan.hopZ).toFixed(3)} F${TRAVEL_FEED}; descend in <= ${DESCENT_SEGMENT_MM.default} mm segments (crash guard armed)`,
         `G1 Z${plan.zMachine.toFixed(3)} F${COARSE_FEED}; guarded 1 mm steps (ANY contact aborts)`,
     ];
     plan.stations.forEach((st, i) => {
@@ -299,6 +308,7 @@ export interface WallFollowResult {
      */
     segments: WallRunSplit | null;
     tipDiameterMm: number | null;
+    stylusReach: StylusReachVerdict;
     /** Contacts pushed one tip radius along the march: the physical wall. null without a stored tip diameter. */
     surfacePoints: Xy[] | null;
     phases: { phase: string; note?: string }[];
@@ -334,6 +344,7 @@ export async function runProbeWallFollowProcedure(plan: ProbeWallFollowPlan): Pr
             fit,
             segments,
             tipDiameterMm: plan.tipDiameterMm,
+            stylusReach: plan.stylusReach,
             surfacePoints: tipR === null
                 ? null
                 : hits.map((c) => ({ x: r3(c.contactMachine.x + plan.dir.x * tipR), y: r3(c.contactMachine.y + plan.dir.y * tipR) })),

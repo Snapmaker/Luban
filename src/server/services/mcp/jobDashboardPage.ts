@@ -22,6 +22,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:380px;overflow:auto;f
 <section class="panel" aria-labelledby="notifications-title"><h2 id="notifications-title" style="margin-top:0">Notifications for this tab</h2>
 <div class="controls"><button id="toasts-toggle" aria-pressed="false">Turn on page toasts</button><button id="system-toggle" aria-pressed="false">Turn on system notifications</button></div>
 <p id="notification-status" class="muted"></p>
+<p id="trust-help" class="muted" hidden>HTTPS is configured on this server. If this browser warns about the certificate or will not offer system notifications, <a id="trust-link" href="/trust">install the local CA certificate</a> (download and per-device steps, served over plain HTTP).</p>
 <p class="muted">Off by default; settings last for this tab session only. Browser permission may be remembered, but alerts must be enabled here for each new session. Keep this page open and connected. Phone sleep or a suspended tab can delay alerts; this is not background push.</p>
 </section>
 <p id="message" role="status"></p>
@@ -142,6 +143,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:380px;overflow:auto;f
       snapshot=await r.json();cursor=snapshot.cursor;instance=snapshot.instance;
       el('connection').textContent='Connected · updated '+new Date().toLocaleTimeString();el('connection').className='muted';
       if(snapshot.missed){el('message').textContent='Some notifications expired while disconnected. Review recent history.';}
+      if(snapshot.trust&&snapshot.trust.url){el('trust-link').href=snapshot.trust.url;el('trust-help').hidden=false;}else{el('trust-help').hidden=true;}
       render();snapshot.notices.forEach(notify);
     }catch(e){el('connection').textContent='Disconnected · displayed jobs may be stale. Retrying…';el('connection').className='error';cards.forEach(function(card){card.stop.disabled=true;card.dismiss.disabled=true;});}
     finally{clearTimeout(timer);busy=false;}

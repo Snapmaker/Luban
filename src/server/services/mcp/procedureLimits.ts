@@ -31,6 +31,25 @@ export function clampTo(raw: unknown, limit: Bounded): number {
     return Math.min(Math.max(Number(raw) || limit.default, limit.min), limit.max);
 }
 
+/**
+ * clampTo that also says what it did, so the caller can REPORT a clip (on the
+ * confirm page and in the result) instead of silently planning the capped
+ * value. `requested` is the finite, non-zero number the caller typed, or null
+ * when the default was used (absent, non-numeric or 0 - clampTo's idiom).
+ */
+export interface ClampReport {
+    value: number;
+    requested: number | null;
+    clipped: boolean;
+}
+
+export function clampReported(raw: unknown, limit: Bounded): ClampReport {
+    const typed = Number(raw);
+    const requested = raw === undefined || raw === null || raw === '' || !Number.isFinite(typed) || typed === 0 ? null : typed;
+    const value = clampTo(raw, limit);
+    return { value, requested, clipped: requested !== null && value !== requested };
+}
+
 /** clampTo for a count. */
 export function clampCount(raw: unknown, limit: Bounded): number {
     return Math.min(Math.max(Math.round(Number(raw) || limit.default), limit.min), limit.max);
@@ -142,10 +161,35 @@ export function standoffReleaseWindowFor(sensorDelayMs: number): number {
  * cdbc29371b97: "never 2 mm" - a move once sent cannot be stopped, so a
  * collision is driven to the end of it). The caller's coarse step is a
  * logical advance made of these; probing.marchInSegments enforces it for
- * every planner, and DESCENT_SEGMENT_MM (5 mm, probing.ts) is the same rule
- * for a descent that expects NO contact.
+ * every planner, and DESCENT_SEGMENT_MM below is the same rule for a descent
+ * that expects NO contact.
  */
 export const MARCH_SEGMENT_MM = 1;
+
+/**
+ * Longest single Z move toward the work a procedure may issue when NO
+ * contact is expected (probing.descendInSegments; operator law 2026-09-05).
+ *
+ * Why 5 is the default and the cap: a descent expects nothing in its way,
+ * so no segment waits on a serial sensor read - the controller's ok is the
+ * gate and the probe feed's crash guard is ASYNCHRONOUS: a channel firing
+ * while motion is in flight latches the CRASH alarm (job stop, connection
+ * close) and the next segment is refused, so a hit ends the descent within
+ * ONE segment. 5 mm is the operator's cap for that one segment (the same
+ * number as TRACE_COARSE_STEP_MM.max); 1 mm would turn a 300 mm descent
+ * from home into 300 settle-verified moves (~5 min) for no gain where the
+ * column is known clear.
+ *
+ * Why it can be lowered per call (issue #166, "1 mm x/y traverse but 5 mm
+ * lunge"): the operator found a 5 mm lunge risky where the column is not
+ * proven clear - an unmeasured scene, a first approach near a fixture, a
+ * capture descent beside a wall. `descent_segment_mm` on a probe_sequence /
+ * probe_program descend step, a surface scan's first approach and a capture
+ * at a stated Z shortens the segment to as little as the march segment
+ * (1 mm); the page states the length it will use, and a request above the
+ * cap is clamped and REPORTED, never silently planned. The cap never rises.
+ */
+export const DESCENT_SEGMENT_MM: Bounded = { default: 5, min: MARCH_SEGMENT_MM, max: 5 };
 
 /**
  * The scalar positions a march visits on its way from `fromS` to `toS`:
@@ -168,6 +212,14 @@ export function marchSegments(fromS: number, toS: number, segmentMm: number = MA
     return out;
 }
 
+/**
+ * A guarded descent's final approach: fast segments stop this far above the
+ * stated target and 1 mm sensor-checked steps take over (operator,
+ * 2026-09-02). Shared by probe_sequence's descend step, the surface scans'
+ * approach to station 1, the bounded procedures' station descents and a
+ * probe_program capture at a stated Z (#177).
+ */
+export const DESCENT_GUARD_MM = 20;
 /** How far a single march may run before it aborts with no contact. */
 export const MARCH_TRAVEL_MM: Range = { min: 1, max: 150 };
 /** start_z_machine - floor_z_machine: the deepest a -Z search may go. */
@@ -236,6 +288,13 @@ export const RADIAL_TOLERANCE_DEG: Range = { min: 0, max: 90 };
 export const B_AXIS_DEG: Range = { min: -360, max: 360 };
 /** Largest reach of stock and clamping about the rotary axis anyone should state (the A350 bed is 350 wide). */
 export const MAX_SWEPT_RADIUS_MM = 200;
+/**
+ * rotary_axis_points (set_probe_geometry): two stations fix the axis line;
+ * a few more tighten the fit. More than this is a pasted survey, not axis
+ * points - the A350 rotary holds under 300 mm of stock, so eight stations
+ * are already closer than the side-pair method can resolve.
+ */
+export const MAX_ROTARY_AXIS_POINTS = 8;
 
 /**
  * probe_program `capture` op: how long to let the platform and rotary stop
@@ -248,6 +307,19 @@ export const CAPTURE_SETTLE_MS: Bounded = { default: 500, min: 0, max: 5000 };
 export const MAX_DWELL_S = 60;
 /** A stated bit protrusion above this is not a bit. */
 export const MAX_BIT_LENGTH_MM = 300;
+
+// ---------------------------------------------------------------------------
+// Stylus reach (stylusReach.ts; issue #187)
+// ---------------------------------------------------------------------------
+
+/**
+ * reach_margin_mm: air kept between the probe BODY's first shoulder and the
+ * rim it would land on when the tip reaches the deepest planned contact. The
+ * default is the figure the probing skill has asked agents to write into
+ * their plans; 0 is allowed only when the operator states it, and above 10 mm
+ * the margin refuses every pocket shallower than the stylus itself.
+ */
+export const STYLUS_REACH_MARGIN_MM: Bounded = { default: 2, min: 0, max: 10 };
 
 // ---------------------------------------------------------------------------
 // Surface scans (surfaceScan.ts / probeSurface.ts)
@@ -323,13 +395,12 @@ export const WALL_LINE_TOLERANCE_MM: Range = { min: FINE_STEP_MM.min, max: 5 };
 export const TRACE_FINE_STEP_MM: Bounded = { default: 0.1, min: 0.05, max: 1 };
 /**
  * The step used only on a run already proven straight (the running line's
- * residuals under line_tolerance). Capped at 5 - a coarse step is a plain
- * sensor-checked move, and the operator's cap for a move that expects no
- * contact is 5 mm (DESCENT_SEGMENT_MM in probing.ts, a server module this
- * pure file cannot import - the value is repeated here on purpose); the
- * whole segment is sensed.
+ * residuals under line_tolerance). Capped at the descent segment cap - a
+ * coarse step is a plain sensor-checked move, and the operator's cap for a
+ * move that expects no contact is DESCENT_SEGMENT_MM.max; the whole segment
+ * is sensed.
  */
-export const TRACE_COARSE_STEP_MM: Bounded = { default: 1, min: TRACE_FINE_STEP_MM.min, max: 5 };
+export const TRACE_COARSE_STEP_MM: Bounded = { default: 1, min: TRACE_FINE_STEP_MM.min, max: DESCENT_SEGMENT_MM.max };
 /** How far the tangent turns per failed step / per fallen-away wall. 2 deg resolves a large radius; 45 is a corner in one turn. */
 export const TRACE_TURN_STEP_DEG: Bounded = { default: 10, min: 2, max: 45 };
 /** Fine steps toward the wall before it counts as fallen away (an outward curve): the operator's "a few". */
@@ -416,6 +487,40 @@ export const EVENT_POLL_MS = 250;
 export const STOP_WAIT_DEFAULT_MS = 20000;
 /** "At the target": the controller's position echo against the commanded one. */
 export const SETTLE_MATCH_MM = 0.15;
+
+// ---------------------------------------------------------------------------
+// G-code job intake (gcodeIntake.ts, tools/gcode.ts): how big a program the
+// MCP will stage, however it arrives - inline text, a file in the jobs inbox,
+// or a chunked upload (#237).
+// ---------------------------------------------------------------------------
+
+/**
+ * The largest program submit_gcode_job / validate_gcode accept, in UTF-8
+ * bytes, whatever the intake. 4 MiB is McpServer's request-body cap
+ * (MAX_BODY_BYTES): the most an inline `gcode` argument could ever have
+ * carried, so a file or an upload is never allowed to exceed what a single
+ * call already could. It is NOT a controller limit - Luban's own file
+ * transfer has none this low - it bounds what staging reads into memory to
+ * validate, hash and render on the confirm page. The 2026-10-17 panel
+ * (46 720 lines, 870 KB) is a fifth of it.
+ */
+export const MAX_GCODE_PROGRAM_BYTES = 4 * 1024 * 1024;
+/**
+ * One append_gcode_chunk's text, in UTF-8 bytes. Well under the body cap so
+ * the JSON envelope around it never trips 413, and small enough that an
+ * agent can emit a chunk as one tool argument reliably (the failure mode
+ * the upload exists to avoid). 256 KiB = about 13 000 CAM lines.
+ */
+export const MAX_GCODE_UPLOAD_CHUNK_BYTES = 256 * 1024;
+/**
+ * An upload nobody has touched for this long is dropped, finished or not:
+ * long enough for an agent to emit 4 MiB in 256 KiB chunks with a model
+ * turn between each, short enough that an abandoned upload does not hold
+ * its bytes in memory for the rest of the session.
+ */
+export const GCODE_UPLOAD_IDLE_EXPIRY_MS = 30 * 60 * 1000;
+/** Uploads in flight at once; a single agent needs one, and each may hold MAX_GCODE_PROGRAM_BYTES. */
+export const MAX_OPEN_GCODE_UPLOADS = 8;
 
 // ---------------------------------------------------------------------------
 // Feature tracking (track_feature)

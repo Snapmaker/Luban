@@ -1109,60 +1109,73 @@ class SstpHttpChannel extends Channel implements
             });
     };
 
-    public getEnclosureStatus = () => {
+    /**
+     * One read of GET /api/v1/enclosure: the controller's module report
+     * ({ isReady, isDoorEnabled, led, fan } under data) or the failure.
+     * Shared by the 1 s settings poll and the MCP enclosure tools, so both
+     * use the same endpoint and the same parsing.
+     */
+    public async readEnclosureStatus(): Promise<Result> {
         const api = `${this.host}/api/v1/enclosure?token=${this.token}`;
-        request
-            .get(api)
-            .end((err, res) => {
-                const currentModuleStatus = _getResult(err, res)?.data;
-                if (!isEqual(this.moduleSettings, currentModuleStatus)) {
-                    this.moduleSettings = currentModuleStatus;
-                    this.socket && this.socket.emit('Marlin:settings', {
-                        settings: {
-                            enclosureDoorDetection: currentModuleStatus?.isDoorEnabled,
-                            enclosureOnline: currentModuleStatus?.isReady,
-                            enclosureFan: currentModuleStatus?.fan,
-                            enclosureLight: currentModuleStatus?.led,
-                        }
-                    });
-                }
-            });
+        return new Promise((resolve) => {
+            request
+                .get(api)
+                .end((err, res) => resolve(_getResult(err, res)));
+        });
+    }
+
+    /**
+     * One POST to /api/v1/enclosure carrying a single field (led / fan /
+     * isDoorEnabled), exactly as the Workspace enclosure widget sends it.
+     * Returns the parsed reply; the socket-facing wrappers below emit it.
+     */
+    public async postEnclosure(field: 'led' | 'fan' | 'isDoorEnabled', value: number | boolean): Promise<Result> {
+        const api = `${this.host}/api/v1/enclosure`;
+        return new Promise((resolve) => {
+            request
+                .post(api)
+                .send(`token=${this.token}`)
+                .send(`${field}=${value}`)
+                .end((err, res) => resolve(_getResult(err, res)));
+        });
+    }
+
+    public getEnclosureStatus = () => {
+        this.readEnclosureStatus().then((result) => {
+            const currentModuleStatus = result?.data;
+            if (!isEqual(this.moduleSettings, currentModuleStatus)) {
+                this.moduleSettings = currentModuleStatus;
+                this.socket && this.socket.emit('Marlin:settings', {
+                    settings: {
+                        enclosureDoorDetection: currentModuleStatus?.isDoorEnabled,
+                        enclosureOnline: currentModuleStatus?.isReady,
+                        enclosureFan: currentModuleStatus?.fan,
+                        enclosureLight: currentModuleStatus?.led,
+                    }
+                });
+            }
+        });
     };
 
     public setEnclosureLight = (options: EventOptions) => {
         const { eventName, value } = options;
-        const api = `${this.host}/api/v1/enclosure`;
-        request
-            .post(api)
-            .send(`token=${this.token}`)
-            .send(`led=${value}`)
-            .end((err, res) => {
-                this.socket && this.socket.emit(eventName, _getResult(err, res));
-            });
+        this.postEnclosure('led', value).then((result) => {
+            this.socket && this.socket.emit(eventName, result);
+        });
     };
 
     public setEnclosureFan = (options: EventOptions) => {
         const { eventName, value } = options;
-        const api = `${this.host}/api/v1/enclosure`;
-        request
-            .post(api)
-            .send(`token=${this.token}`)
-            .send(`fan=${value}`)
-            .end((err, res) => {
-                this.socket && this.socket.emit(eventName, _getResult(err, res));
-            });
+        this.postEnclosure('fan', value).then((result) => {
+            this.socket && this.socket.emit(eventName, result);
+        });
     };
 
     public setDoorDetection = (options: EventOptions) => {
         const { eventName, enable } = options;
-        const api = `${this.host}/api/v1/enclosure`;
-        request
-            .post(api)
-            .send(`token=${this.token}`)
-            .send(`isDoorEnabled=${enable}`)
-            .end((err, res) => {
-                this.socket && this.socket.emit(eventName, _getResult(err, res));
-            });
+        this.postEnclosure('isDoorEnabled', enable).then((result) => {
+            this.socket && this.socket.emit(eventName, result);
+        });
     };
 
     public setFilterSwitch = (options: EventOptions) => {

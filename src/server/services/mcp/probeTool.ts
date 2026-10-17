@@ -21,6 +21,8 @@ import {
     knownMachinePosition,
 } from './probing';
 import { McpToolError } from './registry';
+import { StylusReachVerdict, describeStylusReach } from './stylusReach';
+import { requireStylusReach } from './stylusReachGuard';
 import { TipCalibrationSnapshot, projectToolTipZ } from './toolDatum';
 import { getProbeTipCalibration } from './toolDatumState';
 import { MIN_USEFUL_MARCH_MM, clampRay } from './machineTravel';
@@ -52,6 +54,8 @@ export interface ProbePointPlan {
     backoffMm: number;
     sensorDelayMs: number;
     confirmPasses: number;
+    /** Issue #187: the body-vs-rim verdict at the deepest commanded Z (refused at staging when it fails). */
+    stylusReach: StylusReachVerdict;
 }
 
 export function planProbePoint(args: {
@@ -63,6 +67,9 @@ export function planProbePoint(args: {
     backoff_mm?: number;
     sensor_delay_ms?: number;
     confirm_passes?: number;
+    rim_z_machine?: unknown;
+    surface_z_machine?: unknown;
+    reach_margin_mm?: unknown;
 }): ProbePointPlan {
     const axis = String(args.axis || '').toLowerCase() as ProbeAxis;
     if (!['x', 'y', 'z'].includes(axis)) {
@@ -125,6 +132,9 @@ export function planProbePoint(args: {
         maxTravelMm,
         limitCoord: Number(limitCoord.toFixed(3)),
         travelClippedBy: clippedBy,
+        // Issue #187: a -Z march's deepest Z is its limit; a side march runs
+        // at the start Z, which inside a pocket is already a depth.
+        stylusReach: requireStylusReach(args, axis === 'z' ? Number(limitCoord.toFixed(3)) : startZ, 'Point probe'),
         // Coarse / fine / backoff / sensor delay / confirm passes, clamped to
         // the named limits (procedureLimits.ts; operator law 2026-09-05: never 2 mm).
         ...resolveMarchParams(args),
@@ -144,6 +154,7 @@ export function describeProbePlanAsGcode(plan: ProbePointPlan): string {
         `; anchored at machine (${plan.start.x.toFixed(2)}, ${plan.start.y.toFixed(2)}, ${plan.start.z.toFixed(2)})`
             + ' - re-verified before any motion',
         '; overtravel feed trips -> job stop + connection close + latched alarm',
+        describeStylusReach(plan.stylusReach),
         'G90',
         'G53;',
     ];
@@ -180,6 +191,7 @@ export interface ProbePointResult {
     confirmPassContacts: number[];
     spreadMm: number;
     phases: { phase: string; coord: number; note?: string }[];
+    stylusReach: StylusReachVerdict;
     note: string;
     warning?: string;
 }
@@ -339,6 +351,7 @@ export async function runProbePointProcedure(plan: ProbePointPlan): Promise<obje
             confirmPassContacts: passContacts,
             spreadMm,
             phases,
+            stylusReach: plan.stylusReach,
             note: `Probe contact at machine ${word} ${measured.toFixed(3)} - median of ${plan.confirmPasses} `
                 + `passes [${passContacts.join(', ')}], spread ${spreadMm} mm (+/- ${plan.fineStepMm} mm step `
                 + 'resolution, minus the probe tip radius on side probes - the tip touches before its centre).',

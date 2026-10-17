@@ -17,8 +17,18 @@ from the toolset. Keep all motion within the selected procedure's approved bound
 | Block top and sides | `probe_stock_outline` | Stepped top links; local standoff links on the same side; full raise/reposition when changing sides. Needs a suitable block estimate and valid approach geometry. |
 | Planned mixed directions / CAM stations | `run_probing_gcode` | `link_mode: stepped` or `wall` enables local links and blocked-station handling. G38.2/G38.3 cycles still return to their own starts, including misses. Default `raise` uses full-height XY links. Read `cam-probing.md` for constraints. |
 | Isolated axis/vector measurement | `probe_point` / `probe_vector` | Returns to the march start and raises on success. Vector probing supports polygon faces but does not itself follow the polygon. |
+| Datum approach that must END LOW for the operator's touchscreen origin setup | `probe_approach_and_hold` | Raise, hop at the traverse height, guarded descent, sensor-gated march, then HOLD (in contact, backed off, or at a stated datum). The only procedure that does not raise at the end; `stop_gcode_job` is the sanctioned raise and keeps the measurement. Not a transport or a way to park low between measurements. |
 | Explicit independent approaches | `probe_sequence` | By default every probe returns to its own start and raises, including `on_miss: continue`. Opt-in `local_links: {clearance_z, max_hop_mm?}` (#242) links stations at a stated toolhead machine Z above the measured top instead: retreat to the march start, raise only to max(clearance, current Z), hop ≤ `max_hop_mm` (cap 60), a few guarded mm of descent. Checked against landmarks/keep-outs at that height; first hop and final exit at the traverse height. In a program `clearance_z` may reference an earlier top touch. |
 | Multiple operations / B orientations / measured dependencies | `probe_program` | References feed earlier results into later bounded plans. Each successful probing op ends raised; groups and one approval do not fuse motion between ops. |
+
+**Depth is bounded by the stylus, not the tool length (issue #187).** Before any station below a
+surrounding surface — a pocket floor, a groove, a hole deeper than a ball-radius dip — write the
+reach limit into the plan from `get_stored_state.geometry.stylus` (`reachMm − tipDiameterMm −
+margin`) and pass the rim as `rim_z_machine` so the tool checks it at staging. The probe's
+calibrated tool length (the setter offset behind `tipMachineZ`) is the toolhead-to-tip distance;
+the exposed stylus below the body is a separate, shorter number, and only it says whether the
+body clears the rim. A result carrying `stylusReach.status: "reach-unknown"` means the check did
+not run; do not read it as clearance.
 
 A same-column find → side probe → deeper search can cross these composition boundaries.
 First ask whether a supported wall, surface, outline or CAM circuit expresses the intended

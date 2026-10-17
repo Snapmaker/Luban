@@ -92,6 +92,14 @@ interface McpStatus {
         error: string | null;
         jobsUrl: string | null;
         lanUrls: string[];
+        configured?: boolean;
+        // Browser trust (#218): the stored CA path, whether env overrides
+        // it, what /ca.crt would serve, and the plain-HTTP trust page.
+        caFile?: string;
+        caEnvOverride?: boolean;
+        ca?: { file: string | null; source: string | null; ok: boolean; error: string | null; subject: string | null; fingerprint256: string | null };
+        trustUrl?: string;
+        caUrl?: string;
     };
     transport: McpTransportSettings;
     sensors: McpSensorSettings;
@@ -110,6 +118,16 @@ interface McpStatus {
         source: 'env' | 'config' | 'default';
         traverseWithoutApprovalAtSafeZ?: boolean;
         traverseWithoutApprovalSource?: 'env' | 'config' | 'default';
+    };
+    jobIntake?: {
+        inboxDir: string | null;
+        inboxProblem: string | null;
+        extraInboxDir: string;
+        extraInboxSource: 'env' | 'config' | 'default';
+        extraInboxProblem: string | null;
+        extraInboxEnv: string;
+        maxProgramBytes: number;
+        openUploads: number;
     };
     cameraStream?: McpCameraStreamStatus;
     vibration?: {
@@ -194,6 +212,9 @@ const McpServer: React.FC = () => {
     const [allowLan, setAllowLan] = useState(false);
     const [httpsCert, setHttpsCert] = useState('');
     const [httpsKey, setHttpsKey] = useState('');
+    // Public CA certificate served at /ca.crt for browser trust (#218); '' =
+    // find it with `mkcert -CAROOT`.
+    const [httpsCa, setHttpsCa] = useState('');
     const [toolSetterEnabled, setToolSetterEnabled] = useState(true);
     const [probeEnabled, setProbeEnabled] = useState(true);
     const [transport, setTransport] = useState('');
@@ -211,6 +232,8 @@ const McpServer: React.FC = () => {
     const [approvalHandoffAgent, setApprovalHandoffAgent] = useState(true);
     // Approval-free XY transport with the head already at the traverse height (#241). Default on.
     const [traverseAtSafeZ, setTraverseAtSafeZ] = useState(true);
+    // Extra allow-listed directory for submit_gcode_job {gcode_path} (#237).
+    const [jobInboxDir, setJobInboxDir] = useState('');
     // Live MJPEG camera view served by the MCP server (/camera). Applies at
     // once on save: off disconnects every viewer. '' fps = server default.
     const [cameraStreamEnabled, setCameraStreamEnabled] = useState(false);
@@ -242,6 +265,7 @@ const McpServer: React.FC = () => {
                 setAllowLan(!!body.settings.allowLan);
                 setHttpsCert(body.https?.certFile || '');
                 setHttpsKey(body.https?.keyFile || '');
+                setHttpsCa(body.https?.caFile || '');
                 if (body.sensors) {
                     setToolSetterEnabled(body.sensors.toolSetter !== false);
                     setProbeEnabled(body.sensors.probe !== false);
@@ -254,6 +278,9 @@ const McpServer: React.FC = () => {
                 if (body.approval) {
                     setApprovalHandoffAgent(body.approval.handoff !== 'code');
                     setTraverseAtSafeZ(body.approval.traverseWithoutApprovalAtSafeZ !== false);
+                }
+                if (body.jobIntake) {
+                    setJobInboxDir(body.jobIntake.extraInboxSource === 'config' ? body.jobIntake.extraInboxDir : '');
                 }
                 if (body.cameraStream) {
                     setCameraStreamEnabled(!!body.cameraStream.enabled);
@@ -315,6 +342,7 @@ const McpServer: React.FC = () => {
             https: {
                 ...(status?.https?.envOverrides.includes('certFile') ? {} : { certFile: httpsCert }),
                 ...(status?.https?.envOverrides.includes('keyFile') ? {} : { keyFile: httpsKey }),
+                ...(status?.https?.caEnvOverride ? {} : { caFile: httpsCa }),
             },
             sensors: { toolSetter: toolSetterEnabled, probe: probeEnabled },
             transport,
@@ -323,6 +351,7 @@ const McpServer: React.FC = () => {
             buffers: { jobEventLimit, diagnosticsRecentLimit },
             approvalHandoff: approvalHandoffAgent ? 'agent' : 'code',
             ...(status?.approval?.traverseWithoutApprovalSource === 'env' ? {} : { traverseWithoutApprovalAtSafeZ: traverseAtSafeZ }),
+            ...(status?.jobIntake?.extraInboxSource === 'env' ? {} : { jobInboxDir }),
             cameraStream: { enabled: cameraStreamEnabled, fps: cameraStreamFps },
             spindleTelemetry: {
                 ...(telemetryEnv('enabled') ? {} : { enabled: spindleTelemetry }),
@@ -479,10 +508,40 @@ const McpServer: React.FC = () => {
                     />
                 </label>
                 <p className={styles['port-tips']}>Trust the mkcert CA on each browser/phone and include the server’s LAN IP in the certificate. Clear both paths to turn HTTPS off after restart. Environment overrides: LUBAN_MCP_HTTPS_CERT / LUBAN_MCP_HTTPS_KEY.</p>
+                <label htmlFor="mcp-https-ca" className="sm-flex align-center margin-top-8">
+                    <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-CA certificate file (optional)')}</span>
+                    <Input
+                        id="mcp-https-ca"
+                        value={httpsCa}
+                        onChange={(e) => setHttpsCa(e.target.value)}
+                        disabled={!enabled || !!status?.https?.caEnvOverride}
+                        placeholder="/path/to/rootCA.pem"
+                    />
+                </label>
+                <p className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-The public mkcert root certificate (rootCA.pem) other devices download to trust this server. Leave blank to find it with mkcert -CAROOT. Never the key file: a private key is refused and never served.')}
+                    {status?.https?.caEnvOverride && ` ${i18n._('key-App/Settings/McpServer-Overridden by LUBAN_MCP_HTTPS_CA')}`}
+                </p>
+                {status?.https?.ca && (
+                    <div style={status.https.ca.ok ? {} : { color: '#FF4D4F' }}>
+                        {i18n._('key-App/Settings/McpServer-CA certificate:')}
+                        {' '}
+                        {status.https.ca.ok
+                            ? `${status.https.ca.file} (${status.https.ca.source === 'mkcert' ? 'mkcert -CAROOT' : status.https.ca.source}) · ${status.https.ca.subject}`
+                            : status.https.ca.error}
+                    </div>
+                )}
                 <div>{status?.https?.running ? `HTTPS running on port ${status.https.port}` : 'HTTPS is not running this session.'}</div>
                 {status?.https?.error && <div style={{ color: '#FF4D4F' }}>{status.https.error}</div>}
                 {status?.running && status.jobsUrl && (
                     <p><a href={status.jobsUrl} target="_blank" rel="noopener noreferrer">Open job dashboard</a></p>
+                )}
+                {status?.running && status.https?.configured && status.https.trustUrl && (
+                    <p>
+                        <a href={status.https.trustUrl} target="_blank" rel="noopener noreferrer">
+                            {i18n._('key-App/Settings/McpServer-Trust the HTTPS certificate in a browser (CA download and per-device steps, plain HTTP)')}
+                        </a>
+                    </p>
                 )}
                 {status?.https?.lanUrls.map((url) => <div key={url}>{url}</div>)}
             </div>
@@ -514,6 +573,33 @@ const McpServer: React.FC = () => {
                 <div className={styles['port-tips']}>
                     {i18n._('key-App/Settings/McpServer-Applies to traverse_xy, the XY step of goto_tool_change_position and an up-only move_z, only on a verified homed position at or above mcpSafeTraverseZ, after the usual landmark and travel checks. The job still appears on the dashboard, marked as approved by policy. Off: every transport stages a confirm page.')}
                     {status && status.approval && status.approval.traverseWithoutApprovalSource === 'env' ? ` — ${i18n._('key-App/Settings/McpServer-Overridden by environment variable')} LUBAN_MCP_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z` : ''}
+                </div>
+            </div>
+
+            <div className="border-bottom-normal padding-bottom-4 margin-top-16">
+                <span>{i18n._('key-App/Settings/McpServer-Job files')}</span>
+            </div>
+            <div className="margin-top-8">
+                <div className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-Large G-code programs reach submit_gcode_job as a file path (gcode_path) read from an allow-listed directory, or as a chunked upload. The built-in inbox is always allowed:')}
+                    {' '}
+                    <code>{status?.jobIntake?.inboxDir || '-'}</code>
+                    {status?.jobIntake?.inboxProblem ? ` — ${status.jobIntake.inboxProblem}` : ''}
+                </div>
+                <label htmlFor="mcp-job-inbox-dir" className="sm-flex align-center margin-top-8">
+                    <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Extra inbox directory')}</span>
+                    <Input
+                        id="mcp-job-inbox-dir"
+                        value={jobInboxDir}
+                        onChange={(e) => setJobInboxDir(e.target.value)}
+                        disabled={!enabled || status?.jobIntake?.extraInboxSource === 'env'}
+                        placeholder="/absolute/path/shared/with/the/agent"
+                    />
+                </label>
+                <div className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-One absolute directory the agent can also write files into (a shared folder, a CAM export folder). Applies on save. Paths outside the allowed directories, ".." segments and symlinks pointing out of them are refused. Leave empty to allow only the built-in inbox.')}
+                    {status?.jobIntake?.extraInboxSource === 'env' ? ` — ${i18n._('key-App/Settings/McpServer-Overridden by environment variable')} ${status.jobIntake.extraInboxEnv}` : ''}
+                    {status?.jobIntake?.extraInboxProblem ? ` — ${i18n._('key-App/Settings/McpServer-Not usable:')} ${status.jobIntake.extraInboxProblem}` : ''}
                 </div>
             </div>
 

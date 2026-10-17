@@ -31,10 +31,12 @@ import {
 } from './probing';
 import { McpToolError } from './registry';
 import { LocalLinks, hopHeight, isLocalHop, localHopRefusal, resolveLocalLinks } from './sequenceLinks';
+import { StylusReachVerdict, describeStylusReach } from './stylusReach';
+import { requireStylusReach } from './stylusReachGuard';
 import { projectToolTipZ } from './toolDatum';
 import { getProbeTipCalibration } from './toolDatumState';
 import { outsideTravel } from './machineTravel';
-import { MARCH_TRAVEL_MM, releaseTimeoutFor, resolveMarchParams, within } from './procedureLimits';
+import { DESCENT_GUARD_MM, DESCENT_SEGMENT_MM, MARCH_TRAVEL_MM, clampReported, releaseTimeoutFor, resolveMarchParams, within } from './procedureLimits';
 import { getPositionSnapshot, requirePlanningTravel, safeTraverseZ } from './tools/machine';
 import { TRAVERSE_Z_TOLERANCE_MM } from './traversePlan';
 
@@ -81,6 +83,10 @@ interface SequenceStepHop {
 interface SequenceStepDescend {
     kind: 'descend';
     z: number;
+    /** Longest fast segment of this descent (DESCENT_SEGMENT_MM; #166: lowered per step with descent_segment_mm). */
+    segmentMm: number;
+    /** What the step asked for when it differs from segmentMm (the clip is reported on the page). */
+    segmentRequestedMm: number | null;
 }
 interface SequenceStepProbe {
     kind: 'probe';
@@ -103,7 +109,7 @@ interface SequenceStepProbe {
 }
 type SequenceStep = SequenceStepHop | SequenceStepDescend | SequenceStepProbe;
 
-export const DESCENT_GUARD_MM = 20;
+export { DESCENT_GUARD_MM } from './procedureLimits';
 
 export interface ProbeSequencePlan {
     steps: SequenceStep[];
@@ -116,6 +122,8 @@ export interface ProbeSequencePlan {
     staged: { x: number; y: number; z: number };
     /** Opt-in local links (#242); null = every hop at the traverse height. */
     localLinks: LocalLinks | null;
+    /** Issue #187: the body-vs-rim verdict at the deepest descend / march limit (refused at staging when it fails). */
+    stylusReach: StylusReachVerdict;
 }
 
 export function planProbeSequence(args: {
@@ -126,6 +134,9 @@ export function planProbeSequence(args: {
     sensor_delay_ms?: number;
     confirm_passes?: number;
     local_links?: unknown;
+    rim_z_machine?: unknown;
+    surface_z_machine?: unknown;
+    reach_margin_mm?: unknown;
 }, extraObstacles: ObstacleBox[] = []): ProbeSequencePlan {
     if (!Array.isArray(args.steps) || args.steps.length < 1 || args.steps.length > 60) {
         throw new McpToolError('steps is required: 1-60 entries of {kind: hop|descend|probe, ...}.');
@@ -157,6 +168,8 @@ export function planProbeSequence(args: {
     const steps: SequenceStep[] = [];
     const names = new Set<string>();
     let probeCount = 0;
+    // The deepest toolhead Z any step commands (issue #187).
+    let deepestZ = z;
     (args.steps as { [key: string]: unknown }[]).forEach((raw, index) => {
         const kind = String(raw.kind || '');
         const at = `steps[${index}]`;
@@ -191,8 +204,10 @@ export function planProbeSequence(args: {
             if (!Number.isFinite(dz) || dz < 0 || dz > hopZ) {
                 throw new McpToolError(`${at}: descend needs an absolute machine Z in 0..${hopZ}.`);
             }
-            steps.push({ kind: 'descend', z: dz });
+            const segment = clampReported(raw.descent_segment_mm, DESCENT_SEGMENT_MM);
+            steps.push({ kind: 'descend', z: dz, segmentMm: segment.value, segmentRequestedMm: segment.clipped ? segment.requested : null });
             virtual.z = dz;
+            deepestZ = Math.min(deepestZ, dz);
         } else if (kind === 'probe') {
             const name = String(raw.name || `probe${probeCount + 1}`);
             if (names.has(name)) {
@@ -230,6 +245,7 @@ export function planProbeSequence(args: {
             if (limit.z < 0) {
                 throw new McpToolError(`${at}: the march's far limit is below machine Z 0 (the bed).`);
             }
+            deepestZ = Math.min(deepestZ, virtual.z, limit.z);
             const onMissRaw = raw.on_miss === undefined ? 'continue' : String(raw.on_miss);
             if (onMissRaw !== 'continue' && onMissRaw !== 'abort') {
                 throw new McpToolError(`${at}: on_miss must be "continue" (default: record no_contact, carry on) or "abort".`);
@@ -280,6 +296,7 @@ export function planProbeSequence(args: {
         hopZ,
         staged,
         localLinks,
+        stylusReach: requireStylusReach(args, Number(deepestZ.toFixed(3)), 'Probe sequence'),
     };
 }
 
@@ -329,6 +346,7 @@ export function describeProbeSequencePlanAsGcode(plan: ProbeSequencePlan): strin
         '; sensors: contact is EXPECTED only during marches - a probe/toolsetter trigger during',
         '; any hop, raise or descent latches the CRASH alarm (feed must be armed).',
         '; overtravel feed trips -> job stop + connection close + latched alarm',
+        describeStylusReach(plan.stylusReach),
         'G90',
         'G53;',
     ];
@@ -339,7 +357,10 @@ export function describeProbeSequencePlanAsGcode(plan: ProbeSequencePlan): strin
                 : `G1 Z${step.z.toFixed(3)} F${TRAVEL_FEED}; raise to traverse height (law 2)`);
             lines.push(`G1 X${step.x.toFixed(3)} Y${step.y.toFixed(3)} F${TRAVEL_FEED}; hop ${step.distanceMm.toFixed(1)} mm at Z${step.z.toFixed(3)}`);
         } else if (step.kind === 'descend') {
-            lines.push(`G1 Z${(step.z + DESCENT_GUARD_MM).toFixed(3)} F${TRAVEL_FEED}; descend (<= 5 mm segments (crash guard armed)) to ${DESCENT_GUARD_MM} mm above target`);
+            if (step.segmentRequestedMm !== null) {
+                lines.push(`; CLAMPED: descent_segment_mm ${step.segmentRequestedMm} is outside ${DESCENT_SEGMENT_MM.min}-${DESCENT_SEGMENT_MM.max} - this descent uses ${step.segmentMm} mm segments`);
+            }
+            lines.push(`G1 Z${(step.z + DESCENT_GUARD_MM).toFixed(3)} F${TRAVEL_FEED}; descend (<= ${step.segmentMm} mm segments (crash guard armed)) to ${DESCENT_GUARD_MM} mm above target`);
             lines.push('; ...guarded final approach (operator, 2026-09-02): 1 mm steps, sensor-checked after each -');
             lines.push('; ANY contact during a descent aborts and latches the CRASH alarm.');
             for (let gz = step.z + DESCENT_GUARD_MM - 1; gz > step.z - 1e-9; gz -= 1) {
@@ -456,9 +477,10 @@ export async function runProbeSequenceProcedure(plan: ProbeSequencePlan): Promis
                         + `planned descent target Z${step.z} - a descent never rises. Re-stage from a verified position.`);
                 }
                 if (zNow !== null && zNow > guardTop + TRAVERSE_Z_TOLERANCE_MM) {
-                    // Operator law 2026-09-05: descents in <= 5 mm sensor-checked
-                    // segments, never one long move toward the work.
-                    await descendInSegments(`seq:descend:${stepIndex}`, zNow, guardTop, 'probe', plan.sensorDelayMs);
+                    // Operator law 2026-09-05: descents in short segments
+                    // under the crash guard, never one long move toward the
+                    // work - the step's own length (#166) or the 5 mm default.
+                    await descendInSegments(`seq:descend:${stepIndex}`, zNow, guardTop, 'probe', plan.sensorDelayMs, { segmentMm: step.segmentMm });
                 }
                 let gz = Math.min(zNow === null ? guardTop : Math.max(zNow, step.z), guardTop);
                 while (gz - step.z > 1e-9) {
@@ -471,7 +493,7 @@ export async function runProbeSequenceProcedure(plan: ProbeSequencePlan): Promis
                             + '- something is where the plan says nothing should be. Machine held.');
                     }
                 }
-                announce(`descend-${stepIndex}`, `Z${step.z} (guarded final ${DESCENT_GUARD_MM} mm)`);
+                announce(`descend-${stepIndex}`, `Z${step.z} (<= ${step.segmentMm} mm segments, guarded final ${DESCENT_GUARD_MM} mm)`);
             } else {
                 // Re-verify the walk matches the simulation before marching.
                 // Every preceding move already verified its own arrival, so
@@ -643,6 +665,7 @@ export async function runProbeSequenceProcedure(plan: ProbeSequencePlan): Promis
             noContactProbes: misses,
             phases,
             localLinks: plan.localLinks,
+            stylusReach: plan.stylusReach,
             note: `Probe sequence complete: ${contacts.length} contacts${misses.length ? `, ${misses.length} march(es) found nothing within their approved travel (${misses.join(', ')})` : ''}, `
                 + 'all MACHINE coordinates. Worst confirm spread '
                 + `${(contacts.length ? Math.max(...contacts.map((r) => r.spreadMm)) : 0).toFixed(3)} mm.`

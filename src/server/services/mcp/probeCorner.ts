@@ -46,6 +46,8 @@ import {
     resolveMarchParams,
 } from './procedureLimits';
 import { McpToolError } from './registry';
+import { StylusReachVerdict, describeStylusReach } from './stylusReach';
+import { requireStylusReach } from './stylusReachGuard';
 import { TipCalibrationSnapshot, projectToolTipZ } from './toolDatum';
 import { getProbeTipCalibration } from './toolDatumState';
 import { probeGeometry } from './rotaryGeometry';
@@ -102,9 +104,14 @@ export interface ProbeCornerPlan {
     hopZ: number;
     staged: Xyz;
     tipDiameterMm: number | null;
+    /** Issue #187: the body-vs-rim verdict at z_machine (refused at staging when it fails). */
+    stylusReach: StylusReachVerdict;
 }
 
 interface CornerArgs {
+    rim_z_machine?: unknown;
+    surface_z_machine?: unknown;
+    reach_margin_mm?: unknown;
     wall_a?: unknown;
     wall_b?: unknown;
     z_machine?: unknown;
@@ -214,6 +221,7 @@ export function planProbeCorner(args: CornerArgs, extraObstacles: ObstacleBox[] 
         hopZ,
         staged: { x, y, z },
         tipDiameterMm,
+        stylusReach: requireStylusReach(args, r3(zMachine), 'Corner probe'),
     };
     const violations = checkMotion(cornerMotion(plan), [...landmarkStore.obstacleBoxes(), ...extraObstacles], { traverseZ: hopZ, ...clearanceOptions() });
     if (violations.length) {
@@ -230,7 +238,7 @@ export function describeProbeCornerPlanAsGcode(plan: ProbeCornerPlan): string {
         `; apex (${g.apex.x}, ${g.apex.y}), interior angle ${g.interiorAngleDeg} deg, bisector (${g.bisector.x}, ${g.bisector.y}) into the free space; toolhead Z${plan.zMachine}`,
         `; radius bound (operator, law 3): physical <= ${plan.radiusMaxMm} mm = tip-centre <= ${plan.rhoMaxMm}${plan.tipDiameterMm === null ? ' (NO tip diameter stored: the bound is taken as tip-centre)' : ''}`,
         `; 1) law 2 to the bisector start (${plan.start.x}, ${plan.start.y}) = apex + ${plan.bisectorTravelMm} mm along the bisector (largest arc's mid-point + ${plan.approachClearanceMm} clearance):`,
-        `;    raise to Z${plan.hopZ}, traverse, descend in <= ${DESCENT_SEGMENT_MM} mm segments then guarded 1 mm steps (ANY contact aborts).`,
+        `;    raise to Z${plan.hopZ}, traverse, descend in <= ${DESCENT_SEGMENT_MM.default} mm segments then guarded 1 mm steps (ANY contact aborts).`,
         `; 2) BISECTOR march toward the apex up to ${plan.bisectorTravelMm} mm (${plan.march.coarseStepMm} mm steps F${COARSE_FEED}, release, ${plan.march.fineStepMm} fine, ${plan.march.confirmPasses} confirm pass(es)):`,
         ';    where it stops gives the radius (rho = reach / (1/sin(angle/2) - 1)); a contact at the apex = SHARP corner, radial pass skipped; no contact = ABORT (the walls are not where stated).',
         `; 3) retreat along the bisector to the arc CENTRE (rho / sin(angle/2) from the apex, always short of the contact), then ${plan.radials.length} RADIAL marches from it`,
@@ -238,12 +246,13 @@ export function describeProbeCornerPlanAsGcode(plan: ProbeCornerPlan): string {
         ';    Every station and link lies on the bisector or at the centre - ground a march has proven; nothing is placed inside an unmeasured radius.',
         `; 4) FIT: circle through the contacts - radius, centre, per-point residuals${plan.tipDiameterMm === null ? '' : `; physical radius = tip-centre radius + ${r3(plan.tipDiameterMm / 2)}`}.`,
         `; ends raised at Z${plan.hopZ} (also on any abort, law 8)`,
+        describeStylusReach(plan.stylusReach),
         `; anchored at machine (${plan.staged.x.toFixed(2)}, ${plan.staged.y.toFixed(2)}, ${plan.staged.z.toFixed(2)}) - re-verified before motion`,
         'G90',
         'G53;',
         `G1 Z${plan.hopZ.toFixed(3)} F${TRAVEL_FEED}; raise to the safe traverse height (law 2)`,
         `G1 X${plan.start.x.toFixed(3)} Y${plan.start.y.toFixed(3)} F${TRAVEL_FEED}; traverse to the bisector start`,
-        `G1 Z${Math.min(plan.zMachine + DESCENT_GUARD_MM, plan.hopZ).toFixed(3)} F${TRAVEL_FEED}; descend in <= ${DESCENT_SEGMENT_MM} mm segments (crash guard armed)`,
+        `G1 Z${Math.min(plan.zMachine + DESCENT_GUARD_MM, plan.hopZ).toFixed(3)} F${TRAVEL_FEED}; descend in <= ${DESCENT_SEGMENT_MM.default} mm segments (crash guard armed)`,
         `G1 Z${plan.zMachine.toFixed(3)} F${COARSE_FEED}; guarded 1 mm steps (ANY contact aborts)`,
         `G1 X${g.apex.x.toFixed(3)} Y${g.apex.y.toFixed(3)} F${COARSE_FEED}; bisector march travel limit (the apex) - contact expected before it`,
         `; retreat along the bisector to the centre (run-time: for the largest radius it is (${plan.worstCentre.x}, ${plan.worstCentre.y}))`,
@@ -272,6 +281,7 @@ export interface CornerResult {
     /** + tip radius (internal corner); null without a stored tip diameter. */
     radiusPhysicalMm: number | null;
     tipDiameterMm: number | null;
+    stylusReach: StylusReachVerdict;
     phases: { phase: string; note?: string }[];
     note: string;
     aborted?: boolean;
@@ -315,6 +325,7 @@ export async function runProbeCornerProcedure(plan: ProbeCornerPlan): Promise<Co
             radiusTipCentreMm: rho === null ? null : r3(rho),
             radiusPhysicalMm: rho === null || tipR === null ? null : r3(rho + tipR),
             tipDiameterMm: plan.tipDiameterMm,
+            stylusReach: plan.stylusReach,
             phases,
             note: `${aborted ? 'ABORTED. ' : ''}${sharp ? 'SHARP corner (the bisector march reached the apex). ' : ''}`
                 + `${fit ? `Arc through ${fit.points} contact(s): tip-centre radius ${fit.radius} mm about (${fit.center.x}, ${fit.center.y}), residuals rms ${fit.rmsResidual} / max ${fit.maxResidual} mm`
