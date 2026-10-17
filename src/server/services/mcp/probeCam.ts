@@ -475,7 +475,7 @@ export function describeProbeCamPlanAsGcode(plan: ProbeCamPlan): string {
                     lines.push(`G1 Z${step.target.z.toFixed(3)} F${TRAVEL_FEED}; rise`);
                 } else if (step.target.z < step.from.z) {
                     const prev = plan.links.filter((l) => l.stepIndex < index).pop() || null;
-                    lines.push(`G1 Z${step.target.z.toFixed(3)} F${COARSE_FEED}; descend in <= ${DESCENT_SEGMENT_MM} mm segments, last ${DESCENT_GUARD_MM} mm in guarded 1 mm steps `
+                    lines.push(`G1 Z${step.target.z.toFixed(3)} F${COARSE_FEED}; descend in <= ${DESCENT_SEGMENT_MM.default} mm segments, last ${DESCENT_GUARD_MM} mm in guarded 1 mm steps `
                         + `(${descentNote(prev ? prev.style : 'raise')})`);
                 }
             } else if (!link || link.style === 'raise') {

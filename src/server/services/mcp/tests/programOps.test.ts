@@ -1,7 +1,7 @@
 import { strict as assert } from 'assert';
 
 import { ObstacleBox, checkMotion } from '../envelopeChecks';
-import { CAPTURE_SETTLE_MS, MAX_STATED_MACHINE_Z_MM } from '../procedureLimits';
+import { CAPTURE_SETTLE_MS, DESCENT_SEGMENT_MM, MAX_STATED_MACHINE_Z_MM } from '../procedureLimits';
 import { expandProgramGroups } from '../programGroups';
 import {
     CAPTURE_EVENT_BUDGET,
@@ -35,8 +35,9 @@ export const tests: Array<[string, () => void]> = [
     }],
 
     ['capture takes settle_ms (clamped to CAPTURE_SETTLE_MS), a label, an optional viewing x/y and an optional z, nothing else', () => {
-        assert.deepEqual(captureOpArgs({}, 'ops[1]'), { settle_ms: CAPTURE_SETTLE_MS.default, label: null, view: null, z: null });
-        assert.deepEqual(captureOpArgs({ settle_ms: 99999, label: ' B180 view ' }, 'ops[1]'), { settle_ms: CAPTURE_SETTLE_MS.max, label: 'B180 view', view: null, z: null });
+        const noDescent = { descent_segment_mm: DESCENT_SEGMENT_MM.default, descent_segment_requested_mm: null };
+        assert.deepEqual(captureOpArgs({}, 'ops[1]'), { settle_ms: CAPTURE_SETTLE_MS.default, label: null, view: null, z: null, ...noDescent });
+        assert.deepEqual(captureOpArgs({ settle_ms: 99999, label: ' B180 view ' }, 'ops[1]'), { settle_ms: CAPTURE_SETTLE_MS.max, label: 'B180 view', view: null, z: null, ...noDescent });
         assert.equal(captureOpArgs({ settle_ms: 1200 }, 'ops[1]').settle_ms, 1200);
         assert.deepEqual(captureOpArgs({ x: 140, y: '200' }, 'ops[1]').view, { x: 140, y: 200 });
         assert.throws(() => captureOpArgs({ x: 140 }, 'ops[1]'), /BOTH x and y/);
@@ -48,10 +49,28 @@ export const tests: Array<[string, () => void]> = [
         assert.equal(captureOpArgs({ z: 210.5 }, 'ops[1]').z, 210.5);
         assert.equal(captureOpArgs({ z: '210.5' }, 'ops[1]').z, 210.5);
         assert.equal(captureOpArgs({ z: null }, 'ops[1]').z, null);
-        assert.deepEqual(captureOpArgs({ x: 140, y: 200, z: 0 }, 'ops[1]'), { settle_ms: CAPTURE_SETTLE_MS.default, label: null, view: { x: 140, y: 200 }, z: 0 });
+        assert.deepEqual(captureOpArgs({ x: 140, y: 200, z: 0 }, 'ops[1]'), {
+            settle_ms: CAPTURE_SETTLE_MS.default,
+            label: null,
+            view: { x: 140, y: 200 },
+            z: 0,
+            descent_segment_mm: DESCENT_SEGMENT_MM.default,
+            descent_segment_requested_mm: null,
+        });
         for (const bad of ['abc', -1, MAX_STATED_MACHINE_Z_MM + 1, true, '', Number.NaN]) {
             assert.throws(() => captureOpArgs({ z: bad }, 'ops[1]'), /z must be a toolhead MACHINE Z/, String(bad));
         }
+    }],
+
+    ['issue #166: a capture descent may state descent_segment_mm (1-5); a clip is reported, and it needs a z', () => {
+        const two = captureOpArgs({ z: 210, descent_segment_mm: 2 }, 'ops[1]');
+        assert.equal(two.descent_segment_mm, 2);
+        assert.equal(two.descent_segment_requested_mm, null, 'not a clip');
+        const clipped = captureOpArgs({ z: 210, descent_segment_mm: 12 }, 'ops[1]');
+        assert.equal(clipped.descent_segment_mm, DESCENT_SEGMENT_MM.max, 'the cap never rises');
+        assert.equal(clipped.descent_segment_requested_mm, 12, 'the clip is reported');
+        assert.equal(captureOpArgs({ z: 210, descent_segment_mm: 0.2 }, 'ops[1]').descent_segment_mm, DESCENT_SEGMENT_MM.min);
+        assert.throws(() => captureOpArgs({ descent_segment_mm: 2 }, 'ops[1]'), /needs a z/);
     }],
 
     ['the capture motion list is the hop and the column the envelope check sees; a column into a keep-out volume is refused', () => {

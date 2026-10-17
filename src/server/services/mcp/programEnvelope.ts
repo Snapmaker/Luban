@@ -25,11 +25,8 @@
 // Pure: no server imports (unit-tested under ts-node).
 
 import { ObstacleBox } from './envelopeChecks';
-import { COARSE_FEED, DESCENT_GUARD_MM, TRAVEL_FEED } from './procedureLimits';
+import { COARSE_FEED, DESCENT_GUARD_MM, DESCENT_SEGMENT_MM, TRAVEL_FEED } from './procedureLimits';
 import { CaptureOpArgs } from './programOps';
-
-/** Longest fast descent segment under the crash guard (probing.descendInSegments; the operator's 5 mm law of 2026-09-05). */
-const DESCENT_SEGMENT_TEXT = '<= 5 mm';
 
 /** What the program describer needs of a ProbeProgramPlan (structural, so the plan type stays where it is). */
 export interface ProgramEnvelope {
@@ -86,7 +83,10 @@ export function describeCaptureOp(capture: CaptureOpArgs, hopZ: number): string 
     }
     if (capture.z !== null) {
         const guardTop = Math.min(capture.z + DESCENT_GUARD_MM, hopZ);
-        lines.push(`G1 Z${f3(guardTop)} F${TRAVEL_FEED}; descend in ${DESCENT_SEGMENT_TEXT} segments (crash guard armed) to ${f3(guardTop - capture.z)} mm above the stated Z`);
+        if (capture.descent_segment_requested_mm !== null) {
+            lines.push(`; CLAMPED: descent_segment_mm ${capture.descent_segment_requested_mm} is outside ${DESCENT_SEGMENT_MM.min}-${DESCENT_SEGMENT_MM.max} - this descent uses ${capture.descent_segment_mm} mm segments`);
+        }
+        lines.push(`G1 Z${f3(guardTop)} F${TRAVEL_FEED}; descend in <= ${capture.descent_segment_mm} mm segments (crash guard armed) to ${f3(guardTop - capture.z)} mm above the stated Z`);
         lines.push('; ...guarded final approach: 1 mm steps, sensor-checked after each - ANY contact during the descent aborts the program (nothing should be there).');
         for (let gz = guardTop - 1; gz > capture.z - 1e-9; gz -= 1) {
             lines.push(`G1 Z${f3(Math.max(gz, capture.z))} F${COARSE_FEED}; guarded descent step`);
@@ -141,7 +141,7 @@ export function describeProbeProgramAsGcode(plan: ProgramEnvelope): string {
         '; (each sent as G90 / G53; / move / G54;). This text is the simulated plan the table above is computed from; it is NOT',
         '; streamed to the controller. Marches stop at contact; nothing moves that is not listed here.',
         '; every operation runs through its own runner (position of record, crash guard, hop envelope, slow zone,',
-        `; <= 5 mm descent segments) and ends raised at the safe traverse height Z${plan.hopZ}; the next op starts there.`,
+        `; descents in <= ${DESCENT_SEGMENT_MM.default} mm segments, or the shorter descent_segment_mm an op states) and ends raised at the safe traverse height Z${plan.hopZ}; the next op starts there.`,
         plan.rotations.length
             ? `; THE STOCK WILL ROTATE: B schedule ${plan.rotations.map((b) => `${b} deg`).join(' -> ')}${plan.homesAtEnd ? ' -> 0 (home)' : ''} (absolute), only with the toolhead at Z >= ${plan.hopZ}.`
             : `; no rotations in this program${plan.homesAtEnd ? ' (the closing home still homes B to 0)' : ''}.`,

@@ -78,7 +78,7 @@ import {
     substituteRefs,
     validateRef,
 } from './programRefs';
-import { B_AXIS_DEG, MAX_SWEPT_RADIUS_MM, SENSOR_DELAY_MS, within } from './procedureLimits';
+import { B_AXIS_DEG, DESCENT_SEGMENT_MM, MAX_SWEPT_RADIUS_MM, SENSOR_DELAY_MS, within } from './procedureLimits';
 import { captureFrame } from './camera';
 import { finishProgramAbort, probeAbortHeld } from './programAbort';
 import { describeCaptureOp, describeHomeOp, describeRotateOp } from './programEnvelope';
@@ -450,6 +450,7 @@ export function planProbeProgram(args: { name?: unknown; ops?: unknown; keep_out
                     y: capture.view?.y ?? null,
                     // The raw z (a number or the reference) - resolved at run time.
                     z: opArgs.z === undefined ? null : opArgs.z,
+                    descent_segment_mm: capture.descent_segment_mm,
                 },
                 on_fail: onFail,
                 refs,
@@ -667,8 +668,9 @@ export async function runProbeProgramProcedure(plan: ProbeProgramPlan): Promise<
                     if (captureZ !== null) {
                         // As a sequence descend step: segments to the guard
                         // band, then 1 mm sensor-checked steps; contact aborts.
-                        descent = await guardedDescent(`probe_program:${op.id}:descend`, captureZ, 'probe', SENSOR_DELAY_MS.default);
-                        announce(`op-${op.id}-descended`, `Z${captureZ} from Z${descent.fromZ} (${descent.segments} segment(s), ${descent.guardSteps} guarded step(s))`);
+                        const segmentMm = Number(op.args.descent_segment_mm) || DESCENT_SEGMENT_MM.default;
+                        descent = await guardedDescent(`probe_program:${op.id}:descend`, captureZ, 'probe', SENSOR_DELAY_MS.default, { segmentMm });
+                        announce(`op-${op.id}-descended`, `Z${captureZ} from Z${descent.fromZ} (${descent.segments} segment(s) of <= ${segmentMm} mm, ${descent.guardSteps} guarded step(s))`);
                     }
                 }
                 const settleMs = Number(op.args.settle_ms) || 0;

@@ -14,7 +14,7 @@
 // and homes B: nothing measured after it would relate to what came before.
 
 import { MotionSegment, sequenceMotion } from './envelopeChecks';
-import { Bounded, CAPTURE_SETTLE_MS, MAX_STATED_MACHINE_Z_MM, clampTo } from './procedureLimits';
+import { Bounded, CAPTURE_SETTLE_MS, DESCENT_SEGMENT_MM, MAX_STATED_MACHINE_Z_MM, clampReported, clampTo } from './procedureLimits';
 
 export const PROGRAM_OP_KINDS = ['rotate_b', 'surface_path', 'surface_grid', 'sequence', 'stock_outline', 'wall_follow', 'corner', 'trace', 'capture', 'home'] as const;
 export type ProgramOpKindName = typeof PROGRAM_OP_KINDS[number];
@@ -53,15 +53,23 @@ export interface CaptureOpArgs {
      * raised. null = frame from where the head is.
      */
     z: number | null;
+    /** Longest fast segment of that descent (DESCENT_SEGMENT_MM; #166: lowered with descent_segment_mm). */
+    descent_segment_mm: number;
+    /** What the op asked for when it differs from descent_segment_mm (the clip is reported on the page). */
+    descent_segment_requested_mm: number | null;
 }
 
 /** Normalise a `capture` op's arguments; every other key is refused so a typo cannot pass silently. */
 export function captureOpArgs(raw: { [key: string]: unknown }, where: string): CaptureOpArgs {
-    const allowed = ['settle_ms', 'label', 'x', 'y', 'z'];
+    const allowed = ['settle_ms', 'label', 'x', 'y', 'z', 'descent_segment_mm'];
     const unknown = Object.keys(raw).filter((k) => !allowed.includes(k));
     if (unknown.length) {
-        throw new Error(`${where} (capture): unknown argument(s) ${unknown.join(', ')} - a capture takes settle_ms, label, an optional viewing position x/y (machine, hopped to at the traverse height) and an optional z (a measured or operator-stated toolhead machine Z to descend to for the frame).`);
+        throw new Error(`${where} (capture): unknown argument(s) ${unknown.join(', ')} - a capture takes settle_ms, label, an optional viewing position x/y (machine, hopped to at the traverse height), an optional z (a measured or operator-stated toolhead machine Z to descend to for the frame) and descent_segment_mm (${DESCENT_SEGMENT_MM.min}-${DESCENT_SEGMENT_MM.max}, the descent's fast segment length).`);
     }
+    if (raw.descent_segment_mm !== undefined && raw.descent_segment_mm !== null && (raw.z === undefined || raw.z === null)) {
+        throw new Error(`${where} (capture): descent_segment_mm needs a z to descend to.`);
+    }
+    const segment = clampReported(raw.descent_segment_mm, DESCENT_SEGMENT_MM);
     let z: number | null = null;
     if (raw.z !== undefined && raw.z !== null) {
         z = Number(raw.z);
@@ -81,7 +89,14 @@ export function captureOpArgs(raw: { [key: string]: unknown }, where: string): C
         }
         view = { x, y };
     }
-    return { settle_ms: clampTo(raw.settle_ms, CAPTURE_SETTLE_MS as Bounded), label, view, z };
+    return {
+        settle_ms: clampTo(raw.settle_ms, CAPTURE_SETTLE_MS as Bounded),
+        label,
+        view,
+        z,
+        descent_segment_mm: segment.value,
+        descent_segment_requested_mm: segment.clipped ? segment.requested : null,
+    };
 }
 
 /**

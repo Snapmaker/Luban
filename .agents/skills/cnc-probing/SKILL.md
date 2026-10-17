@@ -344,8 +344,11 @@ so every reference points backwards; `on_fail: "skip"` lets a non-critical op fa
 ending the program (a requested stop or held probe contact always ends it; skip cannot override a hold). Staging REFUSES a program whose event
 estimate exceeds the limit and tells you the number to ask for.
 
-`sequence` steps: `{"kind": "hop", "x", "y"}` (at the hop height), `{"kind": "descend", "z"}`
-(guarded segments then 1 mm sensor-checked steps), `{"kind": "probe", "name", "dx"|"dy"|"dz",
+`sequence` steps: `{"kind": "hop", "x", "y"}` (at the hop height), `{"kind": "descend", "z",
+"descent_segment_mm"?}` (≤ 5 mm guarded segments — or the shorter length stated, 1–5, where the
+column is not proven clear (#166; `cnc-motion-rules` law 5) — then 1 mm sensor-checked steps;
+surface scans and a capture at a stated `z` take the same `descent_segment_mm` for their
+approach), `{"kind": "probe", "name", "dx"|"dy"|"dz",
 "max_travel_mm", "on_miss"?, "capture": {"settle_ms"?, "label"?}?}`. After each probe the head
 returns to that probe's start, then raises to park before the next step. Results read as
 `<opId>.<name>.x|y|z` (contactMachine); references pass measurement values, not a retained low pose.

@@ -1,6 +1,6 @@
 import { strict as assert } from 'assert';
 
-import { COARSE_FEED, DESCENT_GUARD_MM, TRAVEL_FEED } from '../procedureLimits';
+import { COARSE_FEED, DESCENT_GUARD_MM, DESCENT_SEGMENT_MM, TRAVEL_FEED } from '../procedureLimits';
 import {
     ProgramEnvelope,
     describeCaptureOp,
@@ -35,9 +35,10 @@ function program(over: Partial<ProgramEnvelope> = {}): ProgramEnvelope {
 }
 
 // Job 96baca79b3b8 (2026-09-21): ONE capture op viewing from machine (190, 140).
-const VIEW = { settle_ms: 500, label: null, view: { x: 190, y: 140 }, z: null };
+const NO_DESCENT = { descent_segment_mm: DESCENT_SEGMENT_MM.default, descent_segment_requested_mm: null };
+const VIEW = { settle_ms: 500, label: null, view: { x: 190, y: 140 }, z: null, ...NO_DESCENT };
 // Issue #177: the same view, framed from a stated toolhead machine Z (a measured top + 7).
-const VIEW_AT_Z = { settle_ms: 500, label: 'pocket wall', view: { x: 190, y: 140 }, z: 215 };
+const VIEW_AT_Z = { settle_ms: 500, label: 'pocket wall', view: { x: 190, y: 140 }, z: 215, ...NO_DESCENT };
 function captureOnlyProgram(): ProgramEnvelope {
     return program({
         ops: [{ id: 'look', kind: 'capture', on_fail: 'stop', args: { x: 190, y: 140, settle_ms: 500, label: null } }],
@@ -105,7 +106,13 @@ export const tests: Array<[string, () => void]> = [
         assert.ok(text.includes('STATED toolhead machine Z215'), text);
         assert.ok(text.includes('ANY contact during the descent aborts'), text);
         assert.ok(text.includes('stamped with the machine position (Z215)'), text);
-        assert.ok(text.includes('<= 5 mm segments'), 'the page states the segment length');
+        assert.ok(text.includes(`<= ${DESCENT_SEGMENT_MM.default} mm segments`), 'the page states the segment length');
+        // Issue #166: a shorter segment is stated on the page; a request above the cap is clamped AND reported.
+        const gentle = describeCaptureOp({ ...VIEW_AT_Z, descent_segment_mm: 2, descent_segment_requested_mm: null }, HOP_Z);
+        assert.ok(gentle.includes('<= 2 mm segments'), gentle);
+        assert.ok(!gentle.includes('CLAMPED'), 'nothing was clipped');
+        const clipped = describeCaptureOp({ ...VIEW_AT_Z, descent_segment_mm: 5, descent_segment_requested_mm: 12 }, HOP_Z);
+        assert.ok(clipped.includes('; CLAMPED: descent_segment_mm 12 is outside 1-5 - this descent uses 5 mm segments'), clipped);
         // Whole program: the Z extents reach the stated Z and the header counts the descent.
         const body = describeProbeProgramAsGcode(program({
             ops: [{ id: 'low', kind: 'capture', on_fail: 'stop', args: { x: 190, y: 140, z: 215, settle_ms: 500, label: 'pocket wall' } }],
@@ -129,7 +136,7 @@ export const tests: Array<[string, () => void]> = [
     ['a capture with no viewing position moves nothing: only the closing raise is motion', () => {
         const body = describeProbeProgramAsGcode(program({
             ops: [{ id: 'snap', kind: 'capture', on_fail: 'stop', args: { x: null, y: null, settle_ms: 500, label: 'after turn' } }],
-            previews: [{ id: 'snap', text: describeCaptureOp({ settle_ms: 500, label: 'after turn', view: null, z: null }, HOP_Z) }],
+            previews: [{ id: 'snap', text: describeCaptureOp({ settle_ms: 500, label: 'after turn', view: null, z: null, ...NO_DESCENT }, HOP_Z) }],
             captures: ['snap'],
         }));
         const report = validateGcode(body);

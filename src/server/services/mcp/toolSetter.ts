@@ -14,6 +14,7 @@ import {
     TRAVEL_FEED,
     assertChannelReady,
     assertMachineReadyForProcedure,
+    DESCENT_SEGMENT_MM,
     descendInSegments,
     moveMachineSettled,
     marchInSegments,
@@ -293,7 +294,7 @@ export function describePlanAsGcode(plan: ToolSetterPlan): string {
     } else {
         lines.push(
             `G0 X${c.centerX.toFixed(3)} Y${c.centerY.toFixed(3)}; XY to setter centre at current (post-home) Z`,
-            `G1 Z${plan.startZ.toFixed(3)} F${TRAVEL_FEED}; descend to start height in <= 5 mm segments under the crash guard (a hit before it aborts)`,
+            `G1 Z${plan.startZ.toFixed(3)} F${TRAVEL_FEED}; descend to start height in <= ${DESCENT_SEGMENT_MM.default} mm segments under the crash guard (a hit before it aborts)`,
         );
     }
     let z = plan.startZ;
@@ -417,7 +418,7 @@ export async function runToolSetterProcedure(plan: ToolSetterPlan, measurementJo
             }
             announce('travel-xy', z, `XY to (${c.centerX}, ${c.centerY})`);
             await moveMachineSettled('toolsetter:travel', { x: c.centerX, y: c.centerY }, TRAVEL_FEED);
-            announce('travel-z', plan.startZ, 'in <= 5 mm segments under the crash guard (operator law 2026-09-05)');
+            announce('travel-z', plan.startZ, `in <= ${DESCENT_SEGMENT_MM.default} mm segments under the crash guard (operator law 2026-09-05)`);
             // A long single move toward the setter cannot be stopped once sent;
             // segments of <= 5 mm. Contact ABOVE the start height means the bit
             // is longer than declared - a collision, not a measurement - so the
