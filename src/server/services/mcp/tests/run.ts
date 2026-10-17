@@ -49,6 +49,7 @@ import { tests as marchCoreTests } from './marchCore.test';
 import { tests as mcpHealthTests } from './mcpHealth.test';
 import { tests as mcpListenersTests } from './mcpListeners.test';
 import { tests as mjpegFanoutTests } from './mjpegFanout.test';
+import { tests as moveZPlanTests } from './moveZPlan.test';
 import { tests as perimeterAnalysisTests } from './perimeterAnalysis.test';
 import { tests as perimeterTraceTests } from './perimeterTrace.test';
 import { tests as probeInspectionTests } from './probeInspection.test';
@@ -134,6 +135,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['toolDatum', toolDatumTests],
     ['traversePlan', traversePlanTests],
     ['directMovePlan', directMovePlanTests],
+    ['moveZPlan', moveZPlanTests],
     ['jobEnding', jobEndingTests],
     ['jobDashboard', jobDashboardTests],
     ['landmarkClearance', landmarkClearanceTests],

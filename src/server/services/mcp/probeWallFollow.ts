@@ -239,7 +239,7 @@ export function describeProbeWallFollowPlanAsGcode(plan: ProbeWallFollowPlan): s
     const lines = [
         `; WALL FOLLOW: ${plan.stations.length} station(s) along a vertical wall at toolhead Z${plan.zMachine}, start line from (${first.start.x}, ${first.start.y}) `
             + `to (${last.start.x}, ${last.start.y}), ${plan.stepMm} mm apart along (${plan.along.x}, ${plan.along.y}); marches toward (${plan.dir.x}, ${plan.dir.y}) up to ${plan.maxTravelMm} mm`,
-        `; 1) law 2 to station "${first.label}": raise to Z${plan.hopZ}, traverse, descend in <= ${DESCENT_SEGMENT_MM} mm segments then guarded 1 mm steps to Z${plan.zMachine}`,
+        `; 1) law 2 to station "${first.label}": raise to Z${plan.hopZ}, traverse, descend in <= ${DESCENT_SEGMENT_MM.default} mm segments then guarded 1 mm steps to Z${plan.zMachine}`,
         ';    (ANY contact on the way down aborts: the start must be over free space).',
         `; 2) per station: march to the wall (${plan.march.coarseStepMm} mm steps F${COARSE_FEED}, release, ${plan.march.fineStepMm} fine, ${plan.march.confirmPasses} confirm pass(es)); `
             + `back off ${plan.standoffMm} mm from the contact; STEP ALONG THE WALL at that standoff to the next station's line as a stepped traverse (1 mm steps F300,`,
@@ -252,7 +252,7 @@ export function describeProbeWallFollowPlanAsGcode(plan: ProbeWallFollowPlan): s
         'G53;',
         `G1 Z${plan.hopZ.toFixed(3)} F${TRAVEL_FEED}; raise to the safe traverse height (law 2)`,
         `G1 X${first.start.x.toFixed(3)} Y${first.start.y.toFixed(3)} F${TRAVEL_FEED}; traverse to station "${first.label}" start`,
-        `G1 Z${Math.min(plan.zMachine + DESCENT_GUARD_MM, plan.hopZ).toFixed(3)} F${TRAVEL_FEED}; descend in <= ${DESCENT_SEGMENT_MM} mm segments (crash guard armed)`,
+        `G1 Z${Math.min(plan.zMachine + DESCENT_GUARD_MM, plan.hopZ).toFixed(3)} F${TRAVEL_FEED}; descend in <= ${DESCENT_SEGMENT_MM.default} mm segments (crash guard armed)`,
         `G1 Z${plan.zMachine.toFixed(3)} F${COARSE_FEED}; guarded 1 mm steps (ANY contact aborts)`,
     ];
     plan.stations.forEach((st, i) => {

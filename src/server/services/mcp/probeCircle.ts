@@ -12,6 +12,7 @@ import {
     TRAVEL_FEED,
     assertChannelReady,
     assertMachineReadyForProcedure,
+    DESCENT_SEGMENT_MM,
     descendInSegments,
     moveMachineSettled,
     marchInSegments,
@@ -239,7 +240,7 @@ export function describeProbeCirclePlanAsGcode(plan: ProbeCirclePlan): string {
         if (!plan.inside) {
             lines.push(`G1 Z${plan.hopZ.toFixed(3)} F${TRAVEL_FEED}; lift to safe traverse height`);
             lines.push(`G1 X${point.startXY.x.toFixed(3)} Y${point.startXY.y.toFixed(3)} F${TRAVEL_FEED}; approach start`);
-            lines.push(`G1 Z${(plan.probeZ + DESCENT_GUARD_MM).toFixed(3)} F${TRAVEL_FEED}; descend (<= 5 mm segments (crash guard armed)) to ${DESCENT_GUARD_MM} mm above probing depth`);
+            lines.push(`G1 Z${(plan.probeZ + DESCENT_GUARD_MM).toFixed(3)} F${TRAVEL_FEED}; descend (<= ${DESCENT_SEGMENT_MM.default} mm segments (crash guard armed)) to ${DESCENT_GUARD_MM} mm above probing depth`);
             lines.push(`; ...guarded final approach: ${DESCENT_GUARD_MM} x 1 mm sensor-checked steps to Z${plan.probeZ.toFixed(3)} -`);
             lines.push(`G1 Z${plan.probeZ.toFixed(3)} F${COARSE_FEED}; ANY contact during descent aborts + latches CRASH`);
         }

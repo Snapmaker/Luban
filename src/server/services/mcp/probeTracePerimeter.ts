@@ -340,7 +340,7 @@ export function describeProbeTracePlanAsGcode(plan: ProbeTracePlan): string {
         'G53;',
         `G1 Z${plan.hopZ.toFixed(3)} F${TRAVEL_FEED}; raise to the safe traverse height (law 2)`,
         `G1 X${plan.start.x.toFixed(3)} Y${plan.start.y.toFixed(3)} F${TRAVEL_FEED}; traverse to the start (inside the pocket)`,
-        `G1 Z${Math.min(plan.zMachine + DESCENT_GUARD_MM, plan.hopZ).toFixed(3)} F${TRAVEL_FEED}; descend in <= ${DESCENT_SEGMENT_MM} mm segments (crash guard armed)`,
+        `G1 Z${Math.min(plan.zMachine + DESCENT_GUARD_MM, plan.hopZ).toFixed(3)} F${TRAVEL_FEED}; descend in <= ${DESCENT_SEGMENT_MM.default} mm segments (crash guard armed)`,
         `G1 Z${plan.zMachine.toFixed(3)} F${COARSE_FEED}; guarded 1 mm steps (ANY contact aborts: the start is not over free space)`,
         `G1 X${r3(plan.start.x + plan.dir.x * plan.maxTravelMm).toFixed(3)} Y${r3(plan.start.y + plan.dir.y * plan.maxTravelMm).toFixed(3)} F${COARSE_FEED}; first-wall march limit (contact expected before it)`,
         `; ... crawl: G1 steps of ${p.fineStepMm} / ${p.coarseStepMm} mm at F${STEPPED_HOP_FEED} inside the bounds above, each followed by a sensor read; retreats of one step at F${TRAVEL_FEED}`,

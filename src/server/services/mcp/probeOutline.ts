@@ -367,7 +367,7 @@ export function describeProbeOutlinePlanAsGcode(plan: ProbeOutlinePlan): string 
     ];
     const first = plan.topPoints[0];
     lines.push(`G1 X${first.x.toFixed(3)} Y${first.y.toFixed(3)} F${TRAVEL_FEED}; traverse to "${first.label}"`);
-    lines.push(`G1 Z${Math.min(plan.startZMachine + DESCENT_GUARD_MM, plan.hopZ).toFixed(3)} F${TRAVEL_FEED}; descend in <= ${DESCENT_SEGMENT_MM} mm segments (crash guard armed)`);
+    lines.push(`G1 Z${Math.min(plan.startZMachine + DESCENT_GUARD_MM, plan.hopZ).toFixed(3)} F${TRAVEL_FEED}; descend in <= ${DESCENT_SEGMENT_MM.default} mm segments (crash guard armed)`);
     lines.push(`; ...guarded 1 mm steps to Z${plan.startZMachine} (ANY contact aborts: the surface is above start_z_machine)`);
     plan.topPoints.forEach((tp, i) => {
         if (i > 0) {
@@ -383,7 +383,7 @@ export function describeProbeOutlinePlanAsGcode(plan: ProbeOutlinePlan): string 
         if (!previous || previous.side !== p.side) {
             lines.push(`G1 Z${plan.hopZ.toFixed(3)} F${TRAVEL_FEED}; raise to the traverse height`);
             lines.push(`G1 X${p.start.x.toFixed(3)} Y${p.start.y.toFixed(3)} F${TRAVEL_FEED}; traverse to side start "${p.label}"`);
-            lines.push(`; descend in <= ${DESCENT_SEGMENT_MM} mm segments, then guarded 1 mm steps, to Z = top - ${plan.sideDepthMm} (runtime; ANY contact here = the stock is larger than estimate + overextend: ABORT)`);
+            lines.push(`; descend in <= ${DESCENT_SEGMENT_MM.default} mm segments, then guarded 1 mm steps, to Z = top - ${plan.sideDepthMm} (runtime; ANY contact here = the stock is larger than estimate + overextend: ABORT)`);
         } else {
             lines.push(`; skip along the face ${previous.label} -> "${p.label}" at ${plan.sideStandoffMm} mm off the last contact (stepped traverse, retreat away from the face), then march on from there`);
         }

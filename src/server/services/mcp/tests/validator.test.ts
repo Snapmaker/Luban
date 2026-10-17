@@ -5,6 +5,7 @@ import {
     FRAME_REFUSAL_UNDECLARED,
     FrameResolutionContext,
     MAX_TRANSPORT_MOTION_LINES,
+    TRANSPORT_REFUSAL,
     isPureTransport,
     resolveJobFrame,
     suggestGcode,
@@ -272,6 +273,14 @@ export const tests: Array<[string, () => void]> = [
     ['the hand-written transit job of 2026-09-19 is pure transport', () => {
         assert.equal(isPureTransport(validateGcode('G90\nG53;\nG0 X160 Y175;\nG54;')), true);
         assert.equal(isPureTransport(validateGcode(MOVE_Z_MACHINE)), true, 'what move_z itself emits');
+    }],
+
+    ['issue #240: the hand-written fast-then-slow Z approach is pure transport, and the refusal names the move_z form', () => {
+        // The exact file the agent wrote on 2026-10-17: Z only, three rapids, a dwell, no spindle.
+        const approach = ['G21', 'G90', 'G53', 'G0 Z191.456 F400', 'G1 Z181.456 F60', 'G4 S60', 'G0 Z328 F400'].join('\n');
+        assert.equal(isPureTransport(validateGcode(approach)), true);
+        assert.ok(TRANSPORT_REFUSAL.includes('PER-STEP feeds'), TRANSPORT_REFUSAL);
+        assert.ok(TRANSPORT_REFUSAL.includes('z_targets: [{z, feed_rate: 400}, {z, feed_rate: 60}]'), TRANSPORT_REFUSAL);
     }],
 
     ['a toolpath is never transport, even between its cuts', () => {

@@ -154,6 +154,24 @@ as before (`staged_because` says why). Never chain `move_and_capture` hops as tr
    way, but ONLY while a procedure or MCP motion is in progress; pressed by hand with the
    machine idle it just flashes the pill. Do not disconnect the probe feed while anything might
    move.
+
+   **Descent segments (operator law 2026-09-05; bound per call since #166).** A move once sent
+   cannot be stopped, so no single gcode move toward the work is longer than one segment: a
+   sensor-gated MARCH advances in ≤ 1 mm segments, each settle-verified and followed by a
+   sensor read; a DESCENT that expects NO contact (a `descend` step, a scan's approach to
+   station 1, a capture at a stated Z, a station column) runs in **≤ 5 mm** segments
+   (`DESCENT_SEGMENT_MM`, default and cap 5) down to 20 mm above the target, then 1 mm
+   sensor-checked steps. Why 5 and not 1: a descent waits on the controller's ok per segment,
+   never on a serial sensor read, and the crash guard above is ASYNCHRONOUS — a hit latches
+   within the segment in flight and the next segment is refused — so 5 mm is the most the head
+   can travel after a hit; 1 mm would make a 300 mm descent from home ~300 settle-verified
+   moves for no gain where the column is known clear. When to lower it: the column is NOT
+   proven clear — an unmeasured scene, a first approach beside a fixture or a chuck, a capture
+   descent next to a pocket wall, a tool whose length is only estimated — state
+   `descent_segment_mm` (1–5) on that `descend` step, scan or capture; the page says the length
+   it will use, a value above the cap is clamped and REPORTED, and the cap never rises. A 5 mm
+   segment is never "risky" on a proven column; it is the wrong number only where nothing proves
+   the column.
 6. **Chat is not a motion gate — the staged job is.** Every transport, Z and measuring tool
    stages a job and needs the operator's click: `traverse_xy`, `move_z`, `goto_work_origin`,
    `goto_tool_change_position`, `submit_gcode_job`, and every `probe_*` / `run_tool_setter` /
@@ -580,6 +598,10 @@ home {}
 // under the same setting (executed_without_approval: true); anything that descends stages.
 move_z {"z": 328, "coordinate_system": "machine", "reason": "..."}
 start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}
+// Fast-then-creep approach under ONE approval (#240): each z_targets entry may carry its own feed_rate
+// (50-600, clamped and REPORTED in result.feed_clamps); plain numbers run at the call's feed_rate. Never a file job.
+move_z {"z_targets": [{"z": 191.5, "feed_rate": 400}, {"z": 181.5, "feed_rate": 60}], "coordinate_system": "machine", "reason": "..."}
+start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}   // once PER STEP
 // Probe sequence with LOCAL LINKS (§4): stations linked at a stated machine Z instead of Z328 between marches.
 // In a probe_program, clearance_z may be {"from": "tops.top.z", "plus": 4, "between": [200, 215]}.
 probe_sequence {"reason": "...", "local_links": {"clearance_z": 208.4, "max_hop_mm": 60},

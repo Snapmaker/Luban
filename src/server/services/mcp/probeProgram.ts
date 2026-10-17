@@ -3,7 +3,7 @@
 // probe_program arguments verbatim).
 import fs from 'fs';
 
-import { KeepOutError, ObstacleBox, checkMotion, describeViolations, insideSweptCylinder, normalizeKeepOut, sequenceMotion } from './envelopeChecks';
+import { KeepOutError, ObstacleBox, checkMotion, describeViolations, insideSweptCylinder, normalizeKeepOut } from './envelopeChecks';
 import { clearanceOptions } from './clearanceContext';
 import { landmarkStore } from './landmarks';
 import { outsideTravel } from './machineTravel';
@@ -50,13 +50,17 @@ import {
 import {
     ProcedureAbort,
     ProcedureStopped,
+    RaiseToTopPhases,
     ROTATE_FEED,
     TRAVEL_FEED,
+    assertChannelReady,
     assertMachineReadyForProcedure,
     abortRaiseToTop,
+    guardedDescent,
     knownMachinePosition,
     moveMachineSettled,
     procedureStopRequested,
+    raiseToTop,
     rotateB,
     isProcedureStopped,
     checkProcedureStop,
@@ -74,7 +78,7 @@ import {
     substituteRefs,
     validateRef,
 } from './programRefs';
-import { B_AXIS_DEG, MAX_SWEPT_RADIUS_MM, within } from './procedureLimits';
+import { B_AXIS_DEG, DESCENT_SEGMENT_MM, MAX_SWEPT_RADIUS_MM, SENSOR_DELAY_MS, within } from './procedureLimits';
 import { captureFrame } from './camera';
 import { finishProgramAbort, probeAbortHeld } from './programAbort';
 import { describeCaptureOp, describeHomeOp, describeRotateOp } from './programEnvelope';
@@ -84,6 +88,7 @@ import {
     CaptureOpArgs,
     HOME_EVENT_BUDGET,
     PROGRAM_OP_KINDS,
+    captureMotion,
     captureOpArgs,
     homeOrderError,
     isProgramOpKind,
@@ -94,6 +99,7 @@ import { AxisNamespace, axisNamespaceAt, missingGeometryNote, programSeedNamespa
 import { deriveStockSection } from './stockGeometry';
 import { homeMachine } from './tools/camera';
 import { getPositionSnapshot, requirePlanningTravel, safeTraverseZ } from './tools/machine';
+import { TRAVERSE_Z_TOLERANCE_MM } from './traversePlan';
 
 // A composite probing PROGRAM: an ordered list of operations - rotate the
 // rotary axis, top-surface scans (path / grid), probe sequences (side and
@@ -168,32 +174,49 @@ export interface ProbeProgramPlan {
 const MAX_OPS = 80;
 /** Extra events for a capture that hops to a viewing position (raise + hop, each settle-verified). */
 const CAPTURE_VIEW_EVENT_BUDGET = 20;
+/** Extra events for a capture that descends to a stated Z (segments + guarded steps + the raise back, each settle-verified). */
+const CAPTURE_DESCENT_EVENT_BUDGET = 40;
+/** Phase names of a capture's straight raise back to the traverse height. */
+const CAPTURE_RAISE_PHASES: RaiseToTopPhases = {
+    noRetreat: 'capture-no-retreat',
+    held: 'capture-held',
+    skipped: 'capture-raise-skipped',
+    raised: 'capture-raised',
+    moveTag: 'capture-raise',
+};
 
 /**
- * A capture's viewing hop is a sequence hop in every respect: inside the
- * toolhead travel, at the traverse height, and refused (law 4) when the
- * segment crosses an obstacle box below the Z it demands. Throws Error with
- * the operator-facing text; callers wrap it.
+ * A capture's motion - the viewing hop and, with a stated z, the descent
+ * column - is a sequence hop / descend in every respect: inside the toolhead
+ * travel, the hop at the traverse height, and refused (law 4) when a segment
+ * crosses an obstacle box below the Z it demands or the column enters a
+ * keep-out volume. Throws Error with the operator-facing text; callers wrap
+ * it.
  */
-function checkCaptureView(
-    view: { x: number; y: number },
+function checkCaptureMotion(
+    capture: Pick<CaptureOpArgs, 'view' | 'z'>,
     from: { x: number; y: number; z: number },
     hopZ: number,
     keepOut: ObstacleBox[],
     where: string
 ): void {
-    const travel = requirePlanningTravel('a program capture view', { x: from.x, y: from.y });
-    const off = outsideTravel({ x: view.x, y: view.y }, travel.limits);
-    if (off) {
-        throw new Error(`${where} (capture): viewing position is outside the toolhead travel: ${off}.`);
+    if (capture.view) {
+        const travel = requirePlanningTravel('a program capture view', { x: from.x, y: from.y });
+        const off = outsideTravel({ x: capture.view.x, y: capture.view.y }, travel.limits);
+        if (off) {
+            throw new Error(`${where} (capture): viewing position is outside the toolhead travel: ${off}.`);
+        }
+    }
+    if (capture.z !== null && capture.z >= hopZ - TRAVERSE_Z_TOLERANCE_MM) {
+        throw new Error(`${where} (capture): z ${capture.z} is not below the traverse height Z${hopZ} - omit z to frame from there.`);
     }
     const violations = checkMotion(
-        sequenceMotion({ hopZ, staged: from, steps: [{ kind: 'hop', x: view.x, y: view.y }] }),
+        captureMotion(capture, from, hopZ),
         [...landmarkStore.obstacleBoxes(), ...keepOut],
         { traverseZ: hopZ, ...clearanceOptions() }
     );
     if (violations.length) {
-        throw new Error(`${where} (capture): viewing hop refused (law 4, landmarks are obstacles): ${describeViolations(violations)}.`);
+        throw new Error(`${where} (capture): ${capture.z === null ? 'viewing hop' : 'motion'} refused (law 4, landmarks are obstacles): ${describeViolations(violations)}.`);
     }
 }
 
@@ -384,6 +407,19 @@ export function planProbeProgram(args: { name?: unknown; ops?: unknown; keep_out
     if (homeOrder) {
         throw new McpToolError(homeOrder);
     }
+    /** Every reference must read an op that runs BEFORE this one (or a seeded namespace). */
+    const assertRefDeps = (refs: { path: string; ref: RefSpec }[], id: string, where: string): void => {
+        for (const r of refs) {
+            const missing = refOpIds(r.ref).find((dep) => dep === id || (!ids.has(dep) && !seeded.has(dep)));
+            if (missing === 'axis') {
+                throw new McpToolError(`${where}: reference ${describeRef(r.ref)} reads the "axis" namespace, which is not configured. ${missingGeometryNote()}`);
+            }
+            if (missing) {
+                throw new McpToolError(`${where}: reference ${describeRef(r.ref)} reads "${missing}", which is not an op that runs BEFORE this one`
+                    + `${seeded.size ? ` (or a seeded namespace: ${Array.from(seeded).join(', ')})` : ''}.`);
+            }
+        }
+    };
 
     expandedOps.forEach((raw, index) => {
         const where = `ops[${index}]`;
@@ -415,34 +451,64 @@ export function planProbeProgram(args: { name?: unknown; ops?: unknown; keep_out
         }
 
         if (kind === 'capture') {
-            // No motion: a frame from wherever the previous op left the head,
-            // stamped with the position of record and B, saved on the job.
+            // A frame from wherever the previous op left the head - or from a
+            // viewing XY, or at a stated Z (#177) - stamped with the position
+            // of record and B, saved on the job. Only z may be a reference
+            // (a measured top from an earlier op); validated and previewed at
+            // its mid-point like any other op's number.
+            let previewArgs: { [key: string]: unknown };
+            let refs: { path: string; ref: RefSpec }[];
+            try {
+                ({ args: previewArgs, refs } = substituteRefs(opArgs, (ref, path) => {
+                    if (path !== 'z') {
+                        throw new RefResolveError(`${where} (capture): only z may be a reference (${path} is not).`);
+                    }
+                    validateRef(ref, `${where}.${path}`);
+                    return refMidpoint(ref);
+                }));
+            } catch (err) {
+                if (err instanceof RefResolveError) {
+                    throw new McpToolError(err.message);
+                }
+                throw err;
+            }
+            assertRefDeps(refs, id, where);
             let capture: CaptureOpArgs;
             try {
-                capture = captureOpArgs(opArgs, where);
+                capture = captureOpArgs(previewArgs, where);
             } catch (err) {
                 throw new McpToolError((err as Error).message);
             }
-            if (capture.view) {
+            if (capture.view || capture.z !== null) {
                 // Law 2 and law 4 at staging, from the program's anchor (each
                 // op ends raised, so the anchor XY is the worst case only for
                 // op 1; the runner re-checks from the live position).
                 try {
-                    checkCaptureView(capture.view, { x, y, z }, hopZ, keepOut, where);
+                    checkCaptureMotion(capture, { x, y, z }, hopZ, keepOut, where);
                 } catch (err) {
                     throw new McpToolError((err as Error).message);
                 }
             }
             captures.push(id);
-            eventBudget += CAPTURE_EVENT_BUDGET + (capture.view ? CAPTURE_VIEW_EVENT_BUDGET : 0);
+            eventBudget += CAPTURE_EVENT_BUDGET + (capture.view ? CAPTURE_VIEW_EVENT_BUDGET : 0) + (capture.z === null ? 0 : CAPTURE_DESCENT_EVENT_BUDGET);
             ops.push({
                 id,
                 kind,
-                args: { settle_ms: capture.settle_ms, label: capture.label, x: capture.view?.x ?? null, y: capture.view?.y ?? null },
+                args: {
+                    settle_ms: capture.settle_ms,
+                    label: capture.label,
+                    x: capture.view?.x ?? null,
+                    y: capture.view?.y ?? null,
+                    // The raw z (a number or the reference) - resolved at run time.
+                    z: opArgs.z === undefined ? null : opArgs.z,
+                    descent_segment_mm: capture.descent_segment_mm,
+                },
                 on_fail: onFail,
-                refs: [],
+                refs,
             });
-            previews.push({ id, text: describeCaptureOp(capture, hopZ) });
+            const refLines = refs.map((r) => `; REFERENCE ${r.path} = ${describeRef(r.ref)}, `
+                + `approved bounds [${r.ref.between[0]}, ${r.ref.between[1]}] - preview below uses ${refMidpoint(r.ref)}; the runner REFUSES the op outside the bounds`);
+            previews.push({ id, text: [...refLines, describeCaptureOp(capture, hopZ)].join('\n') });
             return;
         }
         if (kind === 'home') {
@@ -506,16 +572,7 @@ export function planProbeProgram(args: { name?: unknown; ops?: unknown; keep_out
             }
             throw err;
         }
-        for (const r of refs) {
-            const missing = refOpIds(r.ref).find((dep) => dep === id || (!ids.has(dep) && !seeded.has(dep)));
-            if (missing === 'axis') {
-                throw new McpToolError(`${where}: reference ${describeRef(r.ref)} reads the "axis" namespace, which is not configured. ${missingGeometryNote()}`);
-            }
-            if (missing) {
-                throw new McpToolError(`${where}: reference ${describeRef(r.ref)} reads "${missing}", which is not an op that runs BEFORE this one`
-                    + `${seeded.size ? ` (or a seeded namespace: ${Array.from(seeded).join(', ')})` : ''}.`);
-            }
-        }
+        assertRefDeps(refs, id, where);
         let preview: SubPlan;
         try {
             preview = buildSubPlan(kind, previewArgs, keepOut);
@@ -619,41 +676,87 @@ export async function runProbeProgramProcedure(plan: ProbeProgramPlan): Promise<
                 if (settledBefore.waitedMs > 1500) {
                     announce(`op-${op.id}-settled`, `waited ${settledBefore.waitedMs} ms for the machine to go idle at B${currentB ?? '?'}`);
                 }
-                if (op.args.x !== null && op.args.x !== undefined && op.args.y !== null && op.args.y !== undefined) {
-                    // Viewing position: re-check from the LIVE position (the
-                    // staging check used the program anchor), then law 2 -
-                    // raise to the traverse height, hop, never the reverse.
-                    const view = { x: Number(op.args.x), y: Number(op.args.y) };
+                const view = op.args.x !== null && op.args.x !== undefined && op.args.y !== null && op.args.y !== undefined
+                    ? { x: Number(op.args.x), y: Number(op.args.y) }
+                    : null;
+                // A stated Z (#177): a number, or a reference resolved NOW
+                // against earlier results and REFUSED outside its bounds.
+                let captureZ: number | null = null;
+                if (op.args.z !== null && op.args.z !== undefined) {
+                    const { args: liveZ } = substituteRefs({ z: op.args.z }, (ref, path) => {
+                        const r = resolveRef(ref, results);
+                        resolved.push({ path, from: describeRef(ref), value: r.value });
+                        announce(`op-${op.id}-ref`, `${path} = ${r.source}`);
+                        return r.value;
+                    });
+                    captureZ = Number(liveZ.z);
+                    if (!Number.isFinite(captureZ) || captureZ < 0) {
+                        throw new ProcedureAbort(`Capture refused: z resolved to ${String(liveZ.z)}, not a machine Z.`);
+                    }
+                }
+                let descent: { fromZ: number; segments: number; guardSteps: number } | null = null;
+                if (view || captureZ !== null) {
+                    // Re-check from the LIVE position (the staging check used
+                    // the program anchor), then law 2 - raise to the traverse
+                    // height, hop, THEN descend, never another order.
                     const known = knownMachinePosition();
                     const { x: kx, y: ky, z: kz } = known.position;
                     if (kx === null || ky === null || kz === null) {
-                        throw new ProcedureAbort('Capture view refused: the machine position is unknown.');
+                        throw new ProcedureAbort('Capture motion refused: the machine position is unknown.');
                     }
-                    checkCaptureView(view, { x: kx, y: ky, z: kz }, plan.hopZ, plan.keepOut, `op "${op.id}"`);
+                    checkCaptureMotion({ view, z: captureZ }, { x: kx, y: ky, z: kz }, plan.hopZ, plan.keepOut, `op "${op.id}"`);
+                    if (captureZ !== null) {
+                        assertChannelReady('probe', 'a capture at a stated Z');
+                    }
                     probeFeedService.clearExpectedContact();
-                    if (kz < plan.hopZ - RECHECK_TOLERANCE_MM) {
-                        await moveMachineSettled(`probe_program:${op.id}:raise`, { z: plan.hopZ }, TRAVEL_FEED);
+                    if (view) {
+                        if (kz < plan.hopZ - RECHECK_TOLERANCE_MM) {
+                            await moveMachineSettled(`probe_program:${op.id}:raise`, { z: plan.hopZ }, TRAVEL_FEED);
+                        }
+                        await moveMachineSettled(`probe_program:${op.id}:view`, { x: view.x, y: view.y }, TRAVEL_FEED);
+                        announce(`op-${op.id}-view`, `at machine (${view.x}, ${view.y}) Z${plan.hopZ}`);
                     }
-                    await moveMachineSettled(`probe_program:${op.id}:view`, { x: view.x, y: view.y }, TRAVEL_FEED);
-                    announce(`op-${op.id}-view`, `at machine (${view.x}, ${view.y}) Z${plan.hopZ}`);
+                    if (captureZ !== null) {
+                        // As a sequence descend step: segments to the guard
+                        // band, then 1 mm sensor-checked steps; contact aborts.
+                        const segmentMm = Number(op.args.descent_segment_mm) || DESCENT_SEGMENT_MM.default;
+                        descent = await guardedDescent(`probe_program:${op.id}:descend`, captureZ, 'probe', SENSOR_DELAY_MS.default, { segmentMm });
+                        announce(`op-${op.id}-descended`, `Z${captureZ} from Z${descent.fromZ} (${descent.segments} segment(s) of <= ${segmentMm} mm, ${descent.guardSteps} guarded step(s))`);
+                    }
                 }
                 const settleMs = Number(op.args.settle_ms) || 0;
                 if (settleMs > 0) {
                     await sleep(settleMs);
                 }
-                // A view hop moved the head: confirm it, too, before the frame.
-                if (op.args.x !== null && op.args.x !== undefined) {
-                    await awaitMachineSettled(`probe_program:${op.id}:view`, { b: currentB });
+                // A hop or a descent moved the head: confirm it, too, before the frame.
+                if (view || captureZ !== null) {
+                    await awaitMachineSettled(`probe_program:${op.id}:moved`, { b: currentB });
                 }
                 const frame = await captureFrame();
                 const snapshot = getPositionSnapshot();
                 const file = programFramePath(startedAt, plan.name, op.id);
                 fs.writeFileSync(file, Buffer.from(frame.imageBase64, 'base64'));
+                // A capture that descended ends raised like every other op:
+                // STRAIGHT back to the traverse height (law 8's one move).
+                let raised: { action: string; z: number | null; note: string } | null = null;
+                if (captureZ !== null) {
+                    raised = await raiseToTop(
+                        `probe_program:${op.id}`,
+                        (phase, rz, note) => announce(phase, rz === null ? note : `Z${rz} - ${note}`),
+                        { phases: CAPTURE_RAISE_PHASES, holdIfTriggered: 'probe' }
+                    );
+                    if (raised.action === 'held' || raised.action === 'no-retreat') {
+                        throw new ProcedureAbort(`Capture "${op.id}" framed at Z${captureZ} but could not raise back: ${raised.note}`);
+                    }
+                }
                 const outcome = {
                     frameId: frame.frameId,
                     file,
                     label: op.args.label ?? null,
-                    view: op.args.x === null || op.args.x === undefined ? null : { x: Number(op.args.x), y: Number(op.args.y) },
+                    view,
+                    statedZ: captureZ,
+                    descent,
+                    raisedTo: raised ? raised.z : null,
                     capturedAt: frame.capturedAt,
                     device: frame.device,
                     provider: frame.provider,
@@ -666,7 +769,8 @@ export async function runProbeProgramProcedure(plan: ProbeProgramPlan): Promise<
                 };
                 results[op.id] = outcome;
                 report.push({ id: op.id, kind: op.kind, b: currentB, status: 'completed', resolvedRefs: resolved, startedAt: opStarted, endedAt: Date.now(), result: outcome });
-                announce(`op-${op.id}-done`, `frame ${frame.frameId} at machine (${snapshot.machine.x}, ${snapshot.machine.y}, ${snapshot.machine.z}) B${snapshot.b ?? '?'}`);
+                const raisedNote = raised ? `, raised to Z${raised.z}` : '';
+                announce(`op-${op.id}-done`, `frame ${frame.frameId} at machine (${snapshot.machine.x}, ${snapshot.machine.y}, ${snapshot.machine.z}) B${snapshot.b ?? '?'}${raisedNote}`);
                 continue;
             }
             if (op.kind === 'home') {
