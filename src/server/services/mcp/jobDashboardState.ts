@@ -11,10 +11,18 @@ export function summarizeDashboardJob(job: McpJob) {
         state: job.state,
         createdAt: job.createdAt,
         approvedAt: job.approvedAt,
+        // 'operator' (the click) or 'policy' with its name (safeZPolicy.ts, #241).
+        approval: job.approval,
         startedAt: job.startedAt,
         endedAt: job.endedAt,
         ending: job.ending,
         error: job.error,
+        // The modal cleanup verdict only (#221); the full evidence is on /jobs/<id>.json.
+        modalRecovery: job.failureRecovery ? {
+            status: job.failureRecovery.status,
+            skipReason: job.failureRecovery.skip_reason,
+            recoveryAction: job.failureRecovery.recovery_action,
+        } : null,
         lastEvent: job.events.length ? job.events[job.events.length - 1] : null,
     };
 }

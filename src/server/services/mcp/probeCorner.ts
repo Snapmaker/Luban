@@ -46,6 +46,8 @@ import {
     resolveMarchParams,
 } from './procedureLimits';
 import { McpToolError } from './registry';
+import { TipCalibrationSnapshot, projectToolTipZ } from './toolDatum';
+import { getProbeTipCalibration } from './toolDatumState';
 import { probeGeometry } from './rotaryGeometry';
 import { assertWithinTravel, getPositionSnapshot, requirePlanningTravel, safeTraverseZ } from './tools/machine';
 import { TRAVERSE_Z_TOLERANCE_MM } from './traversePlan';
@@ -256,6 +258,7 @@ export function describeProbeCornerPlanAsGcode(plan: ProbeCornerPlan): string {
 }
 
 export interface CornerResult {
+    tipCalibration?: TipCalibrationSnapshot;
     tool: 'probe_corner';
     geometry: CornerGeometry;
     zMachine: number;
@@ -276,6 +279,7 @@ export interface CornerResult {
 
 export async function runProbeCornerProcedure(plan: ProbeCornerPlan): Promise<CornerResult> {
     assertMachineReadyForProcedure();
+    const tipCalibration = getProbeTipCalibration();
     assertChannelReady('probe', 'corner probe');
     const phases: { phase: string; note?: string }[] = [];
     const announce = makeAnnounce(plan.tool, phases);
@@ -302,10 +306,11 @@ export async function runProbeCornerProcedure(plan: ProbeCornerPlan): Promise<Co
             tool: plan.tool,
             geometry: g,
             zMachine: plan.zMachine,
-            bisector: bisectorContact,
+            tipCalibration,
+            bisector: { ...bisectorContact, ...projectToolTipZ(bisectorContact.contactMachine?.z ?? null, tipCalibration) },
             sharp,
             centre,
-            radials,
+            radials: radials.map((r) => ({ ...r, ...projectToolTipZ(r.contactMachine?.z ?? null, tipCalibration) })),
             fit,
             radiusTipCentreMm: rho === null ? null : r3(rho),
             radiusPhysicalMm: rho === null || tipR === null ? null : r3(rho + tipR),

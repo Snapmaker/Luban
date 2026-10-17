@@ -261,6 +261,8 @@ def load_observations(directory, marks_path):
     observations = []
     seen = set()
     for frame in index['frames']:
+        if frame.get('holdout', False):
+            continue  # Never let independent verification frames enter the fit.
         name = os.path.basename(frame['file'])
         toolhead = np.array([frame['machine']['x'], frame['machine']['y'], frame['machine']['z']], dtype=float)
         hand = marks.get(name, {})

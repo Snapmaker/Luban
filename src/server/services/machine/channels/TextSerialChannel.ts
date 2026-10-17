@@ -7,6 +7,7 @@ import Channel, { CncChannelInterface, ExecuteGcodeResult, LaserChannelInterface
 import { ChannelEvent } from './ChannelEvent';
 import { L20WLaserToolModule, L40WLaserToolModule } from '../../../../app/machines/snapmaker-2-toolheads';
 import { HEAD_LASER } from '../../../constants';
+import { gcodeLease } from '../gcodeLease';
 
 const log = logger('machine:channels:TextSerialChannel');
 
@@ -19,6 +20,24 @@ class TextSerialChannel extends Channel implements
     private dataSource = '';
 
     private controller: MarlinController = null;
+
+    // Bumped at every port open/close this channel performs. MarlinController
+    // also closes the port on its own (serial 'close'), and every reopen
+    // creates a new serial connection object, so a change in that object is
+    // counted as well when the generation is read.
+    private connectionGeneration = 0;
+
+    private observedPort: unknown = null;
+
+    /** Read-only: lets callers tell a reconnected session from the one they started on. */
+    public getConnectionGeneration(): number {
+        const port = (this.controller as unknown as { serialport?: unknown } | null)?.serialport ?? null;
+        if (port !== this.observedPort) {
+            this.observedPort = port;
+            this.connectionGeneration++;
+        }
+        return this.connectionGeneration;
+    }
 
     public getController(): MarlinController {
         return this.controller;
@@ -81,6 +100,7 @@ class TextSerialChannel extends Channel implements
                     }
 
                     this.controller = controller;
+                    this.connectionGeneration++;
 
                     this.emit(ChannelEvent.Connected);
 
@@ -100,6 +120,8 @@ class TextSerialChannel extends Channel implements
             controller.writeln('M5');
         }
 
+        this.connectionGeneration++;
+
         return new Promise((resolve) => {
             controller.close();
 
@@ -114,6 +136,8 @@ class TextSerialChannel extends Channel implements
     }
 
     public async executeGcode(gcode: string): Promise<ExecuteGcodeResult> {
+        const refusal = gcodeLease.refusal(gcode);
+        if (refusal) { return { result: -1, text: refusal }; }
         const gcodeLines = gcode.split('\n');
 
         const controller = this.controller;

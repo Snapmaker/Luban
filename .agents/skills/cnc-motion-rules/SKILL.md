@@ -29,6 +29,8 @@ item, quoting the tool result — not an essay):
    rotates — say so before calling it. `home` runs on the call, with no confirm page (law 6):
    the operator's word in chat is its whole authority, so get that word first. Only an explicit
    demand to home despite stale data permits `home {ignore_stale_position: true}` (§3).
+   `move_z`, `traverse_xy` and procedures refuse while unhomed: only `home` raises an
+   unhomed head through MCP. Homing sets B to 0; saved B180 heights are not B0 approach heights.
 2. **Frame.** Every number you plan with is MACHINE frame, or the job declares the WORK frame
    and the MCP resolves it (§2). Never convert a file's coordinates by hand. No bare `Z`.
 3. **Height.** Any XY move over 1 mm runs at or above the MOTION FLOOR — machine **Z320**
@@ -45,7 +47,14 @@ item, quoting the tool result — not an essay):
    at-or-above, so equal passes. A box the operator states in chat is a planning obstacle
    immediately; write it with `set_landmark` only when they ask; if chat and the store disagree,
    stop and ask which is current.
-5. **Tool.** A tool or the probe is ALWAYS in the spindle. Where is its tip at the Z you plan?
+5. **Tool.** A tool or the probe is ALWAYS in the spindle. Read `get_active_tool` and the
+   reported clearance basis. Only a current bound below the MACHINE TOOLHEAD REFERENCE, or
+   the separately configured conservative maximum `toolhead_clearance_bound`, can establish
+   physical clearance. `set_active_tool {protrusion_mm, protrusion_reference: "toolhead",
+   source: "operator", note}` requires the operator's explicit bound and reference. A collet-to-tip
+   caliper measurement is a different quantity. Re-read after a setter run or swap; stale fitting
+   records are evidence, not bounds for an unknown replacement. Legacy toolhead boxes retain
+   their stated height.
 6. **Authority.** An explicit imperative in the operator's LATEST message is necessary — not
    sufficient. It authorises STAGING; the click on the confirm page authorises the motion. An
    imperative on a rejected position is still refused by the tools (§3). Stale data has one
@@ -67,8 +76,14 @@ item, quoting the tool result — not an essay):
    after the answer, never before it.
 
 **Fast path.** For a transit that starts at or above Z328 and writes no Z, `get_position` +
-`get_stored_state` discharge items 1–5 in one breath: quote the two results and stage
-`traverse_xy` (§8). One approval, no questions.
+`get_stored_state` discharge items 1–5 in one breath: quote the two results and call
+`traverse_xy` (§8). With `mcpTraverseWithoutApprovalAtSafeZ` on (the shipped default; operator
+ruling 2026-10-17, "if we've got to top z there's no approval for move at top z") it RUNS ON THE
+CALL when the position is verified/heartbeat, homed, already at or above the traverse height and
+the route passes the landmark and travel checks — the result says
+`executed_without_approval: true`, there is no confirm page and no `start_gcode_job`. Below the
+traverse height, on a cached/stale position, or with the setting off it stages for one approval
+as before (`staged_because` says why). Never chain `move_and_capture` hops as transport.
 
 ## 1. The eight motion laws
 
@@ -100,6 +115,12 @@ item, quoting the tool result — not an essay):
    costs is 8 mm less blind protection for anything on the bed with no landmark — which is why
    an unmapped object taller than the floor minus the tool is the operator's problem to state,
    not the guard's to catch.
+   **A known tool does not clear an unknown scene.** Camera surveys and `camera_program`
+   enforce the motion floor even with an active tool. Earlier PR #219 code incorrectly let a
+   tool-length assertion open sub-floor routes; that is fixed, not permission to use old builds
+   that allow it. Never infer `operator_confirmed_clearance`. In camera programs an explicit
+   exception is scoped to the particular op, never all 80 ops. A legacy toolhead-Z328 box still
+   excludes Z320 captures/pose stops inside it; use park height for coverage there.
 3. **Never fabricate clearance.** Only measured numbers or operator-stated numbers count for
    heights. A photo FINDS things, it clears nothing (incident 1). An unknown height is measured
    from a proven-safe height by a sensor-gated −Z march (§8 example), never assumed — and never
@@ -108,12 +129,16 @@ item, quoting the tool result — not an essay):
    CROSSING obstacles: an XY segment that enters or leaves their box below the toolhead Z it
    demands is refused — at staging for procedures, at call time for direct moves. State a new
    one with `obstacle_top_z`: the top of the obstacle ITSELF, nothing about the tool. The server
-   adds how far the fitted tool hangs below the toolhead (the longest of the last tool-setter
-   measurement, `probe_effective_length` and `longest_bit_length_mm` — a measurement only ever
-   lengthens the requirement) plus a 5 mm margin. With the touch probe fitted, a 250 mm-high
-   obstacle still demands 328; with a 2 mm engraving bit it demands 257, and that is where the
-   machine gets its working room back. If NOTHING is known about the tool, a physically stated
-   obstacle is impassable rather than passable — state a tool length. Legacy `clearance_z`
+   adds a verified current toolhead-reference clearance bound plus a 5 mm margin. A measured
+   setter datum with bounded uncertainty can establish it for the measured fitting; a nominal
+   setter convention cannot. Without a current bound, only an explicitly configured conservative
+   maximum for allowable tools (`toolhead_clearance_bound`) supplies the fallback. Collet
+   protrusion, `probe_effective_length` and `longest_bit_length_mm` are not that bound.
+   `run_tool_setter` records the new fitting and reports old → new; inspect its clearance basis.
+   Restart, detected disconnect/reboot and tool-change parking make fitted-tool assertions stale.
+   Home alone does not prove tool identity. If the reference/bound is unknown, physically stated
+   obstacles refuse. Never reinterpret a conventional survey height as a bed-measured obstacle
+   height; retain its original datum. Legacy `clearance_z`
    records are toolhead heights with a tool already baked in and are enforced exactly as before;
    `get_stored_state.landmarkClearances` lists which ones still want re-stating. A hop passes
    because it is at or above the requirement (equal passes), never because it is exempt; an
@@ -136,7 +161,17 @@ item, quoting the tool result — not an essay):
    ruling, 2026-09-21): `home` — homing is safe: Z rises first, then every axis to its switch,
    B included; it still needs the operator's explicit word (law 1) and a reliable position
    unless they explicitly demand the stale-position exception (§3), and you say the stock will turn before calling it — and `move_and_capture`, the
-   ≤ 100 mm vision nudge, which is Z-gated inside the tool (law 7). Everything else that moves
+   ≤ 100 mm vision nudge, which is Z-gated inside the tool (law 7). **A third case is the
+   top-Z transport policy** (operator ruling 2026-10-17, issue #241; setting
+   `mcpTraverseWithoutApprovalAtSafeZ`, default on): `traverse_xy`, the XY step of
+   `goto_tool_change_position` (its no-op Z step skipped) and an UP-only `move_z` to no higher
+   than the traverse height run on the call when the position of record is verified/heartbeat,
+   the machine is homed, the head is ALREADY at or above `mcpSafeTraverseZ` (328) and the route
+   passed the landmark and travel checks. The job record still exists (dashboard, log, timing,
+   `stop_gcode_job`), marked `approval.source: "policy"`; the result says
+   `executed_without_approval: true`. Any other transport — below the top, a cached or stale
+   position, a landmark above the head, a Z that descends — stages a page exactly as before, and
+   the result's `staged_because` tells you which condition failed. Everything else that moves
    the head reaches the operator as a page. **Order:
    stage → deliver the confirm URL as the LAST LINE of your message, alone, plain, one
    sentence above it saying what they are approving, no tool call after it in the same turn
@@ -172,6 +207,23 @@ item, quoting the tool result — not an essay):
    contact for the touchscreen wizard and retreats nowhere.
 
 ## 2. Coordinate doctrine
+
+### Confirm pages and calls
+
+| Calls | Confirm page? | Axis motion? |
+|---|---|---|
+| Transport/Z, `goto_*`, file jobs, probe procedures, `run_tool_setter`, `survey_bed`, both bootstrap stages, `camera_program` | One per staged job, then `start_gcode_job` | Yes; ordinary MCP transport/procedures require homed state |
+| `traverse_xy` / `goto_tool_change_position` XY step / UP-only `move_z` with the head already at or above the traverse height on a verified homed position, route checked (`mcpTraverseWithoutApprovalAtSafeZ` on, the default) | No; runs on the call, job record marked approved by policy (law 6) | Yes, XY at the top or Z straight up; otherwise it stages as the row above |
+| `set_workspace_origin`, `select_workspace`, `apply_tool_length_offset` | One | No; homed state required |
+| `home` | No; explicit operator word | Yes, Z first and B to 0 |
+| `move_and_capture` / a moving `visual_servo` step | No; explicit operator word | Yes, bounded vision correction; Z gate remains mandatory |
+| Captures, previews, stored-frame/index reads, `set_active_tool`, camera selection, model store/verification, `plan_view_pose`, geometry/landmark recording | No | No |
+| `restore_work_frame` | No | No; selects G90/G54 |
+
+Count confirm pages, not tool calls. A `probe_program {dry_run: true}` validates/estimates but
+does not stage or move. A complete sequence whose bounds and clearances are known uses one
+program and one approval, not one page per internal step. Read-only inspection needs no calibration.
+For camera work start with [cnc-camera-operations](../cnc-camera-operations/SKILL.md).
 
 **Two frames exist on the controller.** `G53` selects the MACHINE frame (home = X−19 Y342
 Z328); `G54`–`G59.3` select numbered WORK workspaces whose origin the operator sets. The
@@ -235,16 +287,26 @@ X −19…339, Y 0…342, Z 0…328. The server ignores such a beat (§3); you n
 with a move, subtract an offset to make it fit, or reinterpret its frame. Plan stations near an
 edge (Y340 is 2 mm from the limit) with the margin said aloud.
 
-**Numbers carry their qualifiers or they are not numbers.** Every height states: frame
-(machine), **toolhead Z vs physical surface** (surface = contact Z − probe or tool length), the
-tool fitted, the B angle for anything on the rotary, and the date. **Probe length**: an operator
-naming a length in chat tells you WHICH probe is fitted, not its calibration — read
-`get_stored_state → geometry.probe.effectiveLength`. It is normally set — plan on the stored
-value and do not budget an approval for measuring it. Only after you have READ an empty store do
-you add one measurement (`run_tool_setter accept_probe_contact`, then `set_probe_geometry`,
-§8) and announce it; if store and operator disagree by more than 0.3 mm, ask before converting
-anything. The same subtraction gives a cutting tool's surface height: contact Z − fitted tool
-length, in machine Z. Figures remembered from text (71.1, 71.2, 71.3) are historical.
+**Numbers carry their qualifiers or they are not numbers.** Every height states its frame,
+raw toolhead Z or projected tip Z, setter datum and provenance, tool/fitting, B angle for rotary
+work, date and uncertainty. A nominal reference convention is internally usable but is not an
+independently verified physical machine plane.
+
+**Raw setter triggers, tip coordinates and clearance bounds are different evidence.**
+`get_tool_setter_config` / `get_stored_state` expose the raw setter measurements, named datum
+and provenance. A result's `tipMachineZ` is `toolheadZ − (setterTriggerZ − setterDatumZ)`;
+read its `tipCalibration` snapshot, including applicability and `physicalReferenceVerified`.
+A null projection leaves the raw contact intact; recover the original evidence before proposing
+new measurement. Never apply today's datum to an old contact that lacks that datum snapshot.
+
+Historical `geometry.probe.effectiveLength` is a legacy conversion offset, not an observable
+collet-to-tip length. Keep applicable old surveys in their recorded convention. A 45 mm collet
+measurement neither replaces a 70.9 mm setter offset nor proves that offset wrong. Do not ask
+for an unqualified "probe length" or repeat a survey merely to rename its provenance.
+Clearance uses the independently established bound in law 4; setter approach estimates establish
+neither that bound nor contact calibration. Setter and stylus contacts can have different pretravel:
+verify the contact-method difference before transferring a cutting Z0; read
+[tool-change](../tool-change/SKILL.md). Never invent a correction from an old pretravel estimate.
 
 ## 3. Position of record — what `get_position` means
 
@@ -258,6 +320,10 @@ The MCP keeps ONE judged machine position. Read it; never compute your own from 
 | `awaiting-resync` | The beat was REJECTED (out of bounds, frame-flip signature, or no offset yet) and the record is held at the last accepted position with its age | **refused** by every motion tool |
 | `heartbeat` + `frame: machine-frame` | Three consecutive beats read as a legal MACHINE position while the work reading was impossible: the controller is stuck in the machine workspace. The raw fields ARE the position | allowed — but the work coordinates and the offset are not to be trusted until `restore_work_frame` |
 | `stale` | No report for > 10 s (period 2 s) — the connection has likely dropped unnoticed | **refused**, except user-demanded homing below — recover the session and re-verify |
+
+“Allowed” in this table describes position reliability only. A frame-uncertainty latch, active
+job, competing command lease, alarm or other motion precondition can still refuse the operation;
+a fresh/reliable position does not clear a latch or grant command ownership.
 
 **A stale connection is not a pairing request.** Diagnose through MCP: `get_connection_status`,
 `get_position`, `get_mcp_diagnostics`, then `query_firmware_position` (`M114`) for a fresh
@@ -311,7 +377,9 @@ every beat carries machine coordinates with the work-origin offset still populat
 offset` is impossible, and no amount of waiting fixes it. The server recognises that after
 three such beats and says so in `reasons`, reporting `frame: machine-frame` and using the raw
 fields as the machine position. **The remedy is `restore_work_frame`**: `G90` and `G54`, no
-axis word, permitted precisely because the position is incoherent. A re-home is NOT the remedy,
+axis word, permitted despite incoherent position only when the machine is idle, no active job
+owns the controller and no competing command lease is held. If those conditions are absent,
+report the owner/job and wait; do not force a restore during its work. A re-home is NOT the remedy,
 though it happens to work — it emits a `G54` on the way.
 
 **Frame hygiene stops it happening.** Every machine-frame job hands the frame back: `G53` on its
@@ -333,7 +401,11 @@ start position — expect it, do not act on it.
   consecutive stations): `guarded` retracts to **LAST CONTACT + `z_safe_delta_mm`** (cap 20,
   min 3) and hops in ≤ 10 mm sensor-checked segments; contact is a COLLISION. `stepped` uses
   **LAST CONTACT + `hop_lift_mm`** (default 2, 0.5–10 mm), then touch-probing links that back
-  off and lift on contact, subject to release and lift-contact checks. Either mode limits
+  off and lift on contact, subject to release and lift-contact checks. For a bounded surface
+  survey, the operator's 0.5 mm local lift is within this envelope; it never lowers ordinary
+  transport clearance. Surface adaptive confirmation can use a separate release-verified
+  `backoff_mm: 0.2` retouch when height varies; see the probing skill for uncertainty controls.
+  Either mode limits
   station spacing to `max_hop_mm` (cap 60); these bounds cannot be exceeded by inference.
   Choose by the height change between consecutive stations, not by the surface's name: spacing × steepest
   credible slope ≪ `z_safe_delta_mm` → `guarded`; a station may sit more than `z_safe_delta_mm`
@@ -356,8 +428,15 @@ start position — expect it, do not act on it.
   (outside circles use full-height repositioning). Use each procedure's entry conditions,
   limits and recovery policy; none grants an arbitrary low XY move. See `cnc-probing`'s
   [planning reference](../cnc-probing/references/planning.md).
-- **Composition boundary:** `probe_sequence` returns to each probe's start and raises after
-  every probe, including continuing misses. `probe_program` references and groups share
+- **Composition boundary:** by default `probe_sequence` returns to each probe's start and raises
+  after every probe, including continuing misses. **Opt-in local links** (issue #242,
+  2026-10-17): `probe_sequence {local_links: {clearance_z, max_hop_mm?}}` is a sanctioned
+  envelope of its own — the operator approves, on the one page, hops between stations at a
+  stated toolhead machine Z (a measured top + 3–5 mm; in a program a bounded reference to an
+  earlier top touch), each ≤ `max_hop_mm` (cap 60, split longer links with an extra hop step),
+  checked at staging against every landmark and keep-out at that height; after a march the probe
+  retreats to its start and the next hop raises only to max(clearance, where it is); the first
+  hop and the final exit are at the traverse height. `probe_program` references and groups share
   measurements/approval, not a low position between ops: each successful probing op ends
   raised. Prefer related stations within a suitable continuous op. Ordinary calls split into
   ≤1 mm increments are not a substitute for a sanctioned probing envelope.
@@ -372,10 +451,13 @@ start position — expect it, do not act on it.
 - **`apply_tool_length_offset`** — the sanctioned tool-change origin adjustment: a single `G92` shifting
   work Z by (new − old) trigger height, what the touchscreen wizard does after its two operator
   confirmations. Requires a reliable position and a measurement pair from this connection.
-- **`operator_confirmed_clearance`** — on `move_and_capture` only: skips the homed-first guard
-  and the raise-to-park-height gate, so the XY runs at the CURRENT Z in the corridor the operator
-  named. Only on the operator's explicit words, in an emergency; an unknown Z is refused even
-  then. `goto_work_origin` has no such switch — its confirm page is the operator's word.
+- **`operator_confirmed_clearance`** — only where the schema exposes it: standalone
+  `move_and_capture` and `survey_bed`, or an individual `survey_bed`/`move_and_capture` camera
+  program op. Never set a program-wide exception. On the direct move it skips homed-first,
+  but the park-height Z gate remains: a lower head still raises before XY. Staged camera
+  exceptions permit only their explicitly cleared heights and retain the other preconditions. Use only the operator's explicit clearance for
+  that operation, never inferred permission. It does not remove stored obstacles or make an
+  unknown Z safe. `goto_work_origin` has no such switch.
 
 ## 5. Vocabulary (operator-defined)
 
@@ -391,10 +473,12 @@ start position — expect it, do not act on it.
 - **Park height** (a.k.a. traverse height) = `mcpSafeTraverseZ` = machine Z328: where procedures
   perform ordinary transfers and finish; local links use §4 and aborts use law 8.
   `get_stored_state.limits` reports both.
-- **Toolhead Z** = the Z the heartbeat reports for the head; **physical / surface height** =
-  toolhead Z at contact minus the probe (or tool) length.
-- **`bit_length_mm`** (tool setter) = the fitted tool's PROTRUSION from the collet in mm — a
-  length, never a diameter.
+- **Toolhead Z** = the Z the heartbeat reports for the head. **Tip machine Z** is the
+  datum-qualified projection supplied alongside raw contact Z; it is not a toolhead target.
+- **`bit_length_mm`** (legacy setter argument) = approach-only estimate in the configured
+  nominal reference convention. It is neither cutting diameter nor arbitrary collet-to-tip
+  caliper distance. Use applicable setter history/reference evidence; do not guess it low or high.
+  The raw trigger measurement, not this estimate, establishes the new recorded contact.
 - **Camera pose for the board** = pre-home park (machine X0 Y0), not machine home.
 
 ## 6. Recording rules
@@ -451,8 +535,11 @@ turns: the staging result's `confirm_url` goes to the operator FIRST (last line,
 the start call waits in the background afterwards or takes their pasted code.
 
 ```jsonc
-// Transport at the traverse height (default frame machine; series form: "targets": [{"x","y"}, ...])
+// Transport at the traverse height (default frame machine; series form: "targets": [{"x","y"}, ...]).
+// Head already at/above Z328 on a verified homed position + mcpTraverseWithoutApprovalAtSafeZ on (default):
+// the call EXECUTES the move (result executed_without_approval: true) - no page, no start_gcode_job.
 traverse_xy {"x": 290, "y": 105, "coordinate_system": "machine", "reason": "..."}
+// Otherwise (below the top, cached/stale position, setting off) the same call stages one approval:
 start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}
 // Work origin: XY to work (0, 0) at the current Z, STAGED - the page shows the MACHINE destination
 goto_work_origin {"reason": "..."}
@@ -460,8 +547,17 @@ start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}
 // Machine home runs ON THE CALL - no confirm page, no start_gcode_job (operator ruling 2026-09-21: safe).
 // Needs the operator's explicit word (law 1) and a reliable position; homes B too - say the stock will turn.
 home {}
-// Z, one operator-confirmed step per target
+// Z, one operator-confirmed step per target. An UP-only move to no higher than Z328 runs on the call
+// under the same setting (executed_without_approval: true); anything that descends stages.
 move_z {"z": 328, "coordinate_system": "machine", "reason": "..."}
+start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}
+// Probe sequence with LOCAL LINKS (§4): stations linked at a stated machine Z instead of Z328 between marches.
+// In a probe_program, clearance_z may be {"from": "tops.top.z", "plus": 4, "between": [200, 215]}.
+probe_sequence {"reason": "...", "local_links": {"clearance_z": 208.4, "max_hop_mm": 60},
+  "steps": [{"kind": "hop", "x": 100, "y": 100}, {"kind": "descend", "z": 203},
+            {"kind": "probe", "name": "w", "dx": 1, "max_travel_mm": 10},
+            {"kind": "hop", "x": 150, "y": 100}, {"kind": "descend", "z": 203},
+            {"kind": "probe", "name": "e", "dx": -1, "max_travel_mm": 10}]}
 start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}
 // Offline thread-milling conversion: only after verifying the declarations and actual head.
 // This RPM example requires the 200 W head; standard-head percentage arguments are in cnc-thread-milling.
@@ -474,13 +570,13 @@ submit_gcode_job {"gcode": "<file text>", "name": "pocket.nc", "frame": "work"}
 start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}
 // Poll any running job to its end; ending.kind says why it ended
 get_gcode_job_status {"job_id": "<id>", "wait_ms": 110000, "since_event": <next_event_index>}
-// Tool setter: bit_length_mm is the fitted tool's protrusion (a length, never a diameter)
+// Tool setter: bit_length_mm is an approach-only estimate in the configured reference convention
 run_tool_setter {"bit_length_mm": 40, "reason": "..."}
 start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}
-// Measure the touch probe itself (only after reading an EMPTY store), then record it
+// Measure the fitted probe only if applicable saved evidence is missing/invalidated
 run_tool_setter {"bit_length_mm": 70, "accept_probe_contact": true, "reason": "..."}
 start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}
-set_probe_geometry {"probe_effective_length": 71.28, "reason": "run_tool_setter job <id>, 2026-09-14"}
+// Read result.measurement and its datum snapshot; do not copy a remembered offset into geometry.
 // Tool change, flow A, step 4 of 4: shift work Z by new − old (defaults to the last two measurements)
 apply_tool_length_offset {"reason": "..."}            // or {"old_trigger_z": 100.5, "new_trigger_z": 98.2, "reason": "..."}
 start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}

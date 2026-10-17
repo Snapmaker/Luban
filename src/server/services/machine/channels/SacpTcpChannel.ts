@@ -38,6 +38,7 @@ class SacpTcpChannel extends SacpChannelBase {
         });
         this.client.on('close', () => {
             log.info('TCP connection closed');
+            this.bumpConnectionGeneration('TCP socket closed');
             const result = {
                 code: 200,
                 data: {},
@@ -48,6 +49,7 @@ class SacpTcpChannel extends SacpChannelBase {
         });
         this.client.on('error', (err) => {
             log.error(`TCP connection error: ${err}`);
+            this.bumpConnectionGeneration('TCP socket error');
         });
     }
 
@@ -70,6 +72,7 @@ class SacpTcpChannel extends SacpChannelBase {
                 log.info('TCP connected');
 
                 this.sacpClient = new SacpClient('tcp', this.client);
+                this.bumpConnectionGeneration('TCP session created');
 
                 const hostName = os.hostname();
                 log.info(`os hostname: ${hostName}`);
@@ -80,6 +83,7 @@ class SacpTcpChannel extends SacpChannelBase {
                     try {
                         const { response } = await this.sacpClient.wifiConnection(hostName, 'Luban', options.token, () => {
                             // disconnected
+                            this.bumpConnectionGeneration('Wi-Fi session dropped by the machine');
                             this.client.destroy();
                             if (this.client.destroyed) {
                                 log.info('TCP manually closed');
@@ -164,6 +168,7 @@ class SacpTcpChannel extends SacpChannelBase {
 
                             resolve(true);
                         } else {
+                            this.bumpConnectionGeneration('Wi-Fi session refused');
                             this.client.destroy();
                             if (this.client.destroyed) {
                                 log.info('TCP manually closed');
@@ -205,6 +210,7 @@ class SacpTcpChannel extends SacpChannelBase {
         // });
 
         const force = options?.force || false;
+        this.bumpConnectionGeneration(force ? 'TCP connection force-closed' : 'TCP connection closed');
 
         if (!force) {
             const { response } = await this.sacpClient.wifiConnectionClose();

@@ -1,6 +1,6 @@
 import { strict as assert } from 'assert';
 
-import { MotionSegment, ObstacleBox, POSITION_EPSILON_MM, checkMotion, describeViolations } from '../envelopeChecks';
+import { MotionSegment, ObstacleBox, POSITION_EPSILON_MM, checkMotion, describeViolations, isStraightZUp } from '../envelopeChecks';
 
 // The rotary-axis landmark as stored on the A350: X140-200 x Y0-350, clearance 328
 // (the box includes the tailstock, whose height is unmeasured).
@@ -13,6 +13,15 @@ function hop(z: number, fromX: number, toX: number, y = 105): MotionSegment {
 }
 
 export const tests: Array<[string, () => void]> = [
+    ['a straight Z-up exit is only XY-unchanged (within epsilon) and strictly rising', () => {
+        const from = { x: 170, y: 100, z: 300 };
+        assert.equal(isStraightZUp(from, { x: 170, y: 100, z: 301 }), true);
+        assert.equal(isStraightZUp(from, { x: 170 + POSITION_EPSILON_MM * 0.9, y: 100 - POSITION_EPSILON_MM * 0.9, z: 301 }), true);
+        assert.equal(isStraightZUp(from, { x: 170.2, y: 100, z: 301 }), false);
+        assert.equal(isStraightZUp(from, { x: 170, y: 100.06, z: 301 }), false);
+        assert.equal(isStraightZUp(from, { x: 170, y: 100, z: 300 }), false);
+        assert.equal(isStraightZUp(from, { x: 170, y: 100, z: 299 }), false);
+    }],
     ['a hop at 328 across the rotary footprint passes on its own merits (no exemption needed)', () => {
         const v = checkMotion([hop(328, 20, 290)], [ROTARY], { traverseZ: 328 });
         assert.deepEqual(v, []);

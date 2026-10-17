@@ -45,6 +45,8 @@ import {
     within,
 } from './procedureLimits';
 import { McpToolError } from './registry';
+import { TipCalibrationSnapshot, projectToolTipZ } from './toolDatum';
+import { getProbeTipCalibration } from './toolDatumState';
 import { probeGeometry } from './rotaryGeometry';
 import { assertWithinTravel, getPositionSnapshot, requirePlanningTravel, safeTraverseZ } from './tools/machine';
 import { TRAVERSE_Z_TOLERANCE_MM } from './traversePlan';
@@ -280,6 +282,7 @@ export interface WallFollowContact {
 }
 
 export interface WallFollowResult {
+    tipCalibration?: TipCalibrationSnapshot;
     tool: 'probe_wall_follow';
     zMachine: number;
     dir: Xy;
@@ -305,6 +308,7 @@ export interface WallFollowResult {
 
 export async function runProbeWallFollowProcedure(plan: ProbeWallFollowPlan): Promise<WallFollowResult> {
     assertMachineReadyForProcedure();
+    const tipCalibration = getProbeTipCalibration();
     assertChannelReady('probe', 'wall follow');
     const phases: { phase: string; note?: string }[] = [];
     const announce = makeAnnounce(plan.tool, phases);
@@ -324,8 +328,9 @@ export async function runProbeWallFollowProcedure(plan: ProbeWallFollowPlan): Pr
             zMachine: plan.zMachine,
             dir: plan.dir,
             along: plan.along,
-            contacts,
-            bumps,
+            tipCalibration,
+            contacts: contacts.map((r) => ({ ...r, ...projectToolTipZ(r.contactMachine?.z ?? null, tipCalibration) })),
+            bumps: bumps.map((r) => ({ ...r, ...projectToolTipZ(r.z, tipCalibration) })),
             fit,
             segments,
             tipDiameterMm: plan.tipDiameterMm,

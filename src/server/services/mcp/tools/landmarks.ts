@@ -8,7 +8,9 @@ import { Landmark, landmarkStore } from '../landmarks';
 import { probeFeedService } from '../probeFeed';
 import { McpToolError, ToolRegistry } from '../registry';
 import { GEOMETRY_FIELDS, geometrySettings, setGeometryValues } from '../rotaryGeometry';
-import { getToolSetterConfig } from '../toolSetter';
+import { getMeasurements, getToolSetterConfig } from '../toolSetter';
+import { describeActiveTool } from '../activeTool';
+import { currentSetterDatum, getProbeTipCalibration } from '../toolDatumState';
 import { currentToolProtrusion } from '../clearanceContext';
 import {
     CLEARANCE_MARGIN_MM,
@@ -18,6 +20,8 @@ import {
     restatementAdvice,
 } from '../landmarkClearance';
 import { motionFloorZ, readAppMachineSettings, safeTraverseZ } from './machine';
+import { vibrationCaptureService } from '../vibrationCaptures';
+import { vibrationFeedService } from '../vibrationFeed';
 
 // Named scene landmarks (#50) and the stored-state overview (#53): operator
 // knowledge captured once, surfaced every session, so no agent spends moves
@@ -139,8 +143,10 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
         name: 'set_probe_geometry',
         description: 'Store the jig/tool constants a rotary probe_program may reference as the "axis" namespace: '
             + 'rotary_axis_x (machine X of the axis line), rotary_axis_z_physical (PHYSICAL machine Z of the axis, '
-            + 'e.g. from an opposite-face pair: (topA + topB)/2 - probe length), probe_effective_length (toolhead Z at '
-            + 'contact minus this = surface; run_tool_setter accept_probe_contact measures it), probe_tip_diameter. '
+            + 'with its reference independently established), probe_effective_length (legacy contact-conversion '
+            + 'offset in the same documented datum convention as the stored axis), probe_tip_diameter. '
+            + 'Read saved raw setter triggers and datum provenance; a conventional offset is not a caliper length '
+            + 'or verified physical clearance bound. Legacy values are preserved without reinterpretation. '
             + 'Operator-stated or MEASURED values only, with the reason - like set_landmark. Omit a field to leave it; '
             + 'null clears it. None of these is a prerequisite for probing: only a program that references axis.* '
             + 'needs them; B0-only, stationary or off-rotary work needs nothing here. Stock size is never stored '
@@ -160,8 +166,11 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                     description: 'Machine Y of the chuck face. Also settles which end is which - "the non-chuck end" '
                         + 'stops being a guess.',
                 },
-                probe_effective_length: { type: ['number', 'null'], description: 'Probe effective length in mm (this fitting).' },
+                probe_effective_length: { type: ['number', 'null'], description: 'Legacy probe contact-conversion offset in mm for a documented fitting/datum convention; not a caliper length or physical clearance bound. Prefer saved setter trigger + named datum provenance.' },
                 probe_tip_diameter: { type: ['number', 'null'], description: 'Probe tip diameter in mm.' },
+                probe_stylus_exposed_mm: { type: ['number', 'null'], description: 'Measured exposed stylus length below the body for this fitting. Not overall protrusion. Bounds descents beside walls; reference probe.stylus_exposed_mm in probe_program.' },
+                probe_body_diameter_mm: { type: ['number', 'null'], description: 'Measured body diameter for checking rim/wall access, distinct from the ball. Reference probe.body_diameter_mm in probe_program.' },
+                bed_plane_z: { type: ['number', 'null'], description: 'Measured PHYSICAL machine Z of the bed for camera overlap/mosaics. Never toolhead height or a photo estimate. Does not describe raised workpieces.' },
                 travel_x_min: {
                     type: ['number', 'null'],
                     description: 'Machine X the toolhead can reach at the low end, for THIS rig. Unset = the machine '
@@ -247,6 +256,11 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                         toolProtrusionNote: protrusion.note,
                         clearanceMarginMm: CLEARANCE_MARGIN_MM,
                         onLegacyBasis: legacy.map((l) => l.name),
+                        legacyConsequences: legacy.map((l) => ({ name: l.name,
+                            machine: l.machine,
+                            requiredToolheadZ: l.clearanceZ,
+                            consequence: `Camera waypoints/pose stops below machine toolhead Z${l.clearanceZ} inside this box are dropped or refused; an active tool does not lower this legacy requirement.`,
+                            restatement: { tool: 'set_landmark', name: l.name, obstacle_top_z: '<measured physical top; never copy clearanceZ>', requires: 'Operator instruction and measured/stated physical height; keep the existing bounds.' } })),
                         note: legacy.length
                             ? `${legacy.length} obstacle(s) still state a TOOLHEAD height with some tool length baked `
                                 + 'in, so they are pinned wherever they were set. Re-state each with set_landmark '
@@ -289,9 +303,27 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                 installedModules: (readAppMachineSettings() || { modules: [] }).modules,
                 probeFeed: probeFeedService.status(),
                 toolSetter: getToolSetterConfig(),
+                setterDatum: currentSetterDatum(),
+                toolMeasurements: getMeasurements(),
+                activeTool: describeActiveTool(),
+                probeTipCalibration: getProbeTipCalibration(),
                 // Operator-measured jig/tool constants (Settings -> MCP Server ->
                 // Rotary and probe geometry); programs read them as `axis.*`.
                 geometry: geometrySettings(),
+                // Accelerometers: where each one is stuck, whether it streams,
+                // and the rotary chuck's gravity calibration (absolute B).
+                vibration: (() => {
+                    const feed = vibrationFeedService.status() as { enabled: boolean; state: string; sensors: Array<{ [key: string]: unknown }> };
+                    const rotary = vibrationCaptureService.rotaryCalibration();
+                    return {
+                        enabled: feed.enabled,
+                        state: feed.state,
+                        sensors: feed.sensors.map((sensor) => ({
+                            id: sensor.id, location: sensor.location, chip: sensor.chip, state: sensor.state, orientation: sensor.orientation,
+                        })),
+                        rotaryCalibration: rotary ? { sensorId: rotary.sensor_id, createdAt: rotary.created_at, reason: rotary.reason } : null,
+                    };
+                })(),
             };
         },
     });

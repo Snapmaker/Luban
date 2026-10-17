@@ -130,11 +130,23 @@ export interface PositionOfRecord {
      * verified X174, the next beat - stamped 750 ms later - still read X178).
      */
     previousMachine: Xyz | null;
+    /**
+     * In which frame the report that set this record was read (matchFrame):
+     * an echo taken inside a G53 window is 'machine-frame'. Estimates have
+     * none. The frame latch is cleared only by a 'work-frame' record.
+     */
+    frame?: 'work-frame' | 'machine-frame';
 }
 
 let record: PositionOfRecord | null = null;
 
-export function setPositionOfRecord(machine: Xyz, source: PositionSource, sequence: number, tool: string): PositionOfRecord {
+export function setPositionOfRecord(
+    machine: Xyz,
+    source: PositionSource,
+    sequence: number,
+    tool: string,
+    frame?: 'work-frame' | 'machine-frame'
+): PositionOfRecord {
     const previousMachine = record ? { ...record.machine } : null;
     record = {
         machine: { x: machine.x, y: machine.y, z: machine.z },
@@ -143,6 +155,7 @@ export function setPositionOfRecord(machine: Xyz, source: PositionSource, sequen
         sequence,
         tool,
         previousMachine,
+        ...(frame ? { frame } : {}),
     };
     return record;
 }
@@ -259,6 +272,22 @@ export function matchFrameWithOffsets(
     return null;
 }
 
+/**
+ * Judge an M114 reply after a no-motion G90/G54 restore (the pendant's
+ * zero-segment run): the machine position it proves, or null. Only a WORK-frame
+ * reading counts (2026-10-05 review): a reply that matches `expected` only as
+ * raw machine coordinates is exactly what a controller still in G53 would say.
+ * With a ~0 offset the two readings coincide and matchFrame already reports
+ * work-frame - nothing can tell them apart then, and nothing claims to.
+ */
+export function judgeRestoredEcho(echo: NullableXyz, offsets: Xyz[], expected: Xyz, toleranceMm: number): Xyz | null {
+    const match = matchFrameWithOffsets(echo, offsets, expected, toleranceMm);
+    if (!match || match.frame !== 'work-frame') {
+        return null;
+    }
+    return completeTarget(machineFromReport(echo, match.offset, match.frame), expected);
+}
+
 // The engine's own trusted work-origin offset: the offset that last made a
 // controller echo (or a settled heartbeat) agree with a commanded machine
 // target. Independent of the per-beat heartbeat value, which reads (0,0,0)
@@ -369,4 +398,105 @@ export function describeReport(raw: NullableXyz, offset: Xyz, offsetSource: stri
     const w = machineFromReport(raw, offset, 'work-frame');
     return `raw (${raw.x}, ${raw.y}, ${raw.z}) with offset (${offset.x}, ${offset.y}, ${offset.z}) from ${offsetSource}`
         + ` -> as work-frame machine (${w.x}, ${w.y}, ${w.z}); as machine-frame (${raw.x}, ${raw.y}, ${raw.z})`;
+}
+
+// Frame-uncertainty latch: the ONE record that the controller may still have
+// the machine workspace (G53) selected. It is raised by whoever may have
+// selected G53 and not proven it handed back: the USB pendant's queued run
+// (BEFORE its G53 goes out, so a lost reply still counts), the failed-call
+// cleanup hook (failureRecovery.ts) for a tool, runner or file job that may
+// have left G53, and the persisted copy on a Luban restart. While set it
+// refuses motion through requireReliableMachine (tools/machine.ts), refuses
+// pendant arming, shows in get_position warnings and diagnostics, and IS the
+// gcode lease's recovery hold (machine/gcodeLease.ts reads it directly). It
+// clears only after an acknowledged G54 / G90+G54 restore (noteFrameRestored)
+// AND a verified fresh position taken after it - the same path for every
+// raiser, through getPositionSnapshot.
+export interface FrameLatch {
+    reason: string;
+    since: number;
+    /** When a work-frame restore was last acknowledged; null until then. */
+    restoredAt: number | null;
+}
+
+/** A heartbeat must be received this long after the restore to count as sampled after it. */
+export const FRAME_LATCH_BEAT_MS = 1000;
+
+let frameLatch: FrameLatch | null = null;
+
+// Listeners: tools/machine.ts persists the latch across Luban restarts; the
+// pendant releases its held crash guard when the latch clears. Every change
+// (raised, restore acknowledged, cleared) is reported.
+type FrameLatchListener = (latch: FrameLatch | null) => void;
+const frameLatchListeners = new Set<FrameLatchListener>();
+
+/**
+ * Subscribe to latch changes; returns the unsubscribe. `null` removes every
+ * listener (test fixtures that reload the modules that subscribe).
+ */
+export function onFrameLatchChange(listener: FrameLatchListener | null): () => void {
+    if (!listener) {
+        frameLatchListeners.clear();
+        return () => undefined;
+    }
+    frameLatchListeners.add(listener);
+    return () => { frameLatchListeners.delete(listener); };
+}
+
+function notifyFrameLatch(): void {
+    for (const listener of [...frameLatchListeners]) {
+        try {
+            listener(frameLatch ? { ...frameLatch } : null);
+        } catch (err) {
+            // A listener failure never leaves the latch itself in doubt.
+        }
+    }
+}
+
+export function latchFrameUncertain(reason: string, now: number = Date.now()): void {
+    frameLatch = { reason, since: now, restoredAt: null };
+    notifyFrameLatch();
+}
+
+export function noteFrameRestored(now: number = Date.now()): void {
+    if (frameLatch) {
+        frameLatch.restoredAt = now;
+        notifyFrameLatch();
+    }
+}
+
+export function getFrameLatch(): FrameLatch | null {
+    return frameLatch ? { ...frameLatch } : null;
+}
+
+export function clearFrameLatch(): void {
+    if (frameLatch) {
+        frameLatch = null;
+        notifyFrameLatch();
+    }
+}
+
+/**
+ * Pure: whether this evidence verifies a fresh position after the restore. A
+ * controller-verified arrival (echo or settled heartbeat, not an estimate)
+ * recorded after the restore AND read in the WORK frame, or an accepted
+ * work-frame beat with a reported offset received at least FRAME_LATCH_BEAT_MS
+ * after it. The frame requirement on the record matters (2026-10-05 review):
+ * the pendant's settle writes its echo record after the G54 reply, but that
+ * echo was read inside the G53 window as 'machine-frame' - it proves the
+ * arrival, not the workspace. A record with no frame never clears the latch.
+ */
+export function frameLatchVerified(
+    latch: FrameLatch,
+    rec: PositionOfRecord | null,
+    beat: { accepted: boolean; frame: string; offsetSource: string; reportedAt: number; declaredRun: boolean }
+): boolean {
+    if (latch.restoredAt === null) {
+        return false;
+    }
+    if (rec && rec.source !== 'estimated' && rec.frame === 'work-frame' && rec.at >= latch.restoredAt) {
+        return true;
+    }
+    return beat.accepted && !beat.declaredRun && beat.frame === 'work-frame' && beat.offsetSource === 'heartbeat'
+        && beat.reportedAt >= latch.restoredAt + FRAME_LATCH_BEAT_MS;
 }

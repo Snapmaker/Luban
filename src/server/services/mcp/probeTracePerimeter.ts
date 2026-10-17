@@ -62,6 +62,8 @@ import {
     within,
 } from './procedureLimits';
 import { McpToolError } from './registry';
+import { TipCalibrationSnapshot, projectToolTipZ } from './toolDatum';
+import { getProbeTipCalibration } from './toolDatumState';
 import { probeGeometry } from './rotaryGeometry';
 import { assertWithinTravel, getPositionSnapshot, requirePlanningTravel, safeTraverseZ } from './tools/machine';
 import { TRAVERSE_Z_TOLERANCE_MM } from './traversePlan';
@@ -349,6 +351,7 @@ export function describeProbeTracePlanAsGcode(plan: ProbeTracePlan): string {
 }
 
 export interface TraceProcedureResult {
+    tipCalibration?: TipCalibrationSnapshot;
     tool: 'probe_trace_perimeter';
     zMachine: number;
     /** The crawl's result; each perimeter point's normal and surface come from the local wall geometry (#183), not the crawl heading. */
@@ -373,6 +376,7 @@ export interface TraceProcedureResult {
 
 export async function runProbeTracePerimeterProcedure(plan: ProbeTracePlan): Promise<TraceProcedureResult> {
     assertMachineReadyForProcedure();
+    const tipCalibration = getProbeTipCalibration();
     assertChannelReady('probe', 'perimeter trace');
     const phases: { phase: string; note?: string }[] = [];
     const announce = makeAnnounce(plan.tool, phases);
@@ -405,10 +409,13 @@ export async function runProbeTracePerimeterProcedure(plan: ProbeTracePlan): Pro
         return {
             tool: plan.tool,
             zMachine: z,
+            tipCalibration,
             // `trace` is the crawl's own result - complete, or the partial one an
             // abort carried (T8 lost 67 contacts here). The empty shape below is
             // only for an abort before the crawl started (the approach).
-            trace: trace && analysis ? { ...trace, perimeter: analysis.perimeter } : {
+            trace: trace && analysis ? {
+                ...trace, perimeter: analysis.perimeter.map((r) => ({ ...r, toolheadMachineZ: z, ...projectToolTipZ(z, tipCalibration) })),
+            } : {
                 perimeter: [],
                 closed: false,
                 ending: { kind: 'aborted', note: 'aborted before the crawl started (approach or first-wall march)' },

@@ -73,6 +73,8 @@ import {
 } from './procedureLimits';
 import { McpToolError } from './registry';
 import { probeGeometry } from './rotaryGeometry';
+import { projectToolTipZ } from './toolDatum';
+import { getProbeTipCalibration } from './toolDatumState';
 import { assertWithinTravel, getPositionSnapshot, requirePlanningTravel, safeTraverseZ } from './tools/machine';
 import DataStorage from '../../DataStorage';
 import { TRAVERSE_Z_TOLERANCE_MM } from './traversePlan';
@@ -553,6 +555,7 @@ function emptyRecord(base: RecordBase, status: ProbeResultRecord['status'], bloc
 export async function runProbeCamProcedure(plan: ProbeCamPlan, jobId: string | null): Promise<ProbeCamResult> {
     assertMachineReadyForProcedure();
     assertChannelReady('probe', 'CAM probing program');
+    const tipCalibration = getProbeTipCalibration();
     const phases: { phase: string; note?: string }[] = [];
     const announce = makeAnnounce(plan.tool, phases);
     const tag = 'cam';
@@ -572,12 +575,13 @@ export async function runProbeCamProcedure(plan: ProbeCamPlan, jobId: string | n
             jobId,
             startedAt,
             endedAt: Date.now(),
-            frame: { originOffset: offset, convention: 'work = machine + originOffset; contacts are tip REFERENCE points (stylus-centre XY, stylus-bottom Z)' },
+            frame: { originOffset: offset, convention: 'contactMachine is raw toolhead XYZ; contactWork = contactMachine + originOffset (unchanged WCS touch-off); tipMachineZ is a separate datum-derived tip-bottom projection' },
             tipDiameterMm: plan.tipDiameterMm,
             tipConvention: TIP_CONVENTION,
             results: plan.parsed.results,
-            probes: records,
-            linkContacts,
+            tipCalibration,
+            probes: records.map((record) => ({ ...record, ...projectToolTipZ(record.contactMachine?.z ?? null, tipCalibration) })),
+            linkContacts: linkContacts.map((record) => ({ ...record, ...projectToolTipZ(record.contactMachine.z, tipCalibration) })),
             summary: {
                 total: plan.parsed.probeCount,
                 contacts,

@@ -1,7 +1,10 @@
 /* eslint-disable camelcase */
 // MCP tool arguments are snake_case by convention.
 import { connectionManager } from '../../machine/ConnectionManager';
+import { describeActiveTool, getActiveTool, invalidateActiveTool, setActiveTool } from '../activeTool';
 import { jobManager } from '../jobs';
+import { SetterDatum, parseSetterDatum } from '../toolDatum';
+import { currentSetterDatum } from '../toolDatumState';
 import { probeFeedService } from '../probeFeed';
 import { McpToolError, ToolRegistry } from '../registry';
 import {
@@ -12,31 +15,63 @@ import {
     runToolSetterProcedure,
     setToolSetterConfig,
 } from '../toolSetter';
-import { MAX_TOOL_LENGTH_DELTA_MM, TOOL_SETTER_FLOOR_MARGIN_MM, within } from '../procedureLimits';
+import { MAX_TOOL_LENGTH_DELTA_MM, TOOL_SETTER_FLOOR_MARGIN_MM, TRAVERSE_FEED, within } from '../procedureLimits';
+import { clearanceOptions } from '../clearanceContext';
+import { landmarkStore } from '../landmarks';
+import { decideSafeZTraverse } from '../safeZPolicy';
+import { TRAVERSE_Z_TOLERANCE_MM, planTraverseXy } from '../traversePlan';
+import { runPolicyApprovedDirectJob } from './gcode';
 import { validateStagedEnvelope } from './staging';
-import { getPositionSnapshot, machinePositionDiagnostics, requireReliableMachine } from './machine';
+import {
+    getPositionSnapshot,
+    machinePositionDiagnostics,
+    requirePlanningTravel,
+    requireReliableMachine,
+    safeTraverseZ,
+    traverseWithoutApprovalAtSafeZ,
+} from './machine';
 
 export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUrl: () => string): void {
     registry.register({
         name: 'set_tool_setter_config',
         description: 'Store the tool setter reference: its centre in MACHINE coordinates, the machine '
-            + 'Z at which a known bit triggers it, that bit\'s length, and the longest bit in use. All '
+            + 'Z at which a reference fitting triggers it and nominal approach lengths in that same convention. All '
             + 'values come from the OPERATOR (or a store_as_reference run) - never from visual '
             + 'estimation. The expected trigger Z for any bit follows as '
-            + 'triggerZ + (bit length - reference length).',
+            + 'triggerZ + (approach length - reference approach length). A named setter_datum and independent '
+            + 'toolhead_clearance_bound are separate from these approach estimates.',
         inputSchema: {
             type: 'object',
             properties: {
                 center_x: { type: 'number', description: 'Machine X of the setter centre.' },
                 center_y: { type: 'number', description: 'Machine Y of the setter centre.' },
                 trigger_z: { type: 'number', description: 'Machine Z at trigger with the reference bit.' },
-                reference_bit_length_mm: { type: 'number', description: 'Protrusion of the reference bit, mm.' },
+                reference_bit_length_mm: { type: 'number', description: 'Nominal reference length for approach planning, mm; not independently calibrated geometry.' },
+                setter_datum: {
+                    type: 'object',
+                    description: 'Explicit named coordinate datum. Omission preserves the existing datum; legacy references are labelled conventional, not physically verified.',
+                    properties: {
+                        id: { type: 'string' },
+                        name: { type: 'string' },
+                        machine_z: { type: 'number' },
+                        basis: { type: 'string', enum: ['measured', 'legacy_reference_convention'] },
+                        source: { type: 'string', description: 'Measurement/evidence establishing this datum and its physical reference; never an approach estimate.' },
+                        uncertainty_mm: { type: 'number', minimum: 0, description: 'Bound including datum setup and sensor-trigger effects; required for measured basis.' },
+                    },
+                    required: ['id', 'name', 'machine_z', 'basis', 'source'],
+                    additionalProperties: false,
+                },
                 disc_diameter_mm: {
                     type: 'number',
                     description: 'Diameter of the setter\'s contact disc, if measured. Nothing here needs it; the '
                         + 'camera bootstrap uses it as an absolute scale reference in a frame.',
                 },
-                longest_bit_length_mm: { type: 'number', description: 'Longest bit in use, mm - sets the safe start height.' },
+                longest_bit_length_mm: { type: 'number', description: 'Largest nominal approach length in use, in the approach reference convention; sets start height, never physical clearance.' },
+                toolhead_clearance_bound: { type: ['object', 'null'],
+                    description: 'Optional independent conservative maximum below the machine toolhead reference; never collet protrusion. Omit to preserve; null clears.',
+                    properties: { mm: { type: 'number', exclusiveMinimum: 0 }, source: { type: 'string' } },
+                    required: ['mm', 'source'],
+                    additionalProperties: false },
                 floor_margin_mm: { type: 'number', description: 'Allowed descent below the expected trigger Z, default 3.' },
                 tool_change_x: { type: 'number', description: 'Machine X of the tool-change park position (operator preference).' },
                 tool_change_y: { type: 'number', description: 'Machine Y of the park position; omit if Y does not matter.' },
@@ -51,8 +86,10 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
             center_y?: number;
             trigger_z?: number;
             reference_bit_length_mm?: number;
+            setter_datum?: { id: string; name: string; machine_z: number; basis: SetterDatum['basis']; source: string; uncertainty_mm?: number };
             disc_diameter_mm?: number;
             longest_bit_length_mm?: number;
+            toolhead_clearance_bound?: { mm: number; source: string } | null;
             floor_margin_mm?: number;
             tool_change_x?: number;
             tool_change_y?: number;
@@ -67,7 +104,7 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
                 longestBitLengthMm: Number(args.longest_bit_length_mm),
                 discDiameterMm: args.disc_diameter_mm === undefined ? undefined : Number(args.disc_diameter_mm),
             };
-            if (Object.values(numbers).some((v) => !Number.isFinite(v))) {
+            if (Object.values(numbers).some((v) => v !== undefined && !Number.isFinite(v))) {
                 throw new McpToolError('All coordinates and lengths must be finite numbers.');
             }
             if (numbers.referenceBitLengthMm <= 0 || numbers.longestBitLengthMm < numbers.referenceBitLengthMm - 0.001) {
@@ -78,6 +115,26 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
                 throw new McpToolError(`floor_margin_mm must be ${TOOL_SETTER_FLOOR_MARGIN_MM.min}-${TOOL_SETTER_FLOOR_MARGIN_MM.max}.`);
             }
             const existing = getToolSetterConfig();
+            let datum = currentSetterDatum();
+            if (args.setter_datum !== undefined) {
+                const input = args.setter_datum;
+                datum = parseSetterDatum({ id: String(input.id || '').trim(),
+                    name: String(input.name || '').trim(),
+                    machineZ: input.machine_z,
+                    basis: input.basis,
+                    source: String(input.source || '').trim(),
+                    uncertaintyMm: input.uncertainty_mm ?? null,
+                    at: Date.now() });
+                if (!datum || (datum.basis === 'measured' && datum.uncertaintyMm === null)) {
+                    throw new McpToolError('setter_datum requires a name/id, finite machine_z, source and valid basis; measured datum also requires a nonnegative uncertainty_mm bound.');
+                }
+            }
+            const toolheadClearanceBound = args.toolhead_clearance_bound === undefined
+                ? existing?.toolheadClearanceBound : args.toolhead_clearance_bound;
+            if (toolheadClearanceBound && (!Number.isFinite(toolheadClearanceBound.mm) || toolheadClearanceBound.mm <= 0
+                || !String(toolheadClearanceBound.source || '').trim())) {
+                throw new McpToolError('toolhead_clearance_bound requires a positive finite mm bound and its source/reference.');
+            }
             const changeCoord = (value: number | undefined, previous: number | null): number | null => {
                 if (value === undefined) {
                     return previous;
@@ -89,6 +146,8 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
             };
             setToolSetterConfig({
                 ...numbers,
+                datum,
+                toolheadClearanceBound,
                 floorMarginMm,
                 changeX: changeCoord(args.tool_change_x, existing ? existing.changeX : null),
                 changeY: changeCoord(args.tool_change_y, existing ? existing.changeY : null),
@@ -102,9 +161,77 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
     registry.register({
         name: 'get_tool_setter_config',
         description: 'The stored tool setter reference (centre, trigger Z, bit lengths, tool-change '
-            + 'park position) and the last two measurements. Read-only.',
+            + 'park position), named datum and retained measurement history. Read-only.',
         inputSchema: { type: 'object', properties: {}, additionalProperties: false },
-        handler: async () => ({ config: getToolSetterConfig(), measurements: getMeasurements() }),
+        handler: async () => ({
+            config: getToolSetterConfig(), datum: currentSetterDatum(), measurements: getMeasurements(), active_tool: describeActiveTool(),
+        }),
+    });
+
+    registry.register({
+        name: 'set_active_tool',
+        description: 'Record the operator-confirmed fitted tool for clearance, no motion or confirm page. protrusion_mm is the conservative distance below the toolhead, NOT probe contact calibration or necessarily overall length. Only protrusion_reference toolhead establishes a fitted physical bound; collet or unknown references cannot lower physical-obstacle clearance; it never bypasses the motion floor or legacy clearance_z boxes. run_tool_setter replaces it automatically. Restart, detected disconnect/reboot and tool-change parking make it stale; re-confirm the fitted tool, do not blindly replay a historical value.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                protrusion_mm: { type: 'number', description: 'Measured or operator-confirmed protrusion below the toolhead, mm.' },
+                source: { type: 'string', enum: ['operator', 'tool_setter', 'spindle_probe'], description: 'Provenance of the assertion. Measurement procedures write their own source; operator is for an explicit fitted-tool confirmation.' },
+                tool_identity: { type: 'string', description: 'Optional bit/probe identity.' },
+                protrusion_reference: { type: 'string', enum: ['toolhead', 'collet', 'unknown'], description: 'Only an explicitly bounded distance below the machine toolhead reference may shorten physical clearance. Collet or unknown references are recorded but cannot shorten it.' },
+                note: { type: 'string', description: 'Why this value is trusted, including the physical reference used.' },
+                measurement_job_id: { type: 'string', description: 'Job that produced a measured assertion, when source is tool_setter or spindle_probe.' },
+            },
+            required: ['protrusion_mm', 'source'],
+            additionalProperties: false,
+        },
+        handler: async (args: {
+            protrusion_mm?: number; source?: string; tool_identity?: string; protrusion_reference?: string; note?: string; measurement_job_id?: string;
+        }) => {
+            const source = args.source as 'operator' | 'tool_setter' | 'spindle_probe';
+            if (!['operator', 'tool_setter', 'spindle_probe'].includes(source)) {
+                throw new McpToolError('source must be operator, tool_setter, or spindle_probe.');
+            }
+            if (source !== 'operator' && !String(args.measurement_job_id || '').trim()) {
+                throw new McpToolError('A measured active tool needs measurement_job_id provenance.');
+            }
+            const protrusionMm = Number(args.protrusion_mm);
+            if (!Number.isFinite(protrusionMm) || protrusionMm <= 0) {
+                throw new McpToolError('protrusion_mm must be a positive finite number.');
+            }
+            if (source !== 'operator') {
+                if (getActiveTool()?.measurementJobId !== args.measurement_job_id) {
+                    throw new McpToolError('This measurement is not the current fitted-tool assertion. After invalidation, confirm the current fitting with source operator or measure again.');
+                }
+                const current = getActiveTool();
+                if (current?.clearanceBasis !== 'toolhead_reference') {
+                    throw new McpToolError('This setter measurement has an unverified physical datum; it cannot establish a physical clearance bound. Preserve its conventional offset separately.');
+                }
+                const measurement = jobManager.get(String(args.measurement_job_id));
+                const result = measurement?.result as { active_tool?: { source?: string; protrusionMm?: number } } | undefined;
+                if (measurement?.state !== 'completed' || result?.active_tool?.source !== source
+                    || Math.abs(Number(result.active_tool.protrusionMm) - protrusionMm) > 0.001) {
+                    throw new McpToolError('Measured provenance must match a completed tool-setter job and its actual protrusion. For a current operator assertion use source operator and quote that confirmation.');
+                }
+            }
+            const previous = getActiveTool();
+            const active = setActiveTool({
+                protrusionMm,
+                clearanceBasis: source !== 'operator' || args.protrusion_reference === 'toolhead' ? 'toolhead_reference' : 'unknown',
+                measurementId: source !== 'operator' ? previous?.measurementId : null,
+                source,
+                measurementJobId: args.measurement_job_id || null,
+                toolIdentity: args.tool_identity || null,
+                note: args.note || null,
+            });
+            return describeActiveTool(active);
+        },
+    });
+
+    registry.register({
+        name: 'get_active_tool',
+        description: 'Read the usable active-tool clearance assertion, age and provenance, or active:null plus stored/staleReason when invalidated. Re-read after every setter run or swap. Stale fitting records cannot bound an unknown replacement; fallback requires the explicitly configured toolhead_clearance_bound. Legacy approach lengths and probe offsets do not establish that bound. No motion or confirm page.',
+        inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+        handler: async () => describeActiveTool(),
     });
 
     registry.register({
@@ -117,15 +244,18 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
             + 'to the safe start height, 1 mm sensor-gated descent to a slow zone, 0.1 mm approach to '
             + 'contact, then repeated quick lift-and-retest confirm cycles - then raises STRAIGHT UP '
             + 'to the traverse height (machine Z328, never the start height; result.finalZ) and '
-            + 'reports the median trigger Z, the per-pass contacts and spread, and the derived bit '
-            + 'length. A hard floor and the overtravel tripwire bound it (~1-2 minutes).',
+            + 'reports the raw median trigger Z, per-pass contacts and spread, fitting identity, and the named datum '
+            + 'used for a separate tip projection. bit_length_mm controls the approach only. A hard floor and '
+            + 'the overtravel tripwire bound the descent.',
         inputSchema: {
             type: 'object',
             properties: {
                 bit_length_mm: {
                     type: 'number',
-                    description: 'Approximate protrusion of the FITTED bit in mm, as stated by the operator.',
+                    description: 'Approximate fitted length for APPROACH PLANNING only, in the same nominal convention as the approach reference; never calibrated tool geometry.',
                 },
+                tool_identity: { type: 'string', description: 'Stable tool name/id retained with this raw trigger measurement.' },
+                fitting_id: { type: 'string', description: 'Identity of this seating of the tool; defaults to the measurement job. Re-fitting requires a new identity.' },
                 coarse_step_mm: { type: 'number', description: 'Coarse descent step, default 1 (0.2-2).' },
                 fine_step_mm: { type: 'number', description: 'Fine step, default 0.1 (0.02-0.5).' },
                 backoff_mm: { type: 'number', description: 'Backoff before the confirm pass, default 0.3.' },
@@ -143,8 +273,7 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
                 },
                 store_as_reference: {
                     type: 'boolean',
-                    description: 'After a successful run, store the measured trigger Z and this bit '
-                        + 'length as the new reference (locks in the setter height).',
+                    description: 'After a successful run, update the APPROACH reference trigger and nominal length. The named coordinate datum remains unchanged; the approach estimate is never a calibration.',
                 },
                 stay_at_trigger: {
                     type: 'boolean',
@@ -183,7 +312,7 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
                 validation,
                 'procedure'
             );
-            job.runner = async () => runToolSetterProcedure(plan);
+            job.runner = async () => runToolSetterProcedure(plan, job.id);
 
             return {
                 job: jobManager.describe(job),
@@ -218,7 +347,10 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
         name: 'goto_tool_change_position',
         description: 'Stage the move to the operator-set tool-change park position (machine coords '
             + 'from set_tool_setter_config: typically Z at the homing height and X at the far end; '
-            + 'Y only if configured). One approval covers two exact steps: Z up first, then X/Y, one start_gcode_job call each. The operator then '
+            + 'Y only if configured). One approval covers two exact steps: Z up first, then X/Y, one start_gcode_job call each. '
+            + 'If the head is ALREADY at the park Z (= at or above the traverse height) on a verified, homed position and '
+            + 'mcpTraverseWithoutApprovalAtSafeZ is on (operator ruling 2026-10-17, #241), the no-op Z step is skipped and the XY leg runs '
+            + 'on the call after the landmark/travel checks, with no confirm page (result executed_without_approval: true). The operator then '
             + 'swaps the tool BY HAND; afterwards run_tool_setter measures the new tool and '
             + 'apply_tool_length_offset shifts the work origin by the length difference.',
         inputSchema: {
@@ -250,6 +382,71 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
                 throw new McpToolError('Toolhead appears to be on; refusing the tool-change move.');
             }
 
+            // Operator ruling 2026-10-17 (#241): with the head already at the
+            // park Z - which is at or above the traverse height - on a
+            // verified, homed position, the Z step is a no-op and the XY leg
+            // is exactly the transport traverse_xy runs without a page: plan
+            // it through the same planner (travel + landmark checks at the
+            // current Z; a landmark above the head refuses, never auto-runs)
+            // and execute it on the call. Otherwise stage both steps as before.
+            const { x: mx, y: my, z: mz } = position.machine;
+            const atParkZ = mx !== null && my !== null && mz !== null
+                && Math.abs(mz - cfg.changeZ) <= TRAVERSE_Z_TOLERANCE_MM;
+            const policy = decideSafeZTraverse({
+                enabled: traverseWithoutApprovalAtSafeZ(),
+                reliability: position.reliability,
+                homed: position.isHomed,
+                currentZ: mz,
+                traverseZ: safeTraverseZ(),
+            });
+            if (atParkZ && policy.allowed) {
+                const travel = requirePlanningTravel('the tool-change park move', { x: mx, y: my });
+                let plan;
+                try {
+                    plan = planTraverseXy({
+                        targets: [{ x: cfg.changeX, ...(cfg.changeY !== null ? { y: cfg.changeY } : {}) }],
+                        frame: 'machine',
+                        currentMachine: { x: mx as number, y: my as number, z: mz as number },
+                        originOffset: position.originOffset,
+                        travel: travel.limits,
+                        traverseZ: safeTraverseZ(),
+                        feedRate: TRAVERSE_FEED.default,
+                        obstacles: landmarkStore.obstacleBoxes(),
+                        ...clearanceOptions(),
+                        reason: `tool-change park: ${String(args.reason)}`,
+                    });
+                } catch (err) {
+                    if ((err as Error).name === 'TraversePlanError') {
+                        throw new McpToolError(`Tool-change park XY leg refused: ${(err as Error).message}`);
+                    }
+                    throw err;
+                }
+                invalidateActiveTool('Tool-change park requested; confirm the fitted tool after the manual swap.');
+                const validation = validateStagedEnvelope(plan.reviewText, 'goto_tool_change_position');
+                const job = jobManager.submit(
+                    plan.reviewText,
+                    `tool-change park X${cfg.changeX} (already at Z${cfg.changeZ}) - ${String(args.reason).slice(0, 40)}`,
+                    'cnc',
+                    validation,
+                    'direct'
+                );
+                const token = jobManager.approveByPolicy(job, policy.policy, `${policy.reason}; head already at the park Z ${cfg.changeZ}`);
+                const run = await runPolicyApprovedDirectJob(job, token, true);
+                return {
+                    job: jobManager.describe(job),
+                    executed_without_approval: true,
+                    approval: { source: 'policy', policy: policy.policy, reason: policy.reason },
+                    park: { x: cfg.changeX, y: cfg.changeY, z: cfg.changeZ },
+                    z_step_skipped: `already at the park Z (machine Z ${(mz as number).toFixed(3)} vs ${cfg.changeZ})`,
+                    distance_mm: Number(plan.totalDistanceMm.toFixed(1)),
+                    position: run.settle.position,
+                    position_verified: run.settle.verified,
+                    warning: run.settle.warning,
+                    next_step: `Moved to the park position on the call under ${policy.policy} (no confirm page). The operator swaps `
+                        + 'the tool by hand; measure it with run_tool_setter and finish with apply_tool_length_offset.',
+                };
+            }
+
             // Z clears first, at the move_z feed cap; XY travels as a rapid
             // only once at height. One approval covers both exact steps.
             const steps = [
@@ -257,6 +454,7 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
                 `G90\nG53;\nG0 X${cfg.changeX.toFixed(3)}${cfg.changeY !== null ? ` Y${cfg.changeY.toFixed(3)}` : ''};\nG54;`,
             ];
             const reviewText = steps.join('\n; --- next approved step ---\n');
+            invalidateActiveTool('Tool-change park requested; confirm the fitted tool after the manual swap.');
             const validation = validateStagedEnvelope(reviewText, 'goto_tool_change_position');
             const job = jobManager.submit(
                 reviewText,
@@ -269,6 +467,7 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
             return {
                 job: jobManager.describe(job),
                 park: { x: cfg.changeX, y: cfg.changeY, z: cfg.changeZ },
+                staged_because: atParkZ ? policy.reason : `the head is at machine Z ${mz === null ? 'unknown' : mz.toFixed(3)}, not the park Z ${cfg.changeZ}`,
                 confirm_url: `${getConfirmBaseUrl()}/confirm/${job.id}`,
                 next_step: 'Operator approves once; call start_gcode_job with the code TWICE (Z step, '
                     + 'then XY step). Then the operator swaps the tool by hand; measure it with '

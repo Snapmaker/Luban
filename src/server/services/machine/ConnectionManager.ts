@@ -55,6 +55,8 @@ import { octo } from './adaptor/Octo';
 
 import { connectionDiagnostics, diagnosticId } from './connectionDiagnostics';
 import { safeIdentifier, safeTarget } from './connectionDiagnosticState';
+import { gcodeLease } from './gcodeLease';
+import { noteFrameRestored } from '../mcp/positionOfRecord';
 
 const log = logger('lib:ConnectionManager');
 
@@ -202,6 +204,22 @@ class ConnectionManager {
     /**
      * The active channel, or null when disconnected. Read-only use (MCP).
      */
+    // Bumped on every channel (re)assignment, including a reconnect to the same
+    // singleton channel object: object identity proves nothing here.
+    private channelAssignments = 0;
+
+    /**
+     * Read-only connection identity for the MCP failure hook (#221): the
+     * assignment count plus the channel's own reconnect generation (SSTP over
+     * HTTP, the SACP TCP/UDP/serial channels and the text serial channel all
+     * keep one). Two equal values mean the same connection.
+     */
+    public getConnectionGeneration(): string {
+        const inner = this.channel as unknown as { getConnectionGeneration?: () => number } | null;
+        const own = inner && typeof inner.getConnectionGeneration === 'function' ? inner.getConnectionGeneration() : 0;
+        return `${this.channelAssignments}.${own}`;
+    }
+
     public getCurrentChannel(): Channel | null {
         return this.channel;
     }
@@ -394,6 +412,7 @@ class ConnectionManager {
         }
         this.unbindChannelEvents();
         this.channel = sstpHttpChannel;
+        this.channelAssignments += 1;
         this.connectionType = ConnectionType.WiFi;
         this.protocol = NetworkProtocol.HTTP;
         this.bindChannelEvents();
@@ -409,6 +428,7 @@ class ConnectionManager {
         const instance = this.machineInstance;
         this.unbindChannelEvents();
         this.channel = null;
+        this.channelAssignments += 1;
         this.machineIdentifier = null;
         this.machineInstance = null;
         octo.onStop();
@@ -473,6 +493,7 @@ class ConnectionManager {
         if (this.channel) {
             this.unbindChannelEvents();
             this.channel = null;
+            this.channelAssignments += 1;
         }
 
         const { connectionType, protocol } = options;
@@ -491,12 +512,16 @@ class ConnectionManager {
 
             if (this.protocol === NetworkProtocol.SacpOverTCP) {
                 this.channel = sacpTcpChannel;
+                this.channelAssignments += 1;
             } else if (this.protocol === NetworkProtocol.SacpOverUDP) {
                 this.channel = sacpUdpChannel;
+                this.channelAssignments += 1;
             } else if (this.protocol === NetworkProtocol.HTTP) {
                 this.channel = sstpHttpChannel;
+                this.channelAssignments += 1;
             } else {
                 this.channel = sstpHttpChannel;
+                this.channelAssignments += 1;
             }
         } else {
             const { port, baudRate } = options;
@@ -505,8 +530,10 @@ class ConnectionManager {
 
             if (this.protocol === SerialPortProtocol.SacpOverSerialPort) {
                 this.channel = sacpSerialChannel;
+                this.channelAssignments += 1;
             } else {
                 this.channel = textSerialChannel;
+                this.channelAssignments += 1;
             }
         }
 
@@ -601,6 +628,7 @@ class ConnectionManager {
         // destroy channel
         this.unbindChannelEvents();
         this.channel = null;
+        this.channelAssignments += 1;
         this.machineIdentifier = null;
 
         // destroy machine instance
@@ -616,16 +644,19 @@ class ConnectionManager {
      *
      * Seperate multiple lines with '\n'.
      */
-    public executeGcode = async (socket: SocketServer, options: ExecuteGCodeOptions) => {
+    public executeGcode = async (socket: SocketServer, options: ExecuteGCodeOptions, callback?: (response: object) => void) => {
         const { gcode } = options;
         log.info(`executeGcode: ${gcode}`);
 
         const { result, text } = await this.channel.executeGcode(gcode);
+        const response = { err: result === 0 ? null : -1, gcode, reply: text };
         if (result === 0) {
-            socket.emit('connection:executeGcode', { err: null, gcode, reply: text });
+            socket.emit('connection:executeGcode', response);
         } else {
-            socket.emit('connection:executeGcode', { err: -1, gcode });
+            log.warn(`Controller rejected G-code: ${text || 'No error detail returned.'}`);
+            socket.emit('connection:executeGcode', response);
         }
+        callback?.(response);
     };
 
     /**
@@ -847,10 +878,22 @@ class ConnectionManager {
      */
     public startGcodeAction = async (socket: SocketServer, options) => {
         log.info('gcode action begin');
+        const leaseRefusal = gcodeLease.refusal('start job');
+        if (leaseRefusal) {
+            log.warn(leaseRefusal);
+            options?.eventName && socket && socket.emit(options.eventName, { err: true, msg: leaseRefusal });
+            return;
+        }
         this.channel.startGcode(options);
     };
 
     public startGcode = async (socket: SocketServer, options) => {
+        const leaseRefusal = gcodeLease.refusal('start job');
+        if (leaseRefusal) {
+            log.warn(leaseRefusal);
+            socket && socket.emit(options?.eventName || 'connection:startGcode', { err: true, msg: leaseRefusal });
+            return;
+        }
         const {
             headType, isRotate, toolHead, isLaserPrintAutoMode, materialThickness, laserFocalLength, renderName, eventName, materialThicknessSource
         } = options;
@@ -1028,6 +1071,12 @@ G1 Z${pos.z}
     };
 
     public resumeGcode = async (socket: SocketServer, options, callback) => {
+        const leaseRefusal = gcodeLease.refusal('resume job');
+        if (leaseRefusal) {
+            log.warn(leaseRefusal);
+            callback && callback({ msg: leaseRefusal, code: 409 });
+            return;
+        }
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const success = await this.channel.resumeGcode(callback);
             if (success) {
@@ -1489,27 +1538,47 @@ M3`;
     //
 
     public goHome = async (socket, options, callback) => {
+        const leaseRefusal = gcodeLease.refusal('home');
+        if (leaseRefusal) {
+            log.warn(leaseRefusal);
+            return;
+        }
         const { headType } = options;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort, NetworkProtocol.SacpOverUDP], this.protocol)) {
             this.channel.goHome(headType);
             socket && socket.emit('move:status', { isHoming: true });
         } else {
-            await this.executeGcode(socket, { gcode: 'G53' });
-            await this.executeGcode(socket, { gcode: 'G28' });
+            // The three lines go out as separate requests; runAsHomeSequence lets
+            // them pass a frame-recovery hold as the whole G53/G28/G54 sequence
+            // (a bare G53 or G28 alone is refused there).
+            await gcodeLease.runAsHomeSequence(async () => {
+                await this.executeGcode(socket, { gcode: 'G53' });
+                await this.executeGcode(socket, { gcode: 'G28' });
 
-            callback && callback();
+                callback && callback();
 
-            // ?
-            if (this.connectionType === ConnectionType.WiFi) {
-                socket && socket.emit('move:status', { isHoming: true });
-            }
-            if (headType === HEAD_LASER || headType === HEAD_CNC) {
-                await this.executeGcode(socket, { gcode: 'G54' });
-            }
+                // ?
+                if (this.connectionType === ConnectionType.WiFi) {
+                    socket && socket.emit('move:status', { isHoming: true });
+                }
+                if (headType === HEAD_LASER || headType === HEAD_CNC) {
+                    // An accepted G54 after G28 is a work-frame restore: the
+                    // frame-uncertainty latch records it, and a verified position
+                    // after it clears the latch (tools/machine.ts).
+                    await this.executeGcode(socket, { gcode: 'G54' }, (response) => {
+                        if ((response as { err?: number | null }).err === null) { noteFrameRestored(); }
+                    });
+                }
+            });
         }
     };
 
     public coordinateMove = async (socket, options, callback) => {
+        const leaseRefusal = gcodeLease.refusal('coordinate move');
+        if (leaseRefusal) {
+            log.warn(leaseRefusal);
+            return;
+        }
         const { moveOrders, gcode, jogSpeed, headType } = options;
         // const { moveOrders, gcode, context, cmd, jogSpeed, headType } = options;
 
@@ -1526,6 +1595,11 @@ M3`;
     };
 
     public setWorkOrigin = async (socket, options, callback) => {
+        const leaseRefusal = gcodeLease.refusal('set work origin');
+        if (leaseRefusal) {
+            log.warn(leaseRefusal);
+            return;
+        }
         const { xPosition, yPosition, zPosition, bPosition } = options;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.setWorkOrigin({ xPosition, yPosition, zPosition, bPosition });

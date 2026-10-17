@@ -4,15 +4,33 @@ import * as fs from 'fs-extra';
 
 import logger from '../../../lib/logger';
 import { connectionManager } from '../../machine/ConnectionManager';
-import { McpJob, TERMINAL_JOB_STATES, approvalHandoff, jobManager } from '../jobs';
+import { FileJobModalTrack, McpJob, TERMINAL_JOB_STATES, approvalHandoff, jobManager } from '../jobs';
+import {
+    Exposure,
+    JobEndCategory,
+    ModalLedger,
+    RecoveryDeps,
+    RecoveryEvidence,
+    closeLedger,
+    currentLedger,
+    describeEvidence,
+    fileModalExposure,
+    finishDetachedLedger,
+    recoverAfterJobEnd,
+    runWithLedger,
+} from '../failureRecovery';
+import { manualControlGate } from '../manualControl';
 import { clearanceOptions } from '../clearanceContext';
 import { classifyProcedureEnding, countMeasured, planJobStop } from '../jobEnding';
 import { summarizeJobTiming } from '../jobTiming';
 import { landmarkStore } from '../landmarks';
 import { matchFrame } from '../positionOfRecord';
 import { probeFeedService } from '../probeFeed';
+import { spindleTelemetryService } from '../spindleTelemetry';
+import { vibrationCaptureService } from '../vibrationCaptures';
 import { clearProcedureStop, procedureStopRequested, requestProcedureStop } from '../probing';
 import { McpToolError, ToolRegistry } from '../registry';
+import { decideSafeZRaise, decideSafeZTraverse } from '../safeZPolicy';
 import { planTraverseXy } from '../traversePlan';
 import { JobFrame, TRANSPORT_REFUSAL, isPureTransport, resolveJobFrame, suggestGcode, validateGcode } from '../validator';
 import { GcodeChannel, sendGcodeVisible } from './camera';
@@ -37,6 +55,7 @@ import {
     motionFloorZ,
     requirePlanningTravel,
     safeTraverseZ,
+    traverseWithoutApprovalAtSafeZ,
 } from './machine';
 
 // Motion policy (#23): compound motion leaves this process only as a G-code
@@ -170,6 +189,313 @@ function machineStatus(): string | null {
 
 const log = logger('service:mcp:gcode-jobs');
 
+type DirectSettle = { position: PositionSnapshot | null; verified: boolean; warning?: string };
+
+/**
+ * Execute ONE approved step of a direct job (or its whole single move) over
+ * the realtime path, exactly as start_gcode_job always has: the staged
+ * text's comment header is stripped (the controller never replied to a
+ * payload led by comment lines - hung live 2026-09-02, job e34b19a913ff),
+ * the job is the active job while the move is in flight, the arrival is
+ * verified against the heartbeat unless `shouldWait` is false, and a
+ * controller refusal ends the job as start_failed. A batch re-arms its token
+ * for the remaining steps; the last step completes the job.
+ */
+async function executeDirectStep(job: McpJob, channel: GcodeChannel, shouldWait: boolean): Promise<{ settle: DirectSettle; remainingSteps: number }> {
+    job.state = 'starting';
+    const issuedAt = Date.now();
+    job.startedAt = job.startedAt || issuedAt;
+    const batch = Array.isArray(job.steps) && job.steps.length > 0 ? job.steps : null;
+    const stepIndex = job.nextStep ?? 0;
+    const gcodeText = batch
+        ? batch[stepIndex]
+        : fs.readFileSync(job.filePath, 'utf8');
+    const executable = gcodeText
+        .split(/\r?\n/)
+        .filter((line) => {
+            const trimmed = line.trim();
+            return trimmed.length > 0 && !trimmed.startsWith(';');
+        })
+        .join('\n');
+    jobManager.appendEvent(job, 'started', { note: batch ? `direct step ${stepIndex + 1}/${batch.length}` : 'direct move' });
+    jobManager.setActive(job);
+    let settle: DirectSettle;
+    try {
+        const executed = await sendGcodeVisible(channel, `direct:${job.name}`, executable);
+        if (executed.result !== 0) {
+            job.state = 'start_failed';
+            job.error = `Controller rejected the move: ${executed.text || executed.result}`;
+            job.endedAt = Date.now();
+            job.ending = { kind: 'controller-rejected', reason: job.error, at: job.endedAt };
+            jobManager.appendEvent(job, 'failed', { note: job.error });
+            throw new McpToolError(job.error);
+        }
+        settle = !shouldWait
+            ? {
+                position: null,
+                verified: false,
+                warning: 'wait_until_moved was false: the move was accepted but not awaited - '
+                    + 'poll get_position (or query_firmware_position) before relying on position.',
+            }
+            : await waitForStableHeartbeat(issuedAt, parseDirectTarget(executable));
+        jobManager.appendEvent(job, 'settled', { position: settle.position, verified: settle.verified });
+    } finally {
+        jobManager.setActive(null);
+    }
+    if (batch) {
+        job.nextStep = stepIndex + 1;
+        if (job.nextStep < batch.length) {
+            // Same operator-approved list; keep the token usable for the
+            // remaining steps.
+            job.tokenUsed = false;
+            job.state = 'started';
+            return { settle, remainingSteps: batch.length - job.nextStep };
+        }
+    }
+    job.state = 'completed';
+    job.endedAt = Date.now();
+    job.ending = { kind: 'completed', reason: 'direct move(s) done and settled', at: job.endedAt };
+    jobManager.appendEvent(job, 'completed', { note: 'direct move(s) done' });
+    return { settle, remainingSteps: 0 };
+}
+
+/**
+ * Run a POLICY-approved direct job to completion on the staging call itself
+ * (safeZPolicy.ts; operator ruling 2026-10-17, #241). The caller has already
+ * made every check the staging path makes (fresh heartbeat, idle, homed,
+ * toolhead off, travel, landmarks) and approved the job under a named policy;
+ * this consumes that token through the same consumeToken + executeDirectStep
+ * path an operator-approved job takes, step after step, so the job record,
+ * the console `reason` broadcast and stop_gcode_job behave identically. Only
+ * the confirm page is missing.
+ */
+export async function runPolicyApprovedDirectJob(job: McpJob, token: string, shouldWait: boolean): Promise<{
+    settle: DirectSettle;
+    stepsExecuted: number;
+}> {
+    const active = jobManager.getActive();
+    if (active && active !== job && active.state === 'started') {
+        throw new McpToolError('Another job or step is still active; wait for it to finish before this transport.');
+    }
+    const channel = connectionManager.getCurrentChannel() as unknown as GcodeChannel;
+    if (!channel || typeof channel.executeGcode !== 'function') {
+        throw new McpToolError('The connected channel does not support direct moves.');
+    }
+    const verdict = jobManager.consumeToken(job, token);
+    if (!verdict.ok) {
+        throw new McpToolError(verdict.reason || 'Policy approval could not be consumed.');
+    }
+    let stepsExecuted = 0;
+    let outcome = await executeDirectStep(job, channel, shouldWait);
+    stepsExecuted += 1;
+    while (outcome.remainingSteps > 0) {
+        // The series was approved as one list; a stop request between steps
+        // (stop_gcode_job withdraws / machine-stops the job) ends it here.
+        if (job.state !== 'started' || job.confirmToken === null) {
+            break;
+        }
+        const next = jobManager.consumeToken(job, job.confirmToken);
+        if (!next.ok) {
+            throw new McpToolError(`Series interrupted after ${stepsExecuted} step(s): ${next.reason}`);
+        }
+        outcome = await executeDirectStep(job, channel, shouldWait);
+        stepsExecuted += 1;
+    }
+    return { settle: outcome.settle, stepsExecuted };
+}
+
+// ---- Modal cleanup for jobs that end outside the call that started them (#221) ----
+//
+// The registry's hook covers what a tool call sends in its own async context.
+// A file job runs on the controller's interpreter and ends minutes later; a
+// procedure runner is detached from start_gcode_job onto its own ledger.
+// Both are judged here, with the runtime the registry was given (camera.ts
+// injects it), and leave evidence on the job record. Policy: a stop, a trip,
+// a lost connection or a completion NEVER sends anything (evidence plus
+// restore_work_frame); only a job that failed on its own may get the
+// separate, axis-free G90/G54, and only under the call hook's guards.
+
+let recoveryDepsSource: () => RecoveryDeps | null = () => null;
+
+function recoveryDeps(): RecoveryDeps | null {
+    try {
+        return recoveryDepsSource();
+    } catch (err) {
+        return null;
+    }
+}
+
+function connectionNow(): string | null {
+    try {
+        const deps = recoveryDeps();
+        return deps ? deps.connectionId() : null;
+    } catch (err) {
+        return null;
+    }
+}
+
+/** Why command authority is closed (crash/overtravel latch, stop request), or null. */
+function authorityClosedNow(): string | null {
+    try {
+        const deps = recoveryDeps();
+        return deps ? deps.authorityClosed() : null;
+    } catch (err) {
+        return 'the safety latch state could not be read';
+    }
+}
+
+/**
+ * Hold the MCP ownership gate while cleanup may be sent from outside a tool
+ * call, so the pendant cannot arm in the middle of it. When the pendant
+ * already owns control the gate refuses and the deps' manual-control guard
+ * skips the cleanup.
+ */
+async function withRecoveryGate<T>(name: string, fn: () => Promise<T>): Promise<T> {
+    let leave: () => void = () => undefined;
+    try {
+        leave = manualControlGate.enterTool(name);
+    } catch (err) {
+        leave = () => undefined;
+    }
+    try {
+        return await fn();
+    } finally {
+        leave();
+    }
+}
+
+function newModalTrack(): FileJobModalTrack {
+    return { startConnection: connectionNow(), lastLine: null, totalLines: null, lastProgress: null, stoppingSeen: false };
+}
+
+/** Fold one status report's printing info into the job's modal track (highest line / progress seen). */
+function noteFileJobProgress(job: McpJob, info: { sent?: unknown; total?: unknown; progress?: unknown } | null | undefined): void {
+    const track = job.modalTrack;
+    if (!track || !info) {
+        return;
+    }
+    const line = Number(info.sent);
+    if (Number.isFinite(line) && line > 0) {
+        track.lastLine = Math.max(track.lastLine || 0, line);
+    }
+    const total = Number(info.total);
+    if (Number.isFinite(total) && total > 0) {
+        track.totalLines = total;
+    }
+    const raw = Number(info.progress);
+    if (Number.isFinite(raw) && raw > 0) {
+        const fraction = raw <= 1 ? raw : raw / 100;
+        track.lastProgress = Math.max(track.lastProgress || 0, Math.min(fraction, 1));
+    }
+}
+
+function noteModalRecovery(job: McpJob, evidence: RecoveryEvidence): void {
+    jobManager.appendEvent(job, 'modal_recovery', {
+        note: `${evidence.status}${evidence.skip_reason ? ` (${evidence.skip_reason})` : ''}: ${evidence.explanation}`,
+        recovery_action: evidence.recovery_action,
+        modes: evidence.exposure.state,
+    });
+}
+
+/**
+ * Judge a FILE job's end from its program text and how far it was seen to
+ * get, attach the evidence to the job and log it. Never throws: a job ending
+ * must not be broken by its own evidence.
+ */
+export async function judgeFileJobEnd(job: McpJob, category: JobEndCategory, reason: string): Promise<RecoveryEvidence | null> {
+    if (job.kind !== 'file') {
+        return null;
+    }
+    try {
+        const track = job.modalTrack || { ...newModalTrack(), startConnection: null };
+        let program: string | null = null;
+        try {
+            program = fs.readFileSync(job.filePath, 'utf8');
+        } catch (err) {
+            program = null;
+        }
+        const exposure: Exposure = program !== null
+            ? fileModalExposure(program, {
+                lastLine: track.lastLine,
+                totalLines: track.totalLines,
+                lastProgress: track.lastProgress,
+                ranToEnd: category === 'completed' && !track.stoppingSeen,
+            })
+            : {
+                exposed: true,
+                state: { workspace: 'unknown', distance: 'unknown' },
+                pending_payloads: 0,
+                connections: [],
+                reasons: ['the job file could not be read back, so its modes are unknown'],
+                // Conservative on purpose: a file nobody can read back may have
+                // selected G53, so the shared frame latch is raised explicitly
+                // rather than by g53Exposed's "absent means possible" default.
+                g53_possible: true,
+            };
+        if (category === 'completed' && track.stoppingSeen) {
+            exposure.reasons.push('the machine reported "stopping" before it went idle: the file may not have run to its end');
+        }
+        const run = async () => recoverAfterJobEnd({
+            jobId: job.id,
+            tool: `file-job:${job.name}`,
+            category,
+            reason,
+            exposure,
+            startConnection: track.startConnection,
+        }, recoveryDeps());
+        const evidence = category === 'failed' ? await withRecoveryGate('file-job-modal-recovery', run) : await run();
+        job.failureRecovery = evidence;
+        if (evidence) {
+            noteModalRecovery(job, evidence);
+        }
+        return evidence;
+    } catch (err) {
+        return null;
+    }
+}
+
+/** A detached runner's own ledger, owned by the start_gcode_job call that launches it; null if unavailable. */
+function runnerLedgerFor(job: McpJob): ModalLedger | null {
+    try {
+        return new ModalLedger(`procedure:${job.name}`, true, connectionNow(), currentLedger());
+    } catch (err) {
+        return null;
+    }
+}
+
+/** Close a runner's ledger and judge it like a tool call; evidence lands on the job. Never throws. */
+async function settleRunnerLedger(job: McpJob, ledger: ModalLedger | null, outcome: { threw: boolean; thrown?: unknown }): Promise<RecoveryEvidence | null> {
+    if (!ledger) {
+        return null;
+    }
+    try {
+        const run = async () => finishDetachedLedger(ledger, outcome, recoveryDeps(), job.id);
+        const evidence = outcome.threw ? await withRecoveryGate('procedure-modal-recovery', run) : await run();
+        job.failureRecovery = evidence;
+        if (evidence) {
+            noteModalRecovery(job, evidence);
+        }
+        return evidence;
+    } catch (err) {
+        return null;
+    } finally {
+        try {
+            closeLedger(ledger);
+        } catch (err) {
+            // Idempotent; nothing to report.
+        }
+    }
+}
+
+/** The original error first, then the job's evidence - the same shape the registry gives a failed call. */
+function withEvidence(error: Error, evidence: RecoveryEvidence | null): Error {
+    if (evidence) {
+        error.message = `${error.message}\n${describeEvidence(evidence)}`;
+        (error as Error & { failureRecovery?: RecoveryEvidence }).failureRecovery = evidence;
+    }
+    return error;
+}
+
 // File jobs run on the machine's own interpreter, which reports progress only
 // through the heartbeat - nothing calls back when the job ends, so a started
 // file job previously stayed "started" forever (observed 2026-09-02, job
@@ -223,6 +549,9 @@ function watchFileJobCompletion(job: McpJob): void {
                 jobManager.appendEvent(job, 'completion_unverified', { note: job.error });
                 log.warn(`MCP file job ${job.id}: ${job.error}`);
                 release();
+                // Never sends: the job was not seen to end and authority is not established.
+                const closed = authorityClosedNow();
+                judgeFileJobEnd(job, closed ? 'authority-closed' : 'connection-lost', closed || job.error).catch(() => undefined);
             }
             return;
         }
@@ -235,9 +564,14 @@ function watchFileJobCompletion(job: McpJob): void {
                 jobManager.appendEvent(job, 'paused', { note: 'machine paused the file job - enclosure door interlock or operator pause; it resumes from the machine' });
             }
             lastStatus = status;
+            if (status === 'stopping' && job.modalTrack) {
+                job.modalTrack.stoppingSeen = true;
+            }
             // Progress from the heartbeat, recorded every 5 % so the event
             // log shows the job advancing without a reader having to poll.
-            const state = connectionManager.getLatestMachineState() as { gcodePrintingInfo?: { progress?: number } } | null;
+            const state = connectionManager.getLatestMachineState() as { gcodePrintingInfo?: { progress?: number; sent?: number; total?: number } } | null;
+            // How far the parser got: bounds which modes the file may have left (#221).
+            noteFileJobProgress(job, state ? state.gcodePrintingInfo : null);
             const raw = state && state.gcodePrintingInfo ? Number(state.gcodePrintingInfo.progress) : NaN;
             if (Number.isFinite(raw)) {
                 const percent = Math.round((raw <= 1 ? raw * 100 : raw));
@@ -267,6 +601,9 @@ function watchFileJobCompletion(job: McpJob): void {
                 log.info(`MCP file job ${job.id} completed: heartbeat idle for ${idleStreak}s`
                     + `${sawActive ? '' : ' (job too short for an active heartbeat to be observed)'}`);
                 release();
+                // Never sends: a completion that left G53/G91 is reported, not second-guessed.
+                const closed = authorityClosedNow();
+                judgeFileJobEnd(job, closed ? 'authority-closed' : 'completed', closed || job.ending.reason).catch(() => undefined);
             }
             return;
         }
@@ -342,6 +679,7 @@ export async function stopGcodeJob(args: { job_id?: string; wait_ms?: number }, 
         throw new McpToolError('The connected channel does not support stopping jobs.');
     }
     const stopped = await channel.stopGcodeJob();
+    let evidence: RecoveryEvidence | null = null;
     if (stopped.ok) {
         job.state = 'stopped';
         job.endedAt = Date.now();
@@ -350,6 +688,8 @@ export async function stopGcodeJob(args: { job_id?: string; wait_ms?: number }, 
         if (jobManager.getActive() === job) {
             jobManager.setActive(null);
         }
+        // A stop closes command authority: the file's modes are reported, never cleaned up (#221).
+        evidence = await judgeFileJobEnd(job, 'stopped', job.ending.reason);
     }
     return {
         ok: stopped.ok,
@@ -359,10 +699,13 @@ export async function stopGcodeJob(args: { job_id?: string; wait_ms?: number }, 
         text: stopped.text || null,
         note: plan.note,
         job: jobManager.describe(job),
+        ...(evidence ? { failure_recovery: evidence } : {}),
     };
 }
 
 export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: () => string): void {
+    // Read lazily: the camera tools inject the runtime, possibly after this registers.
+    recoveryDepsSource = () => (typeof registry.getFailureRecovery === 'function' ? registry.getFailureRecovery() : null);
     registry.register({
         name: 'validate_gcode',
         description: 'Statically inspect G-code: motion extents, feeds, spindle commands and '
@@ -594,8 +937,17 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 // a bounded time and returns the result if it arrived, else a
                 // "running" status to long-poll with get_gcode_job_status.
                 clearProcedureStop();
-                const finished = job.runner()
-                    .then((outcome) => {
+                // The runner is detached from this call's modal ledger (#221):
+                // it gets its own, owned by this call while the call waits, so
+                // a step still pending when this call returns "running" cannot
+                // make the start look exposed, and the runner's own failure is
+                // judged when IT ends (settleRunnerLedger), inside or outside
+                // this call's wait.
+                const runner = job.runner;
+                const runnerLedger = runnerLedgerFor(job);
+                const launched = runnerLedger ? runWithLedger(runnerLedger, async () => runner()) : runner();
+                const finished = launched
+                    .then(async (outcome) => {
                         // Where the time went, from the job's own events, so
                         // agents optimise from the record (get_job_timing has
                         // the same for running/failed jobs).
@@ -604,9 +956,11 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                         job.endedAt = Date.now();
                         job.ending = { kind: 'completed', reason: 'procedure finished', at: job.endedAt, measured: countMeasured(outcome) };
                         jobManager.appendEvent(job, 'completed', { note: 'procedure finished; result stored on the job' });
-                        return { ok: true as const, outcome };
+                        // Success is never followed by commands; a G53/G91 it left is reported.
+                        const evidence = await settleRunnerLedger(job, runnerLedger, { threw: false });
+                        return { ok: true as const, outcome, evidence };
                     })
-                    .catch((err: Error) => {
+                    .catch(async (err: Error) => {
                         // What the procedure measured before it ended stays on
                         // the record (stations, contacts, completed ops).
                         const partial = (err as { partial?: object }).partial;
@@ -633,9 +987,17 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                             jobManager.appendEvent(job, 'failed', { note: err.message, ending: job.ending });
                             log.error(`Procedure job ${job.id} failed (${job.ending.kind}): ${err.message}`);
                         }
-                        return { ok: false as const, error: err.message };
+                        // Judged with the job already terminal and the stop
+                        // request still visible: a stop/trip is never cleaned
+                        // up; a failure on its own gets the call hook's guarded
+                        // G90/G54. Reported on the job either way.
+                        const evidence = await settleRunnerLedger(job, runnerLedger, { threw: true, thrown: err });
+                        return { ok: false as const, error: err.message, evidence };
                     })
                     .finally(() => {
+                        if (runnerLedger) {
+                            closeLedger(runnerLedger);
+                        }
                         clearProcedureStop();
                         if (jobManager.getActive() === job) {
                             jobManager.setActive(null);
@@ -656,11 +1018,14 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                     };
                 }
                 if (!settledInTime.ok) {
-                    throw new McpToolError(settledInTime.error);
+                    // The runner's own evidence travels with its error (this
+                    // call's ledger saw none of the runner's sends).
+                    throw withEvidence(new McpToolError(settledInTime.error), settledInTime.evidence);
                 }
                 return {
                     job: jobManager.describe(job),
                     result: settledInTime.outcome,
+                    ...(settledInTime.evidence ? { failure_recovery: settledInTime.evidence } : {}),
                 };
             }
 
@@ -672,80 +1037,26 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 // operator approved exactly this gcode on the confirm page.
                 // For a batch, each call executes ONE approved step; the
                 // token stays valid for the remaining steps (within its TTL).
-                job.state = 'starting';
-                const issuedAt = Date.now();
-                job.startedAt = job.startedAt || issuedAt;
-                const batch = Array.isArray(job.steps) && job.steps.length > 0 ? job.steps : null;
-                const stepIndex = job.nextStep ?? 0;
-                const gcodeText = batch
-                    ? batch[stepIndex]
-                    : fs.readFileSync(job.filePath, 'utf8');
-                // The staged text carries a human-facing comment header for
-                // the confirm page; the realtime execute path must get pure
-                // commands - the controller never replied to a payload led by
-                // comment lines (hung live, 2026-09-02, job e34b19a913ff).
-                const executable = gcodeText
-                    .split(/\r?\n/)
-                    .filter((line) => {
-                        const trimmed = line.trim();
-                        return trimmed.length > 0 && !trimmed.startsWith(';');
-                    })
-                    .join('\n');
-                jobManager.appendEvent(job, 'started', { note: batch ? `direct step ${stepIndex + 1}/${batch.length}` : 'direct move' });
-                jobManager.setActive(job);
-                let settle;
-                try {
-                    const executed = await sendGcodeVisible(channel as GcodeChannel, `direct:${job.name}`, executable);
-                    if (executed.result !== 0) {
-                        job.state = 'start_failed';
-                        job.error = `Controller rejected the move: ${executed.text || executed.result}`;
-                        job.endedAt = Date.now();
-                        job.ending = { kind: 'controller-rejected', reason: job.error, at: job.endedAt };
-                        jobManager.appendEvent(job, 'failed', { note: job.error });
-                        throw new McpToolError(job.error);
-                    }
-                    const shouldWait = args.wait_until_moved !== undefined
-                        ? args.wait_until_moved !== false
-                        : job.waitUntilMoved !== false;
-                    settle = !shouldWait
-                        ? {
-                            position: null,
-                            verified: false,
-                            warning: 'wait_until_moved was false: the move was accepted but not awaited - '
-                                + 'poll get_position (or query_firmware_position) before relying on position.',
-                        }
-                        : await waitForStableHeartbeat(issuedAt, parseDirectTarget(executable));
-                    jobManager.appendEvent(job, 'settled', { position: settle.position, verified: settle.verified });
-                } finally {
-                    jobManager.setActive(null);
+                const shouldWait = args.wait_until_moved !== undefined
+                    ? args.wait_until_moved !== false
+                    : job.waitUntilMoved !== false;
+                const outcome = await executeDirectStep(job, channel as GcodeChannel, shouldWait);
+                if (outcome.remainingSteps > 0) {
+                    return {
+                        job: jobManager.describe(job),
+                        position: outcome.settle.position,
+                        position_verified: outcome.settle.verified,
+                        warning: outcome.settle.warning,
+                        remaining_steps: outcome.remainingSteps,
+                        note: 'Step executed and settled. Call start_gcode_job again with the same '
+                            + 'job_id and code for the next approved step; positions persist.',
+                    };
                 }
-                if (batch) {
-                    job.nextStep = stepIndex + 1;
-                    if (job.nextStep < batch.length) {
-                        // Same operator-approved list; keep the token usable
-                        // for the remaining steps.
-                        job.tokenUsed = false;
-                        job.state = 'started';
-                        return {
-                            job: jobManager.describe(job),
-                            position: settle.position,
-                            position_verified: settle.verified,
-                            warning: settle.warning,
-                            remaining_steps: batch.length - job.nextStep,
-                            note: 'Step executed and settled. Call start_gcode_job again with the same '
-                                + 'job_id and code for the next approved step; positions persist.',
-                        };
-                    }
-                }
-                job.state = 'completed';
-                job.endedAt = Date.now();
-                job.ending = { kind: 'completed', reason: 'direct move(s) done and settled', at: job.endedAt };
-                jobManager.appendEvent(job, 'completed', { note: 'direct move(s) done' });
                 return {
                     job: jobManager.describe(job),
-                    position: settle.position,
-                    position_verified: settle.verified,
-                    warning: settle.warning,
+                    position: outcome.settle.position,
+                    position_verified: outcome.settle.verified,
+                    warning: outcome.settle.warning,
                     note: 'Direct move executed; the position persists (no end-of-job park).',
                 };
             }
@@ -785,6 +1096,9 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             }
             jobManager.appendEvent(job, 'uploaded', { note: `${job.name}.nc uploaded to the machine` });
 
+            // The connection the file will run on (#221): a later job-end judgement
+            // must never treat a reconnected controller as the one that ran it.
+            job.modalTrack = newModalTrack();
             const started = await channel.startGcodeJob();
             if (!started.ok) {
                 job.state = 'start_failed';
@@ -799,6 +1113,10 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             jobManager.appendEvent(job, 'started', { note: 'machine interpreter running the file (door interlock applies)' });
             jobManager.setActive(job);
             watchFileJobCompletion(job);
+            // Opt-in spindle telemetry (status RPM, microphone): observes only.
+            spindleTelemetryService.startForJob(job);
+            // Opt-in accelerometer recording of the job (mcpVibrationJobs): observes only.
+            vibrationCaptureService.startForJob(job);
             return {
                 job: jobManager.describe(job),
                 note: 'Job started. Poll get_gcode_job_status with wait_ms to long-poll for progress '
@@ -818,7 +1136,9 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             + 'the operator approves the EXACT list once, and each start_gcode_job call then executes '
             + 'one step, so you can capture between steps and abandon the series at any point. The '
             + 'confirm page shows current Z, every target, deltas and feed; only the operator one-time '
-            + 'code executes anything. NOT door-interlocked - the operator supervises. Spindle must be '
+            + 'code executes anything - except an UP-only series to no higher than mcpSafeTraverseZ on a verified, homed '
+            + 'position with mcpTraverseWithoutApprovalAtSafeZ on (#241), which runs on the call (executed_without_approval: '
+            + 'true); anything that descends stages. NOT door-interlocked - the operator supervises. Spindle must be '
             + 'off; the toolhead always carries a tool.',
         inputSchema: {
             type: 'object',
@@ -955,6 +1275,44 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             const job = jobManager.submit(reviewText, name, 'cnc', validation, 'direct', isBatch ? steps : undefined);
             job.waitUntilMoved = args.wait_until_moved !== false;
 
+            // The optional half of #241: a Z-only move that can only go UP, to
+            // no higher than the traverse height, is the "retreat first" half
+            // of law 2 - the one Z move that cannot descend (raiseToTop's own
+            // reasoning). With the setting on and a verified, homed position
+            // it runs on the call; a series that dips anywhere, or overshoots
+            // the top, stages as before.
+            const machineTargets = targets.map((t) => (coordinateSystem === 'machine' ? t : t - position.originOffset.z));
+            const policy = decideSafeZRaise({
+                enabled: traverseWithoutApprovalAtSafeZ(),
+                reliability: position.reliability,
+                homed: position.isHomed,
+                currentZ: position.machine.z,
+                traverseZ: safeTraverseZ(),
+                machineTargets,
+            });
+            if (policy.allowed) {
+                const token = jobManager.approveByPolicy(job, policy.policy, policy.reason);
+                const run = await runPolicyApprovedDirectJob(job, token, args.wait_until_moved !== false);
+                return {
+                    job: jobManager.describe(job),
+                    executed_without_approval: true,
+                    approval: { source: 'policy', policy: policy.policy, reason: policy.reason },
+                    current_z: currentZ,
+                    targets,
+                    machine_targets: machineTargets,
+                    final_delta_mm: delta,
+                    feed_rate: feedRate,
+                    coordinate_system: coordinateSystem,
+                    steps_executed: run.stepsExecuted,
+                    position: run.settle.position,
+                    position_verified: run.settle.verified,
+                    warning: run.settle.warning,
+                    note: `Executed on the call under ${policy.policy} (no confirm page): a Z-only, UP-only move to no higher than the `
+                        + `traverse height ${safeTraverseZ()} on a ${position.reliability} position. The job is on the dashboard with this reason. `
+                        + 'Turn this off in Settings -> MCP Server -> Job approval.',
+                };
+            }
+
             return {
                 job: jobManager.describe(job),
                 current_z: currentZ,
@@ -962,6 +1320,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 final_delta_mm: delta,
                 feed_rate: feedRate,
                 coordinate_system: coordinateSystem,
+                staged_because: policy.reason,
                 confirm_url: `${getConfirmBaseUrl()}/confirm/${job.id}`,
                 next_step: isBatch
                     ? 'Ask the operator to open confirm_url, review the DIRECT-move banner and the full '
@@ -979,7 +1338,12 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
         name: 'traverse_xy',
         description: 'Law-2 TRANSPORT: an absolute XY move, or an ordered series (max 20), at the traverse height - '
             + 'staged for ONE operator approval and executed one step per start_gcode_job call on the direct path, '
-            + 'exactly like move_z. Refused unless the toolhead is already at or above mcpSafeTraverseZ (328 = home Z) - '
+            + 'exactly like move_z. TOP-Z POLICY (operator ruling 2026-10-17, #241; setting mcpTraverseWithoutApprovalAtSafeZ, '
+            + 'default on): when the head is ALREADY at or above mcpSafeTraverseZ (328) on a verified/heartbeat, homed position '
+            + 'and the route passes the landmark and travel checks, the call EXECUTES the move(s) itself and returns '
+            + 'executed_without_approval: true - no confirm page, no start_gcode_job; the job record (dashboard, log, '
+            + 'stop_gcode_job) is kept and marked approved by policy. Otherwise it stages as described and staged_because says why. '
+            + 'Refused unless homed and the toolhead is already at or above mcpMotionFloorZ (default 320); stored landmarks may demand higher Z - '
             + 'raise it with move_z (coordinate_system "machine") first; there is deliberately no override. Every '
             + 'segment is checked against the stored landmarks and every target against the travel; Z is never '
             + 'written. Default frame MACHINE (G53 declared on every step; work-frame steps declare G54). This is the '
@@ -1088,9 +1452,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             const stepGcodes = isBatch ? plan.steps.map((step) => step.gcode) : undefined;
             const job = jobManager.submit(plan.reviewText, plan.name, 'cnc', validation, 'direct', stepGcodes);
             job.waitUntilMoved = args.wait_until_moved !== false;
-
-            return {
-                job: jobManager.describe(job),
+            const summary = {
                 current_machine: { x: mx, y: my, z: mz },
                 traverse_z: safeTraverseZ(),
                 coordinate_system: coordinateSystem,
@@ -1102,6 +1464,45 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 })),
                 total_distance_mm: Number(plan.totalDistanceMm.toFixed(1)),
                 travel: { ...travel.limits, conflicts: travel.conflicts },
+            };
+
+            // Operator ruling 2026-10-17 (#241): with the head ALREADY at the
+            // traverse height on a verified, homed position, an XY-only
+            // transport whose route just passed the landmark and travel checks
+            // runs on the call - the page would add nothing. The job record,
+            // the console reason and stop_gcode_job are unchanged; only the
+            // click is gone. Anything else stages exactly as before.
+            const policy = decideSafeZTraverse({
+                enabled: traverseWithoutApprovalAtSafeZ(),
+                reliability: position.reliability,
+                homed: position.isHomed,
+                currentZ: mz,
+                traverseZ: safeTraverseZ(),
+            });
+            if (policy.allowed) {
+                const token = jobManager.approveByPolicy(job, policy.policy, policy.reason);
+                const run = await runPolicyApprovedDirectJob(job, token, args.wait_until_moved !== false);
+                return {
+                    job: jobManager.describe(job),
+                    executed_without_approval: true,
+                    approval: { source: 'policy', policy: policy.policy, reason: policy.reason },
+                    ran_at_machine_z: mz,
+                    ...summary,
+                    steps_executed: run.stepsExecuted,
+                    position: run.settle.position,
+                    position_verified: run.settle.verified,
+                    warning: run.settle.warning,
+                    note: `Executed on the call under ${policy.policy} (no confirm page): the head was already at the traverse height `
+                        + `(machine Z ${mz.toFixed(3)}) on a ${position.reliability} position, Z was never written, and every leg was `
+                        + 'checked against the landmarks and the travel. The job is on the dashboard with this reason; stop_gcode_job '
+                        + 'still applies to a running series. Turn this off in Settings -> MCP Server -> Job approval.',
+                };
+            }
+
+            return {
+                job: jobManager.describe(job),
+                ...summary,
+                staged_because: policy.reason,
                 confirm_url: `${getConfirmBaseUrl()}/confirm/${job.id}`,
                 next_step: isBatch
                     ? 'Ask the operator to open confirm_url, review the DIRECT-move banner, the frame and every leg, and '
@@ -1150,7 +1551,10 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             + 'workspace-unverified | timeout | operation-failure | machine-stopped | completion-unverified, with the reason and how many stations/ops '
             + 'were measured - its event log (state changes, runner phases, gcode traffic while active, file-job progress and '
             + 'pauses), the stored procedure result (a stopped or failed run keeps every completed station under result, with '
-            + 'result.ending beside it), and live machine progress. '
+            + 'result.ending beside it), and live machine progress. File jobs run with spindle telemetry on '
+            + '(mcpSpindleTelemetry) also carry `telemetry`: per commanded S the reported / microphone-tracked RPM '
+            + '(min, median, time below 95 %), the HOLD / BLIP / STRUGGLE verdicts, chatter and runout flags, the audio '
+            + 'device and the analysis cost - the series themselves come from get_job_telemetry. '
             + 'LONG-POLL: pass wait_ms (up to 120000) and it returns as soon as the job reaches a '
             + 'terminal state or new events arrive past since_event - use this instead of tight '
             + 'polling or reading server logs. Read-only.',
@@ -1198,6 +1602,8 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 machineStatus: machineStatus(),
                 printingInfo: state ? ((state as { gcodePrintingInfo?: object }).gcodePrintingInfo || null) : null,
                 reportAgeMs: state ? Date.now() - state.timestamp : null,
+                telemetry: spindleTelemetryService.summary(job.id),
+                vibration: await vibrationCaptureService.jobSummary(job.id),
             };
         },
     });

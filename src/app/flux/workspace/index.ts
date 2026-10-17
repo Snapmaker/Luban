@@ -32,6 +32,7 @@ import {
 } from '../../constants/machines';
 import { valueOf } from '../../lib/contants-utils';
 import log from '../../lib/log';
+import modal from '../../lib/modal';
 import { SnapmakerOriginalMachine } from '../../machines';
 import { machineStore } from '../../store/local-storage';
 import { MachineAgent } from './MachineAgent';
@@ -956,7 +957,7 @@ export const actions = {
         controller.emitEvent(
             SocketEvent.ExecuteGCode,
             { gcode, context, cmd },
-            () => {
+            (response: { err?: unknown; reply?: string } = {}) => {
                 if (homingModal && gcode === 'G28') {
                     dispatch(
                         baseActions.updateState({
@@ -964,7 +965,10 @@ export const actions = {
                         })
                     );
                 }
-                cb && typeof cb === 'function' && cb();
+                if (response.err) {
+                    modal({ title: 'Machine command failed', body: response.reply || 'The controller rejected the command. Check the machine connection and state.' });
+                }
+                cb && typeof cb === 'function' && cb(response);
             }
         );
     },

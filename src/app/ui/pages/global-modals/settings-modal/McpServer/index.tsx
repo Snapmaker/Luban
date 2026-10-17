@@ -1,4 +1,4 @@
-import { Input, Radio, Switch } from 'antd';
+import { Input, Radio, Select, Switch } from 'antd';
 import React, { useState, useEffect } from 'react';
 
 import api from '../../../../../api';
@@ -108,8 +108,43 @@ interface McpStatus {
     approval?: {
         handoff: 'agent' | 'code';
         source: 'env' | 'config' | 'default';
+        traverseWithoutApprovalAtSafeZ?: boolean;
+        traverseWithoutApprovalSource?: 'env' | 'config' | 'default';
     };
     cameraStream?: McpCameraStreamStatus;
+    vibration?: {
+        enabled: boolean;
+        transport: 'blinka' | 'serial';
+        python: string;
+        blinkaEnv: string;
+        serialPort: string;
+        sensorsJson: string;
+        jobCapture: boolean;
+        resolvedPython: string;
+        problems: string[];
+        sources: { [field: string]: 'env' | 'config' | 'default' };
+        envNames: { [field: string]: string };
+        live: {
+            state: string;
+            'last_error': string | null;
+            sensors: Array<{ id: string; location: string; state: string; 'rate_hz': number | null; error: string | null }>;
+        };
+        error?: string;
+    };
+    spindleTelemetry?: {
+        enabled: boolean;
+        statusPollMs: number;
+        statusPollRange: [number, number];
+        audioEnabled: boolean;
+        audioDevice: string | null;
+        sources: { [field: string]: 'env' | 'config' | 'default' };
+        envNames: { [field: string]: string };
+        devices: Array<{ entry: string; description: string; backend: string; builtIn: boolean; usb: boolean }>;
+        resolves: boolean;
+        resolution: string;
+        guidance: string;
+        error?: string;
+    };
 }
 const MQTT_FIELDS: Array<{ name: keyof McpMqttSettings['values']; labelKey: string; placeholder?: string; channel?: string }> = [
     { name: 'host', labelKey: 'key-App/Settings/McpServer-MQTT host', placeholder: 'io.adafruit.com' },
@@ -174,10 +209,28 @@ const McpServer: React.FC = () => {
     const [diagnosticsRecentLimit, setDiagnosticsRecentLimit] = useState('');
     // Job approval hand-off: true = a waiting agent starts on the operator's click.
     const [approvalHandoffAgent, setApprovalHandoffAgent] = useState(true);
+    // Approval-free XY transport with the head already at the traverse height (#241). Default on.
+    const [traverseAtSafeZ, setTraverseAtSafeZ] = useState(true);
     // Live MJPEG camera view served by the MCP server (/camera). Applies at
     // once on save: off disconnects every viewer. '' fps = server default.
     const [cameraStreamEnabled, setCameraStreamEnabled] = useState(false);
     const [cameraStreamFps, setCameraStreamFps] = useState('');
+    // Spindle telemetry (opt-in, read at the next file-job start). The
+    // microphone is chosen here by name from the host's capture sources;
+    // the server never picks one.
+    const [spindleTelemetry, setSpindleTelemetry] = useState(false);
+    const [spindleStatusPollMs, setSpindleStatusPollMs] = useState('');
+    const [spindleAudio, setSpindleAudio] = useState(false);
+    const [spindleAudioDevice, setSpindleAudioDevice] = useState('');
+    // Accelerometers (opt-in, read-only): their own bridge, never the probe
+    // feed's. Saved settings restart the feed at once.
+    const [vibrationEnabled, setVibrationEnabled] = useState(false);
+    const [vibrationTransport, setVibrationTransport] = useState<'blinka' | 'serial'>('blinka');
+    const [vibrationPython, setVibrationPython] = useState('');
+    const [vibrationBlinkaEnv, setVibrationBlinkaEnv] = useState('');
+    const [vibrationSerialPort, setVibrationSerialPort] = useState('');
+    const [vibrationSensors, setVibrationSensors] = useState('');
+    const [vibrationJobs, setVibrationJobs] = useState(false);
 
     useEffect(() => {
         api.getMcpStatus()
@@ -200,11 +253,27 @@ const McpServer: React.FC = () => {
                 }
                 if (body.approval) {
                     setApprovalHandoffAgent(body.approval.handoff !== 'code');
+                    setTraverseAtSafeZ(body.approval.traverseWithoutApprovalAtSafeZ !== false);
                 }
                 if (body.cameraStream) {
                     setCameraStreamEnabled(!!body.cameraStream.enabled);
                     setCameraStreamFps(body.cameraStream.storedFps === undefined || body.cameraStream.storedFps === null
                         ? '' : String(body.cameraStream.storedFps));
+                }
+                if (body.spindleTelemetry && !body.spindleTelemetry.error) {
+                    setSpindleTelemetry(!!body.spindleTelemetry.enabled);
+                    setSpindleStatusPollMs(body.spindleTelemetry.statusPollMs ? String(body.spindleTelemetry.statusPollMs) : '');
+                    setSpindleAudio(!!body.spindleTelemetry.audioEnabled);
+                    setSpindleAudioDevice(body.spindleTelemetry.audioDevice || '');
+                }
+                if (body.vibration && !body.vibration.error) {
+                    setVibrationEnabled(!!body.vibration.enabled);
+                    setVibrationTransport(body.vibration.transport === 'serial' ? 'serial' : 'blinka');
+                    setVibrationPython(body.vibration.python || '');
+                    setVibrationBlinkaEnv(body.vibration.blinkaEnv || '');
+                    setVibrationSerialPort(body.vibration.serialPort || '');
+                    setVibrationSensors(body.vibration.sensorsJson || '');
+                    setVibrationJobs(!!body.vibration.jobCapture);
                 }
                 const { inverted: mqttInvertedNames, ...mqttValues } = body.mqtt.values;
                 setMqtt({ ...mqttValues });
@@ -218,6 +287,14 @@ const McpServer: React.FC = () => {
             })
             .catch(() => setStatus(null));
     }, []);
+
+    const telemetryEnv = (field: string) => !!(status && status.spindleTelemetry && status.spindleTelemetry.sources
+        && status.spindleTelemetry.sources[field] === 'env');
+    const telemetryEnvNote = (field: string) => (telemetryEnv(field) && status && status.spindleTelemetry
+        ? ` — ${i18n._('key-App/Settings/McpServer-Overridden by environment variable')} ${status.spindleTelemetry.envNames[field]}` : '');
+
+    const vibrationEnv = (field: string) => !!(status && status.vibration && status.vibration.sources
+        && status.vibration.sources[field] === 'env');
 
     const onSave = async () => {
         const value = Number(port);
@@ -245,7 +322,23 @@ const McpServer: React.FC = () => {
             gpio: gpioUpdate,
             buffers: { jobEventLimit, diagnosticsRecentLimit },
             approvalHandoff: approvalHandoffAgent ? 'agent' : 'code',
+            ...(status?.approval?.traverseWithoutApprovalSource === 'env' ? {} : { traverseWithoutApprovalAtSafeZ: traverseAtSafeZ }),
             cameraStream: { enabled: cameraStreamEnabled, fps: cameraStreamFps },
+            spindleTelemetry: {
+                ...(telemetryEnv('enabled') ? {} : { enabled: spindleTelemetry }),
+                ...(telemetryEnv('statusPollMs') ? {} : { statusPollMs: spindleStatusPollMs }),
+                ...(telemetryEnv('audioEnabled') ? {} : { audioEnabled: spindleAudio }),
+                ...(telemetryEnv('audioDevice') ? {} : { audioDevice: spindleAudioDevice }),
+            },
+            vibration: {
+                ...(vibrationEnv('enabled') ? {} : { enabled: vibrationEnabled }),
+                ...(vibrationEnv('transport') ? {} : { transport: vibrationTransport }),
+                ...(vibrationEnv('python') ? {} : { python: vibrationPython }),
+                ...(vibrationEnv('blinkaEnv') ? {} : { blinkaEnv: vibrationBlinkaEnv }),
+                ...(vibrationEnv('serialPort') ? {} : { serialPort: vibrationSerialPort }),
+                ...(vibrationEnv('sensors') ? {} : { sensorsJson: vibrationSensors }),
+                ...(vibrationEnv('jobCapture') ? {} : { jobCapture: vibrationJobs }),
+            },
         });
         // The stream toggle applies immediately; refresh the live URL / state.
         api.getMcpStatus()
@@ -410,6 +503,18 @@ const McpServer: React.FC = () => {
                     {i18n._('key-App/Settings/McpServer-Off: the confirm page shows a one-time code you must relay to the agent yourself. Either way only your click in the browser authorises motion.')}
                     {status && status.approval && status.approval.source === 'env' ? ` — ${i18n._('key-App/Settings/McpServer-Overridden by environment variable')} LUBAN_MCP_APPROVAL_HANDOFF` : ''}
                 </div>
+                <div className="sm-flex align-center margin-top-8">
+                    <Switch
+                        checked={traverseAtSafeZ}
+                        onChange={(checked) => setTraverseAtSafeZ(checked)}
+                        disabled={!enabled || !!(status && status.approval && status.approval.traverseWithoutApprovalSource === 'env')}
+                    />
+                    <span className="margin-left-8">{i18n._('key-App/Settings/McpServer-Run XY transport without a confirm page when the head is already at the traverse height')}</span>
+                </div>
+                <div className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-Applies to traverse_xy, the XY step of goto_tool_change_position and an up-only move_z, only on a verified homed position at or above mcpSafeTraverseZ, after the usual landmark and travel checks. The job still appears on the dashboard, marked as approved by policy. Off: every transport stages a confirm page.')}
+                    {status && status.approval && status.approval.traverseWithoutApprovalSource === 'env' ? ` — ${i18n._('key-App/Settings/McpServer-Overridden by environment variable')} LUBAN_MCP_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z` : ''}
+                </div>
             </div>
 
             <div className="border-bottom-normal padding-bottom-4 margin-top-16">
@@ -458,11 +563,150 @@ const McpServer: React.FC = () => {
             </div>
 
             <div className="border-bottom-normal padding-bottom-4 margin-top-16">
+                <span>{i18n._('key-App/Settings/McpServer-Spindle telemetry')}</span>
+            </div>
+            <div className="margin-top-8">
+                <div className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-Opt-in. Records the spindle RPM the controller reports during file jobs and, with a microphone, tracks RPM at 20 frames/s to flag sag, blips, chatter and runout per commanded speed. Observes only: it never pauses or stops a job. Applies at the next file job; with telemetry on the job event log default rises to 200000.')}
+                </div>
+                <div className="sm-flex align-center margin-top-8">
+                    <Switch checked={spindleTelemetry} onChange={(checked) => setSpindleTelemetry(checked)} disabled={!enabled || telemetryEnv('enabled')} />
+                    <span className="margin-left-8">{i18n._('key-App/Settings/McpServer-Record status RPM during file jobs')}{telemetryEnvNote('enabled')}</span>
+                </div>
+                <div className="sm-flex align-center margin-top-8">
+                    <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Extra status poll (ms)')}</span>
+                    <Input
+                        value={spindleStatusPollMs}
+                        onChange={(e) => {
+                            if (/^\d*$/.test(e.target.value)) {
+                                setSpindleStatusPollMs(e.target.value);
+                            }
+                        }}
+                        disabled={!enabled || !spindleTelemetry || telemetryEnv('statusPollMs')}
+                        className={styles['port-input']}
+                        placeholder={i18n._('key-App/Settings/McpServer-off')}
+                    />
+                    <span className="margin-left-8">
+                        {status && status.spindleTelemetry && status.spindleTelemetry.statusPollRange ? `${status.spindleTelemetry.statusPollRange[0]}-${status.spindleTelemetry.statusPollRange[1]}; ` : ''}
+                        {i18n._('key-App/Settings/McpServer-empty = the 2 s heartbeat only. Each poll is one /api/v1/status round trip (~25 ms, ~400 bytes) during file jobs only.')}
+                        {telemetryEnvNote('statusPollMs')}
+                    </span>
+                </div>
+                <div className="sm-flex align-center margin-top-8">
+                    <Switch checked={spindleAudio} onChange={(checked) => setSpindleAudio(checked)} disabled={!enabled || !spindleTelemetry || telemetryEnv('audioEnabled')} />
+                    <span className="margin-left-8">{i18n._('key-App/Settings/McpServer-Record a microphone (RPM tracking, chatter, runout; FLAC under the app data dir)')}{telemetryEnvNote('audioEnabled')}</span>
+                </div>
+                <div className="sm-flex align-center margin-top-8">
+                    <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Capture device')}</span>
+                    <Select
+                        style={{ minWidth: 360 }}
+                        value={spindleAudioDevice || undefined}
+                        onChange={(value) => setSpindleAudioDevice(value ? String(value) : '')}
+                        allowClear
+                        showSearch
+                        disabled={!enabled || telemetryEnv('audioDevice')}
+                        placeholder={i18n._('key-App/Settings/McpServer-Choose a microphone by name - nothing is picked for you')}
+                        options={(status && status.spindleTelemetry ? status.spindleTelemetry.devices : []).map((device) => ({
+                            value: device.entry,
+                            label: `${device.description} — ${device.entry}${device.builtIn ? ` (${i18n._('key-App/Settings/McpServer-built-in')})` : ''}${device.usb ? ' (USB)' : ''}`,
+                        }))}
+                    />
+                    <span className="margin-left-8">{telemetryEnvNote('audioDevice')}</span>
+                </div>
+                <div className={styles['port-tips']}>
+                    {status && status.spindleTelemetry ? status.spindleTelemetry.guidance : ''}
+                    {status && status.spindleTelemetry && status.spindleTelemetry.audioDevice ? ` ${i18n._('key-App/Settings/McpServer-Configured device')}: ${status.spindleTelemetry.resolution}.` : ''}
+                </div>
+            </div>
+
+            <div className="border-bottom-normal padding-bottom-4 margin-top-16">
+                <span>{i18n._('key-App/Settings/McpServer-Accelerometers')}</span>
+            </div>
+            <div className="margin-top-8">
+                <div className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-Opt-in, read-only. I2C accelerometers on the toolhead, tailstock, rotary chuck or axes, for vibration, spindle RPM, chatter, tilt and the rotary chuck\'s absolute angle. They need their OWN bridge (MCP2221A, FT232H, a Pi header) or a CircuitPython board running vibration_monitor.py over serial - never the probe feed\'s U2IF board. Saving restarts the feed.')}
+                </div>
+                <div className="sm-flex align-center margin-top-8">
+                    <Switch checked={vibrationEnabled} onChange={(checked) => setVibrationEnabled(checked)} disabled={!enabled || vibrationEnv('enabled')} />
+                    <span className="margin-left-8">{i18n._('key-App/Settings/McpServer-Read the accelerometers')}</span>
+                </div>
+                <div className="sm-flex align-center margin-top-8">
+                    <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Accelerometer transport')}</span>
+                    <Radio.Group
+                        value={vibrationTransport}
+                        onChange={(e) => setVibrationTransport(e.target.value === 'serial' ? 'serial' : 'blinka')}
+                        disabled={!enabled || vibrationEnv('transport')}
+                    >
+                        <Radio value="blinka">{i18n._('key-App/Settings/McpServer-Blinka bridge on this computer')}</Radio>
+                        <Radio value="serial">{i18n._('key-App/Settings/McpServer-CircuitPython board over serial')}</Radio>
+                    </Radio.Group>
+                </div>
+                {vibrationTransport === 'blinka' ? (
+                    <>
+                        <div className="sm-flex align-center margin-top-8">
+                            <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Blinka environment')}</span>
+                            <Input
+                                value={vibrationBlinkaEnv}
+                                onChange={(e) => setVibrationBlinkaEnv(e.target.value)}
+                                disabled={!enabled || vibrationEnv('blinkaEnv')}
+                                style={{ width: 360 }}
+                                placeholder="BLINKA_MCP2221=1"
+                            />
+                        </div>
+                        <div className="sm-flex align-center margin-top-8">
+                            <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Python')}</span>
+                            <Input
+                                value={vibrationPython}
+                                onChange={(e) => setVibrationPython(e.target.value)}
+                                disabled={!enabled || vibrationEnv('python')}
+                                style={{ width: 360 }}
+                                placeholder={status && status.vibration ? status.vibration.resolvedPython : 'python3'}
+                            />
+                        </div>
+                    </>
+                ) : (
+                    <div className="sm-flex align-center margin-top-8">
+                        <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Serial port')}</span>
+                        <Input
+                            value={vibrationSerialPort}
+                            onChange={(e) => setVibrationSerialPort(e.target.value)}
+                            disabled={!enabled || vibrationEnv('serialPort')}
+                            style={{ width: 360 }}
+                            placeholder="/dev/ttyACM1 or COM7 - several boards: comma-separated"
+                        />
+                    </div>
+                )}
+                <div className="margin-top-8">
+                    <span>{i18n._('key-App/Settings/McpServer-Sensors (JSON)')}</span>
+                    <Input.TextArea
+                        value={vibrationSensors}
+                        onChange={(e) => setVibrationSensors(e.target.value)}
+                        disabled={!enabled || vibrationEnv('sensors')}
+                        autoSize={{ minRows: 3, maxRows: 12 }}
+                        style={{ fontFamily: 'monospace', marginTop: 4 }}
+                        placeholder='[{"id": "head", "location": "toolhead", "chip": "lsm6dsox", "odr_hz": 1666, "orientation": "x:+x,y:+y,z:+z"}]'
+                    />
+                </div>
+                <div className="sm-flex align-center margin-top-8">
+                    <Switch checked={vibrationJobs} onChange={(checked) => setVibrationJobs(checked)} disabled={!enabled || !vibrationEnabled || vibrationEnv('jobCapture')} />
+                    <span className="margin-left-8">{i18n._('key-App/Settings/McpServer-Record the accelerometers during every file job')}</span>
+                </div>
+                <div className={styles['port-tips']}>
+                    {status && status.vibration && status.vibration.live ? `${i18n._('key-App/Settings/McpServer-Feed')}: ${status.vibration.live.state}` : ''}
+                    {status && status.vibration && status.vibration.live && status.vibration.live.sensors.length
+                        ? ` — ${status.vibration.live.sensors.map((sensor) => `${sensor.id} (${sensor.location}) ${sensor.state}${sensor.rate_hz ? ` ${sensor.rate_hz} Hz` : ''}${sensor.error ? `: ${sensor.error}` : ''}`).join('; ')}`
+                        : ''}
+                    {status && status.vibration && status.vibration.enabled && status.vibration.problems.length ? ` — ${status.vibration.problems.join('; ')}` : ''}
+                    {status && status.vibration && status.vibration.live && status.vibration.live.last_error ? ` — ${status.vibration.live.last_error}` : ''}
+                </div>
+            </div>
+
+            <div className="border-bottom-normal padding-bottom-4 margin-top-16">
                 <span>{i18n._('key-App/Settings/McpServer-Diagnostic buffers')}</span>
             </div>
             <div className="margin-top-8">
                 <div className={styles['port-tips']}>
-                    {i18n._('key-App/Settings/McpServer-Long procedures (surface scans, bed surveys) write several events per step; raise the job event limit so the whole record survives. Applies immediately; empty = default.')}
+                    {i18n._('key-App/Settings/McpServer-Long procedures (surface scans, bed surveys) write several events per step; raise the job event limit so the whole record survives. Applies immediately; empty = default (2000, or 200000 with spindle telemetry on).')}
                 </div>
                 <div className="sm-flex align-center margin-top-8">
                     <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Job event log (events kept per job)')}</span>

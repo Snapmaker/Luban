@@ -12,6 +12,13 @@ import {
     outsideBounds,
     reliableForMotion,
 } from '../machinePosition';
+import {
+    clearFrameLatch,
+    frameLatchVerified,
+    getFrameLatch,
+    latchFrameUncertain,
+    noteFrameRestored,
+} from '../positionOfRecord';
 
 // The A350 as the position of record sees it: travel 320 x 340 x 330, home at (-19, 342, 328).
 const BOUNDS = { min: { x: 0, y: 0, z: 0 }, max: { x: 320, y: 340, z: 330 } };
@@ -283,5 +290,71 @@ export const tests: Array<[string, () => void]> = [
         assert.equal(j.reliability, 'heartbeat');
         assert.equal(j.frame, 'work-frame');
         assert.deepEqual(j.machine, { x: 170, y: 207.571, z: 227.7 });
+    }],
+    ['a declared machine-frame run judges G53 beats as machine coordinates, never as work coordinates', () => {
+        const run = { envelope: { min: { x: 150, y: 180, z: 230 }, max: { x: 200, y: 220, z: 250 } }, marginMm: 1 };
+        // Large offset: the raw fields read as machine (175, 199, 240) inside the envelope.
+        const state = createMachinePositionState();
+        judgeBeatStateful(state, workBeat(T0), ctx(T0 + 100));
+        const g53 = { raw: { x: 175, y: 199, z: 240 }, offsetReported: { ...OFFSET }, reportedAt: T0 + 2000 };
+        const j = judgeBeatStateful(state, g53, ctx(T0 + 2100, { declaredRun: run, directGcodeQuiet: false }));
+        assert.equal(j.declaredRun, true); assert.equal(j.accepted, true);
+        assert.equal(j.frame, 'machine-frame'); assert.equal(j.reliability, 'heartbeat');
+        assert.deepEqual(j.machine, { x: 175, y: 199, z: 240 });
+        // After the run, the next work-frame beat is NOT mistaken for a frame flip.
+        const back = judgeBeatStateful(state, workBeat(T0 + 4000, { x: 175, y: 199, z: 240 }), ctx(T0 + 4100));
+        assert.equal(back.accepted, true); assert.equal(back.rejectedReason, null);
+        assert.deepEqual(back.machine, { x: 175, y: 199, z: 240 });
+        // Small offset: undeclared, the same G53 beat would be ACCEPTED as work-frame, off by the offset.
+        const small = { x: -5, y: -3, z: 0 };
+        const plain = createMachinePositionState();
+        judgeBeatStateful(plain, { raw: { x: 165, y: 196, z: 240 }, offsetReported: small, reportedAt: T0 }, ctx(T0 + 100));
+        const wrong = judgeBeatStateful(plain, { raw: { x: 180, y: 205, z: 240 }, offsetReported: small, reportedAt: T0 + 2000 }, ctx(T0 + 2100));
+        assert.equal(wrong.accepted, true);
+        assert.deepEqual(wrong.machine, { x: 185, y: 208, z: 240 }, 'the defect the declaration removes');
+        const declared = createMachinePositionState();
+        judgeBeatStateful(declared, { raw: { x: 165, y: 196, z: 240 }, offsetReported: small, reportedAt: T0 }, ctx(T0 + 100));
+        const held = judgeBeatStateful(declared, { raw: { x: 180, y: 205, z: 240 }, offsetReported: small, reportedAt: T0 + 2000 },
+            ctx(T0 + 2100, { declaredRun: run }));
+        // Both readings fall inside the envelope: it may predate the G53, so it is set aside, never misread.
+        assert.equal(held.accepted, false); assert.equal(held.rejectedReason, 'declared-run-ambiguous');
+        assert.equal(held.reliability, 'awaiting-resync');
+        assert.deepEqual(held.machine, { x: 170, y: 199, z: 240 });
+        // Outside the envelope as machine coordinates: set aside too.
+        const far = judgeBeatStateful(state, { raw: { x: 10, y: 10, z: 10 }, offsetReported: { ...OFFSET }, reportedAt: T0 + 6000 },
+            ctx(T0 + 6100, { declaredRun: run }));
+        assert.equal(far.accepted, false); assert.equal(far.reliability, 'awaiting-resync');
+    }],
+    ['the frame latch clears only after a restore AND a verified fresh position', () => {
+        clearFrameLatch();
+        latchFrameUncertain('test run', T0);
+        const latch = getFrameLatch();
+        assert.ok(latch);
+        if (!latch) { return; }
+        const beat = { accepted: true, frame: 'work-frame', offsetSource: 'heartbeat', reportedAt: T0 + 5000, declaredRun: false };
+        const echo = { machine: { x: 1, y: 2, z: 3 }, source: 'echo' as const, at: T0 + 3000, sequence: 1, tool: 't', previousMachine: null };
+        assert.equal(frameLatchVerified(latch, echo, beat), false, 'no restore yet');
+        noteFrameRestored(T0 + 2000);
+        const restored = getFrameLatch();
+        if (!restored) { throw new Error('latch lost'); }
+        // The record must have been READ in the work frame: the pendant's settle writes a
+        // machine-frame echo (taken inside the G53 window) after the G54 reply, and that
+        // proves the arrival, not the workspace (2026-10-05 review).
+        assert.equal(frameLatchVerified(restored, echo, { ...beat, accepted: false }), false, 'an echo with no frame never clears it');
+        assert.equal(frameLatchVerified(restored, { ...echo, frame: 'machine-frame' }, { ...beat, accepted: false }), false,
+            'a machine-frame echo after the restore does not clear it');
+        assert.equal(frameLatchVerified(restored, { ...echo, frame: 'work-frame' }, { ...beat, accepted: false }), true, 'a work-frame echo after the restore');
+        assert.equal(frameLatchVerified(restored, { ...echo, frame: 'work-frame', source: 'heartbeat' }, { ...beat, accepted: false }), true,
+            'a settled work-frame heartbeat record');
+        assert.equal(frameLatchVerified(restored, { ...echo, frame: 'machine-frame' }, beat), true,
+            'a later work-frame heartbeat clears it even while the machine-frame echo record stands');
+        assert.equal(frameLatchVerified(restored, { ...echo, frame: 'work-frame', at: T0 + 1000 }, { ...beat, accepted: false }), false, 'an echo from before it');
+        assert.equal(frameLatchVerified(restored, { ...echo, frame: 'work-frame', source: 'estimated' }, { ...beat, accepted: false }), false, 'an estimate');
+        assert.equal(frameLatchVerified(restored, null, beat), true, 'a work-frame beat well after the restore');
+        assert.equal(frameLatchVerified(restored, null, { ...beat, reportedAt: T0 + 2500 }), false, 'a beat that may predate it');
+        assert.equal(frameLatchVerified(restored, null, { ...beat, declaredRun: true }), false);
+        assert.equal(frameLatchVerified(restored, null, { ...beat, offsetSource: 'cached' }), false);
+        clearFrameLatch();
+        assert.equal(getFrameLatch(), null);
     }],
 ];

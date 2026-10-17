@@ -70,6 +70,14 @@ export interface TravelInput {
  */
 export const TRAVEL_EPSILON_MM = 0.05;
 
+/**
+ * Operator rule (2026-10-05): the machine accepts attempted overtravel, and so do
+ * we, on every axis. A toolhead seen up to this far past a stated end is the
+ * result of a permitted overtravel (the DRO corrects on the next sync), not a
+ * conflict between the statement and reality.
+ */
+export const TRAVEL_OVERTRAVEL_MM = 1;
+
 /** Is `value` beyond `limit` by more than float noise? */
 function beyond(value: number, limit: number, end: 'low' | 'high'): boolean {
     return end === 'low' ? value < limit - TRAVEL_EPSILON_MM : value > limit + TRAVEL_EPSILON_MM;
@@ -85,9 +93,10 @@ function resolveEnd(
 ): TravelEnd {
     const seen = observed !== null && Number.isFinite(observed) ? observed : null;
     if (stated !== null && Number.isFinite(stated)) {
-        if (seen !== null && beyond(seen, stated, widen)) {
+        const allowance = widen === 'low' ? stated - TRAVEL_OVERTRAVEL_MM : stated + TRAVEL_OVERTRAVEL_MM;
+        if (seen !== null && beyond(seen, allowance, widen)) {
             conflicts.push(`The toolhead has been observed at ${axis} ${Number(seen.toFixed(3))}, outside the stated `
-                + `${axis} ${widen === 'low' ? 'minimum' : 'maximum'} of ${stated}. One of the two is wrong: `
+                + `${axis} ${widen === 'low' ? 'minimum' : 'maximum'} of ${stated} by more than the ${TRAVEL_OVERTRAVEL_MM} mm overtravel allowance. One of the two is wrong: `
                 + 're-state the travel limit, or find out how it got there.');
         }
         return { value: stated, source: 'stated' };

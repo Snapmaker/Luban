@@ -21,6 +21,7 @@ import Channel, { CncChannelInterface, ExecuteGcodeResult, FileChannelInterface,
 import { ChannelEvent } from './ChannelEvent';
 import { connectionDiagnostics, diagnosticId } from '../connectionDiagnostics';
 import { httpEvidence } from '../connectionDiagnosticState';
+import { gcodeLease } from '../gcodeLease';
 
 let waitConfirm: boolean;
 const log = logger('machine:channels:SstpHttpChannel');
@@ -127,6 +128,11 @@ class SstpHttpChannel extends Channel implements
     private isGcodeExecuting = false;
 
     private connectionGeneration = 0;
+
+    /** Read-only: lets callers tell a reconnected session from the one they started on. */
+    public getConnectionGeneration(): number {
+        return this.connectionGeneration;
+    }
 
     private heartbeatGeneration = 0;
 
@@ -331,6 +337,35 @@ class SstpHttpChannel extends Channel implements
         return this.latestMachineState;
     }
 
+    /**
+     * One extra read of /api/v1/status for spindle telemetry during a file
+     * job (mcp/spindleTelemetry.ts). Deliberately NOT routed through the
+     * heartbeat: it neither updates latestMachineState nor the position of
+     * record, so the 2 s cadence every safety judge assumes is untouched;
+     * the caller only gets the controller's raw report and how long it took.
+     */
+    public async fetchStatus(): Promise<{ data: Record<string, unknown>; durationMs: number; bytes: number }> {
+        if (!this.host || !this.token) {
+            throw new Error('No HTTP machine session.');
+        }
+        const startedAt = Date.now();
+        return new Promise((resolve, reject) => {
+            request
+                .get(`${this.host}/api/v1/status`)
+                .query({ token: this.token, _: startedAt })
+                .timeout(3000)
+                .end((err: Error | null, res: request.Response) => {
+                    const result = _getResult(err, res);
+                    if (result.code !== 200 || !result.data || typeof (result.data as { status?: unknown }).status !== 'string') {
+                        // Never surface the request error: it can carry the token in the URL.
+                        reject(new Error(`status poll failed (${result.code || 'transport error'})`));
+                        return;
+                    }
+                    resolve({ data: result.data, durationMs: Date.now() - startedAt, bytes: res && res.text ? res.text.length : 0 });
+                });
+        });
+    }
+
     public async connectionClose(options: { force: boolean }): Promise<boolean> {
         // TODO: cancel intervals on instance
         this.clearAllInterval();
@@ -515,7 +550,10 @@ class SstpHttpChannel extends Channel implements
         connectionDiagnostics.record('command_requested', { sessionId, attemptId, requestId, phase });
         return new Promise((resolve) => {
             const req = request.post(api);
-            req.timeout(300000)
+            // A lease holder (the pendant's queued run) sets a shorter per-request
+            // timeout, so a hung request cannot block the hold-time Restore for
+            // the full 300 s: the timeout fails the run, which raises the latch.
+            req.timeout(gcodeLease.requestTimeoutMs(300000))
                 .send(`token=${this.token}`)
                 .send(`code=${gcode}`)
                 // .send(formData)
@@ -528,7 +566,14 @@ class SstpHttpChannel extends Channel implements
                         durationMs: Date.now() - startedAt });
                     // Request errors can embed credentials in their URL. Retain status/code, never the raw message.
                     const result = _getResult(err, res);
-                    if (err) { result.msg = httpEvidence(err, res).errorCode || 'transport_error'; }
+                    if (err) {
+                        // Preserve the controller's refusal, not the HTTP client's
+                        // generic "Bad Request". Never expose the session token or URLs.
+                        let refusal = res?.text || httpEvidence(err, res).errorCode || 'transport_error';
+                        if (this.token) { refusal = refusal.split(this.token).join('[redacted]'); }
+                        result.msg = refusal.replace(/https?:\/\/[^\s"<>]+/g, '[controller URL]').slice(0, 500);
+                        result.text = result.msg;
+                    }
                     resolve(result);
                 });
         });
@@ -590,9 +635,12 @@ class SstpHttpChannel extends Channel implements
      * Generic execute G-code commands.
      */
     public async executeGcode(gcode: string): Promise<ExecuteGcodeResult> {
+        const refusal = gcodeLease.refusal(gcode);
+        if (refusal) { return { result: -1, text: refusal }; }
         return new Promise((resolve) => {
             // enqueue G-code execution
-            const split = gcode.split('\n');
+            // The controller rejects empty code parameters; blank formatting must not abort a batch.
+            const split = gcode.split('\n').filter(command => command.trim().length > 0);
             this.gcodeQueue.push({
                 gcodes: split,
                 callback: ({ result, text }) => {
@@ -758,6 +806,8 @@ class SstpHttpChannel extends Channel implements
     public startGcode = (options: EventOptions) => {
         log.info('Starting print...');
         const { eventName } = options;
+        const refusal = gcodeLease.refusal('start job');
+        if (refusal) { this.socket && this.socket.emit(eventName, { msg: refusal, code: 409, text: refusal }); return; }
         const api = `${this.host}/api/v1/start_print`;
         request
             .post(api)
@@ -775,6 +825,8 @@ class SstpHttpChannel extends Channel implements
      * result rather than a socket emit (MCP job gate).
      */
     public async startGcodeJob(): Promise<{ ok: boolean; code?: number; text?: string }> {
+        const refusal = gcodeLease.refusal('start job');
+        if (refusal) { return { ok: false, code: 409, text: refusal }; }
         const api = `${this.host}/api/v1/start_print`;
         return new Promise((resolve) => {
             request
@@ -804,6 +856,8 @@ class SstpHttpChannel extends Channel implements
 
     public resumeGcode = (options: EventOptions) => {
         const { eventName } = options;
+        const refusal = gcodeLease.refusal('resume job');
+        if (refusal) { this.socket && this.socket.emit(eventName, { msg: refusal, code: 409, text: refusal }); return; }
         const api = `${this.host}/api/v1/resume_print`;
         request
             .post(api)
@@ -900,6 +954,8 @@ class SstpHttpChannel extends Channel implements
 
     public getLaserMaterialThickness = (options: EventOptions) => {
         const { x, y, feedRate, eventName } = options;
+        const refusal = gcodeLease.refusal('laser material thickness probe');
+        if (refusal) { this.socket && this.socket.emit(eventName, { msg: refusal, code: 409, text: refusal }); return; }
         const api = `${this.host}/api/request_Laser_Material_Thickness?token=${this.token}&x=${x}&y=${y}&feedRate=${feedRate}`;
         const req = request.get(api);
         this.getLaserMaterialThicknessReq = req;
@@ -988,6 +1044,8 @@ class SstpHttpChannel extends Channel implements
 
     public updateZOffset = (options: EventOptions) => {
         const { zOffset, eventName } = options;
+        const refusal = gcodeLease.refusal('override Z offset');
+        if (refusal) { this.socket && this.socket.emit(eventName, { msg: refusal, code: 409, text: refusal }); return; }
         const api = `${this.host}/api/v1/override_z_offset`;
         request
             .post(api)
@@ -999,6 +1057,8 @@ class SstpHttpChannel extends Channel implements
     };
 
     public loadFilament = (options: EventOptions, eventName: string) => {
+        const refusal = gcodeLease.refusal('load filament');
+        if (refusal) { this.socket && this.socket.emit(eventName, { msg: refusal, code: 409, text: refusal }); return; }
         const api = `${this.host}/api/v1/filament_load`;
         request
             .post(api)
@@ -1010,6 +1070,8 @@ class SstpHttpChannel extends Channel implements
 
     public unloadFilament = (options: EventOptions) => {
         const { eventName } = options;
+        const refusal = gcodeLease.refusal('unload filament');
+        if (refusal) { this.socket && this.socket.emit(eventName, { msg: refusal, code: 409, text: refusal }); return; }
         const api = `${this.host}/api/v1/filament_unload`;
         request
             .post(api)
@@ -1021,6 +1083,8 @@ class SstpHttpChannel extends Channel implements
 
     public updateWorkSpeedFactor = (options: EventOptions) => {
         const { eventName, workSpeedValue } = options;
+        const refusal = gcodeLease.refusal('override work speed');
+        if (refusal) { this.socket && this.socket.emit(eventName, { msg: refusal, code: 409, text: refusal }); return; }
         const api = `${this.host}/api/v1/override_work_speed`;
         request
             .post(api)
@@ -1033,6 +1097,8 @@ class SstpHttpChannel extends Channel implements
 
     public updateLaserPower = (options: EventOptions) => {
         const { eventName, laserPower } = options;
+        const refusal = gcodeLease.refusal('override laser power');
+        if (refusal) { this.socket && this.socket.emit(eventName, { msg: refusal, code: 409, text: refusal }); return; }
         const api = `${this.host}/api/v1/override_laser_power`;
         request
             .post(api)

@@ -8,7 +8,10 @@ import logger from '../../lib/logger';
 import config from '../configstore';
 import { JobDashboardFeed, summarizeDashboardJob } from './jobDashboardState';
 import { JobEnding, McpJobKind, McpJobState, TERMINAL_JOB_STATES } from './jobEnding';
+import { resolveTelemetryConfig } from './telemetryConfig';
 import { GcodeValidationReport } from './validator';
+import { describeActiveTool } from './activeTool';
+import type { RecoveryEvidence } from './failureRecovery';
 
 const log = logger('service:mcp:jobs');
 
@@ -54,14 +57,15 @@ export interface JobEvent {
     [detail: string]: unknown;
 }
 
-// A surface scan produces ~4 gcode events per 0.1 mm step; the old 400 cap
-// lost the first three stations of job 1db4902a4cd6 (2026-09-05) before
-// anyone could read them. Long jobs need more, so the cap is a setting:
-// configstore mcpJobEventLimit (Settings -> MCP Server) or the environment
-// LUBAN_MCP_JOB_EVENT_LIMIT. ~700 bytes per event.
-export const DEFAULT_JOB_EVENT_LIMIT = 2000;
-export const MIN_JOB_EVENT_LIMIT = 400;
-export const MAX_JOB_EVENT_LIMIT = 100000;
+// The event cap (default 2000, 100x that with spindle telemetry on, up to
+// 1 000 000) and why it is a setting live in telemetryConfig.ts; the
+// constants are re-exported here because every caller imports them from jobs.
+export {
+    DEFAULT_JOB_EVENT_LIMIT,
+    MAX_JOB_EVENT_LIMIT,
+    MIN_JOB_EVENT_LIMIT,
+    TELEMETRY_JOB_EVENT_LIMIT,
+} from './telemetryConfig';
 
 /**
  * How an approval reaches the agent. 'agent' (default; operator request
@@ -81,17 +85,12 @@ export function approvalHandoff(): ApprovalHandoff {
 }
 
 export function jobEventLimit(): number {
-    const raw = process.env.LUBAN_MCP_JOB_EVENT_LIMIT !== undefined && String(process.env.LUBAN_MCP_JOB_EVENT_LIMIT).trim() !== ''
-        ? Number(process.env.LUBAN_MCP_JOB_EVENT_LIMIT)
-        : Number(config.get('mcpJobEventLimit'));
-    if (!Number.isFinite(raw) || raw <= 0) {
-        return DEFAULT_JOB_EVENT_LIMIT;
-    }
-    return Math.min(Math.max(Math.round(raw), MIN_JOB_EVENT_LIMIT), MAX_JOB_EVENT_LIMIT);
+    return resolveTelemetryConfig(process.env, (key) => config.get(key)).jobEventLimit;
 }
 
 
 export interface McpJob {
+    activeToolAtStaging?: object;
     id: string;
     name: string;
     kind: McpJobKind;
@@ -102,6 +101,13 @@ export interface McpJob {
     state: McpJobState;
     confirmToken: string | null;
     approvedAt: number | null;
+    /**
+     * Who approved: the operator's click on the confirm page, or a named
+     * policy (safeZPolicy.ts: an XY-only transport with the head already at
+     * the traverse height, operator ruling 2026-10-17 / #241). Null until
+     * approved.
+     */
+    approval: { source: 'operator' | 'policy'; policy?: string; note: string } | null;
     tokenUsed: boolean;
     /** An agent is long-polling start_gcode_job for the approval (approval hand-off); the confirm page says so instead of showing a code to copy. */
     agentWaiting: boolean;
@@ -138,6 +144,26 @@ export interface McpJob {
     runner?: () => Promise<object>;
     /** Workspace state against which this job was staged; old approvals cannot survive a change. */
     workspaceRevision?: number;
+    /**
+     * Modal cleanup evidence for a job that ended outside the call that
+     * started it (#221): a file job, or a detached procedure runner. Null or
+     * absent when the job cannot have left G53/G91 behind.
+     */
+    failureRecovery?: RecoveryEvidence | null;
+    /** File jobs: what start and the status polls established, for judging the modes the file may have left. */
+    modalTrack?: FileJobModalTrack;
+}
+
+export interface FileJobModalTrack {
+    /** Connection generation captured as the job started; null when it could not be read. */
+    startConnection: string | null;
+    /** Highest `currentLine` the status reported while the job ran. */
+    lastLine: number | null;
+    totalLines: number | null;
+    /** Highest progress seen, as a fraction 0..1. */
+    lastProgress: number | null;
+    /** The machine reported `stopping` before it went idle (a touchscreen or controller stop looks like completion). */
+    stoppingSeen: boolean;
 }
 
 function escapeHtml(text: string): string {
@@ -178,6 +204,7 @@ export class JobManager {
         fs.writeFileSync(filePath, gcode, 'utf8');
 
         const job: McpJob = {
+            activeToolAtStaging: describeActiveTool(),
             id,
             name: safeName,
             kind,
@@ -189,6 +216,7 @@ export class JobManager {
             state: 'awaiting_confirmation',
             confirmToken: null,
             approvedAt: null,
+            approval: null,
             agentWaiting: false,
             tokenUsed: false,
             startedAt: null,
@@ -206,6 +234,28 @@ export class JobManager {
         this.appendEvent(job, 'submitted', { note: `${kind} job staged, awaiting human confirmation` });
         log.info(`MCP job submitted: ${id} (${safeName}), awaiting human confirmation`);
         return job;
+    }
+
+    /**
+     * Approve a just-submitted job under a named POLICY instead of the
+     * operator's click (safeZPolicy.ts; operator ruling 2026-10-17, #241).
+     * The job keeps its record - dashboard, event log, timing, stop - and
+     * mints a token exactly like the page does, so the caller runs it through
+     * the same consumeToken + direct-execution path as an approved job. Only
+     * a job still awaiting confirmation can be policy-approved; the policy
+     * name and the reason are on the record for anyone reading it later.
+     */
+    public approveByPolicy(job: McpJob, policy: string, reason: string): string {
+        if (job.state !== 'awaiting_confirmation') {
+            throw new Error(`Job ${job.id} is ${job.state}; a policy can only approve a job awaiting confirmation.`);
+        }
+        job.confirmToken = crypto.randomBytes(4).toString('hex');
+        job.approvedAt = Date.now();
+        job.state = 'approved';
+        job.approval = { source: 'policy', policy, note: reason };
+        this.appendEvent(job, 'approved', { note: `auto-approved by ${policy}: ${reason}`, policy });
+        log.info(`MCP job ${job.id} auto-approved by ${policy}: ${reason}`);
+        return job.confirmToken;
     }
 
     /** Record something that happened to a job (state change, phase, gcode, progress). */
@@ -330,10 +380,13 @@ export class JobManager {
             state: job.state,
             createdAt: job.createdAt,
             approvedAt: job.approvedAt,
+            approval: job.approval,
             startedAt: job.startedAt,
             endedAt: job.endedAt,
             error: job.error,
             ending: job.ending,
+            // eslint-disable-next-line camelcase
+            failure_recovery: job.failureRecovery || null,
             terminal: this.isTerminal(job),
             result: job.result,
             eventCount: job.events.length,
@@ -402,6 +455,7 @@ export class JobManager {
             job.confirmToken = crypto.randomBytes(4).toString('hex');
             job.approvedAt = Date.now();
             job.state = 'approved';
+            job.approval = { source: 'operator', note: 'operator approved on the confirm page' };
             this.appendEvent(job, 'approved', { note: 'operator approved on the confirm page' });
             log.info(`MCP job ${job.id} approved by operator`);
             this.page(res, 200, this.approvedPage(job));
@@ -512,6 +566,9 @@ export class JobManager {
 
         return `
             <h2>${job.state === 'awaiting_confirmation' ? 'Confirm' : 'Review'} ${{ direct: 'DIRECT move', procedure: 'SERVER-DRIVEN procedure', file: 'G-code job' }[job.kind]}: ${escapeHtml(job.name)}</h2>
+            <details open><summary>Fitted tool and clearance provenance</summary>
+            <p>At staging:</p><pre>${escapeHtml(JSON.stringify(job.activeToolAtStaging || null, null, 2))}</pre>
+            <p>Now (value, source, age and any stale reason):</p><pre>${escapeHtml(JSON.stringify(describeActiveTool(), null, 2))}</pre></details>
             ${job.state === 'awaiting_confirmation'
         ? '<p>Submitted by an agent over MCP. Review before approving - approval mints a one-time code the agent needs to start it.</p>'
         : `<p>Job status: <strong>${escapeHtml(job.state)}</strong>.</p>`}

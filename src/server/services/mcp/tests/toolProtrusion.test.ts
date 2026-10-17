@@ -20,6 +20,18 @@ export const tests: Array<[string, () => void]> = [
         assert.equal(bit.source, 'longest-bit');
     }],
 
+    ['an active fitted tool overrides the conservative legacy candidates', () => {
+        const r = resolveToolProtrusion({
+            active: { protrusionMm: 20, source: 'operator', status: 'operator_confirmed', measuredAt: null },
+            measured: { protrusionMm: 85, at: T },
+            probeEffectiveLengthMm: 71.3,
+            longestBitLengthMm: 40,
+        });
+        assert.equal(r.mm, 20);
+        assert.equal(r.source, 'active-tool');
+        assert.ok(/routine route clearance/.test(r.note));
+    }],
+
     ['a measurement only ever LENGTHENS the requirement', () => {
         // A long tool was measured: it beats the declared maxima and wins.
         const longer = resolveToolProtrusion({

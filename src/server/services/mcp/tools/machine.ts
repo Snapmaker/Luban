@@ -14,7 +14,10 @@ import {
 import DataStorage from '../../../DataStorage';
 import config from '../../configstore';
 import { connectionManager } from '../../machine/ConnectionManager';
+import { gcodeLease } from '../../machine/gcodeLease';
+import { invalidateActiveTool } from '../activeTool';
 import {
+    DeclaredMachineFrameRun,
     FrameJudgement,
     Reliability,
     createMachinePositionState,
@@ -25,15 +28,24 @@ import {
 import { ResolvedTravel, outsideTravel, resolveTravel } from '../machineTravel';
 import { statedTravel } from '../rotaryGeometry';
 import {
+    FrameLatch,
     ZERO_OFFSET_ACCEPT_BEATS,
     clearPositionOfRecord,
     clearTrustedOffset,
     currentGcodeSequence,
+    clearFrameLatch,
     directGcodeQuiet,
+    frameLatchVerified,
+    getFrameLatch,
     getPositionOfRecord,
+    latchFrameUncertain,
+    onFrameLatchChange,
 } from '../positionOfRecord';
-import { resyncHint } from '../frameRecovery';
+import { describeFrameLatch, resyncHint } from '../frameRecovery';
 import { McpToolError, ToolRegistry } from '../registry';
+import logger from '../../../lib/logger';
+
+const log = logger('service:mcp:machine');
 
 const MACHINES = [
     SnapmakerOriginalMachine,
@@ -165,6 +177,44 @@ export function motionFloorZ(): number {
     return Math.min(floor, safeTraverseZ());
 }
 
+/**
+ * Approval-free transport at the traverse height (operator ruling
+ * 2026-10-17, issue #241: "if we've got to top z there's no approval for
+ * move at top z"). On, an XY-only traverse_xy / the XY step of
+ * goto_tool_change_position / an UP-only move_z runs on the call when the
+ * head is already at or above safeTraverseZ() on a verified, homed position
+ * and the route passed the usual landmark and travel checks (safeZPolicy.ts).
+ * Everything else still stages a confirm page. Default ON for this rig
+ * (the operator's stated preference); configstore
+ * mcpTraverseWithoutApprovalAtSafeZ (Settings -> MCP Server -> Job approval)
+ * or LUBAN_MCP_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z=0/1 turns it off/on.
+ */
+export const DEFAULT_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z = true;
+
+export function traverseWithoutApprovalAtSafeZ(): boolean {
+    const env = String(process.env.LUBAN_MCP_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z || '').trim().toLowerCase();
+    if (env === '0' || env === 'false' || env === 'off') {
+        return false;
+    }
+    if (env === '1' || env === 'true' || env === 'on') {
+        return true;
+    }
+    const stored = config.get('mcpTraverseWithoutApprovalAtSafeZ');
+    if (stored === undefined || stored === null || stored === '') {
+        return DEFAULT_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z;
+    }
+    return stored === true || stored === 'true' || stored === 1 || stored === '1';
+}
+
+export function traverseWithoutApprovalSource(): 'env' | 'config' | 'default' {
+    const env = String(process.env.LUBAN_MCP_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z || '').trim();
+    if (env) {
+        return 'env';
+    }
+    const stored = config.get('mcpTraverseWithoutApprovalAtSafeZ');
+    return stored === undefined || stored === null || stored === '' ? 'default' : 'config';
+}
+
 export interface PositionSnapshot {
     work: { x: number | null; y: number | null; z: number | null };
     machine: { x: number | null; y: number | null; z: number | null };
@@ -191,6 +241,8 @@ export interface PositionSnapshot {
         rejectedReason: string | null;
         /** raw - offset for THIS beat, for diagnostics only - never for motion. */
         derived: { x: number | null; y: number | null; z: number | null };
+        /** Judged under a declared machine-frame run (USB pendant queued jog): raw is machine coordinates. */
+        declaredRun: boolean;
     };
     b: number | null;
     isFourAxis: boolean;
@@ -222,6 +274,96 @@ const machinePosition = createMachinePositionState();
 // idle and is believed after 3 quiet beats (~6 s).
 const ZERO_OFFSET_QUIET_MS = 3000;
 
+// A declared machine-frame run (machinePosition.ts DeclaredMachineFrameRun):
+// beats RECEIVED at or after `fromMs` are judged as machine coordinates until
+// endMachineFrameRun(). Declared only by the USB pendant's queued run, between
+// its G53 reply and its closing G54 send.
+let declaredRun: (DeclaredMachineFrameRun & { fromMs: number }) | null = null;
+
+export function declareMachineFrameRun(envelope: { xMin: number; xMax: number; yMin: number; yMax: number; zMin: number; zMax: number },
+    fromMs: number, marginMm = 1): void {
+    declaredRun = { envelope: { min: { x: envelope.xMin, y: envelope.yMin, z: envelope.zMin },
+        max: { x: envelope.xMax, y: envelope.yMax, z: envelope.zMax } },
+    marginMm,
+    fromMs };
+}
+
+export function endMachineFrameRun(): void {
+    declaredRun = null;
+}
+
+// The frame-uncertainty latch survives a Luban restart: if Luban stopped while
+// the controller may have had G53 selected (a queued pendant run, a failed
+// call's cleanup, a restore never verified), it may still be there. On startup
+// the latch is re-raised, and the gcode lease reads the latch as its recovery
+// hold, so only Restore work frame, Luban's UI Home sequence, position queries
+// and job stop pass until a restore and a verified position clear it (the MCP
+// home tool is refused by requireReliableMachine like every other motion). The file is FAIL-SAFE
+// (2026-10-05 review): it is written whole (temp file + rename, never a torn
+// write), and a file that exists but cannot be read or parsed raises the latch
+// rather than being ignored - an unreadable record of uncertainty is still
+// uncertainty.
+const FRAME_LATCH_FILE = 'mcp-frame-latch.json';
+
+function frameLatchPath(): string | null {
+    try { return DataStorage.userDataDir ? path.join(DataStorage.userDataDir, FRAME_LATCH_FILE) : null; } catch (err) { return null; }
+}
+
+export function persistFrameLatch(latch: FrameLatch | null): void {
+    const file = frameLatchPath();
+    if (!file) { return; }
+    try {
+        if (latch) {
+            const temp = `${file}.tmp`;
+            fs.writeFileSync(temp, `${JSON.stringify(latch)}\n`);
+            fs.renameSync(temp, file);
+        } else if (fs.existsSync(file)) {
+            fs.removeSync(file);
+        }
+    } catch (err) {
+        // The in-memory latch still refuses motion; only the carry-over across a restart is at risk.
+        log.warn(`Could not ${latch ? 'write' : 'remove'} the frame latch file ${file}: ${(err as Error).message}`);
+    }
+}
+
+/** The on-disk latch: null when no file, a latch when readable, 'unreadable' when it exists but cannot be read or parsed. */
+export function readPersistedFrameLatch(): Partial<FrameLatch> | 'unreadable' | null {
+    const file = frameLatchPath();
+    if (!file) { return null; }
+    let exists: boolean;
+    try {
+        exists = fs.existsSync(file);
+    } catch (err) {
+        return 'unreadable';
+    }
+    if (!exists) { return null; }
+    try {
+        const saved = fs.readJsonSync(file) as unknown;
+        if (!saved || typeof saved !== 'object' || Array.isArray(saved)) { return 'unreadable'; }
+        return saved as Partial<FrameLatch>;
+    } catch (err) {
+        return 'unreadable';
+    }
+}
+
+export function restorePersistedFrameLatch(): void {
+    const saved = readPersistedFrameLatch();
+    if (saved === null) { return; }
+    if (saved === 'unreadable') {
+        log.warn(`The frame latch file ${frameLatchPath()} exists but could not be read: raising the latch.`);
+        latchFrameUncertain(`Carried over from before Luban restarted: an unreadable latch file (${FRAME_LATCH_FILE}) says the `
+            + 'machine workspace may have been left selected. Restore the work frame before any motion.');
+        return;
+    }
+    latchFrameUncertain(`Carried over from before Luban restarted: ${String(saved.reason || 'a queued pendant run')} `
+        + 'Restore the work frame before any motion.');
+}
+
+// Persist every change; the lease's recovery hold needs no update because it
+// reads the latch itself (machine/gcodeLease.ts).
+onFrameLatchChange((latch) => persistFrameLatch(latch));
+restorePersistedFrameLatch();
+
 /**
  * Which connection we are on. The position-of-record state is forgotten on
  * every (re)connection, so its reset stamp IS the epoch: anything bound to a
@@ -249,6 +391,10 @@ export function machinePositionDiagnostics() {
         /** When the state was last forgotten (a disconnect); null on the first connection. */
         resetAt: machinePosition.resetAt,
         lastAccepted: machinePosition.lastAccepted,
+        /** Set while the controller may still be in the machine workspace after a queued pendant run. */
+        frameUncertain: getFrameLatch(),
+        declaredMachineFrameRun: declaredRun,
+        gcodeLease: gcodeLease.status(),
         lastJudgement: last
             ? { reliability: last.reliability, frame: last.frame, accepted: last.accepted, rejectedReason: last.rejectedReason, reasons: last.reasons }
             : null,
@@ -261,13 +407,14 @@ export function machinePositionDiagnostics() {
  * reboot, so nothing learnt before may leak into the next connection.
  */
 export function noteMachineDisconnected(): void {
+    invalidateActiveTool('Machine disconnected/rebooted; confirm the fitted tool or measure it again.');
     noteDisconnected(machinePosition, Date.now());
     clearPositionOfRecord();
     clearTrustedOffset();
 }
 
 /** Machine travel as the bounds a derived position must stay within (+/- BOUNDS_MARGIN_MM). */
-function machineBounds(identifier: string | null) {
+export function machineBounds(identifier: string | null) {
     const size = getMachineSizeByIdentifier(identifier);
     return size ? { min: { x: 0, y: 0, z: 0 }, max: { x: size.x, y: size.y, z: size.z } } : null;
 }
@@ -318,8 +465,20 @@ export function getPositionSnapshot(): PositionSnapshot {
             bounds: machineBounds(status.machineIdentifier),
             verified: record ? { ...record.machine } : null,
             directGcodeQuiet: directGcodeQuiet(ZERO_OFFSET_QUIET_MS),
+            declaredRun: declaredRun && state.timestamp >= declaredRun.fromMs ? declaredRun : null,
         }
     );
+    const latch = getFrameLatch();
+    if (latch && frameLatchVerified(latch, record, { accepted: judgement.accepted,
+        frame: judgement.frame,
+        offsetSource: judgement.offset.source,
+        reportedAt: state.timestamp,
+        declaredRun: judgement.declaredRun })) {
+        clearFrameLatch();
+    }
+    // Inside the declared run the latch is the expected state; it still refuses motion.
+    const openLatch = getFrameLatch();
+    const frameWarnings = openLatch && !judgement.declaredRun ? [describeFrameLatch(openLatch)] : [];
 
     return {
         work,
@@ -334,6 +493,7 @@ export function getPositionSnapshot(): PositionSnapshot {
             accepted: judgement.accepted,
             rejectedReason: judgement.rejectedReason,
             derived: judgement.derived,
+            declaredRun: judgement.declaredRun,
         },
         b: axisValue(pos.b),
         isFourAxis: !!pos.isFourAxis,
@@ -344,7 +504,7 @@ export function getPositionSnapshot(): PositionSnapshot {
         convention: 'machine = the JUDGED position of record (machinePosition.ts) with `reliability`; work/originOffset are the '
             + 'raw report - never derive machine = work - originOffset by hand. Agents plan in machine coordinates; the work '
             + 'origin is the operator\'s.',
-        warnings: [...judgement.reasons],
+        warnings: [...judgement.reasons, ...frameWarnings],
     };
 }
 
@@ -425,6 +585,10 @@ export function assertWithinTravel(points: Array<{ label: string; x: number; y: 
  * needs a reconnect.
  */
 export function requireReliableMachine(position: PositionSnapshot, what: string): void {
+    const latch = getFrameLatch();
+    if (latch) {
+        throw new McpToolError(`Refusing ${what}: ${describeFrameLatch(latch)}`);
+    }
     if (reliableForMotion(position.reliability)) {
         return;
     }

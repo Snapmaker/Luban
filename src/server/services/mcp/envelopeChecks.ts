@@ -78,6 +78,20 @@ export const POSITION_EPSILON_MM = 0.05;
 
 export const OBSTACLE_MARGIN_MM = 5;
 
+/**
+ * A straight Z-up exit: X and Y unchanged within POSITION_EPSILON_MM and Z strictly
+ * increasing. A vertical climb cannot strike an obstacle beneath the tool, so manual
+ * pendant jogs permit it regardless of obstacle boxes (envelope and travel Z limits
+ * still apply). Any XY component, or a descent, gets no exemption.
+ */
+export function isStraightZUp(
+    from: { x: number; y: number; z: number },
+    to: { x: number; y: number; z: number }
+): boolean {
+    return Math.abs(to.x - from.x) <= POSITION_EPSILON_MM && Math.abs(to.y - from.y) <= POSITION_EPSILON_MM
+        && to.z > from.z;
+}
+
 /** 2D segment-vs-AABB slab test; the box is inflated by `margin` on every side. */
 export function segmentHitsBox2D(
     x0: number, y0: number, x1: number, y1: number,
@@ -210,19 +224,29 @@ export function describeViolations(violations: Violation[]): string {
 export function sequenceMotion(plan: {
     hopZ: number;
     staged: { x: number; y: number; z: number };
-    steps: ({ kind: 'hop'; x: number; y: number }
+    /**
+     * A hop's `z` is the height it runs at (the planner's local link, #242);
+     * absent = the traverse height. A probe's `endZ` is where the sequence is
+     * after the march's retreat (its start height when local links keep it
+     * low); absent = raised to the traverse height, as every sequence did
+     * before local links.
+     */
+    steps: ({ kind: 'hop'; x: number; y: number; z?: number }
         | { kind: 'descend'; z: number }
-        | { kind: 'probe'; name: string; unit: { x: number; y: number; z: number }; maxTravelMm: number; start: { x: number; y: number; z: number } })[];
+        | { kind: 'probe'; name: string; unit: { x: number; y: number; z: number }; maxTravelMm: number; start: { x: number; y: number; z: number }; endZ?: number })[];
 }): MotionSegment[] {
     const out: MotionSegment[] = [];
     const virtual = { x: plan.staged.x, y: plan.staged.y, z: plan.hopZ };
     plan.steps.forEach((step, index) => {
         const at = `steps[${index}]`;
         if (step.kind === 'hop') {
-            out.push({ kind: 'hop', what: `${at} hop`, from: { ...virtual, z: plan.hopZ }, to: { x: step.x, y: step.y, z: plan.hopZ } });
+            // A local link below the traverse height is checked like any low
+            // segment - against every box at ITS height (law 4), no exemption.
+            const z = step.z === undefined ? plan.hopZ : step.z;
+            out.push({ kind: 'hop', what: `${at} hop`, from: { ...virtual, z }, to: { x: step.x, y: step.y, z } });
             virtual.x = step.x;
             virtual.y = step.y;
-            virtual.z = plan.hopZ;
+            virtual.z = z;
         } else if (step.kind === 'descend') {
             out.push({ kind: 'column', what: `${at} descend column`, from: { ...virtual }, to: { x: virtual.x, y: virtual.y, z: step.z } });
             virtual.z = step.z;
@@ -236,7 +260,7 @@ export function sequenceMotion(plan: {
             out.push({ kind: 'march', what: `${at} probe "${step.name}" march`, from: { ...s }, to: limit });
             virtual.x = s.x;
             virtual.y = s.y;
-            virtual.z = plan.hopZ;
+            virtual.z = step.endZ === undefined ? plan.hopZ : step.endZ;
         }
     });
     return out;

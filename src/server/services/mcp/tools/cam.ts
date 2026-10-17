@@ -178,7 +178,7 @@ ${describeProbeCamPlanAsGcode(plan)}`;
             }
             const result = job.result as { report?: InspectionReport } | null;
             if (!result || !result.report) {
-                throw new McpToolError(`Job ${job.id} has no inspection report (state ${job.state}) - it is not a run_probing_gcode job, or it has not run yet.`);
+                throw new McpToolError(`Job ${job.id} has no CAM inspection report (state ${job.state}). For probe_program, probe_sequence and surface scans, read get_gcode_job_status.result (per-op contacts, stations, summaries and partial results).`);
             }
             const format = String(args.format) as ReportFormat;
             if (!REPORT_FORMATS.includes(format)) {

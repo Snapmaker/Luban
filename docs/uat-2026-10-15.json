@@ -1,0 +1,110 @@
+{
+  "branch": "codex/uat-all-open-prs-2026-10-15",
+  "base": "ec627e836dc5e13fd01eb586cc6a895ea7b6a9ea",
+  "pullRequests": [
+    {
+      "baseRefName": "startup/base",
+      "headRefName": "mcp/spindle-telemetry",
+      "headRefOid": "ccae16f67ae87227eebb0f0987af8b2e858c05b1",
+      "number": 216,
+      "title": "Feature: Opt-in spindle telemetry for file jobs (status RPM, microphone RPM, chatter, runout)"
+    },
+    {
+      "baseRefName": "mcp/spindle-telemetry",
+      "headRefName": "ci/tsc-matcher-false-errors",
+      "headRefOid": "937162a0499e6203efcf62e5f8b448da00c0701f",
+      "number": 217,
+      "title": "Fix: Keep tsc output out of passing typecheck test names"
+    },
+    {
+      "baseRefName": "mcp/spindle-telemetry",
+      "headRefName": "codex/camera-program-active-tool",
+      "headRefOid": "72f33ea7e567b4e8434251598f8e09932e6f9e45",
+      "number": 219,
+      "title": "Feature: Add composable camera programs and active-tool clearance"
+    },
+    {
+      "baseRefName": "codex/camera-program-active-tool",
+      "headRefName": "codex/usb-joystick-dro",
+      "headRefOid": "bfc45b6f60f15fa8c2e2f0913219f7c45494386e",
+      "number": 220,
+      "title": "Feature: Add supervised USB joystick jogging and TFT DRO"
+    },
+    {
+      "baseRefName": "mcp/spindle-telemetry",
+      "headRefName": "claude/fft-i2c-accelerometer-d2d8b2",
+      "headRefOid": "56be8bb81c91db4ac1a16c7c5290e53faddf0d29",
+      "number": 223,
+      "title": "Feature: I2C accelerometers for vibration, chatter, deflection and absolute rotary B"
+    },
+    {
+      "baseRefName": "codex/usb-joystick-dro",
+      "headRefName": "codex/pendant-stability-fixes",
+      "headRefOid": "26e044d54c7334e32965a8f7f1308bcc27059d54",
+      "number": 224,
+      "title": "Fix: Stabilise pendant USB feedback and feed limits"
+    },
+    {
+      "baseRefName": "codex/pendant-stability-fixes",
+      "headRefName": "claude/pendant-heartbeat-trace",
+      "headRefOid": "155d7b7852a26ebf984990de3cfc8351e2525f59",
+      "number": 226,
+      "title": "Fix: Keep the pendant keepalive independent of status polling"
+    },
+    {
+      "baseRefName": "claude/pendant-heartbeat-trace",
+      "headRefName": "claude/pendant-obstacle-map",
+      "headRefOid": "707e5f944050e5feb1c8186a0ad1dcffa7c9adef",
+      "number": 227,
+      "title": "Improvement: Map pendant obstacles and hold jogs instead of disarming"
+    },
+    {
+      "baseRefName": "claude/pendant-obstacle-map",
+      "headRefName": "claude/pendant-smooth-jog",
+      "headRefOid": "22cf61a34910dad14e7c393ede7075d72e31e0b6",
+      "number": 228,
+      "title": "Feature: Add opt-in continuous pendant X/Y jogging"
+    },
+    {
+      "baseRefName": "claude/pendant-heartbeat-trace",
+      "headRefName": "claude/luban-issue-221-0adf10",
+      "headRefOid": "36511161b9e876156d4a869aacb0d5b53ff2de44",
+      "number": 229,
+      "title": "Fix: Restore G90 and G54 after failed MCP operations with recovery evidence"
+    },
+    {
+      "baseRefName": "claude/pendant-heartbeat-trace",
+      "headRefName": "claude/pendant-recovery-integration",
+      "headRefOid": "599a5eb07a848e10a7455d0f1a7e24f6c2751297",
+      "number": 230,
+      "title": "Fix: Unify the pendant frame latch with the failed-call recovery hook"
+    },
+    {
+      "baseRefName": "claude/pendant-recovery-integration",
+      "headRefName": "claude/pendant-continuous-hold",
+      "headRefOid": "1019fb377e581f449873b31556ba02f2cd30669c",
+      "number": 231,
+      "title": "Feature: Replace pendant queued runs with one continuous hold"
+    },
+    {
+      "baseRefName": "claude/pendant-continuous-hold",
+      "headRefName": "claude/pendant-hold-fixes",
+      "headRefOid": "f22551c9d6d65cc71e6cc73216a666584f71d471",
+      "number": 232,
+      "title": "Fix: Allow overtravel in shared travel and stop disarming after pendant holds"
+    },
+    {
+      "baseRefName": "startup/base",
+      "headRefName": "codex/fix-blank-http-jog",
+      "headRefOid": "459af491089f646c1c760a7b7bf5b9c168f03da9",
+      "number": 234,
+      "title": "Fix: Prevent blank HTTP commands from blocking jog moves"
+    }
+  ],
+  "workflow": "build-on-pull-request.yml",
+  "platforms": "linux",
+  "mergeResolutions": [
+    "README: retained both accelerometer and camera/tool descriptions.",
+    "MCP test runner: retained vibration and connection-generation suites."
+  ]
+}

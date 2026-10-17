@@ -323,7 +323,7 @@ the pipe into JPEGs (`mjpegFanout.ts` walks the marker segments; a naive `FFD9` 
 would end a frame at an EXIF thumbnail) and publishes each into a `FrameHub`. While that
 loop runs, `captureFrame()` in `camera.ts` is served FROM the hub through the
 `LiveFrameSource` hook — `capture_frame`, `move_and_capture`, `visual_servo`, `survey_bed`
-all keep working, position-stamped and cached (`frameId`) exactly as before, with
+all keep working, position-stamped and archived (`frameId` and saved image path), with
 `camera.source = "stream"` — waiting for a frame no older than one frame interval (so a
 post-settle capture never gets a pre-settle frame). When the last viewer leaves the loop
 lingers 5 s, then ends ffmpeg and the tools go back to opening the device themselves
@@ -374,7 +374,7 @@ mcp/
   jobs.ts        JobManager + human confirm pages (/confirm/<id>); job kinds file|direct
   validator.ts   static gcode inspection (extents, spindle, distance-mode hazards) + the FRAME
                  handshake (G53/G54 tracking, resolveJobFrame refuses undeclared jobs)
-  camera.ts      capture providers, frame cache (last 12, frameId), sticky device, LiveFrameSource hook
+  camera.ts      capture providers, 12-frame RAM cache plus persistent requested snapshots, sticky device, LiveFrameSource hook
   cameraStream.ts  live MJPEG view (/camera*): one ffmpeg loop while viewers exist, serves the tools too
   mjpegFanout.ts pure: JPEG stream splitter, FrameHub fan-out (backpressure, fps/client caps, stale, awaitFrame)
   tracking.ts    zero-mean NCC template matching between cached frames
@@ -414,6 +414,9 @@ mcp/
   diagnostics.ts event-loop / heartbeat / gcode / sensor timing; publishes mcp:position
   jobTiming.ts   per-kind timing summary from a job's event log
   traversePlan.ts  pure: traverse_xy planner (law-2 XY transport at the traverse height, landmark-checked)
+  safeZPolicy.ts  pure: the top-Z transport policy (#241) - when traverse_xy / the tool-change
+                 XY step / an up-only move_z run on the call instead of staging a page
+  sequenceLinks.ts  pure: probe_sequence local_links (#242) - hop heights and the low-hop bound
   tests/         `npm run test:mcp` - node:assert tests for the pure modules
   tools/         status, machine, gcode, camera, calibration, probe, toolsetter
 ```
@@ -511,10 +514,12 @@ it with no decision point, when the operator had authorised "step 1" only. Laws:
    inference finds things; it never clears them.
 4. **Landmarks are obstacles** — a landmark's clearance refuses XY paths crossing its box
    below the toolhead Z it demands. State it with `obstacle_top_z`: the height of the
-   OBSTACLE ITSELF, to which the fitted tool's protrusion and a 5 mm margin are added when a
-   path is checked. The tool is the longest candidate known (last tool-setter measurement,
-   `probe_effective_length`, `longest_bit_length_mm`), so a measurement only ever lengthens
-   the requirement; with none of them known a physically stated obstacle is impassable, not
+   OBSTACLE ITSELF, to which a current toolhead-reference clearance bound and 5 mm margin
+   are added. Only an explicit operator bound or a measured setter datum with bounded
+   uncertainty establishes that reference for a fitting. Otherwise use the separately
+   configured `toolhead_clearance_bound` conservative maximum; stale fitting records,
+   conventional probe offsets and nominal approach estimates cannot supply it. A collet-to-tip
+   measurement is not a toolhead-reference bound. Without one a physical obstacle is not
    passable. Records set with the legacy `clearance_z` are toolhead heights with a tool
    already baked in and are enforced exactly as before until re-stated —
    `get_stored_state.landmarkClearances` lists which ones those are.
@@ -992,6 +997,73 @@ These are agent release requirements, not new runtime checks in `validate_gcode`
   before a work-frame `move_z` / `move_and_capture`). See "Coordinate frames and the position
   of record" below. Agent guidance: `.agents/skills/cnc-motion-rules/SKILL.md` (canonical) and
   `.agents/skills/README.md`.
+- **A failed tool call does not leave G53/G91 behind silently** (#221). `ToolRegistry.call()`
+  records the direct sends made in the call's OWN async context (`failureRecovery.ts`, per call
+  via AsyncLocalStorage); anything the call launches in the background is detached from that
+  ledger. When the call throws or returns an error, it checks whether the call may have left
+  `G53`, `G91` or a mode an unfinished payload carried. If so, and only if the connection
+  generation is unchanged, none of THIS call's own payloads is still unanswered (the channel's
+  queue is not inspected), no other operation, job or pendant owns the controller, no
+  crash/overtravel latch or procedure stop request is set, and the machine is idle (all
+  re-checked before EACH cleanup send), and the failure was not a stop/trip/overtravel (only the
+  real markers: the procedure-stop marker, `CRASH ALARM` / `OVERTRAVEL ALARM` / `UNEXPECTED
+  CONTACT`, "Stopped on request"; a latch without one is caught by the guard), it sends `G90`
+  and, when `G53` is or may be active, `G54`, as separate, axis-free commands. A `G55`-`G59`
+  selection whose outcome is unknown is warned about, never reset to `G54`. A failure of
+  `restore_work_frame` itself is reported and never retried, and the failed command is never
+  retried: nothing is. The failure is never turned into success: the original error text comes
+  first, followed by `failure_recovery: {...}` evidence (or a `failure_recovery` field on a
+  structured error result). A failed call that cleans up holds the ownership gate about 4.5 s
+  longer (the 4.5 s settle before verification, plus the two replies). A call that SUCCEEDS but leaves
+  `G53`/`G91`/unknown behind gets the same field with status `skipped` and nothing sent (not for
+  a payload still pending, nor under a running job). The distance mode is never claimed verified.
+  The workspace is verified with `restore_work_frame`'s rule (`frameRecovery.verifyWorkFrame`):
+  a status report at least one poll period (2 s) after the cleanup reply, judged work-frame, a
+  work offset above 0.5 mm, AND the raw report impossible as a machine position; otherwise
+  "consistent with work frame, unverified", "unverifiable", or "no fresh beat". A position is
+  reported trustworthy only when its reliability allows motion and either it is a `verified`
+  echo (still physically valid, but the cleanup sends voided the echo record: re-read
+  `get_position`) or its frame is proven. Anything skipped or unverified names
+  `restore_work_frame` as the no-motion recovery, to call once no job is starting or running.
+- **One recovery design with the USB pendant** (2026-10-05). The hook, the pendant's queued
+  runs and the restart carry-over share ONE record that the controller may still have `G53`
+  selected: the frame-uncertainty latch in `positionOfRecord.ts`. The gcode lease's recovery
+  hold (`machine/gcodeLease.ts`) is that latch, read directly, not a second state. So:
+  - the hook never sends into the pendant's lease or into a recovery hold: a held lease, or a
+    latch already set, is `another-operation-active` (nothing sent, the explanation names the
+    holder or the latch, and a second restore is never sent on top of the one the operator or
+    agent owes);
+  - whenever G53 is or may be active and the hook did not verify G54 (skipped, failed, or
+    accepted but unverified), it raises that latch (before its own sends, as the pendant does
+    before its G53), with the same effect everywhere: pendant arming refused, every MCP motion
+    tool refused by `requireReliableMachine`, the `FRAME UNCERTAIN` line in `get_position`
+    warnings (one wording, `frameRecovery.describeFrameLatch`), `frameUncertain` and
+    `gcodeLease.recovery` in `get_mcp_diagnostics`, and `position.frame_uncertain` in the
+    evidence; `position.trustworthy` is false while the latch stands;
+  - an accepted G54 is recorded as the restore (`noteFrameRestored`), and the latch clears only
+    where `restore_work_frame`'s does: in `getPositionSnapshot`, on a verified position after
+    the restore (a work-frame beat with a reported offset at least 1 s later, or a verified
+    echo). Clearing releases the pendant's held crash guard and ends the lease's hold.
+  - `G90` is never claimed verified (`frameRecovery.DISTANCE_MODE_WARNING`, the same text in
+    both places). `feed_override` reports the last accepted `M220 S<n>` on the direct path,
+    which persists on the controller after the pendant run that sent it.
+- **Jobs that end outside the call that started them** (#221). A procedure runner is detached
+  from `start_gcode_job`'s ledger onto its own, so a step still pending when the call returns
+  `running` is not the start's exposure; when the runner ends (inside the 25 s start wait or
+  later) its ledger is judged exactly like a failed call (the waiting start call counts as the
+  same operation), the evidence goes on the job record and, inside the wait, on the start
+  error. A FILE job runs on the controller's interpreter, so its exposure is inferred from the
+  program text: modal words act when the controller PARSES a line and the parser runs far ahead
+  of the cutter, so after a stop every line from the last `currentLine` seen (less a 16-line
+  queue margin, widened by any `totalLines` mismatch) to the END of the file may have been
+  parsed; several possible modes make that mode unknown, and no reading puts the whole file in
+  play. A completed file leaves the modes of its last line. A file job is NEVER cleaned up
+  automatically: a stop (`stop_gcode_job`, dashboard), a crash/overtravel latch, a lost
+  connection and a completion all record skipped evidence (`job-completed-with-modal-exposure`
+  for a completion that left `G53`/`G91`). Only a job classified as failed on its own may get
+  the guarded `G90`/`G54`, and the file-job watcher has no such classification today (the
+  controller reports no failure state for it). The evidence is `job.failure_recovery` in
+  `get_gcode_job_status`, `stop_gcode_job` and the dashboard.
 - **Compound motion and all cutting goes out as gcode FILES** through the same
   `prepare_print`/`start_print` path as Luban's Start button, so the controller job state
   machine and the enclosure **door interlock** apply (fork issue #23). The direct
@@ -1085,17 +1157,18 @@ These are agent release requirements, not new runtime checks in `validate_gcode`
   calibration is keyed by machine Y AND Z. The board-viewing anchor pose is the pre-home
   park (machine X0/Y0), not machine home. The **gold cylinder at machine Y≈176–340 is the
   TOOL HEIGHT CHECKER** (operator-confirmed; was misidentified twice).
-- **Tool setter: centre at machine (X79, Y293), top-left of bed. MEASURED trigger Z 175.500
-  with the 75 mm reference endmill (three confirm passes agreed, spread 0)** — so the setter
-  SURFACE is machine Z 100.5, and expected trigger Z for a bit of length L is
-  `175.5 + (L − 75)`. Config + measurement history live in `mcpToolSetter`.
-- **Touch probe (measured 2026-09-01): effective length 71.1 mm** (trigger on the setter at
-  machine Z 171.6 ⇒ any surface = probe contact toolhead Z − 71.1). The probe's AXIAL
-  spring is stiffer than the setter's switch, so on the setter the SETTER fires first —
-  measuring the probe there is safe with `accept_probe_contact: true` (either channel
-  confirms). Probe feed latency, hardware-measured: **~120–150 ms** sensor→feed on a local
-  bump test (trigger message 452 ms after move issue incl. ~330 ms motion) — the 200 ms
-  contact windows are correctly sized.
+- **Tool setter (historical)**: centre at machine (X79, Y293), raw trigger toolhead Z175.500
+  with a nominal 75 mm reference endmill (three extra passes agreed). Subtraction defines
+  the **legacy reference convention Z100.5**; it does not independently establish a physical
+  machine plane. Approach prediction remains `175.5 + (nominal approach estimate − 75)`.
+  Config, named datum and immutable fitting measurements live in `mcpToolSetter`.
+- **Touch probe (historical, 2026-09-01)**: raw setter trigger machine Z171.6 gives a
+  conventional offset71.1 against datum100.5. This is neither collet-to-tip nor body-to-tip
+  caliper length. Current procedure results preserve raw toolhead coordinates and add
+  `tipMachineZ = toolheadZ − (setterTriggerZ − setterDatumZ)` with `tipCalibration` provenance.
+  The projection can be conventional or unavailable; inspect its basis/applicability.
+  Setter contact and probe stylus contact can differ in pretravel. Historical MQTT sensor
+  latency was ~120–150ms; do not transfer that timing to a different GPIO setup without evidence.
 - **Camera offset**: the toolhead camera looks roughly **90–150 mm in −X** of the toolhead
   (setup-specific — verify per rig): features at machine X appear in frames taken from
   toolhead X+90..150. The far-X column of a bed survey is therefore the only view of the
@@ -1183,7 +1256,350 @@ when a beat was rejected); `get_mcp_diagnostics.machinePosition` counts rejected
 resyncs and disconnects. Unit tests: `tests/machinePosition.test.ts` (the recorded incidents are
 the fixtures).
 
-## Tool surface (48)
+## Spindle telemetry (2026-09-29)
+
+Did the 200 W spindle hold its commanded RPM under load, and did the cut chatter or run
+out — answered from the job record, with the operator recording nothing. **Opt-in, observes
+only**: it never pauses, stops or commands the machine, the heartbeat / position-of-record
+path is untouched, and file-job streaming is unchanged (the machine runs the file; telemetry
+only reads what the controller reports). Files: `telemetryConfig.ts` (settings, limits),
+`spindleProgram.ts` (commanded S + motion kind per line), `spindleTracker.ts` (the
+harmonic-comb tracker, a streaming port of `endmill_burn_calibration/rpm_from_audio.py` whose
+`--selftest` the unit suite reproduces; sags are judged against the UNLOADED baseline - the
+  rolling median of the most recent settled free frames - as the operator's rule and the reference
+  script do, with the best sustained loaded median reported beside it; measured 2026-09-29 the A350
+  reaches ~8010-8030 RPM within 2 s of `M3 S8000` and a 1 mm skim at F500 runs it at 7980-8000),
+  `telemetryRing.ts` (typed-array rings, min/max
+downsampling), `audioSelection.ts` / `audioDevices.ts` (capture-source listing and strict
+matching), `spindleAudio.ts` (ffmpeg recorder), `spindleTelemetry.ts` (the per-job session),
+`tools/telemetry.ts`.
+
+- **Settings** (Settings → MCP Server → Spindle telemetry, configstore or env):
+  `mcpSpindleTelemetry` / `LUBAN_MCP_SPINDLE_TELEMETRY` records every status report during a
+  file job (time, reported RPM, target RPM, the line the controller is on and the S that line
+  commands). `mcpSpindleStatusPollMs` / `LUBAN_MCP_SPINDLE_STATUS_POLL_MS` (200–2000, empty =
+  off) adds read-only `/api/v1/status` polls during file jobs only, via
+  `SstpHttpChannel.fetchStatus()`, which deliberately does NOT update `latestMachineState` so
+  every safety judge keeps its 2 s cadence. `mcpSpindleAudio` / `LUBAN_MCP_SPINDLE_AUDIO` records
+  the microphone named by `mcpAudioDevice` / `LUBAN_MCP_AUDIO_DEVICE` to
+  `<userData>/mcp-audio/<job>_<name>.flac` and tracks it live. `mcpTelemetrySampleLimit` /
+  `LUBAN_MCP_TELEMETRY_SAMPLE_LIMIT` caps each ring (default 1 000 000 samples; 10 000–4 000 000).
+  With telemetry on the job event log default rises to 200 000 (max now 1 000 000 for everyone).
+- **The microphone is never guessed.** `list_audio_devices` reports every capture source
+  (`pw-dump` → `pactl list short sources` → `arecord -l` on Linux, `ffmpeg -list_devices` on
+  Windows) as `pulse:<node>` / `alsa:hw:CARD=…,DEV=n` / `dshow:<name>` entries with built-in /
+  USB hints; the operator stores one (exact entry, alias, or a substring matching exactly one),
+  and a job whose device does not resolve records a `spindle_audio_unavailable` event instead of
+  falling back to the laptop's own microphone. snapcnclaptop (2026-09-29) has exactly one
+  source, the built-in ALC269VC (`pulse:alsa_input.pci-0000_00_0e.0.analog-stereo`); neither USB
+  camera exposes audio, so a microphone near the head has to be added for the audio channel to
+  mean much. The device used is recorded on every job (`telemetry.audio.device`).
+- **Tracker**: mono 16 kHz, 0.15 s Hann frames every 0.05 s, NFFT 16384; each candidate rev
+  frequency in 0.80–1.05 × S/60 scored by weighted log power at harmonics {1: 0.6, 2: 0.6,
+  3: 0.4, 4: 1.0 (tooth pass), 8: 0.5}, parabolic refinement. Commanded S comes from the `M3 S`
+  words at the line the controller is EXECUTING. Nothing the controller reports IS that line
+  (measured 2026-09-29): `currentLine` is the parser's position (the whole file within 44 s of a
+  five-minute job), and x/y/z are the end of the last QUEUED move - the planner keeps 16 blocks
+  ahead (`mcpSpindlePlannerLeadBlocks` / `LUBAN_MCP_SPINDLE_PLANNER_LEAD`), so on a raster of
+  10 s passes the reported position led the cutter by eight passes. `executionModel.ts`
+  therefore simulates the file's timing (segment length / feed, dwell P) from the last exact
+  anchor - the job start, or a dwell end, visible as the frozen reported position advancing
+  again - and keeps the estimate between the queued line (`inferExecutingLine` on x/y/z
+  against the file path) minus the buffer depth and the queued line itself. Put a `G4` before
+  anything whose timing matters: a dwell is a planner sync. An S change is dated by the move
+  before it ending;
+  feed moves (G1/G2/G3) are "cut", everything else after a 2 s spin-up is "baseline",
+  and 0.5 s after every reported line-kind change is neither. Per commanded S (an *epoch*):
+  HOLD / BLIP / STRUGGLE / NO-LOCK exactly as the reference `grade()`; runout index = (1× gain
+  while cutting) − (4× gain), dB vs baseline, flag above −3 dB; chatter = strongest cut-only
+  tone in 300–6000 Hz that is not a rotation harmonic, with the harmonics masked **per frame at
+  that frame's tracked RPM** (mask ≥ ±20 Hz, the window's own resolution), flagged at > 12 dB
+  over the band median and > 10 dB over the baseline, reported with the implied rib spacing
+  vf/f. Frames whose RPM moved > 1 % since the previous or the next frame (one hop of
+  lookahead) are excluded from the spectral statistics — a dip straddles two combs and would
+  otherwise read as chatter. The dip rules only run on a majority-locked 0.3 s window, so
+  noise that happens to score cannot manufacture a sag; a comb that falls to the search band's
+  edge (within 1 %) is a failed lock, not a dip (a clipped run on 2026-09-29 "sagged" to exactly
+  0.80 × S), a clipped frame (RMS ≥ −0.5 dBFS) is never a lock and raises one
+  `audio_clipping` event per job, and the baseline waits until the free-running RPM has
+  SETTLED (1 s median within 0.5 % of the second before). The earlier ~20 s ramp interpretation
+  came from tracking the ~125 Hz gantry tone. The later S8000 trace reached ~8010–8030 RPM
+  within 2 s; that observation is not a universal spin-up time or a prescribed dwell.
+- **Events** (low volume, `tool: spindle-telemetry`): `telemetry_started`, `spindle_reach`
+  (unloaded > 2 % off S), `spindle_blip` (dip > 3 % under 1 s; first 10 per epoch), `spindle_sag`
+  (rolling median < 97 % for > 1 s, emitted *while* it is happening, or loaded median > 3 % down
+  at epoch end), `chatter`, `runout`, `spindle_nolock`, `spindle_epoch` (the verdict per S),
+  `spindle_audio_started` / `_unavailable` / `_error`, `telemetry_finished`. The controller's own
+  RPM report gets the same coarse judgement (`source: status`). **Alerts only.**
+- **Reading it**: `get_gcode_job_status.telemetry` is the summary — samples, rates, audio device,
+  per commanded S the unloaded / loaded median, min, time below 95 %, the verdicts and flags,
+  the poll cost and the analysis cost. `get_job_telemetry {job_id, since_ms?, until_ms?,
+  max_points?}` returns the series (status: line / rpm / target / commandedS / pollMs / source;
+  audio: rpm / confidence / rel / chatterDb / chatterHz / runoutDb / role) downsampled so each
+  bucket keeps its min and max, plus the FLAC path. Rings hold 16 B per status sample and 13 B
+  per audio frame; at the cap a ring halves its rate (every second sample dropped) so a long
+  job keeps its whole shape. The last 4 sessions keep their rings; older ones keep the summary.
+- **The gantry is tracked as its own thing.** Every frame - spindle on or off - also fits a
+  MOTION comb: the strongest harmonic series with a fundamental in 20–400 Hz, with the spindle's
+  harmonics masked out (`motionHz` / `motionDb`; measured 2026-09-29 at F500 the A350's X axis
+  sings a 205-208 Hz comb and its Y and Z axes a 124.5 Hz comb whose second harmonic is 15-17 dB
+  over the fundamental), plus eight octave-band levels 50 Hz–8 kHz (`band0..7`) and a `flags`
+  column (locked / clipped / contested / ambiguous / gantry-like). Three things keep the gantry
+  out of the RPM: a candidate that coincides with a stronger motion-comb harmonic is `contested`;
+  during a rapid a candidate on a harmonic of the gantry's own comb is `ambiguous`; and a
+  candidate whose 2x line is 10 dB or more above its 1x has the gantry's shape (`gantryLike`) -
+  the spindle's fundamental is its strongest low harmonic idle and cutting - so it is never a
+  lock whatever the estimated context says. The estimated context itself starts from the head's
+  position before the job and the modal feed the controller still holds from the previous file
+  (the A350 runs a file's leading `G0`s at it: a 106 mm Z descent took 12.7 s), so the spindle
+  search does not begin while the head is still travelling to the `M3` (2026-09-29: two jobs
+  reported 7470-8000 RPM from the gantry alone before the spindle had started).
+- **Camera page panel**: with telemetry on, `/camera` gains a side panel fed by
+  `/telemetry/live.json` (1 Hz, read-only): RPM (microphone when tracked, else the controller's
+  report) against the commanded S with the load percentage, the noise level (dBFS), the chatter
+  index and the reported line, plus two-minute min/max sparklines - dips below 97 % of S in red,
+  chatter peaks over 12 dB in orange - the gantry tone, a scrolling five-minute spectrogram
+  (30 Hz–8 kHz on a log axis, each column scaled to its own median so the spindle comb, the
+  gantry comb and the mains hum read as separate lines; cyan ticks at the spindle's 1x / 4x,
+  pink at the gantry tone) and the job's event tally.
+- **Status RPM on the A350 (verified 2026-09-29)**: the field is `spindleSpeed`, in 250 RPM
+  steps, and it reads 0 on most reports while the spindle runs (773 of 843 samples of job
+  ad892e15b651; the rest 7250-8250 at S8000). Zeros are counted (`zeroRpmSamples`) and excluded
+  from the per-S statistics; the microphone is the RPM source that matters.
+- **Status field names**: the SSTP/HTTP status payload is spread into the machine state
+  untouched, so the RPM field is whatever the controller calls it. The session tries
+  `cncCurrentSpindleSpeed`, `spindleSpeed`, `currentSpindleSpeed`, `currRpm`, … (SACP writes
+  `cncCurrentSpindleSpeed`; serial Marlin `currRpm`) and records the name it found as
+  `telemetry.status.rpmField`; when none matches it lists the scalar keys the controller did
+  send (`statusScalarsSeen`) so the list can be extended from evidence. The A350 HTTP observation
+  above verifies `spindleSpeed` for that session; other transports/firmware may use different fields.
+- **Measured cost** (snapcnclaptop, Celeron N4020, 2026-09-29): a status poll is ~25 ms and
+  ~361 B (idle payload) — at 200 ms that is 5 req/s, ≈ 2 KB/s plus headers and ≈ 12 % of the
+  controller's HTTP time; at 500 ms 2 req/s / ≈ 5 %. ffmpeg pulse → FLAC + f32le pipe: 5–8 % of
+  one core, 55 MB RSS, ~170 kbit/s on disk for room noise. The tracker in the server process:
+  5.96 ms per 50 ms frame mean (max 55 ms at JIT warm-up) with node 18 = ≈ 6 % of one core live,
+  +~10 MB RSS. The session also reports the server process's own CPU share over the job
+  (`telemetry.server.cpuPercent`) and ffmpeg's (`telemetry.audio.ffmpegCpuPercent`, /proc).
+
+## Accelerometers (vibration feed, 2026-10-04)
+
+I2C accelerometers stuck on parts of the machine - the toolhead, the tailstock, the rotary
+chuck, the axis carriages - read through their own bridge, analysed with the same FFT
+machinery as the spindle microphone, and turned into answers: how hard each part shakes and in
+which direction, at what frequencies, what turns at that rate (spindle RPM seen through the
+structure), which tones the rotation does not explain (chatter), where along an axis the noise
+lives and what length of component it repeats at (reconditioning a noisy axis), how far a mount
+tilts under load (static deflection), and the rotary chuck's **absolute** angle from gravity
+(the A350's B axis has no home switch and can lose its count over a power cycle).
+
+**Opt-in, no machine motion.** Captures write files and rotary calibration stores or clears state.
+Off by default. Nothing in the feed or its tools commands, pauses or stops
+the machine, nothing in the motion or probe path waits on it, and motion a diagnosis needs (an
+axis run, a B rotation) is staged through the ordinary tools on the operator's word and recorded
+alongside. The skill [`cnc-vibration`](../../../../.agents/skills/cnc-vibration/SKILL.md) holds
+the procedures.
+
+### Hardware
+
+| Chip (Adafruit board) | Mode | Use |
+|---|---|---|
+| LSM6DSOX (#4438, 9-DoF #4517), ISM330DHCX (#4502, 9-DoF #4569), LSM6DSO32 (#4692, +-32 g) | `fifo` | Spectra: evenly spaced samples at the chip's ODR (12.5-6664 Hz) from its tagged FIFO, gyro optional |
+| LSM6DS3TR-C, LSM6DS33, LSM9DS1, BNO055, MPU-6050, ICM-20948, LIS3DH, ADXL343/345 | `poll` | Gravity and slow vibration: the Adafruit driver read on a timer (default 100 Hz), stamped on arrival and resampled onto an even grid; jitter reported |
+
+Two sensors of one kind share a bus at their two addresses (address jumper); more go behind a
+TCA9548A mux (`mux: {address, channel}`). The sensors need **their own bridge**:
+
+- **`blinka` transport** - the monitor runs on the Luban host under Python + Adafruit Blinka on
+  a USB I2C bridge (`BLINKA_MCP2221=1` for an MCP2221A breakout, `BLINKA_FT232H=1`) or a Pi header
+  (`native`). The config **refuses** the probe feed's bridge: the probe and crash sensors are
+  safety equipment, two processes on one U2IF/MCP2221 HID device contend for it, and a claim
+  leaked mid-open is exactly what wedged the KB2040 on 2026-09-19. Nothing is picked
+  automatically: the Blinka environment is required.
+- **`serial` transport** - CircuitPython boards (QT Py RP2040, Feather, KB2040 running
+  CircuitPython, not U2IF) run the same file as `code.py` and stream over USB serial; Luban
+  sends each its sensor list. Several boards: list their ports comma-separated and give each
+  sensor `"port"`; every board is its own link (monitor, I2C bus, bus budget, reconnects), so
+  one per area of the machine (toolhead, tailstock, rotary, an axis) keeps cables short. The board does the I2C at 400 kHz locally, so this is the right
+  choice for several sensors, high rates, or long cables to the toolhead / tailstock / rotary
+  (I2C over a metre of STEMMA QT is marginal - put the board near the machine).
+
+The monitor is one file, [`vibration_monitor.py`](vibration_monitor.py), CircuitPython- and
+CPython-compatible; the server spawns an embedded copy (`vibrationMonitorSource.ts`, regenerated
+by `node build/embed-vibration-monitor.js`, and a unit test fails while the two differ). For a
+board: copy `vibration_monitor.py` to CIRCUITPY as `code.py`; it waits for Luban's configuration
+and re-initialises whenever a new one arrives (or reads `/vibration_config.json` standalone).
+Poll-mode chips need their Adafruit drivers on the host or the board (`requirements.txt` lists
+them as optional).
+
+**Resources are leased, not shared.** The configuration states the physical resources the
+accelerometers hold - the USB bridge (`usb:BLINKA_MCP2221`), native I2C pins (`pin:SDA`,
+`pin:SCL`; a Raspberry Pi's D2/D3 are those pins), serial ports - and refuses any that the probe
+feed holds, from its stored settings and from the running feed, and an environment that switches
+on more than one bridge. A future SPI feed declares its pins the same way (`pin:SCK`, ...). Each
+FIFO batch is a contiguous run: an overrun or a corrupt FIFO word ends the batch, and the next one
+is marked as a gap.
+
+**Throughput is checked, then reported.** A configuration whose FIFO traffic exceeds ~60 % of
+the bus clock (7-byte words, 9 bit times per byte) is refused before it starts, as are look-back
+rings over 256 MB in total (rings are allocated on the first sample).
+ The heartbeat carries the bus busy fraction and every
+sensor's FIFO overruns; `get_vibration_status` shows them. Over a USB HID bridge each I2C
+transaction is a USB round trip, so a FIFO is read in 9-word (63-byte) chunks; whether one or two
+sensors keep up at 1666 Hz on a given bridge is for the overrun counter to say - drop `odr_hz`
+to 833 (Nyquist 416 Hz still covers an 8000 RPM spindle's 1x-3x) or move to the serial transport
+if it climbs. If a part does not roll its FIFO read address back from 7Eh to 78h the monitor sees
+garbage tags, says so, and falls back to one word per read.
+
+### Configuration
+
+Settings -> MCP Server -> **Accelerometers**, or the configstore / environment (environment
+wins):
+
+| Key | Env | Meaning |
+|---|---|---|
+| `mcpVibration` | `LUBAN_MCP_VIBRATION` | on/off (default off) |
+| `mcpVibrationTransport` | `LUBAN_MCP_VIBRATION_TRANSPORT` | `blinka` (default) or `serial` |
+| `mcpVibrationBlinkaEnv` | `LUBAN_MCP_VIBRATION_BLINKA_ENV` | e.g. `BLINKA_MCP2221=1`; required for blinka |
+| `mcpVibrationPython` | `LUBAN_MCP_VIBRATION_PYTHON` | default: the GPIO transport's interpreter, else `python3` |
+| `mcpVibrationSerialPort` | `LUBAN_MCP_VIBRATION_SERIAL_PORT` | e.g. `/dev/ttyACM1`, `COM7`; several boards comma-separated |
+| `mcpVibrationSensors` | `LUBAN_MCP_VIBRATION_SENSORS` | JSON array, below |
+| `mcpVibrationJobs` | `LUBAN_MCP_VIBRATION_JOBS` | record every file job automatically |
+| `mcpVibrationI2cHz` | `LUBAN_MCP_VIBRATION_I2C_HZ` | bus clock (default 400000) |
+| `mcpVibrationBufferS` | `LUBAN_MCP_VIBRATION_BUFFER_S` | look-back ring per sensor, s (default 120) |
+
+```json
+[
+  {"id": "head", "location": "toolhead", "chip": "lsm6dsox", "odr_hz": 1666, "range_g": 4, "orientation": "x:+x,y:+y,z:+z"},
+  {"id": "tail", "location": "tailstock", "chip": "ism330dhcx", "address": "0x6b", "odr_hz": 1666},
+  {"id": "chuck", "location": "rotary-chuck", "chip": "lsm6dsox", "mux": {"address": "0x70", "channel": 2}, "gyro": true},
+  {"id": "ycar", "location": "y-axis", "chip": "lsm6dso32", "range_g": 8}
+]
+```
+
+`port` (serial, several boards) names the board a sensor hangs off. `gyro` streams the
+gyroscope in FIFO and poll mode alike, on chips that have one. A root-bus sensor may not share an
+address with a sensor behind a mux on the same board (an open channel joins the two buses, so
+both would answer), nor sit at a mux's address.
+
+`location` is one of `toolhead`, `tailstock`, `rotary-chuck` (turns WITH the chuck - the only
+location the absolute-B tools accept), `rotary-body`, `x-axis`, `y-axis`, `z-axis`, `bed`, `frame`,
+`other`. `orientation` (optional) states which machine axis each sensor axis points along; it must
+be a right-handed signed permutation, and with it every tone's direction and the gravity vector
+are also reported in machine axes. Saving restarts the feed at once.
+
+### What the analysis says (and does not)
+
+- **Levels**: acceleration RMS per axis and in octave bands (g), velocity RMS over the ISO 10816
+  band 10 Hz - min(1 kHz, Nyquist) (mm/s), displacement RMS from 20 Hz up (um; lower would
+  integrate sensor noise into microns - the band is in the result).
+- **Tones**: peaks >= 10 dB over a running-median floor, frequency refined by a parabola, with
+  each tone's RMS, velocity and displacement amplitude, and its power share per axis - the
+  direction it shakes in.
+- **Rotation**: a harmonic comb (1x, 2x, 3x, plus the tooth-passing order with `flutes`) over a
+  band from `rpm_hint` (0.80-1.05 x S, the microphone tracker's band) or `rpm_min/rpm_max`,
+  refined from the clear harmonics' own peak frequencies; confidence < 3 or a band-edge fit is
+  "not locked". Locked, the tones it does NOT explain are listed as chatter candidates.
+- **Spatial periods**: with `motion {axis, feed_mm_min}`, every tone becomes a wavelength (mm per
+  cycle). A tone from a screw, belt, bearing or stepper keeps its wavelength when the feed changes;
+  a resonance keeps its frequency. `references_mm` ({"screw lead": 8, ...}, the operator's or a
+  datasheet's numbers, never guessed) gives each tone's order against them.
+- **Position profile**: with `motion.targets` (the machine coordinates visited, in order), the
+  vibration envelope is segmented into movements, matched one-to-one to the legs (a count mismatch
+  maps nothing), and binned by position per direction. Position is linear in time inside each
+  movement, so the acceleration ramps smear the first and last few mm.
+- **Deflection**: an accelerometer cannot see a static translation. It sees (1) **tilt** - the
+  gravity vector's change against a `baseline_capture_id`, with its resolution from the per-second
+  means; `lever_mm` carries it to a lateral displacement at the tool tip, labelled as tilt x lever;
+  and (2) **dynamic displacement** - per tone and over a band. Temperature drift of the zero-g
+  offset limits tilt over long gaps; compare captures taken close together.
+- **Rotary absolute angle**: see `rotaryGravity.ts`. Four or more still readings at controller B
+  angles spread over >= 180 deg (one power session; 0/90/180/270 is ideal - three points over
+  90 deg extrapolate to p95 0.35 deg with 1 mg of noise, four over 270 deg to 0.09 deg) fit the axis in the sensor frame, the
+  accelerometer's in-plane offset (a circle fit - LSM6DS-class offsets are tens of mg, a degree
+  of angle), the rotation sense and the angle at B0; nothing about the mounting is assumed and the
+  residual is reported. The caller must establish one power session, unchanged B datum and
+  mounting and record that provenance in the calibration reason: the tool does not enforce
+  session identity, and a low residual cannot establish it. A reading is STILL only with >= 3 whole seconds, time-domain vibration
+  < 0.02 g RMS, gravity turning < 0.1 deg between its first and last second (catches a slow B
+  rotation no spectral band sees) and, with a gyro, < 0.5 dps RMS about its zero-rate bias. From then on any still reading gives the chuck's absolute angle and
+  controller B minus absolute B: what a power cycle lost. Trust checks flag a moved mount
+  (in-plane radius) or a tilted module (axial component). **Correcting B is motion and a frame
+  decision** - a rotation staged through the normal tools on the operator's word; nothing here
+  rotates B or writes the controller's count.
+
+### Captures and files
+
+`capture_vibration` records a window (optionally reaching `lookback_s` back into the ring),
+`get_vibration_capture` analyses it again over a sub-window, at another resolution, with a motion
+or a baseline. `from_s`/`to_s` are seconds from the capture's window start, mapped to the raw file
+through a per-sensor time index, so a feed outage inside a capture (counted in `gaps`) does not
+shift later windows; re-analysis reads at most 600 s of raw samples, yielding to the event loop
+between chunks. Raw samples are kept under `<userData>/mcp-vibration/<capture id>/<sensor>.f32`
+(float32 little-endian, interleaved `ax ay az [gx gy gz]`, g and dps; `numpy.fromfile(path,
+'<f4').reshape(-1, 3)`) with `meta.json` beside them (sample rate, controller B and machine status
+at start and end, per-sensor spec). They are not deleted automatically: a new capture is refused while the directory holds more
+than 4 GB, the recording captures together write at most 1 GB of raw samples (each sensor 256 MB
+per capture), and raw samples are written asynchronously - if the disk falls 16 MB behind, that
+raw file stops (the report keeps accumulating) and `raw_stop_reason` says why. Changing the
+accelerometer settings ends every recording capture with that reason. A file job's automatic
+capture (`mcpVibrationJobs`) stops when the job ends (4 h cap) and its summary rides on
+`get_gcode_job_status` as `vibration`.
+
+**Timing.** FIFO samples are spaced at the chip's real ODR (6667 Hz / divider, trimmed by its
+INTERNAL_FREQ_FINE register); after 20 s of stream the rate is re-measured by regression of
+sample count on batch stamps (lower envelope - stamps lag by the read latency) and used when
+within 5 % of the chip's statement. A FIFO overrun or a sequence gap breaks the run and is
+counted, never papered over: the monitor sends what it read before an overrun as its own batch,
+and the first batch of every new monitor run (start, reconnect, a board re-initialising) is
+marked as a gap. A save in Settings restarts the feed only when the resolved configuration
+changed. The monitor never inherits a `BLINKA_*` variable from Luban's own environment, and the
+shared-bridge refusal also checks the bridge the RUNNING probe feed holds. A board's clock is mapped to the host's by the least-delayed batch
+of the last hundred. A sensor's stream survives its monitor: after a reconnect or a board restart
+the first batch is a gap, so a capture spanning the outage counts it and its windows map through
+the time index (`vibrationStream.ts`; `tests/vibrationStream.test.ts` interleaves eight streams
+through a restart, and the monitor's Python tests stream eight sensors over four mux channels).
+
+### Modules and tests
+
+`vibrationConfig.ts` (settings, sensor schema, the shared-bridge refusal), `vibration_monitor.py`
+(+ `vibrationMonitorSource.ts`), `vibrationProtocol.ts` (batch decoding, FIFO clock, poll
+resampler), `vibrationFeed.ts` (transports, rings), `vibrationAnalysis.ts` (Welch PSD, levels,
+peaks, comb, spatial periods, segmentation, position profile), `vibrationReport.ts` (streaming
+per-sensor accumulator and the report), `rotaryGravity.ts` (calibration fit and absolute angle),
+`vibrationCaptures.ts` (captures, files, rotary readings, job captures), `tools/vibration.ts`.
+Pure modules are covered by `tests/vibration*.test.ts` and `tests/rotaryGravity.test.ts` (in
+`npm run test:mcp`); the monitor by `tests/test_vibration_monitor.py` against a simulated
+LSM6DSOX and TCA9548A (`python -m unittest`). The whole chain - monitor, Node feed, clock,
+capture, tools - was run end to end against a simulated IMU injected as a fake Blinka
+`board`/`busio`; **it has not yet run against real sensors** (2026-10-04).
+
+## Tool surface
+
+The live `tools/list` is authoritative; camera operations and fitted-tool clearance are
+documented in [TOOLS.md](docs/TOOLS.md) and the
+[camera operations skill](../../../../.agents/skills/cnc-camera-operations/SKILL.md).
+
+`camera_program` composes explicit Z, surveys, captures, tracking and local 2×2 calibration
+under one approval. Its discriminated operation schema is also validated before staging;
+per-op clearance exceptions cannot implicitly apply to the whole program. An active tool
+never bypasses the camera motion floor. Overlap spacing uses every requested height and the
+physical surface plane; program surveys save frames, standalone surveys can also render mosaics.
+Local Jacobian fitting/inverse checking does not replace camera-model bootstrap and held-out
+verification. Bootstrap now returns confirm URLs and supports excluded holdout poses visited last.
+
+Remote clients read saved bootstrap/survey indexes through `get_camera_capture_set`, then images
+through `get_frame`, including mosaics. Reads are constrained to the camera artifact roots with
+realpath checks. Export the index plus images by basename for the offline Python solver; no
+machine shell access is part of camera operation.
+
+`set_active_tool` / `get_active_tool` establish fitted-tool protrusion for clearance separately
+from probe trigger conversion. A usable active value takes precedence over legacy candidates;
+stale/no active value falls back conservatively. Setter success replaces it with measured
+provenance. Tool-change parking, detected disconnect/reboot and server restart invalidate its
+authority but retain the record; every confirm page shows the staging/current assertion.
+The `probe_stylus_exposed_mm`, `probe_body_diameter_mm` and physical `bed_plane_z` geometry keys
+remove the need to remember these dimensions. `probe_program {dry_run:true}` supplies a
+no-staging event-budget check.
 
 `get_connection_status` · `get_machine_profile` (kinematics, module offsets) ·
 `get_position` (both frames, warnings on incoherent reporting) ·
@@ -1231,7 +1647,14 @@ line: per-station contact, best-fit line slope, flatness) · `probe_surface_grid
 −Z grid: Z matrix, best-fit plane + residuals, ASCII height map) — the two surface scans hop
 at `last contact + z_safe_delta_mm` (cap 20) within `max_hop_mm` (cap 60), see "Surface
 scans" above · `survey_bed` (camera grid at the current Z or stated `z_levels`, landmarks
-honoured by dropping / lifting with the reasons reported).
+honoured by dropping / lifting with the reasons reported) · **spindle telemetry** (read-only):
+`list_audio_devices` (every capture source with the operator's configured one; never chooses)
+· `get_job_telemetry` (a file job's status-RPM and microphone-RPM / chatter / runout series,
+min/max-downsampled, plus the FLAC path — the summary rides on `get_gcode_job_status`) ·
+**accelerometers** (no motion; capture/calibration writes, "Accelerometers" above): `get_vibration_status` ·
+`capture_vibration` · `get_vibration_capture` · `stop_vibration_capture` ·
+`list_vibration_captures` · `measure_rotary_angle` (the chuck's absolute B from gravity) ·
+`calibrate_rotary_accelerometer` (stored state, with a reason).
 
 ## Tool change workflows
 
@@ -1354,6 +1777,39 @@ Verified example, 2026-09-28: the operator's Pi Luban reconnect produced `Connec
 The operator confirmed no touchscreen re-authentication was required. This establishes the
 new session's liveness, not the cause of the earlier morning incident.
 
+
+### Setter datum and fitting evidence
+
+`run_tool_setter` records raw `measuredTriggerZ`, all confirmation contacts, spread, fine step,
+job/date, tool/fitting identity where supplied, and a named datum snapshot. Read these through
+`get_tool_setter_config` or `get_stored_state`; `derivedBitLengthMm` remains a deprecated
+compatibility alias for the setter-derived offset. `bit_length_mm` and the reference/longest
+nominal lengths are approach estimates only. `store_as_reference` retains the existing named
+datum before updating the approach reference, so an estimate cannot recalibrate old geometry.
+
+Configure a measured datum with `setter_datum {id,name,machine_z,basis:"measured",source,
+uncertainty_mm}` only from independent evidence. Existing nominal references are labelled
+`legacy_reference_convention`. Historic records without datum snapshots remain unknown;
+no current datum or synthetic trigger is applied to them retrospectively. Current probe
+procedures capture one fitting calibration per run and expose additive `tipMachineZ` and
+`tipCalibration`; raw contacts, work coordinates and legacy fit fields stay unchanged.
+
+`set_active_tool` accepts `protrusion_reference:"toolhead"|"collet"|"unknown"`. Only an explicit
+current toolhead bound (or measured datum plus uncertainty) supports physical clearance.
+Omitted/collet references cannot shorten it. `toolhead_clearance_bound {mm,source}` in setter
+config is a separately established conservative maximum for allowable tools. Restart, tool
+parking or disconnect invalidates fitting assertions; a previous shorter tool cannot bound an
+unknown replacement. Old `clearance_z` boxes retain their toolhead semantics. Conventional
+survey heights must not be silently mixed with independent bed-referenced obstacle heights.
+Holder/body side envelopes remain separate geometry (issue #187).
+
+Metric camera-bootstrap targets require the measured named setter datum with uncertainty.
+Legacy rotary coordinates remain stored evidence but are excluded from metric bootstrap until
+their physical reference is qualified; an approach reference cannot stand in for target Z.
+Coarse setter search uses configured XY only. The pendant clears unknown-basis offsets from
+its physical-bound input, and retaining a current measured fitting requires explicit unchanged-
+fitting confirmation with matching identity and bound.
+
 ## Development workflow (learned the hard way)
 
 - **Build**: Node 16 (`/c/dev/software/snapmaker/.tools/node-v16.20.2-win-x64`), python
@@ -1447,7 +1903,9 @@ new session's liveness, not the cause of the earlier morning incident.
   report still showing that position is stale by definition (never drift evidence — the
   4.5 s deadline still aborts if nothing ever catches up). Unit checks replay the abort.
 - **Buffer sizes** (Settings → MCP Server → Diagnostic buffers, or env): `mcpJobEventLimit` /
-  `LUBAN_MCP_JOB_EVENT_LIMIT` (default 2000, 400–100000 events per job) and
+  `LUBAN_MCP_JOB_EVENT_LIMIT` (default 2000 — 200 000 while spindle telemetry is on — 400–1 000 000
+  events per job; the dense telemetry series never go through the event log, see "Spindle
+  telemetry") and
   `mcpDiagnosticsRecentLimit` / `LUBAN_MCP_DIAGNOSTICS_RECENT_LIMIT` (default 40, 10–10000 per
   list). Applied immediately. Measured (cdbc29371b97, 8-station path, z_safe_delta 20, coarse 1,
   fine 0.1, 3 confirm passes): 763 events ≈ 100 fixed + ~85 per station; budget
@@ -1502,12 +1960,10 @@ toolhead camera. Everything a fresh install needs:
 - **Verify wiring** with `.venv/bin/python src/server/services/mcp/gpio_bumptest.py --seconds 90`
   (reads the configstore, prints raw → idle/TRIGGERED, flags a resting-state-triggered
   channel = wrong polarity).
-- **Cameras**: two are attached. The **toolhead camera is the Sonix "USB 2.0 Camera"**
-  (pinned by `/dev/v4l/by-id/usb-Sonix_…-video-index0`); at the homed position it looks
-  straight at the enclosure's aluminium extrusion, which reads as a near-field silver strut
-  on a dark textured background — that IS the toolhead view, not a stray camera. The
-  icspring camera (wide, warm view of the MDF wasteboard) is the other one. `/dev/videoN`
-  numbers reshuffle on replug; always pin the by-id entry.
+- **Cameras**: the attached device set changes between deployments. Identify the toolhead
+  camera from `preview_cameras` frames each session; do not infer it from a historical vendor
+  name or remembered composition. `/dev/videoN` numbers reshuffle on replug; pin the stable
+  by-id entry after frame-backed selection.
 - **Launching**: Ubuntu 24.04 needs the AppArmor `userns` profile the `.deb` postinst
   installs (see Installing); until then `snapmaker-luban --no-sandbox`. To launch into the
   operator's GNOME/RDP session from ssh, borrow `DISPLAY`/`XAUTHORITY`/`WAYLAND_DISPLAY`
@@ -1546,8 +2002,10 @@ toolhead camera. Everything a fresh install needs:
   long-polls (`wait_ms`, `since_event`) — agents no longer read server logs to learn how a
   job went. Still open: `probe_sequence` aborts drop completed marches into the error text
   (they are now in the events, but not structured).
-- **`traverse_xy` staged batch tool** (law-2-compliant XY transport twin of `move_z`): hops
-  currently need `submit_gcode_job` file jobs or `probe_sequence` hop steps.
+- ~~**`traverse_xy` staged batch tool**~~ — done 2026-09-14; and since 2026-10-17 (#241) it
+  runs on the call, under `mcpTraverseWithoutApprovalAtSafeZ`, when the head is already at the
+  traverse height on a verified homed position (safeZPolicy.ts). `probe_sequence` gained
+  opt-in `local_links` the same day (#242, sequenceLinks.ts).
 - **Console bug**: MCP gcode broadcasts leak into the Workspace console INPUT element with
   raw ANSI codes.
 - **#60 install size**: bundle/asar the main process, squeeze the remaining server externals.
@@ -1571,3 +2029,72 @@ for the documentation gaps addressed and the next-evaluation constraints.
 [Probe inspection](docs/probe-inspection.md) documents contact-synchronized photos in sequence
 and surface operations, the continuous camera endpoints, bounded ball-radius shoulder backoff,
 and propagation of held probe aborts through composite programs.
+
+### USB joystick manual control
+
+The local `/pendant` page connects an operator's CircuitPython USB joystick,
+reviews a bounded machine-coordinate jog envelope, and arms a supervised session
+with live DRO feedback. See [firmware, installation, controls and safety model](../../../../examples/usb-pendant/README.md).
+It uses a separate USB data interface and does not expose an MCP arming tool.
+Settled pendant segments stop between moves because the engine's trailing `G54;` synchronizes
+the controller's planner (Marlin `select_coordinate_system()`). `LUBAN_PENDANT_PIPELINE=1` is an
+opt-in continuous X/Y/Z mode: retained 2026-10-05 logs show 21 XY holds, 375 increments and
+20 immediate endpoint proofs, with one unproved X-limit close. Those logs do not identify the
+exact backend revision and contain no Z increments, so they are partial XY evidence, not
+acceptance of this build or the Z path. ONE hold runs from D1 press to
+release or any stop (`pendantRuntime.ts` `continuousHold`, pure pieces in `pendantHold.ts`). One
+`G53` at the press (`probing.ts` `enterMachineFrame`), clock-paced `G1` increments of 100 ms at
+the current feed every 100 ms with at most 200 ms queued ahead by a clock model
+(`queueMachineMove` with `omitZ` for X/Y increments: they carry no Z word, so a wrong
+heartbeat-derived record Z fails the close's M114 proof instead of being driven to; the settled
+path's record-Z word is unchanged), and one `G54` at the stop through the shared restore path
+(`tools/camera.ts` `sendWorkFrameRestore`, then `probing.ts` `verifyRestoredPosition`'s `M114`
+proves the commanded end position and clears the latch; it is retried twice 200 ms apart, and a
+close it still cannot prove is proved on demand by the next press, one work-frame `M114`, no
+motion). Z rides the hold: before the first Z word the hold drains its queue and sends one `M114`
+inside `G53`; its machine X/Y/Z must agree with the dead-reckoned chain within 0.05 mm per axis
+(`zBaselineProblem`), otherwise no Z word is sent and the hold closes. Z increments are
+`G1 X Y Z F` at most F1000 (`capZFeed`, host-side), with the same queue cap, envelope clamp and
+obstacle lookahead (the run-out extends along Z: 3.3 mm at F1000; a straight Z-up climb leaves an
+exclusion). Arming keeps Z on the settled path when `M503 S` reports Z limits that cannot follow
+the clock model (`firmwareZMotionProblem`). The earlier run/settle design was
+retired after hardware feedback (2026-10-05: a second of motion, a 0.5-2 s stop, repeat). Every
+increment is checked from the pendant's own dead-reckoned commanded position against the
+reviewed envelope and the obstacle map including the queued run-out; the position of record is
+blind inside the `G53` window by design. `M114` is polled every 250 ms while moving; idle polling
+is conditional on the freshest position evidence approaching 2 s old (one tick of margin).
+A reply within 200 ms whose machine position agrees with the hold
+(`holdPositionAgrees`) is position freshness, and the hold's 4.5 s age limit uses the newer of the
+heartbeat and that reply, so a long or idle hold no longer ages out waiting for a beat. Its
+`Count` fields (stepper steps, converted with `M92` steps/mm from `M503 S` or the A350 default,
+minus a per-axis offset learned from an idle `M114` on every arm: the trial A350 counts from its
+homing position, X +19 Y +4 Z +0 mm, so raw counts are never compared to machine coordinates) are
+traced against the model; the check is `observe` by default and gates only with
+`LUBAN_PENDANT_COUNT_CHECK=enforced` (which refuses to arm when the offset cannot be learned).
+The pendant README states the stop thresholds, limitations of timing estimates and remaining
+hardware validation. While a hold holds the window, an
+exclusive gcode lease (`machine/gcodeLease.ts`) refuses every other command. It covers every
+channel's `executeGcode`, the SSTP job and override endpoints (including the MCP file-job start)
+and ConnectionManager's job, jog, home and origin entry points, and it shortens every HTTP
+request to 10 s while held (`PIPELINE_REQUEST_TIMEOUT_MS`), so a hung request fails the hold
+instead of blocking recovery for the channel's 300 s. After a failed restore the frame latch
+becomes a recovery hold that admits only frame recovery (`restore_work_frame` or the pendant
+page's Restore work frame), Luban's own UI Home button as the whole `G53`/`G28`/`G54` sequence
+(a bare `G53` or `G28` is refused; the button sends its three requests inside
+`runAsHomeSequence`), position queries, spindle off and job stop. The MCP `home` tool and the
+pendant page's Home are NOT routes out: both go through `requireReliableMachine`, which refuses
+on any latch, and a re-home is not the remedy for a frame problem anyway.
+
+`M220 S100` persists after jogging: `/pendant/status` shows it as `pipeline.feedOverride` and the
+failed-call evidence as `feed_override`. The tracker judges in-hold beats as machine coordinates
+(`declareMachineFrameRun`, `machinePosition.ts` `judgeDeclaredRun`); the A350 heartbeat reports
+the planner's queued target, so nothing in the hold reads it for position.
+
+A persistent `frameUncertain` latch (`positionOfRecord.ts`) survives Luban restarts and shows in
+`get_position` warnings and in `get_mcp_diagnostics`. It refuses all motion until the work frame
+is restored and a fresh position verified. It is the same latch the failed-call cleanup hook
+raises and clears (see "Failed calls" above), and the lease's recovery hold IS the latch: the
+hold cannot outlive it, because `holdForRecovery` re-raises the latch if a beat cleared it
+mid-run. The latch file (`mcp-frame-latch.json`) is written whole (temp file and rename); a file
+that exists but cannot be read raises the latch on startup. The pendant's held crash guard is
+released whenever the latch clears, with or without a USB pendant open.

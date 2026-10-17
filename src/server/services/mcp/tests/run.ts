@@ -12,10 +12,21 @@
  * server (config/settings.base is ESM-only and breaks ts-node).
  */
 import { tests as connectionDiagnosticsTests } from './connectionDiagnostics.test';
+import { tests as pendantSettingsTests } from './pendantSettings.test';
+import { tests as pendantPageTests } from './pendantPage.test';
+import { tests as pendantPositionTests } from './pendantPosition.test';
+import { tests as pendantTests } from './pendant.test';
+import { tests as pendantRuntimeTests } from './pendantRuntime.test';
+import { tests as pendantHoldTests } from './pendantHold.test';
+import { tests as connectionLeaseTests } from './connectionLease.test';
 import { tests as sstpConnectionTests } from './sstpConnection.test';
 import { tests as bootstrapPlanTests } from './bootstrapPlan.test';
 import { tests as camLinksTests } from './camLinks.test';
 import { tests as cameraGeometryTests } from './cameraGeometry.test';
+import { tests as cameraProgramSchemaTests } from './cameraProgramSchema.test';
+import { tests as cameraArtifactsTests } from './cameraArtifacts.test';
+import { tests as cameraProgramTests } from './cameraProgram.test';
+import { tests as activeToolTests } from './activeTool.test';
 import { tests as cameraModelTests } from './cameraModel.test';
 import { tests as cameraSelectionTests } from './cameraSelection.test';
 import { tests as cornerFitTests } from './cornerFit.test';
@@ -23,8 +34,10 @@ import { tests as directMovePlanTests } from './directMovePlan.test';
 import { tests as envelopeChecksTests } from './envelopeChecks.test';
 import { tests as gpioFeedTests } from './gpioFeed.test';
 import { tests as frameRecoveryTests } from './frameRecovery.test';
+import { tests as failureRecoveryTests } from './failureRecovery.test';
 import { tests as inspectionReportTests } from './inspectionReport.test';
 import { tests as jobDashboardTests } from './jobDashboard.test';
+import { tests as jobModalRecoveryTests } from './jobModalRecovery.test';
 import { tests as jobEndingTests } from './jobEnding.test';
 import { tests as landmarkClearanceTests } from './landmarkClearance.test';
 import { tests as machinePositionTests } from './machinePosition.test';
@@ -36,13 +49,17 @@ import { tests as mjpegFanoutTests } from './mjpegFanout.test';
 import { tests as perimeterAnalysisTests } from './perimeterAnalysis.test';
 import { tests as perimeterTraceTests } from './perimeterTrace.test';
 import { tests as probeInspectionTests } from './probeInspection.test';
+import { tests as surfaceConfirmationTests } from './surfaceConfirmation.test';
 import { tests as probeFeedHealthTests } from './probeFeedHealth.test';
 import { tests as procedureLimitsTests } from './procedureLimits.test';
 import { tests as programEnvelopeTests } from './programEnvelope.test';
 import { tests as programOpsTests } from './programOps.test';
 import { tests as rotaryMotionTests } from './rotaryMotion.test';
+import { tests as safeZPolicyTests } from './safeZPolicy.test';
+import { tests as sequenceLinksTests } from './sequenceLinks.test';
 import { tests as surveyMosaicTests } from './surveyMosaic.test';
 import { tests as surveyPlanTests } from './surveyPlan.test';
+import { tests as toolDatumTests } from './toolDatum.test';
 import { tests as toolProtrusionTests } from './toolProtrusion.test';
 import { tests as traversePlanTests } from './traversePlan.test';
 import { tests as threadMillingTests } from './threadMilling.test';
@@ -50,10 +67,31 @@ import { tests as workspaceTests } from './workspace.test';
 import { tests as validatorTests } from './validator.test';
 import { tests as wallClearanceTests } from './wallClearance.test';
 import { tests as wallFollowTests } from './wallFollow.test';
+import { tests as audioSelectionTests } from './audioSelection.test';
+import { tests as executionModelTests } from './executionModel.test';
+import { tests as spindleProgramTests } from './spindleProgram.test';
+import { tests as spindleTrackerTests } from './spindleTracker.test';
+import { tests as telemetryConfigTests } from './telemetryConfig.test';
+import { tests as telemetryRingTests } from './telemetryRing.test';
+import { tests as rotaryGravityTests } from './rotaryGravity.test';
+import { tests as vibrationAnalysisTests } from './vibrationAnalysis.test';
+import { tests as vibrationConfigTests } from './vibrationConfig.test';
+import { tests as vibrationProtocolTests } from './vibrationProtocol.test';
+import { tests as vibrationReportTests } from './vibrationReport.test';
+import { tests as vibrationStreamTests } from './vibrationStream.test';
+import { tests as connectionGenerationTests } from './connectionGeneration.test';
 
 type TestCase = [string, () => void | Promise<void>];
 
 const suites: Array<[string, TestCase[]]> = [
+    ['connectionGeneration', connectionGenerationTests],
+    ['pendant', pendantTests],
+    ['pendantPosition', pendantPositionTests],
+    ['pendantPage', pendantPageTests],
+    ['pendantSettings', pendantSettingsTests],
+    ['pendantHold', pendantHoldTests],
+    ['pendantRuntime', pendantRuntimeTests],
+    ['connectionLease', connectionLeaseTests],
     ['sstpConnection', sstpConnectionTests],
     ['connectionDiagnostics', connectionDiagnosticsTests],
     ['validator', validatorTests],
@@ -64,19 +102,29 @@ const suites: Array<[string, TestCase[]]> = [
     ['envelopeChecks', envelopeChecksTests],
     ['cameraModel', cameraModelTests],
     ['cameraGeometry', cameraGeometryTests],
+    ['cameraProgramSchema', cameraProgramSchemaTests],
+    ['cameraArtifacts', cameraArtifactsTests],
+    ['cameraProgram', cameraProgramTests],
+    ['activeTool', activeToolTests],
     ['cameraSelection', cameraSelectionTests],
     ['bootstrapPlan', bootstrapPlanTests],
     ['frameRecovery', frameRecoveryTests],
+    ['failureRecovery', failureRecoveryTests],
+    ['jobModalRecovery', jobModalRecoveryTests],
     ['probeFeedHealth', probeFeedHealthTests],
     ['gpioFeed', gpioFeedTests],
     ['probeInspection', probeInspectionTests],
+    ['surfaceConfirmation', surfaceConfirmationTests],
     ['procedureLimits', procedureLimitsTests],
     ['programOps', programOpsTests],
     ['programEnvelope', programEnvelopeTests],
     ['rotaryMotion', rotaryMotionTests],
+    ['safeZPolicy', safeZPolicyTests],
+    ['sequenceLinks', sequenceLinksTests],
     ['surveyMosaic', surveyMosaicTests],
     ['surveyPlan', surveyPlanTests],
     ['toolProtrusion', toolProtrusionTests],
+    ['toolDatum', toolDatumTests],
     ['traversePlan', traversePlanTests],
     ['directMovePlan', directMovePlanTests],
     ['jobEnding', jobEndingTests],
@@ -93,6 +141,18 @@ const suites: Array<[string, TestCase[]]> = [
     ['cornerFit', cornerFitTests],
     ['perimeterAnalysis', perimeterAnalysisTests],
     ['perimeterTrace', perimeterTraceTests],
+    ['telemetryRing', telemetryRingTests],
+    ['vibrationAnalysis', vibrationAnalysisTests],
+    ['vibrationReport', vibrationReportTests],
+    ['vibrationConfig', vibrationConfigTests],
+    ['vibrationProtocol', vibrationProtocolTests],
+    ['vibrationStream', vibrationStreamTests],
+    ['rotaryGravity', rotaryGravityTests],
+    ['telemetryConfig', telemetryConfigTests],
+    ['spindleProgram', spindleProgramTests],
+    ['spindleTracker', spindleTrackerTests],
+    ['audioSelection', audioSelectionTests],
+    ['executionModel', executionModelTests],
 ];
 
 async function main(): Promise<void> {

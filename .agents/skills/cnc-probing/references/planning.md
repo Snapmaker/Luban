@@ -17,15 +17,17 @@ from the toolset. Keep all motion within the selected procedure's approved bound
 | Block top and sides | `probe_stock_outline` | Stepped top links; local standoff links on the same side; full raise/reposition when changing sides. Needs a suitable block estimate and valid approach geometry. |
 | Planned mixed directions / CAM stations | `run_probing_gcode` | `link_mode: stepped` or `wall` enables local links and blocked-station handling. G38.2/G38.3 cycles still return to their own starts, including misses. Default `raise` uses full-height XY links. Read `cam-probing.md` for constraints. |
 | Isolated axis/vector measurement | `probe_point` / `probe_vector` | Returns to the march start and raises on success. Vector probing supports polygon faces but does not itself follow the polygon. |
-| Explicit independent approaches | `probe_sequence` | Every probe returns to its own start and raises, including `on_miss: continue`. One approval does not mean local continuation. |
+| Explicit independent approaches | `probe_sequence` | By default every probe returns to its own start and raises, including `on_miss: continue`. Opt-in `local_links: {clearance_z, max_hop_mm?}` (#242) links stations at a stated toolhead machine Z above the measured top instead: retreat to the march start, raise only to max(clearance, current Z), hop ≤ `max_hop_mm` (cap 60), a few guarded mm of descent. Checked against landmarks/keep-outs at that height; first hop and final exit at the traverse height. In a program `clearance_z` may reference an earlier top touch. |
 | Multiple operations / B orientations / measured dependencies | `probe_program` | References feed earlier results into later bounded plans. Each successful probing op ends raised; groups and one approval do not fuse motion between ops. |
 
 A same-column find → side probe → deeper search can cross these composition boundaries.
 First ask whether a supported wall, surface, outline or CAM circuit expresses the intended
-measurements safely. If not, record the exact transition that requires a return; do not invent
-an endpoint-retention option or promise that batching will eliminate it. The shared internal
-`marchToContact` primitive leaves retreat policy to its caller, but is not an agent-callable
-motion tool. A miss does not make its entire surrounding region clear.
+measurements safely. If not, a `probe_sequence` with `local_links` is the sanctioned way to keep
+independent stations low between marches once the top is measured; record any transition that
+still requires a full return (a change of face or B, an unmeasured fixture) rather than inventing
+an option the schema does not advertise. The shared internal `marchToContact` primitive leaves
+retreat policy to its caller, but is not an agent-callable motion tool. A miss does not make its
+entire surrounding region clear.
 
 ## Choose samples and an exit condition
 
@@ -41,6 +43,45 @@ motion tool. A miss does not make its entire surrounding region clear.
   may need a new high approach; a neighbouring contact or photograph alone does not clear it.
 - Keep observation proportional: use the live viewer for progress, synchronized captures for
   specific contacts, and high-clearance views for rotary orientation/fixture context.
+
+## Broad surface map: select density, links and confirmation separately
+
+For the operator's nominally flat FR4-board use case, 4×4 stations are the initial broad sample.
+Use existing contacts first, including partial results from an unfinished/stopped larger grid;
+never throw them away and rerun sixteen points merely to apply a faster recipe. Fine edge/datum
+measurements and local anomaly refinement are separate needs, not justification for a dense
+whole-board map. Preserve uncertainties and unsampled intervals in any interpolation.
+
+The native surface op supports the following performance controls (check the installed schema):
+
+```jsonc
+{
+  "id": "map", "kind": "surface_grid",
+  "x_min": "<verified bound>", "x_max": "<verified bound>",
+  "y_min": "<verified bound>", "y_max": "<verified bound>",
+  "x_count": 4, "y_count": 4,
+  "start_z_machine": "<applicable measured contact + guarded entry margin>",
+  "expected_z_machine": "<applicable measured contact>",
+  "floor_z_machine": "<bounded search floor respecting body access>",
+  "hop_mode": "stepped", "hop_lift_mm": 0.5,
+  "confirmation_mode": "adaptive", "confirmation_tolerance_mm": 0.05,
+  "fine_step_mm": 0.05, "backoff_mm": 0.2, "sensor_delay_ms": 50
+}
+```
+
+This is a shape example, not executable coordinates. Replace the string placeholders with
+measured numeric values or valid bounded program references. The 0.05 mm threshold is an example
+escalation threshold, not certified accuracy; choose it for the required result and sensor/step
+resolution. The 50 ms window applies to a healthy GPIO feed, not MQTT. Each hop still obeys the
+60 mm spacing bound, obstacles, release verification and stepped-lift recovery. First entry and
+final exit retain full clearance. If 0.5 mm fails to release, do not retouch or move sideways.
+
+Adaptive mode confirms the first station and suspicious contacts (height variation, coarse
+contact, contact during the link or a preceding miss). It keeps routine fine contacts without
+extra retouches, and reports unknown repeatability for a single observation. Its conditional
+retouch backs off 0.2 mm only if that establishes release; disagreement stops with uncertainty.
+Perimeter tracing's `confirm_at` is a different existing interface and must not be passed to a
+surface op. Legacy fixed `confirm_passes: 1` still adds one retouch; zero is not single-touch.
 
 ## Diagnose elapsed time before changing the plan
 
@@ -59,6 +100,7 @@ still require many controller transactions even when a logical coarse step is la
 
 Choose the remedy that matches the dominant cost: fewer redundant stations, a suitable
 continuous procedure, reuse of valid approach evidence, or bounded refinement near an edge.
-Do not globally reduce confirmations or sensor delays, or assume every full retreat is waste.
+Reduce repeated contacts through the surface-specific adaptive policy, not by globally changing
+confirmation defaults or sensor delays. Do not assume every full retreat is waste.
 An observed repeated transport cost is an optimization opportunity, not a proven saving until
 an equivalent supported plan and its necessary clearances have been accounted for.

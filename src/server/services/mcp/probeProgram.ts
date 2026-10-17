@@ -89,7 +89,7 @@ import {
     isProgramOpKind,
 } from './programOps';
 import { McpToolError } from './registry';
-import { AxisNamespace, missingGeometryNote, programSeedNamespaces } from './rotaryGeometry';
+import { missingGeometryNote, programSeedNamespaces } from './rotaryGeometry';
 import { deriveStockSection } from './stockGeometry';
 import { homeMachine } from './tools/camera';
 import { getPositionSnapshot, requirePlanningTravel, safeTraverseZ } from './tools/machine';
@@ -139,7 +139,7 @@ export interface ProbeProgramPlan {
     previews: { id: string; text: string }[];
     rotations: number[];
     /** Namespaces seeded into the results before op 1 (jig/tool constants: `axis`). */
-    seeds: { axis?: AxisNamespace };
+    seeds: ReturnType<typeof programSeedNamespaces>;
     /** Transient obstacle boxes for THIS clamping (chuck jaws, tailstock), checked with the stored landmarks. */
     keepOut: ObstacleBox[];
     /** `group` ops expanded at staging (for the page header). */
@@ -344,8 +344,8 @@ export function planProbeProgram(args: { name?: unknown; ops?: unknown; keep_out
         if (!ID_PATTERN.test(id)) {
             throw new McpToolError(`${where}: id is required (letters, digits, _ or -, max 32 chars) - other ops reference results by it.`);
         }
-        if (id === 'axis') {
-            throw new McpToolError(`${where}: "axis" is the seeded jig-geometry namespace, not an op id.`);
+        if (id === 'axis' || id === 'probe') {
+            throw new McpToolError(`${where}: "${id}" is a seeded geometry namespace, not an op id.`);
         }
         if (ids.has(id)) {
             throw new McpToolError(`${where}: duplicate id "${id}".`);

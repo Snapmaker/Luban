@@ -9,19 +9,21 @@ description: "Measure CNC stock and position a toolhead from webcam frames — v
 > coordinate doctrine and position-of-record rules live there and are assumed here.
 
 Turn webcam frames into real millimetres and drive the toolhead to something you can see.
+For choosing tools, approval accounting, remote frame retrieval and complete camera sequences,
+start with [cnc-camera-operations](../cnc-camera-operations/SKILL.md). This skill supplies the
+metric geometry and image-interpretation details.
 The geometry is the easy half; the hard half is the failure modes that make a confident
 number wrong, and the machine semantics that make a correct number mean the wrong thing.
 
-This skill was first proven with every frame pasted by hand. The machine now runs a **Luban
-MCP server** that automates capture and guarded motion — use it when present, but every
-principle below survives if you are back to pasted frames and a human relaying gcode.
+The machine runs a **Luban MCP server** for capture and guarded motion. Pasted frames can
+support qualitative discussion; they do not authorize a raw G-code or backend control route.
 
 ## First: what tooling is live?
 
-Check for `mcp__luban__*` tools. If present (`get_connection_status` answers), the whole
-loop below is automated. If not, ask how frames arrive and how gcode reaches the machine,
-and budget for the fact that every hand-relayed iteration costs minutes — design for fewer,
-better frames.
+Discover the Luban tools by capability (prefixes vary by host/plugin). If connection fails or
+tools are missing, report the setup problem and use the repository setup instructions; do not
+reach the machine by SSH, raw sockets or backend requests. Remote agents can retrieve camera
+indexes and frames through MCP, without access to the server filesystem.
 
 ### The Luban MCP surface, by job
 
@@ -33,8 +35,11 @@ better frames.
 | Camera device | `preview_cameras`, `select_camera`, `list_cameras` | With two cameras attached BOTH return perfectly good frames and nothing downstream can tell you picked the wrong one — the millimetres are just wrong. So: `preview_cameras` shows a frame from each, you identify the toolhead cam by what it sees (at home, the enclosure's silver extrusion up close), then `select_camera {device, confirm_frame_id}` pins it — the frame_id is the evidence, and a frame from the other camera is refused. Windows names cameras by DirectShow friendly name; Linux `list_cameras` returns stable `/dev/v4l/by-id/… (Name)` entries (plain `/dev/videoN` renumbers on replug). A vanished device is an error to report, never a silent substitution. Changing camera marks the solved camera model unverified — re-run `camera_bootstrap`, never carry the old geometry over. |
 | Machine home | `home` | `G53;G28;G54`; also homes B (rotary stock rotates) — `cnc-motion-rules` §5. |
 | Work origin | `goto_work_origin` | XY only, at the current Z, STAGED (the confirm page shows the MACHINE destination; refused while the origin offset is untrusted). Distinct from homing — never conflate the two. |
-| Single guarded move | `move_and_capture` | ONE bounded XY move at current Z, settle, capture. No Z parameter by design. |
-| Camera model | `get_camera_model`, `verify_camera_model`, `camera_bootstrap`, `set_camera_model` | Where the camera is and whether that may still be believed. `verify_camera_model` FIRST, every session. |
+| Single guarded move | `move_and_capture` | ONE bounded XY vision correction; first proves/raises to park Z, then settles/captures. No Z parameter. Never use its clearance flag to skip the Z gate. |
+| Composite camera sequence | `camera_program` | One approval for ordered `{id, kind, ...fields}` operations; see cnc-camera-operations. Local 2×2 fitting is not camera-model calibration. |
+| Fitted tool | `set_active_tool`, `get_active_tool` | Clearance protrusion and provenance, separate from probe contact conversion. Re-read after setter/swap. |
+| Saved camera evidence | `get_camera_capture_set`, `get_frame` | Retrieve bootstrap/survey index by result.directory, then saved images by file; server paths work for remote clients. |
+| Camera model | `get_camera_model`, `verify_camera_model`, `camera_bootstrap`, `set_camera_model` | Before metric pose arithmetic, independently verify the applicable model; bootstrap if absent or invalid. Plain viewing needs no model. |
 | Pose arithmetic | `plan_view_pose` | "Where must the toolhead go to see this machine point?" - from the model, never from memory. |
 | Servo step | `visual_servo` | One clamped correction per call; the loop lives in you, not the tool. Pass `plane_z` and it derives the matrix from the camera model at this pose. |
 | Calibration store | `set_/get_/delete_camera_calibration` | The legacy 2×2 pixel-delta→mm matrix, keyed by the machine Y and Z it was derived at. Superseded by the camera model, which can also say whether it is still about the camera that is plugged in. |
@@ -117,6 +122,21 @@ Then `scripts/camera_bootstrap.py <directory>` (hand-mark pixels with `--marks` 
 fails), `set_camera_model`, and `verify_camera_model` against a pose that was **not** in the
 fit. A model that has only agreed with its own fit has demonstrated nothing.
 
+Choose the holdout from observed search frames, not `plan_view_pose` (it refuses an unverified
+model). Set `holdout: true` on a distinct XY pose; the server visits holdouts last, excludes
+them in the index for the solver, and ends at park Z above the last pose (`result.finalMachine`).
+Take a fresh frame there after storing the model and verify the known target (8 px default).
+Keep at least two useful fit poses plus a surviving holdout; count and inspect surviving Z
+stops and solve conditioning, not just requested poses. The toolhead may be outside a legacy
+box while the camera looks in. If boxes eliminate the useful baseline, widen the search rather
+than lowering/removing obstacles. `y_span_mm` defaults to 0 (one row); use a wider Y search
+when direction is unknown.
+
+Frames/index live under the server's `mcp-camera-bootstrap/<id>`. Read them with
+`get_camera_capture_set {directory}` and `get_frame {file}`. Save index.json and image bytes
+by basename in a local directory to run the bundled solver; if the client cannot save/solve,
+request the operator's exported solve. Do not SSH to the machine as a camera workaround.
+
 ### Choosing a viewing pose
 
 **`plan_view_pose {target: {x, y, z}}`.** It returns the toolhead XY, the standoff and the
@@ -153,8 +173,32 @@ ran.
 - The seams double as the drift check: overlapping frames that disagree mean the camera moved,
   and the survey marks the model unverified rather than handing you a skewed mosaic.
 
-Cover the full reachable envelope — on this rig the far-X column is the only view of the bed
-centre-right. Landmarks near each position are the identities the operator already stated.
+Check coverage across the requested reachable envelope; do not assume which column sees a
+region before inspecting this session's camera evidence. Use operator-stated landmark identities.
+
+`machine_z` asserts TOOLHEAD machine Z before any survey XY; it cannot be combined with
+`z_levels`. `plane_z` is PHYSICAL surface Z, using the applicable contact calibration and B,
+not toolhead/camera height. Stored `bed_plane_z` supplies a measured bed plane; absent both,
+zero is only a placeholder for qualitative captures and no metric mosaic is produced.
+Raised objects remain parallax-shifted relative to a bed-plane mosaic. State the chosen plane.
+Legacy Z328 boxes still drop/refuse Z320 views inside them even with a shorter active tool;
+survey at park height when those regions must be covered. Read every dropped/clipped region.
+
+Seam disagreement can come from a wrong plane, raised-object parallax or poor matching as well
+as camera movement. The result states plane_z and the ambiguity; it cannot identify a unique
+corrected height from seams alone. Re-verify on a known target before re-bootstrapping.
+
+### Composite camera programs
+
+Use `camera_program` for ordered Z moves, surveys, captures, feature tracks and local
+calibration under **one approval**. Read its discriminated `ops.items.oneOf` schema or the
+[compact operation table](../cnc-camera-operations/SKILL.md#composite-camera-calls-use-real-fields).
+Program surveys save indexed frames but do not compose mosaics; standalone `survey_bed` does.
+Tracking uses a 41 px NCC patch and 120 px search window. `fit_calibration` stores **M=J⁻¹ in
+the local 2×2 calibration store**, with a default maximum residual of 5 px. It does not make
+`overlap_fraction`, `plan_view_pose` or model-derived `visual_servo plane_z` available.
+`verify_calibration` checks M·J≈I (0.25 default), not held-out physical accuracy.
+Read per-op clearance exceptions aloud; never apply an exception across an entire program.
 
 ## Measuring: the pipeline
 
@@ -209,10 +253,9 @@ Never compute a machine coordinate from one frame and drive to it. With the MCP:
 
 1. Establish state: `get_connection_status` → `get_position` (warnings empty?) → if in any
    doubt, `query_firmware_position`.
-2. If not homed, `home` — after warning the operator about the rotary, and knowing that
-   `move_and_capture`/`visual_servo` refuse un-homed motion unless the operator has
-   explicitly confirmed Z and path clearance (`operator_confirmed_clearance`, which you
-   pass ONLY on the operator's word, never on your own judgment).
+2. If not homed, obtain the operator's explicit word to `home`, including that B turns.
+   Do not infer authority from a camera request. Ordinary Z/transit/procedure tools refuse
+   unhomed state; `home` itself raises Z first. Direct vision's park-height gate remains.
 3. Derive the 2×2 matrix at the working Y and Z: command 2–3 known small XY offsets with
    `move_and_capture`, measure the feature's pixel displacement with `track_feature`
    (never by eye - hand-estimated pixels caused a ~50% calibration error live; on
@@ -236,8 +279,9 @@ Never compute a machine coordinate from one frame and drive to it. With the MCP:
    three passes converge. It auto-selects the nearest-Y calibration and warns when a step
    moves Y (self-invalidating) — re-derive or re-select when it does.
 
-This loop is immune to lens distortion, unknown camera mounting, and an imperfect
-homography, because it only ever measures a *difference* near the target.
+Measuring local differences reduces sensitivity to an imperfect homography, but does
+not remove lens distortion, parallax or mounting changes. Check measured response
+against the local calibration and stop when the claimed tolerance is unsupported.
 
 Z positioning is not part of the servo: raise or lower Z via `move_z` with
 `coordinate_system: "machine"` — one operator-confirmed step per target, never a Z word in a

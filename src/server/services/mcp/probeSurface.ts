@@ -48,6 +48,8 @@ import {
 } from './procedureLimits';
 import { McpToolError } from './registry';
 import { probeGeometry } from './rotaryGeometry';
+import { TipCalibrationSnapshot, projectToolTipZ } from './toolDatum';
+import { getProbeTipCalibration } from './toolDatumState';
 import {
     CIRCLE_MAX_OFFSET_FRACTION,
     CircleProfile,
@@ -129,6 +131,8 @@ export interface ProbeSurfacePlan {
     backoffMm: number;
     sensorDelayMs: number;
     confirmPasses: number;
+    confirmationMode: 'fixed' | 'adaptive';
+    confirmationToleranceMm: number | null;
     /** Coarse steps stop this far above the expected contact and fine steps take over (caps the press at one fine step). */
     slowZoneMm: number;
     /** Expected contact Z for station 1 (a measured neighbour); null = coarse capped at 1 mm there. */
@@ -181,11 +185,31 @@ interface CommonArgs {
     backoff_mm?: number;
     sensor_delay_ms?: number;
     confirm_passes?: number;
+    confirmation_mode?: unknown;
+    confirmation_tolerance_mm?: unknown;
     slow_zone_mm?: number;
     expected_z_machine?: unknown;
     expected_profile?: unknown;
     hop_mode?: unknown;
     hop_lift_mm?: unknown;
+}
+
+/** Surface-only policy; other probe tools retain their existing repeat counts. */
+export function resolveSurfaceConfirmation(args: Pick<CommonArgs, 'confirmation_mode' | 'confirmation_tolerance_mm'>): {
+    confirmationMode: 'fixed' | 'adaptive'; confirmationToleranceMm: number | null;
+} {
+    const mode = args.confirmation_mode === undefined ? 'fixed' : args.confirmation_mode;
+    if (mode !== 'fixed' && mode !== 'adaptive') {
+        throw new McpToolError('confirmation_mode must be "fixed" or "adaptive".');
+    }
+    const tolerance = args.confirmation_tolerance_mm;
+    if (mode === 'adaptive' && (typeof tolerance !== 'number' || !Number.isFinite(tolerance) || tolerance <= 0 || tolerance > 1)) {
+        throw new McpToolError('Adaptive confirmation requires confirmation_tolerance_mm > 0 and <= 1 (an explicit height-change and retouch-agreement threshold).');
+    }
+    if (mode === 'fixed' && tolerance !== undefined) {
+        throw new McpToolError('confirmation_tolerance_mm is only used with confirmation_mode "adaptive".');
+    }
+    return { confirmationMode: mode, confirmationToleranceMm: mode === 'adaptive' ? tolerance as number : null };
 }
 
 function toToolError<T>(fn: () => T): T {
@@ -296,6 +320,7 @@ function finishPlan(
         expectedZ = Number(expectedZ.toFixed(3));
     }
 
+    const confirmation = resolveSurfaceConfirmation(args);
     const profile = parseProfile(args.expected_profile, stations, startZ, floorZ);
     const hopMode = args.hop_mode === undefined || args.hop_mode === null || args.hop_mode === '' ? 'guarded' : String(args.hop_mode);
     if (hopMode !== 'guarded' && hopMode !== 'stepped') {
@@ -337,6 +362,7 @@ function finishPlan(
         // 30 ms sensor floor - both named, with their reasons, in
         // procedureLimits.ts.
         ...resolveMarchParams(args, { coarse: SURFACE_COARSE_STEP_MM, delay: GPIO_SENSOR_DELAY_MS }),
+        ...confirmation,
         slowZoneMm: clampTo(args.slow_zone_mm, { ...SURFACE_SLOW_ZONE_MM, max: env.zSafeDeltaMm }),
         expectedZMachine: profile && expectedZ === null ? circleExpectedZ(profile, stations[0].x) : expectedZ,
         floorExplicit: args.floor_z_machine !== undefined && args.floor_z_machine !== null && args.floor_z_machine !== '',
@@ -419,10 +445,14 @@ export function describeProbeSurfacePlanAsGcode(plan: ProbeSurfacePlan): string 
     // The guarded descent starts at min(start_z + guard, traverse height): the
     // runner never commands a Z above the height it is already at.
     const guardTop = Math.min(plan.startZMachine + DESCENT_GUARD_MM, plan.hopZ);
+    const localLift = plan.hopMode === 'stepped' ? plan.hopLiftMm : plan.zSafeDeltaMm;
+    const confirmationText = plan.confirmationMode === 'adaptive'
+        ? `adaptive: routine fine contact is single-touch; first station, after a miss, coarse contact, link contact or height change > ${plan.confirmationToleranceMm} mm gets one release-verified retouch; disagreement > ${plan.confirmationToleranceMm} mm stops with uncertain evidence`
+        : `${plan.confirmPasses} EXTRA lift-and-retest pass(es) after initial fine contact, median of extra passes`;
     const lines = [
         `; SURFACE ${plan.kind.toUpperCase()} SCAN: ${shape}`,
         '; every station = a -Z sensor-gated march on the probe channel (coarse towards the expected contact,',
-        `; ${plan.fineStepMm} mm fine steps inside the SLOW ZONE, ${plan.confirmPasses} confirm pass(es), median); all coordinates MACHINE frame.`,
+        `; ${plan.fineStepMm} mm fine steps inside the SLOW ZONE); ${confirmationText}; all coordinates MACHINE frame.`,
         `; SLOW ZONE (slow_zone_mm ${plan.slowZoneMm}): coarse steps stop ${plan.slowZoneMm} mm ABOVE the expected contact (the previous`,
         `;   station's contact; expected_z_machine ${plan.expectedZMachine === null ? 'not given' : `Z${plan.expectedZMachine}`} for station 1) and`,
         `;   ${plan.fineStepMm} mm steps take over down to ${(plan.slowZoneMm + 2 * plan.coarseStepMm).toFixed(1)} mm BELOW it (coarse resumes below that).`,
@@ -444,9 +474,10 @@ export function describeProbeSurfacePlanAsGcode(plan: ProbeSurfacePlan): string 
         '; ENVELOPE (operator, 2026-09-05: "no more than 20mm z safe delta from the top (within a horizontal',
         '; change of 60mm)") - the operator-authorised EXCEPTION to motion law 2, valid ONLY inside this',
         '; procedure, ONLY between consecutive stations, ONLY for hops <= max_hop_mm:',
-        `;   * between stations the probe retracts to LAST CONTACT + ${plan.zSafeDeltaMm} mm (z_safe_delta_mm, cap 20) and hops`,
-        `;     horizontally AT THAT HEIGHT in <= ${HOP_SEGMENT_MM} mm segments (crash guard armed) - ANY probe contact during a hop`,
-        ';     is a collision: CRASH alarm latches (job stop + connection close), operator clears it.',
+        `;   * between stations the probe retracts to LAST CONTACT + ${localLift} mm and verifies release before linking.`,
+        ...(plan.hopMode === 'guarded' ? [
+            `;     guarded links use <= ${HOP_SEGMENT_MM} mm segments (crash guard armed); contact latches CRASH.`,
+        ] : [';     stepped links use <= 1 mm contact-aware segments, verified backoff and 0.5 mm checked lifts; contact during lift holds.']),
         `;   * largest hop in this plan: ${plan.worstHopMm} mm (max_hop_mm ${plan.maxHopMm}, cap 60) - refused at staging otherwise.`,
         `;   * each march searches from the hop height down to max(last contact - ${plan.maxDropMm} mm, FLOOR Z${plan.absoluteFloorZ});`,
         ';     nothing by the floor = station recorded no_contact, reference height unchanged, scan continues',
@@ -454,8 +485,8 @@ export function describeProbeSurfacePlanAsGcode(plan: ProbeSurfacePlan): string 
         `;   * the deepest toolhead Z this scan can EVER command is Z${plan.absoluteFloorZ} (floor_z_machine).`,
         '; The approach to station 1 and the final raise are full law-2 moves at the traverse height.',
         ...(plan.stations.length > MANY_STATIONS
-            ? [`; WARNING: ${plan.stations.length} stations - roughly ${Math.round(plan.stations.length * 8 / 60)} min of probing and about `
-                + `${100 + plan.stations.length * 110} job events (the log keeps mcpJobEventLimit; the stored result is never trimmed).`]
+            ? [`; WARNING: ${plan.stations.length} stations; duration depends on links, approaches and confirmations. Use prior result.timing; `
+                + `rough program estimate ${40 + plan.stations.length * 120} job events before captures (the stored result is never trimmed).`]
             : []),
         '; overtravel feed trips -> job stop + connection close + latched alarm',
         'G90',
@@ -488,20 +519,24 @@ export function describeProbeSurfacePlanAsGcode(plan: ProbeSurfacePlan): string 
         k += 1;
         lines.push(`G1 Z${(firstEnv.marchStartZ - s).toFixed(3)} F${COARSE_FEED}; coarse ${k} - settle, check probe, stop at contact`);
     }
-    lines.push(`; ...on coarse contact: release, ${plan.fineStepMm} mm fine approach; then ${plan.confirmPasses} confirm cycle(s) (lift ${plan.backoffMm} mm)`);
-    lines.push(`; retract to contact + ${plan.zSafeDeltaMm} mm (runtime number, never above Z${plan.hopZ})`);
+    lines.push(`; ...on coarse contact: release, ${plan.fineStepMm} mm fine approach; ${confirmationText} (confirmation backoff ${plan.backoffMm} mm, release required)`);
+    lines.push(`; retract to contact + ${localLift} mm (runtime number, never above Z${plan.hopZ})`);
     for (let i = 1; i < n; i++) {
         const prev = plan.stations[i - 1];
         const st = plan.stations[i];
-        lines.push(`; --- station ${i + 1} "${st.label}" (${st.x}, ${st.y}): hop ${st.hopFromPreviousMm} mm at Z = last contact + ${plan.zSafeDeltaMm} ---`);
-        const segs = hopSegments({ x: prev.x, y: prev.y }, { x: st.x, y: st.y });
-        segs.forEach((seg, j) => {
-            lines.push(`G1 X${seg.x.toFixed(3)} Y${seg.y.toFixed(3)} F${TRAVEL_FEED}; hop segment ${j + 1}/${segs.length} - settle, probe must NOT be in contact`);
-        });
+        lines.push(`; --- station ${i + 1} "${st.label}" (${st.x}, ${st.y}): hop ${st.hopFromPreviousMm} mm at Z = last contact + ${localLift} ---`);
+        if (plan.hopMode === 'stepped') {
+            lines.push(`; touch-probing link to X${st.x.toFixed(3)} Y${st.y.toFixed(3)}: <= 1 mm steps F300, release-verified backoff and checked lifts on contact`);
+        } else {
+            const segs = hopSegments({ x: prev.x, y: prev.y }, { x: st.x, y: st.y });
+            segs.forEach((seg, j) => {
+                lines.push(`G1 X${seg.x.toFixed(3)} Y${seg.y.toFixed(3)} F${TRAVEL_FEED}; hop segment ${j + 1}/${segs.length} - settle, probe must NOT be in contact`);
+            });
+        }
         lines.push(`; march -Z in ${plan.coarseStepMm} mm steps from the hop height to last contact + ${plan.slowZoneMm}, then ${plan.fineStepMm} mm steps `
             + `through the slow zone; coarse again below it to max(last contact - ${plan.maxDropMm}, Z${plan.absoluteFloorZ})`);
         lines.push(`G1 Z${plan.absoluteFloorZ.toFixed(3)} F${COARSE_FEED}; deepest allowed at this station (absolute floor) - no contact by here = no_contact`);
-        lines.push(`; ...on contact: release, fine, confirm; retract to contact + ${plan.zSafeDeltaMm} mm`);
+        lines.push(`; ...on contact: ${confirmationText}; retract to contact + ${localLift} mm and verify release`);
     }
     lines.push(`G1 Z${plan.hopZ.toFixed(3)} F${TRAVEL_FEED}; finish at the safe traverse height (on abort: raise only if recovery is not held and sensors permit)`);
     if (plan.capture) {
@@ -519,13 +554,19 @@ export interface SurfaceStationResult {
     s?: number;
     row?: number;
     col?: number;
-    status: 'contact' | 'no_contact';
-    /** Toolhead machine Z at contact (null when no_contact). */
+    status: 'contact' | 'no_contact' | 'uncertain';
+    /** Accepted toolhead machine Z at contact (null when no_contact or uncertain). */
     z: number | null;
     marchStartZ: number;
     floorZ: number;
     confirmPassContacts?: number[];
-    spreadMm?: number;
+    spreadMm?: number | null;
+    initialContactZ?: number;
+    finalContactZ?: number;
+    confirmationReasons?: string[];
+    extraPassCount?: number;
+    confirmationPassesAttempted?: number;
+    confirmationFailure?: 'release-failed' | 'contact-lost';
     /** How the contact was found: fine steps inside the slow zone, or a coarse step (then release + fine). */
     approach?: 'slow-zone' | 'coarse-contact';
     /** Upper bound on how far the probe was pressed past contact by the step that found it. */
@@ -533,7 +574,11 @@ export interface SurfaceStationResult {
     capture?: object;
 }
 
-type MarchOutcome = { contactZ: number; passContacts: number[]; spreadMm: number; approach: 'slow-zone' | 'coarse-contact'; worstPressMm: number };
+type MarchOutcome = {
+    contactZ: number; passContacts: number[]; spreadMm: number | null;
+    initialContactZ: number; finalContactZ: number; confirmationReasons: string[]; accepted: boolean;
+    approach: 'slow-zone' | 'coarse-contact'; worstPressMm: number;
+};
 
 /**
  * One -Z march from startZ down to floorZ at the station's XY: the exact
@@ -547,6 +592,8 @@ async function marchDownZ(
     startZ: number,
     floorZ: number,
     expectedContactZ: number | null,
+    contextReasons: string[],
+    recordUncertain: (result: SurfaceStationResult) => void,
     announce: (phase: string, note?: string) => void
 ): Promise<MarchOutcome | null> {
     const travel = Number((startZ - floorZ).toFixed(3));
@@ -637,16 +684,50 @@ async function marchDownZ(
             throw new ProcedureAbort(`Station "${station.label}": fine approach lost the contact.`);
         }
     }
+    const initialContactZ = zAt(fineContactS);
+    const adaptive = plan.confirmationMode === 'adaptive';
+    const confirmationReasons = adaptive ? [...contextReasons] : ['fixed'];
+    if (adaptive && approach === 'coarse-contact') {
+        confirmationReasons.push('coarse-contact');
+    }
+    if (adaptive && (expectedContactZ === null || Math.abs(initialContactZ - expectedContactZ) > (plan.confirmationToleranceMm as number) + 1e-9)) {
+        confirmationReasons.push(expectedContactZ === null ? 'no-expected-height' : 'height-change');
+    }
+    // A routine fine observation needs no retouch. Any uncertainty earns ONE
+    // released retouch; disagreement is exposed, never hidden by a median.
+    const adaptivePasses = confirmationReasons.length ? 1 : 0;
+    const passes = adaptive ? adaptivePasses : plan.confirmPasses;
     const passContacts: number[] = [];
+    const failConfirmation = (failure: 'release-failed' | 'contact-lost', pass: number, message: string): never => {
+        // Retain the observation without accepting it or changing abort motion.
+        // A failed release/retouch must reach the existing held-contact recovery.
+        recordUncertain({
+            ...station,
+            status: 'uncertain',
+            z: null,
+            marchStartZ: startZ,
+            floorZ,
+            initialContactZ,
+            confirmPassContacts: [...passContacts],
+            spreadMm: null,
+            confirmationReasons,
+            extraPassCount: passContacts.length,
+            confirmationPassesAttempted: pass,
+            confirmationFailure: failure,
+            approach,
+            worstPressMm,
+        });
+        throw new ProcedureAbort(message);
+    };
     const cycleLimit = Math.min(fineContactS + Math.max(0.5, plan.backoffMm), travel);
     let reference = fineContactS;
-    for (let pass = 1; pass <= plan.confirmPasses; pass++) {
+    for (let pass = 1; pass <= passes; pass++) {
         const t0 = Date.now();
         s = Math.max(reference - plan.backoffMm, 0);
         await move(`${tag}:backoff`, s, FINE_FEED);
         const lifted = await senseReleaseAfter('probe', t0, releaseTimeoutMs);
         if (lifted.contact) {
-            throw new ProcedureAbort(`Station "${station.label}": hysteresis exceeds the backoff ${plan.backoffMm} mm.`);
+            failConfirmation('release-failed', pass, `Station "${station.label}": hysteresis exceeds the backoff ${plan.backoffMm} mm.`);
         }
         let passContact: number | null = null;
         while (cycleLimit - s > 1e-9) {
@@ -660,19 +741,31 @@ async function marchDownZ(
             }
         }
         if (passContact === null) {
-            throw new ProcedureAbort(`Station "${station.label}": confirm pass ${pass} lost the contact.`);
+            return failConfirmation('contact-lost', pass, `Station "${station.label}": confirm pass ${pass} lost the contact.`);
         }
         passContacts.push(zAt(passContact));
         reference = passContact;
     }
-    const sorted = [...passContacts].sort((a, b) => a - b);
-    const contactZ = sorted[Math.floor((sorted.length - 1) / 2)];
-    const spreadMm = Number((sorted[sorted.length - 1] - sorted[0]).toFixed(3));
-    return { contactZ, passContacts, spreadMm, approach, worstPressMm };
+    const observations = [initialContactZ, ...passContacts];
+    const sorted = [...(adaptive ? observations : passContacts)].sort((a, b) => a - b);
+    const contactZ = adaptive ? observations[observations.length - 1] : sorted[Math.floor((sorted.length - 1) / 2)];
+    const spreadMm = sorted.length > 1 || !adaptive ? Number((sorted[sorted.length - 1] - sorted[0]).toFixed(3)) : null;
+    const accepted = !adaptive || spreadMm === null || spreadMm <= (plan.confirmationToleranceMm as number) + 1e-9;
+    return { contactZ,
+        passContacts,
+        spreadMm,
+        initialContactZ,
+        finalContactZ: observations[observations.length - 1],
+        confirmationReasons,
+        accepted,
+        approach,
+        worstPressMm };
 }
 
 /** Structured procedure result (lands on job.result): stations, statistics, renderings. */
-function buildResult(plan: ProbeSurfacePlan, results: SurfaceStationResult[], phases: { phase: string; note?: string }[]): object {
+function buildResult(
+    plan: ProbeSurfacePlan, results: SurfaceStationResult[], phases: { phase: string; note?: string }[], tipCalibration: TipCalibrationSnapshot
+): object {
     const contacts: ContactSample[] = results
         .filter((r): r is SurfaceStationResult & { z: number } => r.z !== null)
         .map((r) => ({ x: r.x, y: r.y, z: r.z, s: r.s, label: r.label }));
@@ -682,13 +775,21 @@ function buildResult(plan: ProbeSurfacePlan, results: SurfaceStationResult[], ph
     const common = {
         kind: plan.kind,
         tool: plan.tool,
-        stations: results,
+        tipCalibration,
+        stations: results.map((r) => ({ ...r, ...projectToolTipZ(r.z, tipCalibration) })),
         contactCount: contacts.length,
         noContactStations: noContact,
+        uncertainStations: results.filter((r) => r.status === 'uncertain').map((r) => r.label),
+        confirmation: { mode: plan.confirmationMode || 'fixed',
+            toleranceMm: plan.confirmationToleranceMm ?? null,
+            extraPassesWhenRequired: plan.confirmationMode === 'adaptive' ? 1 : plan.confirmPasses,
+            singleTouchCount: results.filter((r) => r.status === 'contact' && r.extraPassCount === 0).length },
         summary,
         worstConfirmSpreadMm: Number(worstSpread.toFixed(3)),
         profile: plan.profile,
         envelope: {
+            hopMode: plan.hopMode,
+            hopLiftMm: plan.hopLiftMm,
             zSafeDeltaMm: plan.zSafeDeltaMm,
             maxHopMm: plan.maxHopMm,
             worstHopMm: plan.worstHopMm,
@@ -696,8 +797,8 @@ function buildResult(plan: ProbeSurfacePlan, results: SurfaceStationResult[], ph
             absoluteFloorZ: plan.absoluteFloorZ,
             startZMachine: plan.startZMachine,
         },
-        coordinateNote: 'All Z values are TOOLHEAD machine Z at probe contact; the physical surface height is Z minus '
-            + 'the probe\'s effective length (measure it with run_tool_setter accept_probe_contact - never assume).',
+        coordinateNote: 'Station z and fits retain raw TOOLHEAD machine Z. tipMachineZ is a separate tip-bottom projection '
+            + 'using the captured tipCalibration; conventional or unknown provenance is not physically verified geometry.',
         phases,
         warning: worstSpread > plan.fineStepMm + 1e-9
             ? `Worst confirm spread ${worstSpread.toFixed(3)} mm exceeds one fine step - feed timing was unstable; `
@@ -741,6 +842,7 @@ function buildResult(plan: ProbeSurfacePlan, results: SurfaceStationResult[], ph
 export async function runProbeSurfaceProcedure(plan: ProbeSurfacePlan): Promise<object> {
     assertChannelReady('probe', `surface ${plan.kind} scan`);
     assertMachineReadyForProcedure();
+    const tipCalibration = getProbeTipCalibration();
 
     const phases: { phase: string; note?: string }[] = [];
     const announce = (phase: string, note?: string) => {
@@ -817,6 +919,10 @@ export async function runProbeSurfaceProcedure(plan: ProbeSurfacePlan): Promise<
         for (const station of plan.stations) {
             stationIndex = station.index;
             const isFirst = station.index === 1;
+            const confirmationReasons: string[] = isFirst ? ['first-station'] : [];
+            if (!isFirst && results[results.length - 1]?.status === 'no_contact') {
+                confirmationReasons.push('after-miss');
+            }
             if (!isFirst) {
                 // THE LAW-2 EXCEPTION: hop at lastContact + z_safe_delta, in
                 // sensor-checked segments, expecting NO contact. See the file
@@ -839,6 +945,9 @@ export async function runProbeSurfaceProcedure(plan: ProbeSurfacePlan): Promise<
                         extraBackoffMm: plan.hopBackoffMm,
                         backtrackMm,
                     }, announce);
+                    if (traverse.lifts.length) {
+                        confirmationReasons.push('link-contact');
+                    }
                     currentZ = traverse.z;
                     incoming = { ux, uy, z: currentZ, length: traverse.clearTailMm || 0 };
                     announce(`hop-${station.label}`, `${station.hopFromPreviousMm} mm to (${station.x}, ${station.y}), stepped traverse: `
@@ -890,7 +999,11 @@ export async function runProbeSurfaceProcedure(plan: ProbeSurfacePlan): Promise<
             if (modelZ !== null) {
                 expectedContact = modelZ;
             }
-            const outcome: MarchOutcome | null = await marchDownZ(plan, station, marchStartZ, stationFloorZ, expectedContact, announce);
+            const outcome: MarchOutcome | null = await marchDownZ(plan, station, marchStartZ, stationFloorZ, expectedContact, confirmationReasons,
+                (uncertain) => {
+                    results.push(uncertain);
+                    announce(`uncertain-${station.label}`, `initial contact Z${uncertain.initialContactZ}; ${uncertain.confirmationFailure}; excluded from accepted geometry`);
+                }, announce);
             let retractTo: number;
             if (outcome === null) {
                 if (reference === null) {
@@ -913,7 +1026,9 @@ export async function runProbeSurfaceProcedure(plan: ProbeSurfacePlan): Promise<
                 retractTo = hopHeightFor(reference);
                 announce(`no-contact-${station.label}`, `nothing between Z${marchStartZ} and the floor Z${stationFloorZ}; reference stays Z${reference}`);
             } else {
-                reference = outcome.contactZ;
+                if (outcome.accepted) {
+                    reference = outcome.contactZ;
+                }
                 results.push({
                     index: station.index,
                     label: station.label,
@@ -922,17 +1037,21 @@ export async function runProbeSurfaceProcedure(plan: ProbeSurfacePlan): Promise<
                     s: station.s,
                     row: station.row,
                     col: station.col,
-                    status: 'contact',
-                    z: outcome.contactZ,
+                    status: outcome.accepted ? 'contact' : 'uncertain',
+                    z: outcome.accepted ? outcome.contactZ : null,
                     marchStartZ,
                     floorZ: stationFloorZ,
                     confirmPassContacts: outcome.passContacts,
                     spreadMm: outcome.spreadMm,
+                    initialContactZ: outcome.initialContactZ,
+                    finalContactZ: outcome.finalContactZ,
+                    confirmationReasons: outcome.confirmationReasons,
+                    extraPassCount: outcome.passContacts.length,
                     approach: outcome.approach,
                     worstPressMm: outcome.worstPressMm,
                 });
-                retractTo = hopHeightFor(outcome.contactZ);
-                announce(`measured-${station.label}`, `(${station.x}, ${station.y}, ${outcome.contactZ}) spread ${outcome.spreadMm}, `
+                retractTo = hopHeightFor(outcome.accepted ? outcome.contactZ : Math.max(outcome.initialContactZ, outcome.finalContactZ));
+                announce(`${outcome.accepted ? 'measured' : 'uncertain'}-${station.label}`, `(${station.x}, ${station.y}, ${outcome.contactZ}) spread ${outcome.spreadMm}, `
                     + `${outcome.approach}, press <= ${outcome.worstPressMm} mm`);
             }
 
@@ -955,6 +1074,9 @@ export async function runProbeSurfaceProcedure(plan: ProbeSurfacePlan): Promise<
                 incoming = null;
             }
             currentZ = retractTo;
+            if (outcome && !outcome.accepted) {
+                throw new ProcedureAbort(`Station "${station.label}": initial contact Z${outcome.initialContactZ} and retouch Z${outcome.finalContactZ} disagree by ${outcome.spreadMm} mm (threshold ${plan.confirmationToleranceMm}); station is uncertain and excluded from accepted geometry.`);
+            }
         }
 
         await moveMachineSettled(`${plan.tool}:final-raise`, { z: plan.hopZ }, TRAVEL_FEED);
@@ -973,7 +1095,7 @@ export async function runProbeSurfaceProcedure(plan: ProbeSurfacePlan): Promise<
         if (isProcedureAbort(err)) {
             // Keep the class (a program runner tells a requested stop from a
             // fault) and carry the completed stations as the partial result.
-            const partial = { ...buildResult(plan, results, phases), aborted: true, abortedAtStation: stationIndex };
+            const partial = { ...buildResult(plan, results, phases, tipCalibration), aborted: true, abortedAtStation: stationIndex };
             const Ctor = isProcedureStopped(err) ? ProcedureStopped : ProcedureAbort;
             throw new Ctor(`Surface ${plan.kind} scan aborted at station ${stationIndex}: ${err.message} `
                 + `${results.filter((r) => r.status === 'contact').length} station(s) measured before the abort are on the job record.`, partial);
@@ -983,5 +1105,5 @@ export async function runProbeSurfaceProcedure(plan: ProbeSurfacePlan): Promise<
         probeFeedService.clearExpectedContact();
     }
 
-    return buildResult(plan, results, phases);
+    return buildResult(plan, results, phases, tipCalibration);
 }

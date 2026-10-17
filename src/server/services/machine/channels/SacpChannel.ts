@@ -72,6 +72,7 @@ import Channel, {
 } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from '../../../../app/machines/snapmaker-2-toolheads';
+import { gcodeLease } from '../gcodeLease';
 
 const log = logger('machine:channels:SacpChannel');
 
@@ -88,6 +89,24 @@ class SacpChannelBase extends Channel implements
     private heartbeatTimerLegacy = [];
     private heartbeatTimer;
     private shuttingDown: boolean = false;
+
+    // Bumped wherever the underlying socket / serial port / UDP session is
+    // (re)established or torn down, including internal reconnects that never
+    // reassign ConnectionManager's channel (same singleton object). Equal
+    // values mean the same transport session; a spurious bump only makes the
+    // MCP failure hook (#221) skip cleanup, never act on a replaced session.
+    private connectionGeneration = 0;
+
+    /** Read-only: lets callers tell a reconnected session from the one they started on. */
+    public getConnectionGeneration(): number {
+        return this.connectionGeneration;
+    }
+
+    /** Subclasses call this at every transport open, close, error and session replacement. */
+    protected bumpConnectionGeneration(reason: string): void {
+        this.connectionGeneration++;
+        log.debug(`connection generation ${this.connectionGeneration}: ${reason}`);
+    }
 
     public sacpClient: SacpClient;
 
@@ -173,6 +192,7 @@ class SacpChannelBase extends Channel implements
 
             this.heartbeatTimer = setTimeout(async () => {
                 log.info('Lost heartbeat, close connection.');
+                this.bumpConnectionGeneration('heartbeat lost');
 
                 await this.connectionClose({ force: true });
 
@@ -229,6 +249,8 @@ class SacpChannelBase extends Channel implements
      * Generic execute G-code commands.
      */
     public async executeGcode(gcode: string): Promise<ExecuteGcodeResult> {
+        const refusal = gcodeLease.refusal(gcode);
+        if (refusal) { return { result: -1, text: refusal }; }
         const gcodeLines = gcode.split('\n');
 
         const promises = [];
@@ -857,6 +879,7 @@ class SacpChannelBase extends Channel implements
             }
 
             this.heartbeatTimerLegacy[id] = setTimeout(() => {
+                this.bumpConnectionGeneration(`legacy heartbeat lost (${id})`);
                 client && client.destroy();
                 log.info(`SACP close ${id}, ${this.heartbeatTimerLegacy[id]}`,);
                 this.heartbeatTimerLegacy[id] && this.socket && this.socket.emit('connection:close');

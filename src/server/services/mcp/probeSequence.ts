@@ -30,6 +30,9 @@ import {
     abortRaiseToTop,
 } from './probing';
 import { McpToolError } from './registry';
+import { LocalLinks, hopHeight, isLocalHop, localHopRefusal, resolveLocalLinks } from './sequenceLinks';
+import { projectToolTipZ } from './toolDatum';
+import { getProbeTipCalibration } from './toolDatumState';
 import { outsideTravel } from './machineTravel';
 import { MARCH_TRAVEL_MM, releaseTimeoutFor, resolveMarchParams, within } from './procedureLimits';
 import { getPositionSnapshot, requirePlanningTravel, safeTraverseZ } from './tools/machine';
@@ -55,11 +58,25 @@ import { TRAVERSE_Z_TOLERANCE_MM } from './traversePlan';
 // move with concrete numbers, and the runner re-verifies the machine is
 // where the simulation says it should be (+/-0.5mm) before every march.
 // The sequence ends raised at the traverse height.
+//
+// LOCAL LINKS (opt-in, issue #242, 2026-10-17): with `local_links:
+// {clearance_z, max_hop_mm?}` the operator approves a stated local clearance
+// (a toolhead machine Z above the measured top) and the hops between
+// stations run there instead of at the traverse height: after a march the
+// probe retreats to its start and stays; the next hop raises to
+// max(clearance, where the head is) - never lower - moves XY (<= max_hop_mm,
+// cap 60, checked against every landmark/keep-out at that height), and the
+// following descend is a few guarded mm, not 124. The first hop from the
+// staged position and the final exit are still at the traverse height
+// (sequenceLinks.ts).
 
 interface SequenceStepHop {
     kind: 'hop';
     x: number;
     y: number;
+    /** Height the hop runs at: the traverse height, or the local link's (>= the head's current height). */
+    z: number;
+    distanceMm: number;
 }
 interface SequenceStepDescend {
     kind: 'descend';
@@ -81,6 +98,8 @@ interface SequenceStepProbe {
      */
     onMiss: 'continue' | 'abort';
     capture: ProbeCapturePlan | null;
+    /** Where the sequence is after the march's retreat: the traverse height, or the start height with local links. */
+    endZ: number;
 }
 type SequenceStep = SequenceStepHop | SequenceStepDescend | SequenceStepProbe;
 
@@ -95,6 +114,8 @@ export interface ProbeSequencePlan {
     confirmPasses: number;
     hopZ: number;
     staged: { x: number; y: number; z: number };
+    /** Opt-in local links (#242); null = every hop at the traverse height. */
+    localLinks: LocalLinks | null;
 }
 
 export function planProbeSequence(args: {
@@ -104,6 +125,7 @@ export function planProbeSequence(args: {
     backoff_mm?: number;
     sensor_delay_ms?: number;
     confirm_passes?: number;
+    local_links?: unknown;
 }, extraObstacles: ObstacleBox[] = []): ProbeSequencePlan {
     if (!Array.isArray(args.steps) || args.steps.length < 1 || args.steps.length > 60) {
         throw new McpToolError('steps is required: 1-60 entries of {kind: hop|descend|probe, ...}.');
@@ -116,6 +138,15 @@ export function planProbeSequence(args: {
     }
     const staged = { x, y, z };
     const hopZ = safeTraverseZ();
+    let localLinks: LocalLinks | null;
+    try {
+        localLinks = resolveLocalLinks(args.local_links, hopZ);
+    } catch (err) {
+        if ((err as Error).name === 'LocalLinksError') {
+            throw new McpToolError((err as Error).message);
+        }
+        throw err;
+    }
     // Every hop and every march's far limit inside the toolhead's real travel
     // (machineTravel.ts), not the garbage-beat filter's -25..size+40.
     const toolheadTravel = requirePlanningTravel('a probe sequence', { x, y });
@@ -142,10 +173,19 @@ export function planProbeSequence(args: {
             if (hopOutside) {
                 throw new McpToolError(`${at}: hop target is outside the toolhead travel: ${hopOutside}.`);
             }
-            steps.push({ kind: 'hop', x: hx, y: hy });
+            // The runner raises to THIS height before the hop: the traverse
+            // height, or with local links the clearance / wherever the head
+            // already is, whichever is higher (never a descent to link).
+            const hz = hopHeight(localLinks, virtual.z, hopZ);
+            const distanceMm = Number(Math.hypot(hx - virtual.x, hy - virtual.y).toFixed(3));
+            const tooFar = localHopRefusal(localLinks, { z: hz, distanceMm, index }, hopZ);
+            if (tooFar) {
+                throw new McpToolError(tooFar);
+            }
+            steps.push({ kind: 'hop', x: hx, y: hy, z: hz, distanceMm });
             virtual.x = hx;
             virtual.y = hy;
-            virtual.z = hopZ; // the runner raises before every hop
+            virtual.z = hz;
         } else if (kind === 'descend') {
             const dz = Number(raw.z);
             if (!Number.isFinite(dz) || dz < 0 || dz > hopZ) {
@@ -194,6 +234,10 @@ export function planProbeSequence(args: {
             if (onMissRaw !== 'continue' && onMissRaw !== 'abort') {
                 throw new McpToolError(`${at}: on_miss must be "continue" (default: record no_contact, carry on) or "abort".`);
             }
+            // The march retreats to its own start; without local links the
+            // runner then raises to the traverse height before whatever comes
+            // next, with them it stays at the start and the next hop raises.
+            const endZ = localLinks ? virtual.z : hopZ;
             steps.push({
                 kind: 'probe',
                 name,
@@ -202,12 +246,11 @@ export function planProbeSequence(args: {
                 start: { ...virtual },
                 onMiss: onMissRaw,
                 capture: planProbeCapture(raw.capture),
+                endZ,
             });
             names.add(name);
             probeCount += 1;
-            // The march retreats to its own start; the runner then raises to
-            // the traverse height before whatever comes next.
-            virtual.z = hopZ;
+            virtual.z = endZ;
         } else {
             throw new McpToolError(`${at}: kind must be hop, descend or probe.`);
         }
@@ -236,6 +279,7 @@ export function planProbeSequence(args: {
         ...resolveMarchParams(args),
         hopZ,
         staged,
+        localLinks,
     };
 }
 
@@ -265,12 +309,23 @@ function marchWords(step: SequenceStepProbe, s: number): { x?: number; y?: numbe
 /** Confirm-page gcode: the whole circuit, every commanded move enumerated. */
 export function describeProbeSequencePlanAsGcode(plan: ProbeSequencePlan): string {
     const probes = plan.steps.filter((s) => s.kind === 'probe').length;
+    const links = plan.localLinks;
+    const lowHops = plan.steps.filter((s) => s.kind === 'hop' && isLocalHop(s.z, plan.hopZ)) as SequenceStepHop[];
     const lines = [
         `; PROBE SEQUENCE: one approved circuit of ${plan.steps.length} steps (${probes} sensor-gated marches)`,
         `; anchored at machine (${plan.staged.x.toFixed(2)}, ${plan.staged.y.toFixed(2)}, ${plan.staged.z.toFixed(2)})`
             + ' - re-verified before any motion, and before EVERY march',
-        `; law 2 enforced mechanically: every hop first raises to the traverse height Z${plan.hopZ};`,
-        '; every march retreats to its start and raises before the next step.',
+        ...(links ? [
+            `; LOCAL LINKS (opt-in, operator-approved envelope, #242): ${lowHops.length} hop(s) between stations run at machine Z${links.clearanceZ.toFixed(3)}`,
+            `;   (or wherever the head already is, if higher), each <= ${links.maxHopMm} mm${lowHops.length ? ` (longest here ${Math.max(...lowHops.map((h) => h.distanceMm)).toFixed(1)} mm)` : ''};`,
+            ';   after each march the probe retreats to its start and does NOT raise to the traverse height -',
+            ';   the next hop raises to its own height first (never lower). Every low hop was checked against',
+            ';   every landmark and keep-out box at ITS height (law 4). A contact during a low hop latches CRASH.',
+            `;   The first hop from the staged position and the final exit are at the traverse height Z${plan.hopZ}.`,
+        ] : [
+            `; law 2 enforced mechanically: every hop first raises to the traverse height Z${plan.hopZ};`,
+            '; every march retreats to its start and raises before the next step.',
+        ]),
         '; sensors: contact is EXPECTED only during marches - a probe/toolsetter trigger during',
         '; any hop, raise or descent latches the CRASH alarm (feed must be armed).',
         '; overtravel feed trips -> job stop + connection close + latched alarm',
@@ -279,8 +334,10 @@ export function describeProbeSequencePlanAsGcode(plan: ProbeSequencePlan): strin
     ];
     for (const step of plan.steps) {
         if (step.kind === 'hop') {
-            lines.push(`G1 Z${plan.hopZ.toFixed(3)} F${TRAVEL_FEED}; raise to traverse height (law 2)`);
-            lines.push(`G1 X${step.x.toFixed(3)} Y${step.y.toFixed(3)} F${TRAVEL_FEED}; hop`);
+            lines.push(isLocalHop(step.z, plan.hopZ)
+                ? `G1 Z${step.z.toFixed(3)} F${TRAVEL_FEED}; raise to the LOCAL clearance (local_links) - skipped if already at or above it`
+                : `G1 Z${step.z.toFixed(3)} F${TRAVEL_FEED}; raise to traverse height (law 2)`);
+            lines.push(`G1 X${step.x.toFixed(3)} Y${step.y.toFixed(3)} F${TRAVEL_FEED}; hop ${step.distanceMm.toFixed(1)} mm at Z${step.z.toFixed(3)}`);
         } else if (step.kind === 'descend') {
             lines.push(`G1 Z${(step.z + DESCENT_GUARD_MM).toFixed(3)} F${TRAVEL_FEED}; descend (<= 5 mm segments (crash guard armed)) to ${DESCENT_GUARD_MM} mm above target`);
             lines.push('; ...guarded final approach (operator, 2026-09-02): 1 mm steps, sensor-checked after each -');
@@ -313,8 +370,15 @@ export function describeProbeSequencePlanAsGcode(plan: ProbeSequencePlan): strin
             }
             lines.push(`G1 X${step.start.x.toFixed(3)} Y${step.start.y.toFixed(3)} Z${step.start.z.toFixed(3)} `
                 + `F${TRAVEL_FEED}; retreat to the march start (an ABORT raises straight up to the traverse height instead)`);
-            lines.push(`G1 Z${plan.hopZ.toFixed(3)} F${TRAVEL_FEED}; raise to traverse height`);
+            if (links) {
+                lines.push(`; local_links: stays at the march start Z${step.start.z.toFixed(3)}; the next hop raises to its own height`);
+            } else {
+                lines.push(`G1 Z${plan.hopZ.toFixed(3)} F${TRAVEL_FEED}; raise to traverse height`);
+            }
         }
+    }
+    if (links) {
+        lines.push(`G1 Z${plan.hopZ.toFixed(3)} F${TRAVEL_FEED}; raise to the traverse height - the sequence ends raised (law 2)`);
     }
     lines.push('G54;');
     return lines.join('\n');
@@ -323,6 +387,7 @@ export function describeProbeSequencePlanAsGcode(plan: ProbeSequencePlan): strin
 export async function runProbeSequenceProcedure(plan: ProbeSequencePlan): Promise<object> {
     assertChannelReady('probe', 'probe sequence');
     assertMachineReadyForProcedure();
+    const tipCalibration = getProbeTipCalibration();
 
     const position = getPositionSnapshot();
     const here = position.machine;
@@ -360,9 +425,25 @@ export async function runProbeSequenceProcedure(plan: ProbeSequencePlan): Promis
             stepIndex += 1;
             if (step.kind === 'hop') {
                 probeFeedService.clearExpectedContact();
-                await moveMachineSettled(`seq:raise:${stepIndex}`, { z: plan.hopZ }, TRAVEL_FEED);
+                // Raise to the hop's height first - the traverse height, or
+                // the approved local clearance. Decided from the verified
+                // position of record: a head already at or above it is left
+                // where it is (a hop never starts by descending); a head
+                // below it is raised. An unknown Z may only be raised to the
+                // traverse height - the one move that cannot descend.
+                const zNow = knownMachinePosition().position.z;
+                const localHop = isLocalHop(step.z, plan.hopZ);
+                if (zNow === null) {
+                    if (localHop) {
+                        throw new ProcedureAbort(`Hop ${stepIndex}: machine Z unknown - a local link at Z${step.z} cannot be verified; `
+                            + 're-stage from a verified position.');
+                    }
+                    await moveMachineSettled(`seq:raise:${stepIndex}`, { z: plan.hopZ }, TRAVEL_FEED);
+                } else if (zNow < step.z - TRAVERSE_Z_TOLERANCE_MM) {
+                    await moveMachineSettled(`seq:raise:${stepIndex}`, { z: step.z }, TRAVEL_FEED);
+                }
                 await moveMachineSettled(`seq:hop:${stepIndex}`, { x: step.x, y: step.y }, TRAVEL_FEED);
-                announce(`hop-${stepIndex}`, `(${step.x}, ${step.y}) at Z${plan.hopZ}`);
+                announce(`hop-${stepIndex}`, `(${step.x}, ${step.y}) at Z${step.z}${localHop ? ' (local link)' : ''}, ${step.distanceMm.toFixed(1)} mm`);
             } else if (step.kind === 'descend') {
                 probeFeedService.clearExpectedContact();
                 const guardTop = step.z + DESCENT_GUARD_MM;
@@ -449,7 +530,9 @@ export async function runProbeSequenceProcedure(plan: ProbeSequencePlan): Promis
                         x: step.start.x, y: step.start.y, z: step.start.z,
                     }, TRAVEL_FEED);
                     probeFeedService.clearExpectedContact();
-                    await moveMachineSettled(`seq:raise:${step.name}`, { z: plan.hopZ }, TRAVEL_FEED);
+                    if (!plan.localLinks) {
+                        await moveMachineSettled(`seq:raise:${step.name}`, { z: plan.hopZ }, TRAVEL_FEED);
+                    }
                     continue;
                 }
                 let released = false;
@@ -527,26 +610,43 @@ export async function runProbeSequenceProcedure(plan: ProbeSequencePlan): Promis
                     announce(`capture-${step.name}`, JSON.stringify(results[results.length - 1].capture));
                 }
                 // Retreat to the march start, then raise (still expected-contact
-                // until physically clear of the surface).
+                // until physically clear of the surface). With local links the
+                // probe stays at the start; the next hop raises to its height.
                 await moveMachineSettled(`seq:retreat:${step.name}`, {
                     x: step.start.x, y: step.start.y, z: step.start.z,
                 }, TRAVEL_FEED);
                 probeFeedService.clearExpectedContact();
-                await moveMachineSettled(`seq:raise:${step.name}`, { z: plan.hopZ }, TRAVEL_FEED);
+                if (!plan.localLinks) {
+                    await moveMachineSettled(`seq:raise:${step.name}`, { z: plan.hopZ }, TRAVEL_FEED);
+                }
             }
+        }
+
+        if (plan.localLinks) {
+            // The sequence ends raised at the traverse height (law 2) whatever
+            // the links did in between.
+            probeFeedService.clearExpectedContact();
+            const zEnd = knownMachinePosition().position.z;
+            if (zEnd === null || zEnd < plan.hopZ - TRAVERSE_Z_TOLERANCE_MM) {
+                await moveMachineSettled('seq:raise:end', { z: plan.hopZ }, TRAVEL_FEED);
+            }
+            announce('sequence-raised', `traverse height Z${plan.hopZ} (local links used between stations)`);
         }
 
         const contacts = results.filter((r) => r.status === 'contact');
         const misses = results.filter((r) => r.status === 'no_contact').map((r) => r.name);
         announce('sequence-complete', `${contacts.length} contacts${misses.length ? `, ${misses.length} no_contact (${misses.join(', ')})` : ''}`);
         return {
-            results,
+            tipCalibration,
+            results: results.map((r) => ({ ...r, ...projectToolTipZ(r.contactMachine?.z ?? null, tipCalibration) })),
             contactCount: contacts.length,
             noContactProbes: misses,
             phases,
+            localLinks: plan.localLinks,
             note: `Probe sequence complete: ${contacts.length} contacts${misses.length ? `, ${misses.length} march(es) found nothing within their approved travel (${misses.join(', ')})` : ''}, `
                 + 'all MACHINE coordinates. Worst confirm spread '
-                + `${(contacts.length ? Math.max(...contacts.map((r) => r.spreadMm)) : 0).toFixed(3)} mm.`,
+                + `${(contacts.length ? Math.max(...contacts.map((r) => r.spreadMm)) : 0).toFixed(3)} mm.`
+                + `${plan.localLinks ? ` Stations were linked at machine Z${plan.localLinks.clearanceZ} (local_links); the sequence ended raised at Z${plan.hopZ}.` : ''}`,
         };
     } catch (err) {
         const isTrip = !!probeFeedService.getTrip();
@@ -558,7 +658,13 @@ export async function runProbeSequenceProcedure(plan: ProbeSequencePlan): Promis
             }
         }
         if (isProcedureAbort(err)) {
-            const partial = { results, phases, aborted: true, abortedAtStep: stepIndex };
+            const partial = {
+                results: results.map((r) => ({ ...r, ...projectToolTipZ(r.contactMachine?.z ?? null, tipCalibration) })),
+                tipCalibration,
+                phases,
+                aborted: true,
+                abortedAtStep: stepIndex,
+            };
             const Ctor = isProcedureStopped(err) ? ProcedureStopped : ProcedureAbort;
             throw new Ctor(`Probe sequence aborted at step ${stepIndex}: ${err.message} `
                 + `${results.length} contact(s) measured before the abort are on the job record.`, partial);

@@ -1,5 +1,6 @@
 import { connectionManager } from '../machine/ConnectionManager';
 import { mcpBroadcast } from './index';
+import { queuedMoveGcode } from './pendantHold';
 import {
     AXES,
     BeatObservation,
@@ -11,6 +12,7 @@ import {
     getPositionOfRecord,
     getTrustedOffset,
     judgeRecheck,
+    judgeRestoredEcho,
     machineFromReport,
     matchFrameWithOffsets,
     setPositionOfRecord,
@@ -19,9 +21,9 @@ import {
 import { ProbeChannel, probeFeedService, resolveSensorEnabled, sensorLabel } from './probeFeed';
 import { MARCH_SEGMENT_MM, TRAVEL_FEED, marchSegments } from './procedureLimits';
 import { McpToolError } from './registry';
-import { GcodeChannel, currentGcodeSequence, sendGcodeVisible } from './tools/camera';
+import { GcodeChannel, SentGcode, currentGcodeSequence, sendGcodeVisible } from './tools/camera';
 import { PositionSnapshot, assertFreshHeartbeat, getPositionSnapshot, safeTraverseZ } from './tools/machine';
-import { ProcedureAbort, ProcedureStopped } from './procedureAbort';
+import { ProcedureAbort, checkProcedureStop } from './procedureAbort';
 import { TRAVERSE_Z_TOLERANCE_MM, planRaiseToTop } from './traversePlan';
 import { ROTATE_FEED, judgeRotation } from './rotaryMotion';
 import { reliableForMotion } from './machinePosition';
@@ -90,50 +92,16 @@ export function takeStepTrace(since: number | null): string | undefined {
 // isProcedureAbort / isProcedureStopped, never instanceof (see that file).
 export { ProcedureAbort, ProcedureStopped, isProcedureAbort, isProcedureStopped } from './procedureAbort';
 
-// ---------------------------------------------------------------- cooperative stop
-//
-// A procedure is a server-driven loop of <= 1-5 mm settled steps, not a
-// firmware print job: the machine's stop_print cannot end it (job
-// 5ad5fcce6b3a, 2026-09-06 - three stop_gcode_job calls answered ok:false
-// while the scan kept stepping). stop_gcode_job now records a stop REQUEST;
-// every motion primitive checks it before sending, so the procedure stops at
-// the next step boundary (within one <= 1 mm step or one sensor window),
-// throws ProcedureStopped, and the runner's normal abort path raises the head
-// to the traverse height and keeps every completed result. The first check
-// throws and marks the request acknowledged so the abort path's own moves
-// (raise, retreat) are not refused; a program runner sees the request and
-// stops regardless of on_fail.
-interface StopRequest {
-    reason: string;
-    requestedAt: number;
-    acknowledged: boolean;
-}
-
-let stopRequest: StopRequest | null = null;
-
-export function requestProcedureStop(reason: string): StopRequest {
-    if (!stopRequest) {
-        stopRequest = { reason, requestedAt: Date.now(), acknowledged: false };
-    }
-    return stopRequest;
-}
-
-export function clearProcedureStop(): void {
-    stopRequest = null;
-}
-
-export function procedureStopRequested(): StopRequest | null {
-    return stopRequest;
-}
-
-/** Called at every step boundary: throws ProcedureStopped once per request. */
-export function checkProcedureStop(): void {
-    if (stopRequest && !stopRequest.acknowledged) {
-        stopRequest.acknowledged = true;
-        throw new ProcedureStopped(`Stopped on request (${stopRequest.reason}) at a step boundary, `
-            + `${Date.now() - stopRequest.requestedAt} ms after the request. Raising to the traverse height; completed results kept.`);
-    }
-}
+// The cooperative stop-request state lives in procedureAbort.ts (pure, no
+// server imports) so tools/camera.ts can read it without importing this
+// module - camera.ts <-> probing.ts was an import cycle. Re-exported here so
+// every existing importer keeps working; it is the SAME module state.
+export {
+    checkProcedureStop,
+    clearProcedureStop,
+    procedureStopRequested,
+    requestProcedureStop,
+} from './procedureAbort';
 
 export interface StepResult {
     contact: boolean;
@@ -193,6 +161,8 @@ export interface MoveOptions {
      * Each segment is <= DESCENT_SEGMENT_MM and sensor-checked by the caller.
      */
     lenient?: boolean;
+    /** Called once the controller acknowledged the whole batch (result 0), before the arrival is judged. */
+    onReply?: () => void;
 }
 
 async function moveMachineSettledUnguarded(
@@ -210,6 +180,10 @@ async function moveMachineSettledUnguarded(
         target.y !== undefined ? `Y${target.y.toFixed(3)}` : '',
         target.z !== undefined ? `Z${target.z.toFixed(3)}` : '',
     ].filter(Boolean).join(' ');
+    // The trailing G54 is also what makes this call "settled": on the Snapmaker
+    // controller select_coordinate_system() runs planner.synchronize() when the
+    // workspace changes, so its reply (the last of four HTTP requests) only
+    // arrives once the G1 has finished. A bare G53 does not synchronize.
     const gcode = `G90
 G53;
 G1 ${words} F${feed};
@@ -237,10 +211,16 @@ G54;`;
     if (executed.result !== 0) {
         throw new ProcedureAbort(`Controller rejected the move: ${executed.text || executed.result}`);
     }
-    const arrived = (machine: NullableXyz, source: PositionSource) => {
+    if (options.onReply) {
+        options.onReply();
+    }
+    const arrived = (machine: NullableXyz, source: PositionSource, frame: 'work-frame' | 'machine-frame') => {
         const full = completeTarget(machine, target);
         if (full) {
-            setPositionOfRecord(full, source, executed.sequence, tool);
+            // The frame the report was read in travels with the record: a
+            // machine-frame echo (taken inside the G53 window) proves the
+            // arrival but never clears the frame latch (positionOfRecord.ts).
+            setPositionOfRecord(full, source, executed.sequence, tool, frame);
         }
         traceMark(`engine-exit:${source}`);
     };
@@ -264,7 +244,7 @@ G54;`;
             if (match.frame === 'work-frame') {
                 setTrustedOffset(match.offset);
             }
-            arrived(machineFromReport(echo, match.offset, match.frame), 'echo');
+            arrived(machineFromReport(echo, match.offset, match.frame), 'echo', match.frame);
             return;
         }
         traceMark('echo-miss');
@@ -340,7 +320,7 @@ G54;`;
                 if (match.frame === 'work-frame') {
                     setTrustedOffset(match.offset);
                 }
-                arrived(machineFromReport(now.work, match.offset, match.frame), 'heartbeat');
+                arrived(machineFromReport(now.work, match.offset, match.frame), 'heartbeat', match.frame);
                 return;
             }
         }
@@ -482,6 +462,121 @@ export async function moveMachineSettled(
         probeFeedService.motionEnd();
     }
 }
+// ---------------------------------------------------------------------------
+// Queued machine-frame moves (USB pendant continuous hold, opt-in).
+//
+// Why a settled move always ends at rest: the engine's trailing `G54;` runs
+// select_coordinate_system() in the Snapmaker controller (Marlin
+// G53-G59.cpp), which calls planner.synchronize() whenever the workspace
+// changes. The HTTP channel sends each line as its own request and waits for
+// each reply (SstpHttpChannel.consumeGCodeQueue), so the reply - and the next
+// segment - waits for the G1 to finish, and the planner drains between
+// segments. The controller's G53() handler, by contrast, selects the machine
+// workspace WITHOUT a synchronize, and a plain G1 is acknowledged once it is in
+// the planner (measured 2026-10-05: replies in 38-69 ms for ~175 ms moves).
+// These helpers let a caller (pendantRuntime.ts continuousHold) hold the
+// machine frame across clock-paced increments; the hold is closed by the
+// shared work-frame restore (tools/camera.ts sendWorkFrameRestore), whose G54
+// synchronizes, and proven by verifyRestoredPosition. The caller owns every
+// bound on what it queues.
+
+/**
+ * Assert a 100 % feed override (`M220 S100`). No motion. The Snapmaker build's
+ * M220 reports nothing, so the override cannot be read, and a queue model that
+ * paces by commanded feed needs commanded feed to be real feed. The pendant
+ * sends it once when continuous jogging is armed (it persists on the controller).
+ */
+export async function assertFullFeedrate(tool: string): Promise<SentGcode> {
+    const executed = await sendGcodeVisible(getDirectChannel(), tool, 'M220 S100');
+    if (executed.result !== 0) {
+        throw new ProcedureAbort(`Controller rejected M220 S100: ${executed.text || executed.result}`);
+    }
+    return executed;
+}
+
+/**
+ * Select absolute machine coordinates for a hold of queued moves. No motion.
+ * G90 and G53 are separate lines: this firmware acts on only the first G word
+ * of a line (an inline G53 is ignored).
+ */
+export async function enterMachineFrame(tool: string): Promise<SentGcode> {
+    probeFeedService.assertNoOvertravel();
+    checkProcedureStop();
+    const executed = await sendGcodeVisible(getDirectChannel(), tool, 'G90\nG53;');
+    if (executed.result !== 0) {
+        throw new ProcedureAbort(`Controller rejected the machine-frame select: ${executed.text || executed.result}`);
+    }
+    return executed;
+}
+
+/**
+ * Queue one absolute G1 in the machine frame that enterMachineFrame selected.
+ * Returns when the controller accepted it, normally long before it finishes.
+ * Never call it outside such a hold: on its own it would move in the work frame.
+ * `omitZ` sends `G1 X Y F` with no Z word (the controller keeps its current Z):
+ * the continuous hold uses it because its Z is the heartbeat-derived record Z,
+ * which may rest on a reused offset; with no Z word a wrong record Z fails the
+ * close's M114 proof instead of being driven to. The settled path's inherited
+ * record-Z word is unchanged here.
+ */
+export async function queueMachineMove(tool: string, target: Xyz, feed: number, options: { omitZ?: boolean } = {}): Promise<SentGcode> {
+    probeFeedService.assertNoOvertravel();
+    checkProcedureStop();
+    const executed = await sendGcodeVisible(getDirectChannel(), tool, queuedMoveGcode(target, feed, options.omitZ === true));
+    if (executed.result !== 0) {
+        throw new ProcedureAbort(`Controller rejected the queued move: ${executed.text || executed.result}`);
+    }
+    return executed;
+}
+
+/** The firmware's position report (`M114`, read-only), raw: the caller parses it. */
+export async function queryPositionReport(tool: string): Promise<SentGcode> {
+    return sendGcodeVisible(getDirectChannel(), tool, 'M114');
+}
+
+/**
+ * After a no-motion G90/G54 restore (the pendant's hold close, whose G54
+ * synchronized the planner), prove the position: M114's reply must match
+ * `expected` (machine coordinates) read in the WORK frame, judged with the
+ * engine's trusted offset first. A match becomes the
+ * position of record (source `echo`), which clears the frame-uncertainty
+ * latch. A reply that only matches as raw MACHINE coordinates is what a
+ * controller still in G53 would say, so it is refused (2026-10-05 review); with
+ * a ~0 offset the two readings coincide and matchFrame already reports
+ * work-frame - nothing can tell them apart then. Returns whether it matched;
+ * no motion either way.
+ */
+export async function verifyRestoredPosition(tool: string, expected: Xyz): Promise<boolean> {
+    const executed = await queryPositionReport(tool);
+    const echo = executed.result === 0 ? parseEcho(executed.text) : null;
+    if (!echo) {
+        return false;
+    }
+    const trusted = getTrustedOffset();
+    const offsets: Xyz[] = trusted ? [trusted] : [];
+    try {
+        offsets.push(getPositionSnapshot().originOffset);
+    } catch (err) {
+        // No heartbeat: only the trusted offset can judge the reply.
+    }
+    const full = judgeRestoredEcho(echo, offsets, expected, ECHO_TOLERANCE_MM);
+    if (!full) {
+        return false;
+    }
+    // judgeRestoredEcho admits only a work-frame reading, so this record may clear the latch.
+    setPositionOfRecord(full, 'echo', executed.sequence, tool, 'work-frame');
+    return true;
+}
+
+/** The firmware's current motion limits (`M503 S`, read-only), for the caller to judge. */
+export async function readFirmwareMotionConfig(tool: string): Promise<string> {
+    const executed = await sendGcodeVisible(getDirectChannel(), tool, 'M503 S');
+    if (executed.result !== 0 || !executed.text?.trim()) {
+        throw new ProcedureAbort(`M503 S returned no configuration: ${executed.text || executed.result}`);
+    }
+    return executed.text;
+}
+
 /** What raiseToTop did, so a runner can report the head's final Z honestly. */
 export interface RaiseToTopOutcome {
     action: 'raised' | 'skipped' | 'held' | 'no-retreat';

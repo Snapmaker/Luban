@@ -1,0 +1,10 @@
+{
+  ".agents/skills/cnc-camera-operations/SKILL.md": "55047f25e50814bef0baf90c3d955e0ba7a020cff5131a0d57da7d5c4c9a88d5",
+  ".agents/skills/cnc-motion-rules/SKILL.md": "f7933f31821921083e56ec3fc89a95d5bb8cc84b0dc61995f6b6a1f3fd3d6cd0",
+  ".agents/skills/cnc-probing/SKILL.md": "0f140a1b99b4ee30a6d53d9ae24cfd683a1f75b8f3bcbcdce17e293f6dc22196",
+  ".agents/skills/cnc-vibration/SKILL.md": "848f80a3c3033553548c64b10d96d7307d2f26881ae679192bece4573284f6ad",
+  ".agents/skills/cnc-visual-alignment/SKILL.md": "aca938041fcd1b7408adba924d31812317a6b4f37607968abcc3bb3125a96522",
+  "src/server/services/mcp/tools/camera.ts": "d55c1336ef9dae2010afa5ae0624452d27049a0c3939a774ee37f1e5672857ed",
+  "src/server/services/mcp/tools/vibration.ts": "c93d6e0dd5682221d348b98662c7716ecca00976ff6a948ccd163cb79a575080",
+  "src/server/services/mcp/tools/probing.ts": "6437d15bb6efa26b720813d1bd0ef42e7e2cdae7355137a5d07f4b204d58a372"
+}

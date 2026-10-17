@@ -14,6 +14,7 @@ import {
     captureFromDevice,
     clearCameraSelection,
     getCachedFrame,
+    getCapturedFrame,
     getCachedFrameDevice,
     getCachedFrameIds,
     listCameraCandidates,
@@ -25,26 +26,33 @@ import { cameraModelStore } from '../cameraModelStore';
 import { cameraStreamService } from '../cameraStream';
 import { recordGcodeTiming } from '../diagnostics';
 import { jobManager } from '../jobs';
-import { bumpGcodeSequence, noteDirectGcodeEnd, noteDirectGcodeStart } from '../positionOfRecord';
+import { bumpGcodeSequence, noteDirectGcodeEnd, noteDirectGcodeStart, noteFrameRestored } from '../positionOfRecord';
 import { decodeToGray, trackFeature } from '../tracking';
 import { McpToolError, ToolRegistry } from '../registry';
 import { gateDirectXy, planGotoWorkOrigin } from '../directMovePlan';
 import { clearanceOptions } from '../clearanceContext';
-import { WORK_FRAME_RESTORE_GCODE } from '../frameRecovery';
+import { FrameReading, WORK_FRAME_RESTORE_GCODE, frameRestoreJobRefusal, verifyWorkFrame, workFrameVerificationNote } from '../frameRecovery';
+import { NotSentError, RecoveryDeps, classifyReply, recordModalSend } from '../failureRecovery';
+import { gcodeLease } from '../../machine/gcodeLease';
+import { procedureStopRequested } from '../procedureAbort';
+import { manualControlGate } from '../manualControl';
 import { landmarkStore } from '../landmarks';
+import { routeClearanceForPath } from '../routeClearance';
 import { probeFeedService } from '../probeFeed';
-import { programFrameRoot } from '../programFrames';
+import { cameraArtifactPath, cameraImageMime, readCameraSnapshot } from '../cameraArtifacts';
+import DataStorage from '../../../DataStorage';
 import {
     assertFreshHeartbeat,
     PositionSnapshot,
     assertWithinTravel,
     getPositionSnapshot,
+    machineBounds,
     motionFloorZ,
     requirePlanningTravel,
     safeTraverseZ,
 } from './machine';
 import { validateStagedEnvelope } from './staging';
-import { reliableForMotion } from '../machinePosition';
+import { outsideBounds, reliableForMotion } from '../machinePosition';
 import { DIRECT_MOVE_FEED, TRACK_PATCH_PX, TRACK_SEARCH_RADIUS_PX, TRAVEL_FEED, TRAVERSE_FEED, clampCount, clampTo } from '../procedureLimits';
 
 // Motion policy (#23, refined): the direct move path is for the odd single
@@ -109,6 +117,19 @@ export interface SendTiming {
     trace?: string;
 }
 
+/** Connection generation for the failure hook's ledger (#221); null when disconnected. */
+function currentConnectionId(): string | null {
+    try {
+        if (!connectionManager.getConnectionStatus().connected) {
+            return null;
+        }
+        const generation = (connectionManager as { getConnectionGeneration?: () => string }).getConnectionGeneration;
+        return typeof generation === 'function' ? generation.call(connectionManager) : 'unversioned';
+    } catch (err) {
+        return null;
+    }
+}
+
 export async function sendGcodeVisible(channel: GcodeChannel, tool: string, gcode: string, timing?: SendTiming): Promise<SentGcode> {
     const sequence = bumpGcodeSequence();
     const sentAt = Date.now();
@@ -156,9 +177,16 @@ export async function sendGcodeVisible(channel: GcodeChannel, tool: string, gcod
     }
     probeFeedService.motionBegin();
     noteDirectGcodeStart();
+    // The tool call's modal ledger (#221): what left, on which channel, and
+    // how it ended - read by the failure hook in ToolRegistry.call().
+    const settleLedger = recordModalSend(currentConnectionId() || 'none', gcode);
     let executed;
     try {
         executed = await channel.executeGcode(gcode);
+        settleLedger(classifyReply(executed));
+    } catch (err) {
+        settleLedger('indeterminate');
+        throw err;
     } finally {
         probeFeedService.motionEnd();
         noteDirectGcodeEnd();
@@ -229,6 +257,7 @@ function frameContent(frame: CapturedFrame, meta: object): object {
                     ...meta,
                     camera: {
                         frameId: frame.frameId,
+                        file: frame.file,
                         provider: frame.provider,
                         device: frame.device,
                         capturedAt: frame.capturedAt,
@@ -406,6 +435,22 @@ export async function executeBoundedMoveAndCapture(args: BoundedMoveArgs): Promi
         throw new McpToolError('The connected channel does not support direct moves.');
     }
 
+    if (before.machine.x === null || before.machine.y === null) {
+        throw new McpToolError('Machine XY is unknown; cannot compute the route collision envelope.');
+    }
+
+    const routeClearance = routeClearanceForPath(
+        { x: before.machine.x as number, y: before.machine.y as number },
+        machineTarget,
+    );
+
+    if (!Number.isFinite(routeClearance.minimumZ)) {
+        throw new McpToolError(`XY move refused: ${routeClearance.note}`);
+    }
+    if (routeClearance.minimumZ > Math.max(safeTraverseZ(), before.machine.z || 0)) {
+        throw new McpToolError(`Route requires toolhead Z${routeClearance.minimumZ}, above the current/park height; no automatic raise beyond park is allowed.`);
+    }
+
     // OPERATOR LAW (2026-09-01, after the probe crash; made a hard gate on
     // 2026-09-21 - "move_and_capture should be z gated first"): X/Y happens at
     // the safe traverse height, and that precondition is established BEFORE
@@ -413,14 +458,9 @@ export async function executeBoundedMoveAndCapture(args: BoundedMoveArgs): Promi
     // already required a fresh, reliable one). An unknown Z refuses. A head
     // below the height is raised straight up first - the one move that cannot
     // descend (law 8) - and the XY is sent only once that raise has settled.
-    // The height is the MOTION FLOOR, not the park height (operator ruling
-    // 2026-09-21): a head already above the floor is legal to traverse at and
-    // is not forced up to Z328 for a nudge. Until 2026-09-21 this check ran
-    // after the travel cap and was skipped outright when machine Z was null.
-    // The only escape hatch is operator_confirmed_clearance: the operator's
-    // explicit word for the corridor at the CURRENT Z - never the model's own
-    // judgment, never derived from assumptions about what is on the bed.
-    const gate = gateDirectXy(before.machine.z, motionFloorZ(), args.operator_confirmed_clearance === true);
+    // Direct camera nudges retain the park-height Z gate (law 7); an active
+    // tool or a clearance flag cannot disable it. Staged surveys use the floor.
+    const gate = gateDirectXy(before.machine.z, Math.max(safeTraverseZ(), routeClearance.minimumZ), false);
     if (gate.action === 'refuse' || gate.planZ === null) {
         throw new McpToolError(`XY move refused: ${gate.reason}`);
     }
@@ -538,6 +578,7 @@ export async function executeBoundedMoveAndCapture(args: BoundedMoveArgs): Promi
         raised_first: raisedFirst,
         pacing_warning: pacingWarning,
         note: 'position is firmware-reported after settling, not the commanded target',
+        route_clearance: routeClearance,
     });
 }
 
@@ -676,6 +717,7 @@ export async function homeMachine(tool: string, waitUntilHomed: boolean = true, 
     if (executed.result !== 0) {
         throw new McpToolError(`Homing rejected by controller: ${executed.text || executed.result}`);
     }
+    noteFrameRestored(); // G54 acknowledged after G28; a verified position must still follow.
 
     if (!waitUntilHomed) {
         return {
@@ -730,7 +772,90 @@ export async function homeMachine(tool: string, waitUntilHomed: boolean = true, 
         + `Last state: ${JSON.stringify(last && { isHomed: last.isHomed, machineStatus: last.machineStatus })}`);
 }
 
+/** Shared operator/agent frame recovery; deliberately no axis words. */
+export async function sendWorkFrameRestore(tool: string): Promise<SentGcode> {
+    const channel = connectionManager.getCurrentChannel() as unknown as GcodeChannel;
+    if (!channel || typeof channel.executeGcode !== 'function') {
+        throw new McpToolError('No machine connected, or the channel does not support direct commands.');
+    }
+    const executed = await sendGcodeVisible(channel, tool, WORK_FRAME_RESTORE_GCODE);
+    // G54 synchronizes the planner, so an acknowledged restore also means no
+    // queued motion is left; a fresh verified position still has to follow.
+    if (executed.result === 0) { noteFrameRestored(); }
+    return executed;
+}
+
+/** The position-of-record fields a frame verification reads (frameRecovery.verifyWorkFrame). */
+function frameReading(snapshot: PositionSnapshot): FrameReading {
+    return {
+        reliability: snapshot.reliability,
+        frame: snapshot.frame,
+        reportedAt: snapshot.machineReportedAt,
+        originOffset: snapshot.originOffset,
+        // `work` is the raw report; read as machine coordinates, is it impossible?
+        rawImpossibleAsMachine: outsideBounds(
+            snapshot.work,
+            machineBounds((connectionManager.getConnectionStatus() as { machineIdentifier?: string | null }).machineIdentifier || null),
+        ).length > 0,
+    };
+}
+
+/**
+ * The runtime side of the failed-call modal cleanup (failureRecovery.ts):
+ * the SAME visible send path, the position of record, and the ownership
+ * signals. Settling waits two status periods, as restore_work_frame does.
+ */
+export const failureRecoveryDeps: RecoveryDeps = {
+    connectionId: currentConnectionId,
+    send: async (label, gcode) => {
+        const channel = connectionManager.getCurrentChannel() as unknown as GcodeChannel;
+        if (!channel || typeof channel.executeGcode !== 'function') {
+            throw new NotSentError('no machine channel with a direct command path');
+        }
+        return sendGcodeVisible(channel, label, gcode);
+    },
+    settle: async () => sleep(FRAME_RESTORE_SETTLE_MS),
+    readPosition: () => {
+        const snapshot = getPositionSnapshot();
+        return { ...frameReading(snapshot), machineStatus: snapshot.machineStatus };
+    },
+    reliableForMotion: (reliability) => reliableForMotion(reliability as PositionSnapshot['reliability']),
+    jobRunning: () => {
+        // starting/started: the controller is executing (or about to execute)
+        // a program, possibly this call's own direct job - either way cleanup
+        // would land inside it, so it is skipped and explained.
+        const job = jobManager.getActive();
+        return !!job && (job.state === 'starting' || job.state === 'started');
+    },
+    // The pendant arms manual control for its jogs and its own frame recovery.
+    manualControl: () => manualControlGate.isManual(),
+    // The pendant's queued run holds the gcode lease from before its G53 to its
+    // closing G54; cleanup sent inside that window would be read in the wrong
+    // frame. (The recovery hold is the frame latch, which the hook reads itself.)
+    leaseHolder: () => gcodeLease.status().held?.owner ?? null,
+    // The real latches, not the error text: crash/overtravel trip (also the
+    // unexpected-contact guard) and a pending procedure stop request.
+    authorityClosed: () => {
+        const trip = probeFeedService.getTrip();
+        if (trip) {
+            return `${trip.kind === 'crash' ? 'crash' : 'overtravel'} alarm latched (${trip.channel})`;
+        }
+        try {
+            probeFeedService.assertNoOvertravel();
+        } catch (err) {
+            return (err as Error).message;
+        }
+        const stop = procedureStopRequested();
+        return stop ? `a procedure stop was requested (${stop.reason})` : null;
+    },
+    now: () => Date.now(),
+};
+
 export function registerCameraTools(registry: ToolRegistry): void {
+    // Guarded: inert test harnesses hand in a bare registry stub.
+    if (typeof registry.setFailureRecovery === 'function') {
+        registry.setFailureRecovery(failureRecoveryDeps);
+    }
     registry.register({
         name: 'list_cameras',
         description: 'List available capture sources: the configured snapshot URL, or DirectShow '
@@ -765,7 +890,7 @@ export function registerCameraTools(registry: ToolRegistry): void {
             + 'stamped with the firmware-reported position it was taken at, when a machine is '
             + 'connected. While an operator watches the live stream (/camera) the frame comes from '
             + 'that loop (camera.source = "stream", one shared device); otherwise this call opens the '
-            + 'device itself. No motion.',
+            + 'device itself. Requested snapshots are saved to disk and remain retrievable by frame_id or file after the 12-frame RAM cache rolls over or Luban restarts. No motion.',
         inputSchema: { type: 'object', properties: {}, additionalProperties: false },
         handler: async () => {
             const frame = await captureFrame();
@@ -775,16 +900,12 @@ export function registerCameraTools(registry: ToolRegistry): void {
 
     registry.register({
         name: 'get_frame',
-        description: 'Return a frame that was captured earlier, by frame_id: one of the last 12 captures cached in memory '
-            + '(capture_frame, move_and_capture, preview_cameras, visual_servo), or a frame a probe_program `capture` op saved '
-            + 'on its job record (result.ops[].result.file - pass that path as `file`; it is read only from the MCP program-frame '
-            + 'directory). This is how the frames of a one-approval look-rotate-look program are viewed after it finishes. '
-            + 'Read-only, no motion, no new capture.',
+        description: 'Read any saved requested snapshot by frame_id (RAM cache then disk), or an image/mosaic by file from MCP camera capture, program-frame, bootstrap or survey directories. There is NO 12-frame retrieval limit: 12 is only the RAM cache size. Remote agents use get_camera_capture_set for job indexes, then get_frame for images. Read-only, no motion or new capture.',
         inputSchema: {
             type: 'object',
             properties: {
-                frame_id: { type: 'string', description: 'frame_id of a cached frame (from any capture result).' },
-                file: { type: 'string', description: 'Path a probe_program capture op reported as result.file, for when the frame has left the cache.' },
+                frame_id: { type: 'string', description: 'frameId from any requested capture result; archived snapshots survive cache eviction and restart.' },
+                file: { type: 'string', description: 'Image path from a camera/probe program result or a bootstrap/survey index. Server path, not client path.' },
             },
             additionalProperties: false,
         },
@@ -792,35 +913,54 @@ export function registerCameraTools(registry: ToolRegistry): void {
             const frameId = String(args.frame_id || '').trim();
             let jpg = frameId ? getCachedFrame(frameId) : null;
             let source: 'cache' | 'file' = 'cache';
+            let savedFile: string | null = null;
+            if (!jpg && frameId) {
+                const saved = readCameraSnapshot(DataStorage.userDataDir, frameId);
+                if (saved) {
+                    jpg = saved.image;
+                    savedFile = saved.file;
+                    source = 'file';
+                }
+            }
             if (!jpg && args.file) {
-                const file = path.resolve(String(args.file));
-                const root = path.resolve(programFrameRoot());
-                if (!file.startsWith(root + path.sep)) {
-                    throw new McpToolError(`file must be inside the MCP program-frame directory ${root}.`);
-                }
-                if (!fs.existsSync(file)) {
-                    throw new McpToolError(`No frame file at ${file}.`);
-                }
+                const file = cameraArtifactPath(DataStorage.userDataDir, String(args.file), 'image');
                 jpg = fs.readFileSync(file);
+                savedFile = file;
                 source = 'file';
             }
             if (!jpg) {
-                throw new McpToolError(`No cached frame "${frameId}" (the cache keeps the last 12); pass the file path a program capture reported.`);
+                throw new McpToolError(`Frame "${frameId}" was not found in RAM or the snapshot archive. For older job images, pass the saved file path from the job result/index.`);
             }
             return {
                 mcpContent: [
-                    { type: 'image', data: jpg.toString('base64'), mimeType: 'image/jpeg' },
+                    { type: 'image', data: jpg.toString('base64'), mimeType: cameraImageMime(jpg) },
                     {
                         type: 'text',
                         text: JSON.stringify({
                             frame_id: frameId || null,
                             source,
                             device: frameId ? getCachedFrameDevice(frameId) : null,
-                            file: source === 'file' ? args.file : null,
+                            file: savedFile,
                         }),
                     },
                 ],
             };
+        },
+    });
+
+    registry.register({
+        name: 'get_camera_capture_set',
+        description: 'Read the complete position-stamped index of a finished camera_bootstrap or survey_bed. Pass directory from get_gcode_job_status.result. Returns targets, physical plane, dropped poses, frame paths and mosaics as recorded; get_frame reads each image remotely. For an offline solver, save this index.json and the images by basename in a local directory. Read-only; no calibration or motion.',
+        inputSchema: {
+            type: 'object',
+            properties: { directory: { type: 'string', description: 'Server directory returned by the capture job.' } },
+            required: ['directory'],
+            additionalProperties: false,
+        },
+        handler: async (args: { directory?: string }) => {
+            if (!args.directory) throw new McpToolError('directory is required from the saved job result.');
+            const file = cameraArtifactPath(DataStorage.userDataDir, path.join(args.directory, 'index.json'), 'index');
+            return { file, index: JSON.parse(fs.readFileSync(file, 'utf8')), next_step: 'Read images with get_frame {file}; keep their machine stamps and holdout flags. Paths are on the server.' };
         },
     });
 
@@ -984,9 +1124,8 @@ export function registerCameraTools(registry: ToolRegistry): void {
                         + 'showing the right view as confirm_frame_id (or operator_confirmed: true if the '
                         + 'OPERATOR has confirmed the device by name).');
                 }
-                if (!getCachedFrame(frameId)) {
-                    throw new McpToolError(`Frame "${frameId}" is not in the frame cache (it holds the last few `
-                        + `frames: ${getCachedFrameIds().join(', ') || 'none'}). Take a fresh preview_cameras frame.`);
+                if (!getCapturedFrame(frameId)) {
+                    throw new McpToolError(`Frame "${frameId}" is not in the cache or snapshot archive. Take a fresh preview_cameras frame.`);
                 }
                 const frameDevice = getCachedFrameDevice(frameId);
                 if (frameDevice === null) {
@@ -1099,7 +1238,7 @@ export function registerCameraTools(registry: ToolRegistry): void {
 
     registry.register({
         name: 'track_feature',
-        description: 'Template-match a patch between two cached frames (by the frameId each capture '
+        description: 'Template-match a patch between two captured frames (RAM cache or disk archive, by the frameId each capture '
             + 'reports): give the pixel of a feature in one frame and get its measured pixel in the '
             + 'other, with an NCC confidence score. Use this instead of eyeballing pixel coordinates '
             + 'when deriving calibrations or measuring servo error - hand-estimated pixels were the '
@@ -1138,11 +1277,11 @@ export function registerCameraTools(registry: ToolRegistry): void {
             search_radius?: number;
             expected_shift?: { du?: number; dv?: number };
         }) => {
-            const templateJpg = getCachedFrame(String(args.template_frame_id || ''));
-            const searchJpg = getCachedFrame(String(args.search_frame_id || ''));
+            const templateJpg = getCapturedFrame(String(args.template_frame_id || ''));
+            const searchJpg = getCapturedFrame(String(args.search_frame_id || ''));
             if (!templateJpg || !searchJpg) {
                 throw new McpToolError(`Unknown frame id. Cached frames: ${getCachedFrameIds().join(', ') || 'none'} `
-                    + '(the cache holds the last 12 captures of this session).');
+                    + 'No matching saved snapshot was found either. Use frameId from a capture result.');
             }
             const u = Math.round(Number(args.point?.u));
             const v = Math.round(Number(args.point?.v));
@@ -1190,7 +1329,13 @@ export function registerCameraTools(registry: ToolRegistry): void {
             + 'reports an incoherent or machine-frame position after a job that declared G53 and never selected a '
             + 'work workspace again: the controller keeps reporting machine coordinates while the heartbeat still '
             + 'carries a work-origin offset, so every derived position is rejected until the frame is handed back. '
-            + 'Returns the position of record before and after, re-read two beats later. A re-home is not the remedy.',
+            + 'Returns the position of record before and after, re-read two beats later, and `workspace_verification`: '
+            + '`verified` (a status report taken a poll period after the reply is only possible in the work frame), '
+            + '`consistent-unverified` (reads as work but would also fit the machine frame), `unverifiable-zero-offset` '
+            + '(work offset ~0, both frames read alike), `no-fresh-beat` (nothing judged after the reply yet) or '
+            + '`machine-frame` (still in G53). `recovered` is true only when verified; `note` says what to do next. '
+            + 'Refused, sending nothing, while a job is starting or running: wait for it to end or stop it first. '
+            + 'A re-home is not the remedy.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -1199,35 +1344,40 @@ export function registerCameraTools(registry: ToolRegistry): void {
             additionalProperties: false,
         },
         handler: async (args: { reason?: string }) => {
-            const channel = connectionManager.getCurrentChannel() as unknown as GcodeChannel;
-            if (!channel || typeof channel.executeGcode !== 'function') {
-                throw new McpToolError('No machine connected, or the channel does not support direct commands.');
+            // Never inject G90/G54 into a starting or running job (#229 review).
+            const jobRefusal = frameRestoreJobRefusal(jobManager.getActive());
+            if (jobRefusal) {
+                throw new McpToolError(jobRefusal);
             }
             const before = getPositionSnapshot();
             const reason = String(args.reason || '').trim();
-            const executed = await sendGcodeVisible(
-                channel,
-                `restore_work_frame${reason ? ` - ${reason.slice(0, 60)}` : ''}`,
-                WORK_FRAME_RESTORE_GCODE
-            );
+            const executed = await sendWorkFrameRestore(`restore_work_frame${reason ? ` - ${reason.slice(0, 60)}` : ''}`);
+            const replyAt = Date.now();
             // Two status periods: the judgement needs a beat taken AFTER the
             // workspace change, and the poll runs on its own ~2 s cadence.
             await new Promise((resolve) => setTimeout(resolve, FRAME_RESTORE_SETTLE_MS));
             const after = getPositionSnapshot();
-            const recovered = reliableForMotion(after.reliability) && !reliableForMotion(before.reliability);
+            // The before/after reliability comparison missed the case this tool
+            // exists for: a sustained machine-frame state already reads as
+            // 'heartbeat'. Judge the frame itself, conservatively (#229).
+            const accepted = executed.result === 0;
+            const verification = verifyWorkFrame(frameReading(after), replyAt);
+            const recovered = accepted && verification === 'verified' && reliableForMotion(after.reliability);
             return {
                 sent: WORK_FRAME_RESTORE_GCODE,
                 result: executed.result,
                 text: executed.text || null,
                 before: { reliability: before.reliability, frame: before.frame, machine: before.machine },
                 after: { reliability: after.reliability, frame: after.frame, machine: after.machine },
+                frame_before: before.frame,
+                frame_after: after.frame,
+                workspace_verification: verification,
                 recovered,
                 warnings: after.warnings,
-                note: recovered
-                    ? 'The controller is back in the work workspace and the position of record is usable again.'
-                    : `The position of record is ${after.reliability} after the restore. `
-                        + 'Read get_position again in a couple of seconds; if it has not cleared, call '
-                        + 'query_firmware_position to see which frame the controller is actually in and tell the operator.',
+                note: accepted
+                    ? workFrameVerificationNote(verification, after.reliability)
+                    : `The controller did not accept the restore (result ${executed.result}). The workspace is unknown: `
+                        + 'do not move; call query_firmware_position and tell the operator.',
             };
         },
     });
@@ -1254,9 +1404,9 @@ export function registerCameraTools(registry: ToolRegistry): void {
     registry.register({
         name: 'query_firmware_position',
         description: 'Ask the firmware directly for its position report (M114) and return the RAW '
-            + 'controller response alongside the heartbeat-derived view. This is the authoritative '
-            + 'way to establish which coordinate frame the controller is in when heartbeat-derived '
-            + 'machine coordinates look wrong (e.g. after homing). Read-only, no motion.',
+            + 'controller response alongside the heartbeat-derived view. M114 reports the selected workspace; '
+            + 'it does not independently identify that workspace or validate an old origin offset. '
+            + 'Returned machine coordinates are derived using the heartbeat offset, not independent frame proof. Read-only, no motion.',
         inputSchema: { type: 'object', properties: {}, additionalProperties: false },
         handler: async () => {
             const channel = connectionManager.getCurrentChannel() as unknown as GcodeChannel;
@@ -1270,8 +1420,9 @@ export function registerCameraTools(registry: ToolRegistry): void {
                 // is the dead-connection signature (observed live 2026-09-02:
                 // the machine had disconnected without the server noticing).
                 throw new McpToolError('M114 returned no position text - the connection is likely dead '
-                    + 'even though the channel accepted the command. Reconnect the machine and verify '
-                    + `get_position is fresh before trusting anything. (raw: ${JSON.stringify(raw)}, `
+                    + 'even though the channel accepted the command. Preserve connection diagnostics, use recover_machine_connection '
+                    + 'for the retained session if available, otherwise ask the operator to reconnect through Luban; '
+                    + `verify get_position is fresh before trusting anything. (raw: ${JSON.stringify(raw)}, `
                     + `result: ${executed.result})`);
             }
             // M114 reports WORK coordinates in the currently selected
@@ -1384,8 +1535,9 @@ export function registerCameraTools(registry: ToolRegistry): void {
             + 'establishes from the position of record that the head is at the safe traverse height '
             + '(mcpSafeTraverseZ, machine Z328): if it is below, it is raised straight up to it first and the '
             + 'XY is sent only once that raise has settled; if Z cannot be established (unknown, unreliable) '
-            + 'the call is refused. This is NOT a transport primitive - travel and sequences belong in staged '
-            + 'operator-approved mechanisms (traverse_xy, survey_bed, move_z batches, probing procedures, '
+            + 'the call is refused. This is NOT a transport primitive - travel and sequences belong in traverse_xy '
+            + '(which itself runs on the call at the traverse height under mcpTraverseWithoutApprovalAtSafeZ, #241) and the staged '
+            + 'operator-approved mechanisms (survey_bed, move_z batches, probing procedures, '
             + 'submit_gcode_job), and rapid sequential calls are refused (pacing guard). Obstacle landmarks '
             + 'are checked at the Z the XY actually runs at. No Z parameter by design. Requires an idle machine, toolhead '
             + `off, a stated reason. Travel per call is capped (mcpMaxJogDistance, default ${DEFAULT_MAX_TRAVEL_MM} mm).`,
@@ -1403,10 +1555,10 @@ export function registerCameraTools(registry: ToolRegistry): void {
                 feed_rate: { type: 'number', description: `mm/min, default ${DEFAULT_FEED_RATE}, max 3000.` },
                 operator_confirmed_clearance: {
                     type: 'boolean',
-                    description: 'Set true ONLY when the human operator has explicitly confirmed the '
-                        + 'current Z and an obstacle-free path at this Z: the XY then runs at the CURRENT Z '
-                        + '(no raise to the traverse height) and the homed-first requirement is skipped. The '
-                        + 'one escape hatch - never on the model\'s own judgment.',
+                    description: 'Set true ONLY when the human operator has explicitly confirmed clearance for this move. '
+                        + 'Skips the homed-first requirement, but NEVER skips the park-height Z gate: a head below '
+                        + 'the safe traverse height still raises before XY. Route clearances and an established Z remain required. '
+                        + 'Never infer this exception from the model\'s own judgment.',
                 },
                 wait_until_moved: {
                     type: 'boolean',

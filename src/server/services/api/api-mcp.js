@@ -4,7 +4,14 @@ import { MAX_MAX_CLIENTS, MAX_STREAM_FPS, MIN_STREAM_FPS, STREAM_ENABLED_KEY, ST
 import { MAX_RECENT_LIMIT, MIN_RECENT_LIMIT, diagnosticsRecentLimit } from '../mcp/diagnostics';
 import { DEFAULT_BLINKA_ENV, resolveGpioFeedConfig } from '../mcp/gpioFeed';
 import { MAX_JOB_EVENT_LIMIT, MIN_JOB_EVENT_LIMIT, approvalHandoff, jobEventLimit } from '../mcp/jobs';
+import { traverseWithoutApprovalAtSafeZ, traverseWithoutApprovalSource } from '../mcp/tools/machine';
 import { probeFeedService, resolveProbeFeedConfig, resolveProbeTransportKind, resolveSensorEnabled } from '../mcp/probeFeed';
+import { listAudioSources } from '../mcp/audioDevices';
+import { describeSourceChoice, matchAudioDevice } from '../mcp/audioSelection';
+import { currentTelemetryConfig, spindleTelemetryService } from '../mcp/spindleTelemetry';
+import { MAX_STATUS_POLL_MS, MIN_STATUS_POLL_MS, TELEMETRY_KEYS } from '../mcp/telemetryConfig';
+import { VIBRATION_KEYS, parseEnvPairs, parseFlag, parseSensors } from '../mcp/vibrationConfig';
+import { currentVibrationConfig, vibrationFeedService } from '../mcp/vibrationFeed';
 
 const ERR_BAD_REQUEST = 400;
 
@@ -150,6 +157,75 @@ function approvalSettings() {
     return {
         handoff: approvalHandoff(),
         source: limitSource('LUBAN_MCP_APPROVAL_HANDOFF', 'mcpApprovalHandoff'),
+        // Approval-free XY transport with the head already at the traverse
+        // height (tools/machine.ts traverseWithoutApprovalAtSafeZ; operator
+        // ruling 2026-10-17, #241). Default on.
+        traverseWithoutApprovalAtSafeZ: traverseWithoutApprovalAtSafeZ(),
+        traverseWithoutApprovalSource: traverseWithoutApprovalSource(),
+    };
+}
+
+// Spindle telemetry (spindleTelemetry.ts): opt-in status RPM recording, the
+// optional faster status poll, the microphone and WHICH microphone. The
+// capture sources are listed so the pane can offer them; nothing here
+// chooses one - the operator does.
+async function spindleTelemetrySettings() {
+    const cfg = currentTelemetryConfig();
+    let listing = { sources: [], backends: [] };
+    try {
+        listing = await listAudioSources();
+    } catch (err) {
+        listing = { sources: [], backends: [{ command: 'list', ok: false, count: 0, error: err.message }] };
+    }
+    const match = cfg.audioDevice ? matchAudioDevice(cfg.audioDevice, listing.sources) : null;
+    let resolution = 'no device configured';
+    if (match) {
+        resolution = match.ok ? `matched on ${match.matchedOn}` : match.reason;
+    }
+    return {
+        enabled: cfg.enabled,
+        statusPollMs: cfg.statusPollMs,
+        statusPollRange: [MIN_STATUS_POLL_MS, MAX_STATUS_POLL_MS],
+        audioEnabled: cfg.audioEnabled,
+        audioDevice: cfg.audioDevice,
+        sampleLimit: cfg.sampleLimit,
+        sources: cfg.sources,
+        envNames: Object.fromEntries(Object.entries(TELEMETRY_KEYS).map(([field, names]) => [field, names.env])),
+        devices: listing.sources.map((source) => ({
+            entry: source.entry, description: source.description, backend: source.backend, builtIn: source.builtIn, usb: source.usb,
+        })),
+        listingCommands: listing.backends,
+        resolves: match ? match.ok : false,
+        resolution,
+        guidance: describeSourceChoice(listing.sources),
+        live: spindleTelemetryService.status(),
+    };
+}
+
+// Accelerometers (vibrationFeed.ts): the bridge, the sensor list (JSON, as
+// stored) and the live feed state. Saving restarts the feed at once.
+function vibrationSettings() {
+    const cfg = currentVibrationConfig();
+    const storedSensors = config.get(VIBRATION_KEYS.sensors.key);
+    let sensorsJson = '';
+    if (typeof storedSensors === 'string') {
+        sensorsJson = storedSensors;
+    } else if (storedSensors !== undefined && storedSensors !== null) {
+        sensorsJson = JSON.stringify(storedSensors, null, 1);
+    }
+    return {
+        enabled: cfg.enabled,
+        transport: cfg.transport,
+        python: config.get(VIBRATION_KEYS.python.key) || '',
+        blinkaEnv: config.get(VIBRATION_KEYS.blinkaEnv.key) || '',
+        serialPort: config.get(VIBRATION_KEYS.serialPort.key) || '',
+        sensorsJson,
+        jobCapture: cfg.jobCapture,
+        resolvedPython: cfg.python,
+        problems: cfg.problems,
+        sources: cfg.sources,
+        envNames: Object.fromEntries(Object.entries(VIBRATION_KEYS).map(([field, names]) => [field, names.env])),
+        live: vibrationFeedService.status(),
     };
 }
 
@@ -169,8 +245,19 @@ export const getHealth = (req, res) => {
     res.send(getMcpHealth());
 };
 
-export const getStatus = (req, res) => {
-    res.send(settingsPayload());
+export const getStatus = async (req, res) => {
+    const payload = settingsPayload();
+    try {
+        payload.vibration = vibrationSettings();
+    } catch (err) {
+        payload.vibration = { error: err.message };
+    }
+    try {
+        payload.spindleTelemetry = await spindleTelemetrySettings();
+    } catch (err) {
+        payload.spindleTelemetry = { error: err.message };
+    }
+    res.send(payload);
 };
 
 /**
@@ -202,7 +289,9 @@ export const clearAlarm = (req, res) => {
  * omitted field is left unchanged (the pane omits an untouched password).
  */
 export const updateSettings = (req, res) => {
-    const { enabled, port, allowLan, sensors, mqtt, gpio, transport, buffers, approvalHandoff: handoff, cameraStream } = req.body || {};
+    const {
+        enabled, port, allowLan, sensors, mqtt, gpio, transport, buffers, approvalHandoff: handoff, cameraStream, spindleTelemetry, vibration,
+    } = req.body || {};
 
     const tls = (req.body || {}).https;
     if (tls !== undefined) {
@@ -247,6 +336,15 @@ export const updateSettings = (req, res) => {
             return;
         }
     }
+    const safeZTraverse = (req.body || {}).traverseWithoutApprovalAtSafeZ;
+    if (safeZTraverse !== undefined) {
+        // Read on every traverse_xy / goto_tool_change_position / move_z call: applies at once.
+        if (safeZTraverse === null || safeZTraverse === '') {
+            config.unset('mcpTraverseWithoutApprovalAtSafeZ'); // default: on
+        } else {
+            config.set('mcpTraverseWithoutApprovalAtSafeZ', !!safeZTraverse);
+        }
+    }
     if (buffers && typeof buffers === 'object') {
         // Diagnostic buffer sizes: applied immediately (read on every append).
         const limits = [
@@ -268,6 +366,90 @@ export const updateSettings = (req, res) => {
                 return;
             }
             config.set(key, numeric);
+        }
+    }
+    if (spindleTelemetry && typeof spindleTelemetry === 'object') {
+        // Spindle telemetry: read at the next file-job start. The device is
+        // stored as typed (an entry or alias from the listing); it is resolved
+        // strictly when a job starts and refused, not guessed, if it no
+        // longer matches exactly one source.
+        if (spindleTelemetry.enabled !== undefined) {
+            config.set(TELEMETRY_KEYS.enabled.key, !!spindleTelemetry.enabled);
+        }
+        if (spindleTelemetry.audioEnabled !== undefined) {
+            config.set(TELEMETRY_KEYS.audio.key, !!spindleTelemetry.audioEnabled);
+        }
+        if (spindleTelemetry.statusPollMs !== undefined) {
+            const value = String(spindleTelemetry.statusPollMs).trim();
+            if (value === '' || value === '0') {
+                config.unset(TELEMETRY_KEYS.statusPollMs.key);
+            } else {
+                const numeric = Number(value);
+                if (!Number.isInteger(numeric) || numeric < MIN_STATUS_POLL_MS || numeric > MAX_STATUS_POLL_MS) {
+                    res.status(ERR_BAD_REQUEST).send({ msg: `Invalid spindle status poll: ${value} (${MIN_STATUS_POLL_MS}-${MAX_STATUS_POLL_MS} ms, or empty for off)` });
+                    return;
+                }
+                config.set(TELEMETRY_KEYS.statusPollMs.key, numeric);
+            }
+        }
+        if (spindleTelemetry.audioDevice !== undefined) {
+            const value = String(spindleTelemetry.audioDevice).trim();
+            if (value === '') {
+                config.unset(TELEMETRY_KEYS.audioDevice.key);
+            } else if (/^\d+$/.test(value)) {
+                res.status(ERR_BAD_REQUEST).send({ msg: 'Name the capture device (an entry from the list), not a number: numbering changes on replug.' });
+                return;
+            } else {
+                config.set(TELEMETRY_KEYS.audioDevice.key, value);
+            }
+        }
+    }
+    // Only a real change restarts the feed: every Save sends this block, and
+    // a restart drops the rings and interrupts recording captures.
+    const vibrationBefore = JSON.stringify(currentVibrationConfig());
+    if (vibration && typeof vibration === 'object') {
+        // Accelerometers: validated here so a typo is refused with its reason
+        // instead of leaving a feed that will not start. Empty text clears.
+        if (vibration.sensorsJson !== undefined) {
+            const text = String(vibration.sensorsJson).trim();
+            if (text) {
+                const parsed = parseSensors(text);
+                if (parsed.problems.length) {
+                    res.status(ERR_BAD_REQUEST).send({ msg: `Accelerometer sensors: ${parsed.problems.join('; ')}` });
+                    return;
+                }
+            }
+        }
+        if (vibration.blinkaEnv !== undefined && String(vibration.blinkaEnv).trim()) {
+            const parsedEnv = parseEnvPairs(String(vibration.blinkaEnv));
+            if (typeof parsedEnv === 'string') {
+                res.status(ERR_BAD_REQUEST).send({ msg: `Accelerometer bridge: ${parsedEnv}` });
+                return;
+            }
+        }
+        if (vibration.transport !== undefined && !['', 'blinka', 'serial'].includes(String(vibration.transport))) {
+            res.status(ERR_BAD_REQUEST).send({ msg: 'Accelerometer transport must be blinka or serial' });
+            return;
+        }
+        if (vibration.enabled !== undefined) {
+            config.set(VIBRATION_KEYS.enabled.key, parseFlag(vibration.enabled));
+        }
+        if (vibration.jobCapture !== undefined) {
+            config.set(VIBRATION_KEYS.jobCapture.key, parseFlag(vibration.jobCapture));
+        }
+        const textFields = [
+            ['transport', 'transport'], ['python', 'python'], ['blinkaEnv', 'blinkaEnv'], ['serialPort', 'serialPort'], ['sensorsJson', 'sensors'],
+        ];
+        for (const [field, keyName] of textFields) {
+            if (vibration[field] === undefined) {
+                continue;
+            }
+            const value = String(vibration[field]).trim();
+            if (value === '') {
+                config.unset(VIBRATION_KEYS[keyName].key);
+            } else {
+                config.set(VIBRATION_KEYS[keyName].key, value);
+            }
         }
     }
     if (cameraStream && typeof cameraStream === 'object') {
@@ -364,6 +546,12 @@ export const updateSettings = (req, res) => {
             }
             config.set(key, value);
         }
+    }
+
+    if (JSON.stringify(currentVibrationConfig()) !== vibrationBefore && getMcpStatus().running) {
+        // Unlike the listeners, the accelerometer feed restarts at once: it
+        // is read-only and owns its own monitor process.
+        vibrationFeedService.reconfigure();
     }
 
     res.send(settingsPayload());

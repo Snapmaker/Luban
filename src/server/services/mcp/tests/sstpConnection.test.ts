@@ -7,6 +7,7 @@ import ts from 'typescript';
 import * as procedureLimits from '../procedureLimits';
 import { reliableForMotion } from '../machinePosition';
 import { ConnectionDiagnosticState, httpEvidence, safeIdentifier, safeTarget } from '../../machine/connectionDiagnosticState';
+import { GcodeLease } from '../../machine/gcodeLease';
 
 function load(file: string, dependencies: Record<string, unknown>) {
     const source = fs.readFileSync(path.join(__dirname, '../../machine', file), 'utf8');
@@ -50,10 +51,11 @@ function fixture() {
     const sent: string[] = [];
     const replies: Array<{ err?: object; res?: object }> = [];
     const requests: Array<{ method: string; url: string }> = [];
+    const timeouts: number[] = [];
     const request = (method: string, url: string) => {
         requests.push({ method, url });
         const req = {
-            timeout: () => req,
+            timeout: (ms: number) => { timeouts.push(ms); return req; },
             query: () => req,
             send: (value: string) => { if (value.startsWith('code=')) { sent.push(value.slice(5)); } return req; },
             end: (callback: (err?: object, res?: object) => void) => { const reply = replies.shift(); callback(reply?.err, reply?.res); },
@@ -63,6 +65,7 @@ function fixture() {
     class Channel extends EventEmitter {
         public socket = new EventEmitter();
     }
+    const lease = new GcodeLease();
     const module = load('channels/SstpHttpChannel.ts', {
         lodash: { includes: (items: unknown[], value: unknown) => items.includes(value), isNil: (value: unknown) => value == null, isEqual: () => false },
         superagent: { post: (url: string) => request('POST', url), get: (url: string) => request('GET', url) },
@@ -80,13 +83,14 @@ function fixture() {
         '../connectionDiagnosticState': { httpEvidence },
         '../types': { ConnectionType: { WiFi: 'wifi' } },
         './Channel': Channel,
+        '../gcodeLease': { gcodeLease: lease },
         './ChannelEvent': { ChannelEvent: events },
     });
     const HttpChannel = module.default;
     const channel = new HttpChannel();
     channel.socket = new EventEmitter();
     channel.getGcodePrintingInfo = () => ({});
-    return { channel, workers, replies, sent, requests, diagnostics, diagnosticModule };
+    return { channel, workers, replies, sent, requests, timeouts, diagnostics, diagnosticModule, lease };
 }
 
 function cameraFixture() {
@@ -101,9 +105,12 @@ function cameraFixture() {
         '../procedureLimits': procedureLimits,
         '../machinePosition': { reliableForMotion },
         '../index': { mcpBroadcast: () => undefined },
-        '../positionOfRecord': { bumpGcodeSequence: () => 1, noteDirectGcodeStart: () => undefined, noteDirectGcodeEnd: () => undefined },
+        '../positionOfRecord': { bumpGcodeSequence: () => 1, noteDirectGcodeStart: () => undefined, noteDirectGcodeEnd: () => undefined, noteFrameRestored: () => undefined },
         '../diagnostics': { recordGcodeTiming: () => undefined },
         '../registry': { McpToolError: Error },
+        '../failureRecovery': { recordModalSend: () => () => undefined, classifyReply: () => 'accepted', NotSentError: Error },
+        '../procedureAbort': { procedureStopRequested: () => null },
+        '../manualControl': { manualControlGate: { isManual: () => false } },
         '../probeFeed': { probeFeedService: {
             assertNoOvertravel: () => { if (alarm.tripped) { throw new Error('alarm'); } },
             motionBegin: () => undefined,
@@ -170,6 +177,56 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.strictEqual(diagnostics.snapshot().heartbeat.polling, false);
         assert(diagnostics.snapshot().recent.some(e => e.event === 'heartbeat_worker_exit' && e.reason === 'worker_rejected'));
     }],
+    ['a held gcode lease refuses every other caller at the channel and admits only its holder', async () => {
+        const { channel, replies, sent, lease, requests } = fixture();
+        const id = lease.acquire('the USB pendant (queued jog)', 30000);
+        // A UI "go to work origin" inside the pendant's G53 window would be a machine-frame plunge.
+        const ui = await channel.executeGcode('G0 X0 Y0\nG0 Z0');
+        assert.equal(ui.result, -1);
+        assert.match(ui.text, /reserved by the USB pendant/);
+        assert.deepEqual(sent, []);
+        replies.push({ res: { status: 200, text: 'ok' } });
+        const own = await lease.runAs(id, async () => channel.executeGcode('G1 X1 Y1 Z1 F600;') as Promise<{ result: number }>);
+        assert.equal(own.result, 0);
+        assert.deepEqual(sent, ['G1 X1 Y1 Z1 F600;']);
+        assert.equal(lease.status().refused, 1);
+        lease.release(id);
+        replies.push({ res: { status: 200, text: 'ok' } });
+        assert.equal((await channel.executeGcode('G54')).result, 0);
+        // The HTTP job and override endpoints are covered too: no request leaves while held.
+        const pendant = lease.acquire('the USB pendant (queued jog)', Infinity);
+        const emitted: object[] = [];
+        channel.socket = { emit: (_event: string, body: object) => { emitted.push(body); } };
+        const before = requests.length;
+        channel.updateWorkSpeedFactor({ eventName: 'speed', workSpeedValue: 50 });
+        channel.startGcode({ eventName: 'start' });
+        channel.resumeGcode({ eventName: 'resume' });
+        channel.updateLaserPower({ eventName: 'power', laserPower: 10 });
+        assert.equal((await channel.startGcodeJob()).ok, false);
+        assert.equal(requests.length, before, 'no HTTP request was made');
+        assert.equal(emitted.length, 4);
+        assert.ok(emitted.every((body) => /reserved by the USB pendant/.test(JSON.stringify(body))));
+        lease.release(pendant);
+        // A holder that never releases cannot lock the machine out for ever.
+        lease.acquire('stuck', 10, 0);
+        assert.equal(lease.refusal('M5', 5) !== null, true);
+        assert.equal(lease.refusal('M5', 11), null);
+        assert.equal(lease.status(11).expired, 1);
+    }],
+    ['while the pendant holds the lease every execute_code request uses its shorter timeout, not the channel\'s 300 s', async () => {
+        const { channel, replies, lease, timeouts } = fixture();
+        replies.push({ res: { status: 200, text: 'ok' } });
+        await channel.executeGcode('M114');
+        assert.equal(timeouts.slice(-1)[0], 300000);
+        const id = lease.acquire('the USB pendant (queued jog)', Infinity, Date.now(), 10000);
+        replies.push({ res: { status: 200, text: 'ok' } });
+        await lease.runAs(id, async () => channel.executeGcode('G1 X1 Y1 Z1 F600;'));
+        assert.equal(timeouts.slice(-1)[0], 10000, 'a hung request fails the run instead of blocking recovery');
+        lease.release(id);
+        replies.push({ res: { status: 200, text: 'ok' } });
+        await channel.executeGcode('G54');
+        assert.equal(timeouts.slice(-1)[0], 300000);
+    }],
     ['failed commands retain status and timing evidence without leaking error URLs', async () => {
         const { channel, replies, diagnostics } = fixture();
         replies.push({ err: { code: 'ETIMEDOUT', timeout: 3000, message: 'http://host?token=secret' } });
@@ -181,6 +238,18 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.strictEqual(event?.errorCode, 'ETIMEDOUT');
         assert.strictEqual(event?.timedOut, true);
         assert.strictEqual(typeof event?.durationMs, 'number');
+    }],
+    ['controller refusal details survive HTTP 400 while tokens and URLs are removed', async () => {
+        const { channel, replies } = fixture();
+        channel.token = 'secret-session';
+        replies.push({ err: { message: 'Bad Request' },
+            res: { status: 400,
+                text: 'Cannot execute G91: busy. token=secret-session http://host/?token=secret-session' } });
+        const result = await channel.executeGcode('G91');
+        assert.equal(result.result, -1);
+        assert.match(result.text, /400.*Cannot execute G91: busy/);
+        assert.ok(!result.text.includes('secret-session'));
+        assert.ok(!result.text.includes('http://'));
     }],
     ['HTTP failures propagate and stop a multi-line command, instead of returning success', async () => {
         for (const failure of [
@@ -195,6 +264,39 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
             assert(result.text.includes('Controller request failed'));
             assert.deepStrictEqual(sent, ['G53']);
         }
+    }],
+    ['blank lines in jog batches never become empty HTTP commands', async () => {
+        for (const angle of [5, -5]) {
+            for (const newline of ['\n', '\r\n']) {
+                const { channel, replies, sent } = fixture();
+                const commands = ['G91', `G0 B${angle}  F1500`, 'G90'];
+                replies.push(...commands.map(() => ({ res: { status: 200, text: 'ok' } })));
+                const result = await channel.executeGcode(['', ' \t', commands[0], '', commands[1], '\t', commands[2], ''].join(newline));
+                assert.strictEqual(result.result, 0);
+                assert.deepStrictEqual(sent.map(command => command.trim()), commands);
+                assert.strictEqual(result.text, 'ok\nok\nok');
+            }
+        }
+    }],
+    ['empty and whitespace-only batches succeed without HTTP requests', async () => {
+        const { channel, requests } = fixture();
+        for (const gcode of ['', '\n', ' \t\r\n \n']) {
+            const result = await channel.executeGcode(gcode);
+            assert.strictEqual(result.result, 0);
+            assert.strictEqual(result.text, '');
+        }
+        assert.strictEqual(requests.length, 0);
+    }],
+    ['real command failures still stop jog batches containing blank lines', async () => {
+        const { channel, replies, sent } = fixture();
+        replies.push(
+            { res: { status: 200, text: 'ok' } },
+            { res: { status: 400, text: 'Rejected jog' } },
+        );
+        const result = await channel.executeGcode('\nG91\n \t\nG0 B5 F1500\nG90\n');
+        assert.strictEqual(result.result, -1);
+        assert(result.text.includes('Controller request failed (400)'));
+        assert.deepStrictEqual(sent, ['G91', 'G0 B5 F1500']);
     }],
     ['successful controller text is retained for M114 and M503 S', async () => {
         const { channel, replies } = fixture();

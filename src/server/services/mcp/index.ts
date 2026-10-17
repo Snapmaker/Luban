@@ -12,9 +12,11 @@ import { OAuthShim } from './oauth';
 import { handleJobDashboardRequest } from './jobDashboard';
 import { jobManager } from './jobs';
 import { probeFeedService, resolveActiveProbeConfig } from './probeFeed';
+import { pendantRuntime } from './pendantRuntime';
 import { ToolRegistry } from './registry';
 import { registerCalibrationTools } from './tools/calibration';
 import { registerCameraTools } from './tools/camera';
+import { registerCameraProgramTool } from './cameraProgram';
 import { registerCameraModelTools } from './tools/cameraModel';
 import { registerCamTools } from './tools/cam';
 import { registerGcodeTools, stopGcodeJob } from './tools/gcode';
@@ -23,6 +25,11 @@ import { registerMachineTools } from './tools/machine';
 import { registerProbeTools } from './tools/probe';
 import { registerProbingTools } from './tools/probing';
 import { registerStatusTools } from './tools/status';
+import { registerTelemetryTools } from './tools/telemetry';
+import { registerVibrationTools } from './tools/vibration';
+import { spindleTelemetryService } from './spindleTelemetry';
+import { vibrationCaptureService } from './vibrationCaptures';
+import { vibrationFeedService } from './vibrationFeed';
 import { registerToolSetterTools } from './tools/toolsetter';
 import { registerWorkspaceTools } from './tools/workspace';
 import { registerThreadMillingTools } from './tools/threadMilling';
@@ -244,10 +251,13 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
     registerGcodeTools(registry, baseUrl);
     registerThreadMillingTools(registry);
     registerCameraTools(registry);
-    registerCameraModelTools(registry);
+    registerCameraProgramTool(registry, baseUrl);
+    registerCameraModelTools(registry, baseUrl);
     registerCalibrationTools(registry);
     registerLandmarkTools(registry);
     registerProbeTools(registry);
+    registerTelemetryTools(registry);
+    registerVibrationTools(registry);
     registerToolSetterTools(registry, baseUrl);
     registerWorkspaceTools(registry, baseUrl);
     registerProbingTools(registry, baseUrl);
@@ -288,6 +298,14 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
         }
 
         const url = new URL(req.url || '/', 'http://localhost');
+        if (url.pathname === '/pendant' || url.pathname.startsWith('/pendant/')) {
+            pendantRuntime.handleRequest(req, res, url).catch((err: Error) => {
+                log.error(`Pendant request failed: ${err.message}`);
+                if (!res.headersSent) { res.writeHead(500, { 'Content-Type': 'application/json' }); }
+                res.end(JSON.stringify({ error: 'Pendant request failed.' }));
+            });
+            return;
+        }
         if (url.pathname === '/' || url.pathname === '/jobs' || url.pathname.startsWith('/jobs/')) {
             handleJobDashboardRequest(req, res, url, jobManager, async (id) => stopGcodeJob({ job_id: id, wait_ms: 0 }, 'operator'));
             return;
@@ -300,6 +318,14 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
         if (url.pathname === '/camera' || url.pathname.startsWith('/camera/')) {
             // Live MJPEG camera view (cameraStream.ts); off = 404
             cameraStreamService.handleRequest(req, res, url);
+            return;
+        }
+        if (url.pathname === '/telemetry/live.json') {
+            // Spindle telemetry of the running (or latest) file job for the
+            // camera page's side panel: latest RPM / noise / chatter values
+            // and two-minute sparkline tails. Read-only.
+            res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+            res.end(req.method === 'HEAD' ? undefined : JSON.stringify(spindleTelemetryService.live()));
             return;
         }
         if (oauth.handleRequest(req, res, url)) {
@@ -319,6 +345,14 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
             log.error(`Probe feed auto-connect failed: ${err.message}`);
         });
     }
+
+    // Accelerometers (opt-in, read-only): their own monitor and bridge,
+    // retried by their own backoff; never part of the probe feed.
+    try {
+        vibrationFeedService.reconfigure();
+    } catch (err) {
+        log.error(`Accelerometer feed start failed: ${(err as Error).message}`);
+    }
 }
 
 export function startMcpService(socketServer?: McpBroadcaster): void {
@@ -335,7 +369,12 @@ export function startMcpService(socketServer?: McpBroadcaster): void {
 }
 
 export function stopMcpService(): void {
+    // Resolves once a queued pendant run has settled and restored G54; the machine
+    // connection outlives the MCP service, so the restore still reaches the controller.
+    pendantRuntime.shutdown().catch((err: Error) => log.warn(`Pendant shutdown: ${err.message}`));
     cameraStreamService.shutdown();
+    vibrationCaptureService.shutdown();
+    vibrationFeedService.shutdown();
     listeners.stop();
     runningSettings = null;
     startupError = null;

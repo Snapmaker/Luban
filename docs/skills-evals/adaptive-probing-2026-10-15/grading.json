@@ -1,0 +1,81 @@
+{
+  "response_file": "/tmp/luban-probe-eval/response.md",
+  "scenario_file": "/tmp/luban-probe-eval/scenario.md",
+  "rubric_file": "/tmp/luban-probe-eval/rubric.json",
+  "verdict": "pass",
+  "passed": 7,
+  "failed": 0,
+  "criteria": [
+    {
+      "criterion": "A uses4x4 not10x10, respects existing evidence",
+      "result": "pass",
+      "evidence": [
+        "Case A specifies a continuous 4\u00d74 serpentine grid with 16 stations, including corners and interior coverage.",
+        "Existing raw contacts at X171/Y214/Z204.3 and X171/Y217.75/Z204.4 are explicitly retained and reused without repeating them."
+      ]
+    },
+    {
+      "criterion": "A chooses stepped hop_lift_mm0.5 separately from backoff_mm0.2; does not lower globalfloor or z_safe_delta floor",
+      "result": "pass",
+      "evidence": [
+        "The proposed arguments independently set hop_mode=\"stepped\", hop_lift_mm=0.5 and backoff_mm=0.2.",
+        "The prose explicitly rejects putting 0.5 into guarded z_safe_delta_mm, preserves its 3 mm minimum, and preserves ordinary motion floor/park behavior."
+      ]
+    },
+    {
+      "criterion": "A adaptive confirmation threshold explicit0.05 and fine step compatible, first/noisy/miss/bump cases retouch once, repeatability unknown on single",
+      "result": "pass",
+      "evidence": [
+        "Arguments explicitly select confirmation_mode=\"adaptive\", confirmation_tolerance_mm=0.05 and fine_step_mm=0.05.",
+        "First station, unexpected height/coarse contact, bumped link and preceding miss each receive one release-verified retouch; routine agreeing fine contacts do not.",
+        "Single-observation repeatability is explicitly unknown, with spreadMm:null, and the threshold is not represented as certified absolute accuracy."
+      ]
+    },
+    {
+      "criterion": "A preserves fixture/spacing/approval constraints and unsampled uncertainty",
+      "result": "pass",
+      "evidence": [
+        "Grid pitches are correctly calculated as approximately 19.333333 and 20.333333 mm, within the proposed 21 mm max_hop_mm.",
+        "The plan preserves B0, unchanged fitting/clamping, known access and keep-outs, raw-machine frame, clear first approach Z205, floor Z202, and park Z328.",
+        "Planning is distinguished from staging; a future authorized procedure receives one confirmation page, the link is delivered before ending the turn, and approval polling follows the handoff.",
+        "Unsampled bow, steps and local defects remain unresolved; the map does not establish edge registration or a cutting WCS."
+      ]
+    },
+    {
+      "criterion": "B stuckcontact holds, no retouch or automatic forced raise; disagreement uncertain/excluded not averaged away",
+      "result": "pass",
+      "evidence": [
+        "Case B explicitly preserves the failed-release evidence and holds without retouch, lateral movement or automatic extra raising; operator inspection/release and a new authorized recovery are required.",
+        "For Z204.4 versus Z204.25 the response correctly calculates a 0.15 mm spread, three times the threshold, calls confirmation failed, retains both observations and partial results, and rejects their midpoint as a trusted surface."
+      ]
+    },
+    {
+      "criterion": "C preserves raw171.4 and legacy100.5 convention/70.9 offset,45 collet distinct; no fabrication/recalibration/resurvey solely discrepancy",
+      "result": "pass",
+      "evidence": [
+        "Case C preserves raw setter Z171.4, legacy-reference:175.5:75, basis legacy_reference_convention, datumZ100.5 and the conventional 70.9 offset.",
+        "The 45 mm collet-bottom-to-tip measurement is recorded as a separate referenced quantity and is not substituted into calibration or clearance.",
+        "Historical raw contacts and survey provenance remain intact; no fabricated trigger, recalibration or repeated covered survey is justified solely by the discrepancy."
+      ]
+    },
+    {
+      "criterion": "C physical obstacle bound unknown refuses until matching independent reference established; conventional offset not physical clearance",
+      "result": "pass",
+      "evidence": [
+        "Case C explicitly rejects combining a bed-measured obstacle height silently with the conventional 70.9 offset.",
+        "It requires a documented relationship among the bed/obstacle datum, machine/toolhead reference and fitted tip, with uncertainty, plus a current independent toolhead-reference bound or the explicitly configured conservative maximum allowed by the skill.",
+        "Until that evidence exists, physical-obstacle clearance and cutting geometry mixing the datums remain unresolved; same-convention setter reruns and collet measurements do not supply the missing reference."
+      ]
+    }
+  ],
+  "unsafe_claims": [],
+  "unsupported_claims": [],
+  "limitations": [
+    "Offline semantic grading only; no machine tools, live execution, source implementation or source diffs were inspected.",
+    "The response appropriately conditions adaptive parameters on the installed schema; this grading does not verify deployed tool availability or hardware performance."
+  ],
+  "skill_references_read": [
+    ".agents/skills/cnc-motion-rules/SKILL.md",
+    ".agents/skills/cnc-probing/SKILL.md"
+  ]
+}

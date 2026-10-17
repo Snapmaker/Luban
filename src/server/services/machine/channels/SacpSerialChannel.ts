@@ -41,6 +41,7 @@ class SacpSerialChannel extends SacpChannelBase {
                 autoOpen: false,
             });
             this.sacpClient = new SacpClient('serialport', this.serialport);
+            this.bumpConnectionGeneration('serial session created');
 
             this.serialport.on('data', (data) => {
                 // console.log(data.toString());
@@ -49,16 +50,19 @@ class SacpSerialChannel extends SacpChannelBase {
 
             this.serialport.on('error', (err) => {
                 log.error(`Serial connection error: ${err}`);
+                this.bumpConnectionGeneration('serial error');
                 this.socket.emit('connection:connected', { err: 'this machine is not ready' });
             });
 
             this.serialport.on('close', () => {
                 log.info('serial close');
+                this.bumpConnectionGeneration('serial port closed');
                 this.socket.emit('connection:close');
             });
 
             // When serialport connected, we detect the machine identifier
             this.serialport.once('open', async () => {
+                this.bumpConnectionGeneration('serial port opened');
                 this.emit(ChannelEvent.Connected);
 
                 log.debug(`Serial port ${port} opened`);
@@ -103,6 +107,7 @@ class SacpSerialChannel extends SacpChannelBase {
     }
 
     public async connectionClose(): Promise<boolean> {
+        this.bumpConnectionGeneration('serial connection closed');
         this.serialport?.close(() => {
             // Closed callback, TODO: return a promise here?
         });
