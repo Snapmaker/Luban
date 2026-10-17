@@ -751,11 +751,20 @@ hand is now in the program tooling (work plan and hardware test order in
   stay required; the page prints the formula (`describeRef`) and the runner the values.
 - **Rotary axis and probe geometry through the MCP surface** (`rotaryGeometry.ts`, tool
   `set_probe_geometry` — operator-stated or MEASURED values with a reason, like `set_landmark`;
-  env overrides `LUBAN_MCP_ROTARY_AXIS_X/_Z`, `LUBAN_MCP_PROBE_LENGTH`,
-  `LUBAN_MCP_PROBE_TIP_DIAMETER`; read back in `get_stored_state → geometry`): axis X and
-  PHYSICAL axis Z, probe effective length and tip diameter. Programs read them as the seeded
-  namespace **`axis`** (`axis.x`, `axis.z_physical`, `axis.z_contact` = axis Z + probe length,
-  `axis.tip_radius`, `axis.probe_length`). **Never a prerequisite**: only a reference to
+  env overrides `LUBAN_MCP_ROTARY_AXIS_X/_Z`, `LUBAN_MCP_ROTARY_AXIS_POINTS`, `LUBAN_MCP_PROBE_LENGTH`,
+  `LUBAN_MCP_PROBE_TIP_DIAMETER`; read back in `get_stored_state → geometry`): the axis as a
+  LINE — `rotary_axis_point` / `rotary_axis_points`, the measured `(x, z_physical)` at two or
+  more Y stations with source and date (`rotaryAxisLine.ts` fits yaw, pitch and the axis at any
+  Y; issue #155, the operator's rotary is ~1.2° off machine Y) — with the legacy scalars
+  `rotary_axis_x` / `rotary_axis_z_physical` kept as the line's values at the reference Y
+  (derived once stations exist; alone they load as yaw 0 flagged `skew: "unmeasured"`), probe
+  effective length and tip diameter. Programs read them as the seeded namespace **`axis`**
+  (`axis.x`, `axis.z_physical`, `axis.z_contact` = axis Z + probe length, `axis.tip_radius`,
+  `axis.probe_length`, plus `axis.at_y`, `axis.reference_y`, `axis.yaw_deg`, `axis.pitch_deg`,
+  `axis.skew`); the runner re-evaluates `axis.x` / `axis.z_contact` at EACH OP'S OWN Y
+  (`programOps.opStationY` reads it from the op's arguments) before resolving that op's
+  references, and `rotate_b`'s swept-cylinder check measures the tip's distance from the yawed
+  line at the live Y. **Never a prerequisite**: only a reference to
   `axis.*` needs them (then a missing value is a staging error naming the tool); B0-only,
   stationary and off-rotary work needs nothing. **Stock size is not stored anywhere** — it is a
   property of the stock, not the jig — so a rotation takes an optional per-program

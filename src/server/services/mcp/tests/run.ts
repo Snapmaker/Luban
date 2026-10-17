@@ -56,6 +56,7 @@ import { tests as procedureLimitsTests } from './procedureLimits.test';
 import { tests as programEnvelopeTests } from './programEnvelope.test';
 import { tests as programOpsTests } from './programOps.test';
 import { tests as rotaryMotionTests } from './rotaryMotion.test';
+import { tests as rotaryAxisLineTests } from './rotaryAxisLine.test';
 import { tests as safeZPolicyTests } from './safeZPolicy.test';
 import { tests as sequenceLinksTests } from './sequenceLinks.test';
 import { tests as surveyMosaicTests } from './surveyMosaic.test';
@@ -121,6 +122,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['programOps', programOpsTests],
     ['programEnvelope', programEnvelopeTests],
     ['rotaryMotion', rotaryMotionTests],
+    ['rotaryAxisLine', rotaryAxisLineTests],
     ['safeZPolicy', safeZPolicyTests],
     ['sequenceLinks', sequenceLinksTests],
     ['surveyMosaic', surveyMosaicTests],

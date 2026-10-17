@@ -234,6 +234,16 @@ undeclared is refused.
 **Agents plan, stage, record and quote in MACHINE coordinates.** Say "machine" every time.
 Landmarks, tool-setter config, probe results and the geometry store are all machine frame.
 
+**The rotary axis is a measured LINE in the machine frame, not one X.** The store holds it as
+`(x, z_physical)` at two or more Y stations (`set_probe_geometry rotary_axis_point`, each with
+its source and date) and derives yaw and pitch from them; `geometry.rotary.skew: "unmeasured"`
+means only a legacy scalar pair exists and yaw 0 is ASSUMED — on this rig the rotary sits
+~1.2° off machine Y (5 mm of X over 250 mm), so an unmeasured skew is a stated assumption to
+read aloud, never a fact. A program's `axis.x` / `axis.z_contact` resolve at each op's own Y on
+that line; `rotate_b`'s swept-cylinder check uses the line at the toolhead's live Y. CAM that
+rotates about the axis rotates about the line at the feature's Y, with the yaw, not about one
+scalar ([rotary-axis](../cnc-probing/references/rotary-axis.md)).
+
 **Every staged job declares its frame — the handshake.**
 - **Work-frame job — a Luban/slicer export or the operator's scripted file (the common case).**
   Luban exports contain neither `G53` nor `G54`: pass `frame: "work"` to `submit_gcode_job` and
@@ -636,9 +646,12 @@ For flatness swap the second op for a grid: `{"id": "map", "kind": "surface_grid
 chuck jaws' reach (Y ≳ 269 on this rig; box it with `keep_out` or narrow the grid).
 
 Reference grammar: `{"from": "<opId>.<probeName>.<x|y|z>" | "<opId>.summary.<field>" |
-"axis.<x|z_contact|z_physical|tip_radius|probe_length>", "plus"?: n|path, "minus"?: n|path,
-"between": [lo, hi]}`; two-operand forms `{"mid": [a, b]}`, `{"diff": [a, b], "scale"?}`,
-`{"min"|"max": [...]}`. `between` is mandatory (law 3). A reference to a probe that missed
+"axis.<x|z_contact|z_physical|tip_radius|probe_length|at_y|reference_y|yaw_deg|pitch_deg>",
+"plus"?: n|path, "minus"?: n|path, "between": [lo, hi]}`; two-operand forms `{"mid": [a, b]}`,
+`{"diff": [a, b], "scale"?}`, `{"min"|"max": [...]}`. `between` is mandatory (law 3). `axis.x`,
+`axis.z_physical` and `axis.z_contact` are the stored axis LINE evaluated at the op's own Y
+(read from its arguments; `axis.at_y` says which) — no `axis.x_at(y)` call syntax exists, the
+op's Y is the Y. A reference to a probe that missed
 refuses its op at run time — give the finding march enough `max_travel_mm`. A blind −Z find
 advances in sensor-checked physical segments until contact or its limit.
 Use actual job timings, including controller and confirmation costs, rather than assuming a

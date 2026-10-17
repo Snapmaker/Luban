@@ -233,6 +233,13 @@ export const RADIAL_TOLERANCE_DEG: Range = { min: 0, max: 90 };
 export const B_AXIS_DEG: Range = { min: -360, max: 360 };
 /** Largest reach of stock and clamping about the rotary axis anyone should state (the A350 bed is 350 wide). */
 export const MAX_SWEPT_RADIUS_MM = 200;
+/**
+ * rotary_axis_points (set_probe_geometry): two stations fix the axis line;
+ * a few more tighten the fit. More than this is a pasted survey, not axis
+ * points - the A350 rotary holds under 300 mm of stock, so eight stations
+ * are already closer than the side-pair method can resolve.
+ */
+export const MAX_ROTARY_AXIS_POINTS = 8;
 
 /**
  * probe_program `capture` op: how long to let the platform and rotary stop
