@@ -603,17 +603,28 @@ export type { CornerShape, PerimeterCorner, PerimeterPiece, PerimeterSegment, Se
 // ---------------------------------------------------------------- estimate
 
 /**
- * Wall-clock estimate for the confirm page, from T8 (job 8088e3a6aff5,
- * 2026-09-22, GPIO, sensor_delay 50): one crawl cycle - advance, bump,
- * retreat, three settled batches at ~0.27 s of fixed overhead each - took
- * 0.90 s, i.e. 9.0 s per mm at 0.1 mm steps and 0.93 s per mm at 1 mm; the
- * first-wall march ran 0.33 s per 1 mm coarse step; a confirm cycle (3
- * passes) about 10 s. Worst case is the whole budget at fine steps; best
- * case coarse steps on every straight.
+ * Wall-clock estimate for the confirm page, calibrated on T8c (job
+ * 96cf38d16b74, 2026-09-22, GPIO, sensor_delay 50, build e110d8017; issue
+ * #185 - the lap the estimate is checked against, result.timing.byKind):
+ * 876 contacts in 1489 s. One contact costs the advance, ~1.7 bumps and ~2
+ * standoff retreats (release-verified, #182), each a command batch at ~270
+ * ms of transport + controller overhead plus its 50 ms sensor window: 1.5 s
+ * per contact, i.e. 15 s per mm at 0.1 mm steps and 1.5 s per mm at 1 mm
+ * (T8's 0.9 s predated the standoff's extra retreat and bump). The
+ * first-wall march ran 1.0 s per 1 mm coarse step (F100 motion + overhead);
+ * a confirm cycle (3 passes over 0.3 mm) about 4 s (9 cycles, ~36 s). Worst
+ * case is the whole budget at fine steps; best case coarse steps on every
+ * straight EXCEPT the straightness window - after the first wall and after
+ * every corner the crawl walks straight_points coarse steps' worth of wall
+ * at fine steps before a run is proven straight (T8c: 50-61 fine contacts
+ * each, 315 of the 645 fine points). The law-2 descent to z_machine is not
+ * in the figure (T8c: 68 s for 125 mm).
  */
-export const TRACE_CYCLE_SECONDS = 0.9;
-export const TRACE_MARCH_SECONDS_PER_MM = 0.33;
-export const TRACE_CONFIRM_SECONDS = 10;
+export const TRACE_CYCLE_SECONDS = 1.5;
+export const TRACE_MARCH_SECONDS_PER_MM = 1.0;
+export const TRACE_CONFIRM_SECONDS = 4;
+/** A closed lap turns the heading once round: the turn the 'turns' confirm cadence is spread over. */
+export const TRACE_LAP_TURN_DEG = 360;
 
 export interface TraceEstimateInput {
     maxPerimeterMm: number;
@@ -623,25 +634,83 @@ export interface TraceEstimateInput {
     expectedCorners: number;
     /** The first-wall march travel (coarse 1 mm steps). */
     maxTravelMm?: number;
+    confirmAt: Iterable<ConfirmAt>;
+    turnStepDeg: number;
+    majorTurnDeg: number;
+    /** Contacts the straightness line needs; the window spans this many coarse steps, walked at fine steps. */
+    straightPoints: number;
+}
+
+export interface TraceConfirmEstimate {
+    /** Confirm cycles expected over the lap: the first wall's, the corners', the accuracy points'. */
+    total: number;
+    /** Per expected corner: the first block of the corner ('unexpected') plus one per major_turn_deg of turning inside it ('turns'). */
+    perCorner: number;
+    /** From 'turns' alone when there are no corners to anchor the count (a round pocket: one per major_turn_deg of the lap). */
+    fromTurns: number;
+    accuracy: number;
+}
+
+/**
+ * How many confirm cycles the crawl will run (#185: T8c ran 9 against an
+ * estimate of 5 - "1 + one per corner" ignored the 'turns' cadence). The
+ * first-wall march always confirms. With confirm_at 'unexpected' the first
+ * blocked step of each corner confirms and resets the turn counter; with
+ * 'turns' a contact confirms once the heading has turned major_turn_deg
+ * since the last confirm - inside a corner of C degrees walked in
+ * turn_step_deg blocks that is one more cycle per ceil(major / step) blocks
+ * after the first: a 90 deg corner at 10 deg steps and major 45 confirms
+ * twice (blocks 1 and 6), so a four-corner pocket runs 1 + 4 x 2 = 9. The
+ * corners share the lap's 360 deg of turn (an n-corner pocket has n corners
+ * of 360 / n whatever its aspect ratio); with no corners expected the
+ * 'turns' cadence runs over the lap's turn itself. Accuracy points are the
+ * budget over accuracy_every_mm (an upper bound: every other confirm cycle
+ * resets that counter too).
+ */
+export function expectedConfirmCycles(p: TraceEstimateInput): TraceConfirmEstimate {
+    const at = new Set(p.confirmAt);
+    const corners = Math.max(0, Math.round(p.expectedCorners));
+    const turnStep = Math.max(1e-6, p.turnStepDeg);
+    const major = Math.max(turnStep, p.majorTurnDeg);
+    const blocksPerMajorTurn = Math.max(1, Math.ceil(major / turnStep - 1e-9));
+    const lapTurnsOnly = Math.floor(TRACE_LAP_TURN_DEG / major + 1e-9);
+    let perCorner = 0;
+    let fromTurns = 0;
+    if (corners > 0 && at.has('unexpected')) {
+        const blocksPerCorner = Math.ceil(TRACE_LAP_TURN_DEG / corners / turnStep - 1e-9);
+        perCorner = 1 + (at.has('turns') ? Math.floor((blocksPerCorner - 1) / blocksPerMajorTurn) : 0);
+    } else if (at.has('turns')) {
+        fromTurns = lapTurnsOnly;
+    }
+    const accuracy = at.has('every') && p.accuracyEveryMm ? Math.ceil(p.maxPerimeterMm / p.accuracyEveryMm) : 0;
+    return { total: 1 + corners * perCorner + fromTurns + accuracy, perCorner, fromTurns, accuracy };
 }
 
 export function estimateTraceTime(p: TraceEstimateInput): {
     worstMinutes: number;
     bestMinutes: number;
     worstCycles: number;
+    /** Best case: coarse steps everywhere except the straightness windows (requalifyMm at fine steps). */
     bestCycles: number;
+    /** Wall walked at fine steps before each straight run is proven: (1 + expected corners) x straight_points coarse steps. */
+    requalifyMm: number;
     confirmCycles: number;
+    confirms: TraceConfirmEstimate;
     approachSeconds: number;
 } {
     const worstCycles = Math.ceil(p.maxPerimeterMm / p.fineStepMm);
-    const bestCycles = Math.ceil(p.maxPerimeterMm / p.coarseStepMm);
-    const confirmCycles = 1 + p.expectedCorners + (p.accuracyEveryMm ? Math.ceil(p.maxPerimeterMm / p.accuracyEveryMm) : 0);
-    const confirmSeconds = confirmCycles * TRACE_CONFIRM_SECONDS;
+    const windowMm = p.straightPoints * p.coarseStepMm;
+    const requalifyMm = r3(Math.min(p.maxPerimeterMm, (1 + Math.max(0, Math.round(p.expectedCorners))) * windowMm));
+    const bestCycles = Math.ceil(requalifyMm / p.fineStepMm) + Math.ceil((p.maxPerimeterMm - requalifyMm) / p.coarseStepMm);
+    const confirms = expectedConfirmCycles(p);
+    const confirmSeconds = confirms.total * TRACE_CONFIRM_SECONDS;
     const approachSeconds = Math.round((p.maxTravelMm || 0) * TRACE_MARCH_SECONDS_PER_MM);
     return {
         worstCycles,
         bestCycles,
-        confirmCycles,
+        requalifyMm,
+        confirmCycles: confirms.total,
+        confirms,
         approachSeconds,
         worstMinutes: Math.round((worstCycles * TRACE_CYCLE_SECONDS + confirmSeconds + approachSeconds) / 60),
         bestMinutes: Math.round((bestCycles * TRACE_CYCLE_SECONDS + confirmSeconds + approachSeconds) / 60),

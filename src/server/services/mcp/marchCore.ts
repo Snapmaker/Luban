@@ -33,6 +33,26 @@ export type Announce = (phase: string, note?: string) => void;
 export const STEPPED_HOP_STEP_MM = 1;
 export const STEPPED_HOP_FEED = 300;
 
+/** How long a release retreat step waits on a probe still reading contact: the short standoff window, or the full release timeout. */
+export type RetreatPatience = 'window' | 'timeout';
+
+/**
+ * The march's release retreat (marchToContact) after a coarse contact (#185,
+ * T8c job 96cf38d16b74): the FIRST step back lands on the previous step's end,
+ * which the march sensed free a moment ago, so a probe still reading contact
+ * there is the switch's own hysteresis or a late reading and the next step
+ * back answers it - two of T8c's nine confirm cycles waited the full 3.5 s on
+ * that step and the next 0.1 mm released at once (7.0 s of the lap). It
+ * waits only the standoff window (#183, procedureLimits.ts), as the crawl's
+ * own standoff does. Every later step is past the last point known free,
+ * and the last step the retreat can make (back at the start, or at the
+ * retreat cap) is the one whose answer is the stuck-probe fault: those keep
+ * the full release timeout.
+ */
+export function releaseRetreatPatience(stepIndex: number, canStepAgain: boolean): RetreatPatience {
+    return stepIndex === 1 && canStepAgain ? 'window' : 'timeout';
+}
+
 export interface SteppedTraverseParams {
     /** Unit vector of the retreat on contact: (0,0,1) over a top, away from the face along a side, the REVERSE travel vector in a pocket. */
     retreatUnit: Xyz;

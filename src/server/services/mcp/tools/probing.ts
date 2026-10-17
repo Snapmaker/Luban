@@ -1380,10 +1380,14 @@ ${describeProbeCornerPlanAsGcode(plan)}`;
             + 'run; add "every" with accuracy_every_mm for accuracy points) - a routine bump is one sensed contact. Result: perimeter '
             + '(ordered tip-centre points; normal = the LOCAL wall normal from a line through the neighbouring contacts, surface = + tip '
             + 'radius along it; step kind, confirmed flag), segments (straight walls with collinear runs merged, each with its tip-centre '
-            + 'fit and wall surface line; curves with a shape), corners (circle fitted only to the points off BOTH adjacent walls: '
-            + 'radius tip-centre + physical, centre, per-point residuals, interior angle; shape arc / sharp / irregular - an IRREGULAR '
-            + 'lobe reports no radius but a polyline, line / arc pieces and the one-circle misfit), lengths (tipCentreMm and surfaceMm, '
-            + 'the one to compare with CAD), closed, counts, timing. The confirm page states the step count and time estimate (~0.3 s per sensor-checked step on GPIO). Also '
+            + 'fit and wall surface line; curves with a shape), corners (circle fitted to the points off BOTH adjacent walls plus the '
+            + 'wall-to-arc transition points the circle explains better than the wall: radius tip-centre + physical, centre, per-point '
+            + 'residuals, interior angle, arcSpanDeg the fit covers with lowConfidence set under 70 deg - a short slice reads its radius '
+            + 'to a tenth, not 0.1 mm; shape arc / sharp / irregular - an IRREGULAR lobe reports no radius but a polyline, line / arc '
+            + 'pieces and the one-circle misfit), lengths (tipCentreMm and surfaceMm, the one to compare with CAD), closed, counts, timing. '
+            + 'The confirm page states the step count, the expected confirm cycles (first wall + per corner: its first block and one per '
+            + 'major_turn_deg turned) and the time estimate (T8c-measured: ~1.5 s per contact on GPIO, ~4 s per confirm cycle; the best case '
+            + 'counts the straightness window walked at fine steps after the first wall and each corner). Also '
             + 'probe_program op kind "trace". The same crawl with the normal flipped traces a boss / the outer stock outline (not yet exposed).',
         inputSchema: {
             type: 'object',
@@ -1400,7 +1404,7 @@ ${describeProbeCornerPlanAsGcode(plan)}`;
                 bump_mm: { type: 'number', description: 'Back-off from the first wall before the crawl, default = fine_step_mm.' },
                 bump_cap_steps: { type: 'number', description: 'Fine steps toward the wall before it counts as fallen away, default 3 (1-10).' },
                 line_tolerance_mm: { type: 'number', description: 'Largest residual for a run to count as straight, default = fine_step_mm (0.02-5).' },
-                straight_points: { type: 'number', description: 'Contacts the straightness line is fitted over, default 6 (3-20); the window spans that many coarse steps.' },
+                straight_points: { type: 'number', description: 'Contacts the straightness line is fitted over, default 6 (3-20); the window spans that many coarse steps, walked at FINE steps after the first wall and after every corner before the run is proven straight (T8c: 50-60 fine contacts each, half of all fine steps). 3 halves that; the smallest radius that then passes as straight falls from ~45 to ~11 mm (chord^2 / 8 tol).' },
                 max_perimeter_mm: { type: 'number', description: 'REQUIRED perimeter budget (1-1400), law 3: the crawl stops here with the partial result.' },
                 max_steps: { type: 'number', description: 'Step budget, default 20000 (10-100000).' },
                 bounds: {
@@ -1418,7 +1422,7 @@ ${describeProbeCornerPlanAsGcode(plan)}`;
                 },
                 accuracy_every_mm: { type: 'number', description: 'With confirm_at "every": an accuracy confirm cycle each this many mm of perimeter (1-1400).' },
                 major_turn_deg: { type: 'number', description: 'Accumulated turn since the last confirm that counts as a major direction change, default 45 (5-180).' },
-                expected_corners: { type: 'number', description: 'For the time / confirm-cycle estimate only, default 4.' },
+                expected_corners: { type: 'number', description: 'For the time / confirm-cycle estimate only, default 4: the corners share the lap\'s 360 deg of turn whatever the bounds\' aspect ratio, and each costs its first-block confirm plus one per major_turn_deg turned inside it (2 at the defaults) and a straightness window at fine steps.' },
                 fine_step_march_mm: { type: 'number', description: 'Ignored (reserved).' },
                 backoff_mm: { type: 'number', description: 'Confirm-cycle lift, default 1.' },
                 sensor_delay_ms: { type: 'number', description: 'Contact-check window per step, default 300, floor 30 (GPIO: 50 - use it, every step pays it).' },
