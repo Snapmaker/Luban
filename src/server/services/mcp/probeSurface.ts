@@ -41,6 +41,7 @@ import {
     MAX_TIP_RADIUS_MM,
     SURFACE_COARSE_STEP_MM,
     SURFACE_SLOW_ZONE_MM,
+    clampReported,
     clampTo,
     releaseTimeoutFor,
     resolveMarchParams,
@@ -137,6 +138,10 @@ export interface ProbeSurfacePlan {
     confirmationToleranceMm: number | null;
     /** Coarse steps stop this far above the expected contact and fine steps take over (caps the press at one fine step). */
     slowZoneMm: number;
+    /** Longest fast segment of the approach to station 1 (DESCENT_SEGMENT_MM; #166: lowered per call with descent_segment_mm). */
+    descentSegmentMm: number;
+    /** What the call asked for when it differs from descentSegmentMm (the clip is reported on the page). */
+    descentSegmentRequestedMm: number | null;
     /** Expected contact Z for station 1 (a measured neighbour); null = coarse capped at 1 mm there. */
     expectedZMachine: number | null;
     /** floor_z_machine was given explicitly: station 1 may search down to it (not just start_z - max_drop). */
@@ -195,6 +200,7 @@ interface CommonArgs {
     confirmation_mode?: unknown;
     confirmation_tolerance_mm?: unknown;
     slow_zone_mm?: number;
+    descent_segment_mm?: unknown;
     expected_z_machine?: unknown;
     expected_profile?: unknown;
     hop_mode?: unknown;
@@ -286,6 +292,9 @@ function finishPlan(
     const worstHopMm = toToolError(() => assertHopsWithin(stations, env.maxHopMm));
 
     const hopZ = safeTraverseZ();
+    // The first approach's fast segment length (#166): the 5 mm default or
+    // the shorter length the call states, a clip reported on the page.
+    const descentSegment = clampReported(args.descent_segment_mm, DESCENT_SEGMENT_MM);
     const startZ = Number(args.start_z_machine);
     if (args.start_z_machine === undefined || !Number.isFinite(startZ)) {
         throw new McpToolError('start_z_machine is REQUIRED: the toolhead machine Z at which the first -Z march '
@@ -374,6 +383,8 @@ function finishPlan(
         ...resolveMarchParams(args, { coarse: SURFACE_COARSE_STEP_MM, delay: GPIO_SENSOR_DELAY_MS }),
         ...confirmation,
         slowZoneMm: clampTo(args.slow_zone_mm, { ...SURFACE_SLOW_ZONE_MM, max: env.zSafeDeltaMm }),
+        descentSegmentMm: descentSegment.value,
+        descentSegmentRequestedMm: descentSegment.clipped ? descentSegment.requested : null,
         expectedZMachine: profile && expectedZ === null ? circleExpectedZ(profile, stations[0].x) : expectedZ,
         floorExplicit: args.floor_z_machine !== undefined && args.floor_z_machine !== null && args.floor_z_machine !== '',
         stylusReach,
@@ -495,6 +506,9 @@ export function describeProbeSurfacePlanAsGcode(plan: ProbeSurfacePlan): string 
         ';     (the FIRST station finding nothing aborts - no measured reference).',
         `;   * the deepest toolhead Z this scan can EVER command is Z${plan.absoluteFloorZ} (floor_z_machine).`,
         '; The approach to station 1 and the final raise are full law-2 moves at the traverse height.',
+        ...(plan.descentSegmentRequestedMm === null ? [] : [
+            `; CLAMPED: descent_segment_mm ${plan.descentSegmentRequestedMm} is outside ${DESCENT_SEGMENT_MM.min}-${DESCENT_SEGMENT_MM.max} - the approach uses ${plan.descentSegmentMm} mm segments`,
+        ]),
         ...(plan.stations.length > MANY_STATIONS
             ? [`; WARNING: ${plan.stations.length} stations; duration depends on links, approaches and confirmations. Use prior result.timing; `
                 + `rough program estimate ${40 + plan.stations.length * 120} job events before captures (the stored result is never trimmed).`]
@@ -505,7 +519,7 @@ export function describeProbeSurfacePlanAsGcode(plan: ProbeSurfacePlan): string 
         'G53;',
         `G1 Z${plan.hopZ.toFixed(3)} F${TRAVEL_FEED}; raise to the safe traverse height (law 2)`,
         `G1 X${first.x.toFixed(3)} Y${first.y.toFixed(3)} F${TRAVEL_FEED}; hop at gantry height to station 1 "${first.label}"`,
-        `G1 Z${guardTop.toFixed(3)} F${TRAVEL_FEED}; descend to ${(guardTop - plan.startZMachine).toFixed(1)} mm above start_z_machine in <= ${DESCENT_SEGMENT_MM} mm segments (crash guard armed)`,
+        `G1 Z${guardTop.toFixed(3)} F${TRAVEL_FEED}; descend to ${(guardTop - plan.startZMachine).toFixed(1)} mm above start_z_machine in <= ${plan.descentSegmentMm} mm segments (crash guard armed)`,
         '; ...guarded final approach: 1 mm steps, sensor-checked after each - ANY contact here aborts (CRASH).',
     ];
     for (let gz = guardTop - 1; gz > plan.startZMachine - 1e-9; gz -= 1) {
@@ -910,9 +924,9 @@ export async function runProbeSurfaceProcedure(plan: ProbeSurfacePlan): Promise<
             throw new ProcedureAbort(`The toolhead is at machine Z${zNow} (${known.source}), BELOW start_z_machine Z${plan.startZMachine} `
                 + '- the approach to station 1 must descend, never rise into the surface. Re-stage from a verified position.');
         }
-        announce('descend-from', `Z${zNow} (${known.source}) to guard top Z${guardTop} in <= ${DESCENT_SEGMENT_MM} mm segments (crash guard armed)`);
+        announce('descend-from', `Z${zNow} (${known.source}) to guard top Z${guardTop} in <= ${plan.descentSegmentMm} mm segments (crash guard armed)`);
         if (zNow > guardTop + TRAVERSE_Z_TOLERANCE_MM) {
-            await descendInSegments(`${plan.tool}:descend`, zNow, guardTop, 'probe', plan.sensorDelayMs);
+            await descendInSegments(`${plan.tool}:descend`, zNow, guardTop, 'probe', plan.sensorDelayMs, { segmentMm: plan.descentSegmentMm });
         }
         let gz = Math.min(zNow === null ? guardTop : Math.max(zNow, plan.startZMachine), guardTop);
         while (gz - plan.startZMachine > 1e-9) {

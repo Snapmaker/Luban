@@ -25,7 +25,7 @@
 // Pure: no server imports (unit-tested under ts-node).
 
 import { ObstacleBox } from './envelopeChecks';
-import { TRAVEL_FEED } from './procedureLimits';
+import { COARSE_FEED, DESCENT_GUARD_MM, DESCENT_SEGMENT_MM, TRAVEL_FEED } from './procedureLimits';
 import { CaptureOpArgs } from './programOps';
 
 /** What the program describer needs of a ProbeProgramPlan (structural, so the plan type stays where it is). */
@@ -37,7 +37,20 @@ export interface ProgramEnvelope {
     /** Per-op preview text (comments + the op's own commanded lines), by op id. */
     previews: { id: string; text: string }[];
     rotations: number[];
-    seeds: { axis?: { x: number; z_physical: number; z_contact: number; tip_radius: number | null; probe_length: number } };
+    seeds: {
+        axis?: {
+            x: number;
+            z_physical: number;
+            z_contact: number;
+            tip_radius: number | null;
+            probe_length: number;
+            /** The axis LINE (issue #155): where x / z hold and how it is skewed; absent on a plan staged before the line existed. */
+            reference_y?: number | null;
+            yaw_deg?: number;
+            pitch_deg?: number;
+            skew?: 'measured' | 'unmeasured';
+        };
+    };
     keepOut: ObstacleBox[];
     groups: { id: string; angles: number[]; innerCount: number }[];
     eventBudget: number;
@@ -64,20 +77,39 @@ export function unwrapFrameBlock(text: string): string {
 
 /**
  * A capture op's block: the viewing hop as the two moves the runner sends
- * (raise to the traverse height, then XY at that height), then the frame.
+ * (raise to the traverse height, then XY at that height), the descent to a
+ * stated z as the column it is (fast segments, then the guarded 1 mm steps),
+ * the frame, and the straight raise back when it descended.
  */
 export function describeCaptureOp(capture: CaptureOpArgs, hopZ: number): string {
     const label = capture.label ? ` "${capture.label}"` : '';
     const lines: string[] = [];
+    const zText = capture.z === null ? '' : ` at a STATED toolhead machine Z${capture.z}`;
     if (capture.view) {
-        lines.push(`; CAPTURE FRAME${label} from machine (${capture.view.x}, ${capture.view.y}) - the runner COMMANDS the two moves below (law 2: raise, then hop):`);
+        lines.push(`; CAPTURE FRAME${label} from machine (${capture.view.x}, ${capture.view.y})${zText} - the runner COMMANDS the moves below (law 2: raise, then hop${capture.z === null ? '' : ', then descend'}):`);
         lines.push(`G1 Z${f3(hopZ)} F${TRAVEL_FEED}; raise to the traverse height FIRST - skipped only when the head is already there`);
         lines.push(`G1 X${f3(capture.view.x)} Y${f3(capture.view.y)} F${TRAVEL_FEED}; hop at Z${hopZ} to the viewing position - re-checked from the LIVE position against the travel and every obstacle box before it is sent`);
+    } else if (capture.z !== null) {
+        lines.push(`; CAPTURE FRAME${label}${zText}: from the XY where the previous op left the head, the runner COMMANDS the descent below (re-checked from the LIVE position against every obstacle box):`);
     } else {
         lines.push(`; CAPTURE FRAME${label}: NO MOTION - the frame is taken from wherever the previous op left the head.`);
     }
-    lines.push(`; wait ${capture.settle_ms} ms for the platform/rotary to settle, then one frame from the selected camera, stamped with the machine position and B, `
+    if (capture.z !== null) {
+        const guardTop = Math.min(capture.z + DESCENT_GUARD_MM, hopZ);
+        if (capture.descent_segment_requested_mm !== null) {
+            lines.push(`; CLAMPED: descent_segment_mm ${capture.descent_segment_requested_mm} is outside ${DESCENT_SEGMENT_MM.min}-${DESCENT_SEGMENT_MM.max} - this descent uses ${capture.descent_segment_mm} mm segments`);
+        }
+        lines.push(`G1 Z${f3(guardTop)} F${TRAVEL_FEED}; descend in <= ${capture.descent_segment_mm} mm segments (crash guard armed) to ${f3(guardTop - capture.z)} mm above the stated Z`);
+        lines.push('; ...guarded final approach: 1 mm steps, sensor-checked after each - ANY contact during the descent aborts the program (nothing should be there).');
+        for (let gz = guardTop - 1; gz > capture.z - 1e-9; gz -= 1) {
+            lines.push(`G1 Z${f3(Math.max(gz, capture.z))} F${COARSE_FEED}; guarded descent step`);
+        }
+    }
+    lines.push(`; wait ${capture.settle_ms} ms for the platform/rotary to settle, then one frame from the selected camera, stamped with the machine position${capture.z === null ? '' : ` (Z${capture.z})`} and B, `
         + 'saved on the job record (result.file; view with get_frame).');
+    if (capture.z !== null) {
+        lines.push(`G1 Z${f3(hopZ)} F${TRAVEL_FEED}; raise STRAIGHT back to the traverse height - the op ends raised like every other (law 2)`);
+    }
     return lines.join('\n');
 }
 
@@ -113,6 +145,7 @@ export function describeRotateOp(input: { b: number; requireZ: number; fromB: nu
 /** The whole program: one declared machine-frame block, every op's commanded lines inside it, the closing raise, the frame handed back. */
 export function describeProbeProgramAsGcode(plan: ProgramEnvelope): string {
     const captureViews = plan.ops.filter((op) => op.kind === 'capture' && op.args.x !== null && op.args.x !== undefined).length;
+    const captureDescents = plan.ops.filter((op) => op.kind === 'capture' && op.args.z !== null && op.args.z !== undefined).length;
     const lines = [
         `; PROBE PROGRAM "${plan.name}": ${plan.ops.length} operations, ONE approval; about ${plan.eventBudget} job events`,
         ...plan.groups.map((g) => `; GROUP "${g.id}": ${g.innerCount} op(s) repeated at B ${g.angles.join(' / ')} deg (each preceded by a rotation)`),
@@ -121,7 +154,7 @@ export function describeProbeProgramAsGcode(plan: ProgramEnvelope): string {
         '; (each sent as G90 / G53; / move / G54;). This text is the simulated plan the table above is computed from; it is NOT',
         '; streamed to the controller. Marches stop at contact; nothing moves that is not listed here.',
         '; every operation runs through its own runner (position of record, crash guard, hop envelope, slow zone,',
-        `; <= 5 mm descent segments) and ends raised at the safe traverse height Z${plan.hopZ}; the next op starts there.`,
+        `; descents in <= ${DESCENT_SEGMENT_MM.default} mm segments, or the shorter descent_segment_mm an op states) and ends raised at the safe traverse height Z${plan.hopZ}; the next op starts there.`,
         plan.rotations.length
             ? `; THE STOCK WILL ROTATE: B schedule ${plan.rotations.map((b) => `${b} deg`).join(' -> ')}${plan.homesAtEnd ? ' -> 0 (home)' : ''} (absolute), only with the toolhead at Z >= ${plan.hopZ}.`
             : `; no rotations in this program${plan.homesAtEnd ? ' (the closing home still homes B to 0)' : ''}.`,
@@ -129,8 +162,8 @@ export function describeProbeProgramAsGcode(plan: ProgramEnvelope): string {
             ? ['; ENDS WITH MACHINE HOME: G53; G28; G54 - every axis to its switches, B to 0; the program does not end raised in place but AT HOME (X-19 Y342 Z328).']
             : []),
         ...(plan.captures.length
-            ? [`; CAMERA CAPTURES: ${plan.captures.length} frame(s) - op(s) ${plan.captures.join(', ')} - saved on the job record, view with get_frame; ${captureViews
-                ? `${captureViews} of them FIRST hop to a viewing position at Z${plan.hopZ} (the raise and the hop are listed under the op).`
+            ? [`; CAMERA CAPTURES: ${plan.captures.length} frame(s) - op(s) ${plan.captures.join(', ')} - saved on the job record, view with get_frame; ${captureViews || captureDescents
+                ? `${captureViews ? `${captureViews} of them FIRST hop to a viewing position at Z${plan.hopZ} (the raise and the hop are listed under the op)` : ''}${captureViews && captureDescents ? '; ' : ''}${captureDescents ? `${captureDescents} of them DESCEND to a stated Z for the frame (the column and the straight raise back are listed under the op)` : ''}.`
                 : 'none of them moves the head.'}`]
             : []),
         '; A failed operation (no contact where required, hop-guard contact, alarm, rotation not settled) stops the program',
@@ -148,6 +181,12 @@ export function describeProbeProgramAsGcode(plan: ProgramEnvelope): string {
         const a = plan.seeds.axis;
         lines.push(`; JIG GEOMETRY (operator settings, namespace "axis"): axis X${a.x}, physical Z${a.z_physical}, probe ${a.probe_length} mm`
             + ` -> axis.z_contact ${a.z_contact}${a.tip_radius === null ? '' : `, tip radius ${a.tip_radius}`}`);
+        if (a.skew === 'measured' && a.reference_y !== null && a.reference_y !== undefined) {
+            lines.push(`;   the axis is a LINE: those X / Z hold at reference Y${a.reference_y}; yaw ${a.yaw_deg} deg, pitch ${a.pitch_deg} deg - `
+                + 'each op resolves axis.x / axis.z_contact at its OWN Y station (job record: op-<id>-axis)');
+        } else {
+            lines.push(';   axis skew UNMEASURED: one X / Z assumed for every Y (store two stations with set_probe_geometry rotary_axis_point to measure it)');
+        }
     }
     // One declaration for the whole program (frame handshake, cnc-motion-rules
     // section 2): G90, G53 on its own line before the first move, G54 after

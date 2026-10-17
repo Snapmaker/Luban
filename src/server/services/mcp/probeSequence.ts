@@ -36,7 +36,7 @@ import { requireStylusReach } from './stylusReachGuard';
 import { projectToolTipZ } from './toolDatum';
 import { getProbeTipCalibration } from './toolDatumState';
 import { outsideTravel } from './machineTravel';
-import { MARCH_TRAVEL_MM, releaseTimeoutFor, resolveMarchParams, within } from './procedureLimits';
+import { DESCENT_GUARD_MM, DESCENT_SEGMENT_MM, MARCH_TRAVEL_MM, clampReported, releaseTimeoutFor, resolveMarchParams, within } from './procedureLimits';
 import { getPositionSnapshot, requirePlanningTravel, safeTraverseZ } from './tools/machine';
 import { TRAVERSE_Z_TOLERANCE_MM } from './traversePlan';
 
@@ -83,6 +83,10 @@ interface SequenceStepHop {
 interface SequenceStepDescend {
     kind: 'descend';
     z: number;
+    /** Longest fast segment of this descent (DESCENT_SEGMENT_MM; #166: lowered per step with descent_segment_mm). */
+    segmentMm: number;
+    /** What the step asked for when it differs from segmentMm (the clip is reported on the page). */
+    segmentRequestedMm: number | null;
 }
 interface SequenceStepProbe {
     kind: 'probe';
@@ -105,7 +109,7 @@ interface SequenceStepProbe {
 }
 type SequenceStep = SequenceStepHop | SequenceStepDescend | SequenceStepProbe;
 
-export const DESCENT_GUARD_MM = 20;
+export { DESCENT_GUARD_MM } from './procedureLimits';
 
 export interface ProbeSequencePlan {
     steps: SequenceStep[];
@@ -200,7 +204,8 @@ export function planProbeSequence(args: {
             if (!Number.isFinite(dz) || dz < 0 || dz > hopZ) {
                 throw new McpToolError(`${at}: descend needs an absolute machine Z in 0..${hopZ}.`);
             }
-            steps.push({ kind: 'descend', z: dz });
+            const segment = clampReported(raw.descent_segment_mm, DESCENT_SEGMENT_MM);
+            steps.push({ kind: 'descend', z: dz, segmentMm: segment.value, segmentRequestedMm: segment.clipped ? segment.requested : null });
             virtual.z = dz;
             deepestZ = Math.min(deepestZ, dz);
         } else if (kind === 'probe') {
@@ -352,7 +357,10 @@ export function describeProbeSequencePlanAsGcode(plan: ProbeSequencePlan): strin
                 : `G1 Z${step.z.toFixed(3)} F${TRAVEL_FEED}; raise to traverse height (law 2)`);
             lines.push(`G1 X${step.x.toFixed(3)} Y${step.y.toFixed(3)} F${TRAVEL_FEED}; hop ${step.distanceMm.toFixed(1)} mm at Z${step.z.toFixed(3)}`);
         } else if (step.kind === 'descend') {
-            lines.push(`G1 Z${(step.z + DESCENT_GUARD_MM).toFixed(3)} F${TRAVEL_FEED}; descend (<= 5 mm segments (crash guard armed)) to ${DESCENT_GUARD_MM} mm above target`);
+            if (step.segmentRequestedMm !== null) {
+                lines.push(`; CLAMPED: descent_segment_mm ${step.segmentRequestedMm} is outside ${DESCENT_SEGMENT_MM.min}-${DESCENT_SEGMENT_MM.max} - this descent uses ${step.segmentMm} mm segments`);
+            }
+            lines.push(`G1 Z${(step.z + DESCENT_GUARD_MM).toFixed(3)} F${TRAVEL_FEED}; descend (<= ${step.segmentMm} mm segments (crash guard armed)) to ${DESCENT_GUARD_MM} mm above target`);
             lines.push('; ...guarded final approach (operator, 2026-09-02): 1 mm steps, sensor-checked after each -');
             lines.push('; ANY contact during a descent aborts and latches the CRASH alarm.');
             for (let gz = step.z + DESCENT_GUARD_MM - 1; gz > step.z - 1e-9; gz -= 1) {
@@ -469,9 +477,10 @@ export async function runProbeSequenceProcedure(plan: ProbeSequencePlan): Promis
                         + `planned descent target Z${step.z} - a descent never rises. Re-stage from a verified position.`);
                 }
                 if (zNow !== null && zNow > guardTop + TRAVERSE_Z_TOLERANCE_MM) {
-                    // Operator law 2026-09-05: descents in <= 5 mm sensor-checked
-                    // segments, never one long move toward the work.
-                    await descendInSegments(`seq:descend:${stepIndex}`, zNow, guardTop, 'probe', plan.sensorDelayMs);
+                    // Operator law 2026-09-05: descents in short segments
+                    // under the crash guard, never one long move toward the
+                    // work - the step's own length (#166) or the 5 mm default.
+                    await descendInSegments(`seq:descend:${stepIndex}`, zNow, guardTop, 'probe', plan.sensorDelayMs, { segmentMm: step.segmentMm });
                 }
                 let gz = Math.min(zNow === null ? guardTop : Math.max(zNow, step.z), guardTop);
                 while (gz - step.z > 1e-9) {
@@ -484,7 +493,7 @@ export async function runProbeSequenceProcedure(plan: ProbeSequencePlan): Promis
                             + '- something is where the plan says nothing should be. Machine held.');
                     }
                 }
-                announce(`descend-${stepIndex}`, `Z${step.z} (guarded final ${DESCENT_GUARD_MM} mm)`);
+                announce(`descend-${stepIndex}`, `Z${step.z} (<= ${step.segmentMm} mm segments, guarded final ${DESCENT_GUARD_MM} mm)`);
             } else {
                 // Re-verify the walk matches the simulation before marching.
                 // Every preceding move already verified its own arrival, so

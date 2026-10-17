@@ -19,7 +19,7 @@ import {
     setTrustedOffset,
 } from './positionOfRecord';
 import { ProbeChannel, probeFeedService, resolveSensorEnabled, sensorLabel } from './probeFeed';
-import { MARCH_SEGMENT_MM, TRAVEL_FEED, marchSegments } from './procedureLimits';
+import { COARSE_FEED, DESCENT_GUARD_MM, DESCENT_SEGMENT_MM, MARCH_SEGMENT_MM, TRAVEL_FEED, clampTo, marchSegments } from './procedureLimits';
 import { McpToolError } from './registry';
 import { GcodeChannel, SentGcode, currentGcodeSequence, sendGcodeVisible } from './tools/camera';
 import { PositionSnapshot, assertFreshHeartbeat, getPositionSnapshot, safeTraverseZ } from './tools/machine';
@@ -925,8 +925,9 @@ export async function rotateB(tool: string, targetDeg: number, requireZAtLeast: 
     };
 }
 
-/** Longest single Z move toward the work a procedure may issue when NO contact is expected (operator law 2026-09-05). */
-export const DESCENT_SEGMENT_MM = 5;
+// The descent segment limit lives in procedureLimits (pure, with its reasons
+// and the per-call bound of #166); re-exported for the runners and describers.
+export { DESCENT_SEGMENT_MM } from './procedureLimits';
 
 export interface MarchAdvance {
     /** Where the march scalar ended up: `toS`, or the segment a contact stopped it at. */
@@ -975,17 +976,19 @@ export async function marchInSegments(
 
 /**
  * Descend from `fromZ` to `toZ` (machine Z) in segments of at most
- * DESCENT_SEGMENT_MM. Operator law (2026-09-05): a single long G1 toward the
- * work cannot be stopped once sent - a collision would be driven to the end
- * of the move - so every descent is chopped, and NO segment waits on the
- * heartbeat (lenient settle: the controller's ok is the gate).
+ * `options.segmentMm` (clamped into DESCENT_SEGMENT_MM; the default 5 mm, or
+ * the shorter length a procedure states per call - #166). Operator law
+ * (2026-09-05): a single long G1 toward the work cannot be stopped once
+ * sent - a collision would be driven to the end of the move - so every
+ * descent is chopped, and NO segment waits on the heartbeat (lenient
+ * settle: the controller's ok is the gate).
  *
  * Contact detection during the descent is ASYNCHRONOUS (operator, same day):
  * the probe feed's crash guard already latches the CRASH alarm the moment a
  * channel the procedure did not declare as expected fires while motion is
  * in flight (probeFeed.onReading -> tripSafety: job stop + connection close),
  * and every segment re-checks the latch before it is sent, so a hit ends the
- * descent within one segment (<= 5 mm) without a serial sensor wait between
+ * descent within one segment (<= segmentMm) without a serial sensor wait between
  * segments. Callers MUST have cleared the expected-contact set for the
  * channels a hit would arrive on (a descent expects no contact). Where a
  * manoeuvre needs a synchronous verdict as well, `serialCheck` adds a
@@ -998,17 +1001,18 @@ export async function descendInSegments(
     toZ: number,
     channels: ProbeChannel | ProbeChannel[],
     sensorDelayMs: number,
-    options: { feed?: number; serialCheck?: boolean } = {}
-): Promise<{ segments: number }> {
+    options: { feed?: number; serialCheck?: boolean; segmentMm?: number } = {}
+): Promise<{ segments: number; segmentMm: number }> {
     const feed = options.feed === undefined ? TRAVEL_FEED : options.feed;
+    const segmentMm = clampTo(options.segmentMm, DESCENT_SEGMENT_MM);
     if (toZ >= fromZ - TRAVERSE_Z_TOLERANCE_MM) {
         await moveMachineSettled(tool, { z: Number(toZ.toFixed(3)) }, feed);
-        return { segments: 1 };
+        return { segments: 1, segmentMm };
     }
     let z = fromZ;
     let segments = 0;
     while (z - toZ > 1e-9) {
-        z = Math.max(Number((z - DESCENT_SEGMENT_MM).toFixed(3)), toZ);
+        z = Math.max(Number((z - segmentMm).toFixed(3)), toZ);
         segments += 1;
         const t0 = Date.now();
         // assertNoOvertravel() inside the engine refuses this segment if the
@@ -1025,5 +1029,61 @@ export async function descendInSegments(
     // The latch may have fired on the LAST segment with nothing sent after
     // it: surface it here rather than at the caller's next move.
     probeFeedService.assertNoOvertravel();
-    return { segments };
+    return { segments, segmentMm };
+}
+
+export interface GuardedDescentOutcome {
+    /** Verified machine Z the descent started from. */
+    fromZ: number;
+    /** Fast segments sent above the guard band. */
+    segments: number;
+    /** Sensor-checked 1 mm steps sent inside it. */
+    guardSteps: number;
+}
+
+/**
+ * The descent to a STATED toolhead machine Z that expects NO contact, as
+ * probe_sequence's descend step does it (operator, 2026-09-02): from the
+ * verified position (knownMachinePosition - a single heartbeat never decides
+ * a descent, job 42df7b9351b7), descendInSegments to DESCENT_GUARD_MM above
+ * the target, then 1 mm steps at the coarse feed, each followed by a serial
+ * sensor read - any contact aborts with the machine held. Refuses to RISE: a
+ * head already below the target is a plan that does not match the machine.
+ * Callers clear the expected-contact set first (a descent expects nothing).
+ */
+export async function guardedDescent(
+    tool: string,
+    toZ: number,
+    channels: ProbeChannel | ProbeChannel[],
+    sensorDelayMs: number,
+    options: { segmentMm?: number } = {}
+): Promise<GuardedDescentOutcome> {
+    const known = knownMachinePosition();
+    const zNow = known.position.z;
+    if (zNow === null) {
+        throw new ProcedureAbort(`${tool}: machine Z unknown before the descent to Z${toZ.toFixed(3)} - refusing to guess.`);
+    }
+    if (zNow < toZ - RECHECK_TOLERANCE_MM) {
+        throw new ProcedureAbort(`${tool}: the toolhead is at machine Z${zNow} (${known.source}), BELOW the stated Z${toZ.toFixed(3)} - `
+            + 'a descent never rises. Re-stage from a verified position.');
+    }
+    const guardTop = toZ + DESCENT_GUARD_MM;
+    let segments = 0;
+    if (zNow > guardTop + TRAVERSE_Z_TOLERANCE_MM) {
+        ({ segments } = await descendInSegments(tool, zNow, guardTop, channels, sensorDelayMs, { segmentMm: options.segmentMm }));
+    }
+    let gz = Math.min(Math.max(zNow, toZ), guardTop);
+    let guardSteps = 0;
+    while (gz - toZ > 1e-9) {
+        const t0 = Date.now();
+        gz = Math.max(gz - 1, toZ);
+        guardSteps += 1;
+        await moveMachineSettled(`${tool}:guard`, { z: Number(gz.toFixed(3)) }, COARSE_FEED);
+        const sensed = await senseAfter(channels, t0, sensorDelayMs);
+        if (sensed.contact) {
+            throw new ProcedureAbort(`UNEXPECTED CONTACT (${sensed.channel}) during the guarded descent at Z${gz.toFixed(3)} - something is `
+                + 'where the plan says nothing should be. Machine held.');
+        }
+    }
+    return { fromZ: zNow, segments, guardSteps };
 }

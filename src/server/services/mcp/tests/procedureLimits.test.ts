@@ -5,6 +5,7 @@ import {
     CIRCLE_COARSE_STEP_MM,
     COARSE_STEP_MM,
     CONFIRM_PASSES,
+    DESCENT_SEGMENT_MM,
     FINE_STEP_MM,
     GPIO_SENSOR_DELAY_MS,
     MARCH_SEGMENT_MM,
@@ -13,7 +14,9 @@ import {
     SURVEY_PITCH_MM,
     TOOL_SETTER_BACKOFF_MM,
     TOOL_SETTER_RELEASE_TIMEOUT_MIN_MS,
+    TRACE_COARSE_STEP_MM,
     clampCount,
+    clampReported,
     clampTo,
     marchSegments,
     releaseTimeoutFor,
@@ -42,6 +45,18 @@ export const tests: Array<[string, () => void]> = [
         assert.equal(within(150, { min: 1, max: 150 }), true);
         assert.equal(within(150.001, { min: 1, max: 150 }), false);
         assert.equal(within(Number.NaN, { min: 1, max: 150 }), false);
+    }],
+
+    ['issue #166: the descent segment is a named bound - default and cap 5, floor the march segment - and a clip is reported', () => {
+        assert.deepEqual(DESCENT_SEGMENT_MM, { default: 5, min: MARCH_SEGMENT_MM, max: 5 });
+        assert.equal(TRACE_COARSE_STEP_MM.max, DESCENT_SEGMENT_MM.max, 'the trace coarse step shares the cap');
+        assert.deepEqual(clampReported(undefined, DESCENT_SEGMENT_MM), { value: 5, requested: null, clipped: false });
+        assert.deepEqual(clampReported(2, DESCENT_SEGMENT_MM), { value: 2, requested: 2, clipped: false });
+        assert.deepEqual(clampReported(10, DESCENT_SEGMENT_MM), { value: 5, requested: 10, clipped: true }, 'the cap never rises');
+        assert.deepEqual(clampReported(0.5, DESCENT_SEGMENT_MM), { value: 1, requested: 0.5, clipped: true });
+        // A 124 mm descent from home to 20 mm above a 184 top: 25 segments at the default, 124 at 1 mm.
+        assert.equal(marchSegments(328, 204, DESCENT_SEGMENT_MM.default).length, 25);
+        assert.equal(marchSegments(328, 204, DESCENT_SEGMENT_MM.min).length, 124);
     }],
 
     ['the shared march defaults are the ones every planner had inline', () => {

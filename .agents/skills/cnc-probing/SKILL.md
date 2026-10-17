@@ -18,7 +18,7 @@ description: "Plan and run touch-probe measurements through Luban MCP: top profi
 | Probe tip calibration | result `tipCalibration`, raw setter history and named datum | reuse applicable fitting evidence; legacy `geometry.probe.effectiveLength` is a conversion offset, not a caliper length |
 | Probe stylus reach | `geometry.stylus.reachMm` = `probe_stylus_exposed_mm` (tip bottom to the first body shoulder), with `tipDiameterMm` and `bodyDiameterMm` | **probe tool length ≠ tip length**: the calibrated contact offset says nothing about how far the tip reaches below the ~10 mm body. `null` = every −Z plan reports "stylus reach unknown: body collision not checked"; measure the fitted probe and store it with `set_probe_geometry` (issue #187) |
 | Tool setter | historical trigger Z175.5 minus nominal reference 75 defines convention Z100.5 | read the current named datum; this convention is not independently measured physical Z |
-| Rotary axis | `geometry.rotary` — a HISTORICAL estimate tied to the probe offset/datum, clamping and date it was measured with (this jig: 2026-09-05, 71.3 mm conventional offset, raw stock; ~1 mm off for a later clamping) | physical Z, never a toolhead target; before CAM rotates about it, check it against opposite-face contacts — [rotary-axis](references/rotary-axis.md) |
+| Rotary axis | `geometry.rotary` — a LINE through measured stations (`rotaryAxisPoints`, each with source and date; `yawDeg` / `pitchDeg`, X / Z at `referenceY`), or with `skew: "unmeasured"` the legacy scalars: a HISTORICAL estimate tied to the probe offset/datum, clamping and date it was measured with (this jig: 2026-09-05, 71.3 mm conventional offset, raw stock; ~1 mm off for a later clamping), yaw 0 ASSUMED though the rotary is ~1.2° off machine Y | physical Z, never a toolhead target; before CAM rotates about it, check it against opposite-face contacts and store each station where it was measured (`rotary_axis_point`) — [rotary-axis](references/rotary-axis.md) |
 | Chuck jaws | reach ~Y269 | a `keep_out` volume for programs |
 | Tailstock | inside the `rotary-axis` box, Y < ~110; height UNMEASURED | measure it (see below), then `set_landmark` |
 
@@ -272,8 +272,12 @@ or restart. Keep the returned file path for job images; retention lasts until th
 The actual final-pass pose can differ from the reported median contact. A camera failure is
 recorded and normal retraction continues; a stop or safety alarm still stops the procedure.
 These options apply to sequence and surface scans, including inside `probe_program`; a standalone
-program `capture` after a scan still sees its raised finish position. Do not recreate a low pose
-with an extra move just for a picture. If the live schema lacks `capture`, the server needs updating.
+program `capture` after a scan still sees its raised finish position. A frame from 328 cannot
+resolve a contact point or a pocket wall: to photograph low WITHOUT a probe contact, give the
+program `capture` a `z` (a measured top + a few mm, or a bounded reference to the op that found
+it) — the runner descends under the crash guard, frames and raises straight back. Do not recreate
+a low pose with a separate move just for a picture. If the live schema lacks `capture`, the
+server needs updating.
 
 ## Surface flatness and height maps
 
@@ -384,11 +388,18 @@ Ops: `rotate_b` (absolute B; refused unless the head is at/above the traverse he
 PHYSICALLY finished - `M400`, the rotation's wall-clock time at F600 = 10 deg/s, then two idle
 heartbeats at the target B - because the controller's "ok" and M114 report the buffered target
 the instant a B move is queued, seen on hardware 2026-09-21), `surface_path`, `surface_grid`,
-`sequence`, `stock_outline`, `wall_follow`, `corner`, `trace`, `capture {x?, y?, settle_ms?, label?}` (one frame stamped with
+`sequence`, `stock_outline`, `wall_follow`, `corner`, `trace`, `capture {x?, y?, z?, settle_ms?, label?}` (one frame stamped with
 position and B, saved on the job record — read it back with `get_frame {frame_id}` or
 `get_frame {file}`; with `x/y` it first raises and hops there at 328, travel- and
 obstacle-checked like a sequence hop — a hop-only `sequence` is refused as pure motion, so this
-is how a program places the camera; without `x/y` it is NO motion), `home {}` (machine home, the LAST op
+is how a program places the camera; with `z` (#177) — a MEASURED or operator-stated toolhead
+machine Z, in a program usually a bounded reference to an earlier top touch such as
+`{"from": "find.top.z", "plus": 7, "between": [200, 250]}`, never a guess — it then descends
+exactly as a `sequence` descend step does (fast segments to 20 mm above, 1 mm sensor-checked
+steps, ANY contact aborts the program), waits for the machine to settle, frames at that Z and
+raises STRAIGHT back to 328, so the op still ends raised; the page lists the column and the
+raise as the moves they are and the column is checked against landmarks and keep-outs; without
+`x/y` or `z` it is NO motion), `home {}` (machine home, the LAST op
 only; it also homes B — the page says so), and `group {for_b: [0, 90, 180, 270], ops}` which
 runs its inner ops once per angle (`${b}` in strings; a `capture` may sit inside, a `home` may
 not). A `capture` first waits for two idle heartbeats at the expected B (a frame is never taken
@@ -400,16 +411,21 @@ so every reference points backwards; `on_fail: "skip"` lets a non-critical op fa
 ending the program (a requested stop or held probe contact always ends it; skip cannot override a hold). Staging REFUSES a program whose event
 estimate exceeds the limit and tells you the number to ask for.
 
-`sequence` steps: `{"kind": "hop", "x", "y"}` (at the hop height), `{"kind": "descend", "z"}`
-(guarded segments then 1 mm sensor-checked steps), `{"kind": "probe", "name", "dx"|"dy"|"dz",
+`sequence` steps: `{"kind": "hop", "x", "y"}` (at the hop height), `{"kind": "descend", "z",
+"descent_segment_mm"?}` (≤ 5 mm guarded segments — or the shorter length stated, 1–5, where the
+column is not proven clear (#166; `cnc-motion-rules` law 5) — then 1 mm sensor-checked steps;
+surface scans and a capture at a stated `z` take the same `descent_segment_mm` for their
+approach), `{"kind": "probe", "name", "dx"|"dy"|"dz",
 "max_travel_mm", "on_miss"?, "capture": {"settle_ms"?, "label"?}?}`. After each probe the head
 returns to that probe's start, then raises to park before the next step. Results read as
 `<opId>.<name>.x|y|z` (contactMachine); references pass measurement values, not a retained low pose.
 
 Geometry is NEVER a prerequisite: a program that references only its own earlier ops needs
 nothing stored. Only `axis.*` references need the rotary axis and probe length — measure and
-store them yourself (`set_probe_geometry`) or write the program without them; a stored axis is
-historical until checked ([rotary-axis](references/rotary-axis.md)). Rotary stock is
+store them yourself (`set_probe_geometry`, one `rotary_axis_point` per Y station measured) or
+write the program without them; a stored axis is historical until checked, and `axis.x` /
+`axis.z_contact` are evaluated at EACH OP'S OWN Y on the stored line, so an unmeasured skew
+hands every op the same X ([rotary-axis](references/rotary-axis.md)). Rotary stock is
 B-dependent (square stock ~12 mm higher at B90); every result carries its B. This changes the
 surface coordinates, not the validity of an established common WCS. Keep one verified work
 frame for indexed cuts when the mounting and rotary registration remain valid; probe only

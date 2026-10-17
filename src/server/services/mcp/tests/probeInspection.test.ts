@@ -138,7 +138,7 @@ for (const kind of ['sequence', 'surface']) {
                 result = await runner.runProbeSequenceProcedure({ ...common, steps: [{ kind: 'probe', name: 'rim', start: { ...position }, unit: { x: 0, y: 0, z: -1 }, maxTravelMm: 5, onMiss: 'abort', capture: { settleMs: 0, label: null } }] });
                 assert.equal(result.results[0].capture.status, cameraFailed ? 'failed' : 'captured');
             } else {
-                result = await runner.runProbeSurfaceProcedure({ ...common, kind: 'path', path: { start: { x: 0, y: 0 }, end: { x: 0, y: 0 }, unit: { x: 1, y: 0 }, lengthMm: 0, spacingMm: 0 }, tool: 'probe_surface_path', stations: [{ index: 1, label: 's1', x: 0, y: 0, s: 0, hopFromPreviousMm: 0 }], startZMachine: 203, absoluteFloorZ: 198, zSafeDeltaMm: 2, maxDropMm: 5, maxHopMm: 60, worstHopMm: 0, slowZoneMm: 1, expectedZMachine: 200, floorExplicit: true, profile: null, hopMode: 'stepped', hopLiftMm: 2, capture: { stations: [1], settleMs: 0 }, hopBackoffMm: 1.25 });
+                result = await runner.runProbeSurfaceProcedure({ ...common, kind: 'path', path: { start: { x: 0, y: 0 }, end: { x: 0, y: 0 }, unit: { x: 1, y: 0 }, lengthMm: 0, spacingMm: 0 }, tool: 'probe_surface_path', stations: [{ index: 1, label: 's1', x: 0, y: 0, s: 0, hopFromPreviousMm: 0 }], startZMachine: 203, absoluteFloorZ: 198, zSafeDeltaMm: 2, maxDropMm: 5, maxHopMm: 60, worstHopMm: 0, slowZoneMm: 1, descentSegmentMm: 5, descentSegmentRequestedMm: null, expectedZMachine: 200, floorExplicit: true, profile: null, hopMode: 'stepped', hopLiftMm: 2, capture: { stations: [1], settleMs: 0 }, hopBackoffMm: 1.25 });
                 assert.equal(result.stations[0].capture.status, cameraFailed ? 'failed' : 'captured');
             }
             assert.equal(position.z, 328);
@@ -252,6 +252,8 @@ export function surfaceFixture(options: {
         maxHopMm: 60,
         worstHopMm: 1,
         slowZoneMm: 1,
+        descentSegmentMm: 5,
+        descentSegmentRequestedMm: null,
         expectedZMachine: options.expected === undefined ? 200 : options.expected,
         floorExplicit: true,
         profile: null,

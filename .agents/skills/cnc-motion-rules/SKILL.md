@@ -154,6 +154,24 @@ as before (`staged_because` says why). Never chain `move_and_capture` hops as tr
    way, but ONLY while a procedure or MCP motion is in progress; pressed by hand with the
    machine idle it just flashes the pill. Do not disconnect the probe feed while anything might
    move.
+
+   **Descent segments (operator law 2026-09-05; bound per call since #166).** A move once sent
+   cannot be stopped, so no single gcode move toward the work is longer than one segment: a
+   sensor-gated MARCH advances in ≤ 1 mm segments, each settle-verified and followed by a
+   sensor read; a DESCENT that expects NO contact (a `descend` step, a scan's approach to
+   station 1, a capture at a stated Z, a station column) runs in **≤ 5 mm** segments
+   (`DESCENT_SEGMENT_MM`, default and cap 5) down to 20 mm above the target, then 1 mm
+   sensor-checked steps. Why 5 and not 1: a descent waits on the controller's ok per segment,
+   never on a serial sensor read, and the crash guard above is ASYNCHRONOUS — a hit latches
+   within the segment in flight and the next segment is refused — so 5 mm is the most the head
+   can travel after a hit; 1 mm would make a 300 mm descent from home ~300 settle-verified
+   moves for no gain where the column is known clear. When to lower it: the column is NOT
+   proven clear — an unmeasured scene, a first approach beside a fixture or a chuck, a capture
+   descent next to a pocket wall, a tool whose length is only estimated — state
+   `descent_segment_mm` (1–5) on that `descend` step, scan or capture; the page says the length
+   it will use, a value above the cap is clamped and REPORTED, and the cap never rises. A 5 mm
+   segment is never "risky" on a proven column; it is the wrong number only where nothing proves
+   the column.
 6. **Chat is not a motion gate — the staged job is.** Every transport, Z and measuring tool
    stages a job and needs the operator's click: `traverse_xy`, `move_z`, `goto_work_origin`,
    `goto_tool_change_position`, `submit_gcode_job`, and every `probe_*` / `run_tool_setter` /
@@ -221,6 +239,7 @@ as before (`staged_because` says why). Never chain `move_and_capture` hops as tr
 | `move_and_capture` / a moving `visual_servo` step | No; explicit operator word | Yes, bounded vision correction; Z gate remains mandatory |
 | Captures, previews, stored-frame/index reads, `set_active_tool`, camera selection, model store/verification, `plan_view_pose`, geometry/landmark recording | No | No |
 | `restore_work_frame` | No | No; selects G90/G54 |
+| `set_enclosure_light`, `set_enclosure_fan`, `get_enclosure_status` | No | No motion; enclosure LED strip / exhaust fan through Luban's own channel call, refused when the machine reports no enclosure |
 
 Count confirm pages, not tool calls. A `probe_program {dry_run: true}` validates/estimates but
 does not stage or move. A complete sequence whose bounds and clearances are known uses one
@@ -235,6 +254,16 @@ undeclared is refused.
 
 **Agents plan, stage, record and quote in MACHINE coordinates.** Say "machine" every time.
 Landmarks, tool-setter config, probe results and the geometry store are all machine frame.
+
+**The rotary axis is a measured LINE in the machine frame, not one X.** The store holds it as
+`(x, z_physical)` at two or more Y stations (`set_probe_geometry rotary_axis_point`, each with
+its source and date) and derives yaw and pitch from them; `geometry.rotary.skew: "unmeasured"`
+means only a legacy scalar pair exists and yaw 0 is ASSUMED — on this rig the rotary sits
+~1.2° off machine Y (5 mm of X over 250 mm), so an unmeasured skew is a stated assumption to
+read aloud, never a fact. A program's `axis.x` / `axis.z_contact` resolve at each op's own Y on
+that line; `rotate_b`'s swept-cylinder check uses the line at the toolhead's live Y. CAM that
+rotates about the axis rotates about the line at the feature's Y, with the yaw, not about one
+scalar ([rotary-axis](../cnc-probing/references/rotary-axis.md)).
 
 **Every staged job declares its frame — the handshake.**
 - **Work-frame job — a Luban/slicer export or the operator's scripted file (the common case).**
@@ -534,22 +563,40 @@ This is what the machine is for, and it is one approval:
 1. Preflight, asked as ONE batch only where the prompt leaves it open: same tool as when the
    work origin was set (a swap moves work Z — see `tool-change`)? clamps clear of the XY
    extents? deepest Z vs stock thickness? door shut, extraction on?
-2. `validate_gcode {gcode}` — read the warnings. `M3 Sxxxx … M5` in a cutting file is normal:
-   the file owns its spindle (the `M3` refusal belongs to `run_probing_gcode` only). A
-   spindle-on Z below 0, an unmatched `M3`, or an out-of-travel Z is a warning to put in front
-   of the operator, not a reason to edit the file.
-3. `submit_gcode_job {gcode, name, frame: "work"}` for a Luban/slicer export (§2); the file is
-   passed through unchanged.
-4. Read the operator the confirm page's **Frame** row and **machine-resolved Z extents** —
+2. **Get the whole file to the server without retyping it.** A real CAM file (hundreds of KB,
+   tens of thousands of lines) is NEVER emitted as one `gcode` argument — that is how a
+   truncated program reached the confirm page on 2026-10-15. Read
+   `get_stored_state.jobIntake` once: `inboxDir` is the server's `mcp-jobs-inbox/` folder
+   (plus any `extraInboxDir` the operator configured). Write the file there (or `cp` it) and
+   use `gcode_path: "<name>.nc"` in the next two calls. If you cannot reach the server's
+   filesystem, stream it: `begin_gcode_upload {name, total_bytes, sha256}` →
+   `append_gcode_chunk {upload_id, seq, text}` from seq 0, split on line boundaries, ≤ 256 KiB
+   each → `finish_gcode_upload {upload_id}` (verifies size and SHA-256), then use
+   `upload_id` in the next two calls. Inline `gcode` is for short programs only. Paths outside
+   the allowed directories, `..`, and symlinks out of the inbox are refused — do not try.
+3. `validate_gcode {gcode_path | upload_id | gcode}` — read the warnings. `M3 Sxxxx … M5` in a
+   cutting file is normal: the file owns its spindle (the `M3` refusal belongs to
+   `run_probing_gcode` only). A spindle-on Z below 0 or an out-of-travel Z is a warning to put
+   in front of the operator, not a reason to edit the file. A program whose spindle is still
+   on at the end (`M3` never followed by `M5`) is REFUSED as truncated — the refusal tells you
+   what was received (bytes, hash, last motion line); compare it with the file you generated
+   and resubmit the whole file, never a patched one. Compare the result's `identity.sha256`
+   and `identity.bytes` with `sha256sum`/`wc -c` of your file: they must match exactly.
+4. `submit_gcode_job {gcode_path | upload_id | gcode, name, frame: "work"}` for a Luban/slicer
+   export (§2); the file is passed through unchanged. An upload is consumed on success.
+5. Read the operator the confirm page's **Frame** row and **machine-resolved Z extents** —
    with any "if G54 is the active workspace" condition, or say plainly that they are
-   UNRESOLVED (named or several workspaces, mixed frames, origin rewrites, unreliable offset).
-5. Deliver the confirm URL and end the turn; then `start_gcode_job {job_id,
+   UNRESOLVED (named or several workspaces, mixed frames, origin rewrites, unreliable offset) —
+   and the **Program identity** table: tell them the SHA-256 prefix, the byte and line counts,
+   and the last motion line (it should be the file's final retract/park), so they can see the
+   staged program is the complete file.
+6. Deliver the confirm URL and end the turn; then `start_gcode_job {job_id,
    wait_for_approval_ms: 110000}` in the background (or `confirm_token`); the door interlock applies to file
    jobs — the machine pauses if the door opens and resumes from the machine; the job's
    `ending` records it.
-6. Long-poll `get_gcode_job_status {job_id, wait_ms, since_event}`; `ending.kind` says why it
+7. Long-poll `get_gcode_job_status {job_id, wait_ms, since_event}`; `ending.kind` says why it
    ended (`completed`, `stopped-by-agent`, `machine-stopped`, `crash-alarm`, …).
-7. `stop_gcode_job` on a file job is a firmware stop: motion and spindle stop, nothing retracts,
+8. `stop_gcode_job` on a file job is a firmware stop: motion and spindle stop, nothing retracts,
    the cut is not resumable — re-run from the top with the operator. The machine's own stop and
    the crash guard are the E-stop.
 
@@ -576,6 +623,10 @@ home {}
 // under the same setting (executed_without_approval: true); anything that descends stages.
 move_z {"z": 328, "coordinate_system": "machine", "reason": "..."}
 start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}
+// Fast-then-creep approach under ONE approval (#240): each z_targets entry may carry its own feed_rate
+// (50-600, clamped and REPORTED in result.feed_clamps); plain numbers run at the call's feed_rate. Never a file job.
+move_z {"z_targets": [{"z": 191.5, "feed_rate": 400}, {"z": 181.5, "feed_rate": 60}], "coordinate_system": "machine", "reason": "..."}
+start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}   // once PER STEP
 // Probe sequence with LOCAL LINKS (§4): stations linked at a stated machine Z instead of Z328 between marches.
 // In a probe_program, clearance_z may be {"from": "tops.top.z", "plus": 4, "between": [200, 215]}.
 probe_sequence {"reason": "...", "local_links": {"clearance_z": 208.4, "max_hop_mm": 60},
@@ -591,7 +642,12 @@ convert_thread_milling_gcode {"gcode": "<complete generator export>", "source_co
 submit_gcode_job {"gcode": "<reviewed converted text>", "name": "thread.nc", "head_type": "cnc", "frame": "work"}
 start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}
 // A Luban export (the file text, unchanged)
-submit_gcode_job {"gcode": "<file text>", "name": "pocket.nc", "frame": "work"}
+submit_gcode_job {"gcode": "<file text>", "name": "pocket.nc", "frame": "work"}          # short programs only
+submit_gcode_job {"gcode_path": "pocket.nc", "name": "pocket.nc", "frame": "work"}      # file written into get_stored_state.jobIntake.inboxDir
+begin_gcode_upload {"name": "pocket.nc", "total_bytes": 891234, "sha256": "<hex of the UTF-8 bytes>"}
+append_gcode_chunk {"upload_id": "<id>", "seq": 0, "text": "<first ≤256 KiB, ending on a newline>"}   # then seq 1, 2 ...
+finish_gcode_upload {"upload_id": "<id>"}
+submit_gcode_job {"upload_id": "<id>", "name": "pocket.nc", "frame": "work"}
 start_gcode_job {"job_id": "<id>", "wait_for_approval_ms": 110000}
 // Poll any running job to its end; ending.kind says why it ended
 get_gcode_job_status {"job_id": "<id>", "wait_ms": 110000, "since_event": <next_event_index>}
@@ -638,9 +694,12 @@ For flatness swap the second op for a grid: `{"id": "map", "kind": "surface_grid
 chuck jaws' reach (Y ≳ 269 on this rig; box it with `keep_out` or narrow the grid).
 
 Reference grammar: `{"from": "<opId>.<probeName>.<x|y|z>" | "<opId>.summary.<field>" |
-"axis.<x|z_contact|z_physical|tip_radius|probe_length>", "plus"?: n|path, "minus"?: n|path,
-"between": [lo, hi]}`; two-operand forms `{"mid": [a, b]}`, `{"diff": [a, b], "scale"?}`,
-`{"min"|"max": [...]}`. `between` is mandatory (law 3). A reference to a probe that missed
+"axis.<x|z_contact|z_physical|tip_radius|probe_length|at_y|reference_y|yaw_deg|pitch_deg>",
+"plus"?: n|path, "minus"?: n|path, "between": [lo, hi]}`; two-operand forms `{"mid": [a, b]}`,
+`{"diff": [a, b], "scale"?}`, `{"min"|"max": [...]}`. `between` is mandatory (law 3). `axis.x`,
+`axis.z_physical` and `axis.z_contact` are the stored axis LINE evaluated at the op's own Y
+(read from its arguments; `axis.at_y` says which) — no `axis.x_at(y)` call syntax exists, the
+op's Y is the Y. A reference to a probe that missed
 refuses its op at run time — give the finding march enough `max_travel_mm`. A blind −Z find
 advances in sensor-checked physical segments until contact or its limit.
 Use actual job timings, including controller and confirmation costs, rather than assuming a

@@ -362,6 +362,11 @@ ${describeProbeApproachHoldAsGcode(plan)}`;
                             x: { type: 'number', description: 'hop: target machine X.' },
                             y: { type: 'number', description: 'hop: target machine Y.' },
                             z: { type: 'number', description: 'descend: absolute machine Z.' },
+                            descent_segment_mm: {
+                                type: 'number',
+                                description: 'descend: longest fast segment of this descent, default 5, 1-5 (#166). Lower it where the column is '
+                                    + 'not proven clear; the page states the length used and a value above the cap is clamped and reported.',
+                            },
                             name: { type: 'string', description: 'probe: unique result key.' },
                             capture: probeCaptureSchema,
                             dx: { type: 'number', description: 'probe: direction X component.' },
@@ -559,6 +564,12 @@ ${describeProbeCirclePlanAsGcode(plan)}`;
                 + 'zone the press is one fine step instead). Values above 1 are clamped to 1.',
         },
         fine_step_mm: { type: 'number', description: 'Fine step, default 0.1 (0.02-0.5).' },
+        descent_segment_mm: {
+            type: 'number',
+            description: 'Longest fast segment of the approach to station 1 (from the traverse height to 20 mm above start_z_machine), '
+                + 'default 5, 1-5 (#166). Lower it where the column is not proven clear; the page states the length used and a value '
+                + 'above the cap is clamped and reported.',
+        },
         backoff_mm: { type: 'number', description: 'Release-verified confirmation backoff, default 1 (at least fine_step_mm, max 3). 0.2 is supported with fine_step_mm <= 0.2; failure to release aborts before retouch.' },
         sensor_delay_ms: {
             type: 'number',
@@ -1468,7 +1479,10 @@ ${describeProbeTracePlanAsGcode(plan)}`;
             + 'surface_path, surface_grid, sequence, stock_outline, wall_follow, corner and trace (the same arguments as the standalone tools), '
             + 'sequence probe steps and surface scans can request capture before retraction (see their capture schema). '
             + 'capture (one camera frame, stamped with position and B, saved on the job record - view it afterwards with '
-            + 'get_frame; give it x/y and it first hops there at the traverse height like a sequence hop, else no motion) '
+            + 'get_frame; give it x/y and it first hops there at the traverse height like a sequence hop; give it z - a measured or '
+            + 'operator-stated toolhead machine Z, or a bounded reference to an earlier top touch, never a guess (#177) - and after the hop it '
+            + 'descends like a sequence descend step (<= 5 mm segments to 20 mm above, then 1 mm sensor-checked steps, any contact aborts), '
+            + 'settles, frames at that Z and raises STRAIGHT back to the traverse height; neither = no motion) '
             + 'and home (machine home, LAST op only; '
             + 'it also homes B) - run by one '
             + 'runner that hands the machine from op to op. Each successful probing op ends raised at the traverse height; '
@@ -1499,8 +1513,10 @@ ${describeProbeTracePlanAsGcode(plan)}`;
                     type: 'array',
                     description: 'Ordered operations. Each: {id, kind, on_fail?, ...args}. kinds: rotate_b {b, require_z_at_least?, '
                         + 'swept_radius_mm? (largest reach of THIS stock and clamping about the axis - adds a tip-outside-the-cylinder check)}; '
-                        + 'capture {x?, y?, settle_ms? (default 500, max 5000), label?} - a frame; with x/y (machine) it raises and hops '
-                        + 'there first (travel + obstacle checked), without them no motion; '
+                        + 'capture {x?, y?, z?, descent_segment_mm? (1-5, default 5), settle_ms? (default 500, max 5000), label?} - a frame; with x/y (machine) it raises and hops '
+                        + 'there first (travel + obstacle checked); with z (toolhead machine Z, measured / operator-stated / a bounded reference) it '
+                        + 'then descends to z under the crash guard (the column is checked against landmarks and keep-outs), frames, and raises straight back; '
+                        + 'with neither no motion; '
                         + 'home {} - G53;G28;G54, every axis to its switches AND B to 0, allowed only as the last op; '
                         + 'surface_path / surface_grid / sequence / stock_outline / wall_follow / corner / trace: the standalone tool arguments, where ANY number (start_z_machine, '
                         + 'expected_z_machine, floor_z_machine, start_x/end_x, sequence hop x/y and descend z, expected_profile.circle.*) '
