@@ -57,6 +57,7 @@ import { connectionDiagnostics, diagnosticId } from './connectionDiagnostics';
 import { safeIdentifier, safeTarget } from './connectionDiagnosticState';
 import { gcodeLease } from './gcodeLease';
 import { noteFrameRestored } from '../mcp/positionOfRecord';
+import type { EnclosureRawReport, SerialEnclosureReport } from '../mcp/enclosure';
 
 const log = logger('lib:ConnectionManager');
 
@@ -1406,6 +1407,57 @@ M3`;
         } else {
             // unsupported
         }
+    };
+
+    /**
+     * Enclosure report for the MCP tools (#142): the same channel reads the
+     * Workspace enclosure widget relies on, returned instead of emitted.
+     * null when nothing is connected or the channel cannot report one.
+     */
+    public readEnclosureReport = async (): Promise<EnclosureRawReport | null> => {
+        if (!this.channel) {
+            return null;
+        }
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const info = await (this.channel as EnclosureChannelInterface).getEnclosreInfo();
+            return { source: 'sacp', info: info || null };
+        }
+        if (this.protocol === NetworkProtocol.HTTP) {
+            const result = await sstpHttpChannel.readEnclosureStatus();
+            return { source: 'sstp-http', code: result.code, msg: result.msg, data: result.data || null };
+        }
+        if (this.channel === textSerialChannel) {
+            // Marlin.js keeps the "Enclosure ..." settings lines on its controller object.
+            const controller = textSerialChannel.getController() as unknown as { controller?: { settings?: SerialEnclosureReport['settings'] } } | null;
+            return { source: 'text-serial', settings: (controller && controller.controller && controller.controller.settings) || null };
+        }
+        return null;
+    };
+
+    /**
+     * Set the enclosure LED strip or exhaust fan for the MCP tools: the same
+     * call per channel as setEnclosureLight / setEnclosureFan above, with the
+     * outcome returned. The caller has already confirmed an enclosure is
+     * reported.
+     */
+    public setEnclosureLevel = async (part: 'light' | 'fan', value: number): Promise<{ ok: boolean; detail: string }> => {
+        if (!this.channel) {
+            return { ok: false, detail: 'Not connected to a machine.' };
+        }
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const channel = this.channel as EnclosureChannelInterface;
+            const success = part === 'light' ? await channel.setEnclosureLight(value) : await channel.setEnclosureFan(value);
+            return { ok: success, detail: success ? 'SACP accepted the request.' : 'SACP refused the request.' };
+        }
+        if (this.protocol === NetworkProtocol.HTTP) {
+            const result = await sstpHttpChannel.postEnclosure(part === 'light' ? 'led' : 'fan', value);
+            const ok = result.code === 200;
+            return { ok, detail: ok ? 'HTTP 200 from /api/v1/enclosure.' : `HTTP ${result.code} from /api/v1/enclosure${result.msg ? `: ${result.msg}` : ''}.` };
+        }
+        // Text serial: the M1010 the widget path sends (S3 = light, S4 = fan).
+        const { result, text } = await this.channel.executeGcode(`M1010 S${part === 'light' ? 3 : 4} P${value};`);
+        const ok = result === 0;
+        return { ok, detail: ok ? 'M1010 acknowledged.' : `M1010 failed${text ? `: ${text}` : ''}.` };
     };
 
     /**

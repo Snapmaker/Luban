@@ -22,6 +22,7 @@ import { tests as connectionLeaseTests } from './connectionLease.test';
 import { tests as sstpConnectionTests } from './sstpConnection.test';
 import { tests as bootstrapPlanTests } from './bootstrapPlan.test';
 import { tests as camLinksTests } from './camLinks.test';
+import { tests as caTrustTests } from './caTrust.test';
 import { tests as cameraGeometryTests } from './cameraGeometry.test';
 import { tests as cameraProgramSchemaTests } from './cameraProgramSchema.test';
 import { tests as cameraArtifactsTests } from './cameraArtifacts.test';
@@ -31,8 +32,10 @@ import { tests as cameraModelTests } from './cameraModel.test';
 import { tests as cameraSelectionTests } from './cameraSelection.test';
 import { tests as cornerFitTests } from './cornerFit.test';
 import { tests as directMovePlanTests } from './directMovePlan.test';
+import { tests as enclosureTests } from './enclosure.test';
 import { tests as envelopeChecksTests } from './envelopeChecks.test';
 import { tests as gpioFeedTests } from './gpioFeed.test';
+import { tests as gcodeIntakeTests } from './gcodeIntake.test';
 import { tests as frameRecoveryTests } from './frameRecovery.test';
 import { tests as failureRecoveryTests } from './failureRecovery.test';
 import { tests as inspectionReportTests } from './inspectionReport.test';
@@ -56,6 +59,7 @@ import { tests as procedureLimitsTests } from './procedureLimits.test';
 import { tests as programEnvelopeTests } from './programEnvelope.test';
 import { tests as programOpsTests } from './programOps.test';
 import { tests as rotaryMotionTests } from './rotaryMotion.test';
+import { tests as rotaryAxisLineTests } from './rotaryAxisLine.test';
 import { tests as safeZPolicyTests } from './safeZPolicy.test';
 import { tests as sequenceLinksTests } from './sequenceLinks.test';
 import { tests as surveyMosaicTests } from './surveyMosaic.test';
@@ -96,6 +100,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['sstpConnection', sstpConnectionTests],
     ['connectionDiagnostics', connectionDiagnosticsTests],
     ['validator', validatorTests],
+    ['gcodeIntake', gcodeIntakeTests],
     ['workspace', workspaceTests],
     ['threadMilling', threadMillingTests],
     ['machinePosition', machinePositionTests],
@@ -115,11 +120,13 @@ const suites: Array<[string, TestCase[]]> = [
     ['probeFeedHealth', probeFeedHealthTests],
     ['gpioFeed', gpioFeedTests],
     ['probeInspection', probeInspectionTests],
+    ['enclosure', enclosureTests],
     ['surfaceConfirmation', surfaceConfirmationTests],
     ['procedureLimits', procedureLimitsTests],
     ['programOps', programOpsTests],
     ['programEnvelope', programEnvelopeTests],
     ['rotaryMotion', rotaryMotionTests],
+    ['rotaryAxisLine', rotaryAxisLineTests],
     ['safeZPolicy', safeZPolicyTests],
     ['sequenceLinks', sequenceLinksTests],
     ['surveyMosaic', surveyMosaicTests],
@@ -134,6 +141,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['landmarkClearance', landmarkClearanceTests],
     ['mjpegFanout', mjpegFanoutTests],
     ['mcpListeners', mcpListenersTests],
+    ['caTrust', caTrustTests],
     ['mcpHealth', mcpHealthTests],
     ['marchCore', marchCoreTests],
     ['camLinks', camLinksTests],

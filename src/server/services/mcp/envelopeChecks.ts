@@ -333,14 +333,54 @@ export function normalizeKeepOut(raw: unknown, where: string = 'keep_out'): Obst
 }
 
 /**
- * Is the probe tip inside the rotary's swept cylinder (axis along machine Y
- * at X = axisX, physical Z = axisZ, radius r)? Used before a rotation.
+ * The rotary axis as the cylinder check sees it: a point (x, zPhysical) at
+ * referenceY and the line's slopes (rotaryAxisLine.ts). Without referenceY
+ * or slopes it is the pre-#155 scalar axis along machine Y.
+ */
+export interface SweptAxis {
+    x: number;
+    zPhysical: number;
+    radius: number;
+    /** null / absent: the skew is unmeasured and (x, zPhysical) hold at every Y. */
+    referenceY?: number | null;
+    dxPerMm?: number;
+    dzPerMm?: number;
+}
+
+/**
+ * Perpendicular distance from a point to the axis line through
+ * (axis.x, referenceY, axis.zPhysical) with direction (dxPerMm, 1, dzPerMm).
+ * With no slopes this is hypot(dx, dz): the scalar check as before.
+ */
+export function distanceFromSweptAxis(point: { x: number; y: number; z: number }, axis: SweptAxis): number {
+    const dx = axis.dxPerMm || 0;
+    const dz = axis.dzPerMm || 0;
+    const referenceY = axis.referenceY === undefined || axis.referenceY === null ? point.y : axis.referenceY;
+    const len = Math.hypot(dx, 1, dz);
+    const v = { x: dx / len, y: 1 / len, z: dz / len };
+    const w = { x: point.x - axis.x, y: point.y - referenceY, z: point.z - axis.zPhysical };
+    const cx = w.y * v.z - w.z * v.y;
+    const cy = w.z * v.x - w.x * v.z;
+    const cz = w.x * v.y - w.y * v.x;
+    return Math.hypot(cx, cy, cz);
+}
+
+/**
+ * Is the probe tip inside the rotary's swept cylinder (the axis LINE -
+ * yawed and pitched as measured, or along machine Y when the skew is
+ * unmeasured - radius r)? Used before a rotation. The toolhead's Y matters
+ * once the axis is skewed: a tip clear of the cylinder at the reference Y
+ * can be inside it 250 mm along a 1.2 deg yaw (5 mm of X). A toolhead with
+ * no Y is judged at the reference Y, i.e. as the scalar check did.
  */
 export function insideSweptCylinder(
-    toolhead: { x: number; z: number },
+    toolhead: { x: number; z: number; y?: number | null },
     probeLength: number,
-    axis: { x: number; zPhysical: number; radius: number }
+    axis: SweptAxis
 ): boolean {
-    const tipZ = toolhead.z - probeLength;
-    return Math.hypot(toolhead.x - axis.x, tipZ - axis.zPhysical) < axis.radius;
+    let y = toolhead.y === undefined || toolhead.y === null ? 0 : toolhead.y;
+    if ((toolhead.y === undefined || toolhead.y === null) && axis.referenceY !== undefined && axis.referenceY !== null) {
+        y = axis.referenceY;
+    }
+    return distanceFromSweptAxis({ x: toolhead.x, y, z: toolhead.z - probeLength }, axis) < axis.radius;
 }

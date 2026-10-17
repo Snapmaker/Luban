@@ -285,6 +285,13 @@ export const RADIAL_TOLERANCE_DEG: Range = { min: 0, max: 90 };
 export const B_AXIS_DEG: Range = { min: -360, max: 360 };
 /** Largest reach of stock and clamping about the rotary axis anyone should state (the A350 bed is 350 wide). */
 export const MAX_SWEPT_RADIUS_MM = 200;
+/**
+ * rotary_axis_points (set_probe_geometry): two stations fix the axis line;
+ * a few more tighten the fit. More than this is a pasted survey, not axis
+ * points - the A350 rotary holds under 300 mm of stock, so eight stations
+ * are already closer than the side-pair method can resolve.
+ */
+export const MAX_ROTARY_AXIS_POINTS = 8;
 
 /**
  * probe_program `capture` op: how long to let the platform and rotary stop
@@ -464,6 +471,40 @@ export const EVENT_POLL_MS = 250;
 export const STOP_WAIT_DEFAULT_MS = 20000;
 /** "At the target": the controller's position echo against the commanded one. */
 export const SETTLE_MATCH_MM = 0.15;
+
+// ---------------------------------------------------------------------------
+// G-code job intake (gcodeIntake.ts, tools/gcode.ts): how big a program the
+// MCP will stage, however it arrives - inline text, a file in the jobs inbox,
+// or a chunked upload (#237).
+// ---------------------------------------------------------------------------
+
+/**
+ * The largest program submit_gcode_job / validate_gcode accept, in UTF-8
+ * bytes, whatever the intake. 4 MiB is McpServer's request-body cap
+ * (MAX_BODY_BYTES): the most an inline `gcode` argument could ever have
+ * carried, so a file or an upload is never allowed to exceed what a single
+ * call already could. It is NOT a controller limit - Luban's own file
+ * transfer has none this low - it bounds what staging reads into memory to
+ * validate, hash and render on the confirm page. The 2026-10-17 panel
+ * (46 720 lines, 870 KB) is a fifth of it.
+ */
+export const MAX_GCODE_PROGRAM_BYTES = 4 * 1024 * 1024;
+/**
+ * One append_gcode_chunk's text, in UTF-8 bytes. Well under the body cap so
+ * the JSON envelope around it never trips 413, and small enough that an
+ * agent can emit a chunk as one tool argument reliably (the failure mode
+ * the upload exists to avoid). 256 KiB = about 13 000 CAM lines.
+ */
+export const MAX_GCODE_UPLOAD_CHUNK_BYTES = 256 * 1024;
+/**
+ * An upload nobody has touched for this long is dropped, finished or not:
+ * long enough for an agent to emit 4 MiB in 256 KiB chunks with a model
+ * turn between each, short enough that an abandoned upload does not hold
+ * its bytes in memory for the rest of the session.
+ */
+export const GCODE_UPLOAD_IDLE_EXPIRY_MS = 30 * 60 * 1000;
+/** Uploads in flight at once; a single agent needs one, and each may hold MAX_GCODE_PROGRAM_BYTES. */
+export const MAX_OPEN_GCODE_UPLOADS = 8;
 
 // ---------------------------------------------------------------------------
 // Feature tracking (track_feature)

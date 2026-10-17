@@ -20,7 +20,9 @@ export function handleJobDashboardRequest(
     res: http.ServerResponse,
     url: URL,
     manager: JobManager,
-    stop: (id: string) => Promise<object>
+    stop: (id: string) => Promise<object>,
+    /** The CA trust page (plain HTTP) when HTTPS is configured, else null (#218). */
+    trust: () => { url: string } | null = () => null
 ): void {
     if (req.method === 'GET') {
         if (url.pathname === '/' || url.pathname === '/jobs' || url.pathname === '/jobs/') {
@@ -54,6 +56,7 @@ export function handleJobDashboardRequest(
             reply(res, 200, {
                 jobs: manager.dashboardJobs(),
                 activeId: manager.getActive()?.id || null,
+                trust: trust(),
                 ...manager.dashboardFeed.read(since, url.searchParams.get('instance')),
             });
             return;

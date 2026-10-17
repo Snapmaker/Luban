@@ -37,7 +37,20 @@ export interface ProgramEnvelope {
     /** Per-op preview text (comments + the op's own commanded lines), by op id. */
     previews: { id: string; text: string }[];
     rotations: number[];
-    seeds: { axis?: { x: number; z_physical: number; z_contact: number; tip_radius: number | null; probe_length: number } };
+    seeds: {
+        axis?: {
+            x: number;
+            z_physical: number;
+            z_contact: number;
+            tip_radius: number | null;
+            probe_length: number;
+            /** The axis LINE (issue #155): where x / z hold and how it is skewed; absent on a plan staged before the line existed. */
+            reference_y?: number | null;
+            yaw_deg?: number;
+            pitch_deg?: number;
+            skew?: 'measured' | 'unmeasured';
+        };
+    };
     keepOut: ObstacleBox[];
     groups: { id: string; angles: number[]; innerCount: number }[];
     eventBudget: number;
@@ -168,6 +181,12 @@ export function describeProbeProgramAsGcode(plan: ProgramEnvelope): string {
         const a = plan.seeds.axis;
         lines.push(`; JIG GEOMETRY (operator settings, namespace "axis"): axis X${a.x}, physical Z${a.z_physical}, probe ${a.probe_length} mm`
             + ` -> axis.z_contact ${a.z_contact}${a.tip_radius === null ? '' : `, tip radius ${a.tip_radius}`}`);
+        if (a.skew === 'measured' && a.reference_y !== null && a.reference_y !== undefined) {
+            lines.push(`;   the axis is a LINE: those X / Z hold at reference Y${a.reference_y}; yaw ${a.yaw_deg} deg, pitch ${a.pitch_deg} deg - `
+                + 'each op resolves axis.x / axis.z_contact at its OWN Y station (job record: op-<id>-axis)');
+        } else {
+            lines.push(';   axis skew UNMEASURED: one X / Z assumed for every Y (store two stations with set_probe_geometry rotary_axis_point to measure it)');
+        }
     }
     // One declaration for the whole program (frame handshake, cnc-motion-rules
     // section 2): G90, G53 on its own line before the first move, G54 after

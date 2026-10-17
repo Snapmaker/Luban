@@ -5,9 +5,11 @@ import { connectionManager } from '../../machine/ConnectionManager';
 import { calibrationStore } from '../calibration';
 import { cameraStreamService } from '../cameraStream';
 import { Landmark, landmarkStore } from '../landmarks';
+import { gcodeUploads, jobInbox } from '../jobs';
 import { probeFeedService } from '../probeFeed';
 import { McpToolError, ToolRegistry } from '../registry';
-import { GEOMETRY_FIELDS, geometrySettings, setGeometryValues } from '../rotaryGeometry';
+import { GEOMETRY_FIELDS, ROTARY_AXIS_POINTS_FIELD, geometrySettings, setGeometryValues } from '../rotaryGeometry';
+import { MAX_ROTARY_AXIS_POINTS } from '../procedureLimits';
 import { getMeasurements, getToolSetterConfig } from '../toolSetter';
 import { describeActiveTool } from '../activeTool';
 import { currentSetterDatum, getProbeTipCalibration } from '../toolDatumState';
@@ -142,8 +144,13 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
     registry.register({
         name: 'set_probe_geometry',
         description: 'Store the jig/tool constants a rotary probe_program may reference as the "axis" namespace: '
-            + 'rotary_axis_x (machine X of the axis line), rotary_axis_z_physical (PHYSICAL machine Z of the axis, '
-            + 'with its reference independently established), probe_effective_length (legacy contact-conversion '
+            + 'the rotary axis as a LINE - rotary_axis_point / rotary_axis_points, the measured (x, z_physical) at two or '
+            + 'more Y stations (each the side-pair X and opposite-face Z of the rotary-axis check at that Y, with its source '
+            + 'and date), from which yaw, pitch and the axis at any Y derive; a program\'s axis.x / axis.z_contact are then '
+            + 'evaluated at each op\'s own Y. rotary_axis_x / rotary_axis_z_physical are the LEGACY one-number form (the '
+            + 'line\'s values at its reference Y once points exist, and then derived, not settable); alone they mean yaw 0 '
+            + 'assumed, flagged skew "unmeasured". rotary_axis_z_physical is the PHYSICAL machine Z of the axis, '
+            + 'with its reference independently established. probe_effective_length (legacy contact-conversion '
             + 'offset in the same documented datum convention as the stored axis), probe_tip_diameter. '
             + 'Read saved raw setter triggers and datum provenance; a conventional offset is not a caliper length '
             + 'or verified physical clearance bound. Legacy values are preserved without reinterpretation. '
@@ -154,8 +161,50 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
         inputSchema: {
             type: 'object',
             properties: {
-                rotary_axis_x: { type: ['number', 'null'], description: 'Machine X of the rotary axis line.' },
-                rotary_axis_z_physical: { type: ['number', 'null'], description: 'Physical machine Z of the axis (not a contact Z).' },
+                rotary_axis_point: {
+                    type: 'object',
+                    description: 'ONE measured axis station: {x, y, z_physical, source?, measured_at?} - x = (c90 + c270) / 2 of the '
+                        + 'side pair at machine Y y, z_physical = the opposite-face axis Z minus the probe length at that Y (the '
+                        + 'rotary-axis check in cnc-probing). Adds the station, or restates the one already at that Y. The '
+                        + 'FIRST station needs a second one in the same call (rotary_axis_points) - one point does not fix a line. '
+                        + 'source defaults to reason; measured_at is epoch ms or an ISO date.',
+                    properties: {
+                        x: { type: 'number' },
+                        y: { type: 'number' },
+                        z_physical: { type: 'number' },
+                        source: { type: 'string' },
+                        measured_at: { type: ['number', 'string'] },
+                    },
+                    required: ['x', 'y', 'z_physical'],
+                    additionalProperties: false,
+                },
+                rotary_axis_points: {
+                    type: ['array', 'null'],
+                    description: `The whole list of measured axis stations (2..${MAX_ROTARY_AXIS_POINTS}, replaces what is stored; null clears `
+                        + 'it and the legacy scalars stand alone again). Same item shape as rotary_axis_point. Two stations fix the '
+                        + 'line exactly; more are fitted by least squares and the worst residual is reported.',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            x: { type: 'number' },
+                            y: { type: 'number' },
+                            z_physical: { type: 'number' },
+                            source: { type: 'string' },
+                            measured_at: { type: ['number', 'string'] },
+                        },
+                        required: ['x', 'y', 'z_physical'],
+                        additionalProperties: false,
+                    },
+                },
+                rotary_axis_x: {
+                    type: ['number', 'null'],
+                    description: 'LEGACY: machine X of the rotary axis for every Y (yaw 0 assumed). Derived from the points once '
+                        + 'they exist - then not settable by hand.',
+                },
+                rotary_axis_z_physical: {
+                    type: ['number', 'null'],
+                    description: 'LEGACY: physical machine Z of the axis (not a contact Z) for every Y. Derived from the points once they exist.',
+                },
                 rotary_tailstock_y: {
                     type: ['number', 'null'],
                     description: 'Machine Y of the tailstock centre. With the axis line this is a fully known 3D '
@@ -197,8 +246,14 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                     values[spec.field] = args[spec.field];
                 }
             }
+            for (const field of [ROTARY_AXIS_POINTS_FIELD, 'rotary_axis_point']) {
+                if (args[field] !== undefined) {
+                    values[field] = args[field];
+                }
+            }
             if (!Object.keys(values).length) {
-                throw new McpToolError(`Nothing to set: pass one or more of ${GEOMETRY_FIELDS.map((f) => f.field).join(', ')}.`);
+                throw new McpToolError(`Nothing to set: pass one or more of rotary_axis_point, ${ROTARY_AXIS_POINTS_FIELD}, `
+                    + `${GEOMETRY_FIELDS.map((f) => f.field).join(', ')}.`);
             }
             try {
                 const outcome = setGeometryValues(values, reason);
@@ -298,6 +353,27 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                         };
                     })(),
                 },
+                // Where a large program goes (#237): the inbox directories
+                // gcode_path may name, the size cap, and uploads in flight.
+                jobIntake: (() => {
+                    const inbox = jobInbox();
+                    const limits = gcodeUploads.limits;
+                    return {
+                        inboxDir: inbox.inboxDir,
+                        inboxProblem: inbox.inboxProblem,
+                        extraInboxDir: inbox.extraDir,
+                        extraInboxSource: inbox.extraSource,
+                        extraInboxProblem: inbox.extraProblem,
+                        allowedDirs: inbox.roots.map((root) => root.dir),
+                        maxProgramBytes: limits.maxBytes,
+                        uploadChunkMaxBytes: limits.chunkMaxBytes,
+                        uploadIdleExpiryMs: limits.idleExpiryMs,
+                        openUploads: gcodeUploads.list(),
+                        note: 'submit_gcode_job / validate_gcode take exactly one of gcode (inline, small), gcode_path (a file in allowedDirs, '
+                            + 'read by the Luban server) or upload_id (begin_gcode_upload / append_gcode_chunk / finish_gcode_upload). '
+                            + 'Write a real CAM file into inboxDir and pass its name; never emit it as one argument.',
+                    };
+                })(),
                 // From Luban's Machine Settings (machine.json), never a private key.
                 machineSettings: readAppMachineSettings(),
                 installedModules: (readAppMachineSettings() || { modules: [] }).modules,
@@ -307,8 +383,10 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                 toolMeasurements: getMeasurements(),
                 activeTool: describeActiveTool(),
                 probeTipCalibration: getProbeTipCalibration(),
-                // Operator-measured jig/tool constants (Settings -> MCP Server ->
-                // Rotary and probe geometry); programs read them as `axis.*`.
+                // Operator-measured jig/tool constants (set_probe_geometry);
+                // programs read them as `axis.*`. geometry.rotary carries the
+                // axis LINE (yawDeg / pitchDeg / referenceY / points / skew) and
+                // geometry.rotaryAxisPoints the stations it was fitted from.
                 geometry: geometrySettings(),
                 // Accelerometers: where each one is stuck, whether it streams,
                 // and the rotary chuck's gravity calibration (absolute B).

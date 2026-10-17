@@ -12,6 +12,7 @@ import {
     groupableOpKind,
     homeOrderError,
     isProgramOpKind,
+    opStationY,
 } from '../programOps';
 
 export const tests: Array<[string, () => void]> = [
@@ -122,5 +123,34 @@ export const tests: Array<[string, () => void]> = [
         // A home inside a group would be expanded twice, so it can never be last: the order rule catches it.
         const homed = expandProgramGroups([{ id: 'g', kind: 'group', for_b: [0, 90], ops: [{ id: 'h', kind: 'home' }] }]);
         assert.ok(homeOrderError(homed.ops.map((o) => String((o as { kind: string }).kind))));
+    }],
+
+    // Issue #155: the Y the runner evaluates a skewed axis at, per op kind.
+    ['opStationY reads each kind\'s own Y arguments and names where it came from', () => {
+        assert.deepEqual(opStationY('surface_path', { start_y: 100, end_y: 200 }), { y: 150, note: 'mid of start_y..end_y' });
+        assert.deepEqual(opStationY('surface_grid', { y_min: 135, y_max: 260 }), { y: 197.5, note: 'mid of y_min..y_max' });
+        assert.deepEqual(opStationY('stock_outline', { center_y: 180 }), { y: 180, note: 'center_y' });
+        assert.deepEqual(opStationY('wall_follow', { start_y: 90 }), { y: 90, note: 'start_y' });
+        assert.deepEqual(opStationY('trace', { start_y: 91 }), { y: 91, note: 'start_y' });
+        assert.deepEqual(opStationY('corner', { wall_a: { y: 100 }, wall_b: { y: 110 } }), { y: 105, note: 'mid of wall_a.y and wall_b.y' });
+        assert.deepEqual(opStationY('capture', { x: 10, y: 20 }), { y: 20, note: 'viewing position y' });
+    }],
+
+    ['opStationY for a sequence is the hops\' Y - one value, or the mean with the spread named', () => {
+        const steps = [{ kind: 'hop', x: 150, y: 200 }, { kind: 'descend', z: 250 }, { kind: 'probe', name: 'west', direction: '+x' }];
+        assert.deepEqual(opStationY('sequence', { steps }), { y: 200, note: 'the hops\' Y' });
+        const two = [{ kind: 'hop', x: 150, y: 200 }, { kind: 'hop', x: 190, y: 210 }];
+        assert.deepEqual(opStationY('sequence', { steps: two }), { y: 205, note: 'mean of 2 hop Y values (200..210)' });
+        assert.equal(opStationY('sequence', { steps: [{ kind: 'descend', z: 250 }] }), null);
+    }],
+
+    ['opStationY is null when the kind has no Y of its own or the arguments do not carry one yet', () => {
+        assert.equal(opStationY('rotate_b', { b: 90 }), null);
+        assert.equal(opStationY('home', {}), null);
+        assert.equal(opStationY('capture', {}), null);
+        assert.equal(opStationY('surface_path', { start_y: 100 }), null);
+        // An unresolved reference is an object, not a Y.
+        assert.equal(opStationY('stock_outline', { center_y: { from: 's0.end.y', between: [0, 300] } }), null);
+        assert.equal(opStationY('surface_path', { start_y: 'abc', end_y: 200 }), null);
     }],
 ];
