@@ -68,9 +68,11 @@ function managerFixture() {
             readFileSync: (name: string) => files.get(name),
             remove: async (name: string) => files.delete(name),
         },
-        '../../DataStorage': { tmpDir: '/fake' },
+        '../../DataStorage': { tmpDir: '/fake', userDataDir: '/fake' },
         '../../lib/logger': () => ({ info: () => undefined }),
         '../configstore': { get: () => undefined },
+        // Pure (crypto/path only): the real module, so the identity on every staged job is the real one.
+        './gcodeIntake': require('../gcodeIntake'),
         './jobEnding': jobEnding,
         './jobDashboardState': require('../jobDashboardState'),
         './telemetryConfig': require('../telemetryConfig'),

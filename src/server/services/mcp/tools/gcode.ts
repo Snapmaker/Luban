@@ -4,7 +4,8 @@ import * as fs from 'fs-extra';
 
 import logger from '../../../lib/logger';
 import { connectionManager } from '../../machine/ConnectionManager';
-import { FileJobModalTrack, McpJob, TERMINAL_JOB_STATES, approvalHandoff, jobManager } from '../jobs';
+import { FileJobModalTrack, McpJob, TERMINAL_JOB_STATES, approvalHandoff, gcodeUploads, jobInbox, jobManager } from '../jobs';
+import { GcodeIntakeError, ProgramSource, describeProgramIdentity, resolveInboxPath } from '../gcodeIntake';
 import {
     Exposure,
     JobEndCategory,
@@ -32,13 +33,14 @@ import { clearProcedureStop, procedureStopRequested, requestProcedureStop } from
 import { McpToolError, ToolRegistry } from '../registry';
 import { decideSafeZRaise, decideSafeZTraverse } from '../safeZPolicy';
 import { planTraverseXy } from '../traversePlan';
-import { JobFrame, TRANSPORT_REFUSAL, isPureTransport, resolveJobFrame, suggestGcode, validateGcode } from '../validator';
+import { JobFrame, TRANSPORT_REFUSAL, isPureTransport, resolveJobFrame, spindleRefusal, suggestGcode, validateGcode } from '../validator';
 import { GcodeChannel, sendGcodeVisible } from './camera';
 import { stagingFrameContext, validateStagedEnvelope } from './staging';
 import { verifyFileJobWorkspace } from './workspace';
 import { TRAVEL_EPSILON_MM } from '../machineTravel';
 import {
     EVENT_POLL_MS,
+    MAX_GCODE_PROGRAM_BYTES,
     MAX_WAIT_MS,
     MAX_Z_TARGETS,
     MOVE_Z_FEED,
@@ -615,6 +617,116 @@ function watchFileJobCompletion(job: McpJob): void {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Program intake (#237): a job's text comes from exactly one of `gcode`
+// (inline), `gcode_path` (a file in an allow-listed inbox directory) or
+// `upload_id` (a finished chunked upload). Whatever the route, the text is
+// validated, frame-resolved and staged identically.
+// ---------------------------------------------------------------------------
+
+interface ProgramArgs {
+    gcode?: unknown;
+    gcode_path?: unknown;
+    upload_id?: unknown;
+}
+
+interface ProgramInput {
+    text: string;
+    source: ProgramSource;
+    /** For an upload: remove it from the store once the job is staged (not on a refusal, so a frame refusal costs one re-submit). */
+    consume: () => void;
+}
+
+/** The inbox description every intake result and refusal carries, so the agent never has to guess where to write. */
+function describeInbox(): object {
+    const inbox = jobInbox();
+    return {
+        inbox_dir: inbox.inboxDir,
+        inbox_problem: inbox.inboxProblem,
+        extra_inbox_dir: inbox.extraDir,
+        extra_inbox_source: inbox.extraSource,
+        extra_inbox_problem: inbox.extraProblem,
+        allowed_dirs: inbox.roots.map((root) => root.dir),
+        max_program_bytes: MAX_GCODE_PROGRAM_BYTES,
+    };
+}
+
+function inboxHint(): string {
+    const inbox = jobInbox();
+    const dirs = inbox.roots.map((root) => `${root.name}: ${root.dir}`).join('; ');
+    return `gcode_path is read by the Luban server from its allow-listed directories (${dirs || 'none available'})`
+        + `${inbox.extraProblem ? `; the configured extra directory is unusable: ${inbox.extraProblem}` : ''}. `
+        + 'A client that cannot write there uses begin_gcode_upload / append_gcode_chunk / finish_gcode_upload and passes upload_id.';
+}
+
+function resolveProgramInput(args: ProgramArgs): ProgramInput {
+    const given = (['gcode', 'gcode_path', 'upload_id'] as const)
+        .filter((key) => args[key] !== undefined && args[key] !== null && String(args[key]).trim() !== '');
+    if (given.length !== 1) {
+        throw new McpToolError('Pass exactly one of gcode (inline text), gcode_path (a file in the MCP jobs inbox) or upload_id (a finished '
+            + `chunked upload); got ${given.length ? given.join(' and ') : 'none'}. ${inboxHint()}`);
+    }
+    const key = given[0];
+    if (key === 'gcode') {
+        if (typeof args.gcode !== 'string' || !args.gcode.trim()) {
+            throw new McpToolError('gcode must be a non-empty string.');
+        }
+        const bytes = Buffer.byteLength(args.gcode, 'utf8');
+        if (bytes > MAX_GCODE_PROGRAM_BYTES) {
+            throw new McpToolError(`gcode is ${bytes} bytes, over the ${MAX_GCODE_PROGRAM_BYTES}-byte program limit. Split the job into separate programs.`);
+        }
+        return { text: args.gcode, source: { kind: 'inline' }, consume: () => undefined };
+    }
+    if (key === 'gcode_path') {
+        const inbox = jobInbox();
+        const resolved = resolveInboxPath(args.gcode_path, inbox.roots);
+        // `=== false`, not `!ok`: the server tsconfig is not strict and only narrows the union on equality.
+        if (resolved.ok === false) {
+            throw new McpToolError(`${resolved.reason} ${inboxHint()}`);
+        }
+        const size = fs.statSync(resolved.path).size;
+        if (size > MAX_GCODE_PROGRAM_BYTES) {
+            throw new McpToolError(`${resolved.path} is ${size} bytes, over the ${MAX_GCODE_PROGRAM_BYTES}-byte program limit. Split the job into separate programs.`);
+        }
+        const text = fs.readFileSync(resolved.path, 'utf8');
+        if (!text.trim()) {
+            throw new McpToolError(`${resolved.path} is empty.`);
+        }
+        return {
+            text,
+            source: { kind: 'path', path: resolved.path, inbox: resolved.root.dir },
+            consume: () => undefined,
+        };
+    }
+    try {
+        const found = gcodeUploads.peek(args.upload_id);
+        return {
+            text: found.text,
+            source: { kind: 'upload', upload_id: found.record.upload_id, chunks: found.record.chunks.length },
+            consume: () => {
+                gcodeUploads.take(found.record.upload_id);
+            },
+        };
+    } catch (err) {
+        if (err instanceof GcodeIntakeError) {
+            throw new McpToolError(err.message);
+        }
+        throw err;
+    }
+}
+
+/** Re-throw an intake rule as a tool refusal; anything else is a bug and propagates. */
+async function intake<T>(fn: () => T): Promise<T> {
+    try {
+        return fn();
+    } catch (err) {
+        if (err instanceof GcodeIntakeError) {
+            throw new McpToolError(err.message);
+        }
+        throw err;
+    }
+}
+
 /**
  * Append a corrected draft to a staging refusal when the fix is mechanical.
  * The submitted file is never edited - this is the program the agent should
@@ -709,23 +821,36 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
     registry.register({
         name: 'validate_gcode',
         description: 'Statically inspect G-code: motion extents, feeds, spindle commands and '
-            + 'warnings. Sends nothing to the machine.',
+            + 'warnings. Sends nothing to the machine. The program comes from exactly ONE of gcode (inline text), '
+            + 'gcode_path (a file the Luban server reads from its allow-listed mcp-jobs-inbox directory - see '
+            + 'get_stored_state.jobIntake for the path) or upload_id (a finished chunked upload). A large CAM file '
+            + 'belongs in the inbox or an upload, never in one argument. REFUSED, not warned: a program whose spindle '
+            + 'is still on at the end (M3/M4 never followed by M5) - the signature of a truncated program. The result '
+            + 'carries the identity (SHA-256, bytes, line counts, first/last motion lines) of exactly what was received.',
         inputSchema: {
             type: 'object',
             properties: {
-                gcode: { type: 'string', description: 'Complete G-code text.' },
+                gcode: { type: 'string', description: 'Complete G-code text (small programs only).' },
+                gcode_path: { type: 'string', description: 'Path of a .nc/.cnc/.gcode file inside the MCP jobs inbox (relative to it, or absolute within it).' },
+                upload_id: { type: 'string', description: 'A chunked upload that finish_gcode_upload has verified; the upload stays available for submit_gcode_job.' },
             },
-            required: ['gcode'],
             additionalProperties: false,
         },
-        handler: async (args: { gcode?: string }) => {
-            if (typeof args.gcode !== 'string' || !args.gcode.trim()) {
-                throw new McpToolError('gcode must be a non-empty string.');
+        handler: async (args: ProgramArgs) => {
+            const input = resolveProgramInput(args);
+            const report = validateGcode(input.text);
+            const identity = describeProgramIdentity(input.text);
+            const refusal = spindleRefusal(report);
+            if (refusal) {
+                throw new McpToolError(`${refusal}\n\nReceived: ${identity.bytes} bytes, SHA-256 ${identity.sha256}, ${identity.lineCount} lines, `
+                    + `last motion ${identity.lastMotion ? `line ${identity.lastMotion.line}: ${identity.lastMotion.text}` : '-'}, `
+                    + `last line ${identity.lastLine ? `line ${identity.lastLine.line}: ${identity.lastLine.text}` : '-'}.`);
             }
-            const report = validateGcode(args.gcode);
-            const suggestion = suggestGcode(args.gcode, report);
+            const suggestion = suggestGcode(input.text, report);
             return {
                 ...report,
+                identity,
+                source: input.source,
                 // Present only when the fix is mechanical and the corrected
                 // draft re-validates clean; your file is never edited.
                 suggested_gcode: suggestion ? suggestion.gcode : null,
@@ -738,11 +863,19 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
         name: 'submit_gcode_job',
         description: 'Stage a G-code job for human confirmation. Returns a validation report and '
             + 'a confirm_url the OPERATOR must open in a browser; approving there mints a one-time '
-            + 'code the operator gives you for start_gcode_job. Nothing is sent to the machine yet.',
+            + 'code the operator gives you for start_gcode_job. Nothing is sent to the machine yet. '
+            + 'The program comes from exactly ONE of gcode (inline text), gcode_path (a file the Luban server reads '
+            + 'from its allow-listed mcp-jobs-inbox directory - get_stored_state.jobIntake says where) or upload_id (a '
+            + 'chunked upload finish_gcode_upload has verified). A real CAM file (hundreds of KB) goes through the inbox or '
+            + 'an upload - never emit it as one argument. Every route is validated, frame-resolved and staged identically, '
+            + 'and the confirm page shows the program identity (SHA-256, bytes, lines, first/last motion lines). REFUSED: a '
+            + 'program whose spindle is still on at the end - the signature of a truncated program.',
         inputSchema: {
             type: 'object',
             properties: {
-                gcode: { type: 'string', description: 'Complete G-code text.' },
+                gcode: { type: 'string', description: 'Complete G-code text (small programs only).' },
+                gcode_path: { type: 'string', description: 'Path of a file inside the MCP jobs inbox (relative to it, or absolute within it). Read on the server.' },
+                upload_id: { type: 'string', description: 'A finished chunked upload; it is consumed when the job is staged.' },
                 name: { type: 'string', description: 'Short job name shown to the operator.' },
                 head_type: { type: 'string', enum: HEAD_TYPES, description: 'Toolhead kind. Default cnc.' },
                 frame: {
@@ -755,13 +888,11 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                         + 'and passes nothing is REFUSED: G90/G91 is distance mode, not a frame.',
                 },
             },
-            required: ['gcode', 'name'],
+            required: ['name'],
             additionalProperties: false,
         },
-        handler: async (args: { gcode?: string; name?: string; head_type?: string; frame?: string }) => {
-            if (typeof args.gcode !== 'string' || !args.gcode.trim()) {
-                throw new McpToolError('gcode must be a non-empty string.');
-            }
+        handler: async (args: ProgramArgs & { name?: string; head_type?: string; frame?: string }) => {
+            const input = resolveProgramInput(args);
             if (typeof args.name !== 'string' || !args.name.trim()) {
                 throw new McpToolError('name must be a non-empty string.');
             }
@@ -777,7 +908,18 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             // The frame handshake (operator law 2026-09-14): an agent-authored job
             // must say which coordinate frame it runs in, or it does not reach the
             // confirm page. The gcode itself is never edited to add a declaration.
-            const inspected = validateGcode(args.gcode);
+            const inspected = validateGcode(input.text);
+            // A program whose spindle is still on at the end is a truncated
+            // program (2026-10-15: the first part of a 295 KB V-carve reached
+            // the page with only a warning). Refused before anything else,
+            // with what was received, so the agent can see where it stopped.
+            const truncated = spindleRefusal(inspected);
+            if (truncated) {
+                const identity = describeProgramIdentity(input.text);
+                throw new McpToolError(`${truncated}\n\nReceived (${input.source.kind}): ${identity.bytes} bytes, SHA-256 ${identity.sha256}, `
+                    + `${identity.lineCount} lines, last motion ${identity.lastMotion ? `line ${identity.lastMotion.line}: ${identity.lastMotion.text}` : '-'}, `
+                    + `last line ${identity.lastLine ? `line ${identity.lastLine.line}: ${identity.lastLine.text}` : '-'}.`);
+            }
             // Transport has tools. A hand-written transit is the path that
             // produced both the undeclared-frame job of 2026-09-12 and the
             // G53-stranded controller of 2026-09-19.
@@ -788,19 +930,83 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             // start_gcode_job), so a G54-only file may resolve its machine Z.
             const resolved = resolveJobFrame(inspected, { ...stagingFrameContext(frameArgument), verifiesG54AtStart: true });
             if (resolved.refusal) {
-                throw new McpToolError(resolved.refusal + describeSuggestion(suggestGcode(args.gcode, resolved.report)));
+                throw new McpToolError(resolved.refusal + describeSuggestion(suggestGcode(input.text, resolved.report)));
             }
             const validation = resolved.report;
-            const job = jobManager.submit(args.gcode, args.name, headType, validation);
+            const job = jobManager.submit(input.text, args.name, headType, validation, 'file', undefined, input.source);
+            input.consume();
 
             return {
                 job: jobManager.describe(job),
                 confirm_url: `${getConfirmBaseUrl()}/confirm/${job.id}`,
+                intake: describeInbox(),
                 next_step: 'Ask the operator to open confirm_url in a browser, review, and approve. Then either call '
                     + 'start_gcode_job with wait_for_approval_ms (their click starts it - nothing to copy) or pass the '
                     + 'one-time code they relay as confirm_token.',
             };
         },
+    });
+
+    registry.register({
+        name: 'begin_gcode_upload',
+        description: 'Start a chunked upload of a G-code program too large for one tool argument, for a client that cannot '
+            + 'write into the MCP jobs inbox (gcode_path is simpler when it can). Declare the name, the UTF-8 byte count '
+            + 'of the WHOLE program and its SHA-256 up front; then append_gcode_chunk in seq order (0, 1, 2 ...), then '
+            + 'finish_gcode_upload, which verifies both before validate_gcode {upload_id} / submit_gcode_job {upload_id} '
+            + 'can use it. Split chunks on line boundaries. An upload untouched for 30 minutes is dropped. Nothing is sent to the machine.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                name: { type: 'string', description: 'Short program name (the job name you will submit).' },
+                total_bytes: { type: 'number', description: 'UTF-8 byte count of the whole program, exactly as you will send it (same line endings).' },
+                sha256: { type: 'string', description: 'Hex SHA-256 of those bytes.' },
+            },
+            required: ['name', 'total_bytes', 'sha256'],
+            additionalProperties: false,
+        },
+        handler: async (args: { name?: unknown; total_bytes?: unknown; sha256?: unknown }) => intake(() => ({
+            ...gcodeUploads.begin(args),
+            chunk_max_bytes: gcodeUploads.limits.chunkMaxBytes,
+            next_step: 'append_gcode_chunk {upload_id, seq: 0, text}, then seq 1, 2 ... until remaining_bytes is 0; then finish_gcode_upload.',
+        })),
+    });
+
+    registry.register({
+        name: 'append_gcode_chunk',
+        description: 'Send the next slice of a begun upload. Chunks must arrive in seq order starting at 0; a repeat of a seq '
+            + 'already received with the same content is accepted as a no-op (safe to retry), a repeat with different content '
+            + 'or a gap is refused. Split on line boundaries; each chunk at most chunk_max_bytes (256 KiB) of UTF-8.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                upload_id: { type: 'string' },
+                seq: { type: 'number', description: '0-based chunk index; must equal next_seq from the previous result.' },
+                text: { type: 'string', description: 'The chunk text, verbatim.' },
+            },
+            required: ['upload_id', 'seq', 'text'],
+            additionalProperties: false,
+        },
+        handler: async (args: { upload_id?: unknown; seq?: unknown; text?: unknown }) => intake(() => gcodeUploads.append(args.upload_id, args.seq, args.text)),
+    });
+
+    registry.register({
+        name: 'finish_gcode_upload',
+        description: 'Close a chunked upload: refuses unless every declared byte arrived, then verifies the SHA-256 against the '
+            + 'one declared at begin (a mismatch discards the upload). Returns the program identity (bytes, hash, line counts, '
+            + 'first/last motion lines). Then validate_gcode {upload_id} (non-consuming) and submit_gcode_job {upload_id, name, '
+            + 'frame} (consumes it on success).',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                upload_id: { type: 'string' },
+            },
+            required: ['upload_id'],
+            additionalProperties: false,
+        },
+        handler: async (args: { upload_id?: unknown }) => intake(() => ({
+            ...gcodeUploads.finish(args.upload_id),
+            next_step: 'validate_gcode {upload_id} to read the report, then submit_gcode_job {upload_id, name, frame} to stage it.',
+        })),
     });
 
     registry.register({

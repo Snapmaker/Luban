@@ -33,6 +33,7 @@ import { tests as cornerFitTests } from './cornerFit.test';
 import { tests as directMovePlanTests } from './directMovePlan.test';
 import { tests as envelopeChecksTests } from './envelopeChecks.test';
 import { tests as gpioFeedTests } from './gpioFeed.test';
+import { tests as gcodeIntakeTests } from './gcodeIntake.test';
 import { tests as frameRecoveryTests } from './frameRecovery.test';
 import { tests as failureRecoveryTests } from './failureRecovery.test';
 import { tests as inspectionReportTests } from './inspectionReport.test';
@@ -95,6 +96,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['sstpConnection', sstpConnectionTests],
     ['connectionDiagnostics', connectionDiagnosticsTests],
     ['validator', validatorTests],
+    ['gcodeIntake', gcodeIntakeTests],
     ['workspace', workspaceTests],
     ['threadMilling', threadMillingTests],
     ['machinePosition', machinePositionTests],

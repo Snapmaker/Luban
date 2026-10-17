@@ -6,6 +6,14 @@ import path from 'path';
 import DataStorage from '../../DataStorage';
 import logger from '../../lib/logger';
 import config from '../configstore';
+import {
+    GcodeUploadStore,
+    InboxRoot,
+    ProgramIdentity,
+    ProgramSource,
+    describeProgramIdentity,
+    describeProgramSource,
+} from './gcodeIntake';
 import { JobDashboardFeed, summarizeDashboardJob } from './jobDashboardState';
 import { JobEnding, McpJobKind, McpJobState, TERMINAL_JOB_STATES } from './jobEnding';
 import { resolveTelemetryConfig } from './telemetryConfig';
@@ -88,6 +96,83 @@ export function jobEventLimit(): number {
     return resolveTelemetryConfig(process.env, (key) => config.get(key)).jobEventLimit;
 }
 
+// ---------------------------------------------------------------------------
+// Large-program intake (#237): the jobs INBOX that gcode_path reads from,
+// and the chunked-upload store. The rules are pure (gcodeIntake.ts); this is
+// where the directories come from.
+// ---------------------------------------------------------------------------
+
+/** Folder name under Luban's data directory that gcode_path may always read. */
+export const JOB_INBOX_FOLDER = 'mcp-jobs-inbox';
+/** configstore key / env var for one extra allow-listed directory (Settings -> MCP Server -> Job files). */
+export const JOB_INBOX_EXTRA_KEY = 'mcpJobInboxDir';
+export const JOB_INBOX_EXTRA_ENV = 'LUBAN_MCP_JOB_INBOX_DIR';
+
+export interface JobInbox {
+    /** The directories gcode_path may read, in lookup order. */
+    roots: InboxRoot[];
+    /** Luban's own inbox (always listed, created on demand); null only when it could not be created. */
+    inboxDir: string | null;
+    inboxProblem: string | null;
+    /** The configured extra directory as stored, whether or not it is usable. */
+    extraDir: string | null;
+    extraSource: 'env' | 'config' | null;
+    /** Why the extra directory is not in `roots` (missing, not a directory, relative). */
+    extraProblem: string | null;
+}
+
+/**
+ * The allow-listed directories a gcode_path may name. Luban's own
+ * `<data dir>/mcp-jobs-inbox` is created on first use (NOT under Tmp, which
+ * Luban clears), plus the operator's configured directory when it exists.
+ * Resolved on every call so a settings change applies at once.
+ */
+export function jobInbox(): JobInbox {
+    const roots: InboxRoot[] = [];
+    let inboxDir: string | null = path.join(DataStorage.userDataDir, JOB_INBOX_FOLDER);
+    let inboxProblem: string | null = null;
+    try {
+        fs.ensureDirSync(inboxDir);
+        roots.push({ name: 'inbox', dir: inboxDir });
+    } catch (err) {
+        inboxProblem = `could not create ${inboxDir}: ${(err as Error).message}`;
+        inboxDir = null;
+    }
+    const env = process.env[JOB_INBOX_EXTRA_ENV];
+    const fromEnv = env !== undefined && String(env).trim() !== '';
+    const raw = fromEnv ? env : config.get(JOB_INBOX_EXTRA_KEY);
+    const extraDir = raw === undefined || raw === null ? '' : String(raw).trim();
+    let extraProblem: string | null = null;
+    let extraSource: 'env' | 'config' | null = null;
+    if (extraDir) {
+        extraSource = fromEnv ? 'env' : 'config';
+        if (!path.isAbsolute(extraDir)) {
+            extraProblem = `${extraDir} is not an absolute path`;
+        } else {
+            try {
+                if (!fs.statSync(extraDir).isDirectory()) {
+                    extraProblem = `${extraDir} is not a directory`;
+                } else {
+                    roots.push({ name: 'extra', dir: extraDir });
+                }
+            } catch (err) {
+                extraProblem = `${extraDir} does not exist (${(err as Error).message})`;
+            }
+        }
+    }
+    return {
+        roots,
+        inboxDir,
+        inboxProblem,
+        extraDir: extraDir || null,
+        extraSource,
+        extraProblem,
+    };
+}
+
+/** Chunked uploads in flight (begin_gcode_upload / append_gcode_chunk / finish_gcode_upload). */
+export const gcodeUploads = new GcodeUploadStore();
+
 
 export interface McpJob {
     activeToolAtStaging?: object;
@@ -98,6 +183,15 @@ export interface McpJob {
     filePath: string;
     createdAt: number;
     validation: GcodeValidationReport;
+    /**
+     * Size, SHA-256, line counts and first/last motion lines of EXACTLY the
+     * text written to filePath - what start_gcode_job streams. On the
+     * confirm page and in describe() so the operator can tell a complete
+     * program from a truncated one (#237).
+     */
+    identity: ProgramIdentity;
+    /** Inline argument, inbox file, chunked upload, or server-emitted. */
+    source: ProgramSource;
     state: McpJobState;
     confirmToken: string | null;
     approvedAt: number | null;
@@ -197,7 +291,10 @@ export class JobManager {
         return this.jobsDir;
     }
 
-    public submit(gcode: string, name: string, headType: string, validation: GcodeValidationReport, kind: McpJobKind = 'file', steps?: string[]): McpJob {
+    public submit(
+        gcode: string, name: string, headType: string, validation: GcodeValidationReport, kind: McpJobKind = 'file', steps?: string[],
+        source?: ProgramSource,
+    ): McpJob {
         const id = crypto.randomBytes(6).toString('hex');
         const safeName = (name || 'job').replace(/[^\w.-]/g, '_').slice(0, 64);
         const filePath = path.join(this.ensureJobsDir(), `${id}_${safeName}.nc`);
@@ -212,6 +309,8 @@ export class JobManager {
             filePath,
             createdAt: Date.now(),
             validation,
+            identity: describeProgramIdentity(gcode),
+            source: source || (kind === 'file' ? { kind: 'inline' } : { kind: 'server' }),
             workspaceRevision: this.workspaceRevision,
             state: 'awaiting_confirmation',
             confirmToken: null,
@@ -395,6 +494,8 @@ export class JobManager {
             totalSteps: job.steps ? job.steps.length : undefined,
             nextStep: job.steps ? job.nextStep : undefined,
             validation: job.validation,
+            identity: job.identity,
+            source: job.source,
         };
     }
 
@@ -586,6 +687,7 @@ export class JobManager {
                 <tr><td>Spindle</td><td>on x${v.spindle.onCommands}, off x${v.spindle.offCommands}, max S ${v.spindle.maxS === null ? '-' : v.spindle.maxS}</td></tr>
                 <tr><td>Min Z with spindle on</td><td>${v.minZWithSpindleOn === null ? '-' : v.minZWithSpindleOn}</td></tr>
             </table>
+            ${this.identityTable(job)}
             <h3>Warnings</h3>
             ${warnings}
             ${job.state === 'awaiting_confirmation' ? `
@@ -598,6 +700,33 @@ export class JobManager {
             ` : `<p>Job status: <strong>${escapeHtml(job.state)}</strong>. ${escapeHtml(job.ending?.reason || job.error || '')}</p>`}
             <h3>${job.kind === 'procedure' ? 'Simulated plan - every move the runner will command' : 'G-code'}${lines.length > 80 ? ' (first and last 40 lines)' : ''}</h3>
             <pre style="background:#f6f6f6;padding:12px;overflow:auto;max-height:400px">${escapeHtml(preview)}</pre>`;
+    }
+
+    /**
+     * The program's identity - what was actually received, so the operator
+     * can check a large CAM file is complete before approving (#237): hash
+     * and size against the file they generated, the last motion line
+     * against its final retract.
+     */
+    private identityTable(job: McpJob): string {
+        const id = job.identity;
+        const line = (entry: { line: number; text: string } | null) => (entry
+            ? `line ${entry.line}: <code>${escapeHtml(entry.text.length > 120 ? `${entry.text.slice(0, 120)}...` : entry.text)}</code>`
+            : '-');
+        return `
+            <h3>Program identity</h3>
+            <p>Check these against the file you generated: the hash and byte count must match it exactly, and the last
+               motion line should be its final retract. A program whose spindle is still on at the end is refused at staging.</p>
+            <table border="1" cellpadding="6" style="border-collapse:collapse">
+                <tr><td>Source</td><td>${escapeHtml(describeProgramSource(job.source))}</td></tr>
+                <tr><td>SHA-256</td><td><code style="word-break:break-all">${id.sha256}</code></td></tr>
+                <tr><td>Bytes</td><td>${id.bytes}</td></tr>
+                <tr><td>Lines / motion lines</td><td>${id.lineCount} / ${id.motionLineCount}</td></tr>
+                <tr><td>First motion</td><td>${line(id.firstMotion)}</td></tr>
+                <tr><td>Last motion</td><td>${line(id.lastMotion)}</td></tr>
+                <tr><td>Last line</td><td>${line(id.lastLine)}</td></tr>
+                <tr><td>Spindle at end</td><td>${job.validation.spindle.onAtEnd ? '<strong>STILL RUNNING</strong>' : 'off'}</td></tr>
+            </table>`;
     }
 
     private page(res: http.ServerResponse, status: number, body: string): void {
