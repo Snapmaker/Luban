@@ -119,6 +119,16 @@ interface McpStatus {
         traverseWithoutApprovalAtSafeZ?: boolean;
         traverseWithoutApprovalSource?: 'env' | 'config' | 'default';
     };
+    jobIntake?: {
+        inboxDir: string | null;
+        inboxProblem: string | null;
+        extraInboxDir: string;
+        extraInboxSource: 'env' | 'config' | 'default';
+        extraInboxProblem: string | null;
+        extraInboxEnv: string;
+        maxProgramBytes: number;
+        openUploads: number;
+    };
     cameraStream?: McpCameraStreamStatus;
     vibration?: {
         enabled: boolean;
@@ -222,6 +232,8 @@ const McpServer: React.FC = () => {
     const [approvalHandoffAgent, setApprovalHandoffAgent] = useState(true);
     // Approval-free XY transport with the head already at the traverse height (#241). Default on.
     const [traverseAtSafeZ, setTraverseAtSafeZ] = useState(true);
+    // Extra allow-listed directory for submit_gcode_job {gcode_path} (#237).
+    const [jobInboxDir, setJobInboxDir] = useState('');
     // Live MJPEG camera view served by the MCP server (/camera). Applies at
     // once on save: off disconnects every viewer. '' fps = server default.
     const [cameraStreamEnabled, setCameraStreamEnabled] = useState(false);
@@ -266,6 +278,9 @@ const McpServer: React.FC = () => {
                 if (body.approval) {
                     setApprovalHandoffAgent(body.approval.handoff !== 'code');
                     setTraverseAtSafeZ(body.approval.traverseWithoutApprovalAtSafeZ !== false);
+                }
+                if (body.jobIntake) {
+                    setJobInboxDir(body.jobIntake.extraInboxSource === 'config' ? body.jobIntake.extraInboxDir : '');
                 }
                 if (body.cameraStream) {
                     setCameraStreamEnabled(!!body.cameraStream.enabled);
@@ -336,6 +351,7 @@ const McpServer: React.FC = () => {
             buffers: { jobEventLimit, diagnosticsRecentLimit },
             approvalHandoff: approvalHandoffAgent ? 'agent' : 'code',
             ...(status?.approval?.traverseWithoutApprovalSource === 'env' ? {} : { traverseWithoutApprovalAtSafeZ: traverseAtSafeZ }),
+            ...(status?.jobIntake?.extraInboxSource === 'env' ? {} : { jobInboxDir }),
             cameraStream: { enabled: cameraStreamEnabled, fps: cameraStreamFps },
             spindleTelemetry: {
                 ...(telemetryEnv('enabled') ? {} : { enabled: spindleTelemetry }),
@@ -557,6 +573,33 @@ const McpServer: React.FC = () => {
                 <div className={styles['port-tips']}>
                     {i18n._('key-App/Settings/McpServer-Applies to traverse_xy, the XY step of goto_tool_change_position and an up-only move_z, only on a verified homed position at or above mcpSafeTraverseZ, after the usual landmark and travel checks. The job still appears on the dashboard, marked as approved by policy. Off: every transport stages a confirm page.')}
                     {status && status.approval && status.approval.traverseWithoutApprovalSource === 'env' ? ` — ${i18n._('key-App/Settings/McpServer-Overridden by environment variable')} LUBAN_MCP_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z` : ''}
+                </div>
+            </div>
+
+            <div className="border-bottom-normal padding-bottom-4 margin-top-16">
+                <span>{i18n._('key-App/Settings/McpServer-Job files')}</span>
+            </div>
+            <div className="margin-top-8">
+                <div className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-Large G-code programs reach submit_gcode_job as a file path (gcode_path) read from an allow-listed directory, or as a chunked upload. The built-in inbox is always allowed:')}
+                    {' '}
+                    <code>{status?.jobIntake?.inboxDir || '-'}</code>
+                    {status?.jobIntake?.inboxProblem ? ` — ${status.jobIntake.inboxProblem}` : ''}
+                </div>
+                <label htmlFor="mcp-job-inbox-dir" className="sm-flex align-center margin-top-8">
+                    <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Extra inbox directory')}</span>
+                    <Input
+                        id="mcp-job-inbox-dir"
+                        value={jobInboxDir}
+                        onChange={(e) => setJobInboxDir(e.target.value)}
+                        disabled={!enabled || status?.jobIntake?.extraInboxSource === 'env'}
+                        placeholder="/absolute/path/shared/with/the/agent"
+                    />
+                </label>
+                <div className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-One absolute directory the agent can also write files into (a shared folder, a CAM export folder). Applies on save. Paths outside the allowed directories, ".." segments and symlinks pointing out of them are refused. Leave empty to allow only the built-in inbox.')}
+                    {status?.jobIntake?.extraInboxSource === 'env' ? ` — ${i18n._('key-App/Settings/McpServer-Overridden by environment variable')} ${status.jobIntake.extraInboxEnv}` : ''}
+                    {status?.jobIntake?.extraInboxProblem ? ` — ${i18n._('key-App/Settings/McpServer-Not usable:')} ${status.jobIntake.extraInboxProblem}` : ''}
                 </div>
             </div>
 

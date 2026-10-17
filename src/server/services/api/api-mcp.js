@@ -4,7 +4,7 @@ import { CA_FILE_CONFIG_KEY } from '../mcp/caTrust';
 import { MAX_MAX_CLIENTS, MAX_STREAM_FPS, MIN_STREAM_FPS, STREAM_ENABLED_KEY, STREAM_FPS_KEY, STREAM_MAX_CLIENTS_KEY, cameraStreamService } from '../mcp/cameraStream';
 import { MAX_RECENT_LIMIT, MIN_RECENT_LIMIT, diagnosticsRecentLimit } from '../mcp/diagnostics';
 import { DEFAULT_BLINKA_ENV, resolveGpioFeedConfig } from '../mcp/gpioFeed';
-import { MAX_JOB_EVENT_LIMIT, MIN_JOB_EVENT_LIMIT, approvalHandoff, jobEventLimit } from '../mcp/jobs';
+import { JOB_INBOX_EXTRA_ENV, JOB_INBOX_EXTRA_KEY, MAX_JOB_EVENT_LIMIT, MIN_JOB_EVENT_LIMIT, approvalHandoff, gcodeUploads, jobEventLimit, jobInbox } from '../mcp/jobs';
 import { traverseWithoutApprovalAtSafeZ, traverseWithoutApprovalSource } from '../mcp/tools/machine';
 import { probeFeedService, resolveProbeFeedConfig, resolveProbeTransportKind, resolveSensorEnabled } from '../mcp/probeFeed';
 import { listAudioSources } from '../mcp/audioDevices';
@@ -166,6 +166,23 @@ function approvalSettings() {
     };
 }
 
+// Large-program intake (jobs.ts jobInbox, #237): Luban's own mcp-jobs-inbox
+// is always allow-listed; the operator may add ONE extra directory. Env
+// override wins, as everywhere else on this pane.
+function jobIntakeSettings() {
+    const inbox = jobInbox();
+    return {
+        inboxDir: inbox.inboxDir,
+        inboxProblem: inbox.inboxProblem,
+        extraInboxDir: inbox.extraDir || '',
+        extraInboxSource: inbox.extraSource || 'default',
+        extraInboxProblem: inbox.extraProblem,
+        extraInboxEnv: JOB_INBOX_EXTRA_ENV,
+        maxProgramBytes: gcodeUploads.limits.maxBytes,
+        openUploads: gcodeUploads.list().length,
+    };
+}
+
 // Spindle telemetry (spindleTelemetry.ts): opt-in status RPM recording, the
 // optional faster status poll, the microphone and WHICH microphone. The
 // capture sources are listed so the pane can offer them; nothing here
@@ -239,6 +256,7 @@ function settingsPayload() {
         gpio: gpioSettings(),
         buffers: bufferSettings(),
         approval: approvalSettings(),
+        jobIntake: jobIntakeSettings(),
     };
 }
 
@@ -338,6 +356,18 @@ export const updateSettings = (req, res) => {
             res.status(ERR_BAD_REQUEST).send({ msg: `Invalid approvalHandoff: ${handoff} (agent, code or empty)` });
             return;
         }
+    }
+    const inboxDir = (req.body || {}).jobInboxDir;
+    if (inboxDir !== undefined) {
+        // Read on every gcode_path resolution: applies at once. Stored as
+        // given; whether it exists is reported, not enforced here, so the
+        // operator can save the path before creating the directory.
+        if (inboxDir !== null && typeof inboxDir !== 'string') {
+            res.status(ERR_BAD_REQUEST).send({ msg: 'jobInboxDir must be a directory path string (empty clears it).' });
+            return;
+        }
+        const value = inboxDir === null ? '' : inboxDir.trim();
+        if (value) { config.set(JOB_INBOX_EXTRA_KEY, value); } else { config.unset(JOB_INBOX_EXTRA_KEY); }
     }
     const safeZTraverse = (req.body || {}).traverseWithoutApprovalAtSafeZ;
     if (safeZTraverse !== undefined) {

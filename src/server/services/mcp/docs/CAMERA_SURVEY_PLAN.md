@@ -160,7 +160,7 @@ at different XY *and* different heights, which is what makes perspective observa
 | Target | Known geometry | Source |
 |---|---|---|
 | Tool setter | centre `(center_x, center_y)`, plate top `trigger_z − reference_bit_length_mm` | `set_tool_setter_config` (stored today) |
-| Rotary axis | a line: `X = rotary_axis_x`, `Z = rotary_axis_z_physical`, along machine Y | `set_probe_geometry` (stored today) |
+| Rotary axis | a line through the measured stations `rotary_axis_points` (yawed / pitched off machine Y as measured); with only the legacy `rotary_axis_x` / `rotary_axis_z_physical` it runs along machine Y, flagged `skew: unmeasured` | `set_probe_geometry` (stored today) |
 | Tailstock | a point on that line at `Y = rotary_tailstock_y` | new geometry field (D1) |
 
 | PR | Change | Tests |
