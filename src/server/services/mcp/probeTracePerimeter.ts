@@ -413,7 +413,9 @@ export async function runProbeTracePerimeterProcedure(plan: ProbeTracePlan): Pro
             // `trace` is the crawl's own result - complete, or the partial one an
             // abort carried (T8 lost 67 contacts here). The empty shape below is
             // only for an abort before the crawl started (the approach).
-            trace: trace && analysis ? { ...trace, perimeter: analysis.perimeter.map((r) => ({ ...r, toolheadMachineZ: z, ...projectToolTipZ(z, tipCalibration) })) } : {
+            trace: trace && analysis ? {
+                ...trace, perimeter: analysis.perimeter.map((r) => ({ ...r, toolheadMachineZ: z, ...projectToolTipZ(z, tipCalibration) })),
+            } : {
                 perimeter: [],
                 closed: false,
                 ending: { kind: 'aborted', note: 'aborted before the crawl started (approach or first-wall march)' },

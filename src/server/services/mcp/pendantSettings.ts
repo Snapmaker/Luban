@@ -1,5 +1,5 @@
 import logger from '../../lib/logger';
-import { clearActiveTool, describeActiveTool, setActiveTool } from './activeTool';
+import { clearActiveTool, describeActiveTool, getActiveTool, setActiveTool } from './activeTool';
 import { currentToolProtrusion } from './clearanceContext';
 import { CLEARANCE_MARGIN_MM } from './landmarkClearance';
 import { landmarkStore } from './landmarks';
@@ -20,8 +20,23 @@ export function updatePendantSettings(args: Record<string, unknown>): void {
             if (typeof args.protrusionMm !== 'number' || !Number.isFinite(args.protrusionMm) || args.protrusionMm <= 0) {
                 throw new Error('Fitted-tool protrusion must be a positive number in mm.');
             }
+            if (args.protrusionReference !== 'toolhead') {
+                throw new Error('Confirm a conservative bound below the machine toolhead reference; collet lengths and conventional offsets are not that bound.');
+            }
             const before = describeActiveTool();
+            const current = getActiveTool();
+            const identity = String(args.toolIdentity || '').trim();
+            if (args.sameFitting === true) {
+                if (!current || current.clearanceBasis !== 'toolhead_reference' || !current.measurementId
+                    || current.protrusionMm !== args.protrusionMm || (current.toolIdentity || '') !== identity) {
+                    throw new Error('The unchanged measured fitting no longer matches. Reload, or confirm a new toolhead-reference bound.');
+                }
+                // Nothing is reasserted: retain the still-current measurement and its calibration.
+                log.info(`Operator retained unchanged measured fitting: ${JSON.stringify(current)}`);
+                return;
+            }
             const after = setActiveTool({ protrusionMm: args.protrusionMm,
+                clearanceBasis: 'toolhead_reference',
                 source: 'operator',
                 toolIdentity: String(args.toolIdentity || '').trim(),
                 note: String(args.note || 'Confirmed by the operator on the local pendant page.').trim() });

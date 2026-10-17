@@ -695,17 +695,27 @@ async function marchDownZ(
     }
     // A routine fine observation needs no retouch. Any uncertainty earns ONE
     // released retouch; disagreement is exposed, never hidden by a median.
-    const passes = adaptive ? (confirmationReasons.length ? 1 : 0) : plan.confirmPasses;
+    const adaptivePasses = confirmationReasons.length ? 1 : 0;
+    const passes = adaptive ? adaptivePasses : plan.confirmPasses;
     const passContacts: number[] = [];
     const failConfirmation = (failure: 'release-failed' | 'contact-lost', pass: number, message: string): never => {
         // Retain the observation without accepting it or changing abort motion.
         // A failed release/retouch must reach the existing held-contact recovery.
         recordUncertain({
-            ...station, status: 'uncertain', z: null, marchStartZ: startZ, floorZ,
-            initialContactZ, confirmPassContacts: [...passContacts], spreadMm: null,
-            confirmationReasons, extraPassCount: passContacts.length,
-            confirmationPassesAttempted: pass, confirmationFailure: failure,
-            approach, worstPressMm,
+            ...station,
+            status: 'uncertain',
+            z: null,
+            marchStartZ: startZ,
+            floorZ,
+            initialContactZ,
+            confirmPassContacts: [...passContacts],
+            spreadMm: null,
+            confirmationReasons,
+            extraPassCount: passContacts.length,
+            confirmationPassesAttempted: pass,
+            confirmationFailure: failure,
+            approach,
+            worstPressMm,
         });
         throw new ProcedureAbort(message);
     };
@@ -731,7 +741,7 @@ async function marchDownZ(
             }
         }
         if (passContact === null) {
-            failConfirmation('contact-lost', pass, `Station "${station.label}": confirm pass ${pass} lost the contact.`);
+            return failConfirmation('contact-lost', pass, `Station "${station.label}": confirm pass ${pass} lost the contact.`);
         }
         passContacts.push(zAt(passContact));
         reference = passContact;
@@ -741,12 +751,21 @@ async function marchDownZ(
     const contactZ = adaptive ? observations[observations.length - 1] : sorted[Math.floor((sorted.length - 1) / 2)];
     const spreadMm = sorted.length > 1 || !adaptive ? Number((sorted[sorted.length - 1] - sorted[0]).toFixed(3)) : null;
     const accepted = !adaptive || spreadMm === null || spreadMm <= (plan.confirmationToleranceMm as number) + 1e-9;
-    return { contactZ, passContacts, spreadMm, initialContactZ, finalContactZ: observations[observations.length - 1],
-        confirmationReasons, accepted, approach, worstPressMm };
+    return { contactZ,
+        passContacts,
+        spreadMm,
+        initialContactZ,
+        finalContactZ: observations[observations.length - 1],
+        confirmationReasons,
+        accepted,
+        approach,
+        worstPressMm };
 }
 
 /** Structured procedure result (lands on job.result): stations, statistics, renderings. */
-function buildResult(plan: ProbeSurfacePlan, results: SurfaceStationResult[], phases: { phase: string; note?: string }[], tipCalibration: TipCalibrationSnapshot): object {
+function buildResult(
+    plan: ProbeSurfacePlan, results: SurfaceStationResult[], phases: { phase: string; note?: string }[], tipCalibration: TipCalibrationSnapshot
+): object {
     const contacts: ContactSample[] = results
         .filter((r): r is SurfaceStationResult & { z: number } => r.z !== null)
         .map((r) => ({ x: r.x, y: r.y, z: r.z, s: r.s, label: r.label }));
@@ -761,7 +780,8 @@ function buildResult(plan: ProbeSurfacePlan, results: SurfaceStationResult[], ph
         contactCount: contacts.length,
         noContactStations: noContact,
         uncertainStations: results.filter((r) => r.status === 'uncertain').map((r) => r.label),
-        confirmation: { mode: plan.confirmationMode || 'fixed', toleranceMm: plan.confirmationToleranceMm ?? null,
+        confirmation: { mode: plan.confirmationMode || 'fixed',
+            toleranceMm: plan.confirmationToleranceMm ?? null,
             extraPassesWhenRequired: plan.confirmationMode === 'adaptive' ? 1 : plan.confirmPasses,
             singleTouchCount: results.filter((r) => r.status === 'contact' && r.extraPassCount === 0).length },
         summary,

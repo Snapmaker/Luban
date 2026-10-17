@@ -1,16 +1,18 @@
 import assert from 'assert';
+import type { ActiveTool } from '../activeTool';
 import type { Landmark } from '../landmarks';
 import { requiredToolheadZ } from '../landmarkClearance';
 import { isolatedModule } from './jobDashboard.test';
 
-function fixture() {
+function fixture(initialTool: Partial<ActiveTool> | null = null) {
     let items: Landmark[] = [];
     let nextId = 0;
-    let tool: { protrusionMm: number; source: string } | null = null;
+    let tool = initialTool;
     const messages: string[] = [];
     const module = isolatedModule('pendantSettings.ts', {
         '../../lib/logger': () => ({ info: (message: string) => messages.push(message) }),
-        './activeTool': { describeActiveTool: () => ({ active: tool }),
+        './activeTool': { getActiveTool: () => tool,
+            describeActiveTool: () => ({ active: tool }),
             clearActiveTool: () => { tool = null; },
             setActiveTool: (input: { protrusionMm: number; source: string }) => { tool = input; return tool; } },
         './clearanceContext': { currentToolProtrusion: () => ({ mm: tool?.protrusionMm || null }) },
@@ -43,15 +45,35 @@ export const tests: Array<[string, () => void]> = [
     ['operator tool confirmation changes effective clearance without pretending to be a measurement', () => {
         const f = fixture();
         f.update(obstacle);
-        f.update({ kind: 'tool', protrusionMm: 12, source: 'tool_setter', measurementJobId: 'invented' });
+        f.update({ kind: 'tool', protrusionReference: 'toolhead', protrusionMm: 12, source: 'tool_setter', measurementJobId: 'invented' });
         const saved = f.read();
         assert.equal(saved.activeTool.active.source, 'operator');
+        assert.equal(saved.activeTool.active.clearanceBasis, 'toolhead_reference');
         assert.equal(saved.toolProtrusion.mm, 12);
         assert.equal(saved.landmarks[0].clearanceZ, 250);
         assert.equal(requiredToolheadZ(250, 'physical', saved.toolProtrusion.mm, saved.clearanceMarginMm), 267);
         f.update({ kind: 'clear-tool' });
         assert.equal(f.read().activeTool.active, null);
         assert.ok(f.messages.some((message) => message.includes('confirmed fitted tool')));
+    }],
+    ['pendant requires a named physical reference and only retains an unchanged current measurement', () => {
+        const measured = { protrusionMm: 75.3,
+            source: 'spindle_probe' as const,
+            measurementId: 'current',
+            clearanceBasis: 'toolhead_reference' as const,
+            toolIdentity: 'probe-A' };
+        const f = fixture(measured);
+        assert.throws(() => f.update({ kind: 'tool', protrusionMm: 45 }), /toolhead reference/);
+        assert.throws(() => f.update({ kind: 'tool', protrusionReference: 'collet', protrusionMm: 45 }), /toolhead reference/);
+        const same = { kind: 'tool', protrusionReference: 'toolhead', sameFitting: true, protrusionMm: 75.3, toolIdentity: 'probe-A' };
+        f.update(same);
+        assert.equal(f.read().activeTool.active.measurementId, 'current');
+        assert.throws(() => f.update({ ...same, protrusionMm: 45 }), /no longer matches/);
+        assert.throws(() => f.update({ ...same, toolIdentity: 'new tool' }), /no longer matches/);
+        assert.throws(() => fixture().update(same), /no longer matches/);
+        f.update({ ...same, sameFitting: false });
+        assert.equal(f.read().activeTool.active.source, 'operator');
+        assert.equal(f.read().activeTool.active.measurementId, undefined);
     }],
     ['malformed lengths, footprints, height bases and heights cannot change saved settings', () => {
         const f = fixture();

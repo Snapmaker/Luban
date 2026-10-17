@@ -54,6 +54,16 @@ confirm30 commands; corresponding execution1819/4073/3785/12438ms and idle616/30
   physical clearance, and 45mm collet protrusion cannot replace a70.9mm conventional offset.
   Old surveys remain evidence in their original convention; missing provenance stays unknown.
 
+## Independent integration review
+
+The reviewer found and the implementation fixed four additional gaps: failed retouches lost
+the initial observation; staging text used guarded height for stepped links; camera bootstrap
+recomputed target Z from an approach estimate; and pendant confirmation omitted the new
+clearance basis while prefilling conventional offsets. Regression tests cover retained uncertain
+observations, exact staged hop wording, qualified bootstrap targets/XY-only search, unknown
+pendant prefill and explicit preservation of an unchanged measured fitting. Unqualified legacy
+rotary coordinates remain stored but are excluded from metric bootstrap pending requalification.
+
 ## Validation scope
 
 Targeted mocked tests cover adaptive escalation, single contacts, fixed compatibility, release

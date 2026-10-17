@@ -56,23 +56,40 @@ export function parseSetterDatum(raw: unknown): SetterDatum | null {
     if (!d.id || !d.name || !d.source || finiteNumber(d.machineZ) === null
         || !['measured', 'legacy_reference_convention'].includes(d.basis)) return null;
     const uncertaintyMm = finiteNumber(d.uncertaintyMm);
-    return { id: String(d.id), name: String(d.name), machineZ: d.machineZ, basis: d.basis,
-        source: String(d.source), at: finiteNumber(d.at),
+    return { id: String(d.id),
+        name: String(d.name),
+        machineZ: d.machineZ,
+        basis: d.basis,
+        source: String(d.source),
+        at: finiteNumber(d.at),
         uncertaintyMm: uncertaintyMm !== null && uncertaintyMm >= 0 ? uncertaintyMm : null };
 }
 
 /** This describes today's legacy convention; it does NOT recover a historic calibration. */
 export function legacySetterDatum(triggerZ: number, referenceLength: number): SetterDatum {
-    return { id: `legacy-reference:${triggerZ}:${referenceLength}`, name: 'Legacy setter reference convention',
-        machineZ: Number((triggerZ - referenceLength).toFixed(6)), basis: 'legacy_reference_convention',
+    return { id: `legacy-reference:${triggerZ}:${referenceLength}`,
+        name: 'Legacy setter reference convention',
+        machineZ: Number((triggerZ - referenceLength).toFixed(6)),
+        basis: 'legacy_reference_convention',
         source: `Configured reference trigger ${triggerZ} minus nominal reference length ${referenceLength}; physical datum not independently established.`,
-        at: null, uncertaintyMm: null };
+        at: null,
+        uncertaintyMm: null };
 }
 
 export function unavailableTipCalibration(note: string): TipCalibrationSnapshot {
-    return { kind: 'unavailable', offsetMm: null, rawTriggerMachineZ: null, datum: null,
-        measurementId: null, measurementJobId: null, toolIdentity: null, fittingId: null,
-        measuredAt: null, uncertaintyMm: null, applicability: 'unknown', physicalReferenceVerified: false, note };
+    return { kind: 'unavailable',
+        offsetMm: null,
+        rawTriggerMachineZ: null,
+        datum: null,
+        measurementId: null,
+        measurementJobId: null,
+        toolIdentity: null,
+        fittingId: null,
+        measuredAt: null,
+        uncertaintyMm: null,
+        applicability: 'unknown',
+        physicalReferenceVerified: false,
+        note };
 }
 
 export function calibrationFromMeasurement(m: ToolMeasurement): TipCalibrationSnapshot {
@@ -84,10 +101,17 @@ export function calibrationFromMeasurement(m: ToolMeasurement): TipCalibrationSn
     const spread = finiteNumber(m.spreadMm);
     const uncertaintyMm = datum.uncertaintyMm !== null && step !== null && step > 0 && spread !== null && spread >= 0
         ? datum.uncertaintyMm + step + spread : null;
-    return { kind: 'setter', offsetMm: Number((m.measuredTriggerZ - datum.machineZ).toFixed(6)),
-        rawTriggerMachineZ: m.measuredTriggerZ, datum, measurementId: m.id || null,
-        measurementJobId: m.jobId || null, toolIdentity: m.toolIdentity || null, fittingId: m.fittingId || null,
-        measuredAt: m.at, uncertaintyMm, applicability: 'current_fitting',
+    return { kind: 'setter',
+        offsetMm: Number((m.measuredTriggerZ - datum.machineZ).toFixed(6)),
+        rawTriggerMachineZ: m.measuredTriggerZ,
+        datum,
+        measurementId: m.id || null,
+        measurementJobId: m.jobId || null,
+        toolIdentity: m.toolIdentity || null,
+        fittingId: m.fittingId || null,
+        measuredAt: m.at,
+        uncertaintyMm,
+        applicability: 'current_fitting',
         physicalReferenceVerified: datum.basis === 'measured' && uncertaintyMm !== null,
         note: datum.basis === 'measured'
             ? 'Tip-bottom machine Z from the recorded setter datum and this fitting; uncertainty includes datum, one fine step and confirm spread.'

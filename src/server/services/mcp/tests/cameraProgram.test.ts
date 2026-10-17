@@ -80,6 +80,7 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
             '../../DataStorage': { userDataDir: '/fake' },
             './rotaryGeometry': { rotaryAxisPoints: () => [] },
             './toolSetter': { getToolSetterConfig: () => null },
+            './toolDatum': require('../toolDatum'),
             './envelopeChecks': require('../envelopeChecks'),
             './landmarks': { landmarkStore: { obstacleBoxes: () => [] } },
             './clearanceContext': { clearanceOptions: () => ({ toolProtrusionMm: 75 }) },
@@ -149,3 +150,48 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.equal(f.moves.length, 0);
     }],
 ];
+
+
+tests.push(['bootstrap uses the named physical datum and keeps coarse XY search independent of unknown plate height', () => {
+    let setter: any = { centerX: 10,
+        centerY: 20,
+        triggerZ: 175.5,
+        referenceBitLengthMm: 75,
+        datum: require('../toolDatum').legacySetterDatum(175.5, 75) };
+    const dependencies: Record<string, unknown> = {};
+    const source = fs.readFileSync(path.join(__dirname, '../cameraBootstrap.ts'), 'utf8');
+    for (const match of source.matchAll(/from '([^']+)'/g)) dependencies[match[1]] = {};
+    Object.assign(dependencies, {
+        './toolDatum': require('../toolDatum'),
+        './toolSetter': { getToolSetterConfig: () => setter },
+        './rotaryGeometry': { rotaryAxisPoints: () => [{ name: 'legacy axis', x: 1, y: 2, z: 100 }] },
+        './registry': { McpToolError: Error },
+        './bootstrapPlan': require('../bootstrapPlan'),
+        './machineTravel': require('../machineTravel'),
+        './procedureLimits': require('../procedureLimits'),
+        './tools/machine': { safeTraverseZ: () => 328,
+            planningTravel: () => ({
+                limits: { xMin: 0, xMax: 300, yMin: 0, yMax: 300, zMin: 0, zMax: 328 }, conflicts: [],
+            }) },
+    });
+    const bootstrap = isolatedModule('cameraBootstrap.ts', dependencies);
+    assert.equal(bootstrap.bootstrapTargets().length, 0, 'legacy rotary coordinates do not supply typed physical provenance');
+    assert.throws(() => bootstrap.planPoseStage({}), /measured named datum/);
+    const search = bootstrap.planSearchStage({});
+    assert.equal(search.target.machine.x, 10);
+    assert.equal(search.target.machine.z, undefined, 'visual XY search must not fabricate a physical Z');
+    setter = { ...setter,
+        datum: { id: 'physical-v1',
+            name: 'Setter plane',
+            machineZ: 100.5,
+            basis: 'measured',
+            source: 'Independent height measurement',
+            uncertaintyMm: 0.2,
+            at: 1 } };
+    const first = bootstrap.bootstrapTargets()[0];
+    assert.equal(first.machine.z, 100.5);
+    assert.equal(first.datum.id, 'physical-v1');
+    setter = { ...setter, triggerZ: 175.5, referenceBitLengthMm: 45 };
+    assert.equal(bootstrap.bootstrapTargets()[0].machine.z, first.machine.z, 'approach-reference edit cannot change camera target');
+    assert.match(first.source, /Independent height measurement/);
+}]);

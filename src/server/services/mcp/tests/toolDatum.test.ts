@@ -4,53 +4,97 @@ import * as datum from '../toolDatum';
 import * as limits from '../procedureLimits';
 import * as protrusion from '../toolProtrusion';
 
-const legacy = { centerX: 0, centerY: 0, triggerZ: 175.5, referenceBitLengthMm: 75,
-    longestBitLengthMm: 75, floorMarginMm: 3, changeX: null, changeY: null, changeZ: null, notes: null };
+const legacy = { centerX: 0,
+    centerY: 0,
+    triggerZ: 175.5,
+    referenceBitLengthMm: 75,
+    longestBitLengthMm: 75,
+    floorMarginMm: 3,
+    changeX: null,
+    changeY: null,
+    changeZ: null,
+    notes: null };
 
 function fixture(onMove?: () => void) {
     const store = new Map<string, unknown>([['mcpToolSetter', { ...legacy }]]);
-    const config = { get: (key: string) => store.get(key), set: (key: string, value: unknown) => store.set(key, value),
+    const config = { get: (key: string) => store.get(key),
+        set: (key: string, value: unknown) => store.set(key, value),
         unset: (key: string) => store.delete(key) };
     const active = isolatedModule('activeTool.ts', { '../configstore': config });
     let effectiveLength: number | null = null;
-    const state = isolatedModule('toolDatumState.ts', { '../configstore': config, './activeTool': active,
-        './toolDatum': datum, './rotaryGeometry': { geometrySettings: () => ({ fields: { probe_effective_length: {
+    const state = isolatedModule('toolDatumState.ts', { '../configstore': config,
+        './activeTool': active,
+        './toolDatum': datum,
+        './rotaryGeometry': { geometrySettings: () => ({ fields: { probe_effective_length: {
             value: effectiveLength, source: 'config', note: 'legacy evidence', setAt: 100,
         } } }) } });
     let z = 176;
     const sensed = () => ({ contact: z <= 175.5 + 1e-8, channel: 'probe', reading: { value: 'contact' } });
     const setter = isolatedModule('toolSetter.ts', {
         '../../lib/logger': () => ({ info: () => undefined, error: () => undefined }),
-        '../configstore': config, './index': { mcpBroadcast: () => undefined },
-        './traversePlan': { TRAVERSE_Z_TOLERANCE_MM: 0.05 }, './procedureLimits': limits,
-        './registry': { McpToolError: Error }, './activeTool': active, './toolDatum': datum, './toolDatumState': state,
+        '../configstore': config,
+        './index': { mcpBroadcast: () => undefined },
+        './traversePlan': { TRAVERSE_Z_TOLERANCE_MM: 0.05 },
+        './procedureLimits': limits,
+        './registry': { McpToolError: Error },
+        './activeTool': active,
+        './toolDatum': datum,
+        './toolDatumState': state,
         './tools/machine': { getPositionSnapshot: () => ({ machine: { x: 0, y: 0, z } }), safeTraverseZ: () => 328 },
         './probeFeed': { probeFeedService: { setExpectedContact: () => undefined, clearExpectedContact: () => undefined } },
-        './probing': { assertChannelReady: () => undefined, assertMachineReadyForProcedure: () => undefined,
+        './probing': { assertChannelReady: () => undefined,
+            assertMachineReadyForProcedure: () => undefined,
             moveMachineSettled: async (_tag: string, words: { z?: number }) => { if (words.z !== undefined) z = words.z; onMove?.(); },
-            senseAfter: async () => sensed(), senseReleaseAfter: async () => sensed(),
+            senseAfter: async () => sensed(),
+            senseReleaseAfter: async () => sensed(),
             raiseToTop: async () => ({ action: 'raised', z: 328, note: 'mocked' }),
-            abortRaiseToTop: async () => undefined, isProcedureAbort: () => false,
+            abortRaiseToTop: async () => undefined,
+            isProcedureAbort: () => false,
         },
     });
     const clearance = isolatedModule('clearanceContext.ts', { './activeTool': active,
-        './toolSetter': setter, './toolProtrusion': protrusion, './landmarkClearance': { CLEARANCE_MARGIN_MM: 5 } });
+        './toolSetter': setter,
+        './toolProtrusion': protrusion,
+        './landmarkClearance': { CLEARANCE_MARGIN_MM: 5 } });
     const registryTools = new Map<string, any>(); // eslint-disable-line @typescript-eslint/no-explicit-any
     const toolModule = isolatedModule('tools/toolsetter.ts', {
-        '../../machine/ConnectionManager': {}, '../activeTool': active, '../jobs': { jobManager: { get: () => null } },
-        '../toolDatum': datum, '../toolDatumState': state, '../probeFeed': {}, '../registry': { McpToolError: Error },
-        '../toolSetter': setter, '../procedureLimits': limits, './staging': {}, './machine': {},
+        '../../machine/ConnectionManager': {},
+        '../activeTool': active,
+        '../jobs': { jobManager: { get: () => null } },
+        '../toolDatum': datum,
+        '../toolDatumState': state,
+        '../probeFeed': {},
+        '../registry': { McpToolError: Error },
+        '../toolSetter': setter,
+        '../procedureLimits': limits,
+        './staging': {},
+        './machine': {},
     });
     toolModule.registerToolSetterTools({ register: (tool: { name: string }) => registryTools.set(tool.name, tool) }, () => 'unused');
-    return { store, active, state, setter, clearance, tools: registryTools,
+    return { store,
+        active,
+        state,
+        setter,
+        clearance,
+        tools: registryTools,
         setLegacyLength: (value: number | null) => { effectiveLength = value; },
         resetZ: () => { z = 176; } };
 }
 
 function measurement(id: string, datumSnapshot = datum.legacySetterDatum(175.5, 75)): datum.ToolMeasurement {
-    return { id, jobId: id, toolIdentity: 'probe-A', fittingId: `fitting-${id}`, source: 'spindle_probe',
-        measuredTriggerZ: 172, bitLengthMm: 75, spreadMm: 0.1, fineStepMm: 0.1, at: 100,
-        datum: datumSnapshot, confirmPassContacts: [172, 172.1], contactChannels: ['probe', 'probe'] };
+    return { id,
+        jobId: id,
+        toolIdentity: 'probe-A',
+        fittingId: `fitting-${id}`,
+        source: 'spindle_probe',
+        measuredTriggerZ: 172,
+        bitLengthMm: 75,
+        spreadMm: 0.1,
+        fineStepMm: 0.1,
+        at: 100,
+        datum: datumSnapshot,
+        confirmPassContacts: [172, 172.1],
+        contactChannels: ['probe', 'probe'] };
 }
 
 export const tests: Array<[string, () => void | Promise<void>]> = [
@@ -68,16 +112,25 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
     }],
     ['physically measured datum includes uncertainty rather than equating spread with accuracy', () => {
         const calibration = datum.calibrationFromMeasurement(measurement('one', {
-            id: 'measured-v1', name: 'Setter reference plane', machineZ: 100.5, basis: 'measured',
-            source: 'independent reference measurement', uncertaintyMm: 0.2, at: 50,
+            id: 'measured-v1',
+            name: 'Setter reference plane',
+            machineZ: 100.5,
+            basis: 'measured',
+            source: 'independent reference measurement',
+            uncertaintyMm: 0.2,
+            at: 50,
         }));
         assert.equal(calibration.physicalReferenceVerified, true);
         assert.ok(Math.abs((calibration.uncertaintyMm as number) - 0.4) < 1e-9);
     }],
     ['history retains every fitting and snapshots after reference edits, with legacy unknowns intact', () => {
         const f = fixture();
-        f.store.set('mcpToolSetter', { ...legacy, lastMeasurement: { measuredTriggerZ: 171, bitLengthMm: 70,
-            derivedBitLengthMm: 70.5, spreadMm: 0, at: 1 } });
+        f.store.set('mcpToolSetter', { ...legacy,
+            lastMeasurement: { measuredTriggerZ: 171,
+                bitLengthMm: 70,
+                derivedBitLengthMm: 70.5,
+                spreadMm: 0,
+                at: 1 } });
         const m = measurement('one');
         f.state.recordToolMeasurement(m);
         if (m.datum) m.datum.machineZ = 99;
@@ -121,10 +174,24 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
     }],
     ['approximate approach reference run never changes datum or silently shortens clearance', async () => {
         const f = fixture();
-        const plan = { config: f.setter.getToolSetterConfig(), bitLengthMm: 45, toolIdentity: 'probe-A', fittingId: 'seating-1',
-            expectedTriggerZ: 175.5, startZ: 176, endZ: 328, floorZ: 174, coarseFloorZ: 176,
-            coarseStepMm: 1, fineStepMm: 0.1, backoffMm: 0.3, sensorDelayMs: 10, confirmPasses: 2,
-            storeAsReference: true, stayAtTrigger: false, startFromCurrent: true, acceptProbeContact: true };
+        const plan = { config: f.setter.getToolSetterConfig(),
+            bitLengthMm: 45,
+            toolIdentity: 'probe-A',
+            fittingId: 'seating-1',
+            expectedTriggerZ: 175.5,
+            startZ: 176,
+            endZ: 328,
+            floorZ: 174,
+            coarseFloorZ: 176,
+            coarseStepMm: 1,
+            fineStepMm: 0.1,
+            backoffMm: 0.3,
+            sensorDelayMs: 10,
+            confirmPasses: 2,
+            storeAsReference: true,
+            stayAtTrigger: false,
+            startFromCurrent: true,
+            acceptProbeContact: true };
         const result = await f.setter.runToolSetterProcedure(plan, 'job-one');
         assert.equal(result.measuredTriggerZ, 175.5);
         assert.equal(result.setterDerivedOffsetMm, 75);
@@ -155,8 +222,14 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
     }],
     ['missing historic repeatability never becomes a verified zero-spread clearance calibration', () => {
         const f = fixture();
-        const raw = { ...measurement('incomplete', { id: 'v1', name: 'Measured datum', machineZ: 100.5,
-            basis: 'measured', source: 'independent measurement', uncertaintyMm: 0.2, at: 1 }), spreadMm: undefined };
+        const raw = { ...measurement('incomplete', { id: 'v1',
+            name: 'Measured datum',
+            machineZ: 100.5,
+            basis: 'measured',
+            source: 'independent measurement',
+            uncertaintyMm: 0.2,
+            at: 1 }),
+        spreadMm: undefined };
         const parsed = f.state.parseToolMeasurement(raw);
         assert.equal(parsed.spreadMm, null);
         assert.equal(datum.calibrationFromMeasurement(parsed).physicalReferenceVerified, false);
@@ -167,15 +240,34 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         const f = fixture(() => {
             if (!changed) {
                 changed = true;
-                f.setter.setToolSetterConfig({ ...legacy, datum: { id: 'new', name: 'New datum', machineZ: 90,
-                    basis: 'measured', source: 'new reference', uncertaintyMm: 0.1, at: 200 } });
+                f.setter.setToolSetterConfig({ ...legacy,
+                    datum: { id: 'new',
+                        name: 'New datum',
+                        machineZ: 90,
+                        basis: 'measured',
+                        source: 'new reference',
+                        uncertaintyMm: 0.1,
+                        at: 200 } });
             }
         });
         const result = await f.setter.runToolSetterProcedure({ config: f.setter.getToolSetterConfig(),
-            bitLengthMm: 75, toolIdentity: 'probe-A', fittingId: 'one', expectedTriggerZ: 175.5, startZ: 176,
-            endZ: 328, floorZ: 174, coarseFloorZ: 176, coarseStepMm: 1, fineStepMm: 0.1, backoffMm: 0.3,
-            sensorDelayMs: 10, confirmPasses: 2, storeAsReference: true, stayAtTrigger: false,
-            startFromCurrent: true, acceptProbeContact: true }, 'snapshot-job');
+            bitLengthMm: 75,
+            toolIdentity: 'probe-A',
+            fittingId: 'one',
+            expectedTriggerZ: 175.5,
+            startZ: 176,
+            endZ: 328,
+            floorZ: 174,
+            coarseFloorZ: 176,
+            coarseStepMm: 1,
+            fineStepMm: 0.1,
+            backoffMm: 0.3,
+            sensorDelayMs: 10,
+            confirmPasses: 2,
+            storeAsReference: true,
+            stayAtTrigger: false,
+            startFromCurrent: true,
+            acceptProbeContact: true }, 'snapshot-job');
         assert.equal(f.state.currentSetterDatum().machineZ, 90);
         assert.equal(result.measurement.datum.machineZ, 100.5);
         assert.equal(result.setterDerivedOffsetMm, 75);
@@ -183,13 +275,32 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
     }],
     ['verified setter datum yields a current conservative bound and loses clearance authority on replacement', async () => {
         const f = fixture();
-        f.setter.setToolSetterConfig({ ...legacy, datum: { id: 'measured', name: 'Setter plane', machineZ: 100.5,
-            basis: 'measured', source: 'independent measurement', uncertaintyMm: 0.2, at: 1 } });
+        f.setter.setToolSetterConfig({ ...legacy,
+            datum: { id: 'measured',
+                name: 'Setter plane',
+                machineZ: 100.5,
+                basis: 'measured',
+                source: 'independent measurement',
+                uncertaintyMm: 0.2,
+                at: 1 } });
         const result = await f.setter.runToolSetterProcedure({ config: f.setter.getToolSetterConfig(),
-            bitLengthMm: 75, toolIdentity: 'probe-A', fittingId: 'one', expectedTriggerZ: 175.5, startZ: 176,
-            endZ: 328, floorZ: 174, coarseFloorZ: 176, coarseStepMm: 1, fineStepMm: 0.1, backoffMm: 0.3,
-            sensorDelayMs: 10, confirmPasses: 2, storeAsReference: false, stayAtTrigger: false,
-            startFromCurrent: true, acceptProbeContact: true }, 'verified-job');
+            bitLengthMm: 75,
+            toolIdentity: 'probe-A',
+            fittingId: 'one',
+            expectedTriggerZ: 175.5,
+            startZ: 176,
+            endZ: 328,
+            floorZ: 174,
+            coarseFloorZ: 176,
+            coarseStepMm: 1,
+            fineStepMm: 0.1,
+            backoffMm: 0.3,
+            sensorDelayMs: 10,
+            confirmPasses: 2,
+            storeAsReference: false,
+            stayAtTrigger: false,
+            startFromCurrent: true,
+            acceptProbeContact: true }, 'verified-job');
         assert.equal(result.tipMachineZ, 100.5);
         assert.equal(result.active_tool.clearanceBasis, 'toolhead_reference');
         assert.equal(f.clearance.currentToolProtrusion().mm, 75.3);

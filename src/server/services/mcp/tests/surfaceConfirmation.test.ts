@@ -1,4 +1,4 @@
-/* eslint-disable import/no-dynamic-require */
+/* eslint-disable import/no-dynamic-require, @typescript-eslint/no-var-requires */
 import { strict as assert } from 'assert';
 import Module from 'module';
 
@@ -48,7 +48,8 @@ tests.push(['surface staging instructions describe the actual lift in both hop m
         '../registry': { McpToolError: Error },
         '../probeFeed': { probeFeedService: { assertNoOvertravel: () => undefined } },
         '../probeSurface': {
-            planProbeSurfacePath: () => plan, planProbeSurfaceGrid: () => plan,
+            planProbeSurfacePath: () => plan,
+            planProbeSurfaceGrid: () => plan,
             describeProbeSurfacePlanAsGcode: () => '; mocked review envelope',
             runProbeSurfaceProcedure: () => { throw new Error('staging must not run motion'); },
         },

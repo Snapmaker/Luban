@@ -1800,6 +1800,13 @@ unknown replacement. Old `clearance_z` boxes retain their toolhead semantics. Co
 survey heights must not be silently mixed with independent bed-referenced obstacle heights.
 Holder/body side envelopes remain separate geometry (issue #187).
 
+Metric camera-bootstrap targets require the measured named setter datum with uncertainty.
+Legacy rotary coordinates remain stored evidence but are excluded from metric bootstrap until
+their physical reference is qualified; an approach reference cannot stand in for target Z.
+Coarse setter search uses configured XY only. The pendant clears unknown-basis offsets from
+its physical-bound input, and retaining a current measured fitting requires explicit unchanged-
+fitting confirmation with matching identity and bound.
+
 ## Development workflow (learned the hard way)
 
 - **Build**: Node 16 (`/c/dev/software/snapmaker/.tools/node-v16.20.2-win-x64`), python

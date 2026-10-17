@@ -377,14 +377,14 @@ export function registerCameraModelTools(registry: ToolRegistry, getConfirmBaseU
                 throw new McpToolError(`Machine Z ${z === null ? 'unknown' : z.toFixed(1)} is below the motion floor `
                     + `${motionFloorZ()} - raise Z first (move_z, coordinate_system "machine").`);
             }
+            const stage = args.stage === 'poses' ? 'poses' : 'search';
             const targets = bootstrapTargets();
-            if (!targets.length) {
-                throw new McpToolError('Nothing to solve against: no tool setter is configured and no rotary axis end '
-                    + 'is stated. A bootstrap with no target of known machine coordinates measures nothing. Set one '
-                    + 'with set_tool_setter_config or set_probe_geometry.');
+            if (stage === 'poses' && !targets.length) {
+                throw new McpToolError('Nothing physical to solve against: the setter target needs a measured named datum with uncertainty. '
+                    + 'Nominal approach lengths and legacy rotary-axis coordinates lack the required physical reference qualification. '
+                    + 'Read existing evidence before supplying datum provenance with set_tool_setter_config; stored axis data is retained unchanged.');
             }
 
-            const stage = args.stage === 'poses' ? 'poses' : 'search';
             if (stage === 'search') {
                 const plan = planSearchStage(args as SearchPlanArgs);
                 validateBootstrapMotion(plan.parkZ, plan.waypoints.map((p) => ({ ...p, z: plan.parkZ })));

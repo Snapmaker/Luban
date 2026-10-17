@@ -41,8 +41,9 @@ import { McpToolError } from './registry';
 import { getActiveTool, invalidateActiveTool, setActiveTool } from './activeTool';
 import { SetterDatum, ToolMeasurement, calibrationFromMeasurement, legacySetterDatum, projectToolTipZ } from './toolDatum';
 import { currentSetterDatum, getToolMeasurements, recordToolMeasurement } from './toolDatumState';
-export type { ToolMeasurement } from './toolDatum';
 import { getPositionSnapshot, motionFloorZ, safeTraverseZ } from './tools/machine';
+
+export type { ToolMeasurement } from './toolDatum';
 
 const log = logger('service:mcp:tool-setter');
 
@@ -589,8 +590,11 @@ export async function runToolSetterProcedure(plan: ToolSetterPlan, measurementJo
             setterDerivedOffsetMm: Number(derivedBitLengthMm.toFixed(6)),
             datum: { ...datum },
             referenceBasis: 'snapshot',
-            confirmPassContacts: [...passContacts], contactChannels: passChannels,
-            fineStepMm: plan.fineStepMm, spreadMm, at,
+            confirmPassContacts: [...passContacts],
+            contactChannels: passChannels,
+            fineStepMm: plan.fineStepMm,
+            spreadMm,
+            at,
         };
         recordMeasurement(measurement);
         const calibration = calibrationFromMeasurement(measurement);

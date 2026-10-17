@@ -562,7 +562,13 @@ export async function runProbeSequenceProcedure(plan: ProbeSequencePlan): Promis
             }
         }
         if (isProcedureAbort(err)) {
-            const partial = { results: results.map((r) => ({ ...r, ...projectToolTipZ(r.contactMachine?.z ?? null, tipCalibration) })), tipCalibration, phases, aborted: true, abortedAtStep: stepIndex };
+            const partial = {
+                results: results.map((r) => ({ ...r, ...projectToolTipZ(r.contactMachine?.z ?? null, tipCalibration) })),
+                tipCalibration,
+                phases,
+                aborted: true,
+                abortedAtStep: stepIndex,
+            };
             const Ctor = isProcedureStopped(err) ? ProcedureStopped : ProcedureAbort;
             throw new Ctor(`Probe sequence aborted at step ${stepIndex}: ${err.message} `
                 + `${results.length} contact(s) measured before the abort are on the job record.`, partial);

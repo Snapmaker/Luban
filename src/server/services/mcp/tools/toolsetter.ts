@@ -36,14 +36,18 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
                 trigger_z: { type: 'number', description: 'Machine Z at trigger with the reference bit.' },
                 reference_bit_length_mm: { type: 'number', description: 'Nominal reference length for approach planning, mm; not independently calibrated geometry.' },
                 setter_datum: {
-                    type: 'object', description: 'Explicit named coordinate datum. Omission preserves the existing datum; legacy references are labelled conventional, not physically verified.',
+                    type: 'object',
+                    description: 'Explicit named coordinate datum. Omission preserves the existing datum; legacy references are labelled conventional, not physically verified.',
                     properties: {
-                        id: { type: 'string' }, name: { type: 'string' }, machine_z: { type: 'number' },
+                        id: { type: 'string' },
+                        name: { type: 'string' },
+                        machine_z: { type: 'number' },
                         basis: { type: 'string', enum: ['measured', 'legacy_reference_convention'] },
                         source: { type: 'string', description: 'Measurement/evidence establishing this datum and its physical reference; never an approach estimate.' },
                         uncertainty_mm: { type: 'number', minimum: 0, description: 'Bound including datum setup and sensor-trigger effects; required for measured basis.' },
                     },
-                    required: ['id', 'name', 'machine_z', 'basis', 'source'], additionalProperties: false,
+                    required: ['id', 'name', 'machine_z', 'basis', 'source'],
+                    additionalProperties: false,
                 },
                 disc_diameter_mm: {
                     type: 'number',
@@ -51,9 +55,11 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
                         + 'camera bootstrap uses it as an absolute scale reference in a frame.',
                 },
                 longest_bit_length_mm: { type: 'number', description: 'Largest nominal approach length in use, in the approach reference convention; sets start height, never physical clearance.' },
-                toolhead_clearance_bound: { type: ['object', 'null'], description: 'Optional independent conservative maximum below the machine toolhead reference; never collet protrusion. Omit to preserve; null clears.',
+                toolhead_clearance_bound: { type: ['object', 'null'],
+                    description: 'Optional independent conservative maximum below the machine toolhead reference; never collet protrusion. Omit to preserve; null clears.',
                     properties: { mm: { type: 'number', exclusiveMinimum: 0 }, source: { type: 'string' } },
-                    required: ['mm', 'source'], additionalProperties: false },
+                    required: ['mm', 'source'],
+                    additionalProperties: false },
                 floor_margin_mm: { type: 'number', description: 'Allowed descent below the expected trigger Z, default 3.' },
                 tool_change_x: { type: 'number', description: 'Machine X of the tool-change park position (operator preference).' },
                 tool_change_y: { type: 'number', description: 'Machine Y of the park position; omit if Y does not matter.' },
@@ -100,9 +106,13 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
             let datum = currentSetterDatum();
             if (args.setter_datum !== undefined) {
                 const input = args.setter_datum;
-                datum = parseSetterDatum({ id: String(input.id || '').trim(), name: String(input.name || '').trim(),
-                    machineZ: input.machine_z, basis: input.basis, source: String(input.source || '').trim(),
-                    uncertaintyMm: input.uncertainty_mm ?? null, at: Date.now() });
+                datum = parseSetterDatum({ id: String(input.id || '').trim(),
+                    name: String(input.name || '').trim(),
+                    machineZ: input.machine_z,
+                    basis: input.basis,
+                    source: String(input.source || '').trim(),
+                    uncertaintyMm: input.uncertainty_mm ?? null,
+                    at: Date.now() });
                 if (!datum || (datum.basis === 'measured' && datum.uncertaintyMm === null)) {
                     throw new McpToolError('setter_datum requires a name/id, finite machine_z, source and valid basis; measured datum also requires a nonnegative uncertainty_mm bound.');
                 }
@@ -141,7 +151,9 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
         description: 'The stored tool setter reference (centre, trigger Z, bit lengths, tool-change '
             + 'park position), named datum and retained measurement history. Read-only.',
         inputSchema: { type: 'object', properties: {}, additionalProperties: false },
-        handler: async () => ({ config: getToolSetterConfig(), datum: currentSetterDatum(), measurements: getMeasurements(), active_tool: describeActiveTool() }),
+        handler: async () => ({
+            config: getToolSetterConfig(), datum: currentSetterDatum(), measurements: getMeasurements(), active_tool: describeActiveTool(),
+        }),
     });
 
     registry.register({
@@ -160,7 +172,9 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
             required: ['protrusion_mm', 'source'],
             additionalProperties: false,
         },
-        handler: async (args: { protrusion_mm?: number; source?: string; tool_identity?: string; protrusion_reference?: string; note?: string; measurement_job_id?: string }) => {
+        handler: async (args: {
+            protrusion_mm?: number; source?: string; tool_identity?: string; protrusion_reference?: string; note?: string; measurement_job_id?: string;
+        }) => {
             const source = args.source as 'operator' | 'tool_setter' | 'spindle_probe';
             if (!['operator', 'tool_setter', 'spindle_probe'].includes(source)) {
                 throw new McpToolError('source must be operator, tool_setter, or spindle_probe.');

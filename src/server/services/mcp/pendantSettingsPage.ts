@@ -4,7 +4,8 @@ export const pendantSettingsHtml = `
 <button type="button" id="reload-settings">Reload saved settings</button>
 <h2>Fitted tool</h2><p id="tool-summary"></p>
 <form id="tool-form"><label>Protrusion below the toolhead reference (mm) <input id="tool-length" type="number" step="any" min="0.001" required></label>
-<p>Enter the fitted tool's conservative protrusion used for clearance. This does not change probe calibration or work zero.</p>
+<p>Enter a conservative bound below the machine toolhead reference, not a collet-to-tip length or conventional setter offset. Saving records a new fitting; work zero is unchanged.</p>
+<label><input id="tool-same-fitting" type="checkbox">This is the unchanged, currently measured fitting; retain its calibration</label>
 <label>Tool identity <input id="tool-identity" type="text"></label><label>Note <input id="tool-note" type="text"></label>
 <button>Confirm fitted tool and disarm</button><button id="clear-tool" type="button">Use conservative fallback</button></form>
 <h2>Obstructions</h2><label>Choose a saved obstruction or add one <select id="obstacle-select"></select></label>
@@ -42,7 +43,7 @@ function renderSettings(info,force=false){
   const tool=info.activeTool.active,stored=info.activeTool.stored,effective=info.toolProtrusion;
   settingsEl('tool-summary').textContent=(tool?'Confirmed fitted tool: '+tool.protrusionMm+' mm. ':stored?'Previous tool: '+stored.protrusionMm+' mm; confirmation needed. ':'No fitted tool confirmed. ')+(info.activeTool.staleReason||'')+' Clearance currently uses '+(effective.mm===null?'unknown protrusion':effective.mm+' mm ('+effective.source+')')+'.';
   if(!settingsLoaded||force){
-    const shown=tool||stored;settingsEl('tool-length').value=shown?shown.protrusionMm:'';settingsEl('tool-identity').value=shown?shown.toolIdentity||'':'';settingsEl('tool-note').value=shown?shown.note||'':'';
+    const shown=tool||stored;settingsEl('tool-length').value=shown&&shown.clearanceBasis==='toolhead_reference'?shown.protrusionMm:'';settingsEl('tool-same-fitting').checked=false;settingsEl('tool-same-fitting').disabled=!(tool&&tool.measurementId&&tool.clearanceBasis==='toolhead_reference');settingsEl('tool-identity').value=shown?shown.toolIdentity||'':'';settingsEl('tool-note').value=shown?shown.note||'':'';
     const select=settingsEl('obstacle-select'),previous=select.value;select.textContent='';const add=document.createElement('option');add.value='';add.textContent='Add new obstruction';select.appendChild(add);
     for(const item of info.landmarks){const option=document.createElement('option');option.value=item.id;option.textContent=item.name+(item.clearanceZ===null?' (not an obstruction)':'');select.appendChild(option);}
     select.value=info.landmarks.some(item=>item.id===previous)?previous:'';settingsLoaded=true;selectObstacle();
@@ -55,7 +56,7 @@ async function saveSettings(body){
 settingsEl('reload-settings').onclick=()=>renderSettings(savedSettings,true);
 settingsEl('obstacle-select').onchange=selectObstacle;
 for(const id of ['obstacle-enabled','obstacle-basis','obstacle-height'])settingsEl(id).oninput=obstaclePreview;
-settingsEl('tool-form').onsubmit=async event=>{event.preventDefault();await saveSettings({kind:'tool',protrusionMm:Number(settingsEl('tool-length').value),toolIdentity:settingsEl('tool-identity').value,note:settingsEl('tool-note').value});};
+settingsEl('tool-form').onsubmit=async event=>{event.preventDefault();await saveSettings({kind:'tool',protrusionReference:'toolhead',sameFitting:settingsEl('tool-same-fitting').checked,protrusionMm:Number(settingsEl('tool-length').value),toolIdentity:settingsEl('tool-identity').value,note:settingsEl('tool-note').value});};
 settingsEl('clear-tool').onclick=()=>saveSettings({kind:'clear-tool'});
 settingsEl('obstacle-form').onsubmit=async event=>{event.preventDefault();const body={kind:'obstacle',id:settingsEl('obstacle-select').value,name:settingsEl('obstacle-name').value,description:settingsEl('obstacle-description').value,enabled:settingsEl('obstacle-enabled').checked,clearanceBasis:settingsEl('obstacle-basis').value,clearanceZ:Number(settingsEl('obstacle-height').value),notes:settingsEl('obstacle-notes').value};for(const key of ['x0','x1','y0','y1'])body[key]=Number(settingsEl('obstacle-'+key).value);await saveSettings(body);};
 settingsEl('remove-obstacle').onclick=()=>saveSettings({kind:'remove-obstacle',id:settingsEl('obstacle-select').value});

@@ -193,39 +193,72 @@ export function surfaceFixture(options: {
     };
     const runner = mocked('../probeSurface', {
         './toolDatumState': { getProbeTipCalibration: options.calibration || (() => unavailableTipCalibration('test fixture')) },
-        './index': { mcpBroadcast: () => undefined }, './clearanceContext': {}, './landmarks': {},
-        './registry': { McpToolError: Error }, './rotaryGeometry': { probeGeometry: () => null },
+        './index': { mcpBroadcast: () => undefined },
+        './clearanceContext': {},
+        './landmarks': {},
+        './registry': { McpToolError: Error },
+        './rotaryGeometry': { probeGeometry: () => null },
         './probeFeed': { probeFeedService: { setExpectedContact: () => undefined, clearExpectedContact: () => undefined, getTrip: () => null } },
         './tools/machine': { getPositionSnapshot: () => ({ machine: position }) },
-        './probeSequence': { DESCENT_GUARD_MM: 20 }, './probeCaptureRuntime': {},
+        './probeSequence': { DESCENT_GUARD_MM: 20 },
+        './probeCaptureRuntime': {},
         './march': { steppedTraverseZ: async (_tool: string, name: string, _from: object, to: { x: number; y: number }, z: number) => {
             await move(`link:${name}`, { ...to, z });
             return { z, clearTailMm: 0, lifts: options.linkBump && to.x === 1 ? [{ x: to.x, y: to.y, z, liftMm: 0.5 }] : [] };
         } },
         './probing': {
-            ProcedureAbort, assertChannelReady: () => undefined, assertMachineReadyForProcedure: () => undefined,
-            expectMachinePosition: async () => ({ note: null }), knownMachinePosition: () => ({ position, source: 'test' }),
-            moveMachineSettled: move, descendInSegments: async (tag: string, _from: number, z: number) => move(tag, { z }),
+            ProcedureAbort,
+            assertChannelReady: () => undefined,
+            assertMachineReadyForProcedure: () => undefined,
+            expectMachinePosition: async () => ({ note: null }),
+            knownMachinePosition: () => ({ position, source: 'test' }),
+            moveMachineSettled: move,
+            descendInSegments: async (tag: string, _from: number, z: number) => move(tag, { z }),
             marchInSegments: async (fn: (s: number) => Promise<void>, _from: number, to: number) => { await fn(to); return { s: to, sensed: contact() }; },
             senseAfter: async () => contact(),
             senseReleaseAfter: async () => {
                 moves.push({ tag: 'release-check', z: position.z });
                 return options.stuckRetouch && tagNow.includes(':backoff') ? { contact: true } : contact();
             },
-            isProcedureAbort: (err: unknown) => err instanceof ProcedureAbort, isProcedureStopped: () => false,
+            isProcedureAbort: (err: unknown) => err instanceof ProcedureAbort,
+            isProcedureStopped: () => false,
             abortRaiseToTop: async () => { moves.push({ tag: 'abort-recovery' }); },
-            MAX_RETREAT_MM: 5, COARSE_FEED: 100, FINE_FEED: 60, TRAVEL_FEED: 600, RECHECK_TOLERANCE_MM: 0.5, DESCENT_SEGMENT_MM: 5,
+            MAX_RETREAT_MM: 5,
+            COARSE_FEED: 100,
+            FINE_FEED: 60,
+            TRAVEL_FEED: 600,
+            RECHECK_TOLERANCE_MM: 0.5,
+            DESCENT_SEGMENT_MM: 5,
         },
     });
     const plan = {
-        kind: 'path', tool: 'probe_surface_path', staged: { ...position }, hopZ: 328,
-        coarseStepMm: 1, fineStepMm: 0.1, backoffMm: 0.2, sensorDelayMs: 50, confirmPasses: 3,
-        confirmationMode: options.mode || 'adaptive', confirmationToleranceMm: 0.1,
+        kind: 'path',
+        tool: 'probe_surface_path',
+        staged: { ...position },
+        hopZ: 328,
+        coarseStepMm: 1,
+        fineStepMm: 0.1,
+        backoffMm: 0.2,
+        sensorDelayMs: 50,
+        confirmPasses: 3,
+        confirmationMode: options.mode || 'adaptive',
+        confirmationToleranceMm: 0.1,
         stations: heights.map((_, i) => ({ index: i + 1, label: `s${i + 1}`, x: i, y: 0, s: i, hopFromPreviousMm: i ? 1 : 0 })),
         path: { start: { x: 0, y: 0 }, end: { x: heights.length - 1, y: 0 }, unit: { x: 1, y: 0 }, lengthMm: heights.length - 1, spacingMm: 1 },
-        startZMachine: 203, absoluteFloorZ: 194, zSafeDeltaMm: 20, maxDropMm: 6, maxHopMm: 60, worstHopMm: 1,
-        slowZoneMm: 1, expectedZMachine: options.expected === undefined ? 200 : options.expected,
-        floorExplicit: true, profile: null, hopMode: 'stepped', hopLiftMm: 0.5, hopBackoffMm: 0, capture: null,
+        startZMachine: 203,
+        absoluteFloorZ: 194,
+        zSafeDeltaMm: 20,
+        maxDropMm: 6,
+        maxHopMm: 60,
+        worstHopMm: 1,
+        slowZoneMm: 1,
+        expectedZMachine: options.expected === undefined ? 200 : options.expected,
+        floorExplicit: true,
+        profile: null,
+        hopMode: 'stepped',
+        hopLiftMm: 0.5,
+        hopBackoffMm: 0,
+        capture: null,
     };
     return { runner, plan, moves, run: () => runner.runProbeSurfaceProcedure(plan) };
 }
@@ -328,9 +361,15 @@ tests.push(['surface uncertain event retains station timing without counting it 
 tests.push(['surface projections retain the initial fitting snapshot through state changes and partial aborts', async () => {
     for (const changedRetouch of [false, true]) {
         let reads = 0;
-        let current = calibrationFromMeasurement({ id: 'original', measuredTriggerZ: 172, bitLengthMm: 75,
-            spreadMm: 0.1, fineStepMm: 0.1, at: 100, datum: legacySetterDatum(175.5, 75) });
-        const f = surfaceFixture({ changedRetouch, calibration: () => { reads++; return current; },
+        let current = calibrationFromMeasurement({ id: 'original',
+            measuredTriggerZ: 172,
+            bitLengthMm: 75,
+            spreadMm: 0.1,
+            fineStepMm: 0.1,
+            at: 100,
+            datum: legacySetterDatum(175.5, 75) });
+        const f = surfaceFixture({ changedRetouch,
+            calibration: () => { reads++; return current; },
             onMove: () => { current = unavailableTipCalibration('fitting changed after start'); } });
         f.plan.confirmationToleranceMm = 0.05;
         let result: any;

@@ -419,7 +419,8 @@ ${describeProbeCirclePlanAsGcode(plan)}`;
         },
         confirm_passes: { type: 'number', description: 'Fixed mode: EXTRA lift-and-retest cycles after the initial fine contact, default 3 (1-10); 1 is one extra retouch. Adaptive mode uses exactly one extra retouch when needed.' },
         confirmation_mode: {
-            type: 'string', enum: ['fixed', 'adaptive'],
+            type: 'string',
+            enum: ['fixed', 'adaptive'],
             description: 'Default fixed preserves repeated confirmations. Adaptive uses a single fine contact on routine stations; first station, after a miss, coarse contact, link contact or height change beyond confirmation_tolerance_mm gets one release-verified retouch. Disagreement stops with uncertain evidence, excluded from geometry.',
         },
         confirmation_tolerance_mm: { type: 'number', exclusiveMinimum: 0, maximum: 1, description: 'Required for adaptive: explicit height-change and initial/retouch agreement threshold (>0 to 1 mm). This is a confirmation decision threshold, not guaranteed measurement accuracy.' },

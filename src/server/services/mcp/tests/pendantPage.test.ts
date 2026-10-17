@@ -285,6 +285,28 @@ export const tests: Array<[string, () => Promise<void>]> = [
         await f.element('tool-form').onsubmit?.({ preventDefault: () => undefined });
         assert.equal((f.posted.slice(-1)[0].body as { protrusionMm?: number }).protrusionMm, 12);
     }],
+    ['pendant never prefills an unknown-basis offset as a physical bound and sends explicit fitting intent', async () => {
+        const f = await pageFixture();
+        Object.assign(f.state.settings.activeTool, { active: { protrusionMm: 71.5, clearanceBasis: 'unknown', toolIdentity: 'probe' } });
+        await f.refresh();
+        await f.element('reload-settings').onclick?.();
+        assert.equal(f.element('tool-length').value, '');
+        assert.equal(f.element('tool-same-fitting').disabled, true);
+        Object.assign(f.state.settings.activeTool, { active: { protrusionMm: 75.3,
+            clearanceBasis: 'toolhead_reference',
+            measurementId: 'current',
+            toolIdentity: 'probe' } });
+        await f.refresh();
+        await f.element('reload-settings').onclick?.();
+        assert.equal(f.element('tool-length').value, 75.3);
+        assert.equal(f.element('tool-same-fitting').checked, false, 'operator must explicitly affirm unchanged fitting');
+        assert.equal(f.element('tool-same-fitting').disabled, false);
+        f.element('tool-same-fitting').checked = true;
+        await f.element('tool-form').onsubmit?.({ preventDefault: () => undefined });
+        const body = f.posted.slice(-1)[0].body as { protrusionReference?: string; sameFitting?: boolean };
+        assert.equal(body.protrusionReference, 'toolhead');
+        assert.equal(body.sameFitting, true);
+    }],
     ['polled jog refusals are revealed beside the controls without opening diagnostics', async () => {
         const f = await pageFixture();
         f.state.error = 'Jog blocked by rotary-axis: requires machine Z at or above 328.000 mm.';

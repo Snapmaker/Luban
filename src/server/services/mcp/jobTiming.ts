@@ -249,12 +249,15 @@ function summarizeStations(events: JobEvent[], commands: CommandRecord[]): Stati
             k.idleMs += c.idleMs || 0;
             byKind[c.kind] = k;
         }
+        let outcome: StationTiming['outcome'] = 'no_contact';
+        if (m[1] === 'measured') outcome = 'contact';
+        if (m[1] === 'uncertain') outcome = 'uncertain';
         stations.push({
             label: m[2],
             ms: event.at - windowStart,
             commands: inWindow.length,
             byKind,
-            outcome: m[1] === 'measured' ? 'contact' : m[1] === 'uncertain' ? 'uncertain' : 'no_contact',
+            outcome,
             approach,
         });
         windowStart = event.at;

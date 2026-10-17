@@ -12,8 +12,8 @@ import { clearanceOptions } from './clearanceContext';
 import { checkMotion, describeViolations, MotionSegment } from './envelopeChecks';
 import { landmarkStore } from './landmarks';
 import { McpToolError } from './registry';
-import { rotaryAxisPoints } from './rotaryGeometry';
 import { getToolSetterConfig } from './toolSetter';
+import { parseSetterDatum, SetterDatum } from './toolDatum';
 import { ResolvedTravel, TravelLimits, clampBand, describeClipping } from './machineTravel';
 import {
     BOOTSTRAP_REACH_MM,
@@ -60,6 +60,7 @@ export interface BootstrapTarget {
     source: string;
     /** A known size in the scene is an absolute scale constraint. */
     diameterMm?: number;
+    datum?: SetterDatum;
 }
 
 /**
@@ -70,28 +71,23 @@ export interface BootstrapTarget {
 export function bootstrapTargets(): BootstrapTarget[] {
     const targets: BootstrapTarget[] = [];
     const setter = getToolSetterConfig();
-    if (setter) {
+    const datum = parseSetterDatum(setter?.datum);
+    if (setter && datum?.basis === 'measured' && datum.uncertaintyMm !== null) {
         targets.push({
             name: 'tool-setter',
             machine: {
                 x: setter.centerX,
                 y: setter.centerY,
-                // The plate top: the trigger Z is where the REFERENCE BIT's tip
-                // sits when it closes the switch, so the plate is that much
-                // higher than the toolhead was.
-                z: Number((setter.triggerZ - setter.referenceBitLengthMm).toFixed(3)),
+                z: datum.machineZ,
             },
-            source: 'set_tool_setter_config (centre, and trigger_z - reference_bit_length_mm for the plate top)',
+            source: `Named setter datum ${datum.id} (${datum.name}): ${datum.source}; uncertainty ${datum.uncertaintyMm} mm.`,
+            datum,
             diameterMm: setter.discDiameterMm,
         });
     }
-    for (const point of rotaryAxisPoints()) {
-        targets.push({
-            name: point.name,
-            machine: { x: point.x, y: point.y, z: point.z },
-            source: 'set_probe_geometry (rotary_axis_x / rotary_axis_z_physical and the named end)',
-        });
-    }
+    // Legacy rotary_axis_z_physical has no typed datum/fitting provenance. Keep
+    // that stored evidence unchanged, but do not mix it into this physical camera
+    // frame until axis evidence has explicit matching reference qualification.
     return targets;
 }
 
@@ -155,19 +151,22 @@ export interface SearchPlanArgs {
 
 export function planSearchStage(args: SearchPlanArgs): {
     waypoints: Array<{ x: number; y: number }>;
-    target: BootstrapTarget;
+    target: { name: string; machine: { x: number; y: number }; source: string };
     parkZ: number;
     bounds: { xMin: number; xMax: number; yMin: number; yMax: number };
     travel: ResolvedTravel;
     clipped: string[];
 } {
-    const targets = bootstrapTargets();
-    const setter = targets.find((t) => t.name === 'tool-setter');
-    if (!setter) {
+    const config = getToolSetterConfig();
+    if (!config) {
         throw new McpToolError('The search stage brackets the tool setter, whose machine coordinates are the one thing '
             + 'known exactly without any camera knowledge at all - and no setter is configured. Run '
             + 'set_tool_setter_config first, or state another target the same way.');
     }
+    // Coarse visual search uses only configured XY. It does not assert a metric plate Z.
+    const setter = { name: 'tool-setter',
+        machine: { x: config.centerX, y: config.centerY },
+        source: 'Configured setter centre XY; physical Z is not needed for the search.' };
     const travel = planningTravel();
     if (!travel) {
         throw new McpToolError('The toolhead travel is unknown for this machine, so a search band cannot be planned '
@@ -195,6 +194,10 @@ export interface PosePlanArgs {
 }
 
 export function planPoseStage(args: PosePlanArgs) {
+    if (!bootstrapTargets().length) {
+        throw new McpToolError('Metric pose calibration needs a target with physically established machine coordinates. '
+            + 'The setter requires a measured named datum with uncertainty; its nominal approach reference is not a physical plate height.');
+    }
     const raw = Array.isArray(args.poses) ? args.poses : [];
     if (!raw.length || raw.length > MAX_BOOTSTRAP_POSES) {
         throw new McpToolError(`Provide 1-${MAX_BOOTSTRAP_POSES} poses: the toolhead XY to view each target from, derived from the search `
