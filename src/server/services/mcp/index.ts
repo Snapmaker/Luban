@@ -14,7 +14,9 @@ import { handleJobDashboardRequest } from './jobDashboard';
 import { jobManager } from './jobs';
 import { probeFeedService, resolveActiveProbeConfig } from './probeFeed';
 import { pendantRuntime } from './pendantRuntime';
-import { ToolRegistry } from './registry';
+import { McpToolError, ToolRegistry } from './registry';
+import { connectedMachineCapability } from './connectedMachine';
+import { procedureRefusal } from './procedureGates';
 import { registerCalibrationTools } from './tools/calibration';
 import { registerCameraTools } from './tools/camera';
 import { registerCameraProgramTool } from './cameraProgram';
@@ -284,6 +286,15 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
     registerWorkspaceTools(registry, baseUrl);
     registerProbingTools(registry, baseUrl);
     registerCamTools(registry, baseUrl);
+    // Refuse rather than translate (#265 WP4b): a CNC procedure the connected
+    // machine's dialect row does not allow is refused, naming the machine,
+    // before its handler runs (procedureGates.ts).
+    registry.setProcedureGate((name, args) => {
+        const refusal = procedureRefusal(connectedMachineCapability(), name, args as { [key: string]: unknown });
+        if (refusal) {
+            throw new McpToolError(refusal);
+        }
+    });
     registeredToolCount = registry.list().length;
 
     // Operator-facing live camera view; also the single frame source for

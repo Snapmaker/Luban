@@ -103,10 +103,24 @@ export class ToolRegistry {
         return this.recoveryDeps;
     }
 
+    // Injected by index.ts (procedureGates.ts bound to the connected machine);
+    // without it every tool runs as before. It throws McpToolError to refuse.
+    private procedureGate: ((name: string, args: object) => void) | null = null;
+
+    public setProcedureGate(gate: ((name: string, args: object) => void) | null): void {
+        this.procedureGate = gate;
+    }
+
     public async call(name: string, args: object): Promise<object> {
         const tool = this.tools.get(name);
         if (!tool) {
             throw new McpToolError(`Unknown tool: ${name}`);
+        }
+        // A procedure the connected machine cannot run is refused before it
+        // takes the ownership gate or opens a ledger: nothing is sent, so
+        // there is nothing for failure recovery to judge (#265 WP4b).
+        if (this.procedureGate) {
+            this.procedureGate(name, args || {});
         }
         const leave = manualControlGate.enterTool(name);
         // Every direct send made while the handler runs lands on this ledger
