@@ -1099,6 +1099,18 @@ These are agent release requirements, not new runtime checks in `validate_gcode`
   with `code` (or `LUBAN_MCP_APPROVAL_HANDOFF=code`) the code must be relayed by hand as
   before. Batch direct jobs: one approval covers an exact target list; each
   `start_gcode_job` call executes one step.
+- **Uncertain file starts (#256)**: observation begins before `start_print`, so a lost HTTP
+  reply does not lose a running job. Fresh reports from the same connection reconcile
+  the attempt (matching the uploaded filename when available). A confirmed run gets the
+  normal progress/pause, telemetry and completion tracking. Otherwise the call returns
+  after a 6-second reconciliation window with `start_unverified`, `retry_safe: false`
+  and `machine_status_after`; monitoring and ownership continue. Idle does not prove
+  the file never ran. Never automatically retry or restage: the operator reviews the
+  outcome and can use `stop_gcode_job`. The dashboard retains Stop, while competing
+  starts, pendant control and frame restore stay blocked. A refusal known to occur
+  before dispatch is `start_failed` and safe to restage with fresh human approval.
+  `job.start_attempt` preserves the original error and observation times, and the server
+  log explicitly records heartbeat-confirmed starts and uncertain outcomes.
 - **Z policy**: no Z through XY tools, ever. `move_z` = per-move operator confirmation
   showing current Z, target, delta, feed. Every request needs a `reason`.
 - **Guards on every direct move**: machine idle, toolhead off (headStatus/headPower),

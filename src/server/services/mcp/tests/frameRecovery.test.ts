@@ -282,7 +282,7 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
 
     ['the frame restore is refused while a job is starting or running, and only then', () => {
         const job = (state: string) => ({ id: 'abc123', name: 'pocket.nc', kind: 'file', state });
-        for (const state of ['starting', 'started']) {
+        for (const state of ['starting', 'started', 'start_unverified']) {
             const refusal = frameRestoreJobRefusal(job(state));
             assert.ok(refusal, state);
             assert.ok(/abc123/.test(refusal) && /pocket\.nc/.test(refusal), 'names the job');
@@ -296,14 +296,14 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
     }],
 
     ['restore_work_frame sends nothing into a running procedure or file job', async () => {
-        for (const state of ['starting', 'started']) {
+        for (const state of ['starting', 'started', 'start_unverified']) {
             const { restore, sent } = restoreFixture(
                 [snapshot('machine-frame', 'heartbeat', MACHINE, REPLY_AT - 1000)],
                 { result: 0, text: 'ok' },
                 { id: 'p77', name: 'surface_scan', kind: 'procedure', state },
             );
             // eslint-disable-next-line no-await-in-loop
-            await assert.rejects(restore({}), /procedure job p77 \("surface_scan"\) is (starting|started)/);
+            await assert.rejects(restore({}), /procedure job p77 \("surface_scan"\) is (starting|started|start_unverified)/);
             assert.deepEqual(sent, [], 'nothing reached the controller');
         }
         const { restore, sent } = restoreFixture([

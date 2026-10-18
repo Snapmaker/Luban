@@ -20,6 +20,7 @@ import { resolveTelemetryConfig } from './telemetryConfig';
 import { GcodeValidationReport } from './validator';
 import { describeActiveTool } from './activeTool';
 import type { RecoveryEvidence } from './failureRecovery';
+import type { FileStartAttempt } from './fileJobStart';
 import type { HoldRecord } from './approachHold';
 
 const log = logger('service:mcp:jobs');
@@ -247,6 +248,7 @@ export interface McpJob {
     failureRecovery?: RecoveryEvidence | null;
     /** File jobs: what start and the status polls established, for judging the modes the file may have left. */
     modalTrack?: FileJobModalTrack;
+    startAttempt?: FileStartAttempt;
     /**
      * A procedure HOLDING for the operator (probe_approach_and_hold, #188):
      * where, what the sensor reads, the handoff text, what changed during the
@@ -489,6 +491,8 @@ export class JobManager {
             approvedAt: job.approvedAt,
             approval: job.approval,
             startedAt: job.startedAt,
+            // eslint-disable-next-line camelcase
+            start_attempt: job.startAttempt || null,
             endedAt: job.endedAt,
             error: job.error,
             ending: job.ending,

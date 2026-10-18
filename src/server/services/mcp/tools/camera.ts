@@ -825,7 +825,7 @@ export const failureRecoveryDeps: RecoveryDeps = {
         // a program, possibly this call's own direct job - either way cleanup
         // would land inside it, so it is skipped and explained.
         const job = jobManager.getActive();
-        return !!job && (job.state === 'starting' || job.state === 'started');
+        return !!job && (job.state === 'starting' || job.state === 'started' || job.state === 'start_unverified');
     },
     // The pendant arms manual control for its jogs and its own frame recovery.
     manualControl: () => manualControlGate.isManual(),

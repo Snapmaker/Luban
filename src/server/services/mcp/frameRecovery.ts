@@ -181,7 +181,7 @@ export interface ActiveJobView {
  * is sent. Returns the refusal text, or null when the restore may go ahead.
  */
 export function frameRestoreJobRefusal(job: ActiveJobView | null): string | null {
-    if (!job || (job.state !== 'starting' && job.state !== 'started')) {
+    if (!job || (job.state !== 'starting' && job.state !== 'started' && job.state !== 'start_unverified')) {
         return null;
     }
     return `Refusing restore_work_frame: the ${job.kind} job ${job.id} ("${job.name}") is ${job.state}, and G90/G54 sent now `

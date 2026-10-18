@@ -202,7 +202,9 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         channel.startGcode({ eventName: 'start' });
         channel.resumeGcode({ eventName: 'resume' });
         channel.updateLaserPower({ eventName: 'power', laserPower: 10 });
-        assert.equal((await channel.startGcodeJob()).ok, false);
+        const refusedStart = await channel.startGcodeJob();
+        assert.equal(refusedStart.ok, false);
+        assert.equal(refusedStart.notSent, true);
         assert.equal(requests.length, before, 'no HTTP request was made');
         assert.equal(emitted.length, 4);
         assert.ok(emitted.every((body) => /reserved by the USB pendant/.test(JSON.stringify(body))));
@@ -212,6 +214,24 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.equal(lease.refusal('M5', 5) !== null, true);
         assert.equal(lease.refusal('M5', 11), null);
         assert.equal(lease.status(11).expired, 1);
+    }],
+    ['a lost start reply preserves transport failure without claiming the request was not sent', async () => {
+        const { channel, replies, requests } = fixture();
+        replies.push({ err: { message: 'read ECONNRESET', code: 'ECONNRESET' } });
+        const result = await channel.startGcodeJob();
+        assert.equal(result.ok, false);
+        assert.equal(result.text, 'read ECONNRESET');
+        assert.equal(result.notSent, undefined);
+        assert.equal(requests.length, 1, 'the transport never retries start_print');
+    }],
+    ['heartbeat retains filename and progress without an estimated time or first line', () => {
+        const { channel } = fixture();
+        const report = Object.getPrototypeOf(channel).getGcodePrintingInfo.call(channel, {
+            fileName: 'drill.nc', currentLine: 0, totalLines: 208, estimatedTime: 0, progress: 0,
+        });
+        assert.equal(report.name, 'drill.nc');
+        assert.equal(report.total, 208);
+        assert.equal(report.sent, 0);
     }],
     ['while the pendant holds the lease every execute_code request uses its shorter timeout, not the channel\'s 300 s', async () => {
         const { channel, replies, lease, timeouts } = fixture();

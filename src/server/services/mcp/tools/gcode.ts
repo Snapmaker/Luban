@@ -23,6 +23,7 @@ import {
 import { manualControlGate } from '../manualControl';
 import { clearanceOptions } from '../clearanceContext';
 import { classifyProcedureEnding, countMeasured, planJobStop } from '../jobEnding';
+import { FILE_JOB_ACTIVE_STATUSES, FileStartReport, fileStartEvidence } from '../fileJobStart';
 import { summarizeJobTiming } from '../jobTiming';
 import { landmarkStore } from '../landmarks';
 import { matchFrame } from '../positionOfRecord';
@@ -71,7 +72,7 @@ const JOB_FRAMES: JobFrame[] = ['machine', 'work'];
 interface JobChannel {
     executeGcode?: (gcode: string) => Promise<{ result: number; text?: string }>;
     uploadGcodeFile?: (filePath: string, type: string, renderName: string, callback: (msg: unknown, data?: unknown) => void) => void;
-    startGcodeJob?: () => Promise<{ ok: boolean; code?: number; text?: string }>;
+    startGcodeJob?: () => Promise<{ ok: boolean; code?: number; text?: string; notSent?: boolean }>;
     stopGcodeJob?: () => Promise<{ ok: boolean; code?: number; text?: string }>;
 }
 
@@ -275,7 +276,7 @@ export async function runPolicyApprovedDirectJob(job: McpJob, token: string, sho
     stepsExecuted: number;
 }> {
     const active = jobManager.getActive();
-    if (active && active !== job && active.state === 'started') {
+    if (active && active !== job && ['starting', 'started', 'start_unverified'].includes(active.state)) {
         throw new McpToolError('Another job or step is still active; wait for it to finish before this transport.');
     }
     const channel = connectionManager.getCurrentChannel() as unknown as GcodeChannel;
@@ -515,9 +516,27 @@ const FILE_JOB_POLL_MS = 1000;
 const FILE_JOB_IDLE_DEBOUNCE_POLLS = 3;
 const FILE_JOB_NEVER_SEEN_ACTIVE_IDLE_POLLS = 20;
 const FILE_JOB_UNREADABLE_POLLS_GIVE_UP = 120;
-const FILE_JOB_ACTIVE_STATUSES = ['running', 'paused', 'pausing', 'stopping', 'resuming'];
+const FILE_JOB_START_RECONCILE_MS = 6000;
 
-function watchFileJobCompletion(job: McpJob): void {
+function markFileStarted(job: McpJob, observedAt?: number): void {
+    if (job.startAttempt && observedAt && !job.startAttempt.observedRunningAt) {
+        job.startAttempt.observedRunningAt = observedAt;
+    }
+    if (job.state !== 'starting' && job.state !== 'start_unverified') {
+        return;
+    }
+    job.state = 'started';
+    job.startedAt = observedAt || Date.now();
+    job.error = null;
+    jobManager.appendEvent(job, 'started', { note: observedAt
+        ? 'fresh heartbeat confirms the machine is running the uploaded file; start response may be lost'
+        : 'controller acknowledged file start (door interlock applies)' });
+    log.info(`MCP file job ${job.id} started: ${observedAt ? 'confirmed by fresh heartbeat' : 'controller acknowledged'}; reportAt=${observedAt || 'not yet observed'}`);
+    spindleTelemetryService.startForJob(job);
+    vibrationCaptureService.startForJob(job);
+}
+
+function watchFileJobCompletion(job: McpJob, channel: FileJobChannel): () => void {
     let sawActive = false;
     let idleStreak = 0;
     let unreadableStreak = 0;
@@ -526,19 +545,38 @@ function watchFileJobCompletion(job: McpJob): void {
     // operator's pause): record each transition so the ending can say so.
     let lastStatus: string | null = null;
     let pausedSeen = 0;
+    let lastReportAt = 0;
+    const generation = connectionManager.getConnectionGeneration();
+    let timer: ReturnType<typeof setInterval>;
     const release = () => {
         if (jobManager.getActive() === job) {
             jobManager.setActive(null);
         }
     };
-    const timer = setInterval(() => {
-        if (job.state !== 'started') {
+    const poll = () => {
+        if (TERMINAL_JOB_STATES.includes(job.state)) {
             // Stopped (or otherwise finalised) through another path.
             clearInterval(timer);
             release();
             return;
         }
-        const status = machineStatus();
+        const report = connectionManager.getLatestMachineState() as FileStartReport | null;
+        const attempt = job.startAttempt;
+        const sameConnection = (connectionManager.getCurrentChannel() as unknown) === channel
+            && generation === connectionManager.getConnectionGeneration();
+        const evidence = fileStartEvidence(report, attempt?.requestedAt || 0, Date.now(), sameConnection, `${job.name}.nc`, job.identity.lineCount);
+        const status = evidence === 'unknown' ? null : String(report?.status);
+        if (attempt) {
+            attempt.machineStatusAfter = status;
+        }
+        // Keep watching ambiguous starts, including ones whose HTTP call is
+        // still pending. Never infer a failed start/completion from idle alone.
+        if (evidence === 'active' && report) {
+            markFileStarted(job, report.timestamp);
+        }
+        if (job.state !== 'started') {
+            return;
+        }
         if (status === null) {
             unreadableStreak += 1;
             idleStreak = 0;
@@ -549,13 +587,18 @@ function watchFileJobCompletion(job: McpJob): void {
                 job.ending = { kind: 'completion-unverified', reason: job.error, at: Date.now() };
                 jobManager.appendEvent(job, 'completion_unverified', { note: job.error });
                 log.warn(`MCP file job ${job.id}: ${job.error}`);
-                release();
+                // Retain ownership: loss of status does not stop a real run.
                 // Never sends: the job was not seen to end and authority is not established.
                 const closed = authorityClosedNow();
                 judgeFileJobEnd(job, closed ? 'authority-closed' : 'connection-lost', closed || job.error).catch(() => undefined);
             }
             return;
         }
+        // A cached idle report must not count as several completion reports.
+        if (!report || report.timestamp <= lastReportAt) {
+            return;
+        }
+        lastReportAt = report.timestamp;
         unreadableStreak = 0;
         if (FILE_JOB_ACTIVE_STATUSES.includes(status)) {
             sawActive = true;
@@ -597,9 +640,9 @@ function watchFileJobCompletion(job: McpJob): void {
                     at: job.endedAt,
                 };
                 jobManager.appendEvent(job, 'completed', {
-                    note: `heartbeat idle for ${idleStreak}s${sawActive ? '' : ' (job too short for an active heartbeat to be observed)'}`,
+                    note: `heartbeat idle for ${idleStreak} distinct reports${sawActive ? '' : ' (job too short for an active heartbeat to be observed)'}`,
                 });
-                log.info(`MCP file job ${job.id} completed: heartbeat idle for ${idleStreak}s`
+                log.info(`MCP file job ${job.id} completed: heartbeat idle for ${idleStreak} distinct reports`
                     + `${sawActive ? '' : ' (job too short for an active heartbeat to be observed)'}`);
                 release();
                 // Never sends: a completion that left G53/G91 is reported, not second-guessed.
@@ -610,10 +653,12 @@ function watchFileJobCompletion(job: McpJob): void {
         }
         // Unknown status string: treat as activity of some kind, keep waiting.
         idleStreak = 0;
-    }, FILE_JOB_POLL_MS);
+    };
+    timer = setInterval(poll, FILE_JOB_POLL_MS);
     if (typeof timer.unref === 'function') {
         timer.unref();
     }
+    return poll;
 }
 
 // ---------------------------------------------------------------------------
@@ -1022,7 +1067,9 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             + 'false, timed_out: true - call again to keep waiting; approval is never lost - a timeout is not a reason to '
             + 'withdraw the job or to conclude anything). Never call this with wait_for_approval_ms BEFORE the operator has '
             + 'the link: they cannot click what they have not seen. The hand-off can be disabled in Settings -> MCP Server, '
-            + 'in which case only confirm_token works.',
+            + 'in which case only confirm_token works. File start transport errors are reconciled against fresh heartbeats; '
+            + 'start_unverified means it may have run: never retry/restage. Poll status and ask the operator to review; '
+            + 'stop_gcode_job remains available. Results include retry_safe and machine_status_after.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -1052,6 +1099,17 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             const job = jobManager.get(String(args.job_id || ''));
             if (!job) {
                 throw new McpToolError('Unknown job_id.');
+            }
+
+            if (job.kind === 'file' && job.startAttempt) {
+                return {
+                    ok: false,
+                    job: jobManager.describe(job),
+                    machine_status_after: job.startAttempt.machineStatusAfter,
+                    retry_safe: false,
+                    note: 'This file already had a start attempt. It may have run; this call sends nothing. '
+                        + 'Poll get_gcode_job_status. Do not retry or restage without the operator reviewing the outcome.',
+                };
             }
 
             // Approval hand-off (operator request 2026-09-05): with no code
@@ -1111,7 +1169,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             }
 
             const active = jobManager.getActive();
-            if (active?.state === 'started') {
+            if (active && ['starting', 'started', 'start_unverified'].includes(active.state)) {
                 throw new McpToolError('Another job or step is still active; wait for it to finish before starting this job.');
             }
 
@@ -1267,6 +1325,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             }
 
             job.state = 'starting';
+            jobManager.setActive(job);
             if (job.validation.machineZResolvedFor) {
                 // The confirm page's machine Z assumed the live offset was this
                 // workspace's; the heartbeat cannot say so. Prove it (select,
@@ -1284,19 +1343,25 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                     job.ending = { kind: 'workspace-unverified', reason: job.error, at: job.endedAt };
                     job.result = { workspace_check: (err as { partial?: object }).partial || null };
                     jobManager.appendEvent(job, 'failed', { note: job.error, ending: job.ending });
+                    if (jobManager.getActive() === job) jobManager.setActive(null);
                     throw new McpToolError(job.error);
                 }
             }
+            // A stop while the workspace check/upload is in flight must not
+            // subsequently dispatch a start.
+            if (job.state !== 'starting') return { ok: false, job: jobManager.describe(job), retry_safe: false };
             const uploadError = await new Promise<string | null>((resolve) => {
                 channel.uploadGcodeFile(job.filePath, job.headType, `${job.name}.nc`, (msg) => {
                     resolve(msg ? String(msg) : null);
                 });
-            });
+            }).catch((err: Error) => err.message);
+            if (job.state !== 'starting') return { ok: false, job: jobManager.describe(job), retry_safe: false };
             if (uploadError) {
                 job.state = 'start_failed';
                 job.error = `Upload failed: ${uploadError}`;
                 job.endedAt = Date.now();
                 jobManager.appendEvent(job, 'failed', { note: job.error });
+                if (jobManager.getActive() === job) jobManager.setActive(null);
                 throw new McpToolError(job.error);
             }
             jobManager.appendEvent(job, 'uploaded', { note: `${job.name}.nc uploaded to the machine` });
@@ -1304,30 +1369,66 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             // The connection the file will run on (#221): a later job-end judgement
             // must never treat a reconnected controller as the one that ran it.
             job.modalTrack = newModalTrack();
-            const started = await channel.startGcodeJob();
+            job.startAttempt = { requestedAt: Date.now(),
+                acknowledged: false,
+                observedRunningAt: null,
+                error: null,
+                machineStatusAfter: null,
+                retrySafe: false };
+            // Observe before sending: even a slow/lost reply must not hide a
+            // complete short run or its pauses/progress from the job record.
+            const poll = watchFileJobCompletion(job, channel);
+            let started: { ok: boolean; code?: number; text?: string; notSent?: boolean };
+            try {
+                started = await channel.startGcodeJob();
+            } catch (err) {
+                started = { ok: false, text: (err as Error).message };
+            }
+            poll();
+            job.startAttempt.acknowledged = started.ok;
             if (!started.ok) {
+                job.startAttempt.error = started.text || String(started.code || 'unknown error');
+                jobManager.appendEvent(job, 'start_response_error', { note: job.startAttempt.error, not_sent: started.notSent === true });
+                log.warn(`MCP file job ${job.id} start response error: ${job.startAttempt.error}; state=${job.state}; notSent=${started.notSent === true}`);
+            }
+            if (!started.ok && started.notSent && job.state === 'starting') {
                 job.state = 'start_failed';
                 job.error = `Start failed: ${started.text || started.code || 'unknown error'}`;
                 job.endedAt = Date.now();
+                job.ending = { kind: 'controller-rejected', reason: job.error, at: job.endedAt };
+                job.startAttempt.retrySafe = true;
                 jobManager.appendEvent(job, 'failed', { note: job.error });
-                throw new McpToolError(job.error);
+                if (jobManager.getActive() === job) jobManager.setActive(null);
+                return { ok: false,
+                    job: jobManager.describe(job),
+                    machine_status_after: job.startAttempt.machineStatusAfter,
+                    retry_safe: true,
+                    note: 'Start was refused before sending. A new operator approval is required to restage.' };
             }
-
-            job.state = 'started';
-            job.startedAt = Date.now();
-            jobManager.appendEvent(job, 'started', { note: 'machine interpreter running the file (door interlock applies)' });
-            jobManager.setActive(job);
-            watchFileJobCompletion(job);
-            // Opt-in spindle telemetry (status RPM, microphone): observes only.
-            spindleTelemetryService.startForJob(job);
-            // Opt-in accelerometer recording of the job (mcpVibrationJobs): observes only.
-            vibrationCaptureService.startForJob(job);
+            if (started.ok) {
+                markFileStarted(job);
+            } else if (job.state === 'starting') {
+                job.state = 'start_unverified';
+                job.error = `Start unverified: ${job.startAttempt.error}. The file may have run; do not retry or restage. `
+                    + 'Monitoring continues. Ask the operator to review the machine; stop_gcode_job remains available.';
+                jobManager.appendEvent(job, 'start_unverified', { note: job.error, retry_safe: false });
+                log.warn(`MCP file job ${job.id}: ${job.error}`);
+                const deadline = Date.now() + FILE_JOB_START_RECONCILE_MS;
+                while (job.state === 'start_unverified' && Date.now() < deadline) {
+                    await sleep(250);
+                    poll();
+                }
+            }
             return {
+                ok: ['started', 'completed'].includes(job.state),
                 job: jobManager.describe(job),
-                note: 'Job started. Poll get_gcode_job_status with wait_ms to long-poll for progress '
+                machine_status_after: job.startAttempt.machineStatusAfter,
+                retry_safe: false,
+                note: job.error || (TERMINAL_JOB_STATES.includes(job.state) ? `Job is ${job.state}; no further start was sent.`
+                    : 'File start acknowledged or confirmed by heartbeat. Poll get_gcode_job_status with wait_ms for progress '
                     + 'events and completion (no need to read server logs); the controller, its door '
                     + 'interlock and the machine UI remain in control. The job is marked completed when '
-                    + 'the heartbeat settles back to idle.',
+                    + 'the heartbeat settles back to idle.'),
             };
         },
     });

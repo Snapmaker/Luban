@@ -13,6 +13,7 @@ export type McpJobState =
     | 'approved'
     | 'rejected'
     | 'starting'
+    | 'start_unverified'
     | 'started'
     | 'start_failed'
     | 'stopped'

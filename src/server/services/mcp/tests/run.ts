@@ -1,3 +1,4 @@
+import { tests as fileJobStartTests } from './fileJobStart.test';
 /* eslint-disable no-console */
 /**
  * Unit tests for the MCP server's PURE modules - the ones with no server
@@ -140,6 +141,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['traversePlan', traversePlanTests],
     ['directMovePlan', directMovePlanTests],
     ['moveZPlan', moveZPlanTests],
+    ['fileJobStart', fileJobStartTests],
     ['jobEnding', jobEndingTests],
     ['jobDashboard', jobDashboardTests],
     ['landmarkClearance', landmarkClearanceTests],

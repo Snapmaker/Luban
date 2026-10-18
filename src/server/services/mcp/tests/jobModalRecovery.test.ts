@@ -92,7 +92,7 @@ async function judge(category: JobEndCategory, exposure: Exposure, f: Fake | nul
 
 // ----------------------------------------------------------------- gcode.ts harness
 
-function managerFixture(files: Map<string, string>): JobManager {
+export function managerFixture(files: Map<string, string>): JobManager {
     const loaded = isolatedModule('jobs.ts', {
         'fs-extra': {
             ensureDirSync: () => undefined,

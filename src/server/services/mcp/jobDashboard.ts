@@ -84,7 +84,7 @@ export function handleJobDashboardRequest(
             return;
         }
         const canDismiss = job.state === 'awaiting_confirmation' || job.state === 'approved';
-        const canStop = manager.getActive() === job && (job.state === 'started' || job.state === 'starting');
+        const canStop = manager.getActive() === job && (job.state === 'started' || job.state === 'starting' || job.state === 'start_unverified');
         if ((action[2] === 'dismiss' ? !canDismiss : !canStop) || stopping.has(job.id)) {
             reply(res, 409, { error: 'Job changed or a stop is already pending. Refresh and check its status.' });
             return;

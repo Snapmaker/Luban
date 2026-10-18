@@ -87,6 +87,7 @@ export const tests: Array<[string, () => void]> = [
     ['a file or direct job already handed to the machine gets the firmware stop', () => {
         assert.equal(planJobStop('file', 'started').action, 'machine-stop');
         assert.equal(planJobStop('file', 'starting').action, 'machine-stop');
+        assert.equal(planJobStop('file', 'start_unverified').action, 'machine-stop');
         assert.equal(planJobStop('direct', 'started').action, 'machine-stop');
     }],
 
