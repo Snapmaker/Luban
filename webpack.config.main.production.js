@@ -18,7 +18,6 @@ const KEEP_EXTERNAL = [
     'electron', // provided by the runtime
     '@electron/remote', // main side of the renderer's remote bridge; both ends from one install
     '@sentry/electron', // lazily required on opt-in; a large tree that stays off the startup path
-    'electron-store', // its conf dependency finds the caller through module.parent and require.cache
     'electron-updater', // lazily required on first update check; keep it off the startup path
     'node-fetch', // lazily required inside the update check; keep it off the startup path
     'font-scanner', // native

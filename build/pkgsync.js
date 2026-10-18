@@ -19,7 +19,6 @@ const pkgApp = require('../src/package.json');
 const mainExternals = [
     '@electron/remote',
     '@sentry/electron',
-    'electron-store',
     'electron-updater',
     'node-fetch',
     'font-scanner',

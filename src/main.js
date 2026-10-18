@@ -98,10 +98,22 @@ const ensureUserDataDir = (label) => {
 };
 
 ensureUserDataDir('boot');
-const config = new Store();
+const userDataDir = app.getPath('userData');
+
+// electron-store is compiled into this bundle (webpack.config.main.production.js),
+// so hand conf everything it would otherwise infer from the calling file: given
+// no `cwd` it names the project by walking up from `module.parent` with pkg-up,
+// and a bundle has no parent file to walk from. Both options equal what
+// electron-store derives on its own (cwd = app.getPath('userData'), name from
+// the app's package.json), so the file stays `<userData>/config.json` and the
+// settings already there (winBounds, enableCrashReporting, projectFile...) are
+// still found.
+const config = new Store({
+    cwd: userDataDir,
+    projectName: pkg.name,
+});
 
 initCrashReporting(config);
-const userDataDir = app.getPath('userData');
 global.luban = {
     userDataDir
 };
