@@ -138,6 +138,8 @@ const PLAIN_KEYS: Array<[string, StorePath]> = [
     ['mcpZPolicyProvenance', ['zPolicy', 'provenance']],
     ['mcpTravelFudgeProvenance', ['travelFudge', 'provenance']],
     ['mcpLandmarkConfirmTtlProvenance', ['landmarkConfirmTtlProvenance']],
+    // WP5: the operator's approval of the landmark review (landmarkReview.ts) - written only by the staged review page.
+    ['mcpLandmarksConfirmed', ['landmarksConfirmed']],
     ['mcpToolSetter', ['toolSetter']],
     ['mcpActiveTool', ['activeTool']],
     ['mcpToolRegion', ['toolRegion']],
@@ -150,7 +152,7 @@ const PLAIN_KEYS: Array<[string, StorePath]> = [
 
 /** Keys that never existed before WP2: addressed through the store, never migrated. */
 const NEW_KEYS = new Set(['mcpRotaryChuckTopZ', 'mcpRotaryTailstockTopZ', 'mcpMachineTraverseWithoutApprovalAtSafeZ', 'mcpLandmarkConfirmTtlHours',
-    'mcpZPolicyProvenance', 'mcpTravelFudgeProvenance', 'mcpLandmarkConfirmTtlProvenance']);
+    'mcpZPolicyProvenance', 'mcpTravelFudgeProvenance', 'mcpLandmarkConfirmTtlProvenance', 'mcpLandmarksConfirmed']);
 
 export const PER_MACHINE_KEYS: { [key: string]: StorePath } = (() => {
     const table: { [key: string]: StorePath } = {};

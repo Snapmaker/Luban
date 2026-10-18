@@ -5,6 +5,13 @@ import { cameraSetting } from '../camera';
 import { calibrationStore } from '../calibration';
 import { cameraStreamService } from '../cameraStream';
 import { Landmark, landmarkStore } from '../landmarks';
+import { LandmarkSource } from '../landmarkReview';
+import {
+    landmarkReviewFlow,
+    landmarkReviewForConnected,
+    registerLandmarkReviewProvider,
+    setLandmarkReviewConfirmBaseUrl,
+} from '../landmarkReviewState';
 import { gcodeUploads, jobInbox } from '../jobs';
 import { probeFeedService } from '../probeFeed';
 import { McpToolError, ToolRegistry } from '../registry';
@@ -86,44 +93,60 @@ function describeLandmark(landmark: Landmark): object {
     };
 }
 
-export function registerLandmarkTools(registry: ToolRegistry): void {
+export function registerLandmarkTools(registry: ToolRegistry, getConfirmBaseUrl?: () => string): void {
+    // WP5: the review flow's safeZPolicy provider and the confirm-page base URL.
+    registerLandmarkReviewProvider();
+    if (getConfirmBaseUrl) {
+        setLandmarkReviewConfirmBaseUrl(getConfirmBaseUrl);
+    }
+
     registry.register({
         name: 'set_landmark',
         description: 'Persist a named scene landmark (tool height checker, rotary span, tool '
-            + 'post...) with its machine-coordinate XY extent and a description. Same name '
-            + 'replaces. Landmarks near the current position are surfaced with every capture, '
-            + 'so identities the operator has stated once are never re-guessed. Record identity '
-            + 'from OPERATOR knowledge, not visual analogy. MACHINE-SCOPED: the record is tagged with the connected '
-            + '(else Luban-selected) machine and applies to that machine only - the A350\'s rotary keep-out means nothing '
-            + 'on a Ray. Records from before 2026-10-18 carry no tag and are the A350\'s by rule (the only machine they '
-            + 'were ever set on); get_stored_state shows each record\'s machineScope.',
+            + 'post...) with its machine-coordinate XY extent and a description. Landmarks near the current position are '
+            + 'surfaced with every capture, so identities the operator has stated once are never re-guessed. Record identity '
+            + 'from OPERATOR knowledge, not visual analogy. UPDATE: an existing name changes only the fields given (the box is '
+            + 'kept unless x0..y1 are restated). OPERATOR RULE: adding or tightening (new obstacle, higher top, bigger box) '
+            + 'applies at once; LOOSENING (lower top, smaller box, no longer an obstacle, or a legacy toolhead clearance '
+            + 'restated as a physical top that could demand less) is STAGED for the operator\'s approval and the old record '
+            + 'stays enforced until then. Any applied edit makes landmark_review unconfirmed again. MACHINE-SCOPED: the record '
+            + 'is tagged with the connected (else Luban-selected) machine and applies to that machine only - the A350\'s rotary '
+            + 'keep-out means nothing on a Ray. Records from before 2026-10-18 carry no tag and are the A350\'s by rule; '
+            + 'get_stored_state shows each record\'s machineScope.',
         inputSchema: {
             type: 'object',
             properties: {
-                name: { type: 'string', description: 'Short unique name, e.g. "tool-height-checker".' },
-                description: { type: 'string', description: 'What it is and how it looks on camera.' },
-                x0: { type: 'number', description: 'Machine-coordinate extent of the feature.' },
+                name: { type: 'string', description: 'Short unique name, e.g. "tool-height-checker". An existing name is UPDATED.' },
+                description: { type: 'string', description: 'What it is and how it looks on camera. Required for a new landmark.' },
+                x0: { type: 'number', description: 'Machine-coordinate extent of the feature. All four required for a new landmark; omit all four to keep the box.' },
                 y0: { type: 'number' },
                 x1: { type: 'number' },
                 y1: { type: 'number' },
                 obstacle_top_z: {
-                    type: 'number',
+                    type: ['number', 'null'],
                     description: 'PREFERRED. Marks this landmark as an OBSTACLE by stating the machine Z of the '
                         + 'top of the OBSTACLE ITSELF - nothing about the tool. The live tool protrusion and a '
                         + 'safety margin are added when a path is checked, so the number stays true across tool '
                         + 'changes instead of having to be set for the longest bit ever fitted. Omit for '
-                        + 'non-obstacles.',
+                        + 'non-obstacles (or to keep the stored height on an update); null = no longer an obstacle (staged). '
+                        + 'Restating a legacy clearance_z record here keeps the old value in its legacy audit block.',
                 },
                 clearance_z: {
-                    type: 'number',
+                    type: ['number', 'null'],
                     description: 'LEGACY form of the same thing: the minimum safe TOOLHEAD machine Z when an XY '
                         + 'path crosses this box, with tool length already included by whoever set it. Still '
                         + 'honoured exactly as before, but prefer obstacle_top_z - a toolhead height has to be '
                         + 're-stated on every tool change and in practice ends up pinned at the machine ceiling.',
                 },
+                source: {
+                    type: 'string',
+                    enum: ['operator', 'measured'],
+                    description: 'Who stated the height: the operator (default), or a measurement - then give measured_by.',
+                },
+                measured_by: { type: 'string', description: 'The job id (tool setter / probe run) a measured height came from.' },
                 notes: { type: 'string' },
             },
-            required: ['name', 'description', 'x0', 'y0', 'x1', 'y1'],
+            required: ['name'],
             additionalProperties: false,
         },
         handler: async (args: {
@@ -133,18 +156,27 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
             y0?: number;
             x1?: number;
             y1?: number;
-            clearance_z?: number;
-            obstacle_top_z?: number;
+            clearance_z?: number | null;
+            obstacle_top_z?: number | null;
+            source?: string;
+            measured_by?: string;
             notes?: string;
         }) => {
             const name = String(args.name || '').trim();
-            const description = String(args.description || '').trim();
-            if (!name || !description) {
-                throw new McpToolError('name and description are required.');
+            if (!name) {
+                throw new McpToolError('name is required.');
             }
-            const box = [args.x0, args.y0, args.x1, args.y1].map(Number);
-            if (box.some((v) => !Number.isFinite(v)) || box[0] >= box[2] || box[1] >= box[3]) {
-                throw new McpToolError('Require finite machine coordinates with x0 < x1 and y0 < y1.');
+            const given = [args.x0, args.y0, args.x1, args.y1].filter((v) => v !== undefined).length;
+            if (given !== 0 && given !== 4) {
+                throw new McpToolError('Give all four of x0, y0, x1, y1 (a new box) or none (keep the stored box).');
+            }
+            let box: { x0: number; y0: number; x1: number; y1: number } | undefined;
+            if (given === 4) {
+                const v = [args.x0, args.y0, args.x1, args.y1].map(Number);
+                if (v.some((n) => !Number.isFinite(n)) || v[0] >= v[2] || v[1] >= v[3]) {
+                    throw new McpToolError('Require finite machine coordinates with x0 < x1 and y0 < y1.');
+                }
+                box = { x0: v[0], y0: v[1], x1: v[2], y1: v[3] };
             }
             if (args.obstacle_top_z !== undefined && args.clearance_z !== undefined) {
                 throw new McpToolError('Give obstacle_top_z (the top of the obstacle itself - preferred) or '
@@ -153,26 +185,47 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
             }
             const physical = args.obstacle_top_z !== undefined;
             const raw = physical ? args.obstacle_top_z : args.clearance_z;
-            const clearanceZ = raw !== undefined ? Number(raw) : null;
-            if (clearanceZ !== null && !Number.isFinite(clearanceZ)) {
-                throw new McpToolError(`${physical ? 'obstacle_top_z' : 'clearance_z'} must be a finite machine Z when given.`);
+            let clearance: { z: number | null; basis: ClearanceBasis } | undefined;
+            if (raw !== undefined) {
+                const z = raw === null ? null : Number(raw);
+                if (z !== null && !Number.isFinite(z)) {
+                    throw new McpToolError(`${physical ? 'obstacle_top_z' : 'clearance_z'} must be a finite machine Z (or null: no longer an obstacle).`);
+                }
+                clearance = { z, basis: physical ? 'physical' : 'toolhead' };
             }
-            const clearanceBasis: ClearanceBasis = physical ? 'physical' : 'toolhead';
+            if (args.source !== undefined && args.source !== 'operator' && args.source !== 'measured') {
+                throw new McpToolError('source is "operator" or "measured".');
+            }
+            const description = args.description !== undefined ? String(args.description).trim() : undefined;
+            if (description === '') {
+                throw new McpToolError('description cannot be empty.');
+            }
             const machineIdentifier = machineForNewRecord('A landmark');
-            const landmark = landmarkStore.add({
-                name,
-                description,
-                machine: { x0: box[0], y0: box[1], x1: box[2], y1: box[3] },
-                clearanceZ,
-                clearanceBasis,
-                notes: args.notes ? String(args.notes) : null,
-                machineIdentifier,
-            });
+            let outcome;
+            try {
+                outcome = landmarkReviewFlow.setLandmark({
+                    name,
+                    description,
+                    box,
+                    clearance,
+                    notes: args.notes !== undefined ? String(args.notes) : undefined,
+                    source: args.source as LandmarkSource | undefined,
+                    measuredBy: args.measured_by ? String(args.measured_by) : undefined,
+                }, machineIdentifier);
+            } catch (err) {
+                throw new McpToolError((err as Error).message);
+            }
+            const landmark = outcome.landmark as Landmark;
             return {
+                applied: outcome.applied,
+                change: outcome.change,
                 landmark: describeLandmark(landmark),
-                note: clearanceBasis === 'toolhead' && clearanceZ !== null
-                    ? restatementAdvice(name, clearanceZ)
+                staged: outcome.staged,
+                still_enforced: outcome.still_enforced,
+                note: landmark.clearanceBasis === 'toolhead' && landmark.clearanceZ !== null
+                    ? restatementAdvice(name, landmark.clearanceZ)
                     : null,
+                landmark_review: landmarkReviewForConnected(),
             };
         },
     });
@@ -315,18 +368,75 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
 
     registry.register({
         name: 'delete_landmark',
-        description: 'Delete one stored landmark by id or name.',
+        description: 'Ask the operator to delete one stored landmark of the connected machine, by id or name. OPERATOR RULE: '
+            + 'landmarks are assumed temporary but never removed unless a human confirms, so this STAGES a page (confirm_url) '
+            + 'and the landmark stays enforced until the operator approves it there; the approval removes it. Nothing is '
+            + 'removed by the call itself.',
         inputSchema: {
             type: 'object',
-            properties: { id: { type: 'string', description: 'Landmark id or name.' } },
+            properties: { id: { type: 'string', description: 'Landmark id or name (an ambiguous name is refused - give the id).' } },
             required: ['id'],
             additionalProperties: false,
         },
         handler: async (args: { id?: string }) => {
-            if (!landmarkStore.remove(String(args.id || ''))) {
-                throw new McpToolError('Unknown landmark id or name.');
+            try {
+                return landmarkReviewFlow.deleteLandmark(String(args.id || ''), connectedMachineIdentifier() || machineForNewRecord('A landmark'));
+            } catch (err) {
+                throw new McpToolError((err as Error).message);
             }
-            return { removed: true };
+        },
+    });
+
+    registry.register({
+        name: 'confirm_landmarks',
+        description: 'STAGE the operator\'s landmark review for the connected machine: a page (confirm_url) listing every landmark '
+            + 'that applies, with its box, physical top, basis, the toolhead Z it needs with the tool fitted now, source and age. '
+            + 'This call confirms NOTHING (amendment R4: an agent never answers its own question) - only the operator\'s approval '
+            + 'on that page writes the confirmation. It then lasts until disconnect, landmark_confirm_ttl_hours (per machine, '
+            + 'set_machine_policy, default 24) or any landmark edit / device conflict, whichever comes first. While the review is '
+            + 'not confirmed every landmark is still enforced, and top-Z transport that would run on the call is staged instead. '
+            + 'Ask the operator get_stored_state.landmark_review.question before calling this; fix the set first with '
+            + 'set_landmark / delete_landmark if they say it is wrong.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                note: { type: 'string', description: 'Optional context shown on the page (e.g. what the operator said about the bed).' },
+            },
+            additionalProperties: false,
+        },
+        handler: async (args: { note?: string }) => {
+            try {
+                return landmarkReviewFlow.stageConfirmation(args.note ? String(args.note) : null);
+            } catch (err) {
+                throw new McpToolError((err as Error).message);
+            }
+        },
+    });
+
+    registry.register({
+        name: 'assign_machine_device',
+        description: 'Answer an open device conflict (get_stored_state.machineStore.deviceConflict / landmark_review status '
+            + '"device-conflict": the connected machine presents a serial its model\'s records were not made on). STAGES a page '
+            + '(confirm_url); only the operator\'s approval applies it. same_machine true: the serial becomes an alias of the '
+            + 'stored entry and its records apply; false: the device gets its own empty entry and nothing stored so far applies. '
+            + 'Either way the landmark review is asked again afterwards.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                same_machine: { type: 'boolean', description: 'What the operator said: is this the same physical machine?' },
+            },
+            required: ['same_machine'],
+            additionalProperties: false,
+        },
+        handler: async (args: { same_machine?: boolean }) => {
+            if (typeof args.same_machine !== 'boolean') {
+                throw new McpToolError('same_machine (true / false) is required: ask the operator whether this is the same machine.');
+            }
+            try {
+                return landmarkReviewFlow.stageDeviceAssignment(args.same_machine);
+            } catch (err) {
+                throw new McpToolError((err as Error).message);
+            }
         },
     });
 
@@ -388,6 +498,12 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                         appliesToConnectedMachine: appliesToMachine(entry.machineIdentifier, connected),
                     },
                 })),
+                /**
+                 * WP5: has the operator confirmed what is on the bed (R4)?
+                 * Always present. Every landmark is enforced whatever the
+                 * status; when not 'confirmed', put `question` to the operator.
+                 */
+                landmark_review: landmarkReviewForConnected(),
                 landmarks: landmarkStore.list().map(describeLandmark),
                 landmarkClearances: (() => {
                     const legacy = landmarkStore.list().filter((l) => needsRestatement(l.clearanceZ, l.clearanceBasis));

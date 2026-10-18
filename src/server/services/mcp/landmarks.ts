@@ -7,6 +7,7 @@ import logger from '../../lib/logger';
 import { connectedMachineIdentifier } from './connectedMachine';
 import { ObstacleBox, POSITION_EPSILON_MM, segmentHitsBox2D } from './envelopeChecks';
 import { ClearanceBasis, normaliseClearanceBasis, requiredToolheadZ } from './landmarkClearance';
+import { LandmarkSource, LegacyClearance } from './landmarkReview';
 import { appliesToMachine, isLegacyScope, recordMachineScope } from './machineCapability';
 
 const log = logger('service:mcp:landmarks');
@@ -51,6 +52,13 @@ export interface Landmark {
     machineIdentifier: string;
     /** True when machineIdentifier was attributed by the legacy rule rather than recorded. */
     legacyScope?: boolean;
+    /** Who stated the height (WP5): the operator, or a measurement named by measuredBy (a job id). Absent = operator. */
+    source?: LandmarkSource;
+    measuredBy?: string | null;
+    /** The legacy toolhead clearance a physical restatement retired - audit only, never enforced. */
+    legacy?: LegacyClearance | null;
+    /** Last edit (set_landmark update / an approved loosening); createdAt until then. */
+    updatedAt?: number;
 }
 
 interface LandmarkFile {
@@ -135,6 +143,34 @@ export class LandmarkStore {
     /** The landmarks that apply to `machineIdentifier` (the connected machine when omitted); none when no machine is connected. */
     public listFor(machineIdentifier: string | null = connectedMachineIdentifier()): Landmark[] {
         return this.load().landmarks.filter((l) => appliesToMachine(l.machineIdentifier, machineIdentifier));
+    }
+
+    /**
+     * Replace the record with the same id, in place (set_landmark UPDATE
+     * semantics and approved loosenings - landmarkReviewFlow.ts). Refused
+     * for an unknown id: an update never invents a record.
+     */
+    public put(landmark: Landmark): void {
+        const data = this.load();
+        const index = data.landmarks.findIndex((l) => l.id === landmark.id);
+        if (index < 0) {
+            throw new Error(`Unknown landmark id ${landmark.id}.`);
+        }
+        data.landmarks[index] = { ...landmark };
+        this.save();
+        log.info(`Landmark updated: ${landmark.name} (${landmark.id})`);
+    }
+
+    /** Remove exactly one record by id (the staged delete_landmark resolves its id first). */
+    public removeId(id: string): boolean {
+        const data = this.load();
+        const before = data.landmarks.length;
+        data.landmarks = data.landmarks.filter((l) => l.id !== id);
+        if (data.landmarks.length !== before) {
+            this.save();
+            return true;
+        }
+        return false;
     }
 
     public remove(idOrName: string): boolean {
