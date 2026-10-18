@@ -92,6 +92,9 @@ import { tests as connectionGenerationTests } from './connectionGeneration.test'
 import { tests as sacpMachineStateTests } from './sacpMachineState.test';
 import { tests as sacpConnectionTests } from './sacpConnection.test';
 import { tests as gcodeDialectTests } from './gcodeDialect.test';
+import { tests as dialectRulesTests } from './dialectRules.test';
+import { tests as gcodeHeaderTests } from './gcodeHeader.test';
+import { tests as jobMachineBindingTests } from './jobMachineBinding.test';
 
 type TestCase = [string, () => void | Promise<void>];
 
@@ -177,6 +180,9 @@ const suites: Array<[string, TestCase[]]> = [
     ['audioSelection', audioSelectionTests],
     ['executionModel', executionModelTests],
     ['gcodeDialect', gcodeDialectTests],
+    ['dialectRules', dialectRulesTests],
+    ['gcodeHeader', gcodeHeaderTests],
+    ['jobMachineBinding', jobMachineBindingTests],
 ];
 
 async function main(): Promise<void> {

@@ -37,7 +37,8 @@ import { parseSettleComment, planTraverseXy } from '../traversePlan';
 import { connectedMachineCapability, connectedMachineTag, describeConnectedMachine } from '../connectedMachine';
 import { JobFrame, TRANSPORT_REFUSAL, isPureTransport, resolveJobFrame, spindleRefusal, suggestGcode, validateGcode } from '../validator';
 import { GcodeChannel, sendGcodeVisible } from './camera';
-import { stagingFrameContext, validateStagedEnvelope } from './staging';
+import { connectedStagingMachine, connectedValidationOptions, stagingFrameContext, validateStagedEnvelope } from './staging';
+import { parseGcodeHeader } from '../gcodeHeader';
 import { verifyFileJobWorkspace } from './workspace';
 import { TRAVEL_EPSILON_MM } from '../machineTravel';
 import { MoveZPlanError, describeFeedClamps, resolveZTargets } from '../moveZPlan';
@@ -873,6 +874,8 @@ export async function stopGcodeJob(args: { job_id?: string; wait_ms?: number }, 
 export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: () => string): void {
     // Read lazily: the camera tools inject the runtime, possibly after this registers.
     recoveryDepsSource = () => (typeof registry.getFailureRecovery === 'function' ? registry.getFailureRecovery() : null);
+    // Every staged job records the machine it is for; approval and start refuse on another (#265 WP3).
+    jobManager.setMachineSource(connectedStagingMachine);
     registry.register({
         name: 'validate_gcode',
         description: 'Statically inspect G-code: motion extents, feeds, spindle commands and '
@@ -881,7 +884,10 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             + 'get_stored_state.jobIntake for the path) or upload_id (a finished chunked upload). A large CAM file '
             + 'belongs in the inbox or an upload, never in one argument. REFUSED, not warned: a program whose spindle '
             + 'is still on at the end (M3/M4 never followed by M5) - the signature of a truncated program. The result '
-            + 'carries the identity (SHA-256, bytes, line counts, first/last motion lines) of exactly what was received.',
+            + 'carries the identity (SHA-256, bytes, line counts, first/last motion lines) of exactly what was received. '
+            + 'The program is judged by the CONNECTED machine\'s G-code rules (machine.rulesApplied: frame form, laser S range, '
+            + 'M4 short segments, Z on a Z-less machine, travel, Luban header, homing form, codes outside the machine\'s '
+            + 'reference); machine.refusals lists what submit_gcode_job will refuse, and header is the Luban header it read.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -893,7 +899,10 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
         },
         handler: async (args: ProgramArgs) => {
             const input = resolveProgramInput(args);
-            const report = validateGcode(input.text);
+            // Judged for the connected machine (#265 WP3): an incompatible code
+            // or a header for another machine is a warning here and a refusal
+            // at submit; the other rule refusals are listed in machine.refusals.
+            const report = validateGcode(input.text, connectedValidationOptions('validate'));
             const identity = describeProgramIdentity(input.text);
             const refusal = spindleRefusal(report);
             if (refusal) {
@@ -924,7 +933,9 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             + 'chunked upload finish_gcode_upload has verified). A real CAM file (hundreds of KB) goes through the inbox or '
             + 'an upload - never emit it as one argument. Every route is validated, frame-resolved and staged identically, '
             + 'and the confirm page shows the program identity (SHA-256, bytes, lines, first/last motion lines). REFUSED: a '
-            + 'program whose spindle is still on at the end - the signature of a truncated program.',
+            + 'program whose spindle is still on at the end - the signature of a truncated program; and anything the CONNECTED '
+            + 'machine\'s G-code rules refuse (validate_gcode machine.refusals), including a code its reference calls '
+            + 'incompatible and a Luban header (;machine:) naming another machine.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -963,7 +974,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             // The frame handshake (operator law 2026-09-14): an agent-authored job
             // must say which coordinate frame it runs in, or it does not reach the
             // confirm page. The gcode itself is never edited to add a declaration.
-            const inspected = validateGcode(input.text);
+            const inspected = validateGcode(input.text, connectedValidationOptions('submit', headType));
             // A program whose spindle is still on at the end is a truncated
             // program (2026-10-15: the first part of a 295 KB V-carve reached
             // the page with only a warning). Refused before anything else,
@@ -981,6 +992,12 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             if (headType === 'cnc' && isPureTransport(inspected)) {
                 throw new McpToolError(TRANSPORT_REFUSAL);
             }
+            // The connected machine's G-code rules (#265 WP3): this body is
+            // streamed as written, so what they refuse never reaches the page.
+            if (inspected.machine && inspected.machine.refusals.length) {
+                throw new McpToolError(`${inspected.machine.refusals.join('\n\n')}\n\n(${inspected.machine.identifier}, `
+                    + `${inspected.machine.dialect}; rules applied: ${inspected.machine.rulesApplied.join(', ')}.)`);
+            }
             // A file job's start selects G54 and verifies its offset first (see
             // start_gcode_job), so a G54-only file may resolve its machine Z.
             const resolved = resolveJobFrame(inspected, { ...stagingFrameContext(frameArgument), verifiesG54AtStart: true });
@@ -994,6 +1011,8 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             return {
                 job: jobManager.describe(job),
                 confirm_url: `${getConfirmBaseUrl()}/confirm/${job.id}`,
+                machine: validation.machine || null,
+                header: validation.header || null,
                 intake: describeInbox(),
                 next_step: 'Ask the operator to open confirm_url in a browser, review, and approve. Then either call '
                     + 'start_gcode_job with wait_for_approval_ms (their click starts it - nothing to copy) or pass the '
@@ -1021,6 +1040,8 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
         },
         handler: async (args: { name?: unknown; total_bytes?: unknown; sha256?: unknown }) => intake(() => ({
             ...gcodeUploads.begin(args),
+            // The machine validate/submit will judge the upload by (#265 WP3).
+            connected_machine: describeConnectedMachine(),
             chunk_max_bytes: gcodeUploads.limits.chunkMaxBytes,
             next_step: 'append_gcode_chunk {upload_id, seq: 0, text}, then seq 1, 2 ... until remaining_bytes is 0; then finish_gcode_upload.',
         })),
@@ -1058,10 +1079,17 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             required: ['upload_id'],
             additionalProperties: false,
         },
-        handler: async (args: { upload_id?: unknown }) => intake(() => ({
-            ...gcodeUploads.finish(args.upload_id),
-            next_step: 'validate_gcode {upload_id} to read the report, then submit_gcode_job {upload_id, name, frame} to stage it.',
-        })),
+        handler: async (args: { upload_id?: unknown }) => intake(() => {
+            const finished = gcodeUploads.finish(args.upload_id);
+            // The header the rules will compare with the connected machine (#265 WP3).
+            const header = parseGcodeHeader(gcodeUploads.peek(args.upload_id).text);
+            return {
+                ...finished,
+                header,
+                connected_machine: describeConnectedMachine(),
+                next_step: 'validate_gcode {upload_id} to read the report, then submit_gcode_job {upload_id, name, frame} to stage it.',
+            };
+        }),
     });
 
     registry.register({

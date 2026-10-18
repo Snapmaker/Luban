@@ -1,4 +1,6 @@
 import { strict as assert } from 'assert';
+import fs from 'fs';
+import path from 'path';
 
 import {
     FRAME_REFUSAL_NO_RESTORE,
@@ -12,9 +14,17 @@ import {
     resolveJobFrame,
     suggestGcode,
     validateGcode,
+    ValidationOptions,
 } from '../validator';
+import { dialectById, dialectFor } from '../gcodeDialect';
+import { convertThreadMillingGcode } from '../threadMilling';
+import { ORIGINAL_LASER_EXPORT, a350CncExport, rayExport } from './fixtures/lubanExports';
 
 const A350 = { machineZMax: 330 };
+
+// The connected machine as tools/staging.ts connectedValidationOptions() passes it.
+const A350_SUBMIT: ValidationOptions = { dialect: dialectById('sm2-marlin'), machineIdentifier: 'Snapmaker 2.0 A350', hasZ: true, supportsRotary: true, headType: 'cnc', phase: 'submit' };
+const RAY_SUBMIT: ValidationOptions = { dialect: dialectFor('Ray'), machineIdentifier: 'Ray', hasZ: false, supportsRotary: false, headType: 'cnc', phase: 'submit' };
 
 function ctx(over: Partial<FrameResolutionContext> = {}): FrameResolutionContext {
     return { frameArgument: null, originOffsetZ: -328, offsetReliable: true, ...A350, ...over };
@@ -352,5 +362,88 @@ export const tests: Array<[string, () => void]> = [
         assert.equal(isRelativeOnlyTransport(validateGcode('G91\nG1 X-5 F1500')), false);
         assert.equal(isRelativeOnlyTransport(validateGcode('G1 X-5 F1500\nG91\nG90')), false);
         assert.notEqual(resolveJobFrame(validateGcode('G91\nG1 X-5 F1500'), ctx({ relativeTransport: true })).refusal, null);
+    }],
+    // ---- Machine-aware rules (#265 WP3) ----
+    ['an A350 CNC export judged for the connected A350 is the legacy report plus the two new fields', () => {
+        const text = a350CncExport();
+        const legacy = validateGcode(text);
+        const judged = validateGcode(text, A350_SUBMIT);
+        const strip = (r: ReturnType<typeof validateGcode>) => {
+            const rest = { ...r };
+            delete rest.machine;
+            delete rest.header;
+            return rest;
+        };
+        assert.deepEqual(strip(judged), strip(legacy));
+        assert.deepEqual(judged.machine && judged.machine.refusals, []);
+        assert.deepEqual(legacy.machine, {
+            identifier: null,
+            dialect: 'sm2-marlin',
+            g53Form: 'own-line',
+            rulesApplied: ['frame-form'],
+            phase: null,
+            refusals: [],
+            findings: [],
+            codesOutsideReference: [],
+        });
+        assert.equal(judged.machine && judged.machine.identifier, 'Snapmaker 2.0 A350');
+        assert.equal(judged.header && judged.header.machine, 'Snapmaker 2.0 A350');
+        // The facts the confirm page shows, pinned.
+        assert.deepEqual(judged.extents, { x: { min: 10, max: 40 }, y: { min: 10, max: 40 }, z: { min: -1, max: 10 }, b: null });
+        assert.equal(judged.spindle.maxS, 12000);
+        assert.equal(judged.usesArcs, true);
+        const resolved = resolveJobFrame(judged, ctx({ frameArgument: 'work', verifiesG54AtStart: true }));
+        assert.equal(resolved.refusal, null);
+        assert.deepEqual(resolved.report.machineZExtents, { min: 327, max: 338 });
+    }],
+
+    ['a Ray export (GRBL words run together) is parsed, accepted at submit, and frame "work" resolves', () => {
+        const report = validateGcode(rayExport({}, 1000), RAY_SUBMIT);
+        assert.deepEqual(report.extents.x, { min: 0, max: 40 }, 'X10Y10F3000 is three words, not one dropped token');
+        assert.deepEqual(report.extents.y, { min: 0, max: 40 });
+        assert.equal(report.spindle.maxS, 1000);
+        assert.deepEqual(report.machine && report.machine.refusals, []);
+        assert.equal(report.header && report.header.machine, 'Ray');
+        assert.equal(resolveJobFrame(report, ctx({ frameArgument: 'work' })).refusal, null);
+    }],
+
+    ['the undeclared-frame refusal on the Ray never asks for an own-line G53', () => {
+        const refusal = resolveJobFrame(validateGcode(rayExport(), RAY_SUBMIT), ctx()).refusal;
+        assert.ok(refusal);
+        assert.notEqual(refusal, FRAME_REFUSAL_UNDECLARED);
+        assert.ok(refusal.includes('frame: "work"') && refusal.includes('Ray (ray-grbl)'), refusal);
+        assert.ok(!refusal.includes('own line before'), refusal);
+    }],
+
+    ['suggestGcode never writes the Snapmaker 2.0 frame form for the Ray', () => {
+        const program = 'G53 G0 X10 Y10 F3000\nM3 S100\nG1 X20 Y10 F600\nM5';
+        assert.equal(suggestGcode(program, validateGcode(program, RAY_SUBMIT)), null);
+        assert.ok(suggestGcode(program, validateGcode(program)), 'the A350 still gets its mechanical fix');
+    }],
+
+    ['an Original laser export (M3 P.. S..) is accepted with no refusals', () => {
+        const report = validateGcode(ORIGINAL_LASER_EXPORT, { dialect: dialectFor('Original'), machineIdentifier: 'Original', hasZ: true, phase: 'submit' });
+        assert.deepEqual(report.machine && report.machine.refusals, []);
+        assert.ok(report.machine && report.machine.rulesApplied.includes('s-range'));
+        assert.equal(resolveJobFrame(report, ctx({ frameArgument: 'work' })).refusal, null);
+    }],
+
+    ['an SM2-incompatible code is refused only on the send path; the legacy call never refuses it', () => {
+        const program = 'G90\nG53\nG0 X10 Y10 Z300 F600\nG38.2 Z280 F60\nG0 Z300\nG54';
+        assert.deepEqual(validateGcode(program).machine && validateGcode(program).machine?.refusals, []);
+        assert.deepEqual(validateGcode(program, { ...A350_SUBMIT, phase: 'validate' }).machine?.refusals, []);
+        assert.equal(validateGcode(program, A350_SUBMIT).machine?.refusals.length, 1);
+    }],
+
+    ['the translation paths are unchanged: a converted thread-milling program and a probe-program envelope pass the A350 send rules', () => {
+        const fanuc = fs.readFileSync(path.join(__dirname, 'fixtures/thread-milling-m2_5-fanuc.nc'), 'utf8');
+        const converted = convertThreadMillingGcode(fanuc, { toolCenterPath: true, toolLengthApplied: true, spindleMode: 'cnc_200w_rpm' });
+        assert.deepEqual(validateGcode(converted.gcode, A350_SUBMIT).machine?.refusals, []);
+        // describeProbeCamPlanAsGcode's shape: every G38.x is TRANSLATED, so it appears only in comments.
+        const envelope = ['G90', 'G53;', 'G1 Z300.000 F600; raise to the traverse height (law 2)',
+            'G1 X100.000 Y100.000 F600; traverse (crash guard armed)',
+            'G1 X100.000 Y100.000 Z250.000 F100; G38.2 march up to 30 mm - 1 mm steps to contact, release, fine, confirm',
+            'G1 Z300.000 F600; finish at the safe traverse height (also on any abort)', 'G54;'].join('\n');
+        assert.deepEqual(validateGcode(envelope, { ...A350_SUBMIT, phase: 'staged' }).machine?.refusals, []);
     }],
 ];
