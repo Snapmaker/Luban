@@ -36,7 +36,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:380px;overflow:auto;f
 (function () {
   'use strict';
   var key='luban.jobs.notifications', prefs={toasts:false,system:false}, registration=null, cursor=null, instance=null, snapshot=null, busy=false;
-  var labels={awaiting_confirmation:'Ready for approval',approved:'Approved',starting:'Starting',started:'Running',completed:'Completed',rejected:'Rejected',stopped:'Stopped / cancelled',start_failed:'Failed',submitted:'Ready for approval',failed:'Failed','stop-requested':'Stop requested'};
+  var labels={awaiting_confirmation:'Ready for approval',approved:'Approved',starting:'Starting',start_unverified:'Start unverified — do not retry',started:'Running',completed:'Completed',rejected:'Rejected',stopped:'Stopped / cancelled',start_failed:'Failed',submitted:'Ready for approval',failed:'Failed','stop-requested':'Stop requested'};
   var cards=new Map();
   function el(id){return document.getElementById(id);}
   var pendantUrl=new URL('/pendant',window.location.href);pendantUrl.hostname='localhost';el('pendant-link').href=pendantUrl.href;
@@ -116,7 +116,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:380px;overflow:auto;f
     var counts={running:0,ready:0,approved:0,history:0}, ids=new Set();
     document.querySelectorAll('.empty').forEach(function(n){n.remove();});
     snapshot.jobs.forEach(function(job){
-      var group=job.state==='starting'||job.state==='started'?'running':job.state==='awaiting_confirmation'?'ready':job.state==='approved'?'approved':'history';
+      var group=job.state==='starting'||job.state==='started'||job.state==='start_unverified'?'running':job.state==='awaiting_confirmation'?'ready':job.state==='approved'?'approved':'history';
       if(group==='history' && el('filter').value!=='all' && outcome(job)!==el('filter').value){return;}
       ids.add(job.id);counts[group]++;
       var card=cards.get(job.id);if(!card){card=makeCard(job);cards.set(job.id,card);}

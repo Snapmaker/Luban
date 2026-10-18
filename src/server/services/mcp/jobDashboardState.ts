@@ -1,6 +1,6 @@
 import type { McpJob } from './jobs';
 
-const NOTICE_PHASES = new Set(['submitted', 'approved', 'rejected', 'started', 'completed', 'stopped', 'failed', 'stop-requested']);
+const NOTICE_PHASES = new Set(['start_unverified', 'submitted', 'approved', 'rejected', 'started', 'completed', 'stopped', 'failed', 'stop-requested']);
 
 /** Small, explicit public list view: no approval tokens, files, plans or large results. */
 export function summarizeDashboardJob(job: McpJob) {

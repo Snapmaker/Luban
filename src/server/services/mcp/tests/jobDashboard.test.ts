@@ -40,7 +40,7 @@ async function request(manager: object, route: string, method = 'GET', headers =
 }
 
 // Load server-bound code with explicit inert dependencies; never start Luban or connect to hardware.
-export function isolatedModule(file: string, dependencies: Record<string, unknown>) {
+export function isolatedModule(file: string, dependencies: Record<string, unknown>, globals: Record<string, unknown> = {}) {
     const source = fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
     const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2019, esModuleInterop: true } });
     const exports: Record<string, any> = {}; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -48,6 +48,9 @@ export function isolatedModule(file: string, dependencies: Record<string, unknow
         exports,
         Buffer,
         setTimeout,
+        setInterval,
+        clearInterval,
+        ...globals,
         process: { env: {} },
         require: (name: string) => {
             if (name in dependencies) { return dependencies[name]; }
@@ -233,6 +236,15 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.strictEqual((await request(manager, '/jobs/abcdef/stop', 'POST', { 'x-luban-job-action': '1' }, stop)).status, 409);
         assert.strictEqual((await request(manager, '/jobs/abcdef/stop', 'GET', {}, stop)).status, 404);
         assert.strictEqual(calls, 0);
+    }],
+    ['an unverified start remains stoppable from the operator dashboard', async () => {
+        const active = job('abcdef', 'start_unverified');
+        const manager = { get: () => active, getActive: () => active };
+        let calls = 0;
+        const stop = async () => { calls++; return { ok: true }; };
+        const response = await request(manager, '/jobs/abcdef/stop', 'POST', { 'x-luban-job-action': '1' }, stop);
+        assert.strictEqual(response.status, 200);
+        assert.strictEqual(calls, 1);
     }],
     ['operator actions target the selected job and concurrent stops are refused', async () => {
         const active = job('abcdef', 'started');

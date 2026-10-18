@@ -824,9 +824,9 @@ class SstpHttpChannel extends Channel implements
      * Promise variants of startGcode/stopGcode for callers that need the
      * result rather than a socket emit (MCP job gate).
      */
-    public async startGcodeJob(): Promise<{ ok: boolean; code?: number; text?: string }> {
+    public async startGcodeJob(): Promise<{ ok: boolean; code?: number; text?: string; notSent?: boolean }> {
         const refusal = gcodeLease.refusal('start job');
-        if (refusal) { return { ok: false, code: 409, text: refusal }; }
+        if (refusal) { return { ok: false, code: 409, text: refusal, notSent: true }; }
         const api = `${this.host}/api/v1/start_print`;
         return new Promise((resolve) => {
             request
@@ -898,7 +898,9 @@ class SstpHttpChannel extends Channel implements
         }
         const { currentLine, estimatedTime, totalLines, fileName = '', progress, elapsedTime, remainingTime, printStatus } = data;
         if (!currentLine || !estimatedTime || !totalLines) {
-            return {};
+            // Preserve file identity even before the first line or for files
+            // without a time estimate: MCP uses it to reconcile a lost start reply.
+            return { name: fileName, sent: currentLine || 0, total: totalLines || 0, progress, printStatus };
         }
         const sent = currentLine || 0;
         const received = currentLine || 0;

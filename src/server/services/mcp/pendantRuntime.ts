@@ -295,7 +295,7 @@ export class PendantRuntime {
         const warnings = provedPosition ? [] : this.positionWarnings();
         if (warnings.length) { throw new Error(`Machine position unavailable: ${warnings.join(' ')}`); }
         if (record && record.source === 'estimated') { throw new Error('Last move was only estimated; wait for a verified position.'); }
-        if (jobManager.getActive()?.state === 'started') { throw new Error('A machine job is active.'); }
+        if (['starting', 'started', 'start_unverified'].includes(jobManager.getActive()?.state || '')) { throw new Error('A machine job is active.'); }
     }
 
     private travelBounds(current: JogPosition = this.position()): JogBounds {
@@ -795,7 +795,7 @@ export class PendantRuntime {
             throw new Error('Continuous jog stopped: the toolhead appears to be on. Pendant disarmed.');
         }
         probeFeedService.assertNoOvertravel();
-        if (jobManager.getActive()?.state === 'started') { throw new Error('Continuous jog stopped: a machine job is active. Pendant disarmed.'); }
+        if (['starting', 'started', 'start_unverified'].includes(jobManager.getActive()?.state || '')) { throw new Error('Continuous jog stopped: a machine job is active. Pendant disarmed.'); }
         // Position freshness is the newer of the heartbeat and the last prompt M114 that agreed
         // with the hold (pollCount, the Z baseline, a close proof). A failed, late or disagreeing
         // M114 never refreshes it, so a faltering connection still stops the hold.
@@ -1678,7 +1678,7 @@ export class PendantRuntime {
                 }
                 case '/pendant/settings': {
                     this.disarm('Reviewing operator settings. Re-arm after saving.');
-                    if (this.busy || this.opening || ['starting', 'started'].includes(jobManager.getActive()?.state || '')) {
+                    if (this.busy || this.opening || ['starting', 'started', 'start_unverified'].includes(jobManager.getActive()?.state || '')) {
                         throw new Error('Wait for the current move, connection or machine job to finish before changing settings.');
                     }
                     if (connectionManager.getConnectionStatus().connected && getPositionSnapshot().machineStatus !== 'idle') {
@@ -1696,7 +1696,7 @@ export class PendantRuntime {
                     const homing = url.pathname === '/pendant/home';
                     this.disarm(homing ? 'Operator requested homing. Pendant disarmed.' : 'Restoring work frame. Pendant disarmed.');
                     if (homing && args.confirmHoming !== true) { throw new Error('Confirm homing all axes, including rotary B, even if position data is stale.'); }
-                    if (this.busy || this.opening || ['starting', 'started'].includes(jobManager.getActive()?.state || '')) {
+                    if (this.busy || this.opening || ['starting', 'started', 'start_unverified'].includes(jobManager.getActive()?.state || '')) {
                         throw new Error('Wait for the current move, connection or machine job to finish before recovery.');
                     }
                     if (!homing && getPositionSnapshot().machineStatus !== 'idle') {
