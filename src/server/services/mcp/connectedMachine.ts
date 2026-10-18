@@ -15,14 +15,18 @@ import {
     SnapmakerRayMachine,
 } from '../../../app/machines';
 import { connectionManager } from '../machine/ConnectionManager';
+import { GcodeDialect } from './gcodeDialect';
 import {
+    CapabilityKey,
     MachineCapability,
     MachineDefinitionLike,
     MachineSummary,
+    capabilityRefusal,
     deriveMachineCapability,
     machineTag,
     summariseMachine,
 } from './machineCapability';
+import { McpToolError } from './registry';
 
 export const MACHINES = [
     SnapmakerOriginalMachine,
@@ -71,4 +75,25 @@ export function describeConnectedMachine(): MachineSummary {
 /** The parenthetical refusals carry: "(connected machine: Ray, Laser, no Z axis)". */
 export function connectedMachineTag(): string {
     return machineTag(connectedMachineCapability());
+}
+
+/** The CONNECTED machine's G-code dialect row (gcodeDialect.ts); 'unknown' when nothing or an unlisted machine is connected. */
+export function connectedDialect(): GcodeDialect {
+    return connectedMachineCapability().dialect;
+}
+
+/**
+ * Refuse `action` unless the connected machine supports `what`
+ * (MachineCapability.supports). The McpToolError names the machine and the
+ * dialect table's source: "Probing needs probing, which this MCP does not
+ * support on Snapmaker J1 (connected machine: ...): ...". Returns the
+ * capability it checked, so a caller can read the row without a second lookup.
+ */
+export function requireCapability(what: CapabilityKey, action: string): MachineCapability {
+    const capability = connectedMachineCapability();
+    const refusal = capabilityRefusal(capability, what, action);
+    if (refusal) {
+        throw new McpToolError(refusal);
+    }
+    return capability;
 }
