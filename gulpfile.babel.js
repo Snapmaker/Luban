@@ -13,6 +13,7 @@ import {
     appCopyProduction,
     appBuildProduction
 } from './gulp/tasks/app';
+import { mainBuildProduction } from './gulp/tasks/main';
 import { i18nextServer, i18nextApp } from './gulp/tasks/i18next';
 
 function prepareDevelopment() {
@@ -39,6 +40,7 @@ const production = gulp.series(
     prepareProduction,
     clean,
     gulp.parallel(
+        mainBuildProduction,
         serverCopyProduction,
         serverBuildProduction,
         appCopyProduction,

@@ -3,21 +3,28 @@
 const _ = require('lodash');
 const fs = require('fs');
 const path = require('path');
-const findImports = require('find-imports');
 
 // Copy necessary properties from 'package.json' to 'src/package.json'
 const pkg = require('../package.json');
 const pkgApp = require('../src/package.json');
 
-// Only the main process ships unbundled (src/main.js, src/electron-app/*,
-// src/server-cli.js...), so only its imports need installing into the
-// packaged app. The server's dependencies are compiled into its webpack
-// bundle, except the keep-external list below — mirror of KEEP_EXTERNAL in
-// webpack.config.server.production.js.
-const files = [
-    'src/*.{ts,js}',
-    'src/electron-app/**/*.{ts,js}',
+// Both the main process (src/main.js + src/electron-app/*, and the server
+// child entry src/server-cli.js) and the server ship as webpack bundles with
+// their dependencies compiled in, so the packaged app only installs what the
+// bundles leave external: packages that cannot live inside a bundle (native
+// addons, packages that load files out of their own directory) and the
+// Electron glue that is required lazily to stay off the startup path.
+//
+// Mirror of KEEP_EXTERNAL in webpack.config.main.production.js.
+const mainExternals = [
+    '@electron/remote',
+    '@sentry/electron',
+    'electron-store',
+    'electron-updater',
+    'node-fetch',
+    'font-scanner',
 ];
+// Mirror of KEEP_EXTERNAL in webpack.config.server.production.js.
 const serverExternals = [
     'serialport',
     'font-scanner',
@@ -29,16 +36,7 @@ const serverExternals = [
     'errorhandler',
     'socket.io',
 ];
-const deps = [
-    '@babel/runtime', // 'babel-runtime' is required for electron app
-    'debug', // 'debug' is required for electron app
-    '@electron/remote', // '@electron/remote/main' is required
-    '@sentry/electron',
-    // Lazy require()s inside functions in src/main.js, invisible to
-    // findImports' top-level import scan:
-    'electron-updater',
-    'node-fetch',
-].concat(serverExternals).concat(findImports(files, { flatten: true })).sort();
+const deps = [...new Set([...mainExternals, ...serverExternals])].sort();
 
 pkgApp.name = pkg.name;
 pkgApp.version = pkg.version;
