@@ -34,6 +34,7 @@ import { ConnectionStatusLike, baseIdentifier, machineStore, setMachineStoreSour
 import { LANDMARK_CONFIRM_TTL_HOURS } from '../procedureLimits';
 import {
     MACHINES,
+    connectedDialect,
     connectedMachineCapability,
     connectedMachineIdentifier,
     connectedMachineTag,
@@ -42,6 +43,9 @@ import {
     machineCapabilityFor,
 } from '../connectedMachine';
 import { TraverseMachine } from '../traversePlan';
+import { GcodeDialect, dialectById } from '../gcodeDialect';
+import { GcodeForm, gcodeFormOf, genericMotionRefusal } from '../gcodeForms';
+import { LogicalFrameTrust, judgeLogicalFrame, readLogicalFrameEvidence } from '../logicalFrame';
 import { statedTravel } from '../rotaryGeometry';
 import {
     FrameLatch,
@@ -134,11 +138,62 @@ export function getMachineSizeByIdentifier(identifier: string | null): { x: numb
  * Ray, gcodeFlavor 'grbl' in its definition) gets Luban's own relative jog
  * form; everything else keeps the Snapmaker 2.0 own-line G53 / G54 steps.
  */
-export function traverseMachine(): TraverseMachine {
+export function traverseMachine(action: string = 'this motion'): TraverseMachine {
     const capability = connectedMachineCapability();
-    const definition = findMachine(capability.identifier) as { metadata?: { gcodeFlavor?: string } } | null;
-    const grbl = !!definition && definition.metadata !== undefined && definition.metadata.gcodeFlavor === 'grbl';
-    return { hasZ: capability.hasZ, gcode: grbl ? 'grbl-relative' : 'snapmaker-2' };
+    const dialect = motionDialect();
+    const refusal = genericMotionRefusal(dialect, action);
+    if (refusal) {
+        throw new McpToolError(`${refusal} ${connectedMachineTag()}`);
+    }
+    // Derived from the dialect row (gcodeDialect.ts transportForm): the Ray,
+    // the Original and the J1 take relative steps, the Snapmaker 2.0 and the
+    // Artisan absolute steps in the declared frame. The two literals are #264's.
+    return { hasZ: capability.hasZ, gcode: gcodeFormOf(dialect) === 'relative-steps' ? 'grbl-relative' : 'snapmaker-2', dialect };
+}
+
+/**
+ * The dialect generic motion is written in: the connected machine's row, or
+ * the Snapmaker 2.0 row when NO machine identifier is known (the A350 as the
+ * MCP always assumed - zPolicyFor treats null the same way; the test harness's
+ * ConnectionManager stub has no getConnectionStatus). A connected machine the
+ * table does not list gets the 'unknown' row, which emits nothing.
+ */
+export function motionDialect(): GcodeDialect {
+    return connectedMachineIdentifier() === null ? dialectById('sm2-marlin') : connectedDialect();
+}
+
+/** `gcode_form` for tool results: 'sm2' | 'relative-steps' (throws, naming the machine, where nothing is emitted). */
+export function motionGcodeForm(): GcodeForm {
+    const dialect = motionDialect();
+    try {
+        return gcodeFormOf(dialect);
+    } catch (err) {
+        throw new McpToolError(`${(err as Error).message} ${connectedMachineTag()}`);
+    }
+}
+
+/**
+ * The MCP's idle/running notion from a channel state. SACP/SSTP states carry
+ * `status` ('idle', 'running', ...). The USB text-serial state has none:
+ * Marlin reports no motion state over M114, so its `workflowState` - Luban's
+ * sender ('idle' | 'running' | 'paused': is a FILE streaming) - is mapped
+ * explicitly, and anything else is unknown (null, which refuses).
+ * `controllerHomed` and the like are never read as status.
+ */
+export function machineStatusOf(state: { [key: string]: unknown } | null): string | null {
+    if (!state) {
+        return null;
+    }
+    if (typeof state.status === 'string' && state.status) {
+        return state.status;
+    }
+    if (state.positionFrame === 'logical') {
+        const workflow = state.workflowState;
+        if (workflow === 'idle' || workflow === 'running' || workflow === 'paused') {
+            return workflow;
+        }
+    }
+    return null;
 }
 
 /**
@@ -452,6 +507,19 @@ export interface PositionSnapshot {
     reportedAt: number;
     convention: string;
     warnings: string[];
+    /**
+     * USB text serial only (null elsewhere): whether the controller's LOGICAL
+     * M114 position is taken as the machine position (logicalFrame.ts), and
+     * why. Untrusted = the position is refused with `reason` (home first, a
+     * G92 since the home, a machine with workspaces...).
+     */
+    logicalFrame?: LogicalFrameTrust | null;
+    /**
+     * USB text serial only (null elsewhere): the newest report's M114 was
+     * written after a planner sync that followed the last motion line, so the
+     * head was at rest at it. false = it may be the planner's queued target.
+     */
+    motionAtRest?: boolean | null;
 }
 
 // The WiFi status poll runs every 2 s (3 s timeout); a report older than this
@@ -715,6 +783,12 @@ export function getPositionSnapshot(): PositionSnapshot {
     };
     const now = Date.now();
     const record = getPositionOfRecord(currentGcodeSequence());
+    // USB text serial reports the LOGICAL position: it is the machine position
+    // only on a machine with no workspaces, homed on this connection with no
+    // shift written since (logicalFrame.ts). Otherwise the judge refuses it.
+    const logicalFrame = (state as { positionFrame?: unknown }).positionFrame === 'logical'
+        ? judgeLogicalFrame(connectedDialect(), readLogicalFrameEvidence((state as { frameEvidence?: unknown }).frameEvidence))
+        : null;
     const judgement = judgeBeatStateful(
         machinePosition,
         { raw: work, offsetReported: reported, reportedAt: state.timestamp },
@@ -725,6 +799,8 @@ export function getPositionSnapshot(): PositionSnapshot {
             verified: record ? { ...record.machine } : null,
             directGcodeQuiet: directGcodeQuiet(ZERO_OFFSET_QUIET_MS),
             declaredRun: declaredRun && state.timestamp >= declaredRun.fromMs ? declaredRun : null,
+            logicalAsMachine: logicalFrame !== null && logicalFrame.trusted,
+            logicalFrameReason: logicalFrame && !logicalFrame.trusted ? logicalFrame.reason : null,
         }
     );
     const latch = getFrameLatch();
@@ -757,14 +833,19 @@ export function getPositionSnapshot(): PositionSnapshot {
         },
         b: axisValue(pos.b),
         isFourAxis: !!pos.isFourAxis,
-        isHomed: (state as { isHomed?: boolean }).isHomed ?? null,
-        machineStatus: (state as { status?: string }).status || null,
+        // Text serial: homed only when the MCP OBSERVED a full home complete on
+        // this connection (logicalFrame.ts) - never MarlinController's
+        // isHomed, which a SENT G28 sets.
+        isHomed: logicalFrame ? logicalFrame.homed : (state as { isHomed?: boolean }).isHomed ?? null,
+        machineStatus: machineStatusOf(state as { [key: string]: unknown }),
         reportAgeMs: now - state.timestamp,
         reportedAt: state.timestamp,
         convention: 'machine = the JUDGED position of record (machinePosition.ts) with `reliability`; work/originOffset are the '
             + 'raw report - never derive machine = work - originOffset by hand. Agents plan in machine coordinates; the work '
             + 'origin is the operator\'s.',
         warnings: [...judgement.reasons, ...frameWarnings],
+        logicalFrame,
+        motionAtRest: logicalFrame ? (state as { reportAtRest?: unknown }).reportAtRest === true : null,
     };
 }
 
@@ -869,7 +950,7 @@ export function requireReliableMachine(position: PositionSnapshot, what: string)
  * a runner's per-move loop, so a rejected G53-window beat can only delay a
  * start by one poll period, never abort a running procedure.
  */
-export function assertFreshHeartbeat(what: string): void {
+export function assertFreshHeartbeat(what: string, options: { homing?: boolean } = {}): void {
     const state = connectionManager.getLatestMachineState();
     if (!state) {
         throw new McpToolError('No heartbeat received yet on this channel; position unknown.');
@@ -880,7 +961,18 @@ export function assertFreshHeartbeat(what: string): void {
             + '(poll period 2 s) - the machine connection has likely dropped without the server noticing. '
             + 'Reconnect the machine, verify get_position reports a fresh, correct position, then retry.');
     }
-    requireReliableMachine(getPositionSnapshot(), what);
+    const snapshot = getPositionSnapshot();
+    if (options.homing === true && snapshot.logicalFrame && !snapshot.logicalFrame.trusted) {
+        // Homing is what ESTABLISHES a logical-frame position (the Original):
+        // refusing it for lacking one would be circular. The beat is fresh;
+        // a frame latch still refuses, as for every other motion.
+        const latch = getFrameLatch();
+        if (latch) {
+            throw new McpToolError(`Refusing ${what}: ${describeFrameLatch(latch)}`);
+        }
+        return;
+    }
+    requireReliableMachine(snapshot, what);
 }
 
 /** get_machine_profile.policy / get_stored_state: the machine's policy with the source of every value. */

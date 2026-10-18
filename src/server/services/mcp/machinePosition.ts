@@ -399,6 +399,15 @@ export interface JudgeContext {
     directGcodeQuiet: boolean;
     /** A declared machine-frame run covering this beat (by its receive time), if any. */
     declaredRun?: DeclaredMachineFrameRun | null;
+    /**
+     * A logical-frame beat (JudgeConnectionContext.positionFrame 'logical') IS
+     * the machine position: logicalFrame.ts judged it so for a machine with no
+     * workspaces (homed on this connection, no shift since). The beat is then
+     * judged with a zero offset. Absent/false = refused as before.
+     */
+    logicalAsMachine?: boolean;
+    /** Why a logical-frame beat is refused (logicalFrame.ts), added to the reasons. */
+    logicalFrameReason?: string | null;
 }
 
 /**
@@ -511,7 +520,8 @@ export function judgeBeatStateful(state: MachinePositionState, beat: RawBeat, ct
         }
         state.session = connection.session;
     }
-    const logical = connection?.positionFrame === 'logical';
+    const logicalTrusted = connection?.positionFrame === 'logical' && ctx.logicalAsMachine === true;
+    const logical = connection?.positionFrame === 'logical' && !logicalTrusted;
     if (logical) {
         // Belt and braces: whatever an earlier frame left behind is not this frame's.
         state.cachedOffset = null;
@@ -565,9 +575,24 @@ export function judgeBeatStateful(state: MachinePositionState, beat: RawBeat, ct
             machineFrameStreak: 0,
         });
     }
+    if (logicalTrusted) {
+        // Logical = machine (no workspaces, homed, no shift since): the offset
+        // is zero BY THAT FACT, not by a report. No echo record or declared
+        // run applies to this transport.
+        Object.assign(input, {
+            offsetReported: { x: 0, y: 0, z: 0 },
+            cachedOffset: null,
+            verified: null,
+            declaredRun: null,
+            machineFrameStreak: 0,
+        });
+    }
     const judgement = judgeBeat(input);
     if (logical) {
         judgement.reasons.push(LOGICAL_FRAME_REASON);
+        if (ctx.logicalFrameReason) {
+            judgement.reasons.push(ctx.logicalFrameReason);
+        }
     }
 
     if (isNewBeat) {

@@ -1334,6 +1334,9 @@ class MarlinController extends EventEmitter {
         context.emit && this.emitAll('serialport:write', { data, context });
 
         this.serialport.write(data, context);
+        // The only serial write: TextSerialChannel notes every line (homes,
+        // G92 shifts, syncs, M114 queries) for the MCP's frame evidence.
+        this.emit('lineWritten', data);
     }
 }
 
