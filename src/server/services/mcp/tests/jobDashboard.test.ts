@@ -79,6 +79,7 @@ function managerFixture() {
         './jobEnding': jobEnding,
         './jobDashboardState': require('../jobDashboardState'),
         './telemetryConfig': require('../telemetryConfig'),
+        './jobMachineBinding': require('../jobMachineBinding'),
         './activeTool': { describeActiveTool: () => ({ active: null }) },
     });
     return loaded;

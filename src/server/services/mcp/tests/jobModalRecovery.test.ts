@@ -106,6 +106,7 @@ export function managerFixture(files: Map<string, string>): JobManager {
         './jobEnding': jobEnding,
         './jobDashboardState': require('../jobDashboardState'),
         './telemetryConfig': require('../telemetryConfig'),
+        './jobMachineBinding': require('../jobMachineBinding'),
         './activeTool': { describeActiveTool: () => ({ active: null }) },
         // Program identity + upload store (#237): pure, so the real module.
         './gcodeIntake': require('../gcodeIntake'),

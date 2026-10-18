@@ -18,6 +18,7 @@ import { JobDashboardFeed, summarizeDashboardJob } from './jobDashboardState';
 import { JobEnding, McpJobKind, McpJobState, TERMINAL_JOB_STATES } from './jobEnding';
 import { resolveTelemetryConfig } from './telemetryConfig';
 import { GcodeValidationReport } from './validator';
+import { StagedMachine, machineBindingRefusal } from './jobMachineBinding';
 import { describeActiveTool } from './activeTool';
 import type { RecoveryEvidence } from './failureRecovery';
 import type { FileStartAttempt } from './fileJobStart';
@@ -186,6 +187,13 @@ export interface McpJob {
     createdAt: number;
     validation: GcodeValidationReport;
     /**
+     * The machine connected when the job was staged (#265 WP3): approval and
+     * start refuse on any other (jobMachineBinding.ts). null = staged with no
+     * machine connected; undefined = no machine source wired (the inert test
+     * harnesses).
+     */
+    stagedFor?: StagedMachine | null;
+    /**
      * Size, SHA-256, line counts and first/last motion lines of EXACTLY the
      * text written to filePath - what start_gcode_job streams. On the
      * confirm page and in describe() so the operator can tell a complete
@@ -293,6 +301,21 @@ export class JobManager {
 
     private workspaceRevision = 0;
 
+    /** Reads the connected machine (tools/staging.ts connectedStagingMachine); wired by registerGcodeTools. */
+    private machineSource: (() => StagedMachine | null) | null = null;
+
+    public setMachineSource(source: () => StagedMachine | null): void {
+        this.machineSource = source;
+    }
+
+    /** Why `action` must be refused because the job is not for the connected machine, or null. */
+    public machineBindingRefusal(job: McpJob, action: 'approve' | 'start'): string | null {
+        if (!this.machineSource) {
+            return null;
+        }
+        return machineBindingRefusal(job.stagedFor, this.machineSource(), action);
+    }
+
     private ensureJobsDir(): string {
         if (!this.jobsDir) {
             this.jobsDir = path.join(DataStorage.tmpDir, 'mcp-jobs');
@@ -319,6 +342,7 @@ export class JobManager {
             filePath,
             createdAt: Date.now(),
             validation,
+            ...(this.machineSource ? { stagedFor: this.machineSource() } : {}),
             identity: describeProgramIdentity(gcode),
             source: source || (kind === 'file' ? { kind: 'inline' } : { kind: 'server' }),
             workspaceRevision: this.workspaceRevision,
@@ -357,6 +381,10 @@ export class JobManager {
     public approveByPolicy(job: McpJob, policy: string, reason: string): string {
         if (job.state !== 'awaiting_confirmation') {
             throw new Error(`Job ${job.id} is ${job.state}; a policy can only approve a job awaiting confirmation.`);
+        }
+        const wrongMachine = this.machineBindingRefusal(job, 'approve');
+        if (wrongMachine) {
+            throw new Error(wrongMachine);
         }
         job.confirmToken = crypto.randomBytes(4).toString('hex');
         job.approvedAt = Date.now();
@@ -451,6 +479,12 @@ export class JobManager {
         if ((job.workspaceRevision || 0) !== this.workspaceRevision) {
             return { ok: false, reason: 'Workspace state changed since this job was staged; restage it against the verified offsets for a new approval.' };
         }
+        // Every start path consumes the token here, so this is the one place
+        // a job staged for another machine is stopped before anything is sent.
+        const wrongMachine = this.machineBindingRefusal(job, 'start');
+        if (wrongMachine) {
+            return { ok: false, reason: wrongMachine };
+        }
         // A batch direct job mid-series reads 'started' with steps remaining
         // and its token re-armed; the operator's one approval covers the
         // exact list, so the same code keeps working (bug found live
@@ -490,6 +524,8 @@ export class JobManager {
             createdAt: job.createdAt,
             approvedAt: job.approvedAt,
             approval: job.approval,
+            // eslint-disable-next-line camelcase
+            staged_for: job.stagedFor === undefined ? null : job.stagedFor,
             startedAt: job.startedAt,
             // eslint-disable-next-line camelcase
             start_attempt: job.startAttempt || null,
@@ -564,6 +600,12 @@ export class JobManager {
         if (req.method === 'POST' && action === 'approve') {
             if (job.state !== 'awaiting_confirmation') {
                 this.page(res, 409, `<p>Job is ${escapeHtml(job.state)}; nothing to approve.</p>`);
+                return;
+            }
+            const wrongMachine = this.machineBindingRefusal(job, 'approve');
+            if (wrongMachine) {
+                this.appendEvent(job, 'approval-refused', { note: wrongMachine });
+                this.page(res, 409, `<h2>Not approved</h2><p>${escapeHtml(wrongMachine)}</p>`);
                 return;
             }
             job.confirmToken = crypto.randomBytes(4).toString('hex');
@@ -663,6 +705,24 @@ export class JobManager {
             machineZ = '-';
         }
 
+        // Which machine the program was judged for, by which rules (#265 WP3).
+        // Jobs persisted before the rules existed carry no machine block.
+        let machineText = '-';
+        if (v.machine && v.machine.identifier) {
+            machineText = `${v.machine.identifier} (${v.machine.dialect}) - rules: ${v.machine.rulesApplied.join(', ')}`;
+        } else if (v.machine) {
+            machineText = `no machine connected at staging - judged by the legacy ${v.machine.dialect} rules only (${v.machine.rulesApplied.join(', ')})`;
+        }
+        if (job.stagedFor) {
+            machineText += `; staged for ${job.stagedFor.identifier}${job.stagedFor.deviceSerial ? ` serial ${job.stagedFor.deviceSerial}` : ''} - `
+                + 'approval and start refuse on any other machine';
+        } else if (job.stagedFor === null) {
+            machineText += '; staged with NO machine connected - approval and start refuse once one is';
+        }
+        if (v.header && v.header.machine) {
+            machineText += `; file header: ;machine: ${v.header.machine}${v.header.gcodeFlavor ? `, ;gcode_flavor: ${v.header.gcodeFlavor}` : ''}`;
+        }
+
         let directBanner = '';
         if (job.kind === 'direct') {
             directBanner = `<p style="background:#fff3cd;border:1px solid #b8860b;padding:10px">
@@ -691,6 +751,7 @@ export class JobManager {
             ${directBanner}
             <table border="1" cellpadding="6" style="border-collapse:collapse">
                 <tr><td>Head</td><td>${escapeHtml(job.headType)}</td></tr>
+                <tr><td><strong>Machine</strong></td><td><strong>${escapeHtml(machineText)}</strong></td></tr>
                 <tr><td>Lines / motion lines</td><td>${v.lineCount} / ${v.motionLineCount}</td></tr>
                 <tr><td>X extents</td><td>${range(v.extents.x)}</td></tr>
                 <tr><td>Y extents</td><td>${range(v.extents.y)}</td></tr>

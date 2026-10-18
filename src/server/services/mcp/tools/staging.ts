@@ -1,7 +1,11 @@
 import { connectionManager } from '../../machine/ConnectionManager';
+import { connectedMachineIdentifier, connectedMachineTag, machineCapabilityFor } from '../connectedMachine';
+import { RulePhase } from '../dialectRules';
+import { StagedMachine } from '../jobMachineBinding';
+import { ResolvedTravel } from '../machineTravel';
 import { McpToolError } from '../registry';
-import { FrameResolutionContext, GcodeValidationReport, JobFrame, resolveJobFrame, validateGcode } from '../validator';
-import { getMachineSizeByIdentifier, getPositionSnapshot, zTravelTop } from './machine';
+import { FrameResolutionContext, GcodeValidationReport, JobFrame, ValidationOptions, resolveJobFrame, validateGcode } from '../validator';
+import { getMachineSizeByIdentifier, getPositionSnapshot, planningTravel, zTravelTop } from './machine';
 
 /**
  * Live context for resolveJobFrame(): the work-origin Z offset the position
@@ -32,6 +36,64 @@ export function stagingFrameContext(frameArgument: JobFrame | null): FrameResolu
 }
 
 /**
+ * The validator options for the CONNECTED machine (#265 WP3): its dialect row,
+ * Z axis, rotary support and, for a submitted file, its XY travel. undefined
+ * when no machine is connected (or the harness stub names none): the file is
+ * then judged by the legacy A350 rules, exactly as before - the 'unknown'
+ * dialect row would refuse every G53 and is only for a machine that IS
+ * connected but missing from the table.
+ */
+export function connectedValidationOptions(phase: RulePhase, headType: string | null = null): ValidationOptions | undefined {
+    const identifier = connectedMachineIdentifier();
+    if (!identifier) {
+        return undefined;
+    }
+    const capability = machineCapabilityFor(identifier);
+    let travel: ResolvedTravel | null = null;
+    // Server-emitted bodies were planned inside the travel already
+    // (requirePlanningTravel / assertWithinTravel); a submitted file was not.
+    if (phase !== 'staged') {
+        try {
+            travel = planningTravel();
+        } catch (err) {
+            travel = null;
+        }
+    }
+    return {
+        dialect: capability.dialect,
+        machineIdentifier: identifier,
+        hasZ: capability.hasZ,
+        supportsRotary: capability.supports.rotary,
+        travel,
+        headType,
+        phase,
+    };
+}
+
+/**
+ * The connected machine as a staged job records it (jobMachineBinding.ts):
+ * identifier, dialect and the connection's device serial when it reports one
+ * (getConnectionStatus().deviceSerial - read defensively, absent on transports
+ * and builds without it). null when nothing is connected.
+ */
+export function connectedStagingMachine(): StagedMachine | null {
+    const identifier = connectedMachineIdentifier();
+    if (!identifier) {
+        return null;
+    }
+    let deviceSerial: string | null = null;
+    try {
+        const status = connectionManager.getConnectionStatus() as unknown as { deviceSerial?: unknown };
+        if (status && typeof status.deviceSerial === 'string' && status.deviceSerial.trim()) {
+            deviceSerial = status.deviceSerial.trim();
+        }
+    } catch (err) {
+        deviceSerial = null;
+    }
+    return { identifier, dialect: machineCapabilityFor(identifier).dialect.id, deviceSerial };
+}
+
+/**
  * Validate a body the SERVER emitted - a procedure envelope or a direct
  * move's review text - and resolve its frame, so the confirm page's Frame row
  * and machine-resolved Z extents are filled for it exactly as for a submitted
@@ -46,7 +108,15 @@ export function stagingFrameContext(frameArgument: JobFrame | null): FrameResolu
  * only motion gate, and a page whose Frame row is wrong is not a gate.
  */
 export function validateStagedEnvelope(gcode: string, what: string, options: { relativeTransport?: boolean } = {}): GcodeValidationReport {
-    const resolved = resolveJobFrame(validateGcode(gcode), { ...stagingFrameContext(null), relativeTransport: options.relativeTransport === true });
+    const report = validateGcode(gcode, connectedValidationOptions('staged'));
+    // The connected machine's rules (dialectRules.ts) refuse this body - a
+    // capability mismatch (a Z move on the Ray, G53 on a machine without
+    // workspaces), not an emitter bug: say which machine, and why.
+    if (report.machine && report.machine.refusals.length) {
+        const refusals = report.machine.refusals.join(' ');
+        throw new McpToolError(`The ${what} body cannot be sent ${connectedMachineTag()}: ${refusals}`);
+    }
+    const resolved = resolveJobFrame(report, { ...stagingFrameContext(null), relativeTransport: options.relativeTransport === true });
     if (resolved.refusal) {
         throw new McpToolError(`Internal error: the ${what} envelope the server emitted does not declare its coordinate frame `
             + 'cleanly, so it cannot reach the confirm page (the page is the only motion gate and its Frame row would be wrong). '
