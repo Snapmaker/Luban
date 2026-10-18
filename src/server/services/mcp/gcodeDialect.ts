@@ -376,7 +376,8 @@ export function dialectFor(definitionOrIdentifier: { identifier: string } | stri
     if (!identifier) {
         return UNKNOWN;
     }
-    return DIALECTS.find((dialect) => dialect.identifiers.includes(identifier)) || UNKNOWN;
+    const wanted: string = identifier;
+    return DIALECTS.find((dialect) => dialect.identifiers.includes(wanted)) || UNKNOWN;
 }
 
 /** Whether the MCP emits anything at all on this dialect (false only for 'unknown'). */
