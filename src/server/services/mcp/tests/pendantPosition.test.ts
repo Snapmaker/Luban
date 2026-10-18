@@ -42,7 +42,7 @@ function snapshot(now = 5200): PositionSnapshot {
         machineStatus: 'idle',
         reportAgeMs: now - 3500,
         reportedAt: 3500,
-        connectedMachine: { identifier: 'Snapmaker 2.0 A350', type: 'Snapmaker 2.0', hasZ: true } };
+        connectedMachine: { identifier: 'Snapmaker 2.0 A350', type: 'Snapmaker 2.0', hasZ: true, dialect: 'sm2-marlin' } };
 }
 export const tests: Array<[string, () => void]> = [
     ['pendant uses the existing verified record across delayed G53-window heartbeats', () => {

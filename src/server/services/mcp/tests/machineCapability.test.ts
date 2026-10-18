@@ -25,7 +25,7 @@ export const tests: Array<[string, () => void]> = [
         assert.equal(cap.hasZ, false);
         assert.equal(cap.known, true);
         assert.equal(cap.type, 'Laser');
-        assert.deepEqual(summariseMachine(cap), { identifier: 'Ray', type: 'Laser', hasZ: false });
+        assert.deepEqual(summariseMachine(cap), { identifier: 'Ray', type: 'Laser', hasZ: false, dialect: 'ray-grbl' });
         assert.equal(machineTag(cap), '(connected machine: Ray, Laser, no Z axis)');
     }],
 
@@ -95,5 +95,26 @@ export const tests: Array<[string, () => void]> = [
     ['a SACP channel without goHome, or a Ray channel without executeGcode, falls back to the gcode sequence', () => {
         assert.equal(homeCommandFor({ sacp: true, machineIdentifier: 'A400', canExecuteGcode: true, canGoHome: false }).kind, 'g28-sequence');
         assert.equal(homeCommandFor({ sacp: true, machineIdentifier: RAY_IDENTIFIER, canExecuteGcode: false, canGoHome: true }).kind, 'sacp-home-request');
+    }],
+
+    // The dialect table (gcodeDialect.ts, #265 WP1) rides on the capability.
+    ['the capability carries the dialect row: the Ray speaks ray-grbl, the A350 sm2-marlin', () => {
+        assert.equal(deriveMachineCapability(RAY).dialect.id, 'ray-grbl');
+        const a350 = deriveMachineCapability(A350);
+        assert.equal(a350.dialect.id, 'sm2-marlin');
+        assert.equal(summariseMachine(a350).dialect, 'sm2-marlin');
+    }],
+
+    ['an unknown machine HAS Z for the laws but may not move Z: hasZ true, supports.zAxis false, dialect unknown', () => {
+        const cap = deriveMachineCapability(null, 'Some Future Machine');
+        assert.equal(cap.hasZ, true);
+        assert.equal(cap.dialect.id, 'unknown');
+        assert.equal(cap.supports.zAxis, false);
+        assert.ok(Object.values(cap.supports).every((flag) => flag === false));
+        assert.equal(summariseMachine(cap).dialect, 'unknown');
+    }],
+
+    ['a listed identifier without a definition still gets the unknown row - nothing is known about it', () => {
+        assert.equal(deriveMachineCapability(null, 'Ray').dialect.id, 'unknown');
     }],
 ];
