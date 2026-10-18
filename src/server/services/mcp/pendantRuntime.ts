@@ -35,7 +35,7 @@ import {
     verifyRestoredPosition,
 } from './probing';
 import { homeMachine, sendWorkFrameRestore } from './tools/camera';
-import { HEARTBEAT_STALE_MS, connectionEpoch, declareMachineFrameRun, endMachineFrameRun, getMachineSizeByIdentifier, getPositionSnapshot, requirePlanningTravel, safeTraverseZ } from './tools/machine';
+import { HEARTBEAT_STALE_MS, connectionEpoch, declareMachineFrameRun, endMachineFrameRun, getMachineSizeByIdentifier, getPositionSnapshot, requirePlanningTravel, zTravelTop } from './tools/machine';
 
 const log = logger('service:mcp:pendant');
 
@@ -304,7 +304,7 @@ export class PendantRuntime {
         const size = getMachineSizeByIdentifier(connectionManager.getConnectionStatus().machineIdentifier);
         if (!size) { throw new Error('Machine travel is unknown.'); }
         // Match stagingFrameContext: A350 profile Z325 excludes its reachable Z328 park.
-        return { ...travel.limits, zMin: 0, zMax: Math.max(size.z, safeTraverseZ()) };
+        return { ...travel.limits, zMin: 0, zMax: zTravelTop(size.z) };
     }
 
     private reviewedBounds(requested: JogBounds): JogBounds {

@@ -1735,7 +1735,7 @@ export function registerCameraTools(registry: ToolRegistry): void {
                     type: 'boolean',
                     description: 'Default true. false still settles and verifies the position but '
                         + 'skips the frame - a plain verified move. (The XY travel cap per call is '
-                        + 'the configstore key mcpMaxJogDistance, default 100mm.)',
+                        + 'maxJogDistanceMm in the connected machine\'s entry of the configstore key mcpMachines, default 100mm.)',
                 },
             },
             required: ['reason'],

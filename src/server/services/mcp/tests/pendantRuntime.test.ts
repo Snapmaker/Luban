@@ -295,6 +295,7 @@ function fixture(a350 = false, options: { pipeline?: boolean; countCheck?: 'enfo
             getMachineSizeByIdentifier: () => ({ x: 350, y: 350, z: a350 ? 325 : 100 }),
             getPositionSnapshot: snapshot,
             safeTraverseZ: () => (a350 ? 328 : 100),
+            zTravelTop: (z: number) => Math.max(z, a350 ? 328 : 100),
             requirePlanningTravel: () => ({ limits: { xMin: a350 ? -19 : 0, xMax: a350 ? 330 : 100, yMin: 0, yMax: a350 ? 342 : 100 }, conflicts: [] }) }
     };
     const exports: Record<string, any> = {}; // eslint-disable-line @typescript-eslint/no-explicit-any

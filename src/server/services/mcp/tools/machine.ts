@@ -267,6 +267,18 @@ function zPolicyRefusal(policy: ZPolicy): string {
         + 'machine) with set_machine_policy first.';
 }
 
+/**
+ * The top of the Z TRAVEL for range checks (staging frame context, pendant
+ * envelope): the model's size.z, or the park height when that is higher (an
+ * A350 homes at Z328 against its profile). Never throws - a machine with no
+ * stated park height is range-checked against its size.z alone; it is the
+ * hop/park users of safeTraverseZ() that refuse.
+ */
+export function zTravelTop(sizeZ: number): number {
+    const park = zPolicyFor().safeTraverseZ.value;
+    return park === null ? sizeZ : Math.max(sizeZ, park);
+}
+
 /** Park height of the CURRENT machine (zPolicyFor), or a refusal naming set_machine_policy when it has none. */
 export function safeTraverseZ(): number {
     const policy = zPolicyFor();
@@ -605,9 +617,10 @@ export function noteMachineDisconnected(): void {
  * end of each axis, the toolhead is allowed to be (machineTravel.ts header).
  * Default 25 mm - covers the A350's X-19..339 against 320 and the Ray's
  * home at about X-1 / Y399 against 600 x 400, and still refuses X650 on the
- * Ray. One setting, mcpTravelFudgeMm (configstore) / LUBAN_MCP_TRAVEL_FUDGE_MM
- * (env, wins), with optional per-axis overrides mcpTravelFudgeXMm /
- * mcpTravelFudgeYMm (LUBAN_MCP_TRAVEL_FUDGE_X_MM / _Y_MM). Negative or
+ * Ray. One setting PER MACHINE (set_machine_policy travel_fudge_mm, in the
+ * machine's machineStore entry) / LUBAN_MCP_TRAVEL_FUDGE_MM (env, wins), with
+ * optional per-axis overrides travel_fudge_x_mm / travel_fudge_y_mm
+ * (LUBAN_MCP_TRAVEL_FUDGE_X_MM / _Y_MM). Negative or
  * absurd values fall back to the default rather than refusing every move.
  */
 export const TRAVEL_FUDGE_MAX_MM = 500;
@@ -825,7 +838,7 @@ export function assertWithinTravel(points: Array<{ label: string; x: number; y: 
         if (outside) {
             throw new McpToolError(`${p.label} (machine ${Number(p.x.toFixed(3))}, ${Number(p.y.toFixed(3))}) is outside the `
                 + `toolhead travel: ${outside} (${describePlanningTravel(travel)}). Move the plan inside it; widen the travel fudge `
-                + '(mcpTravelFudgeMm) only if this rig genuinely reaches there.');
+                + '(set_machine_policy travel_fudge_mm) only if this rig genuinely reaches there.');
         }
     }
 }

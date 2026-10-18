@@ -269,7 +269,7 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                     type: ['number', 'null'],
                     description: 'Machine X the toolhead may reach at the low end, for the CONNECTED machine only (else the one '
                         + 'selected in Luban Machine Settings). Unset = the '
-                        + 'machine model\'s size plus the travel fudge at each end (mcpTravelFudgeMm, default 25 mm: an A350 '
+                        + 'machine model\'s size plus the travel fudge at each end (set_machine_policy travel_fudge_mm, default 25 mm: an A350 '
                         + 'homes at X-19 against a 320 definition, a Ray at about X-1 / Y399 against 600 x 400). A stated end '
                         + 'only TIGHTENS that; a looser statement is reported and ignored - widen the fudge instead '
                         + '(set_machine_policy). Every machine keeps its own ends: stating the Ray\'s never touches the A350\'s.',
@@ -429,7 +429,7 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                             yMm: fudge.y,
                             source: fudge.source,
                             defaultMm: fudge.defaultMm,
-                            setting: 'mcpTravelFudgeMm (LUBAN_MCP_TRAVEL_FUDGE_MM); per axis mcpTravelFudgeXMm / mcpTravelFudgeYMm',
+                            setting: 'per machine: set_machine_policy travel_fudge_mm / travel_fudge_x_mm / travel_fudge_y_mm (env LUBAN_MCP_TRAVEL_FUDGE_MM wins)',
                         };
                     })(),
                     /** The PARK height: where procedures hop, retreat on abort, and end. 328 = home Z. Meaningless when zLawsApply is false. */

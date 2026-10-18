@@ -316,6 +316,7 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.equal(f.tools.safeTraverseZ(), 328);
         assert.equal(f.tools.motionFloorZ(), 320);
         assert.equal(f.tools.traverseWithoutApprovalAtSafeZ(), true);
+        assert.equal(f.tools.zTravelTop(325), 328, 'the A350 homes above its profile');
         const policy = f.tools.zPolicyFor();
         assert.equal(policy.safeTraverseZ.source, 'default');
         same(policy.missing, []);
@@ -337,6 +338,7 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.throws(() => f.tools.safeTraverseZ(), /set_machine_policy/);
         assert.throws(() => f.tools.motionFloorZ(), /safe_traverse_z \/ motion_floor_z/);
         same(f.tools.zPolicyFor().missing, ['safe_traverse_z', 'motion_floor_z'], 'status reads never throw');
+        assert.equal(f.tools.zTravelTop(125), 125, 'range checks (staging, pendant envelope) use size.z and never throw');
         assert.equal(f.tools.traverseWithoutApprovalAtSafeZ(), false, 'never approval-free off the A350');
         assert.throws(() => f.tools.setMachinePolicy({ safe_traverse_z: 130 }), /0\.\.125/);
         assert.throws(() => f.tools.setMachinePolicy({ safe_traverse_z: 100, motion_floor_z: 110 }), /above safe_traverse_z/);
