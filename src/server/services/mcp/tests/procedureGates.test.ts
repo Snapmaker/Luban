@@ -101,16 +101,18 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.match(procedureRefusal(MACHINES.ray, 'probe_point') || '',
             /runs it only on the Snapmaker 2\.0 \(Marlin 2\.0\.x\) and Snapmaker Artisan \(Marlin 2\.0\.x\) rows/);
     }],
-    ['nothing connected or an unlisted machine is refused; the offline thread-milling conversion needs no connection', () => {
-        for (const tool of TOOLS.filter((name) => name !== 'convert_thread_milling_gcode')) {
+    ['nothing connected or an unlisted machine is refused; the offline conversion and setter record need no connection', () => {
+        for (const tool of TOOLS.filter((name) => !PROCEDURE_GATES[name].offline)) {
             assert.match(procedureRefusal(NONE, tool) || '', /no machine is connected .* Nothing was sent\.$/, tool);
         }
         assert.match(gateRefusal(NONE, PENDANT_GATE) || '', /no machine is connected/);
         assert.equal(procedureRefusal(NONE, 'convert_thread_milling_gcode'), null);
+        assert.equal(procedureRefusal(NONE, 'set_tool_setter_config'), null);
         for (const tool of TOOLS) {
             assert.match(procedureRefusal(UNLISTED, tool) || '', /Some Other Printer is not in this MCP's G-code dialect table/, tool);
         }
         assert.match(procedureRefusal(MACHINES.ray, 'convert_thread_milling_gcode') || '', /needs spindle control, .* on Ray/);
+        assert.match(procedureRefusal(MACHINES.ray, 'set_tool_setter_config') || '', /needs the tool setter, .* on Ray/);
     }],
     ['a rotate_b op, a group, or a B word adds the rotary need', () => {
         assert.equal(programTurnsB([{ kind: 'sequence' }]), false);
@@ -126,7 +128,7 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.deepEqual(gateNeeds(PROCEDURE_GATES.run_probing_gcode, { gcode: 'G38.2 Z-5 F100' }), ['probing'] as CapabilityKey[]);
     }],
     ['read-only, store-only and generic-motion tools are not gated here', () => {
-        for (const tool of ['get_position', 'get_tool_setter_config', 'set_tool_setter_config', 'move_z', 'traverse_xy', 'home',
+        for (const tool of ['get_position', 'get_tool_setter_config', 'set_active_tool', 'move_z', 'traverse_xy', 'home',
             'restore_work_frame', 'goto_work_origin', 'move_and_capture', 'visual_servo', 'track_feature', 'measure_rotary_angle',
             'calibrate_rotary_accelerometer', 'submit_gcode_job', 'validate_gcode', 'set_landmark', 'set_probe_geometry']) {
             assert.equal(procedureRefusal(MACHINES.ray, tool), null, tool);

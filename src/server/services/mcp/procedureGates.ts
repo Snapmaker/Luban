@@ -59,6 +59,12 @@ export const PROCEDURE_GATES: { readonly [tool: string]: ProcedureGate } = {
     run_tool_setter: { needs: ['toolSetter'], action: 'run_tool_setter (a sensor-gated Z march onto the setter in own-line G53 moves)' },
     goto_tool_change_position: { needs: ['toolSetter'], action: 'goto_tool_change_position (own-line G53 Z then XY moves to the change position)' },
     apply_tool_length_offset: { needs: ['toolSetter'], action: 'apply_tool_length_offset (a G92 Z work-offset write from the setter measurement)' },
+    // A record, not motion; offline so the A350's config is still editable while disconnected, refused on a connected machine without a setter.
+    set_tool_setter_config: {
+        needs: ['toolSetter'],
+        action: 'set_tool_setter_config (the setter record run_tool_setter marches onto in own-line G53 moves)',
+        offline: true,
+    },
 
     probe_point: PROBING('probe_point'),
     probe_vector: PROBING('probe_vector'),
