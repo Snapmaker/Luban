@@ -4,11 +4,6 @@ import {
     SnapmakerA150Machine,
     SnapmakerA250Machine,
     SnapmakerA350Machine,
-    SnapmakerArtisanMachine,
-    SnapmakerJ1Machine,
-    SnapmakerOriginalExtendedMachine,
-    SnapmakerOriginalMachine,
-    SnapmakerRayMachine,
 } from '../../../../app/machines';
 
 import DataStorage from '../../../DataStorage';
@@ -25,7 +20,25 @@ import {
     noteDisconnected,
     reliableForMotion,
 } from '../machinePosition';
-import { ResolvedTravel, outsideTravel, resolveTravel } from '../machineTravel';
+import {
+    DEFAULT_TRAVEL_FUDGE_MM,
+    ResolvedTravel,
+    TravelFudge,
+    describeTravel,
+    modelTravel,
+    outsideTravel,
+    resolveTravel,
+} from '../machineTravel';
+import { MachineSummary } from '../machineCapability';
+import {
+    MACHINES,
+    connectedMachineCapability,
+    connectedMachineIdentifier,
+    describeConnectedMachine,
+    findMachine,
+    machineCapabilityFor,
+} from '../connectedMachine';
+import { TraverseMachine } from '../traversePlan';
 import { statedTravel } from '../rotaryGeometry';
 import {
     FrameLatch,
@@ -47,17 +60,6 @@ import logger from '../../../lib/logger';
 
 const log = logger('service:mcp:machine');
 
-const MACHINES = [
-    SnapmakerOriginalMachine,
-    SnapmakerOriginalExtendedMachine,
-    SnapmakerA150Machine,
-    SnapmakerA250Machine,
-    SnapmakerA350Machine,
-    SnapmakerArtisanMachine,
-    SnapmakerJ1Machine,
-    SnapmakerRayMachine,
-];
-
 // Kinematics an agent must not guess. On the Snapmaker 2.0 gantry the
 // platform itself travels in Y while the toolhead moves in X and Z, so a
 // camera fixed to the machine frame or toolhead sees the platform move
@@ -74,10 +76,6 @@ const KINEMATICS_BY_IDENTIFIER: { [identifier: string]: object } = {
     [SnapmakerA250Machine.identifier]: SM2_KINEMATICS,
     [SnapmakerA350Machine.identifier]: SM2_KINEMATICS,
 };
-
-function findMachine(identifier: string) {
-    return MACHINES.find((machine) => machine.identifier === identifier) || null;
-}
 
 export interface AppMachineSettings {
     /** Machine identifier as selected in Luban, e.g. "Snapmaker 2.0 A350". */
@@ -122,8 +120,34 @@ export function readAppMachineSettings(): AppMachineSettings | null {
  * Build volume of a machine by identifier, or null when unknown.
  */
 export function getMachineSizeByIdentifier(identifier: string | null): { x: number; y: number; z: number } | null {
-    const machine = identifier ? findMachine(identifier) : null;
+    const machine = findMachine(identifier);
     return machine ? machine.metadata.size : null;
+}
+
+/**
+ * The transport traits of the CONNECTED machine for the XY planners
+ * (traversePlan.ts TraverseMachine): whether it has a Z axis, and which
+ * gcode form its firmware is known to execute. A GRBL-flavoured machine (the
+ * Ray, gcodeFlavor 'grbl' in its definition) gets Luban's own relative jog
+ * form; everything else keeps the Snapmaker 2.0 own-line G53 / G54 steps.
+ */
+export function traverseMachine(): TraverseMachine {
+    const capability = connectedMachineCapability();
+    const definition = findMachine(capability.identifier) as { metadata?: { gcodeFlavor?: string } } | null;
+    const grbl = !!definition && definition.metadata !== undefined && definition.metadata.gcodeFlavor === 'grbl';
+    return { hasZ: capability.hasZ, gcode: grbl ? 'grbl-relative' : 'snapmaker-2' };
+}
+
+/**
+ * Refuse a Z tool on a machine that has no Z axis, naming the machine. The
+ * refusal never mentions move_z: there is nothing to raise.
+ */
+export function requireZAxis(what: string): void {
+    const capability = connectedMachineCapability();
+    if (!capability.hasZ) {
+        throw new McpToolError(`Refusing ${what}: this machine has no Z axis (${capability.identifier}, ${capability.type}, `
+            + 'definition size.z 0). XY moves run at its only height; there is no Z to move, no motion floor and no traverse height.');
+    }
 }
 
 function axisValue(value: unknown): number | null {
@@ -216,6 +240,8 @@ export function traverseWithoutApprovalSource(): 'env' | 'config' | 'default' {
 }
 
 export interface PositionSnapshot {
+    /** Which machine this position belongs to, and whether it has a Z axis - so an agent cannot miss that it is driving a Ray. */
+    connectedMachine: MachineSummary;
     work: { x: number | null; y: number | null; z: number | null };
     machine: { x: number | null; y: number | null; z: number | null };
     originOffset: { x: number; y: number; z: number };
@@ -413,10 +439,66 @@ export function noteMachineDisconnected(): void {
     clearTrustedOffset();
 }
 
-/** Machine travel as the bounds a derived position must stay within (+/- BOUNDS_MARGIN_MM). */
+/**
+ * The travel FUDGE: how far outside the machine model's nominal box, at each
+ * end of each axis, the toolhead is allowed to be (machineTravel.ts header).
+ * Default 25 mm - covers the A350's X-19..339 against 320 and the Ray's
+ * home at about X-1 / Y399 against 600 x 400, and still refuses X650 on the
+ * Ray. One setting, mcpTravelFudgeMm (configstore) / LUBAN_MCP_TRAVEL_FUDGE_MM
+ * (env, wins), with optional per-axis overrides mcpTravelFudgeXMm /
+ * mcpTravelFudgeYMm (LUBAN_MCP_TRAVEL_FUDGE_X_MM / _Y_MM). Negative or
+ * absurd values fall back to the default rather than refusing every move.
+ */
+export const TRAVEL_FUDGE_MAX_MM = 500;
+
+export type TravelFudgeSource = 'env' | 'config' | 'default';
+
+function fudgeSetting(envName: string, key: string): { value: number; source: TravelFudgeSource } | null {
+    const env = String(process.env[envName] || '').trim();
+    if (env) {
+        const n = Number(env);
+        if (Number.isFinite(n) && n >= 0 && n <= TRAVEL_FUDGE_MAX_MM) {
+            return { value: n, source: 'env' };
+        }
+    }
+    const stored = config.get(key);
+    if (stored !== undefined && stored !== null && stored !== '') {
+        const n = Number(stored);
+        if (Number.isFinite(n) && n >= 0 && n <= TRAVEL_FUDGE_MAX_MM) {
+            return { value: n, source: 'config' };
+        }
+    }
+    return null;
+}
+
+export function travelFudge(): TravelFudge & { source: { x: TravelFudgeSource; y: TravelFudgeSource }; defaultMm: number } {
+    const common = fudgeSetting('LUBAN_MCP_TRAVEL_FUDGE_MM', 'mcpTravelFudgeMm');
+    const x = fudgeSetting('LUBAN_MCP_TRAVEL_FUDGE_X_MM', 'mcpTravelFudgeXMm') || common;
+    const y = fudgeSetting('LUBAN_MCP_TRAVEL_FUDGE_Y_MM', 'mcpTravelFudgeYMm') || common;
+    return {
+        x: x ? x.value : DEFAULT_TRAVEL_FUDGE_MM,
+        y: y ? y.value : DEFAULT_TRAVEL_FUDGE_MM,
+        source: { x: x ? x.source : 'default', y: y ? y.source : 'default' },
+        defaultMm: DEFAULT_TRAVEL_FUDGE_MM,
+    };
+}
+
+/**
+ * The machine model's travel as the bounds a derived position must stay
+ * within: size +/- the travel fudge on X and Y (the judge adds its own
+ * BOUNDS_MARGIN_MM garbage margin on top), 0..size.z on Z - and NO Z range
+ * at all on a machine without a Z axis (the Ray reports Z 0 for ever).
+ */
 export function machineBounds(identifier: string | null) {
-    const size = getMachineSizeByIdentifier(identifier);
-    return size ? { min: { x: 0, y: 0, z: 0 }, max: { x: size.x, y: size.y, z: size.z } } : null;
+    const capability = machineCapabilityFor(identifier);
+    if (!capability.size) {
+        return null;
+    }
+    const xy = modelTravel(capability.size, travelFudge());
+    return {
+        min: { x: xy.xMin, y: xy.yMin, z: capability.hasZ ? 0 : -Infinity },
+        max: { x: xy.xMax, y: xy.yMax, z: capability.hasZ ? capability.size.z : Infinity },
+    };
 }
 
 /**
@@ -481,6 +563,7 @@ export function getPositionSnapshot(): PositionSnapshot {
     const frameWarnings = openLatch && !judgement.declaredRun ? [describeFrameLatch(openLatch)] : [];
 
     return {
+        connectedMachine: describeConnectedMachine(),
         work,
         machine: judgement.machine,
         originOffset: judgement.offset.offset,
@@ -509,17 +592,20 @@ export function getPositionSnapshot(): PositionSnapshot {
 }
 
 /**
- * The XY travel a planner may sweep, for THIS machine and THIS rig: stated
- * limits first, then positions the toolhead has been observed at, then the
- * machine definition (machineTravel.ts). Null when the machine is unknown and
- * nothing has been stated - there is no honest box to clamp to, and a caller
- * must refuse rather than invent one.
+ * The XY travel a planner may sweep, for THIS machine: the machine model's
+ * size plus the travel fudge at each end (machineTravel.ts), tightened by any
+ * travel the operator stated FOR THIS MACHINE (set_probe_geometry travel_*,
+ * machine-scoped; a statement looser than the model is reported and
+ * ignored). Null when the machine is unknown and not every end has been
+ * stated - there is no honest box to clamp to, and a caller must refuse
+ * rather than invent one.
  *
- * Deliberately NOT machineBounds() above: that is a +/-50 mm sanity filter for
- * garbage heartbeats, far too loose to plan a waypoint against.
+ * machineBounds() above is the same model box; the position judge adds its
+ * own BOUNDS_MARGIN_MM garbage margin to it, which is why planners read this
+ * and not that.
  */
 export function planningTravel(observed?: { x: number | null; y: number | null } | null): ResolvedTravel | null {
-    const identifier = connectionManager.getConnectionStatus().machineIdentifier;
+    const identifier = connectedMachineIdentifier();
     let seen = observed;
     if (seen === undefined) {
         // The live position is evidence of reach, when there is one to read.
@@ -532,9 +618,15 @@ export function planningTravel(observed?: { x: number | null; y: number | null }
     }
     return resolveTravel({
         size: getMachineSizeByIdentifier(identifier),
-        stated: statedTravel(),
+        fudge: travelFudge(),
+        stated: statedTravel(identifier),
         observed: seen || null,
     });
+}
+
+/** planningTravel() described in one line for results and refusals. */
+export function describePlanningTravel(travel: ResolvedTravel): string {
+    return describeTravel(travel, connectedMachineIdentifier());
 }
 
 /**
@@ -548,9 +640,11 @@ export function planningTravel(observed?: { x: number | null; y: number | null }
 export function requirePlanningTravel(what: string, observed?: { x: number | null; y: number | null } | null): ResolvedTravel {
     const travel = planningTravel(observed);
     if (!travel) {
-        throw new McpToolError(`The toolhead travel is unknown for this machine, so ${what} cannot be planned without `
-            + 'inventing an envelope. State it with set_probe_geometry (travel_x_min, travel_x_max, travel_y_min, '
-            + 'travel_y_max) - the measured limits for this rig.');
+        const identifier = connectedMachineIdentifier();
+        throw new McpToolError(`The toolhead travel is unknown for this machine (${identifier === null ? 'no machine connected'
+            : `identifier "${identifier}" matches no machine definition`}), so ${what} cannot be planned without `
+            + 'inventing an envelope. Connect a known machine, or state every end with set_probe_geometry (travel_x_min, '
+            + 'travel_x_max, travel_y_min, travel_y_max) - the measured limits for this rig.');
     }
     return travel;
 }
@@ -565,16 +659,9 @@ export function assertWithinTravel(points: Array<{ label: string; x: number; y: 
     for (const p of points) {
         const outside = outsideTravel(p, travel.limits);
         if (outside) {
-            const sources = [travel.ends.xMin, travel.ends.xMax, travel.ends.yMin, travel.ends.yMax].map((e) => e.source);
-            let basis = 'the travel observed so far';
-            if (sources.some((s) => s === 'stated')) {
-                basis = 'the stated travel';
-            } else if (sources.every((s) => s === 'nominal')) {
-                basis = 'the machine definition';
-            }
             throw new McpToolError(`${p.label} (machine ${Number(p.x.toFixed(3))}, ${Number(p.y.toFixed(3))}) is outside the `
-                + `toolhead travel: ${outside} (from ${basis}). Move the plan inside it, or state a wider limit with `
-                + 'set_probe_geometry travel_* if this rig genuinely reaches there.');
+                + `toolhead travel: ${outside} (${describePlanningTravel(travel)}). Move the plan inside it; widen the travel fudge `
+                + '(mcpTravelFudgeMm) only if this rig genuinely reaches there.');
         }
     }
 }
@@ -673,11 +760,19 @@ export function registerMachineTools(registry: ToolRegistry): void {
             }
             const hasOffset = netOffset.some((v) => v !== 0);
 
+            const capability = machineCapabilityFor(machine.identifier);
             return {
                 identifier: machine.identifier,
                 fullName: machine.fullName,
                 machineType: machine.machineType,
                 size: machine.metadata.size,
+                /** false on the Ray (size.z 0): no Z axis, so no motion floor, traverse height or move_z - XY runs at the only height. */
+                hasZ: capability.hasZ,
+                /** The travel the planners allow on this machine: model +/- the travel fudge at each end of each axis. */
+                travel: (() => {
+                    const fudge = travelFudge();
+                    return { ...modelTravel(machine.metadata.size, fudge), fudgeMm: { x: fudge.x, y: fudge.y }, fudgeSource: fudge.source };
+                })(),
                 toolHeads: machine.metadata.toolHeads.map((toolHead) => ({
                     identifier: toolHead.identifier,
                     workRange: toolHead.workRange || null,
@@ -708,9 +803,11 @@ export function registerMachineTools(registry: ToolRegistry): void {
         name: 'get_position',
         description: 'The machine POSITION OF RECORD: the judged machine-frame position with its `reliability` '
             + '(verified | heartbeat | cached-offset | awaiting-resync | stale), the frame it rests on, why (`reasons`), '
-            + 'plus the raw work-frame report and originOffset, B, homed/idle flags and the report age. Motion and staging '
-            + 'refuse unless reliability is verified/heartbeat/cached-offset; awaiting-resync clears on the next coherent '
-            + 'beat (2 s). Never compute machine = work - originOffset yourself. Read-only.',
+            + 'plus the raw work-frame report and originOffset, B, homed/idle flags and the report age. `connectedMachine` '
+            + 'says which machine this is ({identifier, type, hasZ}): on a machine with hasZ false (the Ray) there is no Z '
+            + 'axis, no motion floor and no traverse height - XY moves run at its only height and move_z is refused. Motion '
+            + 'and staging refuse unless reliability is verified/heartbeat/cached-offset; awaiting-resync clears on the next '
+            + 'coherent beat (2 s). Never compute machine = work - originOffset yourself. Read-only.',
         inputSchema: {
             type: 'object',
             properties: {},

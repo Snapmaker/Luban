@@ -47,6 +47,7 @@ import { tests as jobEndingTests } from './jobEnding.test';
 import { tests as landmarkClearanceTests } from './landmarkClearance.test';
 import { tests as machinePositionTests } from './machinePosition.test';
 import { tests as machineTravelTests } from './machineTravel.test';
+import { tests as machineCapabilityTests } from './machineCapability.test';
 import { tests as marchCoreTests } from './marchCore.test';
 import { tests as mcpHealthTests } from './mcpHealth.test';
 import { tests as mcpListenersTests } from './mcpListeners.test';
@@ -112,6 +113,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['threadMilling', threadMillingTests],
     ['machinePosition', machinePositionTests],
     ['machineTravel', machineTravelTests],
+    ['machineCapability', machineCapabilityTests],
     ['envelopeChecks', envelopeChecksTests],
     ['cameraModel', cameraModelTests],
     ['cameraGeometry', cameraGeometryTests],

@@ -4,6 +4,8 @@ import path from 'path';
 
 import DataStorage from '../../DataStorage';
 import logger from '../../lib/logger';
+import { connectedMachineIdentifier } from './connectedMachine';
+import { appliesToMachine, isLegacyScope, recordMachineScope } from './machineCapability';
 
 const log = logger('service:mcp:calibration');
 
@@ -28,6 +30,15 @@ export interface CalibrationEntry {
     surface: string | null;
     notes: string | null;
     createdAt: number;
+    /**
+     * The machine the matrix was derived on. A pixel-to-machine mapping at
+     * "machine Y 199" is a statement about one gantry; applied to another
+     * machine's Y 199 it is noise. Untagged entries (before 2026-10-18) are
+     * the A350's (machineCapability.LEGACY_MACHINE_IDENTIFIER). findNearest
+     * serves only the connected machine's entries; list() shows all.
+     */
+    machineIdentifier: string;
+    legacyScope?: boolean;
 }
 
 interface CalibrationFile {
@@ -52,7 +63,12 @@ export class CalibrationStore {
         }
         try {
             const raw = fs.readJsonSync(this.file());
-            this.cache = { entries: Array.isArray(raw?.entries) ? raw.entries : [] };
+            const entries = (Array.isArray(raw?.entries) ? raw.entries : []).map((entry: CalibrationEntry) => ({
+                ...entry,
+                machineIdentifier: recordMachineScope(entry.machineIdentifier),
+                legacyScope: isLegacyScope(entry.machineIdentifier),
+            }));
+            this.cache = { entries };
         } catch (err) {
             this.cache = { entries: [] };
         }
@@ -67,10 +83,17 @@ export class CalibrationStore {
         }
     }
 
-    public add(entry: Omit<CalibrationEntry, 'id' | 'createdAt'>): CalibrationEntry {
+    /** Store an entry for `machineIdentifier` - the connected machine when omitted; refused when none can be named. */
+    public add(entry: Omit<CalibrationEntry, 'id' | 'createdAt' | 'machineIdentifier' | 'legacyScope'> & { machineIdentifier?: string | null }): CalibrationEntry {
+        const machineIdentifier = entry.machineIdentifier || connectedMachineIdentifier();
+        if (!machineIdentifier) {
+            throw new Error('A camera calibration maps pixels to ONE machine\'s coordinates, and no machine is connected to tag it with.');
+        }
         const data = this.load();
         const full: CalibrationEntry = {
             ...entry,
+            machineIdentifier,
+            legacyScope: false,
             id: crypto.randomBytes(4).toString('hex'),
             createdAt: Date.now(),
         };
@@ -80,8 +103,14 @@ export class CalibrationStore {
         return full;
     }
 
+    /** Every stored entry, for every machine, each with its machineIdentifier. */
     public list(): CalibrationEntry[] {
         return this.load().entries;
+    }
+
+    /** The entries that apply to `machineIdentifier` (the connected machine when omitted). */
+    public listFor(machineIdentifier: string | null = connectedMachineIdentifier()): CalibrationEntry[] {
+        return this.load().entries.filter((entry) => appliesToMachine(entry.machineIdentifier, machineIdentifier));
     }
 
     public get(id: string): CalibrationEntry | null {
@@ -102,9 +131,13 @@ export class CalibrationStore {
     /**
      * Nearest entry by |validAtY - y|, or null when none is within tolerance.
      */
-    public findNearest(y: number, toleranceMm: number): { entry: CalibrationEntry; distance: number } | null {
+    public findNearest(
+        y: number,
+        toleranceMm: number,
+        machineIdentifier: string | null = connectedMachineIdentifier()
+    ): { entry: CalibrationEntry; distance: number } | null {
         let best: { entry: CalibrationEntry; distance: number } | null = null;
-        for (const entry of this.load().entries) {
+        for (const entry of this.listFor(machineIdentifier)) {
             const distance = Math.abs(entry.validAtY - y);
             if (!best || distance < best.distance) {
                 best = { entry, distance };

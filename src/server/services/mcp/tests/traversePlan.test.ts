@@ -1,7 +1,17 @@
 import { strict as assert } from 'assert';
 
 import { ObstacleBox } from '../envelopeChecks';
-import { TraversePlanError, TraversePlanInput, mayDescend, planRaiseToTop, planToolSetterEnd, planTraverseXy } from '../traversePlan';
+import {
+    TraverseMachine,
+    TraversePlanError,
+    TraversePlanInput,
+    mayDescend,
+    parseSettleComment,
+    planRaiseToTop,
+    planToolSetterEnd,
+    planTraverseXy,
+    relativeXyStep,
+} from '../traversePlan';
 
 // The A350 travel as resolved with the head observed at home X-19: the definition's box, widened by the evidence.
 const TRAVEL = { xMin: -19, xMax: 320, yMin: 0, yMax: 350 };
@@ -219,5 +229,95 @@ export const tests: Array<[string, () => void]> = [
             () => planTraverseXy({ ...input(), currentMachine: { x: 20, y: 105, z: 321 }, traverseZ: 328 }),
             /below the motion floor 328/
         );
+    }],
+
+    // ---- The Snapmaker Ray (#260 follow-up, 2026-10-18): no Z axis, GRBL firmware ----
+    // The live refusal: at machine X181 Y49 Z0, traverse_xy {x: 176, y: 49} (5 mm) was
+    // refused "below the motion floor 320 ... Raise Z with move_z first" - on a machine
+    // that has no Z. The Ray's travel is its model 600 x 400 +/- the 25 mm fudge.
+    ['the Ray at Z0: a 5 mm traverse is PLANNED, not refused - no Z law applies to a machine without Z', () => {
+        const ray: TraverseMachine = { hasZ: false, gcode: 'grbl-relative' };
+        const plan = planTraverseXy(input({
+            targets: [{ x: 176, y: 49 }],
+            currentMachine: { x: 181, y: 49, z: 0 },
+            originOffset: { x: -181, y: -49, z: 0 },
+            travel: { xMin: -25, xMax: 625, yMin: -25, yMax: 425 },
+            obstacles: [],
+            machine: ray,
+            reason: 'Ray acceptance: 5 mm in -X',
+        }));
+        assert.equal(plan.steps.length, 1);
+        assert.equal(plan.relative, true);
+        assert.equal(plan.steps[0].to.z, 0, 'planned at the machine\'s only height');
+        assert.ok(!plan.steps[0].gcode.includes('Z'), 'no Z word');
+        assert.ok(!plan.steps[0].gcode.includes('G53') && !plan.steps[0].gcode.includes('G54'), 'no frame words: a relative step needs none');
+        assert.equal(plan.steps[0].gcode, '; mcp-settle machine X176.000 Y49.000\nG91\nG1 X-5.000 Y0.000 F1500\nG90', 'Luban\'s own Ray jog form');
+        assert.deepEqual(parseSettleComment(plan.steps[0].gcode), { x: 176, y: 49 });
+        assert.ok(plan.header.includes('this machine has NO Z axis'));
+        assert.ok(!plan.header.includes('traverse height 328'), 'the header does not cite a traverse height that does not exist');
+        assert.ok(!plan.reviewText.includes('move_z'));
+    }],
+
+    ['the same call on an A350 at Z0 is still refused exactly as before, with the move_z advice', () => {
+        refuses(() => planTraverseXy(input({
+            targets: [{ x: 176, y: 49 }],
+            currentMachine: { x: 181, y: 49, z: 0 },
+            motionFloorZ: 320,
+            obstacles: [],
+        })), 'below the motion floor 320 (law 2: all XY over 1 mm at or above it). Raise Z with move_z');
+        // And the default machine (omitted) is the A350: absolute G53 steps, byte for byte.
+        const plan = planTraverseXy(input());
+        assert.equal(plan.relative, false);
+        assert.deepEqual(plan.machine, { hasZ: true, gcode: 'snapmaker-2' });
+        assert.equal(plan.steps[0].gcode, 'G90\nG53;\nG1 X290.000 Y105.000 F1500;\nG54;');
+    }],
+
+    ['the A350 rotary keep-out does not apply on the Ray - the caller scopes landmarks, the planner sees none', () => {
+        // The operator's Ray acceptance route: -Y in 50 mm steps from home towards Y80, then +X to X90.
+        // X140-200 is the A350 rotary's box; on the Ray the landmark store returns nothing for it.
+        const ray: TraverseMachine = { hasZ: false, gcode: 'grbl-relative' };
+        const plan = planTraverseXy(input({
+            targets: [{ y: 349 }, { y: 299 }, { y: 249 }, { y: 199 }, { y: 149 }, { y: 99 }, { y: 80 }, { x: 90 }],
+            currentMachine: { x: -1, y: 399, z: 0 },
+            originOffset: { x: 0, y: 0, z: 0 },
+            travel: { xMin: -25, xMax: 625, yMin: -25, yMax: 425 },
+            obstacles: [],
+            machine: ray,
+            reason: 'Ray acceptance route',
+        }));
+        assert.equal(plan.steps.length, 8);
+        // Each relative step is the delta from the PREVIOUS planned endpoint and names its absolute endpoint.
+        assert.equal(plan.steps[0].gcode, '; mcp-settle machine X-1.000 Y349.000\nG91\nG1 X0.000 Y-50.000 F1500\nG90');
+        assert.equal(plan.steps[6].gcode, '; mcp-settle machine X-1.000 Y80.000\nG91\nG1 X0.000 Y-19.000 F1500\nG90');
+        assert.equal(plan.steps[7].gcode, '; mcp-settle machine X90.000 Y80.000\nG91\nG1 X91.000 Y0.000 F1500\nG90');
+        assert.equal(Math.round(plan.totalDistanceMm), 410);
+        // Were the A350 landmark handed in anyway, the Ray plan would still be checked against it
+        // at Z0 and refuse - which is exactly why the store scopes by machine.
+        refuses(() => planTraverseXy(input({
+            targets: [{ x: 250 }],
+            currentMachine: { x: -1, y: 80, z: 0 },
+            originOffset: { x: 0, y: 0, z: 0 },
+            travel: { xMin: -25, xMax: 625, yMin: -25, yMax: 425 },
+            obstacles: [ROTARY],
+            machine: ray,
+        })), 'crosses a landmark');
+    }],
+
+    ['the Ray travel check: X650 is refused against the model + fudge, with no set_probe_geometry-only advice', () => {
+        const ray: TraverseMachine = { hasZ: false, gcode: 'grbl-relative' };
+        refuses(() => planTraverseXy(input({
+            targets: [{ x: 650 }],
+            currentMachine: { x: 181, y: 49, z: 0 },
+            travel: { xMin: -25, xMax: 625, yMin: -25, yMax: 425 },
+            obstacles: [],
+            machine: ray,
+        })), 'X 650 is 25 mm beyond the X maximum 625');
+    }],
+
+    ['the settle comment is parsed strictly and only from its own line', () => {
+        assert.deepEqual(parseSettleComment('; reason: G1 to X5\n; mcp-settle machine X-1.000 Y349.000\nG91\nG1 X0.000 Y-50.000 F1500\nG90'), { x: -1, y: 349 });
+        assert.equal(parseSettleComment('G90\nG53;\nG1 X290.000 Y105.000 F1500;\nG54;'), null);
+        assert.equal(parseSettleComment('; mcp-settle machine X1 Y2 extra'), null);
+        assert.equal(relativeXyStep({ x: 10, y: 20 }, { x: 12.5, y: 20 }, 1000, 'G0'), '; mcp-settle machine X12.500 Y20.000\nG91\nG0 X2.500 Y0.000 F1000\nG90');
     }],
 ];

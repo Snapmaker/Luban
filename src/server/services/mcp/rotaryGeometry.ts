@@ -2,6 +2,7 @@
 // The `axis` namespace is read by agents through snake_case reference paths
 // (axis.z_contact), matching the MCP argument convention.
 import config from '../configstore';
+import { LEGACY_MACHINE_IDENTIFIER, recordMachineScope } from './machineCapability';
 import { RimArgs, StylusReachVerdict, checkStylusReach, parseReachMargin, parseRimZ } from './stylusReach';
 import { MAX_ROTARY_AXIS_POINTS } from './procedureLimits';
 import {
@@ -76,12 +77,12 @@ export const GEOMETRY_FIELDS = [
     { field: 'probe_stylus_exposed_mm', key: 'mcpProbeStylusExposed', env: 'LUBAN_MCP_PROBE_STYLUS_EXPOSED_MM', min: 0.1, max: 300 },
     { field: 'probe_body_diameter_mm', key: 'mcpProbeBodyDiameter', env: 'LUBAN_MCP_PROBE_BODY_DIAMETER_MM', min: 0.1, max: 100 },
     { field: 'bed_plane_z', key: 'mcpBedPlaneZ', env: 'LUBAN_MCP_BED_PLANE_Z', min: -100, max: 400 },
-    // Toolhead travel for THIS rig (machineTravel.ts). Unset is the normal
-    // case: travel then falls back to the machine definition's size box,
-    // widened by positions the toolhead has actually been observed at. State
-    // an end when the definition is wrong for the rig - an A350's frame runs
-    // X -19...339 against a 320 x 350 definition, and a bracing kit or a
-    // different machine moves it again.
+    // Toolhead travel stated for ONE machine (machineTravel.ts). Unset is the
+    // normal case: the travel is then the machine model's size plus the
+    // travel fudge (mcpTravelFudgeMm) at each end. A stated end is a TIGHTER
+    // override only, and it is scoped to the machine it was stated on
+    // (TRAVEL_MACHINE_KEY below): values with no scope were stated on the A350
+    // (the only machine this ever ran on) and stop applying on the Ray.
     { field: 'travel_x_min', key: 'mcpTravelXMin', env: 'LUBAN_MCP_TRAVEL_X_MIN', min: -500, max: 1000 },
     { field: 'travel_x_max', key: 'mcpTravelXMax', env: 'LUBAN_MCP_TRAVEL_X_MAX', min: -500, max: 1000 },
     { field: 'travel_y_min', key: 'mcpTravelYMin', env: 'LUBAN_MCP_TRAVEL_Y_MIN', min: -500, max: 1000 },
@@ -281,8 +282,37 @@ export function stylusReachForPlan(args: RimArgs, deepestZMachine: number): Styl
     });
 }
 
-/** The travel ends stated for this rig; any of them may be null (= not stated). */
-export function statedTravel(): { xMin: number | null; xMax: number | null; yMin: number | null; yMax: number | null } {
+/** The configstore key naming the machine the travel_* values were stated on. */
+export const TRAVEL_MACHINE_KEY = 'mcpTravelMachine';
+export const TRAVEL_FIELDS: GeometryField[] = ['travel_x_min', 'travel_x_max', 'travel_y_min', 'travel_y_max'];
+
+const NO_TRAVEL = { xMin: null, xMax: null, yMin: null, yMax: null };
+
+/**
+ * Which machine the stored travel_* values belong to. null when none is
+ * stated at all; the legacy A350 when values exist but were written before
+ * machine scoping (machineCapability.LEGACY_MACHINE_IDENTIFIER).
+ */
+export function travelScope(): { statedFor: string | null; legacy: boolean; stated: string[] } {
+    const stated = TRAVEL_FIELDS.filter((field) => geometryValue(field) !== null);
+    if (!stated.length) {
+        return { statedFor: null, legacy: false, stated };
+    }
+    const raw = config.get(TRAVEL_MACHINE_KEY);
+    const legacy = !(typeof raw === 'string' && raw.trim());
+    return { statedFor: recordMachineScope(raw), legacy, stated };
+}
+
+/**
+ * The travel ends stated FOR `machineIdentifier`; any of them may be null
+ * (= not stated). Values stated on another machine are not returned: the
+ * A350's X -19..339 is not a statement about the Ray.
+ */
+export function statedTravel(machineIdentifier: string | null): { xMin: number | null; xMax: number | null; yMin: number | null; yMax: number | null } {
+    const scope = travelScope();
+    if (scope.statedFor === null || machineIdentifier === null || scope.statedFor !== machineIdentifier) {
+        return { ...NO_TRAVEL };
+    }
     return {
         xMin: geometryValue('travel_x_min'),
         xMax: geometryValue('travel_x_max'),
@@ -372,12 +402,40 @@ function applyAxisPoints(
  */
 export function setGeometryValues(
     values: { [field: string]: unknown },
-    note: string
-): { updated: string[]; cleared: string[] } {
+    note: string,
+    /** The machine any travel_* value is being stated for; required when one is. */
+    machineIdentifier: string | null = null
+): { updated: string[]; cleared: string[]; travelScope?: { statedFor: string | null; replaced: string | null } } {
     const updated: string[] = [];
     const cleared: string[] = [];
     const envOverridden = (spec: typeof GEOMETRY_FIELDS[number]) => process.env[spec.env] !== undefined && String(process.env[spec.env]).trim() !== '';
     const pointsAfter = applyAxisPoints(values, note, envOverridden);
+    // Travel statements are machine-scoped. Stating any end for a machine
+    // other than the one the stored values belong to retires those values:
+    // the A350's X -19 is not the Ray's X minimum, and keeping it under a
+    // Ray scope would silently make it one.
+    const travelSet = TRAVEL_FIELDS.filter((field) => field in values && values[field] !== undefined && values[field] !== null && values[field] !== '');
+    let travelScopeChange: { statedFor: string | null; replaced: string | null } | undefined;
+    if (travelSet.length) {
+        if (!machineIdentifier) {
+            throw new Error(`${travelSet.join(', ')}: a travel limit is stated for ONE machine, and no machine is connected or selected to `
+                + 'state it for. Connect the machine (or select it in Luban Machine Settings) first.');
+        }
+        const before = travelScope();
+        if (before.statedFor !== null && before.statedFor !== machineIdentifier) {
+            for (const field of TRAVEL_FIELDS) {
+                if (!(field in values) && geometryValue(field) !== null) {
+                    const spec = GEOMETRY_FIELDS.find((f) => f.field === field) as typeof GEOMETRY_FIELDS[number];
+                    config.unset(spec.key);
+                    config.unset(`${spec.key}Note`);
+                    config.unset(`${spec.key}At`);
+                    cleared.push(field);
+                }
+            }
+        }
+        const replaced = before.statedFor !== null && before.statedFor !== machineIdentifier ? before.statedFor : null;
+        travelScopeChange = { statedFor: machineIdentifier, replaced };
+    }
     for (const spec of GEOMETRY_FIELDS) {
         if (!(spec.field in values) || values[spec.field] === undefined) {
             continue;
@@ -407,6 +465,12 @@ export function setGeometryValues(
         config.set(`${spec.key}At`, Date.now());
         updated.push(spec.field);
     }
+    if (travelScopeChange) {
+        config.set(TRAVEL_MACHINE_KEY, travelScopeChange.statedFor);
+    } else if (TRAVEL_FIELDS.every((field) => geometryValue(field) === null)) {
+        // The last travel end was cleared: no scope without values.
+        config.unset(TRAVEL_MACHINE_KEY);
+    }
     if (pointsAfter.changed) {
         if (pointsAfter.points.length) {
             updated.push(ROTARY_AXIS_POINTS_FIELD);
@@ -430,7 +494,7 @@ export function setGeometryValues(
             }
         }
     }
-    return { updated, cleared };
+    return travelScopeChange ? { updated, cleared, travelScope: travelScopeChange } : { updated, cleared };
 }
 
 /** Everything stored, with provenance, for get_stored_state / set_probe_geometry. */
@@ -454,8 +518,21 @@ export function geometrySettings() {
             fields[field].derivedFrom = ROTARY_AXIS_POINTS_FIELD;
         }
     }
+    const scope = travelScope();
     return {
         fields,
+        /**
+         * Which machine the travel_* statements belong to (#260 follow-up).
+         * `legacy` marks values written before machine scoping, attributed
+         * to the A350 by rule (machineCapability.LEGACY_MACHINE_IDENTIFIER).
+         */
+        travel: {
+            statedFor: scope.statedFor,
+            legacy: scope.legacy,
+            statedFields: scope.stated,
+            legacyRule: `records with no machine tag were set on ${LEGACY_MACHINE_IDENTIFIER}, the only machine the MCP ran on before 2026-10-18`,
+            note: 'A stated end only TIGHTENS the machine model + travel fudge (mcpTravelFudgeMm) for the machine it was stated on; it never widens it.',
+        },
         rotary,
         rotaryAxisPoints: {
             field: ROTARY_AXIS_POINTS_FIELD,

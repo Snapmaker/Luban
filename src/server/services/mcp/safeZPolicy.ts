@@ -31,6 +31,13 @@ export interface SafeZPolicyInput {
     currentZ: number | null;
     /** mcpSafeTraverseZ (default 328). */
     traverseZ: number;
+    /**
+     * Whether the connected machine has a Z axis (machineCapability.ts).
+     * Omitted = true. On a Z-less machine (the Ray) there is no "safe
+     * height" for the head to already be at, so nothing justifies skipping
+     * the operator's click: every transport stages, and the reason says so.
+     */
+    hasZ?: boolean;
 }
 
 export type SafeZDecision =
@@ -50,6 +57,10 @@ export function verifiedForPolicy(reliability: Reliability): boolean {
 }
 
 function commonRefusal(input: SafeZPolicyInput): string | null {
+    if (input.hasZ === false) {
+        return 'this machine has no Z axis, so there is no safe traverse height to justify skipping approval - staged for '
+            + 'the operator\'s click (the top-Z policy is about a head already parked at the top of a Z axis)';
+    }
     if (!input.enabled) {
         return 'mcpTraverseWithoutApprovalAtSafeZ is off - staged for the operator\'s click as usual';
     }

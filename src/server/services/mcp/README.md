@@ -523,6 +523,22 @@ it with no decision point, when the operator had authorised "step 1" only. Laws:
    the floor is checked against every stored landmark exactly like any low segment — there
    is still no exemption for being high. What the floor costs is 8 mm less blind protection
    for anything on the bed with no landmark; `mcpMotionFloorZ` reverts it.
+
+   **Machine-aware since 2026-10-18 (the Ray, #260 follow-up).** The laws above are about a
+   Z axis. On a machine whose definition has `size.z` 0 (the Snapmaker Ray, a 600 × 400
+   laser) there is no floor, no traverse height and nothing to raise: `traverse_xy`,
+   `move_and_capture` and `goto_work_origin` run at the machine's only height (always
+   staged — the top-Z approval-free policy needs a top to be at), `move_z`, `survey_bed`
+   and `goto_tool_change_position` are refused with the machine named, and every motion
+   result carries `connected_machine {identifier, type, hasZ}`. The Ray's steps are
+   relative `G91 … G90` increments — the form Luban's own Ray jog sends — with the
+   absolute machine endpoint declared for the settle check, because no `G53` form has been
+   shown to work on its firmware. Landmarks, camera calibrations and the stated travel are
+   scoped to the machine they were set on (untagged pre-2026-10-18 records are the A350's),
+   and the travel itself is the machine model's size ± `mcpTravelFudgeMm` (default 25 mm)
+   at each end of each axis, which covers the A350's X−19..339 and the Ray's X−1/Y399 home
+   while still refusing a Ray X650 (`docs/TOOLS.md`, `machineCapability.ts`,
+   `machineTravel.ts`).
 3. **No fabricated clearances** — only measured or operator-stated heights count. Visual
    inference finds things; it never clears them.
 4. **Landmarks are obstacles** — a landmark's clearance refuses XY paths crossing its box
@@ -1956,7 +1972,8 @@ fitting confirmation with matching identity and bound.
   `http://127.0.0.1:40889/mcp` on the box) in the meantime.
 - **Where operator state lives** (per machine running Luban — it does NOT sync between
   rigs): configstore `~/.snapmaker-luban.json` (`mcp*` keys incl. `mcpToolSetter`,
-  `mcpToolRegion`, `mcpSafeTraverseZ`, `mcpMaxJogDistance`); userData
+  `mcpToolRegion`, `mcpSafeTraverseZ`, `mcpMaxJogDistance`, `mcpTravelFudgeMm` and the
+  machine-scoped travel `mcpTravelXMin`.. with `mcpTravelMachine`); userData
   (`%APPDATA%/snapmaker-luban` or `~/.config/snapmaker-luban`): `machine.json` (the app's
   Machine Settings), `mcp-landmarks.json`, `mcp-camera-calibration.json`, `mcp-surveys/`.
   While Luban runs, change state only through the MCP tools (`set_tool_setter_config`,

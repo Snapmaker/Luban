@@ -8,6 +8,8 @@ import { modelContext } from './cameraModel';
 import { McpToolError, ToolRegistry } from '../registry';
 import { executeBoundedMoveAndCapture } from './camera';
 import { getPositionSnapshot } from './machine';
+import { connectedMachineIdentifier } from '../connectedMachine';
+import { appliesToMachine } from '../machineCapability';
 
 // visual_servo executes ONE correction step per call - the agent supplies
 // the pixel error, the stored calibration turns it into a machine XY move,
@@ -28,7 +30,16 @@ function isMatrix(value: unknown): value is [[number, number], [number, number]]
 }
 
 function describeEntry(entry: CalibrationEntry): object {
-    return entry;
+    // Which machine the matrix belongs to, and whether it applies to the one
+    // connected now (machineCapability.ts; untagged = the A350 by rule).
+    return {
+        ...entry,
+        machineScope: {
+            machineIdentifier: entry.machineIdentifier,
+            legacy: entry.legacyScope === true,
+            appliesToConnectedMachine: appliesToMachine(entry.machineIdentifier, connectedMachineIdentifier()),
+        },
+    };
 }
 
 export function registerCalibrationTools(registry: ToolRegistry): void {
@@ -124,13 +135,19 @@ export function registerCalibrationTools(registry: ToolRegistry): void {
                 }
             }
 
-            const entry = calibrationStore.add({
-                validAtY,
-                z,
-                matrix: args.matrix,
-                surface: args.surface ? String(args.surface) : null,
-                notes: args.notes ? String(args.notes) : null,
-            });
+            let entry: CalibrationEntry;
+            try {
+                // Tagged with the connected machine: a matrix at "machine Y 199" is about one gantry.
+                entry = calibrationStore.add({
+                    validAtY,
+                    z,
+                    matrix: args.matrix,
+                    surface: args.surface ? String(args.surface) : null,
+                    notes: args.notes ? String(args.notes) : null,
+                });
+            } catch (err) {
+                throw new McpToolError((err as Error).message);
+            }
             return { entry: describeEntry(entry), warnings };
         },
     });
@@ -276,6 +293,8 @@ export function registerCalibrationTools(registry: ToolRegistry): void {
                     surface: `plane machine Z ${planeZ}`,
                     notes: `derived from camera model ${model.id} at this pose - not a stored calibration`,
                     createdAt: model.solvedAt,
+                    // Solved against the live position of record, so it is the connected machine's by construction.
+                    machineIdentifier: connectedMachineIdentifier() || 'connected machine',
                 };
                 entryDistance = 0;
                 derivedFromModel = true;

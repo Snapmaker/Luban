@@ -13,6 +13,7 @@ import { GcodeLease, isHomeSequence, isRecoveryCommand } from '../../machine/gco
 import * as frameRecovery from '../frameRecovery';
 import * as machinePosition from '../machinePosition';
 import * as machineTravel from '../machineTravel';
+import * as machineCapability from '../machineCapability';
 import * as positionOfRecord from '../positionOfRecord';
 import { McpToolError } from '../registry';
 
@@ -99,7 +100,18 @@ function machineToolsFixture(userDataDir: string) {
         '../activeTool': { invalidateActiveTool: () => undefined },
         '../machinePosition': machinePosition,
         '../machineTravel': machineTravel,
-        '../rotaryGeometry': { statedTravel: () => null },
+        '../machineCapability': machineCapability,
+        '../connectedMachine': {
+            MACHINES: [machine('A350'), machine('Ray')],
+            findMachine: (id: string | null) => (id ? [machine('A350'), machine('Ray')].find((m) => m.identifier === id) || null : null),
+            connectedMachineIdentifier: () => 'A350',
+            machineCapabilityFor: (id: string | null) => machineCapability.deriveMachineCapability(
+                id ? { ...machine(id), machineType: 'test' } : null, id
+            ),
+            connectedMachineCapability: () => machineCapability.deriveMachineCapability({ ...machine('A350'), machineType: 'test' }),
+            describeConnectedMachine: () => ({ identifier: 'A350', type: 'test', hasZ: true }),
+        },
+        '../rotaryGeometry': { statedTravel: () => ({ xMin: null, xMax: null, yMin: null, yMax: null }) },
         '../positionOfRecord': positionOfRecord,
         '../frameRecovery': frameRecovery,
         '../registry': { McpToolError },

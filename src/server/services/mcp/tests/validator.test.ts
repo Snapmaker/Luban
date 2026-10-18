@@ -5,8 +5,10 @@ import {
     FRAME_REFUSAL_UNDECLARED,
     FrameResolutionContext,
     MAX_TRANSPORT_MOTION_LINES,
+    RELATIVE_TRANSPORT_NOTE,
     TRANSPORT_REFUSAL,
     isPureTransport,
+    isRelativeOnlyTransport,
     resolveJobFrame,
     suggestGcode,
     validateGcode,
@@ -325,5 +327,30 @@ export const tests: Array<[string, () => void]> = [
     ['G38 is recorded so a probing program is never mistaken for a transit', () => {
         assert.equal(validateGcode('G90\nG54\nG38.2 Z-10 F50').usesProbing, true);
         assert.equal(validateGcode(MOVE_Z_MACHINE).usesProbing, false);
+    }],
+
+    // ---- Relative transport (the Ray, #260 follow-up): frame-independent, accepted only when the emitter says so ----
+    ['a server-emitted G91 .. G90 step passes the frame gate under relativeTransport, and the page gets a note instead of a refusal', () => {
+        const step = '; mcp-settle machine X176.000 Y49.000\nG91\nG1 X-5.000 Y0.000 F1500\nG90';
+        const report = validateGcode(step);
+        assert.equal(isRelativeOnlyTransport(report), true);
+        const r = resolveJobFrame(report, ctx({ relativeTransport: true }));
+        assert.equal(r.refusal, null);
+        assert.ok(r.report.warnings.includes(RELATIVE_TRANSPORT_NOTE));
+        assert.ok(!r.report.warnings.some((w) => w.startsWith('Contains G91 relative motion')), 'the generic G91 warning is replaced by the note');
+        assert.equal(r.report.frame.declared, null);
+    }],
+
+    ['without relativeTransport the same text is refused as undeclared - a submitted file never gets this exemption', () => {
+        const step = '; mcp-settle machine X176.000 Y49.000\nG91\nG1 X-5.000 Y0.000 F1500\nG90';
+        assert.equal(resolveJobFrame(validateGcode(step), ctx()).refusal, FRAME_REFUSAL_UNDECLARED);
+    }],
+
+    ['relativeTransport accepts ONLY all-relative bodies that restore G90', () => {
+        // An absolute move mixed in, G91 left active, or motion before the distance mode: not relative transport.
+        assert.equal(isRelativeOnlyTransport(validateGcode('G91\nG1 X-5 F1500\nG90\nG1 X10 F1500')), false);
+        assert.equal(isRelativeOnlyTransport(validateGcode('G91\nG1 X-5 F1500')), false);
+        assert.equal(isRelativeOnlyTransport(validateGcode('G1 X-5 F1500\nG91\nG90')), false);
+        assert.notEqual(resolveJobFrame(validateGcode('G91\nG1 X-5 F1500'), ctx({ relativeTransport: true })).refusal, null);
     }],
 ];

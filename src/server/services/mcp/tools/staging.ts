@@ -45,8 +45,8 @@ export function stagingFrameContext(frameArgument: JobFrame | null): FrameResolu
  * That is a server bug, and it is thrown rather than shown: the page is the
  * only motion gate, and a page whose Frame row is wrong is not a gate.
  */
-export function validateStagedEnvelope(gcode: string, what: string): GcodeValidationReport {
-    const resolved = resolveJobFrame(validateGcode(gcode), stagingFrameContext(null));
+export function validateStagedEnvelope(gcode: string, what: string, options: { relativeTransport?: boolean } = {}): GcodeValidationReport {
+    const resolved = resolveJobFrame(validateGcode(gcode), { ...stagingFrameContext(null), relativeTransport: options.relativeTransport === true });
     if (resolved.refusal) {
         throw new McpToolError(`Internal error: the ${what} envelope the server emitted does not declare its coordinate frame `
             + 'cleanly, so it cannot reach the confirm page (the page is the only motion gate and its Frame row would be wrong). '

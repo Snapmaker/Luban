@@ -119,4 +119,33 @@ export const tests: Array<[string, () => void]> = [
     ['below the motion floor the move is refused - law 2 applies to the work origin like any traverse', () => {
         refuses(() => planGotoWorkOrigin(input({ currentMachine: { x: -19, y: 342, z: 300 } })), 'below the motion floor');
     }],
+
+    // ---- The Ray (#260 follow-up): no Z axis ----
+    ['on a machine with no Z axis the direct XY gate proceeds at the only height, even at Z0 or with Z unknown', () => {
+        const atZero = gateDirectXy(0, 328, false, false);
+        assert.equal(atZero.action, 'proceed');
+        assert.equal(atZero.planZ, 0);
+        assert.match(atZero.reason, /no Z axis/);
+        assert.ok(!atZero.reason.includes('move_z'));
+        const unknown = gateDirectXy(null, 328, false, false);
+        assert.equal(unknown.action, 'proceed', 'an unknown Z on a Z-less machine is not a Z to establish');
+        assert.equal(unknown.planZ, 0);
+        // The A350 gate is byte-for-byte what it was: Z0 raises first, unknown refuses.
+        assert.equal(gateDirectXy(0, 328, false, true).action, 'raise');
+        assert.equal(gateDirectXy(0, 328, false).action, 'raise');
+        assert.equal(gateDirectXy(null, 328, false, true).action, 'refuse');
+    }],
+
+    ['goto_work_origin on the Ray at Z0 is planned as a relative step, not refused below a floor', () => {
+        const plan = planGotoWorkOrigin(input({
+            currentMachine: { x: 181, y: 49, z: 0 },
+            originOffset: { x: -181, y: -49, z: 0 },
+            travel: { xMin: -25, xMax: 625, yMin: -25, yMax: 425 },
+            obstacles: [],
+            machine: { hasZ: false, gcode: 'grbl-relative' },
+        }));
+        assert.deepEqual(plan.destinationMachine, { x: 181, y: 49 });
+        assert.equal(plan.relative, true);
+        assert.equal(plan.steps[0].gcode, '; mcp-settle machine X181.000 Y49.000\nG91\nG1 X0.000 Y0.000 F1500\nG90');
+    }],
 ];

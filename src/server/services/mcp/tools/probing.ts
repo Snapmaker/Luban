@@ -47,6 +47,7 @@ import {
     motionFloorZ,
     requirePlanningTravel,
     requireReliableMachine,
+    requireZAxis,
     safeTraverseZ,
 } from './machine';
 import { clampBand, describeClipping } from '../machineTravel';
@@ -799,6 +800,9 @@ ${describeProbeSurfacePlanAsGcode(plan)}`;
             reason?: string;
         }) => {
             probeFeedService.assertNoOvertravel();
+            // The survey plans Z levels, hops and descents (surveyPlan.ts);
+            // on a machine with no Z axis none of that exists.
+            requireZAxis('survey_bed (it plans Z levels, hops and descents)');
             const position = getPositionSnapshot();
             requireReliableMachine(position, 'a bed survey');
             const { x, y, z } = position.machine;

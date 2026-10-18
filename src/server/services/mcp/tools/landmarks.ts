@@ -9,6 +9,8 @@ import { gcodeUploads, jobInbox } from '../jobs';
 import { probeFeedService } from '../probeFeed';
 import { McpToolError, ToolRegistry } from '../registry';
 import { GEOMETRY_FIELDS, ROTARY_AXIS_POINTS_FIELD, geometrySettings, setGeometryValues } from '../rotaryGeometry';
+import { connectedMachineCapability, connectedMachineIdentifier, describeConnectedMachine } from '../connectedMachine';
+import { LEGACY_MACHINE_IDENTIFIER, appliesToMachine } from '../machineCapability';
 import { MAX_ROTARY_AXIS_POINTS } from '../procedureLimits';
 import { getMeasurements, getToolSetterConfig } from '../toolSetter';
 import { describeActiveTool } from '../activeTool';
@@ -21,7 +23,7 @@ import {
     requiredToolheadZ,
     restatementAdvice,
 } from '../landmarkClearance';
-import { motionFloorZ, readAppMachineSettings, safeTraverseZ } from './machine';
+import { describePlanningTravel, motionFloorZ, planningTravel, readAppMachineSettings, safeTraverseZ, travelFudge } from './machine';
 import { vibrationCaptureService } from '../vibrationCaptures';
 import { vibrationFeedService } from '../vibrationFeed';
 
@@ -35,14 +37,42 @@ import { vibrationFeedService } from '../vibrationFeed';
  * An agent reading get_stored_state should not have to work out that a
  * clearance of 328 is a toolhead height with a probe baked into it.
  */
+function landmarkScope(landmark: Landmark): object {
+    return {
+        machineIdentifier: landmark.machineIdentifier,
+        /** Attributed by the legacy rule (untagged = the A350) rather than recorded when set. */
+        legacy: landmark.legacyScope === true,
+        appliesToConnectedMachine: appliesToMachine(landmark.machineIdentifier, connectedMachineIdentifier()),
+    };
+}
+
+/**
+ * The machine a new record is tagged with: the connected machine, else the
+ * one selected in Luban Machine Settings (an operator can describe a bed
+ * while the machine is off). Refused when neither names one.
+ */
+function machineForNewRecord(what: string): string {
+    const connected = connectedMachineIdentifier();
+    if (connected) {
+        return connected;
+    }
+    const settings = readAppMachineSettings();
+    if (settings && settings.series) {
+        return settings.series;
+    }
+    throw new McpToolError(`${what} is machine coordinates on ONE machine, and no machine is connected or selected in Luban `
+        + 'Machine Settings to tag it with. Connect or select the machine first.');
+}
+
 function describeLandmark(landmark: Landmark): object {
     if (landmark.clearanceZ === null) {
-        return { ...landmark, requiredToolheadZ: null };
+        return { ...landmark, machineScope: landmarkScope(landmark), requiredToolheadZ: null };
     }
     const protrusion = currentToolProtrusion();
     const required = requiredToolheadZ(landmark.clearanceZ, landmark.clearanceBasis, protrusion.mm);
     return {
         ...landmark,
+        machineScope: landmarkScope(landmark),
         requiredToolheadZ: required,
         clearanceNote: required === null
             ? `No tool length is known, so the toolhead Z this obstacle needs cannot be computed. ${protrusion.note}`
@@ -62,7 +92,10 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
             + 'post...) with its machine-coordinate XY extent and a description. Same name '
             + 'replaces. Landmarks near the current position are surfaced with every capture, '
             + 'so identities the operator has stated once are never re-guessed. Record identity '
-            + 'from OPERATOR knowledge, not visual analogy.',
+            + 'from OPERATOR knowledge, not visual analogy. MACHINE-SCOPED: the record is tagged with the connected '
+            + '(else Luban-selected) machine and applies to that machine only - the A350\'s rotary keep-out means nothing '
+            + 'on a Ray. Records from before 2026-10-18 carry no tag and are the A350\'s by rule (the only machine they '
+            + 'were ever set on); get_stored_state shows each record\'s machineScope.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -124,6 +157,7 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                 throw new McpToolError(`${physical ? 'obstacle_top_z' : 'clearance_z'} must be a finite machine Z when given.`);
             }
             const clearanceBasis: ClearanceBasis = physical ? 'physical' : 'toolhead';
+            const machineIdentifier = machineForNewRecord('A landmark');
             const landmark = landmarkStore.add({
                 name,
                 description,
@@ -131,6 +165,7 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                 clearanceZ,
                 clearanceBasis,
                 notes: args.notes ? String(args.notes) : null,
+                machineIdentifier,
             });
             return {
                 landmark: describeLandmark(landmark),
@@ -222,10 +257,11 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                 bed_plane_z: { type: ['number', 'null'], description: 'Measured PHYSICAL machine Z of the bed for camera overlap/mosaics. Never toolhead height or a photo estimate. Does not describe raised workpieces.' },
                 travel_x_min: {
                     type: ['number', 'null'],
-                    description: 'Machine X the toolhead can reach at the low end, for THIS rig. Unset = the machine '
-                        + 'definition, widened by positions the toolhead has actually been observed at. State it when '
-                        + 'the definition is wrong for the rig (an A350 frame runs X -19...339 against a 320 x 350 '
-                        + 'definition); planners clamp their bands to it.',
+                    description: 'Machine X the toolhead may reach at the low end, for the CONNECTED machine only. Unset = the '
+                        + 'machine model\'s size plus the travel fudge at each end (mcpTravelFudgeMm, default 25 mm: an A350 '
+                        + 'homes at X-19 against a 320 definition, a Ray at about X-1 / Y399 against 600 x 400). A stated end '
+                        + 'only TIGHTENS that; a looser statement is reported and ignored - widen the fudge instead. Stating '
+                        + 'any end for a different machine retires the ends stated for the previous one.',
                 },
                 travel_x_max: { type: ['number', 'null'], description: 'Machine X reachable at the high end. See travel_x_min.' },
                 travel_y_min: { type: ['number', 'null'], description: 'Machine Y reachable at the low end. See travel_x_min.' },
@@ -256,7 +292,11 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                     + `${GEOMETRY_FIELDS.map((f) => f.field).join(', ')}.`);
             }
             try {
-                const outcome = setGeometryValues(values, reason);
+                // Travel statements are machine-scoped: tag them with the connected (else selected) machine.
+                const travelStated = ['travel_x_min', 'travel_x_max', 'travel_y_min', 'travel_y_max']
+                    .some((field) => values[field] !== undefined && values[field] !== null && values[field] !== '');
+                const machineIdentifier = travelStated ? machineForNewRecord('A travel limit') : null;
+                const outcome = setGeometryValues(values, reason, machineIdentifier);
                 return { ...outcome, geometry: geometrySettings() };
             } catch (err) {
                 throw new McpToolError((err as Error).message);
@@ -286,7 +326,10 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
         description: 'Everything already known about this machine and bed in one read-only call, '
             + 'so a fresh session orients WITHOUT moving anything: stored calibrations (with '
             + 'surface tags), named landmarks, the expected tool region, motion limits, camera '
-            + 'config, and the live connection snapshot. Call this first.',
+            + 'config, and the live connection snapshot. Call this first. connectedMachine says which machine this '
+            + 'is and whether it has a Z axis; every landmark and calibration carries machineScope (which machine it was '
+            + 'set on, whether it applies to the connected one, and whether it was attributed to the A350 by the legacy '
+            + 'untagged rule); limits.travel is the machine model +/- the travel fudge the planners allow.',
         inputSchema: { type: 'object', properties: {}, additionalProperties: false },
         handler: async () => {
             let toolRegion: object | null = null;
@@ -298,9 +341,36 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                     toolRegion = null;
                 }
             }
+            const capability = connectedMachineCapability();
+            const connected = connectedMachineIdentifier();
+            const travel = planningTravel();
             return {
                 connection: connectionManager.getConnectionStatus(),
-                calibrations: calibrationStore.list(),
+                connectedMachine: describeConnectedMachine(),
+                /**
+                 * Machine scoping (#260 follow-up): landmarks, calibrations and
+                 * the stated travel apply only to the machine they were set
+                 * on. Records with no tag were set on the A350, the only
+                 * machine the MCP ran on before 2026-10-18, and are its by rule.
+                 */
+                machineScope: {
+                    connected,
+                    legacyRule: `records with no machineIdentifier belong to ${LEGACY_MACHINE_IDENTIFIER}`,
+                    landmarksApplying: landmarkStore.listFor(connected).map((l) => l.name),
+                    landmarksNotApplying: landmarkStore.list().filter((l) => !appliesToMachine(l.machineIdentifier, connected))
+                        .map((l) => ({ name: l.name, machineIdentifier: l.machineIdentifier })),
+                    calibrationsApplying: calibrationStore.listFor(connected).map((e) => e.id),
+                    calibrationsNotApplying: calibrationStore.list().filter((e) => !appliesToMachine(e.machineIdentifier, connected))
+                        .map((e) => ({ id: e.id, machineIdentifier: e.machineIdentifier })),
+                },
+                calibrations: calibrationStore.list().map((entry) => ({
+                    ...entry,
+                    machineScope: {
+                        machineIdentifier: entry.machineIdentifier,
+                        legacy: entry.legacyScope === true,
+                        appliesToConnectedMachine: appliesToMachine(entry.machineIdentifier, connected),
+                    },
+                })),
                 landmarks: landmarkStore.list().map(describeLandmark),
                 landmarkClearances: (() => {
                     const legacy = landmarkStore.list().filter((l) => needsRestatement(l.clearanceZ, l.clearanceBasis));
@@ -327,7 +397,25 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                 expectedToolRegion: toolRegion,
                 limits: {
                     maxJogDistanceMm: Number(config.get('mcpMaxJogDistance')) || 100,
-                    /** The PARK height: where procedures hop, retreat on abort, and end. 328 = home Z. */
+                    /**
+                     * Whether the Z laws below apply at all: false on a machine
+                     * with no Z axis (the Ray), where XY runs at the only height
+                     * and move_z is refused.
+                     */
+                    zLawsApply: capability.hasZ,
+                    /** The XY travel the planners allow on the connected machine: the model +/- the fudge, tightened by any statement for it. */
+                    travel: travel ? { ...travel.limits, basis: describePlanningTravel(travel), conflicts: travel.conflicts } : null,
+                    travelFudge: (() => {
+                        const fudge = travelFudge();
+                        return {
+                            xMm: fudge.x,
+                            yMm: fudge.y,
+                            source: fudge.source,
+                            defaultMm: fudge.defaultMm,
+                            setting: 'mcpTravelFudgeMm (LUBAN_MCP_TRAVEL_FUDGE_MM); per axis mcpTravelFudgeXMm / mcpTravelFudgeYMm',
+                        };
+                    })(),
+                    /** The PARK height: where procedures hop, retreat on abort, and end. 328 = home Z. Meaningless when zLawsApply is false. */
                     safeTraverseZMm: safeTraverseZ(),
                     /**
                      * The MOTION FLOOR (law 2): the lowest machine Z an XY move

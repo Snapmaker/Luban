@@ -4,8 +4,10 @@ import path from 'path';
 
 import DataStorage from '../../DataStorage';
 import logger from '../../lib/logger';
+import { connectedMachineIdentifier } from './connectedMachine';
 import { ObstacleBox, POSITION_EPSILON_MM, segmentHitsBox2D } from './envelopeChecks';
 import { ClearanceBasis, normaliseClearanceBasis, requiredToolheadZ } from './landmarkClearance';
+import { appliesToMachine, isLegacyScope, recordMachineScope } from './machineCapability';
 
 const log = logger('service:mcp:landmarks');
 
@@ -37,6 +39,18 @@ export interface Landmark {
     clearanceBasis: ClearanceBasis;
     notes: string | null;
     createdAt: number;
+    /**
+     * The machine this landmark's coordinates belong to (the connection's
+     * machineIdentifier when it was set). A landmark is machine coordinates
+     * on ONE bed: the A350's rotary keep-out at X140-200 means nothing on a
+     * Ray. Records written before this existed (2026-10-18) carry no tag and
+     * are the A350's - machineCapability.LEGACY_MACHINE_IDENTIFIER - because
+     * that is the only machine they were ever set on. Checks apply only the
+     * landmarks whose machine is the connected one; list() still shows all.
+     */
+    machineIdentifier: string;
+    /** True when machineIdentifier was attributed by the legacy rule rather than recorded. */
+    legacyScope?: boolean;
 }
 
 interface LandmarkFile {
@@ -66,6 +80,8 @@ export class LandmarkStore {
                     ...l,
                     clearanceZ: Number.isFinite(Number(l.clearanceZ)) ? Number(l.clearanceZ) : null,
                     clearanceBasis: normaliseClearanceBasis(l.clearanceBasis),
+                    machineIdentifier: recordMachineScope(l.machineIdentifier),
+                    legacyScope: isLegacyScope(l.machineIdentifier),
                 }));
             this.cache = { landmarks };
         } catch (err) {
@@ -82,12 +98,26 @@ export class LandmarkStore {
         }
     }
 
-    public add(landmark: Omit<Landmark, 'id' | 'createdAt'>): Landmark {
+    /**
+     * Store a landmark for `machineIdentifier` - the connected machine when
+     * omitted. Refused when no machine can be named: a landmark is machine
+     * coordinates, and coordinates without a machine are not a landmark.
+     */
+    public add(landmark: Omit<Landmark, 'id' | 'createdAt' | 'machineIdentifier' | 'legacyScope'> & { machineIdentifier?: string | null }): Landmark {
+        const machineIdentifier = landmark.machineIdentifier || connectedMachineIdentifier();
+        if (!machineIdentifier) {
+            throw new Error('A landmark is machine coordinates on ONE machine, and no machine is connected to tag it with. '
+                + 'Connect the machine first.');
+        }
         const data = this.load();
-        // Same name replaces: landmarks are identities, not history.
-        data.landmarks = data.landmarks.filter((l) => l.name !== landmark.name);
+        // Same name replaces, within the same machine: landmarks are
+        // identities, not history - and "tool-setter" on the A350 is not
+        // "tool-setter" on the Ray.
+        data.landmarks = data.landmarks.filter((l) => !(l.name === landmark.name && l.machineIdentifier === machineIdentifier));
         const full: Landmark = {
             ...landmark,
+            machineIdentifier,
+            legacyScope: false,
             id: crypto.randomBytes(4).toString('hex'),
             createdAt: Date.now(),
         };
@@ -97,8 +127,14 @@ export class LandmarkStore {
         return full;
     }
 
+    /** Every stored landmark, for every machine, each with its machineIdentifier. */
     public list(): Landmark[] {
         return this.load().landmarks;
+    }
+
+    /** The landmarks that apply to `machineIdentifier` (the connected machine when omitted); none when no machine is connected. */
+    public listFor(machineIdentifier: string | null = connectedMachineIdentifier()): Landmark[] {
+        return this.load().landmarks.filter((l) => appliesToMachine(l.machineIdentifier, machineIdentifier));
     }
 
     public remove(idOrName: string): boolean {
@@ -131,9 +167,10 @@ export class LandmarkStore {
         x0: number, y0: number, x1: number, y1: number,
         toolheadZ: number, marginMm = 5,
         toolProtrusionMm: number | null = null,
-        clearanceMarginMm?: number
+        clearanceMarginMm?: number,
+        machineIdentifier: string | null = connectedMachineIdentifier()
     ): Array<Landmark & { requiredZ: number | null }> {
-        return this.load().landmarks
+        return this.listFor(machineIdentifier)
             .map((l) => ({
                 ...l,
                 requiredZ: l.clearanceZ === null
@@ -160,8 +197,8 @@ export class LandmarkStore {
      * TRAVERSING across its box low, not probing inside it - the rotary-axis
      * landmark covers the whole stock, and probing the stock is the job.
      */
-    public obstacleBoxes(): ObstacleBox[] {
-        return this.load().landmarks
+    public obstacleBoxes(machineIdentifier: string | null = connectedMachineIdentifier()): ObstacleBox[] {
+        return this.listFor(machineIdentifier)
             .filter((l) => l.clearanceZ !== null)
             .map((l) => ({
                 name: l.name,
@@ -176,8 +213,8 @@ export class LandmarkStore {
      * Landmarks whose extent lies within `radius` mm of a machine XY point -
      * what a toolhead camera at that position could plausibly see.
      */
-    public near(x: number, y: number, radius: number): Landmark[] {
-        return this.load().landmarks.filter((l) => {
+    public near(x: number, y: number, radius: number, machineIdentifier: string | null = connectedMachineIdentifier()): Landmark[] {
+        return this.listFor(machineIdentifier).filter((l) => {
             const dx = Math.max(l.machine.x0 - x, 0, x - l.machine.x1);
             const dy = Math.max(l.machine.y0 - y, 0, y - l.machine.y1);
             return Math.hypot(dx, dy) <= radius;

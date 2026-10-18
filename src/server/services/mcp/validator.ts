@@ -540,6 +540,32 @@ export interface FrameResolutionContext {
      * resolved on the assumption that the live offset is G54's.
      */
     verifiesG54AtStart?: boolean;
+    /**
+     * The body is a server-emitted RELATIVE transport step (traversePlan.ts
+     * 'grbl-relative': `G91 / G1 X.. Y.. F.. / G90`, Luban's own jog form for
+     * the Ray). A relative move is frame-independent, so the frame doctrine
+     * has nothing to demand of it; accepted only when EVERY motion line is
+     * relative and G90 is restored. Never set for a submitted file.
+     */
+    relativeTransport?: boolean;
+}
+
+/** The note a relative transport body carries on the confirm page in place of a frame declaration. */
+export const RELATIVE_TRANSPORT_NOTE = 'Relative transport (G91 .. G90): every move is an increment from where the head is, so no '
+    + 'workspace frame applies - the "; mcp-settle machine" line names the absolute MACHINE endpoint the heartbeat must report. '
+    + 'This is the form Luban\'s own jog sends to the Ray.';
+
+/**
+ * Every motion line runs under G91 and G90 is restored before the end: the
+ * extents are all null because the validator does not accumulate relative
+ * moves, and nothing moved before the distance mode was set.
+ */
+export function isRelativeOnlyTransport(report: GcodeValidationReport): boolean {
+    return report.motionLineCount > 0
+        && report.usesRelativeMotion
+        && !report.endsInRelativeMode
+        && !report.assumesDistanceMode
+        && report.extents.x === null && report.extents.y === null && report.extents.z === null;
 }
 
 export interface FrameResolution {
@@ -581,6 +607,12 @@ export function resolveJobFrame(input: GcodeValidationReport, ctx: FrameResoluti
     }
     if (declared === 'work' && arg === 'machine') {
         return { report, refusal: `Refused: the gcode selects a work workspace (${report.frame.workspaceSelects.join('/')}) at line ${report.frame.line} but frame: "machine" was passed. A machine-frame job must contain G53 literally.` };
+    }
+    if (declared === null && arg === null && ctx.relativeTransport === true && isRelativeOnlyTransport(report)) {
+        report.warnings = report.warnings.filter((w) => !w.startsWith('Contains G91 relative motion'));
+        report.warnings.push(RELATIVE_TRANSPORT_NOTE);
+        report.machineZExtents = null;
+        return { report, refusal: null };
     }
     if (declared === null) {
         if (arg === 'work') {

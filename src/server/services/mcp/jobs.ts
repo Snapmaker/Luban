@@ -650,6 +650,8 @@ export class JobManager {
                 : `WORK (${frame.workspaceSelects.join('/')} at line ${frame.line})${offsetNote}`;
         } else if (v.motionLineCount === 0) {
             frameText = 'n/a (no motion)';
+        } else if (v.usesRelativeMotion && !v.endsInRelativeMode) {
+            frameText = 'RELATIVE (G91 .. G90) - frame-independent increments; the "; mcp-settle machine" line of each step is the machine endpoint';
         }
         let machineZ = 'UNRESOLVED - see warnings';
         if (v.machineZExtents && v.machineZResolvedFor) {

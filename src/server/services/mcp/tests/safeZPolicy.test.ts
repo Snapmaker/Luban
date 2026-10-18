@@ -78,4 +78,19 @@ export const tests: Array<[string, () => void]> = [
         assert.equal(decideSafeZRaise({ ...input({ currentZ: 205.5, enabled: false }), machineTargets: [328] }).allowed, false);
         assert.equal(decideSafeZRaise({ ...input({ currentZ: 205.5, reliability: 'cached-offset' }), machineTargets: [328] }).allowed, false);
     }],
+
+    // ---- The Ray (#260 follow-up): no Z axis, so no "safe height" to justify skipping the click ----
+    ['a machine with no Z axis never auto-executes a traverse: it stages, and the reason says why', () => {
+        const d = decideSafeZTraverse(input({ currentZ: 0, hasZ: false }));
+        assert.equal(d.allowed, false);
+        assert.match(d.reason, /no Z axis/);
+        assert.match(d.reason, /staged for the operator's click/);
+        assert.ok(!d.reason.includes('move_z'), 'never suggests raising an axis that does not exist');
+        // Even a Z that would qualify on an A350 does not qualify without a Z axis.
+        assert.equal(decideSafeZTraverse(input({ currentZ: 328, hasZ: false })).allowed, false);
+        assert.equal(decideSafeZRaise({ ...input({ currentZ: 0, hasZ: false }), machineTargets: [10] }).allowed, false);
+        // hasZ omitted or true: the A350 decision is unchanged.
+        assert.equal(decideSafeZTraverse(input({ hasZ: true })).allowed, true);
+        assert.equal(decideSafeZTraverse(input()).allowed, true);
+    }],
 ];

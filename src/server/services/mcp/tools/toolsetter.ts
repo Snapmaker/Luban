@@ -27,6 +27,7 @@ import {
     machinePositionDiagnostics,
     requirePlanningTravel,
     requireReliableMachine,
+    requireZAxis,
     safeTraverseZ,
     traverseWithoutApprovalAtSafeZ,
 } from './machine';
@@ -363,6 +364,9 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
         },
         handler: async (args: { reason?: string }) => {
             probeFeedService.assertNoOvertravel();
+            // A tool-change park is a CNC move with a Z step; a machine with
+            // no Z axis has neither the step nor the tool change.
+            requireZAxis('goto_tool_change_position (its first step is a Z move)');
             const cfg = getToolSetterConfig();
             if (!cfg || cfg.changeZ === null || cfg.changeX === null) {
                 throw new McpToolError('No tool-change position stored. Ask the operator for it and set '

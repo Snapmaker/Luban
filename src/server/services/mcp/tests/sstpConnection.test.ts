@@ -6,6 +6,7 @@ import vm from 'vm';
 import ts from 'typescript';
 import * as procedureLimits from '../procedureLimits';
 import { reliableForMotion } from '../machinePosition';
+import * as machineCapability from '../machineCapability';
 import { ConnectionDiagnosticState, httpEvidence, safeIdentifier, safeTarget } from '../../machine/connectionDiagnosticState';
 import { GcodeLease } from '../../machine/gcodeLease';
 
@@ -120,6 +121,12 @@ function cameraFixture() {
             getPositionSnapshot: () => state,
             assertFreshHeartbeat: () => { throw new Error('Refusing home: unreliable heartbeat'); },
         },
+        // The home decision is pure (machineCapability.homeCommandFor); the
+        // identifier read is the defensive one in connectedMachine.ts, which
+        // this stub replaces - the ConnectionManager stub below has no
+        // getConnectionStatus, exactly like the first CI run of fd3c8c7da.
+        '../machineCapability': machineCapability,
+        '../connectedMachine': { connectedMachineIdentifier: () => null, describeConnectedMachine: () => ({ identifier: null, type: null, hasZ: true }) },
         '../../machine/ConnectionManager': { connectionManager: {
             getLatestMachineState: () => state,
             getCurrentChannel: () => ({ executeGcode: async (gcode: string) => { commands.push(gcode); return replies.shift() || { result: 0 }; } }),
