@@ -271,6 +271,32 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.equal(f.store.describe().current.deviceScope !== null, true);
     }],
 
+    ['an A350 reconnecting over SSTP from a new address adds an alias: no conflict, auto-execute unaffected', () => {
+        const f = machineToolsFixture(BOX);
+        f.connect({ machineIdentifier: A350, host: '192.168.1.20' });
+        f.store.currentMachine();
+        f.connect({ machineIdentifier: A350, host: '192.168.1.57' });
+        const current = f.store.currentMachine();
+        assert.equal(current.deviceConflict, null, 'a host is weak identity (DHCP), never a conflict');
+        assert.equal(current.machineKey, A350);
+        same(f.store.load().machines[A350].devices.map((d: { id: string }) => d.id), ['host:192.168.1.20', 'host:192.168.1.57']);
+        assert.equal(f.tools.traverseWithoutApprovalAtSafeZ(), true);
+        assert.equal(f.tools.traverseWithoutApprovalPolicy().gatedBy, null);
+        assert.equal(f.store.machineConfig.get('mcpProbeTipDiameter'), 2, 'its records still apply');
+        f.connect({ machineIdentifier: A350, host: '192.168.1.20' });
+        f.store.currentMachine();
+        assert.equal(f.store.load().machines[A350].devices.length, 2, 'a known host is not added twice');
+    }],
+
+    ['two different serials still conflict', () => {
+        const f = machineToolsFixture(BOX);
+        f.connect({ machineIdentifier: A350, deviceSerial: '111' });
+        f.store.currentMachine();
+        f.connect({ machineIdentifier: A350, deviceSerial: '222' });
+        assert.ok(f.store.currentMachine().deviceConflict);
+        assert.equal(f.tools.traverseWithoutApprovalAtSafeZ(), false);
+    }],
+
     ['a differing id of a recorded type is a conflict; "same machine" adds the alias', () => {
         const f = machineStoreFixture(BOX);
         f.connect({ machineIdentifier: A350, deviceSerial: '123' });

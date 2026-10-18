@@ -11,12 +11,19 @@
 // Keyed by machineIdentifier ("Snapmaker 2.0 A350"), with the device ids a
 // connection presents kept as ALIASES of that entry (amendment R3): the A350
 // over SACP has a serial number, over SSTP a host, over USB nothing, and all
-// three are the same machine. A connect presenting a device id of a type the
-// entry already records, but different from every recorded id, is a
-// `deviceConflict`: maybe a second machine of the same model. The records
-// then read as unconfirmed and nothing auto-executes until the operator
-// answers (assignMachineDevice: same machine -> alias; different -> a new
-// empty entry "<identifier>#<deviceId>"). Different id types never conflict.
+// three are the same machine. A connect presenting an SACP serial (`sn:`)
+// when the entry already records a different serial is a `deviceConflict`:
+// maybe a second machine of the same model. The records then read as
+// unconfirmed and nothing auto-executes until the operator answers
+// (assignMachineDevice: same machine -> alias; different -> a new empty entry
+// "<identifier>#<deviceId>"). Different id types never conflict.
+//
+// Only serials are identity. An SSTP `host:` id is the address the channel
+// was opened with - DHCP moves it - so a new host is recorded as one more
+// alias (lastSeen kept current) and NEVER raises a conflict: an A350 that
+// reconnects over Wi-Fi from a new address keeps its records and its
+// approval-free transport. The limitation: two machines of the same model
+// that only ever connect over SSTP cannot be told apart, and share an entry.
 //
 // Consumers keep their old configstore key names: `machineConfig.get(key)`
 // maps a legacy key (and its `Note` / `At` companions) to its place in the
@@ -360,6 +367,10 @@ export function createMachineStore(deps: MachineStoreDeps) {
             if ((data.machines[key].devices || []).some((d) => d.id === deviceId)) {
                 return { key, conflict: null };
             }
+        }
+        // A host is weak identity (DHCP): never a conflict, only another alias (see the header).
+        if (idType(deviceId) !== 'sn') {
+            return { key: identifier, conflict: null };
         }
         const entry = data.machines[identifier];
         const sameType = entry ? (entry.devices || []).filter((d) => idType(d.id) === idType(deviceId)).map((d) => d.id) : [];
