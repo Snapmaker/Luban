@@ -138,8 +138,11 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
             const promise = new Promise<void>((resolve, reject) => { resolveWorker = resolve; rejectWorker = reject; });
             const handle = Object.assign(promise, { cancel: () => rejectWorker(new Error('cancelled token=secret')) });
             const manager = load('../task-manager/workerManager.ts', {
+                path,
                 workerpool: { pool: () => ({ exec: () => handle }) },
                 '../../DataStorage': { tmpDir: '/tmp', fontDir: '/tmp' },
+                // The pool is created from SERVER_DIR; this test never reaches it.
+                '../../lib/paths': { SERVER_DIR: '/srv' },
             }).default;
             const messages: Array<{ status: string; reason: string }> = [];
             const worker = manager.heartBeat([], (message: { status: string; reason: string }) => messages.push(message));
