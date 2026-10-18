@@ -71,6 +71,7 @@ declare interface WorkspaceOtherState {
     uploadState: string;
     renderState: string;
     previewRenderState: string;
+    previewRenderError: string;
 
     gcodeFile: object | null;
     activeGcodeFile: object | null;
@@ -109,6 +110,7 @@ export const initialState: WorkspaceState = {
     uploadState: 'idle', // uploading, uploaded
     renderState: 'idle',
     previewRenderState: 'idle',
+    previewRenderError: '',
     gcodeFile: null,
     activeGcodeFile: null,
     boundingBox: null,

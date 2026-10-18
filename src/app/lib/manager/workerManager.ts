@@ -3,6 +3,8 @@ import { isUndefined } from 'lodash';
 import { Pool, Thread, Worker as ThreadsWorker, spawn } from 'threads';
 
 import { machineStore } from '../../store/local-storage';
+import { getBackendOrigin } from '../backend-origin';
+import type { GcodeToArraybufferGeometryData } from '../../workers/gcodeToArraybufferGeometry';
 import { LoadModelOptions } from '../../workers/loadModel';
 import CalculateSectionPoints, { IMessage as TCalculateSectionPointsMessage } from './ClippingPoolManager.worker';
 import './Pool.worker';
@@ -72,8 +74,10 @@ class WorkerManager extends EventEmitter {
         this.exec('boxSelect', data, onMessage, onComplete);
     }
 
-    public gcodeToArraybufferGeometry<T>(data: unknown, onMessage: (data: T) => void, onComplete?: () => void) {
-        this.exec('gcodeToArraybufferGeometry', data, onMessage, onComplete);
+    public gcodeToArraybufferGeometry<T>(data: GcodeToArraybufferGeometryData, onMessage: (data: T) => void, onComplete?: () => void) {
+        // Workers cannot receive the renderer's server-origin IPC event. Pass
+        // the backend explicitly so /data requests do not resolve on luban://.
+        this.exec('gcodeToArraybufferGeometry', { ...data, backendOrigin: getBackendOrigin() }, onMessage, onComplete);
     }
 
     public gcodeToBufferGeometry<T>(data: unknown, onMessage: (data: T) => void, onComplete?: () => void) {

@@ -16,6 +16,7 @@ import url from 'url';
 import DataStorage from './DataStorage';
 import MenuBuilder, { addRecentFile, cleanAllRecentFiles } from './electron-app/Menu';
 import { configureWindow } from './electron-app/window';
+import getWindowBounds from './electron-app/window-bounds';
 import pkg from './package.json';
 import { ENV_KEY as STARTUP_EPOCH_KEY, epoch as startupEpoch, formatTimeline as formatStartupTimeline, mark as startupMark } from './startup-timeline';
 
@@ -183,12 +184,7 @@ ipcMain.on('set-crash-reporting', (event, enabled) => {
 
 function getBrowserWindowOptions() {
     const defaultOptions = {
-        width: 1440,
-        height: 900,
-        minHeight: 708,
-        minWidth: 1024,
         show: false,
-        useContentSize: true,
         title: `${pkg.name} ${pkg.version}`,
         webPreferences: {
             nodeIntegration: true,
@@ -204,51 +200,8 @@ function getBrowserWindowOptions() {
     // { x, y, width, height }
     const lastOptions = config.get('winBounds');
 
-    // Get display that most closely intersects the provided bounds.
-    let windowOptions = {};
-    if (lastOptions) {
-        const display = screen.getDisplayMatching(lastOptions);
-
-        if (display.id === lastOptions.id) {
-            // use last time options when using the same display
-            windowOptions = {
-                ...windowOptions,
-                ...lastOptions
-            };
-        } else {
-            // or center the window when using other display
-            const workArea = display.workArea;
-
-            // calculate window size
-            const width = Math.max(Math.min(lastOptions.width, workArea.width), 360);
-            const height = Math.max(Math.min(lastOptions.height, workArea.height), 240);
-            const x = workArea.x + (workArea.width - width) / 2;
-            const y = workArea.y + (workArea.height - height) / 2;
-
-            windowOptions = {
-                id: display.id,
-                x,
-                y,
-                width,
-                height
-            };
-        }
-    } else {
-        const display = screen.getPrimaryDisplay();
-        // const { x, y, width, height } = display.workArea;
-        const { x, y, width } = display.workArea;
-        const nx = x + (width - 1440) / 2;
-        windowOptions = {
-            id: display.id,
-            // x,
-            // y,
-            x: nx,
-            y,
-            center: true
-            // width,
-            // height
-        };
-    }
+    const display = lastOptions ? screen.getDisplayMatching(lastOptions) : screen.getPrimaryDisplay();
+    const windowOptions = getWindowBounds(display, lastOptions);
 
     return Object.assign({}, defaultOptions, windowOptions);
 }

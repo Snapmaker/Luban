@@ -5,26 +5,30 @@ import { Transfer } from 'threads';
 import GcodeToBufferGeometryWorkspace from './GcodeToBufferGeometry/GcodeToBufferGeometryWorkspace';
 
 
-type GcodeToArraybufferGeometryData = {
+export type GcodeToArraybufferGeometryData = {
     func: string;
-    gcodeFilename: string;
-    gcode: string;
-    isPreview: boolean;
+    gcodeFilename?: string;
+    gcode?: string;
+    isPreview?: boolean;
+    backendOrigin?: string;
 };
 
 const gcodeToArraybufferGeometry = (data: GcodeToArraybufferGeometryData) => {
     return new Observable((observer) => {
         if (isEmpty(data)) {
             observer.next({ status: 'err', value: 'Data is empty' });
+            observer.complete();
+            return;
         }
 
-        const { func, gcodeFilename, gcode, isPreview = false } = data;
+        const { func, gcodeFilename, gcode, isPreview = false, backendOrigin = '' } = data;
 
         // Support func=WORKSPACE only
         if (!['WORKSPACE'].includes(func.toUpperCase())) {
             observer.next({
                 status: 'err',
                 value: `Unsupported func: ${func}`,
+                isPreview,
             });
             observer.complete();
             return;
@@ -34,6 +38,7 @@ const gcodeToArraybufferGeometry = (data: GcodeToArraybufferGeometryData) => {
             observer.next({
                 status: 'err',
                 value: 'Gcode filename and gcode is empty',
+                isPreview,
             });
             observer.complete();
             return;
@@ -83,10 +88,11 @@ const gcodeToArraybufferGeometry = (data: GcodeToArraybufferGeometryData) => {
                     isPreview,
                 });
             },
-            (err: string) => {
-                observer.next({ status: 'err', value: err });
+            (err) => {
+                observer.next({ status: 'err', value: err.message || String(err), isPreview });
                 observer.complete();
-            }
+            },
+            backendOrigin
         );
     });
 };

@@ -41,6 +41,27 @@
     }
 }
 
+:global(.ant-modal.gcode-preview-modal) {
+    min-width: 0 !important;
+    max-width: calc(100vw - 32px) !important;
+    padding-bottom: 0;
+
+    :global(.ant-modal-content) {
+        display: flex;
+        flex-direction: column;
+        max-height: calc(100vh - 32px);
+    }
+
+    :global(.ant-modal-header),
+    :global(.ant-modal-footer) {
+        flex-shrink: 0;
+    }
+
+    :global(.ant-modal-body) {
+        min-height: 0;
+    }
+}
+
 :global(.model-lg-profile-manager) {
     width: calc(100vw - 80px) !important;
     max-width: calc(100vw - 80px) !important;

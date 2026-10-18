@@ -52,6 +52,7 @@ const PreviewModal: React.FC<PreviewModalProps> = (props) => {
 
         previewModelGroup,
         previewRenderState,
+        previewRenderError,
     } = useSelector((state: RootState) => state.workspace);
 
     const { size } = useSelector((state: RootState) => state.machine);
@@ -75,13 +76,15 @@ const PreviewModal: React.FC<PreviewModalProps> = (props) => {
         <Modal
             centered
             open
+            className="gcode-preview-modal"
+            width={992}
             onClose={closeModal}
         >
             <Modal.Header>
                 {i18n._('key-Workspace/Transport-Preview')}
             </Modal.Header>
             <Modal.Body>
-                <div style={{ width: 944, height: 522 }} className="position-re">
+                <div style={{ width: '100%', height: 'max(120px, min(522px, calc(100vh - 220px)))' }} className="position-re">
                     {previewRenderState === 'rendered' && (
                         <Canvas
                             ref={canvas}
@@ -102,7 +105,13 @@ const PreviewModal: React.FC<PreviewModalProps> = (props) => {
                             />
                         </div>
                     )}
-                    {previewRenderState !== 'rendered' && (
+                    {previewRenderState === 'failed' && (
+                        <div role="alert" className="position-absolute position-absolute-center">
+                            <p>{i18n._('Failed to preview G-code.')}</p>
+                            <p>{previewRenderError}</p>
+                        </div>
+                    )}
+                    {previewRenderState !== 'rendered' && previewRenderState !== 'failed' && (
                         <div className="position-absolute position-absolute-center">
                             <Spin />
                         </div>
