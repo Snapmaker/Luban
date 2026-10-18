@@ -177,6 +177,13 @@ class ConnectionManager {
     // identifier of the connected machine, kept for status reporting
     private machineIdentifier: string | null = null;
 
+    // Per-device identity from the channel's Ready payload (#265): the SACP
+    // controller serial number, and the SSTP-HTTP base URL the session talks
+    // to. Null when the transport has none (text serial). Never the token.
+    private deviceSerial: string | null = null;
+
+    private host: string | null = null;
+
     private scheduledTasksHandle;
 
     /**
@@ -259,7 +266,15 @@ class ConnectionManager {
             protocol: this.channel ? this.protocol : null,
             machineIdentifier: this.machineIdentifier,
             machineReady: !!this.machineInstance,
+            deviceSerial: this.deviceSerial,
+            host: this.host,
         };
+    }
+
+    private clearDeviceIdentity(): void {
+        this.machineIdentifier = null;
+        this.deviceSerial = null;
+        this.host = null;
     }
 
     // TODO: Refactor this
@@ -339,7 +354,7 @@ class ConnectionManager {
      * 2. Start heart beat (or subscribe to heart beat)
      * 3. Subscribe to machine events
      */
-    private onChannelReady = async (data: { machineIdentifier?: string }) => {
+    private onChannelReady = async (data: { machineIdentifier?: string; deviceSerial?: unknown; host?: unknown }) => {
         log.info('channel: Ready');
         connectionDiagnostics.record('channel_ready');
 
@@ -347,6 +362,9 @@ class ConnectionManager {
 
         log.debug(`machineIdentifier = ${machineIdentifier}`);
         this.machineIdentifier = machineIdentifier || null;
+        this.deviceSerial = typeof data?.deviceSerial === 'string' && data.deviceSerial ? data.deviceSerial : null;
+        // Strip any user:password@ so a status reader never sees credentials.
+        this.host = typeof data?.host === 'string' && data.host ? data.host.replace(/\/\/[^/@]*@/, '//') : null;
 
         // configure machine instance
         this.machineInstance = null;
@@ -443,7 +461,7 @@ class ConnectionManager {
         this.unbindChannelEvents();
         this.channel = null;
         this.channelAssignments += 1;
-        this.machineIdentifier = null;
+        this.clearDeviceIdentity();
         this.machineInstance = null;
         octo.onStop();
         if (instance) {
@@ -643,7 +661,7 @@ class ConnectionManager {
         this.unbindChannelEvents();
         this.channel = null;
         this.channelAssignments += 1;
-        this.machineIdentifier = null;
+        this.clearDeviceIdentity();
 
         // destroy machine instance
         if (this.machineInstance) {

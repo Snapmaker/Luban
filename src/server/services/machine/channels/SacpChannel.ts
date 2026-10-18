@@ -74,7 +74,7 @@ import { ChannelEvent } from './ChannelEvent';
 import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from '../../../../app/machines/snapmaker-2-toolheads';
 import { gcodeLease } from '../gcodeLease';
 import { connectionDiagnostics } from '../connectionDiagnostics';
-import { SacpMachineState, SacpMachineStateTracker } from './sacpMachineState';
+import { SacpMachineState, SacpMachineStateTracker, sacpDeviceSerial } from './sacpMachineState';
 
 const log = logger('machine:channels:SacpChannel');
 
@@ -388,6 +388,11 @@ class SacpChannelBase extends Channel implements
         const { data: machineInfo } = await this.sacpClient.getMachineInfo();
 
         return machineInfo;
+    }
+
+    /** The Ready payload's `deviceSerial`: the controller's serial number, null when it reported none. */
+    protected deviceSerialOf(machineInfo: { masterControlSerialNumber?: unknown } | null | undefined): string | null {
+        return sacpDeviceSerial(machineInfo);
     }
 
 

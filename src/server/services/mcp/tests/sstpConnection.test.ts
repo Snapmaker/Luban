@@ -505,4 +505,47 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert(manager.getLatestMachineState());
         assert(requests.every(req => req.method === 'GET'));
     }],
+    ['device identity: the SSTP host reaches getConnectionStatus().host (deviceSerial null, never the token), cleared on loss', async () => {
+        const { channel, diagnosticModule } = fixture();
+        const source = fs.readFileSync(path.join(__dirname, '../../machine/ConnectionManager.ts'), 'utf8');
+        const dependencies = stubImports(source);
+        Object.assign(dependencies, {
+            '../../lib/logger': logger,
+            './connectionDiagnostics': diagnosticModule,
+            './connectionDiagnosticState': { safeIdentifier, safeTarget },
+            './types': { ConnectionType: { WiFi: 'wifi' } },
+            './ProtocolDetector': { NetworkProtocol: { Unknown: 'Unknown', HTTP: 'HTTP' }, SerialPortProtocol: {} },
+            './channels/ChannelEvent': { ChannelEvent: events },
+            './channels/SstpHttpChannel': { sstpHttpChannel: channel },
+            './adaptor/Octo': { octo: { onStop: () => undefined, onStart: () => undefined } },
+            lodash: { includes: (items: unknown[], value: unknown) => items.includes(value) },
+            '../../../app/machines': {
+                SnapmakerA150Machine: { identifier: 'A150' },
+                SnapmakerA250Machine: { identifier: 'A250' },
+                SnapmakerA350Machine: { identifier: 'A350' },
+                SnapmakerArtisanMachine: { identifier: 'Artisan' },
+                SnapmakerJ1Machine: { identifier: 'J1' },
+                SnapmakerRayMachine: { identifier: 'Ray' },
+            },
+        });
+        const manager = load('ConnectionManager.ts', dependencies).connectionManager;
+        manager.channel = channel;
+        manager.bindChannelEvents();
+        channel.host = 'http://192.0.2.20:8080';
+        channel.token = 'secret-token';
+        channel.state.series = 'no instance';
+        const ready: Array<{ host?: unknown }> = [];
+        channel.on(events.Ready, (data: { host?: unknown }) => ready.push(data));
+        channel.resumeVerifiedSession();
+        assert.strictEqual(ready[0].host, 'http://192.0.2.20:8080', 'the Ready payload carries the host');
+        const status = manager.getConnectionStatus();
+        assert.strictEqual(status.host, 'http://192.0.2.20:8080');
+        assert.strictEqual(status.deviceSerial, null, 'SSTP reports no serial number');
+        assert.ok(!JSON.stringify(status).includes('secret-token'), 'never the token');
+        channel.emit(events.Ready, { machineIdentifier: 'no instance', host: 'http://user:pw@192.0.2.20:8080' });
+        assert.strictEqual(manager.getConnectionStatus().host, 'http://192.0.2.20:8080', 'credentials in the URL are dropped');
+        channel.emit(events.Disconnected);
+        assert.strictEqual(manager.getConnectionStatus().host, null, 'cleared on loss');
+        assert.strictEqual(manager.getConnectionStatus().deviceSerial, null);
+    }],
 ];
