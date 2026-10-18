@@ -71,6 +71,8 @@ const HOME_TIMEOUT_MS = 120000;
 // Two status periods: the judgement needs a beat taken after the workspace change.
 const FRAME_RESTORE_SETTLE_MS = 4500;
 const HOME_POLL_MS = 1000;
+/** machineIdentifier of the Snapmaker Ray (app/machines/snapmaker-ray.ts), which homes on GRBL $H. */
+const RAY_IDENTIFIER = 'Ray';
 // home with ignore_stale_position on a channel that has published nothing yet:
 // how long to wait for its first state before refusing (a SACP subscription
 // reports within ~1 s of connecting; three HTTP poll periods otherwise).
@@ -772,7 +774,19 @@ export async function homeMachine(tool: string, waitUntilHomed: boolean = true, 
 
     const issuedAt = Date.now();
     let homeRequest: string;
-    if (sacpTransport() && typeof channel.goHome === 'function') {
+    const machineIdentifier = (connectionManager.getConnectionStatus() as { machineIdentifier?: string | null }).machineIdentifier;
+    if (sacpTransport() && machineIdentifier === RAY_IDENTIFIER && typeof channel.executeGcode === 'function') {
+        // The Ray homes on GRBL $H - what Luban's Home button sends for it
+        // (ConnectionControl/ControlPanel.tsx). Ray firmware V1.7.4 never
+        // answers the SACP 0x01/0x35 home request (observed 2026-10-18: no
+        // reply, no motion, the call hung). The homed state and position come
+        // back through the coordinate subscription.
+        homeRequest = '$H';
+        const executed = await sendGcodeVisible(channel, tool, '$H');
+        if (executed.result !== 0) {
+            throw new McpToolError(`Homing rejected by controller: ${executed.text || executed.result}`);
+        }
+    } else if (sacpTransport() && typeof channel.goHome === 'function') {
         // A SACP controller (Ray, Artisan, J1) homes on its own request
         // (0x01/0x35) - the same call as Luban's Home button on this transport
         // (ConnectionManager.goHome). Its G-code path acknowledges text with a
