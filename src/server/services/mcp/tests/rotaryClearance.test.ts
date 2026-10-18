@@ -223,6 +223,9 @@ export const tests: Array<[string, () => void]> = [
         // Computed above the fallback: never supersedes either.
         const tooTall = rotaryKeepOutBox(footprint, rotarySafeHeight(inputs({ toolProtrusionMm: 73.5, chuckTopZ: 260 })), LEGACY);
         assert.equal(supersedesLegacy(LEGACY, tooTall), false);
+        // ...and the box itself says the crossing must be refused, not planned at 328.
+        assert.equal(present(tooTall).clearsAtFallback, false);
+        assert.equal(present(computed).clearsAtFallback, true);
         assert.equal(supersedesLegacy(LEGACY, null), false);
     }],
 

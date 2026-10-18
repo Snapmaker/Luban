@@ -235,6 +235,12 @@ export interface RotaryKeepOutBox extends ObstacleBox {
     /** The computed height this box demands (= clearanceZ on the 'toolhead' basis). */
     requiredToolheadZ: number;
     basis: RotaryClearanceBasis;
+    /**
+     * Copied from the height result: false means even clearanceZ (the
+     * fallback) does not clear the rotary with this tool and part, so a
+     * crossing must be REFUSED, not planned at clearanceZ.
+     */
+    clearsAtFallback: boolean | null;
     extentFrom: { x: 'geometry' | 'legacy' | 'both'; y: 'geometry' | 'legacy' | 'both' };
 }
 
@@ -288,6 +294,7 @@ export function rotaryKeepOutBox(
         mode: legacy?.mode ?? 'crossing',
         requiredToolheadZ: result.zMm,
         basis: result.basis,
+        clearsAtFallback: result.clearsAtFallback,
         extentFrom: { x: source(geoX, legX), y: source(geoY, legY) },
     };
 }
