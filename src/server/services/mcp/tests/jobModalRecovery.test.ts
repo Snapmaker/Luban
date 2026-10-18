@@ -100,13 +100,15 @@ function managerFixture(files: Map<string, string>): JobManager {
             readFileSync: (name: string) => files.get(name),
             remove: async (name: string) => files.delete(name),
         },
-        '../../DataStorage': { tmpDir: '/fake' },
+        '../../DataStorage': { tmpDir: '/fake', userDataDir: '/fake' },
         '../../lib/logger': () => ({ info: () => undefined }),
         '../configstore': { get: () => undefined },
         './jobEnding': jobEnding,
         './jobDashboardState': require('../jobDashboardState'),
         './telemetryConfig': require('../telemetryConfig'),
         './activeTool': { describeActiveTool: () => ({ active: null }) },
+        // Program identity + upload store (#237): pure, so the real module.
+        './gcodeIntake': require('../gcodeIntake'),
     });
     return new loaded.JobManager();
 }
