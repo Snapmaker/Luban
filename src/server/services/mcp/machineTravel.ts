@@ -10,10 +10,10 @@
 // X-1 / Y399 against 600 x 400, the A350's frame runs X -19...339 / Y 0...342
 // against 320 x 350 (home X-19, X339 found by sweep). The default fudge of
 // 25 mm covers every one of those (-19 >= -25, 339 <= 345, 399 <= 425) and
-// still refuses X650 on the Ray (> 625). It is ONE configurable setting
-// (configstore mcpTravelFudgeMm / LUBAN_MCP_TRAVEL_FUDGE_MM, with per-axis
-// overrides mcpTravelFudgeXMm / mcpTravelFudgeYMm), read by tools/machine.ts
-// travelFudge(); this module just takes the numbers.
+// still refuses X650 on the Ray (> 625). It is ONE setting per machine
+// (set_machine_policy travel_fudge_mm, per axis travel_fudge_x_mm / _y_mm,
+// stored in the machine's machineStore entry; LUBAN_MCP_TRAVEL_FUDGE_MM wins),
+// read by tools/machine.ts travelFudge(); this module just takes the numbers.
 //
 // Before this the travel was a global "stated" box (set_probe_geometry
 // travel_*) widened by observed positions, which (a) was the A350's box
@@ -131,7 +131,7 @@ function resolveEnd(
     const looser = end === 'low' ? said < model - TRAVEL_EPSILON_MM : said > model + TRAVEL_EPSILON_MM;
     if (looser) {
         conflicts.push(`The stated ${axis} ${end === 'low' ? 'minimum' : 'maximum'} ${said} is looser than the machine model plus `
-            + `fudge (${model}); the model governs. Widen the travel fudge (mcpTravelFudgeMm) if this rig genuinely reaches there.`);
+            + `fudge (${model}); the model governs. Widen this machine's travel fudge (set_machine_policy travel_fudge_mm) if this rig genuinely reaches there.`);
         return { value: model, source: 'model' };
     }
     return { value: said, source: 'stated' };
@@ -144,7 +144,7 @@ function noteObserved(axis: string, seen: number | null, min: number, max: numbe
     if (beyond(seen, min - TRAVEL_OVERTRAVEL_MM, 'low') || beyond(seen, max + TRAVEL_OVERTRAVEL_MM, 'high')) {
         conflicts.push(`The toolhead has been observed at ${axis} ${Number(seen.toFixed(3))}, outside the travel ${axis} ${min}..${max} `
             + `by more than the ${TRAVEL_OVERTRAVEL_MM} mm overtravel allowance. Either the position of record or the travel is wrong: `
-            + 'check get_position, and widen the travel fudge (mcpTravelFudgeMm) only if the machine really reaches there.');
+            + 'check get_position, and widen the travel fudge for this machine (set_machine_policy travel_fudge_mm) only if the machine really reaches there.');
     }
 }
 

@@ -92,6 +92,7 @@ import { tests as connectionGenerationTests } from './connectionGeneration.test'
 import { tests as sacpMachineStateTests } from './sacpMachineState.test';
 import { tests as sacpConnectionTests } from './sacpConnection.test';
 import { tests as gcodeDialectTests } from './gcodeDialect.test';
+import { tests as machineStoreTests } from './machineStore.test';
 
 type TestCase = [string, () => void | Promise<void>];
 
@@ -177,6 +178,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['audioSelection', audioSelectionTests],
     ['executionModel', executionModelTests],
     ['gcodeDialect', gcodeDialectTests],
+    ['machineStore', machineStoreTests],
 ];
 
 async function main(): Promise<void> {

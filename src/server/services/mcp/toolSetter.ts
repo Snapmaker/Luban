@@ -3,7 +3,7 @@
 // the run_tool_setter arguments verbatim).
 import logger from '../../lib/logger';
 import { TRAVERSE_Z_TOLERANCE_MM, planToolSetterEnd } from './traversePlan';
-import config from '../configstore';
+import { machineConfig } from './machineStore';
 import { mcpBroadcast } from './index';
 import { ProbeChannel, probeFeedService } from './probeFeed';
 import {
@@ -101,7 +101,7 @@ export interface ToolSetterConfig {
 }
 
 function rawConfig(): { [key: string]: unknown } {
-    const raw = config.get(CONFIG_KEY);
+    const raw = machineConfig.get(CONFIG_KEY);
     return raw && typeof raw === 'object' ? (raw as { [key: string]: unknown }) : {};
 }
 
@@ -142,7 +142,7 @@ export function getToolSetterConfig(): ToolSetterConfig | null {
 /** Merge-write: measurement history and unknown fields survive config edits. */
 export function setToolSetterConfig(cfg: ToolSetterConfig): void {
     const datum = cfg.datum || currentSetterDatum() || legacySetterDatum(cfg.triggerZ, cfg.referenceBitLengthMm);
-    config.set(CONFIG_KEY, { ...rawConfig(), ...cfg, datum });
+    machineConfig.set(CONFIG_KEY, { ...rawConfig(), ...cfg, datum });
     log.info(`Tool setter config stored: centre (${cfg.centerX}, ${cfg.centerY}), `
         + `trigger Z ${cfg.triggerZ} with ${cfg.referenceBitLengthMm} mm reference bit`);
 }

@@ -80,7 +80,7 @@ export const tests: Array<[string, () => void]> = [
         assert.equal(travel.ends.xMin.source, 'model');
         assert.equal(travel.conflicts.length, 1);
         assert.match(travel.conflicts[0], /stated X minimum -40 is looser than the machine model plus fudge \(-25\)/);
-        assert.match(travel.conflicts[0], /mcpTravelFudgeMm/);
+        assert.match(travel.conflicts[0], /set_machine_policy travel_fudge_mm/);
     }],
 
     ['a statement equal to the model within float noise is not "looser"', () => {

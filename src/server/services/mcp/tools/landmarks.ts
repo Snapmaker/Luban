@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 // MCP tool arguments are snake_case by convention.
-import config from '../../configstore';
 import { connectionManager } from '../../machine/ConnectionManager';
+import { cameraSetting } from '../camera';
 import { calibrationStore } from '../calibration';
 import { cameraStreamService } from '../cameraStream';
 import { Landmark, landmarkStore } from '../landmarks';
@@ -12,6 +12,7 @@ import { GEOMETRY_FIELDS, ROTARY_AXIS_POINTS_FIELD, geometrySettings, setGeometr
 import { connectedMachineCapability, connectedMachineIdentifier, describeConnectedMachine } from '../connectedMachine';
 import { LEGACY_MACHINE_IDENTIFIER, appliesToMachine } from '../machineCapability';
 import { MAX_ROTARY_AXIS_POINTS } from '../procedureLimits';
+import { machineConfig, machineStore } from '../machineStore';
 import { getMeasurements, getToolSetterConfig } from '../toolSetter';
 import { describeActiveTool } from '../activeTool';
 import { currentSetterDatum, getProbeTipCalibration } from '../toolDatumState';
@@ -23,7 +24,7 @@ import {
     requiredToolheadZ,
     restatementAdvice,
 } from '../landmarkClearance';
-import { describePlanningTravel, motionFloorZ, planningTravel, readAppMachineSettings, safeTraverseZ, travelFudge } from './machine';
+import { describeMachinePolicy, describePlanningTravel, planningTravel, readAppMachineSettings, travelFudge, zPolicyFor } from './machine';
 import { vibrationCaptureService } from '../vibrationCaptures';
 import { vibrationFeedService } from '../vibrationFeed';
 
@@ -250,6 +251,15 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                     description: 'Machine Y of the chuck face. Also settles which end is which - "the non-chuck end" '
                         + 'stops being a guess.',
                 },
+                rotary_chuck_top_z: {
+                    type: ['number', 'null'],
+                    description: 'Measured PHYSICAL machine Z of the top of the rotary chuck (the jaws at their highest), not a '
+                        + 'toolhead height. An obstacle a rotary safe height must clear.',
+                },
+                rotary_tailstock_top_z: {
+                    type: ['number', 'null'],
+                    description: 'Measured PHYSICAL machine Z of the top of the tailstock bracket, not a toolhead height.',
+                },
                 probe_effective_length: { type: ['number', 'null'], description: 'Legacy probe contact-conversion offset in mm for a documented fitting/datum convention; not a caliper length or physical clearance bound. Prefer saved setter trigger + named datum provenance.' },
                 probe_tip_diameter: { type: ['number', 'null'], description: 'Probe tip diameter in mm.' },
                 probe_stylus_exposed_mm: { type: ['number', 'null'], description: 'Measured exposed stylus length below the body for this fitting. Not overall protrusion. Bounds descents beside walls; reference probe.stylus_exposed_mm in probe_program.' },
@@ -257,11 +267,12 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                 bed_plane_z: { type: ['number', 'null'], description: 'Measured PHYSICAL machine Z of the bed for camera overlap/mosaics. Never toolhead height or a photo estimate. Does not describe raised workpieces.' },
                 travel_x_min: {
                     type: ['number', 'null'],
-                    description: 'Machine X the toolhead may reach at the low end, for the CONNECTED machine only. Unset = the '
-                        + 'machine model\'s size plus the travel fudge at each end (mcpTravelFudgeMm, default 25 mm: an A350 '
+                    description: 'Machine X the toolhead may reach at the low end, for the CONNECTED machine only (else the one '
+                        + 'selected in Luban Machine Settings). Unset = the '
+                        + 'machine model\'s size plus the travel fudge at each end (set_machine_policy travel_fudge_mm, default 25 mm: an A350 '
                         + 'homes at X-19 against a 320 definition, a Ray at about X-1 / Y399 against 600 x 400). A stated end '
-                        + 'only TIGHTENS that; a looser statement is reported and ignored - widen the fudge instead. Stating '
-                        + 'any end for a different machine retires the ends stated for the previous one.',
+                        + 'only TIGHTENS that; a looser statement is reported and ignored - widen the fudge instead '
+                        + '(set_machine_policy). Every machine keeps its own ends: stating the Ray\'s never touches the A350\'s.',
                 },
                 travel_x_max: { type: ['number', 'null'], description: 'Machine X reachable at the high end. See travel_x_min.' },
                 travel_y_min: { type: ['number', 'null'], description: 'Machine Y reachable at the low end. See travel_x_min.' },
@@ -291,11 +302,9 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                 throw new McpToolError(`Nothing to set: pass one or more of rotary_axis_point, ${ROTARY_AXIS_POINTS_FIELD}, `
                     + `${GEOMETRY_FIELDS.map((f) => f.field).join(', ')}.`);
             }
+            // Every value is one machine's (machineStore.ts): stored in the connected (else selected) machine's entry.
+            const machineIdentifier = machineForNewRecord('Probe / rotary geometry or a travel limit');
             try {
-                // Travel statements are machine-scoped: tag them with the connected (else selected) machine.
-                const travelStated = ['travel_x_min', 'travel_x_max', 'travel_y_min', 'travel_y_max']
-                    .some((field) => values[field] !== undefined && values[field] !== null && values[field] !== '');
-                const machineIdentifier = travelStated ? machineForNewRecord('A travel limit') : null;
                 const outcome = setGeometryValues(values, reason, machineIdentifier);
                 return { ...outcome, geometry: geometrySettings() };
             } catch (err) {
@@ -333,7 +342,7 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
         inputSchema: { type: 'object', properties: {}, additionalProperties: false },
         handler: async () => {
             let toolRegion: object | null = null;
-            const rawRegion = config.get('mcpToolRegion');
+            const rawRegion = machineConfig.get('mcpToolRegion');
             if (rawRegion) {
                 try {
                     toolRegion = typeof rawRegion === 'string' ? JSON.parse(rawRegion) : (rawRegion as object);
@@ -344,9 +353,17 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
             const capability = connectedMachineCapability();
             const connected = connectedMachineIdentifier();
             const travel = planningTravel();
+            // Never throws: a machine with no stated Z policy reads null here and refuses at motion time.
+            const zPolicy = zPolicyFor();
             return {
                 connection: connectionManager.getConnectionStatus(),
                 connectedMachine: describeConnectedMachine(),
+                /**
+                 * The per-machine store (tyeth/Luban#265): every machine's
+                 * entry, which one applies now, its device aliases, any open
+                 * device conflict and the one-time migration snapshot.
+                 */
+                machineStore: machineStore.describe(),
                 /**
                  * Machine scoping (#260 follow-up): landmarks, calibrations and
                  * the stated travel apply only to the machine they were set
@@ -396,7 +413,7 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                 })(),
                 expectedToolRegion: toolRegion,
                 limits: {
-                    maxJogDistanceMm: Number(config.get('mcpMaxJogDistance')) || 100,
+                    maxJogDistanceMm: Number(machineConfig.get('mcpMaxJogDistance')) || 100,
                     /**
                      * Whether the Z laws below apply at all: false on a machine
                      * with no Z axis (the Ray), where XY runs at the only height
@@ -412,23 +429,25 @@ export function registerLandmarkTools(registry: ToolRegistry): void {
                             yMm: fudge.y,
                             source: fudge.source,
                             defaultMm: fudge.defaultMm,
-                            setting: 'mcpTravelFudgeMm (LUBAN_MCP_TRAVEL_FUDGE_MM); per axis mcpTravelFudgeXMm / mcpTravelFudgeYMm',
+                            setting: 'per machine: set_machine_policy travel_fudge_mm / travel_fudge_x_mm / travel_fudge_y_mm (env LUBAN_MCP_TRAVEL_FUDGE_MM wins)',
                         };
                     })(),
                     /** The PARK height: where procedures hop, retreat on abort, and end. 328 = home Z. Meaningless when zLawsApply is false. */
-                    safeTraverseZMm: safeTraverseZ(),
+                    safeTraverseZMm: zPolicy.safeTraverseZ.value,
                     /**
                      * The MOTION FLOOR (law 2): the lowest machine Z an XY move
                      * over 1 mm may happen at. Lower than the park height since
                      * 2026-09-19 - landmarks are checked at the real height, so
                      * the registry does the work a blanket ceiling used to.
                      */
-                    motionFloorZMm: motionFloorZ(),
+                    motionFloorZMm: zPolicy.motionFloorZ.value,
+                    /** This machine's Z policy, fudge and approval-free transport, each with its source (set_machine_policy). */
+                    policy: describeMachinePolicy(zPolicy.machineKey),
                 },
                 camera: {
-                    url: config.get('mcpCameraUrl') || null,
-                    device: config.get('mcpCameraDevice') || null,
-                    lastGoodDevice: config.get('mcpCameraLastGood') || null,
+                    url: cameraSetting('mcpCameraUrl') || null,
+                    device: cameraSetting('mcpCameraDevice') || null,
+                    lastGoodDevice: cameraSetting('mcpCameraLastGood') || null,
                     // Live MJPEG view for the operator's browser (cameraStream.ts).
                     stream: (() => {
                         const stream = cameraStreamService.status();

@@ -18,6 +18,7 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
             '../../DataStorage': { userDataDir: dir },
             '../../lib/logger': () => ({ debug: () => undefined }),
             '../configstore': {},
+            './machineStore': { machineConfig: { get: () => undefined }, machineStore: { currentMachine: () => ({ machineKey: null }) } },
             './cameraSelection': {},
             './registry': {},
             './cameraArtifacts': cameraArtifacts,
