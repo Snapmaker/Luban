@@ -10,6 +10,7 @@ import settings from './config/settings';
 import { CNC_CONFIG_SUBCATEGORY, LASER_CONFIG_SUBCATEGORY, PRINTING_CONFIG_SUBCATEGORY } from './constants';
 import downloadManager from './lib/downloadManager';
 import logger from './lib/logger';
+import { RESOURCES_DIR } from './lib/paths';
 import { copyDir } from './lib/util-fs/node';
 import config from './services/configstore';
 
@@ -244,8 +245,7 @@ class DataStorage {
         }
 
         // TODO: Use print-settings directly from package
-        // const CURA_ENGINE_CONFIG_LOCAL = path.resolve('../../packages/luban-print-settings/resources');
-        const CURA_ENGINE_CONFIG_LOCAL = path.resolve('../../resources/print-settings');
+        const CURA_ENGINE_CONFIG_LOCAL = path.join(RESOURCES_DIR, 'print-settings');
 
         // default config
         await copyDir(CURA_ENGINE_CONFIG_LOCAL, this.defaultConfigDir);
@@ -287,7 +287,7 @@ class DataStorage {
     private async initFonts() {
         await fs.ensureDir(this.fontDir);
 
-        const FONTS_LOCAL = path.resolve('../../resources/fonts');
+        const FONTS_LOCAL = path.join(RESOURCES_DIR, 'fonts');
         if (fs.existsSync(FONTS_LOCAL)) {
             const files = fs.readdirSync(FONTS_LOCAL);
             for (const file of files) {
@@ -313,8 +313,8 @@ class DataStorage {
     private async initScenes() {
         await fs.ensureDir(this.scenesDir);
 
-        const SCENES_LOCAL = path.resolve('../../resources/scenes/');
-        const resultPath = path.resolve(__dirname, this.scenesDir);
+        const SCENES_LOCAL = path.join(RESOURCES_DIR, 'scenes');
+        const resultPath = this.scenesDir;
 
         if (fs.existsSync(SCENES_LOCAL)) {
             const files = fs.readdirSync(SCENES_LOCAL);
@@ -330,7 +330,7 @@ class DataStorage {
 
     private async initUserCase() {
         await fs.ensureDir(this.userCaseDir);
-        const USER_CASE_LOCAL = path.resolve('../../resources/luban-case-library/');
+        const USER_CASE_LOCAL = path.join(RESOURCES_DIR, 'luban-case-library');
         if (fs.existsSync(USER_CASE_LOCAL)) {
             const files = fs.readdirSync(USER_CASE_LOCAL);
             for (const file of files) {
@@ -351,7 +351,7 @@ class DataStorage {
         log.info(`Initializing parameter document dir: ${this.parameterDocumentDir}`);
         await fs.ensureDir(this.parameterDocumentDir);
 
-        const appParameterDocumentDir = path.resolve('../../resources/print-settings-docs');
+        const appParameterDocumentDir = path.join(RESOURCES_DIR, 'print-settings-docs');
 
         if (fs.existsSync(appParameterDocumentDir)) {
             const files = fs.readdirSync(appParameterDocumentDir);

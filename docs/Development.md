@@ -38,6 +38,16 @@ Or you can follow the instructions below to set up the development environment f
 > npm run build && npm run build:win-x64 (for Windows)
 ```
 
+The installer packs `dist/Luban` into a single `resources/app.asar` archive, so a
+cold start reads one file instead of crawling thousands. Native addons, the two
+engine packages (LunarTPP, LubanEngine) and the `resources/` tree are unpacked
+beside it; the list is `asarUnpack` in `electron-builder.yml`. Plain `fs` reads
+work through the archive in every Electron process, including the forked
+server, but anything that hands a path to the OS (spawning a binary, opening a
+folder) needs the real file: see `unpackedPath()` and `requireUnpacked()` in
+`src/server/lib/paths.ts`. Paths to bundled assets (i18n, views, resources,
+workers) come from that module, never from the working directory.
+
 ### Build release assets with GitHub Actions
 
 Publish a release or prerelease whose tag includes the current

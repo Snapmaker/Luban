@@ -18,8 +18,24 @@ fileAssociations:
 #
 # global pack options
 #
-asar: false
-asarUnpack: []
+# Everything under dist/Luban is packed into one archive, so a cold start reads
+# a single file instead of crawling ~13k small ones (each scanned by antivirus
+# on first open). Only what must exist as a real file on disk is left beside
+# the archive, in app.asar.unpacked:
+#   - native addons (.node), which the OS has to dlopen from a real path;
+#   - the two engine packages, which spawn a binary out of their own package
+#     directory (Electron translates execFile but not spawn - the server loads
+#     them from the unpacked copy, see src/server/lib/paths.ts);
+#   - the resources tree, copied into userData at startup and opened in the
+#     file manager (engine-test).
+# Everything else - the server bundle, the renderer, i18n, node_modules - is
+# read through Electron's archive-aware fs, including from the forked server.
+asar: true
+asarUnpack:
+    - '**/*.node'
+    - 'node_modules/@snapmaker/snapmaker-lunar/**'
+    - 'node_modules/snapmaker-luban-engine/**'
+    - 'resources/**'
 
 #
 # publish options

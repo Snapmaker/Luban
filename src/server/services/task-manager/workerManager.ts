@@ -1,5 +1,7 @@
+import path from 'path';
 import workerpool, { WorkerPool } from 'workerpool';
 import DataStorage from '../../DataStorage';
+import { SERVER_DIR } from '../../lib/paths';
 
 // Avoid TSC precompiling, at the same time, webpack can collect dependencies
 if (process.env.NODE_ENV === 'production') {
@@ -46,7 +48,9 @@ class WorkerManager {
             // } else {
             config.minWorkers = 1;
             // }
-            this.pool = workerpool.pool('./Pool.worker.js', config);
+            // The worker is emitted beside the server bundle (worker-loader);
+            // an absolute path keeps the fork independent of the working directory.
+            this.pool = workerpool.pool(path.join(SERVER_DIR, 'Pool.worker.js'), config);
         }
         return this.pool;
     }

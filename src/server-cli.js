@@ -47,8 +47,17 @@ const launchServer = () => new Promise((resolve, reject) => {
 
     startupMark('server: child entry');
 
-    // Change working directory to 'server' before require('./server')
-    process.chdir(path.resolve(__dirname, 'server'));
+    // Tell the server where its files are (see src/server/lib/paths.ts). The
+    // working directory used to carry this, but inside the packaged asar
+    // archive there is no real directory to chdir into; it is kept as a
+    // best effort for the unpackaged (bin/cli) layout.
+    const serverDir = path.resolve(__dirname, 'server');
+    process.env.LUBAN_SERVER_DIR = serverDir;
+    try {
+        process.chdir(serverDir);
+    } catch (err) {
+        // ENOENT inside app.asar: everything resolves from LUBAN_SERVER_DIR.
+    }
 
     const server = require('./server');
     startupMark('server: bundle required');
