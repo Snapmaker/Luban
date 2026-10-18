@@ -875,7 +875,9 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
     // Read lazily: the camera tools inject the runtime, possibly after this registers.
     recoveryDepsSource = () => (typeof registry.getFailureRecovery === 'function' ? registry.getFailureRecovery() : null);
     // Every staged job records the machine it is for; approval and start refuse on another (#265 WP3).
-    jobManager.setMachineSource(connectedStagingMachine);
+    if (typeof jobManager.setMachineSource === 'function') {
+        jobManager.setMachineSource(connectedStagingMachine);
+    }
     registry.register({
         name: 'validate_gcode',
         description: 'Statically inspect G-code: motion extents, feeds, spindle commands and '

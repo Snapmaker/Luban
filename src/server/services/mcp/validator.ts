@@ -381,6 +381,14 @@ export function validateGcode(gcode: string, options?: ValidationOptions): Gcode
         }
     });
 
+    // GRBL (the Ray): G53 is a same-line prefix, so a file that prefixes
+    // EVERY move is a machine-frame file - the only machine-frame form there
+    // is. (frame-form refuses one that prefixes only some.)
+    if (judged && dialect.frames.g53 === 'same-line' && declaredAtFirstMotion === null
+        && motionLineCount > 0 && inlineG53Lines.length === motionLineCount) {
+        declaredAtFirstMotion = 'machine';
+        declarationLine = firstMotionLine;
+    }
     const frame: FrameDeclaration = {
         endsInFrame: frameModal,
         declared: declaredAtFirstMotion,

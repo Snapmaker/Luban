@@ -9,7 +9,7 @@ import {
 } from '../dialectRules';
 import { dialectById, dialectFor } from '../gcodeDialect';
 import { resolveTravel } from '../machineTravel';
-import { GcodeValidationReport, ValidationOptions, validateGcode } from '../validator';
+import { GcodeValidationReport, ValidationOptions, resolveJobFrame, validateGcode } from '../validator';
 import { a350CncExport, lubanHeader, rayExport } from './fixtures/lubanExports';
 
 const RAY = dialectFor('Ray');
@@ -220,5 +220,33 @@ export const tests: Array<[string, () => void]> = [
             'unknown-command', 'frame-form', 's-range', 'laser-mode-dynamic-short-segments', 'z-on-zless', 'travel', 'header-machine', 'homing-form',
         ]);
         assert.deepEqual(validateGcode(a350CncExport(), a350('staged')).machine?.rulesApplied, ['unknown-command', 'frame-form', 'homing-form']);
+    }],
+    ['frame-form on GRBL: every move prefixed with G53 declares the machine frame, and the travel rule holds it', () => {
+        const machine = validateGcode('G90\nG53 G0 X10 Y10 F3000\nG53 G0 X590 Y390', ray('submit'));
+        assert.equal(machine.frame.declared, 'machine');
+        assert.equal(machine.frame.source, 'gcode');
+        assert.deepEqual(machine.machine?.refusals, []);
+        assert.notEqual(resolveJobFrame(machine, { frameArgument: 'work', originOffsetZ: null, offsetReliable: false, machineZMax: null }).refusal, null,
+            'frame: "work" contradicts a fully prefixed file');
+        const outside = validateGcode('G90\nG53 G0 X10 Y10 F3000\nG53 G0 X700 Y10', ray('submit'));
+        assert.ok((outside.machine?.refusals || []).some((r) => r.includes('X 700 is 75 mm beyond the X maximum 625')), outside.machine?.refusals.join('\n'));
+        const legacy = validateGcode('G90\nG53 G0 X10 Y10 F3000');
+        assert.equal(legacy.frame.declared, null, 'the A350 does not honour an inline G53: unchanged');
+    }],
+    ['frame-form on GRBL: a file that prefixes only some moves is refused', () => {
+        const mixed = validateGcode('G90\nG53 G0 X10 Y10 F3000\nG0 X20 Y20', ray('submit'));
+        const refused = findings(mixed, 'frame-form', 'refusal');
+        assert.equal(refused.length, 1);
+        assert.ok(refused[0].message.includes('1 of 2 motion lines'), refused[0].message);
+    }],
+    ['frame-form on a staged body judges what moves: an inert G53; G54; description pair passes, a G53 governing a move does not', () => {
+        const original: ValidationOptions = { dialect: dialectFor('Original'), machineIdentifier: 'Original', phase: 'staged' };
+        const inert = 'G90\nG53;\nG54;';
+        assert.deepEqual(validateGcode(inert, ray('staged')).machine?.refusals, []);
+        assert.deepEqual(validateGcode(inert, original).machine?.refusals, []);
+        assert.equal(findings(validateGcode(inert, ray('submit')), 'frame-form', 'refusal').length, 1, 'a submitted file is judged as written');
+        const moving = 'G90\nG53;\nG0 X10 Y10 F3000\nG54;';
+        assert.equal(findings(validateGcode(moving, ray('staged')), 'frame-form', 'refusal').length, 1);
+        assert.equal(findings(validateGcode(moving, original), 'frame-form', 'refusal').length, 1);
     }],
 ];

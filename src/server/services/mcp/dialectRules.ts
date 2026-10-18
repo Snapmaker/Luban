@@ -209,18 +209,59 @@ function unknownCommand(lines: RuleLine[], ctx: DialectRuleContext, push: Push,
     }
 }
 
+/**
+ * Own-line G53 lines that some move runs under - a motion line follows before
+ * the next workspace select. A `G53; G54;` pair with nothing between selects
+ * nothing that moves: the procedure envelopes' description lines (camera_program,
+ * the probing review texts) end that way, and the runner never sends them.
+ */
+function governingG53Lines(lines: RuleLine[]): number[] {
+    const governing: number[] = [];
+    let pending: number | null = null;
+    for (const line of lines) {
+        const motion = line.codes.some((c) => MOTION_RE.test(c));
+        if (line.codes.includes('G53') && !motion) {
+            pending = line.lineNo;
+        } else if (line.codes.some((c) => WORKSPACE_RE.test(c))) {
+            pending = null;
+        }
+        if (motion && pending !== null) {
+            governing.push(pending);
+            pending = null;
+        }
+    }
+    return governing;
+}
+
 function frameForm(lines: RuleLine[], ctx: DialectRuleContext, push: Push): void {
     const g53 = ctx.dialect.frames.g53;
+    // A body the SERVER staged is judged by what would move: its frame lines
+    // that govern no motion are description, not commands (see above).
+    const staged = ctx.phase === 'staged';
     if (g53 === 'same-line') {
-        const alone = lines.filter((l) => l.codes.includes('G53') && !l.codes.some((c) => MOTION_RE.test(c))).map((l) => l.lineNo);
+        const alone = staged
+            ? governingG53Lines(lines)
+            : lines.filter((l) => l.codes.includes('G53') && !l.codes.some((c) => MOTION_RE.test(c))).map((l) => l.lineNo);
         if (alone.length) {
             push('frame-form', 'refusal', `Refused [frame-form]: G53 alone on line(s) ${listLines(alone)}. On ${machineName(ctx)} `
                 + 'G53 is NON-MODAL (GRBL): alone on a line it has no effect, and the next move runs in the active work '
                 + 'workspace (G54) - not in machine coordinates. GRBL takes G53 only as a prefix on the move\'s own line '
                 + '(`G53 G0 X.. Y..`). A Luban export for this machine uses neither: submit it with frame: "work".');
         }
+        // The prefix covers its own line only: a file that prefixes some
+        // moves and not others runs in two frames, and no Frame row can say so.
+        const motion = lines.filter((l) => l.codes.some((c) => MOTION_RE.test(c)));
+        const prefixed = motion.filter((l) => l.codes.includes('G53')).length;
+        if (prefixed > 0 && prefixed < motion.length) {
+            push('frame-form', 'refusal', `Refused [frame-form]: ${prefixed} of ${motion.length} motion lines carry the G53 prefix. On `
+                + `${machineName(ctx)} the prefix applies to its own line only, so the other ${motion.length - prefixed} run in the work `
+                + 'workspace: the file mixes machine and work coordinates line by line. Prefix every move (a machine-frame file) or '
+                + 'none (a work-frame file, frame: "work").');
+        }
     } else if (g53 === 'none') {
-        const frameLines = lines.filter((l) => l.codes.some((c) => c === 'G53' || WORKSPACE_RE.test(c))).map((l) => l.lineNo);
+        const frameLines = staged
+            ? governingG53Lines(lines)
+            : lines.filter((l) => l.codes.some((c) => c === 'G53' || WORKSPACE_RE.test(c))).map((l) => l.lineNo);
         if (frameLines.length) {
             push('frame-form', 'refusal', `Refused [frame-form]: G53/G54..G59 on line(s) ${listLines(frameLines)}, but the `
                 + `${ctx.dialect.label} documents no workspace frames (${ctx.dialect.sources[0]}) and this MCP never sends them `
