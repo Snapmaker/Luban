@@ -163,7 +163,67 @@ interface McpStatus {
         guidance: string;
         error?: string;
     };
+    motionRules?: McpMotionRules;
 }
+
+interface McpZPolicyValue {
+    value: number | null;
+    source: string;
+    setAt: number | null;
+}
+
+// GET /api/mcp motionRules (server tools/machine.ts describeMotionRules).
+interface McpMotionRuleMachine {
+    machineKey: string;
+    identifier: string;
+    current: 'connected' | 'selected' | null;
+    dialect: { id: string; label: string; transportForm: string } | null;
+    hasZ: boolean;
+    zPolicy: { applies: boolean; safeTraverseZ: McpZPolicyValue; motionFloorZ: McpZPolicyValue; missing: string[] };
+    travelFudge: { xMm: number; yMm: number; source: { x: string; y: string } };
+    traverseWithoutApproval: {
+        on: boolean;
+        effective: boolean;
+        eligible: boolean;
+        reason: string | null;
+        source: string;
+        setAt: number | null;
+        gatedBy: string | null;
+    };
+    // R13: moving without approval at a computed safe height below top Z (stored and displayed only for now).
+    computedHeight?: {
+        on: boolean;
+        source: string;
+        setAt: number | null;
+        eligible: boolean;
+        reason: string | null;
+        allowed: boolean;
+        idealMm: number;
+        minMm: number;
+        clearanceSource: { ideal: string; min: string };
+        requirements: Array<{ id: string; met: boolean | null; detail: string }>;
+        bedContactToolheadZ: number | null;
+        note: string;
+    };
+}
+
+interface McpMotionRules {
+    host?: { enabled: boolean; source: 'env' | 'config' | 'default' };
+    toggle?: string;
+    machines?: McpMotionRuleMachine[];
+    error?: string;
+}
+
+function describeZValue(value: McpZPolicyValue): string {
+    if (value.source === 'not-applicable') {
+        return '-';
+    }
+    if (value.value === null) {
+        return i18n._('key-App/Settings/McpServer-not stated');
+    }
+    return `Z${value.value} (${value.source})`;
+}
+
 const MQTT_FIELDS: Array<{ name: keyof McpMqttSettings['values']; labelKey: string; placeholder?: string; channel?: string }> = [
     { name: 'host', labelKey: 'key-App/Settings/McpServer-MQTT host', placeholder: 'io.adafruit.com' },
     { name: 'port', labelKey: 'key-App/Settings/McpServer-MQTT port', placeholder: '8883 (TLS)' },
@@ -232,6 +292,9 @@ const McpServer: React.FC = () => {
     const [approvalHandoffAgent, setApprovalHandoffAgent] = useState(true);
     // Approval-free XY transport with the head already at the traverse height (#241). Default on.
     const [traverseAtSafeZ, setTraverseAtSafeZ] = useState(true);
+    // Per-machine Motion rules toggles apply on the click (POST /api/mcp/motion-rules), not on Save.
+    const [motionRuleBusy, setMotionRuleBusy] = useState<string | null>(null);
+    const [motionRuleError, setMotionRuleError] = useState('');
     // Extra allow-listed directory for submit_gcode_job {gcode_path} (#237).
     const [jobInboxDir, setJobInboxDir] = useState('');
     // Live MJPEG camera view served by the MCP server (/camera). Applies at
@@ -388,6 +451,29 @@ const McpServer: React.FC = () => {
             setPort(value);
         }
     };
+
+    // The operator's click is the only way the toggle turns ON off the A350;
+    // the server re-checks eligibility and refuses with the reason.
+    const onMotionRule = async (machineKey: string, change: { [field: string]: boolean | string }) => {
+        setMotionRuleBusy(machineKey);
+        setMotionRuleError('');
+        try {
+            const res = await api.setMcpMotionRule({ machineKey, ...change });
+            const rules = (res as { body: { motionRules?: McpMotionRules } }).body.motionRules;
+            setStatus((prev) => (prev && rules ? { ...prev, motionRules: rules } : prev));
+        } catch (err) {
+            const body = (err as { body?: { msg?: string; motionRules?: McpMotionRules } } | undefined)?.body;
+            setMotionRuleError(body?.msg || i18n._('key-App/Settings/McpServer-Could not change the motion rule'));
+            if (body?.motionRules) {
+                setStatus((prev) => (prev ? { ...prev, motionRules: body.motionRules } : prev));
+            }
+        } finally {
+            setMotionRuleBusy(null);
+        }
+    };
+
+    const motionRules = status?.motionRules;
+    const hostSwitchEnv = status?.approval?.traverseWithoutApprovalSource === 'env';
 
     let statusLine = i18n._('key-App/Settings/McpServer-Status unknown');
     if (status) {
@@ -562,18 +648,139 @@ const McpServer: React.FC = () => {
                     {i18n._('key-App/Settings/McpServer-Off: the confirm page shows a one-time code you must relay to the agent yourself. Either way only your click in the browser authorises motion.')}
                     {status && status.approval && status.approval.source === 'env' ? ` — ${i18n._('key-App/Settings/McpServer-Overridden by environment variable')} LUBAN_MCP_APPROVAL_HANDOFF` : ''}
                 </div>
-                <div className="sm-flex align-center margin-top-8">
+            </div>
+
+            <div className="border-bottom-normal padding-bottom-4 margin-top-16">
+                <span>{i18n._('key-App/Settings/McpServer-Motion rules')}</span>
+            </div>
+            <div className="margin-top-8">
+                <div className="sm-flex align-center">
                     <Switch
                         checked={traverseAtSafeZ}
                         onChange={(checked) => setTraverseAtSafeZ(checked)}
-                        disabled={!enabled || !!(status && status.approval && status.approval.traverseWithoutApprovalSource === 'env')}
+                        disabled={!enabled || hostSwitchEnv}
                     />
                     <span className="margin-left-8">{i18n._('key-App/Settings/McpServer-Run XY transport without a confirm page when the head is already at the traverse height')}</span>
                 </div>
                 <div className={styles['port-tips']}>
-                    {i18n._('key-App/Settings/McpServer-Applies to traverse_xy, the XY step of goto_tool_change_position and an up-only move_z, only on a verified homed position at or above mcpSafeTraverseZ, after the usual landmark and travel checks. The job still appears on the dashboard, marked as approved by policy. Off: every transport stages a confirm page.')}
-                    {status && status.approval && status.approval.traverseWithoutApprovalSource === 'env' ? ` — ${i18n._('key-App/Settings/McpServer-Overridden by environment variable')} LUBAN_MCP_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z` : ''}
+                    {i18n._('key-App/Settings/McpServer-Master switch for every machine (applies on Save). Off: every move on every machine stages a confirm page. On: each machine below still needs its own toggle on.')}
+                    {hostSwitchEnv ? ` — ${i18n._('key-App/Settings/McpServer-Overridden by environment variable')} LUBAN_MCP_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z` : ''}
                 </div>
+                <div className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-Move at safe top Z without approval: traverse_xy, the XY step of goto_tool_change_position and an up-only move_z run on the agent\'s call, without your click, only when the head is already at or above that machine\'s safe traverse Z on a verified, homed position, after the usual landmark and travel checks. The job still appears on the dashboard, marked as approved by policy. Everything else always stages a confirm page for your click: any move that descends or starts below the safe traverse Z, programs, probing and jobs. Once the landmark review lands, the machine\'s landmarks must also have been confirmed recently.')}
+                </div>
+                <div className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-The A350 has this on by default. An A150, A250 or Artisan stays off until you turn it on here after a hardware session, and only once its safe traverse Z and motion floor are stated (set_machine_policy). An agent can turn it off but never on. Relative-step machines (Ray, Original, J1) always stage every move. Heights and the travel fudge are read-only here. Toggles apply at once.')}
+                </div>
+                {motionRules?.error && <div className={styles['port-tips']}>{motionRules.error}</div>}
+                {motionRuleError && <div className={styles['port-tips']}>{motionRuleError}</div>}
+                {(motionRules?.machines || []).length === 0 && !motionRules?.error && (
+                    <div className={styles['port-tips']}>
+                        {i18n._('key-App/Settings/McpServer-No machine known yet: connect or select one.')}
+                    </div>
+                )}
+                {(motionRules?.machines || []).map((machine) => {
+                    const rule = machine.traverseWithoutApproval;
+                    const computed = machine.computedHeight;
+                    return (
+                        <div key={machine.machineKey} className="margin-top-8">
+                            <div className="sm-flex align-center">
+                                <Switch
+                                    checked={rule.on}
+                                    loading={motionRuleBusy === machine.machineKey}
+                                    onChange={(checked) => onMotionRule(machine.machineKey, { traverseWithoutApprovalAtSafeZ: checked })}
+                                    disabled={!enabled || motionRuleBusy !== null || (!rule.on && !rule.eligible)}
+                                />
+                                <span className="margin-left-8">
+                                    <b>{machine.machineKey}</b>
+                                    {machine.current ? ` (${machine.current})` : ''}
+                                    {' — '}
+                                    {i18n._('key-App/Settings/McpServer-Move at safe top Z without approval')}
+                                </span>
+                            </div>
+                            <div className={styles['port-tips']}>
+                                {`${machine.dialect ? machine.dialect.label : '-'} · `}
+                                {machine.hasZ ? i18n._('key-App/Settings/McpServer-has Z') : i18n._('key-App/Settings/McpServer-no Z axis')}
+                                {machine.zPolicy.applies && (
+                                    ` · ${i18n._('key-App/Settings/McpServer-safe traverse')} ${describeZValue(machine.zPolicy.safeTraverseZ)}`
+                                    + ` · ${i18n._('key-App/Settings/McpServer-motion floor')} ${describeZValue(machine.zPolicy.motionFloorZ)}`
+                                )}
+                                {` · ${i18n._('key-App/Settings/McpServer-travel fudge')} X${machine.travelFudge.xMm}/Y${machine.travelFudge.yMm} mm`}
+                            </div>
+                            <div className={styles['port-tips']}>
+                                {rule.effective
+                                    ? i18n._('key-App/Settings/McpServer-Moves at safe top Z run without your click.')
+                                    : `${i18n._('key-App/Settings/McpServer-Every move is staged for your click')}: ${rule.reason || rule.gatedBy || i18n._('key-App/Settings/McpServer-the master switch is off')}`}
+                                {rule.setAt ? ` (${rule.source}, ${new Date(rule.setAt).toLocaleString()})` : ''}
+                            </div>
+                            {computed && (
+                                <div className="margin-top-8 margin-left-16">
+                                    <div className="sm-flex align-center">
+                                        <Switch
+                                            checked={computed.on}
+                                            loading={motionRuleBusy === machine.machineKey}
+                                            onChange={(checked) => onMotionRule(machine.machineKey, { computedHeightTraverse: checked })}
+                                            disabled={!enabled || motionRuleBusy !== null || (!computed.on && !computed.eligible)}
+                                        />
+                                        <span className="margin-left-8">
+                                            {i18n._('key-App/Settings/McpServer-Move without approval at a computed safe height (below top Z)')}
+                                        </span>
+                                    </div>
+                                    <label htmlFor={`mcp-clearance-ideal-${machine.machineKey}`} className="sm-flex align-center margin-top-8">
+                                        <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Ideal clearance (mm)')}</span>
+                                        <Input
+                                            id={`mcp-clearance-ideal-${machine.machineKey}`}
+                                            key={`ideal-${machine.machineKey}-${computed.idealMm}`}
+                                            defaultValue={computed.clearanceSource.ideal === 'default' ? '' : String(computed.idealMm)}
+                                            placeholder={String(computed.idealMm)}
+                                            disabled={!enabled || motionRuleBusy !== null}
+                                            onBlur={(e) => {
+                                                const value = e.target.value.trim();
+                                                const stored = computed.clearanceSource.ideal === 'default' ? '' : String(computed.idealMm);
+                                                if (value !== stored) {
+                                                    onMotionRule(machine.machineKey, { clearanceIdealMm: value });
+                                                }
+                                            }}
+                                        />
+                                    </label>
+                                    <label htmlFor={`mcp-clearance-min-${machine.machineKey}`} className="sm-flex align-center margin-top-8">
+                                        <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Minimum clearance (mm)')}</span>
+                                        <Input
+                                            id={`mcp-clearance-min-${machine.machineKey}`}
+                                            key={`min-${machine.machineKey}-${computed.minMm}`}
+                                            defaultValue={computed.clearanceSource.min === 'default' ? '' : String(computed.minMm)}
+                                            placeholder={String(computed.minMm)}
+                                            disabled={!enabled || motionRuleBusy !== null}
+                                            onBlur={(e) => {
+                                                const value = e.target.value.trim();
+                                                const stored = computed.clearanceSource.min === 'default' ? '' : String(computed.minMm);
+                                                if (value !== stored) {
+                                                    onMotionRule(machine.machineKey, { clearanceMinMm: value });
+                                                }
+                                            }}
+                                        />
+                                    </label>
+                                    <div className={styles['port-tips']}>
+                                        {i18n._('key-App/Settings/McpServer-Head-room above the highest known obstacle or bed contact that the computed height aims for (ideal) and never goes below (minimum). Empty = default. Applies when you leave the field.')}
+                                    </div>
+                                    <div className={styles['port-tips']}>
+                                        {computed.allowed
+                                            ? i18n._('key-App/Settings/McpServer-Every requirement is met.')
+                                            : i18n._('key-App/Settings/McpServer-Needs:')}
+                                        {computed.requirements.map((need) => (
+                                            <div key={need.id}>
+                                                {need.met === true ? '✓' : (need.met === null ? '?' : '✗')}
+                                                {' '}
+                                                {need.detail}
+                                            </div>
+                                        ))}
+                                        <div>{computed.note}</div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
 
             <div className="border-bottom-normal padding-bottom-4 margin-top-16">
