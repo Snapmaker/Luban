@@ -66,6 +66,17 @@ export default class Channel extends EventEmitter {
     }
 
     /**
+     * Last machine status report (position, offsets, homed, workflow status)
+     * with the time it arrived, or null when this channel has none: before
+     * the first report, after close, or on a channel that keeps no state.
+     * The MCP's position of record reads this (SstpHttpChannel from its status
+     * poll, the SACP channels from their heartbeat/coordinate subscriptions).
+     */
+    public getLatestMachineState(): { [key: string]: unknown; timestamp: number } | null {
+        return null;
+    }
+
+    /**
      * Execute G-code command.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

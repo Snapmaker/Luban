@@ -143,10 +143,11 @@ class SacpUdpChannel extends SacpChannelBase {
         };
     }
 
-    public goHome = async () => {
-        await this.sacpClient.requestHome().then(({ response }) => {
-            this.socket && this.socket.emit('serialport:read', { data: response.result === 0 ? 'OK' : 'WARNING' });
-        });
+    /** The channel's own home (SACP 0x01/0x35); true when the controller accepted it. */
+    public goHome = async (): Promise<boolean> => {
+        const { response } = await this.sacpClient.requestHome();
+        this.socket && this.socket.emit('serialport:read', { data: response.result === 0 ? 'OK' : 'WARNING' });
+        return response.result === 0;
     }
 }
 

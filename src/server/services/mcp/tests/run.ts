@@ -88,11 +88,15 @@ import { tests as vibrationProtocolTests } from './vibrationProtocol.test';
 import { tests as vibrationReportTests } from './vibrationReport.test';
 import { tests as vibrationStreamTests } from './vibrationStream.test';
 import { tests as connectionGenerationTests } from './connectionGeneration.test';
+import { tests as sacpMachineStateTests } from './sacpMachineState.test';
+import { tests as sacpConnectionTests } from './sacpConnection.test';
 
 type TestCase = [string, () => void | Promise<void>];
 
 const suites: Array<[string, TestCase[]]> = [
     ['connectionGeneration', connectionGenerationTests],
+    ['sacpMachineState', sacpMachineStateTests],
+    ['sacpConnection', sacpConnectionTests],
     ['pendant', pendantTests],
     ['pendantPosition', pendantPositionTests],
     ['pendantPage', pendantPageTests],
