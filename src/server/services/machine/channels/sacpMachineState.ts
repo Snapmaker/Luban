@@ -116,6 +116,23 @@ export function mapCoordinateReport(report: SacpCoordinateReport, isFourAxis: bo
     };
 }
 
+/**
+ * Per-device identity for the Ready payload (#265 plan 1.3): the SACP
+ * MachineInfo `masterControlSerialNumber` as a string, null when the
+ * controller reported none (absent, 0 or not a number).
+ */
+export function sacpDeviceSerial(info: { masterControlSerialNumber?: unknown } | null | undefined): string | null {
+    const serial = info ? info.masterControlSerialNumber : undefined;
+    if (typeof serial === 'number') {
+        return Number.isFinite(serial) && serial !== 0 ? String(serial) : null;
+    }
+    if (typeof serial === 'string') {
+        const trimmed = serial.trim();
+        return trimmed && trimmed !== '0' ? trimmed : null;
+    }
+    return null;
+}
+
 /** Every heartbeat-payload field except the three the coordinate report owns. */
 export function pickHeartbeatExtras(stateData: { [key: string]: unknown }): { [key: string]: unknown } {
     const extras: { [key: string]: unknown } = {};

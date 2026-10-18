@@ -401,7 +401,50 @@ export interface JudgeContext {
     declaredRun?: DeclaredMachineFrameRun | null;
 }
 
+/**
+ * What the stateful judge needs to know about the live connection, and cannot
+ * get from the beat itself (tools/machine.ts hands it raw/offset/time only):
+ * - `session`: an id that changes whenever the connection session does
+ *   (ConnectionManager.getConnectionGeneration: channel assignment + the
+ *   channel's own transport generation). Everything learnt on one session -
+ *   above all the cached work offset - is forgotten when it changes, so an
+ *   offset from an A350 SSTP session is never applied to whatever connects
+ *   next.
+ * - `positionFrame`: 'logical' when the channel reports Marlin's M114 logical
+ *   position (USB text serial, textSerialMachineState.ts). No offset that maps
+ *   that frame to machine coordinates exists yet, so such a beat never takes a
+ *   cached offset, a held position or a position of record: machine stays null.
+ * Registered by ConnectionManager; null in unit tests that do not set one.
+ */
+export interface JudgeConnectionContext {
+    session: string | null;
+    positionFrame: string | null;
+}
+
+let connectionContextProvider: (() => JudgeConnectionContext | null) | null = null;
+
+export function setJudgeConnectionContextProvider(provider: (() => JudgeConnectionContext | null) | null): void {
+    connectionContextProvider = provider;
+}
+
+function readConnectionContext(): JudgeConnectionContext | null {
+    if (!connectionContextProvider) {
+        return null;
+    }
+    try {
+        return connectionContextProvider();
+    } catch {
+        return null;
+    }
+}
+
+export const LOGICAL_FRAME_REASON = 'The controller reports its LOGICAL position (Marlin M114 over USB text serial: G92 and work-origin '
+    + 'shifted, the planner\'s queued target). No offset maps that frame to machine coordinates on this connection, so no machine '
+    + 'position is derived, held or assumed; motion and staging are refused.';
+
 export interface MachinePositionState {
+    /** JudgeConnectionContext.session of the beats this state was learnt from (null = none seen yet). */
+    session: string | null;
     cachedOffset: (Xyz & { at: number }) | null;
     zeroStreak: number;
     zeroSeenAt: number | null;
@@ -423,6 +466,7 @@ export interface MachinePositionState {
 
 export function createMachinePositionState(): MachinePositionState {
     return {
+        session: null,
         cachedOffset: null,
         zeroStreak: 0,
         zeroSeenAt: null,
@@ -459,6 +503,22 @@ export function noteDisconnected(state: MachinePositionState, now: number): void
  * verified record but never advances streaks or the previous-raw memory.
  */
 export function judgeBeatStateful(state: MachinePositionState, beat: RawBeat, ctx: JudgeContext): BeatJudgement {
+    const connection = readConnectionContext();
+    if (connection && connection.session !== null) {
+        if (state.session !== null && state.session !== connection.session) {
+            // A new connection session: nothing learnt on the old one carries over.
+            noteDisconnected(state, ctx.now);
+        }
+        state.session = connection.session;
+    }
+    const logical = connection?.positionFrame === 'logical';
+    if (logical) {
+        // Belt and braces: whatever an earlier frame left behind is not this frame's.
+        state.cachedOffset = null;
+        state.lastAccepted = null;
+        state.previousRaw = null;
+        state.machineFrameStreak = 0;
+    }
     const isNewBeat = beat.reportedAt !== state.lastBeatAt;
     if (isNewBeat) {
         const reportedAllZero = complete(beat.offsetReported)
@@ -491,7 +551,24 @@ export function judgeBeatStateful(state: MachinePositionState, beat: RawBeat, ct
         bounds: ctx.bounds,
         staleMs: ctx.staleMs,
         declaredRun: ctx.declaredRun ?? null };
+    if (logical) {
+        // Refuse rather than guess: no offset (reported or cached), no held
+        // position and no position of record give a logical beat a machine
+        // reading. judgeBeat then rejects it as no-offset-yet with machine null.
+        Object.assign(input, {
+            offsetReported: { x: null, y: null, z: null },
+            cachedOffset: null,
+            lastAccepted: null,
+            previousRaw: null,
+            verified: null,
+            declaredRun: null,
+            machineFrameStreak: 0,
+        });
+    }
     const judgement = judgeBeat(input);
+    if (logical) {
+        judgement.reasons.push(LOGICAL_FRAME_REASON);
+    }
 
     if (isNewBeat) {
         if (judgement.offset.source === 'heartbeat' && judgement.offset.cache) {

@@ -73,13 +73,16 @@ class FakeSacpClient {
 
     public static homeResult = 0;
 
+    /** MachineInfo.masterControlSerialNumber; undefined = a controller that reports none. */
+    public static serialNumber: unknown = undefined;
+
     public read(): void { /* parsed, never a session change */ }
 
     public dispose(): void { /* nothing to free */ }
 
     public setLogger(): void { /* silent */ }
 
-    public async getMachineInfo() { return { data: { type: 0 } }; }
+    public async getMachineInfo() { return { data: { type: 0, masterControlSerialNumber: FakeSacpClient.serialNumber } }; }
 
     public async getModuleInfo() { return { data: [] }; }
 
@@ -193,6 +196,16 @@ function connectionManager(channel: object, diag: ConnectionDiagnosticState) {
         './ProtocolDetector': { NetworkProtocol: { HTTP: 'HTTP', SacpOverTCP: 'SACP-TCP', SacpOverUDP: 'SACP-UDP', Unknown: 'Unknown' },
             SerialPortProtocol: { SacpOverSerialPort: 'SACP-Serial', PlainText: 'text' } },
         './types': { ConnectionType: { WiFi: 'wifi', Serial: 'serial' } },
+        './adaptor/Octo': { octo: { onStart: () => undefined, onStop: () => undefined } },
+        './channels/ChannelEvent': { ChannelEvent: events },
+        '../../../app/machines': {
+            SnapmakerA150Machine: { identifier: 'A150' },
+            SnapmakerA250Machine: { identifier: 'A250' },
+            SnapmakerA350Machine: { identifier: 'A350' },
+            SnapmakerArtisanMachine: { identifier: 'Artisan' },
+            SnapmakerJ1Machine: { identifier: 'J1' },
+            SnapmakerRayMachine: { identifier: 'Ray' },
+        },
     }, timers);
     const cm = module.connectionManager;
     cm.channel = channel;
@@ -320,5 +333,61 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         FakeSacpClient.homeResult = 2;
         assert.strictEqual(await channel.goHome(), false);
         assert.strictEqual(FakeSacpClient.homeRequests, 2);
+    }],
+
+    ['device identity: the SACP serial number reaches getConnectionStatus().deviceSerial (host null), cleared on close and on loss', async () => {
+        assert.strictEqual(sacpMachineState.sacpDeviceSerial({ masterControlSerialNumber: 0 }), null, '0 is no serial');
+        assert.strictEqual(sacpMachineState.sacpDeviceSerial({}), null);
+        assert.strictEqual(sacpMachineState.sacpDeviceSerial(null), null);
+        assert.strictEqual(sacpMachineState.sacpDeviceSerial({ masterControlSerialNumber: Number.NaN }), null);
+        const diag = diagnostics();
+        const { channel } = udpChannel(diag);
+        const cm = connectionManager(channel, diag);
+        cm.bindChannelEvents();
+        const ready: Array<{ deviceSerial?: unknown }> = [];
+        channel.on(events.Ready, (data: { deviceSerial?: unknown }) => ready.push(data));
+        FakeSacpClient.serialNumber = 20481234;
+        try {
+            assert.strictEqual(cm.getConnectionStatus().deviceSerial, null, 'nothing before Ready');
+            await channel.connectionOpen({ address: '192.0.2.9' });
+            assert.strictEqual(ready[0].deviceSerial, '20481234', 'a string in the Ready payload');
+            let status = cm.getConnectionStatus();
+            assert.strictEqual(status.deviceSerial, '20481234');
+            assert.strictEqual(status.host, null, 'SACP has no SSTP host');
+            assert.ok(!JSON.stringify(status).includes('token'), 'no token in the status');
+
+            // A Ready without a serial (text serial, or a controller reporting 0) replaces it, never inherits.
+            channel.emit(events.Ready, { machineIdentifier: 'Original' });
+            assert.strictEqual(cm.getConnectionStatus().deviceSerial, null);
+            channel.emit(events.Ready, { machineIdentifier: 'no instance', deviceSerial: '20481234' });
+            assert.strictEqual(cm.getConnectionStatus().deviceSerial, '20481234');
+
+            // The position judge's view of the connection (machinePosition.ts JudgeConnectionContext).
+            assert.deepStrictEqual({ ...cm.getJudgeConnectionContext() }, { session: cm.getConnectionGeneration(), positionFrame: null });
+            const logicalChannel = { getLatestMachineState: () => ({ timestamp: 1, positionFrame: 'logical' }) };
+            cm.channel = logicalChannel;
+            assert.strictEqual(cm.getJudgeConnectionContext().positionFrame, 'logical', 'text serial reports the logical frame');
+            cm.channel = null;
+            assert.deepStrictEqual({ ...cm.getJudgeConnectionContext() }, { session: null, positionFrame: null });
+            cm.channel = channel;
+
+            // A transport loss clears it with machineIdentifier.
+            channel.emit(events.Disconnected);
+            status = cm.getConnectionStatus();
+            assert.strictEqual(status.connected, false);
+            assert.strictEqual(status.deviceSerial, null);
+            assert.strictEqual(status.host, null);
+            assert.strictEqual(status.machineIdentifier, null);
+
+            // So does an explicit close.
+            cm.channel = channel;
+            cm.bindChannelEvents();
+            channel.emit(events.Ready, { machineIdentifier: 'no instance', deviceSerial: '20481234' });
+            assert.strictEqual(cm.getConnectionStatus().deviceSerial, '20481234');
+            await cm.connectionClose({ emit: () => undefined }, {});
+            assert.strictEqual(cm.getConnectionStatus().deviceSerial, null, 'cleared on close');
+        } finally {
+            FakeSacpClient.serialNumber = undefined;
+        }
     }],
 ];

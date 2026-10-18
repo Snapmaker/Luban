@@ -3,7 +3,9 @@ import { strict as assert } from 'assert';
 import {
     BOUNDS_MARGIN_MM,
     SUSTAINED_MACHINE_FRAME_BEATS,
+    JudgeConnectionContext,
     JudgeContext,
+    LOGICAL_FRAME_REASON,
     RawBeat,
     createMachinePositionState,
     isFrameFlip,
@@ -11,6 +13,7 @@ import {
     noteDisconnected,
     outsideBounds,
     reliableForMotion,
+    setJudgeConnectionContextProvider,
 } from '../machinePosition';
 import {
     clearFrameLatch,
@@ -356,5 +359,77 @@ export const tests: Array<[string, () => void]> = [
         assert.equal(frameLatchVerified(restored, null, { ...beat, offsetSource: 'cached' }), false);
         clearFrameLatch();
         assert.equal(getFrameLatch(), null);
+    }],
+
+    ['#265 WPC: an SSTP offset is never applied to a following text-serial (logical-frame) beat', () => {
+        const connection: JudgeConnectionContext = { session: '1.1', positionFrame: null };
+        setJudgeConnectionContextProvider(() => connection);
+        try {
+            const state = createMachinePositionState();
+            const sstp = judgeBeatStateful(state, workBeat(T0), ctx(T0 + 100));
+            assert.equal(sstp.accepted, true);
+            assert.ok(state.cachedOffset, 'the SSTP session cached its offset');
+
+            // Luban reconnects the machine over USB text serial: no offset is reported.
+            connection.session = '2.1';
+            connection.positionFrame = 'logical';
+            const usb = judgeBeatStateful(state, { raw: { x: 10, y: 20, z: 5 }, offsetReported: { x: null, y: null, z: null }, reportedAt: T0 + 5000 },
+                ctx(T0 + 5100));
+            assert.equal(usb.accepted, false);
+            assert.equal(usb.rejectedReason, 'no-offset-yet');
+            assert.deepEqual(usb.machine, { x: null, y: null, z: null }, 'no machine position: no cached offset, no held SSTP position');
+            assert.equal(reliableForMotion(usb.reliability), false);
+            assert.ok(usb.reasons.includes(LOGICAL_FRAME_REASON));
+            assert.equal(state.cachedOffset, null);
+
+            // Even within one session, a logical beat never takes a cached offset or a position of record.
+            const again = createMachinePositionState();
+            connection.positionFrame = null;
+            judgeBeatStateful(again, workBeat(T0), ctx(T0 + 100));
+            connection.positionFrame = 'logical';
+            const logical = judgeBeatStateful(again, { raw: { x: 10, y: 20, z: 5 }, offsetReported: { ...OFFSET }, reportedAt: T0 + 2000 },
+                ctx(T0 + 2100, { verified: { x: 170, y: 199, z: 240 } }));
+            assert.deepEqual(logical.machine, { x: null, y: null, z: null }, 'a reported offset and a verified record are not applied either');
+            assert.equal(reliableForMotion(logical.reliability), false);
+        } finally {
+            setJudgeConnectionContextProvider(null);
+        }
+    }],
+
+    ['#265 WPC: a new connection session forgets the cached offset, held position and flip reference', () => {
+        const connection: JudgeConnectionContext = { session: '1.1', positionFrame: null };
+        setJudgeConnectionContextProvider(() => connection);
+        try {
+            const state = createMachinePositionState();
+            judgeBeatStateful(state, workBeat(T0), ctx(T0 + 100));
+            assert.ok(state.cachedOffset);
+            assert.ok(state.lastAccepted);
+            assert.ok(state.previousRaw);
+            const disconnects = state.disconnects;
+
+            // Same session: a beat without an offset still uses the cached one (unchanged behaviour).
+            const sameSession = judgeBeatStateful(state, { raw: workBeat(T0).raw, offsetReported: { x: null, y: null, z: null }, reportedAt: T0 + 2000 },
+                ctx(T0 + 2100));
+            assert.equal(sameSession.offset.source, 'cached');
+
+            // The SACP channel's own generation bumps (heartbeat loss, new session): forget everything.
+            connection.session = '1.2';
+            const next = judgeBeatStateful(state, { raw: workBeat(T0).raw, offsetReported: { x: null, y: null, z: null }, reportedAt: T0 + 4000 },
+                ctx(T0 + 4100));
+            assert.equal(next.accepted, false);
+            assert.equal(next.rejectedReason, 'no-offset-yet');
+            assert.deepEqual(next.machine, { x: null, y: null, z: null }, 'the old session\'s position is not held');
+            assert.equal(reliableForMotion(next.reliability), false);
+            assert.equal(state.session, '1.2');
+            assert.equal(state.disconnects, disconnects + 1);
+
+            // A provider with no session (no channel) changes nothing.
+            connection.session = null;
+            judgeBeatStateful(state, workBeat(T0 + 6000), ctx(T0 + 6100));
+            assert.equal(state.session, '1.2');
+            assert.ok(state.cachedOffset, 'the new session learns its own offset');
+        } finally {
+            setJudgeConnectionContextProvider(null);
+        }
     }],
 ];

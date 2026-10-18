@@ -93,6 +93,7 @@ import { tests as sacpMachineStateTests } from './sacpMachineState.test';
 import { tests as sacpConnectionTests } from './sacpConnection.test';
 import { tests as gcodeDialectTests } from './gcodeDialect.test';
 import { tests as machineStoreTests } from './machineStore.test';
+import { tests as textSerialStateTests } from './textSerialState.test';
 
 type TestCase = [string, () => void | Promise<void>];
 
@@ -179,6 +180,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['executionModel', executionModelTests],
     ['gcodeDialect', gcodeDialectTests],
     ['machineStore', machineStoreTests],
+    ['textSerialState', textSerialStateTests],
 ];
 
 async function main(): Promise<void> {

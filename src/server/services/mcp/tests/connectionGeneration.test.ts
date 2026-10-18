@@ -10,6 +10,7 @@ import path from 'path';
 import vm from 'vm';
 import ts from 'typescript';
 import * as sacpMachineState from '../../machine/channels/sacpMachineState';
+import * as textSerialMachineState from '../../machine/channels/textSerialMachineState';
 
 type Exports = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -293,6 +294,7 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
             './Channel': Channel,
             './ChannelEvent': { ChannelEvent: events },
             '../../../constants': { HEAD_LASER: 'laser' },
+            './textSerialMachineState': textSerialMachineState, // the real pure module: the channel constructs its tracker
         });
         const TextChannel = module.default;
         const channel = new TextChannel();

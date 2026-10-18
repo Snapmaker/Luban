@@ -109,14 +109,18 @@ class SacpTcpChannel extends SacpChannelBase {
 
                             const machineIdentifier = SACP_TYPE_SERIES_MAP[machineInfos.type];
 
+                            const deviceSerial = this.deviceSerialOf(machineInfos);
+
                             if (machineIdentifier === SnapmakerArtisanMachine.identifier) {
                                 this.emit(ChannelEvent.Ready, {
                                     machineIdentifier,
+                                    deviceSerial,
                                 });
                             }
                             if (machineIdentifier === SnapmakerJ1Machine.identifier) {
                                 this.emit(ChannelEvent.Ready, {
                                     machineIdentifier,
+                                    deviceSerial,
                                 });
                             }
 

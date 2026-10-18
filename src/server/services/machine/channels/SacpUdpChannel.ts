@@ -90,6 +90,7 @@ class SacpUdpChannel extends SacpChannelBase {
         // Machine detected
         this.emit(ChannelEvent.Ready, {
             machineIdentifier,
+            deviceSerial: this.deviceSerialOf(machineInfo),
         });
 
         return true;
