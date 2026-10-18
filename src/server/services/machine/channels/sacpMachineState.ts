@@ -129,8 +129,12 @@ export function pickHeartbeatExtras(stateData: { [key: string]: unknown }): { [k
 
 /** headPower in the SSTP sense: laser current power for a laser head, current spindle speed for CNC. */
 export function deriveHeadPower(state: { headType?: unknown; laserPower?: unknown; cncCurrentSpindleSpeed?: unknown }): number | undefined {
-    const candidate = state.headType === 'laser' ? state.laserPower
-        : state.headType === 'cnc' ? state.cncCurrentSpindleSpeed : undefined;
+    let candidate: unknown;
+    if (state.headType === 'laser') {
+        candidate = state.laserPower;
+    } else if (state.headType === 'cnc') {
+        candidate = state.cncCurrentSpindleSpeed;
+    }
     const n = Number(candidate);
     return candidate === undefined || candidate === null || !Number.isFinite(n) ? undefined : n;
 }
@@ -145,7 +149,11 @@ export function deriveHeadPower(state: { headType?: unknown; laserPower?: unknow
 export class SacpMachineStateTracker {
     private state: SacpMachineState | null = null;
 
-    public constructor(private now: () => number = Date.now) {}
+    private readonly now: () => number;
+
+    public constructor(now: () => number = Date.now) {
+        this.now = now;
+    }
 
     public get(): SacpMachineState | null {
         return this.state;

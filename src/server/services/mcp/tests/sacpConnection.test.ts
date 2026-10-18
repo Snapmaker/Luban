@@ -175,7 +175,8 @@ function udpChannel(diag: ConnectionDiagnosticState) {
         '../../../../app/constants/machines': { SACP_TYPE_SERIES_MAP: {} },
         '../gcodeLease': { gcodeLease: new GcodeLease() },
     }, timers);
-    const channel = new module.default();
+    const UdpChannel = module.default;
+    const channel = new UdpChannel();
     channel.socket = new EventEmitter();
     return { channel, timers };
 }

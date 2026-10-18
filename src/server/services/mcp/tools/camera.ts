@@ -100,7 +100,7 @@ async function awaitFirstMachineState(timeoutMs: number): Promise<boolean> {
         if (connectionManager.getLatestMachineState()) {
             return true;
         }
-        await sleep(FIRST_STATE_POLL_MS);
+        await new Promise((resolve) => setTimeout(resolve, FIRST_STATE_POLL_MS));
     }
     return !!connectionManager.getLatestMachineState();
 }
@@ -1481,7 +1481,7 @@ export function registerCameraTools(registry: ToolRegistry): void {
                 throw new McpToolError('No machine connected, or the channel does not support direct commands.');
             }
             if (sacpTransport()) {
-                throw new McpToolError(SACP_NO_REPLY_TEXT + ' M503 S can therefore never return configuration text here; '
+                throw new McpToolError(`${SACP_NO_REPLY_TEXT} M503 S can therefore never return configuration text here; `
                     + 'nothing was sent. Use get_machine_profile for the machine definition and get_position for live state.');
             }
             const executed = await sendGcodeVisible(channel, 'query_firmware_configuration', 'M503 S');
