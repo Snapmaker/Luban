@@ -227,7 +227,10 @@ class ConnectionManager {
 
     /**
      * Last heartbeat state from the active channel, or null when the channel
-     * does not report one (no heartbeat yet, or unsupported channel type).
+     * does not report one (no heartbeat yet, or a channel that keeps none).
+     * SSTP over HTTP fills it from its status poll; the SACP channels (TCP,
+     * UDP, serial - the Ray, Artisan and J1) from their heartbeat and
+     * coordinate-system subscriptions (#260). Text serial keeps no state.
      */
     public getLatestMachineState(): { [key: string]: unknown; timestamp: number } | null {
         const channel = this.channel as unknown as {
@@ -237,6 +240,12 @@ class ConnectionManager {
             return channel.getLatestMachineState();
         }
         return null;
+    }
+
+    /** True while the active channel speaks SACP (TCP, UDP or serial). Read-only (MCP). */
+    public isSacpChannel(): boolean {
+        return !!this.channel
+            && includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol);
     }
 
     /**
@@ -398,7 +407,11 @@ class ConnectionManager {
         connectionDiagnostics.record('recovery_requested');
         if (this.channel && this.channel !== sstpHttpChannel) {
             connectionDiagnostics.record('recovery_failed', { reason: 'different_transport' });
-            throw new Error('Recovery is supported only for the existing HTTP machine session.');
+            const why = this.isSacpChannel()
+                ? ' The active channel speaks SACP, whose heartbeat is a controller subscription rather than a poll '
+                    + 'the server can restart: if get_position reports no fresh beat, reconnect the machine through Luban.'
+                : ` The active channel is ${this.describeChannel()}, which has no retained session to verify.`;
+            throw new Error(`Recovery is supported only for the existing HTTP machine session.${why}`);
         }
         const previousChannel = this.channel;
         try {

@@ -9,6 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import vm from 'vm';
 import ts from 'typescript';
+import * as sacpMachineState from '../../machine/channels/sacpMachineState';
 
 type Exports = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -111,6 +112,9 @@ class FakeSerialPort extends EventEmitter {
     public destroy(): void { /* destroyed */ }
 }
 
+/** Inert connection diagnostics: the generation tests are not about them. */
+const silentDiagnostics = { startWorker: () => undefined, stopWorker: () => undefined, poll: () => undefined, record: () => undefined };
+
 function sacpBase(timers: Timers): Exports {
     return load('channels/SacpChannel.ts', {
         '@snapmaker/luban-platform': { WorkflowStatus: { Idle: 'idle', Unknown: 'unknown', Starting: 'starting', Running: 'running' } },
@@ -119,6 +123,8 @@ function sacpBase(timers: Timers): Exports {
         lodash: { includes: (items: unknown[], value: unknown) => items.includes(value), find: () => undefined },
         '../../../lib/logger': logger,
         '../sacp/SacpClient': FakeSacpClient,
+        '../connectionDiagnostics': { connectionDiagnostics: silentDiagnostics },
+        './sacpMachineState': sacpMachineState, // the real pure module: the channel constructs its tracker
         './Channel': Channel,
         './ChannelEvent': { ChannelEvent: events },
     }, timers);

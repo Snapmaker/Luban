@@ -71,9 +71,38 @@ const HOME_TIMEOUT_MS = 120000;
 // Two status periods: the judgement needs a beat taken after the workspace change.
 const FRAME_RESTORE_SETTLE_MS = 4500;
 const HOME_POLL_MS = 1000;
+// home with ignore_stale_position on a channel that has published nothing yet:
+// how long to wait for its first state before refusing (a SACP subscription
+// reports within ~1 s of connecting; three HTTP poll periods otherwise).
+const FIRST_STATE_WAIT_MS = 6000;
+const FIRST_STATE_POLL_MS = 250;
 
 export interface GcodeChannel {
     executeGcode?: (gcode: string) => Promise<{ result: number; text?: string }>;
+    /** The SACP channels' own home request (SacpUdpChannel / SacpChannelBase.goHome); true when accepted. */
+    goHome?: (headType?: string) => Promise<boolean | void>;
+}
+
+const SACP_NO_REPLY_TEXT = 'This channel speaks SACP: a G-code is acknowledged with a result code only and the firmware\'s '
+    + 'reply text is never forwarded (SacpClient.executeGcode discards the payload), so a bare "ok" is the transport working '
+    + 'as designed, NOT a dead connection.';
+
+/** True while the connected channel speaks SACP (ConnectionManager.isSacpChannel; absent in test stubs). */
+function sacpTransport(): boolean {
+    const manager = connectionManager as unknown as { isSacpChannel?: () => boolean };
+    return typeof manager.isSacpChannel === 'function' && manager.isSacpChannel() === true;
+}
+
+/** Wait briefly for a channel's first machine state (a SACP subscription publishes within ~1 s of connecting). */
+async function awaitFirstMachineState(timeoutMs: number): Promise<boolean> {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+        if (connectionManager.getLatestMachineState()) {
+            return true;
+        }
+        await new Promise((resolve) => setTimeout(resolve, FIRST_STATE_POLL_MS));
+    }
+    return !!connectionManager.getLatestMachineState();
 }
 
 const gcodeLog = logger('service:mcp:gcode');
@@ -681,6 +710,39 @@ async function stageGotoWorkOrigin(args: { reason?: string; feed_rate?: number; 
     };
 }
 
+/** Connected, but the channel has published no machine state yet (or never will). */
+function connectedWithoutState(): boolean {
+    const manager = connectionManager as unknown as { getConnectionStatus?: () => { connected?: boolean } };
+    const connected = typeof manager.getConnectionStatus === 'function' ? !!manager.getConnectionStatus().connected : true;
+    return connected && !connectionManager.getLatestMachineState();
+}
+
+/**
+ * The position snapshot homing starts from. Homing is what ESTABLISHES the
+ * position, so the position itself is not a precondition - but the idle and
+ * toolhead-off checks need SOME state. A channel that has published nothing
+ * yet (a SACP machine in its first second after connecting, #260) is given a
+ * moment on the operator's explicit demand; a channel that never publishes
+ * is refused honestly, because idle cannot be verified and homing blind is
+ * not on offer.
+ */
+async function positionForHoming(ignoreStalePosition: boolean): Promise<PositionSnapshot> {
+    try {
+        return getPositionSnapshot();
+    } catch (err) {
+        if (!connectedWithoutState()) {
+            throw err;
+        }
+        if (ignoreStalePosition && await awaitFirstMachineState(FIRST_STATE_WAIT_MS)) {
+            return getPositionSnapshot();
+        }
+        throw new McpToolError(`${(err as Error).message} Homing needs no position, but the idle and toolhead checks need `
+            + 'the channel\'s state: a SACP machine publishes its first state about a second after connecting, and on the '
+            + `operator's explicit demand ignore_stale_position: true waits up to ${FIRST_STATE_WAIT_MS / 1000}s for it. `
+            + 'A channel that never reports state cannot be homed through the MCP.');
+    }
+}
+
 /**
  * MACHINE home, shared by the `home` tool and the probe_program `home` op:
  * Luban's own G53;G28;G54 (home in the machine workspace, reselect workspace
@@ -690,7 +752,7 @@ async function stageGotoWorkOrigin(args: { reason?: string; feed_rate?: number; 
  */
 export async function homeMachine(tool: string, waitUntilHomed: boolean = true, ignoreStalePosition: boolean = false): Promise<object> {
     probeFeedService.assertNoOvertravel();
-    const before = getPositionSnapshot();
+    const before = await positionForHoming(ignoreStalePosition);
     if (!ignoreStalePosition || before.reliability !== 'stale') {
         assertFreshHeartbeat(tool);
     }
@@ -704,26 +766,51 @@ export async function homeMachine(tool: string, waitUntilHomed: boolean = true, 
     }
 
     const channel = connectionManager.getCurrentChannel() as unknown as GcodeChannel;
-    if (!channel || typeof channel.executeGcode !== 'function') {
+    if (!channel || (typeof channel.executeGcode !== 'function' && typeof channel.goHome !== 'function')) {
         throw new McpToolError('The connected channel does not support direct commands.');
     }
 
     const issuedAt = Date.now();
-    // Luban's own Home button sends G53; G28; G54 - home in the
-    // machine workspace, then reselect workspace 0. A bare G28 leaves
-    // the controller reporting positions in an unselected workspace
-    // (observed: derived machine Y 464/Z 656 on the A350).
-    const executed = await sendGcodeVisible(channel, tool, 'G53;\nG28;\nG54;');
-    if (executed.result !== 0) {
-        throw new McpToolError(`Homing rejected by controller: ${executed.text || executed.result}`);
+    let homeRequest: string;
+    if (sacpTransport() && typeof channel.goHome === 'function') {
+        // A SACP controller (Ray, Artisan, J1) homes on its own request
+        // (0x01/0x35) - the same call as Luban's Home button on this transport
+        // (ConnectionManager.goHome). Its G-code path acknowledges text with a
+        // bare result code, so G53;G28;G54 could neither be relied on nor
+        // checked; the homed state comes back through the coordinate
+        // subscription and the 0x01/0x36 homed notification instead.
+        const leaseRefusal = gcodeLease.refusal('home');
+        if (leaseRefusal) {
+            throw new McpToolError(leaseRefusal);
+        }
+        homeRequest = 'SACP home request';
+        gcodeLog.info(`[${tool}] > ${homeRequest}`);
+        mcpBroadcast('mcp:gcode', { tool, gcode: homeRequest, idleMs: null });
+        const accepted = await channel.goHome();
+        const response = accepted === false ? 'rejected' : 'ok';
+        mcpBroadcast('mcp:gcode', { tool, response, execMs: Date.now() - issuedAt });
+        gcodeLog.info(`[${tool}] < ${response} (exec ${Date.now() - issuedAt}ms)`);
+        if (accepted === false) {
+            throw new McpToolError('Homing rejected by controller (SACP home request returned a non-zero result).');
+        }
+    } else {
+        // Luban's own Home button sends G53; G28; G54 - home in the
+        // machine workspace, then reselect workspace 0. A bare G28 leaves
+        // the controller reporting positions in an unselected workspace
+        // (observed: derived machine Y 464/Z 656 on the A350).
+        homeRequest = 'G28';
+        const executed = await sendGcodeVisible(channel, tool, 'G53;\nG28;\nG54;');
+        if (executed.result !== 0) {
+            throw new McpToolError(`Homing rejected by controller: ${executed.text || executed.result}`);
+        }
+        noteFrameRestored(); // G54 acknowledged after G28; a verified position must still follow.
     }
-    noteFrameRestored(); // G54 acknowledged after G28; a verified position must still follow.
 
     if (!waitUntilHomed) {
         return {
             homed: null,
             position_verified: false,
-            note: 'wait_until_moved was false: G28 accepted but not awaited (homing takes '
+            note: `wait_until_moved was false: ${homeRequest} accepted but not awaited (homing takes `
                 + '~15-20s). Poll get_position until isHomed is true and the position is '
                 + 'stable before any motion.',
         };
@@ -1393,6 +1480,10 @@ export function registerCameraTools(registry: ToolRegistry): void {
             if (!channel || typeof channel.executeGcode !== 'function') {
                 throw new McpToolError('No machine connected, or the channel does not support direct commands.');
             }
+            if (sacpTransport()) {
+                throw new McpToolError(`${SACP_NO_REPLY_TEXT} M503 S can therefore never return configuration text here; `
+                    + 'nothing was sent. Use get_machine_profile for the machine definition and get_position for live state.');
+            }
             const executed = await sendGcodeVisible(channel, 'query_firmware_configuration', 'M503 S');
             if (executed.result !== 0 || !executed.text?.trim() || /^ok\s*$/i.test(executed.text.trim())) {
                 throw new McpToolError(`M503 S returned no configuration or failed: ${executed.text || executed.result}. No fresh machine data was obtained.`);
@@ -1415,6 +1506,22 @@ export function registerCameraTools(registry: ToolRegistry): void {
             }
             const executed = await sendGcodeVisible(channel, 'query_firmware_position', 'M114');
             const raw = executed.text || null;
+            if (sacpTransport()) {
+                // The acknowledgement is real liveness evidence (a round trip the
+                // controller answered); the position must come from the
+                // subscription, which get_position already judges.
+                return {
+                    raw: null,
+                    result: executed.result,
+                    acknowledged: executed.result === 0,
+                    firmware_work: null,
+                    derived_machine: null,
+                    note: `${SACP_NO_REPLY_TEXT} The controller ${executed.result === 0 ? 'acknowledged' : 'did NOT acknowledge'} `
+                        + 'M114, which says the transport is alive but carries no coordinates. The position of record below comes '
+                        + 'from the SACP coordinate subscription (the same source as the Luban UI); use get_position.',
+                    heartbeat: positionOrNull(),
+                };
+            }
             if (executed.result !== 0 || !raw || !/X:-?\d/.test(raw)) {
                 // An "ok" with no position text is not a position report - it
                 // is the dead-connection signature (observed live 2026-09-02:
@@ -1470,14 +1577,18 @@ export function registerCameraTools(registry: ToolRegistry): void {
             + 'on hardware); warn the operator first. Requires an idle machine with the toolhead '
             + 'off. Waits for the firmware to report homed. Stale position is refused by default; '
             + 'ignore_stale_position may be true ONLY when the operator explicitly demands homing despite stale data. '
-            + 'This does not bypass alarms, toolhead/idle checks or verification after homing.',
+            + 'This does not bypass alarms, toolhead/idle checks or verification after homing. '
+            + 'On a SACP machine (Ray, Artisan, J1) the channel\'s own home request is used instead of G53;G28;G54, and '
+            + 'the homed state comes back through its coordinate subscription; a Ray homes to about X-1..1, Y399.',
         inputSchema: {
             type: 'object',
             properties: {
                 ignore_stale_position: {
                     type: 'boolean',
                     default: false,
-                    description: 'Only on the operator explicit demand to home despite stale position. Bypasses stale-position rejection only; all other guards and fresh completion verification remain.',
+                    description: 'Only on the operator explicit demand to home despite stale position. Bypasses stale-position rejection '
+                        + 'only (and, on a channel that has published no state yet, waits a few seconds for its first report); all '
+                        + 'other guards and fresh completion verification remain.',
                 },
                 wait_until_moved: {
                     type: 'boolean',

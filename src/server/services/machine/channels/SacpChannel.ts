@@ -73,6 +73,8 @@ import Channel, {
 import { ChannelEvent } from './ChannelEvent';
 import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from '../../../../app/machines/snapmaker-2-toolheads';
 import { gcodeLease } from '../gcodeLease';
+import { connectionDiagnostics } from '../connectionDiagnostics';
+import { SacpMachineState, SacpMachineStateTracker } from './sacpMachineState';
 
 const log = logger('machine:channels:SacpChannel');
 
@@ -105,7 +107,43 @@ class SacpChannelBase extends Channel implements
     /** Subclasses call this at every transport open, close, error and session replacement. */
     protected bumpConnectionGeneration(reason: string): void {
         this.connectionGeneration++;
+        // A new or torn-down session has no state; the MCP must read null and
+        // forget this connection's offsets (tools/machine.ts noteMachineDisconnected).
+        this.machineState.clear();
         log.debug(`connection generation ${this.connectionGeneration}: ${reason}`);
+    }
+
+    // Latest heartbeat/coordinate state for the MCP (#260): filled by the
+    // subscriptions below, cleared on stop, loss and every generation bump.
+    private machineState = new SacpMachineStateTracker();
+
+    // Labels the connection-diagnostics heartbeat worker, like SstpHttpChannel's heartbeatGeneration.
+    private heartbeatWorkerGeneration = 0;
+
+    /**
+     * Last machine state, or null before the first heartbeat / after close.
+     * Same shape as SstpHttpChannel's: status, pos (work), originOffset,
+     * isHomed, timestamp; machine = work - originOffset.
+     */
+    public getLatestMachineState(): SacpMachineState | null {
+        return this.machineState.get();
+    }
+
+    /** Diagnostics: a heartbeat subscription is live, like an HTTP heartbeat worker. */
+    private noteHeartbeatSubscribed(): void {
+        this.heartbeatWorkerGeneration += 1;
+        connectionDiagnostics.startWorker(this.heartbeatWorkerGeneration);
+    }
+
+    /** Diagnostics: one heartbeat arrived (the SACP equivalent of an accepted status poll). */
+    private noteHeartbeatReceived(): void {
+        connectionDiagnostics.poll({ protocol: 'SACP' }, true);
+    }
+
+    /** Diagnostics and state on a stopped or lost heartbeat. */
+    private noteHeartbeatEnded(reason: string): void {
+        this.machineState.clear();
+        connectionDiagnostics.stopWorker(reason);
     }
 
     public sacpClient: SacpClient;
@@ -192,6 +230,7 @@ class SacpChannelBase extends Channel implements
 
             this.heartbeatTimer = setTimeout(async () => {
                 log.info('Lost heartbeat, close connection.');
+                this.noteHeartbeatEnded('heartbeat_lost');
                 this.bumpConnectionGeneration('heartbeat lost');
 
                 await this.connectionClose({ force: true });
@@ -215,6 +254,11 @@ class SacpChannelBase extends Channel implements
             this.machineStatus = status;
             log.debug(`machine status = ${statusKey}, ${this.machineStatus}`);
 
+            // Status only: this pre-1.6.8 path subscribes no coordinates, so the
+            // MCP sees the workflow status and an honest "position unknown".
+            this.machineState.noteHeartbeat(this.machineStatus);
+            this.noteHeartbeatReceived();
+
             this.socket && this.socket.emit('Marlin:state', {
                 state: {
                     status: this.machineStatus,
@@ -223,6 +267,7 @@ class SacpChannelBase extends Channel implements
         };
 
         const res = await this.sacpClient.subscribeHeartbeat({ interval: 2000 }, subscribeHeartbeatCallback);
+        this.noteHeartbeatSubscribed();
         this.subscribePurifierInfo();
         log.info(`Subscribe heartbeat, result = ${res.code}`);
     }
@@ -239,6 +284,7 @@ class SacpChannelBase extends Channel implements
             clearTimeout(this.heartbeatTimerLegacy[id]);
             this.heartbeatTimerLegacy[id] = null;
         }
+        this.noteHeartbeatEnded('heartbeat_stop');
 
         // Cancel subscription of heartbeat
         const res = await this.sacpClient.unsubscribeHeartbeat(null);
@@ -853,6 +899,7 @@ class SacpChannelBase extends Channel implements
                 ...stateData,
                 isHomed: !isHomed
             };
+            this.machineState.noteHomed(!isHomed);
             this.sacpClient.ack(0x01, 0x36, packet, new Response(0).toBuffer()).then(() => {
                 if (stateData.headType !== HEAD_PRINTING) {
                     this.sacpClient.getCurrentCoordinateInfo().then(() => {
@@ -879,6 +926,7 @@ class SacpChannelBase extends Channel implements
             }
 
             this.heartbeatTimerLegacy[id] = setTimeout(() => {
+                this.noteHeartbeatEnded('heartbeat_lost');
                 this.bumpConnectionGeneration(`legacy heartbeat lost (${id})`);
                 client && client.destroy();
                 log.info(`SACP close ${id}, ${this.heartbeatTimerLegacy[id]}`,);
@@ -886,6 +934,12 @@ class SacpChannelBase extends Channel implements
             }, 10000);
 
             this.machineStatus = WORKFLOW_STATUS_MAP[statusKey];
+
+            // The MCP's copy of this beat (#260): the same payload the renderer
+            // gets below, kept with a timestamp. pos/originOffset/isHomed are
+            // owned by the coordinate subscription (noteCoordinates).
+            this.machineState.noteHeartbeat(this.machineStatus, { ...stateData, moduleStatusList });
+            this.noteHeartbeatReceived();
 
             // TODO: Refactor this
             this.socket && this.socket.emit('Marlin:state', {
@@ -902,6 +956,7 @@ class SacpChannelBase extends Channel implements
 
         // Subscribe heart beat
         this.shuttingDown = false;
+        this.noteHeartbeatSubscribed();
         this.sacpClient.subscribeHeartbeat({ interval: 1000 }, this.subscribeHeartCallback).then((res) => {
             log.info(`subscribe heartbeat success: ${res.code}`);
         });
@@ -1044,12 +1099,15 @@ class SacpChannelBase extends Channel implements
             // log.info(`revice coordinate: ${data.response}`);
             const response = data.response;
             const coordinateInfos = new CoordinateSystemInfo().fromBuffer(response.data);
+            // The MCP's position source (#260): axes by key, missing axes
+            // (a Ray has no Z) read as 0 - see sacpMachineState.ts.
+            this.machineState.noteCoordinates(coordinateInfos, moduleStatusList.rotaryModule);
             const currentCoordinate = coordinateInfos.coordinates;
             const originCoordinate = coordinateInfos.originOffset;
             const pos = {
-                x: currentCoordinate[0].value,
-                y: currentCoordinate[1].value,
-                z: currentCoordinate[2].value,
+                x: currentCoordinate[0]?.value,
+                y: currentCoordinate[1]?.value,
+                z: currentCoordinate[2]?.value,
                 b: currentCoordinate[4]?.value,
                 isFourAxis: moduleStatusList.rotaryModule
             };
@@ -1279,16 +1337,17 @@ class SacpChannelBase extends Channel implements
         return this.sacpClient.getCurrentCoordinateInfo();
     };
 
+    /** The channel's own home (SACP 0x01/0x35); true when the controller accepted it. */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public goHome = async (headType?: string) => {
+    public goHome = async (headType?: string): Promise<boolean> => {
         log.info('onClick gohome');
         await this.sacpClient.updateCoordinate(CoordinateType.MACHINE).then(res => {
             log.info(`Update Coordinate: ${res}`);
         });
-        await this.sacpClient.requestHome().then(({ response }) => {
-            log.info(`Go-Home, ${response}`);
-            this.socket && this.socket.emit('serialport:read', { data: response.result === 0 ? 'OK' : 'WARNING' });
-        });
+        const { response } = await this.sacpClient.requestHome();
+        log.info(`Go-Home, ${response}`);
+        this.socket && this.socket.emit('serialport:read', { data: response.result === 0 ? 'OK' : 'WARNING' });
+        return response.result === 0;
     };
 
     public coordinateMove = async ({ moveOrders, jogSpeed, headType, beforeGcodeStart = false }) => {
