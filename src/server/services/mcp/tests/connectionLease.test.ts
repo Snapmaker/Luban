@@ -112,6 +112,12 @@ function machineToolsFixture(userDataDir: string) {
             describeConnectedMachine: () => ({ identifier: 'A350', type: 'test', hasZ: true }),
         },
         '../rotaryGeometry': { statedTravel: () => ({ xMin: null, xMax: null, yMin: null, yMax: null }) },
+        // An empty per-machine store with nothing applying: the A350 defaults (machineStore.test covers the store itself).
+        '../machineStore': {
+            machineStore: { currentMachine: () => ({ machineKey: null, deviceConflict: null }), keyForIdentifier: () => null, getFor: () => undefined },
+            baseIdentifier: (key: string) => key,
+            setMachineStoreSources: () => undefined,
+        },
         '../positionOfRecord': positionOfRecord,
         '../frameRecovery': frameRecovery,
         '../registry': { McpToolError },

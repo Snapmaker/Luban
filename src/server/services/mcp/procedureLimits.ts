@@ -529,3 +529,15 @@ export const MAX_OPEN_GCODE_UPLOADS = 8;
 /** Odd, so the patch has a centre pixel. */
 export const TRACK_PATCH_PX: Bounded = { default: 41, min: 11, max: 101 };
 export const TRACK_SEARCH_RADIUS_PX: Bounded = { default: 120, min: 20, max: 250 };
+
+// ---------------------------------------------------------------------------
+// Per-machine policy (set_machine_policy, machineStore.ts)
+// ---------------------------------------------------------------------------
+
+/**
+ * How long an operator's landmark review stays valid (amendment R4: until
+ * disconnect or 24 h, whichever comes first). The floor of one hour keeps a
+ * review from expiring mid-procedure; the week cap keeps a review from
+ * outliving the bed it described - a stored setting, so it must be bounded.
+ */
+export const LANDMARK_CONFIRM_TTL_HOURS: Bounded = { default: 24, min: 1, max: 168 };

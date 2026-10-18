@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 // MCP tool arguments and results are snake_case by convention.
-import config from '../../configstore';
+import { machineConfig } from '../machineStore';
 import { MAX_WAIT_MS } from '../procedureLimits';
 import { McpToolError, ToolRegistry } from '../registry';
 import { RotaryCalibrationError, fitRotaryCalibration } from '../rotaryGravity';
@@ -347,7 +347,7 @@ export function registerVibrationTools(registry: ToolRegistry): void {
             }
             if (args.clear) {
                 const previous = vibrationCaptureService.rotaryCalibration();
-                config.unset(ROTARY_CALIBRATION_KEY);
+                machineConfig.unset(ROTARY_CALIBRATION_KEY);
                 return { cleared: true, previous, reason: args.reason };
             }
             const sensor = rotarySensor(args.sensor);
@@ -394,7 +394,7 @@ export function registerVibrationTools(registry: ToolRegistry): void {
                 readings: used,
                 calibration,
             };
-            config.set(ROTARY_CALIBRATION_KEY, record);
+            machineConfig.set(ROTARY_CALIBRATION_KEY, record);
             return {
                 stored: true,
                 sensor_id: sensor,

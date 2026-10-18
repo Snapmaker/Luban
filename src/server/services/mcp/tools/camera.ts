@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 
 import logger from '../../../lib/logger';
-import config from '../../configstore';
+import { machineConfig } from '../machineStore';
 import { mcpBroadcast } from '../index';
 import { connectionManager } from '../../machine/ConnectionManager';
 import {
@@ -246,7 +246,7 @@ async function sleep(ms: number): Promise<void> {
  * frame carries it - turning tool identification into a lookup.
  */
 function expectedToolRegion(): object | null {
-    const raw = config.get('mcpToolRegion');
+    const raw = machineConfig.get('mcpToolRegion');
     if (!raw) {
         return null;
     }
@@ -454,7 +454,7 @@ export async function executeBoundedMoveAndCapture(args: BoundedMoveArgs): Promi
     }
 
     const travel = Math.hypot(target.x - current.x, target.y - current.y);
-    const maxTravel = Number(config.get('mcpMaxJogDistance')) || DEFAULT_MAX_TRAVEL_MM;
+    const maxTravel = Number(machineConfig.get('mcpMaxJogDistance')) || DEFAULT_MAX_TRAVEL_MM;
     if (travel > maxTravel) {
         throw new McpToolError(`Requested travel ${travel.toFixed(1)} mm exceeds the ${maxTravel} mm `
                     + 'per-call limit. Split the approach, or submit a gcode job.');
@@ -1366,7 +1366,7 @@ export function registerCameraTools(registry: ToolRegistry): void {
                 v1: box[3],
                 note: args.note ? String(args.note) : undefined,
             };
-            config.set('mcpToolRegion', region);
+            machineConfig.set('mcpToolRegion', region);
             return { stored: region };
         },
     });

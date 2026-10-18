@@ -1,0 +1,241 @@
+{
+  "mcpActiveTool": {
+    "clearanceBasis": "unknown",
+    "confirmedAt": null,
+    "measuredAt": 1792333105393,
+    "measurementId": "98067f63e3e5",
+    "measurementJobId": "98067f63e3e5",
+    "note": "Conventional setter offset only; does not establish a physical clearance bound.",
+    "protrusionMm": 43.5,
+    "source": "tool_setter",
+    "status": "measured",
+    "toolIdentity": "1.5 mm flat end mill"
+  },
+  "mcpCameraDevice": "/dev/v4l/by-id/usb-Generic_USB_Camera_200901010001-video-index0 (USB Camera: USB Camera)",
+  "mcpCameraLastGood": "/dev/v4l/by-id/usb-Generic_USB_Camera_200901010001-video-index0 (USB Camera: USB Camera)",
+  "mcpProbeEffectiveLength": 70.9,
+  "mcpProbeEffectiveLengthAt": 1790690310973,
+  "mcpProbeEffectiveLengthNote": "run_tool_setter job 5ce60989dc03, 2026-09-29 ~12:37 BST, after the operator refitted the probe: contact Z171.4 x3, spread 0, setter physical surface 100.5 -> 70.9 (morning fitting measured 72.3, job e17afc9bde64)",
+  "mcpProbeTipDiameter": 2,
+  "mcpProbeTipDiameterAt": 1790687502920,
+  "mcpProbeTipDiameterNote": "operator-stated 2026-09-29: tip is 2 mm (the 2.5 used in stock_probe_2026-09-29.md was never calipered)",
+  "mcpRotaryAxisX": 170.1,
+  "mcpRotaryAxisZ": 112.4,
+  "mcpToolRegion": {
+    "note": "Endmill enters from bottom edge ~2/3 along, diagonal toward top-left, ~20% of frame height; extreme near-lens blur; frame-position invariant across all machine motion. Approximate box from operator description 2026-08-30 - refine against a frame.",
+    "u0": 0.55,
+    "u1": 1,
+    "v0": 0.65,
+    "v1": 1
+  },
+  "mcpToolSetter": {
+    "centerX": 79,
+    "centerY": 293,
+    "changeX": 339,
+    "changeY": null,
+    "changeZ": 328,
+    "floorMarginMm": 3,
+    "lastMeasurement": {
+      "at": 1792333105381,
+      "bitLengthMm": 27,
+      "confirmPassContacts": [
+        144,
+        144,
+        144
+      ],
+      "contactChannels": [
+        "toolsetter",
+        "toolsetter",
+        "toolsetter"
+      ],
+      "datum": {
+        "at": null,
+        "basis": "legacy_reference_convention",
+        "id": "legacy-reference:175.5:75",
+        "machineZ": 100.5,
+        "name": "Legacy setter reference convention",
+        "source": "Configured reference trigger 175.5 minus nominal reference length 75; physical datum not independently established.",
+        "uncertaintyMm": null
+      },
+      "derivedBitLengthMm": 43.5,
+      "fineStepMm": 0.1,
+      "fittingId": "98067f63e3e5",
+      "id": "98067f63e3e5",
+      "jobId": "98067f63e3e5",
+      "measuredTriggerZ": 144,
+      "referenceBasis": "snapshot",
+      "setterDerivedOffsetMm": 43.5,
+      "source": "tool_setter",
+      "spreadMm": 0,
+      "toolIdentity": "1.5 mm flat end mill"
+    },
+    "longestBitLengthMm": 75,
+    "measurements": [
+      {
+        "at": 1792272870511,
+        "bitLengthMm": 43,
+        "derivedBitLengthMm": 42.9,
+        "measuredTriggerZ": 143.4,
+        "spreadMm": 0
+      },
+      {
+        "at": 1792276077666,
+        "bitLengthMm": 71,
+        "derivedBitLengthMm": 70.8,
+        "measuredTriggerZ": 171.3,
+        "spreadMm": 0
+      },
+      {
+        "at": 1792277728856,
+        "bitLengthMm": 55,
+        "confirmPassContacts": [
+          160.6,
+          160.6,
+          160.6
+        ],
+        "contactChannels": [
+          "toolsetter",
+          "toolsetter",
+          "toolsetter"
+        ],
+        "datum": {
+          "at": null,
+          "basis": "legacy_reference_convention",
+          "id": "legacy-reference:175.5:75",
+          "machineZ": 100.5,
+          "name": "Legacy setter reference convention",
+          "source": "Configured reference trigger 175.5 minus nominal reference length 75; physical datum not independently established.",
+          "uncertaintyMm": null
+        },
+        "derivedBitLengthMm": 60.1,
+        "fineStepMm": 0.1,
+        "fittingId": "f6bd58880c32",
+        "id": "f6bd58880c32",
+        "jobId": "f6bd58880c32",
+        "measuredTriggerZ": 160.6,
+        "referenceBasis": "snapshot",
+        "setterDerivedOffsetMm": 60.1,
+        "source": "tool_setter",
+        "spreadMm": 0,
+        "toolIdentity": null
+      },
+      {
+        "at": 1792318511508,
+        "bitLengthMm": 43,
+        "confirmPassContacts": [
+          143.4,
+          143.4,
+          143.4
+        ],
+        "contactChannels": [
+          "toolsetter",
+          "toolsetter",
+          "toolsetter"
+        ],
+        "datum": {
+          "at": null,
+          "basis": "legacy_reference_convention",
+          "id": "legacy-reference:175.5:75",
+          "machineZ": 100.5,
+          "name": "Legacy setter reference convention",
+          "source": "Configured reference trigger 175.5 minus nominal reference length 75; physical datum not independently established.",
+          "uncertaintyMm": null
+        },
+        "derivedBitLengthMm": 42.9,
+        "fineStepMm": 0.1,
+        "fittingId": "724813c1c815",
+        "id": "724813c1c815",
+        "jobId": "724813c1c815",
+        "measuredTriggerZ": 143.4,
+        "referenceBasis": "snapshot",
+        "setterDerivedOffsetMm": 42.9,
+        "source": "tool_setter",
+        "spreadMm": 0,
+        "toolIdentity": "1.0 mm CNC drill"
+      },
+      {
+        "at": 1792333105381,
+        "bitLengthMm": 27,
+        "confirmPassContacts": [
+          144,
+          144,
+          144
+        ],
+        "contactChannels": [
+          "toolsetter",
+          "toolsetter",
+          "toolsetter"
+        ],
+        "datum": {
+          "at": null,
+          "basis": "legacy_reference_convention",
+          "id": "legacy-reference:175.5:75",
+          "machineZ": 100.5,
+          "name": "Legacy setter reference convention",
+          "source": "Configured reference trigger 175.5 minus nominal reference length 75; physical datum not independently established.",
+          "uncertaintyMm": null
+        },
+        "derivedBitLengthMm": 43.5,
+        "fineStepMm": 0.1,
+        "fittingId": "98067f63e3e5",
+        "id": "98067f63e3e5",
+        "jobId": "98067f63e3e5",
+        "measuredTriggerZ": 144,
+        "referenceBasis": "snapshot",
+        "setterDerivedOffsetMm": 43.5,
+        "source": "tool_setter",
+        "spreadMm": 0,
+        "toolIdentity": "1.5 mm flat end mill"
+      }
+    ],
+    "notes": "Reference measured by run_tool_setter 2026-08-31 (confirm passes agreed at 175.500). Park: X339 = firmware X limit found by sweep 2026-09-01, Z328 = homing height, Y free. | Migrated from the Windows rig configstore 2026-09-04. Measurement history there: last 60 mm bit -> trigger Z 171.7 (spread 0); previous 55 mm bit -> 171.6.",
+    "previousMeasurement": {
+      "at": 1792318511508,
+      "bitLengthMm": 43,
+      "confirmPassContacts": [
+        143.4,
+        143.4,
+        143.4
+      ],
+      "contactChannels": [
+        "toolsetter",
+        "toolsetter",
+        "toolsetter"
+      ],
+      "datum": {
+        "at": null,
+        "basis": "legacy_reference_convention",
+        "id": "legacy-reference:175.5:75",
+        "machineZ": 100.5,
+        "name": "Legacy setter reference convention",
+        "source": "Configured reference trigger 175.5 minus nominal reference length 75; physical datum not independently established.",
+        "uncertaintyMm": null
+      },
+      "derivedBitLengthMm": 42.9,
+      "fineStepMm": 0.1,
+      "fittingId": "724813c1c815",
+      "id": "724813c1c815",
+      "jobId": "724813c1c815",
+      "measuredTriggerZ": 143.4,
+      "referenceBasis": "snapshot",
+      "setterDerivedOffsetMm": 42.9,
+      "source": "tool_setter",
+      "spreadMm": 0,
+      "toolIdentity": "1.0 mm CNC drill"
+    },
+    "referenceBitLengthMm": 75,
+    "triggerZ": 175.5
+  },
+  "mcpTravelXMax": 339,
+  "mcpTravelXMaxAt": 1789909318499,
+  "mcpTravelXMaxNote": "A350 machine frame: home X-19 Y342 Z328 (observed live 2026-09-20); X339 = firmware X limit found by sweep 2026-09-01 (recorded in the tool setter config notes as changeX); Y342 = homed Y. The 320x350 machine definition over-claims Y by 8 mm and under-claims X.",
+  "mcpTravelXMin": -19,
+  "mcpTravelXMinAt": 1789909318496,
+  "mcpTravelXMinNote": "A350 machine frame: home X-19 Y342 Z328 (observed live 2026-09-20); X339 = firmware X limit found by sweep 2026-09-01 (recorded in the tool setter config notes as changeX); Y342 = homed Y. The 320x350 machine definition over-claims Y by 8 mm and under-claims X.",
+  "mcpTravelYMax": 342,
+  "mcpTravelYMaxAt": 1789909318503,
+  "mcpTravelYMaxNote": "A350 machine frame: home X-19 Y342 Z328 (observed live 2026-09-20); X339 = firmware X limit found by sweep 2026-09-01 (recorded in the tool setter config notes as changeX); Y342 = homed Y. The 320x350 machine definition over-claims Y by 8 mm and under-claims X.",
+  "mcpTravelYMin": 0,
+  "mcpTravelYMinAt": 1789909318501,
+  "mcpTravelYMinNote": "A350 machine frame: home X-19 Y342 Z328 (observed live 2026-09-20); X339 = firmware X limit found by sweep 2026-09-01 (recorded in the tool setter config notes as changeX); Y342 = homed Y. The 320x350 machine definition over-claims Y by 8 mm and under-claims X."
+}

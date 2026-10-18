@@ -23,7 +23,7 @@ import * as fs from 'fs-extra';
 
 import DataStorage from '../../DataStorage';
 import logger from '../../lib/logger';
-import config from '../configstore';
+import { machineConfig } from './machineStore';
 import { connectionManager } from '../machine/ConnectionManager';
 import { McpJob, jobManager } from './jobs';
 import { parseSpindleProgram } from './spindleProgram';
@@ -838,7 +838,7 @@ export class VibrationCaptureService {
     // ---------------------------------------------------------------- rotary
 
     public rotaryCalibration(): { [key: string]: unknown } | null {
-        const raw = config.get(ROTARY_CALIBRATION_KEY);
+        const raw = machineConfig.get(ROTARY_CALIBRATION_KEY);
         if (!raw) {
             return null;
         }

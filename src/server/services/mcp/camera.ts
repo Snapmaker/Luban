@@ -9,6 +9,7 @@ import DataStorage from '../../DataStorage';
 import logger from '../../lib/logger';
 import config from '../configstore';
 import { CameraCandidate, describeCaptureFailure, isSnapshotUrl } from './cameraSelection';
+import { machineConfig, machineStore } from './machineStore';
 import { McpToolError } from './registry';
 import { readCameraSnapshot, saveCameraSnapshot } from './cameraArtifacts';
 
@@ -204,8 +205,46 @@ export async function listLocalCameras(): Promise<{ provider: string; devices: s
     return { provider: 'ffmpeg-dshow', devices };
 }
 
+// The camera preference is per machine (tyeth/Luban#265): the A350 rig's
+// camera is not the Ray's. A machine with any preference of its own (URL,
+// pinned device or last-good device in its machineStore entry) uses only its
+// own; one with none falls back to the global keys every pre-#265 build wrote
+// and a fresh host starts with. Selections are written to the current
+// machine's entry, or to the global keys when no machine is connected or
+// selected. The camera OFFSET is never memorised anywhere (select_camera).
+const CAMERA_KEYS = ['mcpCameraUrl', 'mcpCameraDevice', 'mcpCameraLastGood'];
+
+function machineCameraPreference(): { [key: string]: unknown } | null {
+    const own: { [key: string]: unknown } = {};
+    for (const key of CAMERA_KEYS) {
+        own[key] = machineConfig.get(key);
+    }
+    return CAMERA_KEYS.some((key) => own[key] !== undefined && own[key] !== null && own[key] !== '') ? own : null;
+}
+
+/** One camera setting: the current machine's preference when it has one, else the global key. */
+export function cameraSetting(key: string): unknown {
+    const own = machineCameraPreference();
+    return own ? own[key] : config.get(key);
+}
+
+function writeCameraSetting(key: string, value: string | undefined): void {
+    const perMachine = machineStore.currentMachine().machineKey !== null;
+    if (value === undefined) {
+        if (perMachine) {
+            machineConfig.unset(key);
+        } else {
+            config.unset(key);
+        }
+    } else if (perMachine) {
+        machineConfig.set(key, value);
+    } else {
+        config.set(key, value);
+    }
+}
+
 export async function listCameras(): Promise<{ provider: string; devices: string[]; note?: string }> {
-    const cameraUrl = config.get('mcpCameraUrl');
+    const cameraUrl = cameraSetting('mcpCameraUrl');
     if (cameraUrl) {
         return { provider: 'http', devices: [String(cameraUrl)], note: 'mcpCameraUrl is set; it takes precedence.' };
     }
@@ -239,7 +278,7 @@ export async function listCameraCandidates(): Promise<{ provider: string; candid
         aliases.delete(entry);
         return { entry, aliases: [...aliases] };
     });
-    const cameraUrl = config.get('mcpCameraUrl');
+    const cameraUrl = cameraSetting('mcpCameraUrl');
     if (cameraUrl) {
         candidates.unshift({ entry: String(cameraUrl), aliases: [] });
     }
@@ -307,7 +346,7 @@ export async function resolveFfmpegInput(deviceOverride?: string): Promise<{ dev
     // An override names the device for THIS capture only (preview_cameras
     // looking at a camera that has not been chosen): it neither reads nor
     // writes the sticky choice.
-    let device: unknown = deviceOverride || config.get('mcpCameraDevice');
+    let device: unknown = deviceOverride || cameraSetting('mcpCameraDevice');
     if (!device) {
         const { devices } = await listCameras();
         if (!devices.length) {
@@ -319,7 +358,7 @@ export async function resolveFfmpegInput(deviceOverride?: string): Promise<{ dev
                 + 'found. Attach a camera and choose it with select_camera, or set mcpCameraUrl for an HTTP '
                 + `snapshot source.${linuxHint}`);
         }
-        const lastGood = config.get('mcpCameraLastGood');
+        const lastGood = cameraSetting('mcpCameraLastGood');
         if (lastGood && devices.includes(String(lastGood))) {
             device = lastGood;
         } else if (lastGood) {
@@ -343,7 +382,7 @@ export async function resolveFfmpegInput(deviceOverride?: string): Promise<{ dev
 
 /** Remember the device that just produced a frame (the sticky choice). */
 export function noteCameraLastGood(device: string): void {
-    config.set('mcpCameraLastGood', device);
+    writeCameraSetting('mcpCameraLastGood', device);
 }
 
 async function captureViaFfmpeg(deviceOverride?: string): Promise<CapturedFrame> {
@@ -403,11 +442,11 @@ async function captureViaFfmpeg(deviceOverride?: string): Promise<CapturedFrame>
 
 /** True when some capture source is configured (URL, pinned device, or a remembered one). */
 export function isCameraConfigured(): boolean {
-    return !!(config.get('mcpCameraUrl') || config.get('mcpCameraDevice') || config.get('mcpCameraLastGood'));
+    return !!(cameraSetting('mcpCameraUrl') || cameraSetting('mcpCameraDevice') || cameraSetting('mcpCameraLastGood'));
 }
 
 async function captureOneShot(): Promise<CapturedFrame> {
-    const cameraUrl = config.get('mcpCameraUrl');
+    const cameraUrl = cameraSetting('mcpCameraUrl');
     if (cameraUrl) {
         log.debug(`Capturing frame via HTTP snapshot: ${cameraUrl}`);
         return captureViaHttp(String(cameraUrl));
@@ -471,9 +510,9 @@ export interface CameraSelection {
 
 export function cameraSelection(): CameraSelection {
     return {
-        url: (config.get('mcpCameraUrl') as string) || null,
-        device: (config.get('mcpCameraDevice') as string) || null,
-        lastGood: (config.get('mcpCameraLastGood') as string) || null,
+        url: (cameraSetting('mcpCameraUrl') as string) || null,
+        device: (cameraSetting('mcpCameraDevice') as string) || null,
+        lastGood: (cameraSetting('mcpCameraLastGood') as string) || null,
     };
 }
 
@@ -486,13 +525,13 @@ export function cameraSelection(): CameraSelection {
 export function selectCamera(entry: string): CameraSelection {
     const before = cameraSelection();
     if (isSnapshotUrl(entry)) {
-        config.set('mcpCameraUrl', entry);
-        config.unset('mcpCameraDevice');
+        writeCameraSetting('mcpCameraUrl', entry);
+        writeCameraSetting('mcpCameraDevice', undefined);
     } else {
-        config.set('mcpCameraDevice', entry);
-        config.unset('mcpCameraUrl');
+        writeCameraSetting('mcpCameraDevice', entry);
+        writeCameraSetting('mcpCameraUrl', undefined);
     }
-    config.set('mcpCameraLastGood', entry);
+    writeCameraSetting('mcpCameraLastGood', entry);
     log.info(`Camera selected: "${entry}" (was ${before.url || before.device || 'unpinned'})`);
     return before;
 }
@@ -500,8 +539,8 @@ export function selectCamera(entry: string): CameraSelection {
 /** Unpin: the next capture falls back to the last-good device, then to the only one attached. */
 export function clearCameraSelection(): CameraSelection {
     const before = cameraSelection();
-    config.unset('mcpCameraDevice');
-    config.unset('mcpCameraUrl');
+    writeCameraSetting('mcpCameraDevice', undefined);
+    writeCameraSetting('mcpCameraUrl', undefined);
     log.info(`Camera selection cleared (was ${before.url || before.device || 'unpinned'})`);
     return before;
 }

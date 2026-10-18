@@ -1,4 +1,4 @@
-import config from '../configstore';
+import { machineConfig } from './machineStore';
 import { getActiveTool, getStoredActiveTool } from './activeTool';
 import { geometrySettings } from './rotaryGeometry';
 import {
@@ -9,7 +9,7 @@ import {
 const CONFIG_KEY = 'mcpToolSetter';
 
 export function rawSetterState(): { [key: string]: unknown } {
-    const raw = config.get(CONFIG_KEY);
+    const raw = machineConfig.get(CONFIG_KEY);
     return raw && typeof raw === 'object' ? raw as { [key: string]: unknown } : {};
 }
 
@@ -52,7 +52,7 @@ export function recordToolMeasurement(measurement: ToolMeasurement): void {
     const cfg = rawSetterState();
     const history = Array.isArray(cfg.measurements) ? [...cfg.measurements] : [cfg.previousMeasurement, cfg.lastMeasurement].filter(Boolean);
     const saved = JSON.parse(JSON.stringify(measurement)) as ToolMeasurement;
-    config.set(CONFIG_KEY, { ...cfg,
+    machineConfig.set(CONFIG_KEY, { ...cfg,
         previousMeasurement: cfg.lastMeasurement || null,
         lastMeasurement: saved,
         measurements: [...history, saved] });

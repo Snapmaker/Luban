@@ -8,7 +8,7 @@ export const tests: Array<[string, () => void]> = [
         const config = { get: (key: string) => store.get(key),
             set: (key: string, value: unknown) => store.set(key, value),
             unset: (key: string) => store.delete(key) };
-        const tool = isolatedModule('activeTool.ts', { '../configstore': config });
+        const tool = isolatedModule('activeTool.ts', { './machineStore': { machineConfig: config } });
         const first = tool.setActiveTool({ protrusionMm: 75, source: 'operator', at: 100 });
         assert.equal(first.measuredAt, null);
         assert.equal(tool.getActiveTool().confirmedAt, 100);
@@ -19,7 +19,7 @@ export const tests: Array<[string, () => void]> = [
         tool.setActiveTool({ protrusionMm: 20, source: 'tool_setter', measurementJobId: 'measurement', at: 200 });
         assert.equal(tool.getActiveTool().confirmedAt, null);
         assert.equal(tool.getActiveTool().protrusionMm, 20);
-        const restarted = isolatedModule('activeTool.ts', { '../configstore': config });
+        const restarted = isolatedModule('activeTool.ts', { './machineStore': { machineConfig: config } });
         assert.equal(restarted.getActiveTool(), null);
         assert.equal(restarted.getStoredActiveTool().measurementJobId, 'measurement');
     }],

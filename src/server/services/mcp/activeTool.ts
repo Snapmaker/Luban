@@ -1,4 +1,4 @@
-import config from '../configstore';
+import { machineConfig } from './machineStore';
 
 /** The source of the operator's current-tool assertion. */
 export type ActiveToolSource = 'operator' | 'tool_setter' | 'spindle_probe';
@@ -30,7 +30,7 @@ let sessionConfirmed = false;
 let staleReason = 'Server restarted; confirm the currently fitted tool or measure it again.';
 
 function raw(): { [key: string]: unknown } {
-    const value = config.get(CONFIG_KEY);
+    const value = machineConfig.get(CONFIG_KEY);
     return value && typeof value === 'object' ? value as { [key: string]: unknown } : {};
 }
 
@@ -101,13 +101,13 @@ export function setActiveTool(input: {
         toolIdentity: input.toolIdentity ? String(input.toolIdentity) : null,
         note: input.note ? String(input.note).trim() : null,
     };
-    config.set(CONFIG_KEY, value);
+    machineConfig.set(CONFIG_KEY, value);
     sessionConfirmed = true;
     return value;
 }
 
 export function clearActiveTool(): void {
-    config.unset(CONFIG_KEY);
+    machineConfig.unset(CONFIG_KEY);
     sessionConfirmed = false;
 }
 

@@ -29,11 +29,14 @@ import {
     outsideTravel,
     resolveTravel,
 } from '../machineTravel';
-import { MachineSummary } from '../machineCapability';
+import { LEGACY_MACHINE_IDENTIFIER, MachineSummary } from '../machineCapability';
+import { ConnectionStatusLike, baseIdentifier, machineStore, setMachineStoreSources } from '../machineStore';
+import { LANDMARK_CONFIRM_TTL_HOURS } from '../procedureLimits';
 import {
     MACHINES,
     connectedMachineCapability,
     connectedMachineIdentifier,
+    connectedMachineTag,
     describeConnectedMachine,
     findMachine,
     machineCapabilityFor,
@@ -157,8 +160,8 @@ function axisValue(value: unknown): number | null {
 
 /**
  * The PARK height: where a procedure hops between stations, retreats to on an
- * abort, and ends. Default 328 = home Z on the A350. Override via configstore
- * mcpSafeTraverseZ.
+ * abort, and ends. Default 328 = home Z on the A350. Per machine via
+ * set_machine_policy safe_traverse_z (machineStore.ts; zPolicyFor below).
  *
  * This was also the minimum Z for any XY move until 2026-09-19, which is why
  * it sits at the ceiling: the rotary landmark declares clearance 328 because
@@ -168,11 +171,6 @@ function axisValue(value: unknown): number | null {
  * see motionFloorZ below.
  */
 export const DEFAULT_SAFE_TRAVERSE_Z = 328;
-
-export function safeTraverseZ(): number {
-    const raw = Number(config.get('mcpSafeTraverseZ'));
-    return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_SAFE_TRAVERSE_Z;
-}
 
 /**
  * The MOTION FLOOR: the lowest machine Z at which an XY move over 1 mm may
@@ -189,16 +187,102 @@ export function safeTraverseZ(): number {
  *
  * The residual risk is what the registry does not know about: 8 mm less blind
  * protection for anything on the bed that has no landmark. Override via
- * configstore mcpMotionFloorZ, which is the one setting that reverts this.
+ * set_machine_policy motion_floor_z (per machine), which is the one setting that reverts this.
  */
 export const DEFAULT_MOTION_FLOOR_Z = 320;
 
-export function motionFloorZ(): number {
-    const raw = Number(config.get('mcpMotionFloorZ'));
-    const floor = Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_MOTION_FLOOR_Z;
+/**
+ * Per-machine Z policy (tyeth/Luban#265 R9, machineStore.ts zPolicy). The
+ * defaults above are the A350's - home Z and the 2026-09-19 floor - and
+ * exist ONLY for the A350 (and for nothing connected or selected, where no
+ * motion is possible and the pre-#265 numbers are what every status read
+ * showed). Any other machine with a Z axis (A150, A250, Artisan, Original)
+ * has no default: a model's size.z is a travel limit, not a park height, so
+ * the Z tools refuse until the operator states both with set_machine_policy.
+ * On a machine with no Z axis the policy does not apply; the A350 numbers are
+ * returned unchanged (as before) for the callers that ignore them there.
+ */
+export type ZPolicySource = 'default' | 'not-applicable' | 'unset' | string;
+
+export interface ZPolicyValue {
+    value: number | null;
+    /** 'default' (A350), 'not-applicable' (no Z axis), 'unset' (must be stated), else who stated it (set_machine_policy / migration). */
+    source: ZPolicySource;
+    setAt: number | null;
+}
+
+export interface ZPolicy {
+    machineKey: string | null;
+    machineIdentifier: string | null;
+    /** false on a machine with no Z axis: there is no traverse height or floor. */
+    applies: boolean;
+    safeTraverseZ: ZPolicyValue;
+    motionFloorZ: ZPolicyValue;
+    /** Fields that must be stated with set_machine_policy before any Z planning on this machine. */
+    missing: string[];
+}
+
+type Provenance = { [field: string]: { source?: string; setAt?: number } } | undefined;
+
+function storedProvenance(machineKey: string | null, key: string): Provenance {
+    return machineKey === null ? undefined : machineStore.getFor(machineKey, key) as Provenance;
+}
+
+/** Whether a machine falls back to the A350 defaults: the A350 itself, or nothing connected or selected. */
+function hasA350Defaults(identifier: string | null): boolean {
+    return identifier === null || identifier === LEGACY_MACHINE_IDENTIFIER;
+}
+
+/** The Z policy of `machineKey` (default: the current machine's entry). Never throws: status reads use this. */
+export function zPolicyFor(machineKey: string | null = machineStore.currentMachine().machineKey): ZPolicy {
+    const identifier = machineKey === null ? null : baseIdentifier(machineKey);
+    const applies = machineCapabilityFor(identifier).hasZ;
+    const provenance = storedProvenance(machineKey, 'mcpZPolicyProvenance');
+    const read = (key: string, field: string, fallback: number): ZPolicyValue => {
+        if (!applies) {
+            return { value: fallback, source: 'not-applicable', setAt: null };
+        }
+        const raw = Number(machineKey === null ? undefined : machineStore.getFor(machineKey, key));
+        if (Number.isFinite(raw) && raw > 0) {
+            const stated = provenance && provenance[field];
+            return { value: raw, source: (stated && stated.source) || 'config', setAt: (stated && stated.setAt) || null };
+        }
+        return hasA350Defaults(identifier) ? { value: fallback, source: 'default', setAt: null } : { value: null, source: 'unset', setAt: null };
+    };
+    const safe = read('mcpSafeTraverseZ', 'safeTraverseZ', DEFAULT_SAFE_TRAVERSE_Z);
+    const floor = read('mcpMotionFloorZ', 'motionFloorZ', DEFAULT_MOTION_FLOOR_Z);
     // Never above the park height: a floor the machine cannot legally sit at
     // would refuse every traverse, which is the failure this replaced.
-    return Math.min(floor, safeTraverseZ());
+    if (floor.value !== null && safe.value !== null && floor.value > safe.value) {
+        floor.value = safe.value;
+    }
+    const missing = [safe.value === null ? 'safe_traverse_z' : null, floor.value === null ? 'motion_floor_z' : null].filter((f): f is string => !!f);
+    return { machineKey, machineIdentifier: identifier, applies, safeTraverseZ: safe, motionFloorZ: floor, missing };
+}
+
+function zPolicyRefusal(policy: ZPolicy): string {
+    return `No ${policy.missing.join(' / ')} is stated for ${policy.machineKey} ${connectedMachineTag()}, so there is no height to `
+        + 'traverse at or floor to check against. Only the Snapmaker 2.0 A350 has defaults (park Z328, floor Z320); the model '
+        + 'size.z is a travel limit, not a park height. State safe_traverse_z and motion_floor_z (machine Z, measured on this '
+        + 'machine) with set_machine_policy first.';
+}
+
+/** Park height of the CURRENT machine (zPolicyFor), or a refusal naming set_machine_policy when it has none. */
+export function safeTraverseZ(): number {
+    const policy = zPolicyFor();
+    if (policy.safeTraverseZ.value === null) {
+        throw new McpToolError(zPolicyRefusal(policy));
+    }
+    return policy.safeTraverseZ.value;
+}
+
+/** Motion floor of the CURRENT machine (zPolicyFor), or a refusal naming set_machine_policy when it has none. */
+export function motionFloorZ(): number {
+    const policy = zPolicyFor();
+    if (policy.motionFloorZ.value === null) {
+        throw new McpToolError(zPolicyRefusal(policy));
+    }
+    return policy.motionFloorZ.value;
 }
 
 /**
@@ -215,13 +299,27 @@ export function motionFloorZ(): number {
  */
 export const DEFAULT_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z = true;
 
-export function traverseWithoutApprovalAtSafeZ(): boolean {
-    const env = String(process.env.LUBAN_MCP_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z || '').trim().toLowerCase();
-    if (env === '0' || env === 'false' || env === 'off') {
+function parseSwitch(raw: unknown): boolean | null {
+    const text = String(raw === undefined || raw === null ? '' : raw).trim().toLowerCase();
+    if (text === '0' || text === 'false' || text === 'off') {
         return false;
     }
-    if (env === '1' || env === 'true' || env === 'on') {
+    if (text === '1' || text === 'true' || text === 'on') {
         return true;
+    }
+    return null;
+}
+
+/**
+ * The HOST-wide switch the Settings pane shows and writes (env > configstore
+ * mcpTraverseWithoutApprovalAtSafeZ > default on). Kept global: it is the
+ * operator's kill switch. What a motion tool honours is
+ * traverseWithoutApprovalAtSafeZ() below, which also needs the machine.
+ */
+export function traverseWithoutApprovalHostSetting(): boolean {
+    const env = parseSwitch(process.env.LUBAN_MCP_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z);
+    if (env !== null) {
+        return env;
     }
     const stored = config.get('mcpTraverseWithoutApprovalAtSafeZ');
     if (stored === undefined || stored === null || stored === '') {
@@ -237,6 +335,69 @@ export function traverseWithoutApprovalSource(): 'env' | 'config' | 'default' {
     }
     const stored = config.get('mcpTraverseWithoutApprovalAtSafeZ');
     return stored === undefined || stored === null || stored === '' ? 'default' : 'config';
+}
+
+export interface TraverseApproval {
+    /** What the motion tools honour: the setting AND the machine gate. */
+    enabled: boolean;
+    /** The setting before the gate. */
+    setting: boolean;
+    /** env > host switch OFF > this machine's set_machine_policy value > host switch ON > default. */
+    source: 'env' | 'host-setting' | 'machine' | 'default';
+    /** Why the gate holds approval-free transport off on this machine, or null when it does not. */
+    gatedBy: string | null;
+}
+
+/**
+ * Approval-free transport for `machineKey` (default: the current machine).
+ * R9: never on a machine whose motion has not been verified on hardware -
+ * today only the A350 - and never while a device conflict (machineStore.ts)
+ * leaves the records unconfirmed. The host switch OFF wins over any machine.
+ */
+export function traverseWithoutApprovalPolicy(machineKey?: string | null): TraverseApproval {
+    const current = machineStore.currentMachine();
+    const key = machineKey === undefined ? current.machineKey : machineKey;
+    const identifier = key === null ? null : baseIdentifier(key);
+    let setting: boolean;
+    let source: TraverseApproval['source'];
+    const env = parseSwitch(process.env.LUBAN_MCP_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z);
+    const host = parseSwitch(config.get('mcpTraverseWithoutApprovalAtSafeZ'));
+    const perMachine = parseSwitch(key === null ? undefined : machineStore.getFor(key, 'mcpMachineTraverseWithoutApprovalAtSafeZ'));
+    if (env !== null) {
+        [setting, source] = [env, 'env'];
+    } else if (host === false) {
+        [setting, source] = [false, 'host-setting'];
+    } else if (perMachine !== null) {
+        [setting, source] = [perMachine, 'machine'];
+    } else if (host !== null) {
+        [setting, source] = [host, 'host-setting'];
+    } else {
+        [setting, source] = [DEFAULT_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z, 'default'];
+    }
+    let gatedBy: string | null = null;
+    // TODO(WP1, tyeth/Luban#265): gate on the dialect's verifiedOnHardware once
+    // machineCapability carries it; until then the A350 is the one verified machine.
+    if (identifier !== LEGACY_MACHINE_IDENTIFIER) {
+        gatedBy = `approval-free transport is allowed only on a machine verified on hardware (the ${LEGACY_MACHINE_IDENTIFIER}); `
+            + `${identifier || 'no machine'} stages every move`;
+    } else if (key === current.machineKey && current.deviceConflict) {
+        gatedBy = `device conflict: ${current.deviceConflict.note}`;
+    }
+    return { enabled: setting && gatedBy === null, setting, source, gatedBy };
+}
+
+/** What traverse_xy / goto_tool_change_position / move_z honour (safeZPolicy.ts). */
+export function traverseWithoutApprovalAtSafeZ(): boolean {
+    return traverseWithoutApprovalPolicy().enabled;
+}
+
+/** The landmark review validity of the current machine (R4; WP5 reads it). */
+export function landmarkConfirmTtlHours(machineKey: string | null = machineStore.currentMachine().machineKey): { hours: number; source: string } {
+    const raw = Number(machineKey === null ? undefined : machineStore.getFor(machineKey, 'mcpLandmarkConfirmTtlHours'));
+    if (Number.isFinite(raw) && raw >= LANDMARK_CONFIRM_TTL_HOURS.min && raw <= LANDMARK_CONFIRM_TTL_HOURS.max) {
+        return { hours: raw, source: 'set_machine_policy' };
+    }
+    return { hours: LANDMARK_CONFIRM_TTL_HOURS.default, source: 'default' };
 }
 
 export interface PositionSnapshot {
@@ -453,7 +614,7 @@ export const TRAVEL_FUDGE_MAX_MM = 500;
 
 export type TravelFudgeSource = 'env' | 'config' | 'default';
 
-function fudgeSetting(envName: string, key: string): { value: number; source: TravelFudgeSource } | null {
+function fudgeSetting(envName: string, key: string, machineKey: string | null): { value: number; source: TravelFudgeSource } | null {
     const env = String(process.env[envName] || '').trim();
     if (env) {
         const n = Number(env);
@@ -461,7 +622,8 @@ function fudgeSetting(envName: string, key: string): { value: number; source: Tr
             return { value: n, source: 'env' };
         }
     }
-    const stored = config.get(key);
+    // 'config' = this machine's own entry in the per-machine store (machineStore.ts).
+    const stored = machineKey === null ? undefined : machineStore.getFor(machineKey, key);
     if (stored !== undefined && stored !== null && stored !== '') {
         const n = Number(stored);
         if (Number.isFinite(n) && n >= 0 && n <= TRAVEL_FUDGE_MAX_MM) {
@@ -471,10 +633,12 @@ function fudgeSetting(envName: string, key: string): { value: number; source: Tr
     return null;
 }
 
-export function travelFudge(): TravelFudge & { source: { x: TravelFudgeSource; y: TravelFudgeSource }; defaultMm: number } {
-    const common = fudgeSetting('LUBAN_MCP_TRAVEL_FUDGE_MM', 'mcpTravelFudgeMm');
-    const x = fudgeSetting('LUBAN_MCP_TRAVEL_FUDGE_X_MM', 'mcpTravelFudgeXMm') || common;
-    const y = fudgeSetting('LUBAN_MCP_TRAVEL_FUDGE_Y_MM', 'mcpTravelFudgeYMm') || common;
+/** The fudge of machine `identifier` (default: the current machine): env > that machine's entry > 25 mm. */
+export function travelFudge(identifier?: string | null): TravelFudge & { source: { x: TravelFudgeSource; y: TravelFudgeSource }; defaultMm: number } {
+    const machineKey = identifier === undefined ? machineStore.currentMachine().machineKey : machineStore.keyForIdentifier(identifier);
+    const common = fudgeSetting('LUBAN_MCP_TRAVEL_FUDGE_MM', 'mcpTravelFudgeMm', machineKey);
+    const x = fudgeSetting('LUBAN_MCP_TRAVEL_FUDGE_X_MM', 'mcpTravelFudgeXMm', machineKey) || common;
+    const y = fudgeSetting('LUBAN_MCP_TRAVEL_FUDGE_Y_MM', 'mcpTravelFudgeYMm', machineKey) || common;
     return {
         x: x ? x.value : DEFAULT_TRAVEL_FUDGE_MM,
         y: y ? y.value : DEFAULT_TRAVEL_FUDGE_MM,
@@ -494,7 +658,7 @@ export function machineBounds(identifier: string | null) {
     if (!capability.size) {
         return null;
     }
-    const xy = modelTravel(capability.size, travelFudge());
+    const xy = modelTravel(capability.size, travelFudge(identifier));
     return {
         min: { x: xy.xMin, y: xy.yMin, z: capability.hasZ ? 0 : -Infinity },
         max: { x: xy.xMax, y: xy.yMax, z: capability.hasZ ? capability.size.z : Infinity },
@@ -618,7 +782,7 @@ export function planningTravel(observed?: { x: number | null; y: number | null }
     }
     return resolveTravel({
         size: getMachineSizeByIdentifier(identifier),
-        fudge: travelFudge(),
+        fudge: travelFudge(identifier),
         stated: statedTravel(identifier),
         observed: seen || null,
     });
@@ -706,6 +870,172 @@ export function assertFreshHeartbeat(what: string): void {
     requireReliableMachine(getPositionSnapshot(), what);
 }
 
+/** get_machine_profile.policy / get_stored_state: the machine's policy with the source of every value. */
+export function describeMachinePolicy(machineKey: string | null) {
+    const identifier = machineKey === null ? null : baseIdentifier(machineKey);
+    const fudge = travelFudge(identifier);
+    return {
+        machineKey,
+        zPolicy: zPolicyFor(machineKey),
+        travelFudge: {
+            xMm: fudge.x,
+            yMm: fudge.y,
+            source: fudge.source,
+            defaultMm: fudge.defaultMm,
+            statedBy: storedProvenance(machineKey, 'mcpTravelFudgeProvenance') || {},
+            setting: 'set_machine_policy travel_fudge_mm / travel_fudge_x_mm / travel_fudge_y_mm (env LUBAN_MCP_TRAVEL_FUDGE_MM, _X_MM, _Y_MM wins)',
+        },
+        traverseWithoutApprovalAtSafeZ: traverseWithoutApprovalPolicy(machineKey),
+        landmarkConfirmTtl: landmarkConfirmTtlHours(machineKey),
+    };
+}
+
+const FUDGE_ARGS: Array<[string, string, string, string]> = [
+    ['travel_fudge_mm', 'mcpTravelFudgeMm', 'LUBAN_MCP_TRAVEL_FUDGE_MM', 'mm'],
+    ['travel_fudge_x_mm', 'mcpTravelFudgeXMm', 'LUBAN_MCP_TRAVEL_FUDGE_X_MM', 'x'],
+    ['travel_fudge_y_mm', 'mcpTravelFudgeYMm', 'LUBAN_MCP_TRAVEL_FUDGE_Y_MM', 'y'],
+];
+
+function policyNumber(name: string, raw: unknown, range: [number, number], why: string, exclusiveMin = false): number {
+    const n = Number(raw);
+    const [min, max] = range;
+    if (typeof raw === 'boolean' || raw === '' || !Number.isFinite(n) || (exclusiveMin ? n <= min : n < min) || n > max) {
+        throw new McpToolError(`${name} must be a number in ${exclusiveMin ? '(' : ''}${min}..${max} (${why}); got ${JSON.stringify(raw)}.`);
+    }
+    return n;
+}
+
+/** set_machine_policy: validate everything first, then write into the connected machine's entry only. */
+export function setMachinePolicy(args: { [key: string]: unknown }) {
+    const current = machineStore.currentMachine();
+    if (current.basis !== 'connected' || !current.machineKey || !current.machineIdentifier) {
+        throw new McpToolError('set_machine_policy states the policy of the CONNECTED machine, and none is connected. Connect it first.');
+    }
+    if (current.deviceConflict) {
+        throw new McpToolError(`Refusing to write policy while the device conflict is open: ${current.deviceConflict.note}`);
+    }
+    const key = current.machineKey;
+    const identifier = current.machineIdentifier;
+    const capability = machineCapabilityFor(identifier);
+    const given = (name: string) => args[name] !== undefined;
+    const names = ['safe_traverse_z', 'motion_floor_z', 'traverse_without_approval_at_safe_z', 'travel_fudge_mm', 'travel_fudge_x_mm',
+        'travel_fudge_y_mm', 'landmark_confirm_ttl_hours'];
+    if (!names.some(given)) {
+        throw new McpToolError(`Nothing to set: pass one or more of ${names.join(', ')}.`);
+    }
+    const reason = String(args.reason || '').trim();
+    const source = reason ? `set_machine_policy: ${reason}` : 'set_machine_policy';
+    const at = Date.now();
+    const writes: Array<[string, unknown]> = [];
+    const updated: string[] = [];
+    const cleared: string[] = [];
+
+    const zArgs: Array<[string, string, 'safeTraverseZ' | 'motionFloorZ']> = [
+        ['safe_traverse_z', 'mcpSafeTraverseZ', 'safeTraverseZ'],
+        ['motion_floor_z', 'mcpMotionFloorZ', 'motionFloorZ'],
+    ];
+    if (zArgs.some(([name]) => given(name))) {
+        if (!capability.hasZ) {
+            throw new McpToolError(`The Z policy does not apply: ${identifier} has no Z axis ${connectedMachineTag()}.`);
+        }
+        if (!capability.size) {
+            throw new McpToolError(`${identifier}: the model size is unknown, so a stated Z cannot be checked against its travel; refusing.`);
+        }
+        // The model's Z travel. The A350's park Z328 sits above its profile
+        // (stagingFrameContext), so its own default stays statable.
+        const zMax = identifier === LEGACY_MACHINE_IDENTIFIER ? Math.max(capability.size.z, DEFAULT_SAFE_TRAVERSE_Z) : capability.size.z;
+        const zProvenance = { ...(storedProvenance(key, 'mcpZPolicyProvenance') || {}) };
+        const before = zPolicyFor(key);
+        const after: { [field: string]: number | null } = {};
+        for (const [name, configKey, field] of zArgs) {
+            if (!given(name)) {
+                after[field] = before[field].value;
+                continue;
+            }
+            if (args[name] === null) {
+                writes.push([configKey, undefined]);
+                delete zProvenance[field];
+                cleared.push(name);
+                const fallback = field === 'safeTraverseZ' ? DEFAULT_SAFE_TRAVERSE_Z : DEFAULT_MOTION_FLOOR_Z;
+                after[field] = hasA350Defaults(identifier) ? fallback : null;
+                continue;
+            }
+            const value = policyNumber(name, args[name], [0, zMax], `machine Z within ${identifier}'s Z travel`, true);
+            writes.push([configKey, value]);
+            zProvenance[field] = { source, setAt: at };
+            updated.push(name);
+            after[field] = value;
+        }
+        if (after.safeTraverseZ !== null && after.motionFloorZ !== null && after.motionFloorZ > after.safeTraverseZ) {
+            throw new McpToolError(`motion_floor_z ${after.motionFloorZ} is above safe_traverse_z ${after.safeTraverseZ}: the floor can never `
+                + 'be above the park height.');
+        }
+        writes.push(['mcpZPolicyProvenance', zProvenance]);
+    }
+
+    if (given('traverse_without_approval_at_safe_z')) {
+        const raw = args.traverse_without_approval_at_safe_z;
+        if (raw === null) {
+            writes.push(['mcpMachineTraverseWithoutApprovalAtSafeZ', undefined]);
+            cleared.push('traverse_without_approval_at_safe_z');
+        } else if (typeof raw !== 'boolean') {
+            throw new McpToolError('traverse_without_approval_at_safe_z must be true, false or null.');
+        } else {
+            // TODO(WP1, tyeth/Luban#265): verifiedOnHardware from the dialect table instead of the identifier.
+            if (raw && identifier !== LEGACY_MACHINE_IDENTIFIER) {
+                throw new McpToolError(`Refusing to turn approval-free transport ON for ${identifier}: only a machine whose motion is verified `
+                    + `on hardware (the ${LEGACY_MACHINE_IDENTIFIER}) may skip the confirm page.`);
+            }
+            writes.push(['mcpMachineTraverseWithoutApprovalAtSafeZ', raw]);
+            updated.push('traverse_without_approval_at_safe_z');
+        }
+    }
+
+    if (FUDGE_ARGS.some(([name]) => given(name))) {
+        const fudgeProvenance = { ...(storedProvenance(key, 'mcpTravelFudgeProvenance') || {}) };
+        for (const [name, configKey, env, field] of FUDGE_ARGS) {
+            if (!given(name)) {
+                continue;
+            }
+            if (String(process.env[env] || '').trim()) {
+                throw new McpToolError(`${name} is pinned by the environment variable ${env} on this box; change it there.`);
+            }
+            if (args[name] === null) {
+                writes.push([configKey, undefined]);
+                delete fudgeProvenance[field];
+                cleared.push(name);
+                continue;
+            }
+            writes.push([configKey, policyNumber(name, args[name], [0, TRAVEL_FUDGE_MAX_MM], 'mm beyond the model box at each end')]);
+            fudgeProvenance[field] = { source, setAt: at };
+            updated.push(name);
+        }
+        writes.push(['mcpTravelFudgeProvenance', fudgeProvenance]);
+    }
+
+    if (given('landmark_confirm_ttl_hours')) {
+        if (args.landmark_confirm_ttl_hours === null) {
+            writes.push(['mcpLandmarkConfirmTtlHours', undefined]);
+            writes.push(['mcpLandmarkConfirmTtlProvenance', undefined]);
+            cleared.push('landmark_confirm_ttl_hours');
+        } else {
+            writes.push(['mcpLandmarkConfirmTtlHours', policyNumber('landmark_confirm_ttl_hours', args.landmark_confirm_ttl_hours,
+                [LANDMARK_CONFIRM_TTL_HOURS.min, LANDMARK_CONFIRM_TTL_HOURS.max], 'hours an operator landmark review stays valid')]);
+            writes.push(['mcpLandmarkConfirmTtlProvenance', { source, setAt: at }]);
+            updated.push('landmark_confirm_ttl_hours');
+        }
+    }
+
+    for (const [configKey, value] of writes) {
+        if (value === undefined) {
+            machineStore.unsetFor(key, configKey);
+        } else {
+            machineStore.setFor(key, configKey, value);
+        }
+    }
+    return { machineKey: key, updated, cleared, policy: describeMachinePolicy(key) };
+}
+
 export function registerMachineTools(registry: ToolRegistry): void {
     registry.register({
         name: 'get_machine_profile',
@@ -770,9 +1100,16 @@ export function registerMachineTools(registry: ToolRegistry): void {
                 hasZ: capability.hasZ,
                 /** The travel the planners allow on this machine: model +/- the travel fudge at each end of each axis. */
                 travel: (() => {
-                    const fudge = travelFudge();
+                    const fudge = travelFudge(machine.identifier);
                     return { ...modelTravel(machine.metadata.size, fudge), fudgeMm: { x: fudge.x, y: fudge.y }, fudgeSource: fudge.source };
                 })(),
+                /**
+                 * This machine's own policy (per-machine store, set_machine_policy):
+                 * the Z policy with where each value came from, the travel
+                 * fudge with its source, and whether approval-free transport
+                 * applies here at all.
+                 */
+                policy: describeMachinePolicy(machineStore.keyForIdentifier(machine.identifier)),
                 toolHeads: machine.metadata.toolHeads.map((toolHead) => ({
                     identifier: toolHead.identifier,
                     workRange: toolHead.workRange || null,
@@ -815,4 +1152,55 @@ export function registerMachineTools(registry: ToolRegistry): void {
         },
         handler: async () => getPositionSnapshot(),
     });
+
+    registry.register({
+        name: 'set_machine_policy',
+        description: 'Store the CONNECTED machine\'s motion policy in its own entry of the per-machine store (other machines\' '
+            + 'entries are never touched). safe_traverse_z = the PARK height procedures hop at and end at; motion_floor_z = the '
+            + 'lowest machine Z any XY move over 1 mm may happen at. Both are machine Z, stated from this machine (its home Z / '
+            + 'top of travel), never copied from another model. Only the Snapmaker 2.0 A350 has defaults (328 / 320); on any '
+            + 'other machine with a Z axis every Z-planning tool refuses until both are stated. Not applicable on a machine with '
+            + 'no Z axis (the Ray). traverse_without_approval_at_safe_z can only be turned ON for a machine verified on hardware '
+            + '(the A350). travel_fudge_* widen the model box at each end of each axis (default 25 mm). null clears a value. '
+            + 'Each value records its source and time; get_machine_profile.policy reads them back.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                safe_traverse_z: { type: ['number', 'null'], description: 'Park height, machine Z. Must be within this machine\'s Z travel.' },
+                motion_floor_z: { type: ['number', 'null'], description: 'Lowest machine Z for XY transport; not above safe_traverse_z.' },
+                traverse_without_approval_at_safe_z: { type: ['boolean', 'null'], description: 'Approval-free transport at the park height. ON only on a hardware-verified machine.' },
+                travel_fudge_mm: { type: ['number', 'null'], description: 'mm beyond the model box at each end of X and Y (default 25).' },
+                travel_fudge_x_mm: { type: ['number', 'null'], description: 'Per-axis override of travel_fudge_mm for X.' },
+                travel_fudge_y_mm: { type: ['number', 'null'], description: 'Per-axis override of travel_fudge_mm for Y.' },
+                landmark_confirm_ttl_hours: {
+                    type: ['number', 'null'],
+                    description: `How long an operator landmark review stays valid (default ${LANDMARK_CONFIRM_TTL_HOURS.default} h, or until disconnect).`,
+                },
+                reason: { type: 'string', description: 'Who stated it / how it was measured; stored as the values\' source.' },
+            },
+            additionalProperties: false,
+        },
+        handler: async (args: { [key: string]: unknown }) => {
+            try {
+                return setMachinePolicy(args);
+            } catch (err) {
+                throw err instanceof McpToolError ? err : new McpToolError((err as Error).message);
+            }
+        },
+    });
 }
+
+// The per-machine store reads the live connection (identifier, and WPC's
+// deviceSerial / host when present) and, while nothing is connected, the
+// machine selected in Luban Machine Settings. Defensive: the inert test
+// harnesses hand in a ConnectionManager stub without getConnectionStatus.
+setMachineStoreSources({
+    status: () => {
+        const manager = connectionManager as unknown as { getConnectionStatus?: () => ConnectionStatusLike };
+        return typeof manager.getConnectionStatus === 'function' ? manager.getConnectionStatus() : null;
+    },
+    selectedMachine: () => {
+        const settings = readAppMachineSettings();
+        return settings && settings.series ? settings.series : null;
+    },
+});

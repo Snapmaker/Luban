@@ -5,7 +5,7 @@ import { MAX_MAX_CLIENTS, MAX_STREAM_FPS, MIN_STREAM_FPS, STREAM_ENABLED_KEY, ST
 import { MAX_RECENT_LIMIT, MIN_RECENT_LIMIT, diagnosticsRecentLimit } from '../mcp/diagnostics';
 import { DEFAULT_BLINKA_ENV, resolveGpioFeedConfig } from '../mcp/gpioFeed';
 import { JOB_INBOX_EXTRA_ENV, JOB_INBOX_EXTRA_KEY, MAX_JOB_EVENT_LIMIT, MIN_JOB_EVENT_LIMIT, approvalHandoff, gcodeUploads, jobEventLimit, jobInbox } from '../mcp/jobs';
-import { traverseWithoutApprovalAtSafeZ, traverseWithoutApprovalSource } from '../mcp/tools/machine';
+import { traverseWithoutApprovalHostSetting, traverseWithoutApprovalSource } from '../mcp/tools/machine';
 import { probeFeedService, resolveProbeFeedConfig, resolveProbeTransportKind, resolveSensorEnabled } from '../mcp/probeFeed';
 import { listAudioSources } from '../mcp/audioDevices';
 import { describeSourceChoice, matchAudioDevice } from '../mcp/audioSelection';
@@ -161,7 +161,8 @@ function approvalSettings() {
         // Approval-free XY transport with the head already at the traverse
         // height (tools/machine.ts traverseWithoutApprovalAtSafeZ; operator
         // ruling 2026-10-17, #241). Default on.
-        traverseWithoutApprovalAtSafeZ: traverseWithoutApprovalAtSafeZ(),
+        // The host-wide switch (per-machine gating: tools/machine.ts traverseWithoutApprovalPolicy).
+        traverseWithoutApprovalAtSafeZ: traverseWithoutApprovalHostSetting(),
         traverseWithoutApprovalSource: traverseWithoutApprovalSource(),
     };
 }

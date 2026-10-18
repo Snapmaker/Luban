@@ -1,8 +1,7 @@
 /* eslint-disable camelcase */
 // The `axis` namespace is read by agents through snake_case reference paths
 // (axis.z_contact), matching the MCP argument convention.
-import config from '../configstore';
-import { LEGACY_MACHINE_IDENTIFIER, recordMachineScope } from './machineCapability';
+import { machineConfig, machineStore } from './machineStore';
 import { RimArgs, StylusReachVerdict, checkStylusReach, parseReachMargin, parseRimZ } from './stylusReach';
 import { MAX_ROTARY_AXIS_POINTS } from './procedureLimits';
 import {
@@ -58,6 +57,10 @@ export interface RotaryGeometry {
     tailstockY: number | null;
     /** Machine Y of the chuck face, when stated. Which end is the chuck stops being a guess. */
     chuckFaceY: number | null;
+    /** R5: PHYSICAL machine Z of the top of the chuck, when stated. */
+    chuckTopZ: number | null;
+    /** R5: PHYSICAL machine Z of the top of the tailstock bracket, when stated. */
+    tailstockTopZ: number | null;
 }
 
 export interface ProbeGeometry {
@@ -76,13 +79,18 @@ export const GEOMETRY_FIELDS = [
     { field: 'probe_tip_diameter', key: 'mcpProbeTipDiameter', env: 'LUBAN_MCP_PROBE_TIP_DIAMETER', min: 0.1, max: 30 },
     { field: 'probe_stylus_exposed_mm', key: 'mcpProbeStylusExposed', env: 'LUBAN_MCP_PROBE_STYLUS_EXPOSED_MM', min: 0.1, max: 300 },
     { field: 'probe_body_diameter_mm', key: 'mcpProbeBodyDiameter', env: 'LUBAN_MCP_PROBE_BODY_DIAMETER_MM', min: 0.1, max: 100 },
+    // R5: the PHYSICAL machine-Z tops of the rotary chuck and the tailstock
+    // bracket - obstacles a rotary safe height must clear (WP6). Same range as
+    // the axis Z: they are heights on the same bed.
+    { field: 'rotary_chuck_top_z', key: 'mcpRotaryChuckTopZ', env: 'LUBAN_MCP_ROTARY_CHUCK_TOP_Z', min: 0, max: 400 },
+    { field: 'rotary_tailstock_top_z', key: 'mcpRotaryTailstockTopZ', env: 'LUBAN_MCP_ROTARY_TAILSTOCK_TOP_Z', min: 0, max: 400 },
     { field: 'bed_plane_z', key: 'mcpBedPlaneZ', env: 'LUBAN_MCP_BED_PLANE_Z', min: -100, max: 400 },
     // Toolhead travel stated for ONE machine (machineTravel.ts). Unset is the
     // normal case: the travel is then the machine model's size plus the
     // travel fudge (mcpTravelFudgeMm) at each end. A stated end is a TIGHTER
-    // override only, and it is scoped to the machine it was stated on
-    // (TRAVEL_MACHINE_KEY below): values with no scope were stated on the A350
-    // (the only machine this ever ran on) and stop applying on the Ray.
+    // override only. Like every field here it lives in the machine's own
+    // entry of the per-machine store (machineStore.ts), so the Ray's ends and
+    // the A350's coexist and stating one never touches the other.
     { field: 'travel_x_min', key: 'mcpTravelXMin', env: 'LUBAN_MCP_TRAVEL_X_MIN', min: -500, max: 1000 },
     { field: 'travel_x_max', key: 'mcpTravelXMax', env: 'LUBAN_MCP_TRAVEL_X_MAX', min: -500, max: 1000 },
     { field: 'travel_y_min', key: 'mcpTravelYMin', env: 'LUBAN_MCP_TRAVEL_Y_MIN', min: -500, max: 1000 },
@@ -111,13 +119,27 @@ export interface GeometryEntry {
     derivedFrom?: string;
 }
 
-function readSetting(spec: typeof GEOMETRY_FIELDS[number]): { value: number | null; source: 'env' | 'config' | 'unset' } {
+/** configstore-shaped access to one machine's entry: the current machine's (machineConfig) or a named one. */
+interface MachineReader {
+    get(key: string): unknown;
+}
+
+function storeFor(machineKey: string): MachineReader & { set(key: string, value: unknown): void; unset(key: string): void } {
+    return {
+        get: (key: string) => machineStore.getFor(machineKey, key),
+        set: (key: string, value: unknown) => machineStore.setFor(machineKey, key, value),
+        unset: (key: string) => machineStore.unsetFor(machineKey, key),
+    };
+}
+
+/** env (pins the value for whatever machine is connected) > the machine's own entry > unset. */
+function readSetting(spec: typeof GEOMETRY_FIELDS[number], store: MachineReader = machineConfig): { value: number | null; source: 'env' | 'config' | 'unset' } {
     const env = process.env[spec.env];
     if (env !== undefined && String(env).trim() !== '') {
         const n = Number(env);
         return { value: Number.isFinite(n) ? n : null, source: 'env' };
     }
-    const stored = config.get(spec.key);
+    const stored = store.get(spec.key);
     if (stored === undefined || stored === null || stored === '') {
         return { value: null, source: 'unset' };
     }
@@ -125,9 +147,9 @@ function readSetting(spec: typeof GEOMETRY_FIELDS[number]): { value: number | nu
     return { value: Number.isFinite(n) ? n : null, source: 'config' };
 }
 
-export function geometryValue(field: GeometryField): number | null {
+export function geometryValue(field: GeometryField, store: MachineReader = machineConfig): number | null {
     const spec = GEOMETRY_FIELDS.find((f) => f.field === field);
-    return spec ? readSetting(spec).value : null;
+    return spec ? readSetting(spec, store).value : null;
 }
 
 function fieldRange(field: GeometryField): [number, number] {
@@ -161,15 +183,15 @@ export interface StoredAxisPoints {
 }
 
 /** The stored axis stations with their provenance; a malformed record reads as none, with the error reported. */
-export function storedAxisPoints(): StoredAxisPoints {
+export function storedAxisPoints(store: MachineReader = machineConfig): StoredAxisPoints {
     const env = process.env[ROTARY_AXIS_POINTS_ENV];
     const fromEnv = env !== undefined && String(env).trim() !== '';
-    const raw = fromEnv ? env : config.get(ROTARY_AXIS_POINTS_KEY);
+    const raw = fromEnv ? env : store.get(ROTARY_AXIS_POINTS_KEY);
     if (raw === undefined || raw === null || raw === '') {
         return { points: [], source: 'unset', note: null, setAt: null, error: null };
     }
-    const note = config.get(`${ROTARY_AXIS_POINTS_KEY}Note`);
-    const at = Number(config.get(`${ROTARY_AXIS_POINTS_KEY}At`));
+    const note = store.get(`${ROTARY_AXIS_POINTS_KEY}Note`);
+    const at = Number(store.get(`${ROTARY_AXIS_POINTS_KEY}At`));
     const provenance = {
         source: fromEnv ? 'env' as const : 'config' as const,
         note: note ? String(note) : null,
@@ -229,6 +251,8 @@ export function rotaryGeometry(): RotaryGeometry | null {
         line,
         tailstockY: geometryValue('rotary_tailstock_y'),
         chuckFaceY: geometryValue('rotary_chuck_face_y'),
+        chuckTopZ: geometryValue('rotary_chuck_top_z'),
+        tailstockTopZ: geometryValue('rotary_tailstock_top_z'),
     };
 }
 
@@ -282,42 +306,37 @@ export function stylusReachForPlan(args: RimArgs, deepestZMachine: number): Styl
     });
 }
 
-/** The configstore key naming the machine the travel_* values were stated on. */
-export const TRAVEL_MACHINE_KEY = 'mcpTravelMachine';
 export const TRAVEL_FIELDS: GeometryField[] = ['travel_x_min', 'travel_x_max', 'travel_y_min', 'travel_y_max'];
 
 const NO_TRAVEL = { xMin: null, xMax: null, yMin: null, yMax: null };
 
 /**
- * Which machine the stored travel_* values belong to. null when none is
- * stated at all; the legacy A350 when values exist but were written before
- * machine scoping (machineCapability.LEGACY_MACHINE_IDENTIFIER).
+ * Which machine the travel_* values that apply now belong to: the current
+ * machine's store entry (machineStore.ts), null when none of its ends is
+ * stated. Other machines' ends are in their own entries and untouched.
  */
-export function travelScope(): { statedFor: string | null; legacy: boolean; stated: string[] } {
+export function travelScope(): { statedFor: string | null; stated: string[] } {
     const stated = TRAVEL_FIELDS.filter((field) => geometryValue(field) !== null);
-    if (!stated.length) {
-        return { statedFor: null, legacy: false, stated };
-    }
-    const raw = config.get(TRAVEL_MACHINE_KEY);
-    const legacy = !(typeof raw === 'string' && raw.trim());
-    return { statedFor: recordMachineScope(raw), legacy, stated };
+    return { statedFor: stated.length ? machineStore.currentMachine().machineKey : null, stated };
 }
 
 /**
  * The travel ends stated FOR `machineIdentifier`; any of them may be null
- * (= not stated). Values stated on another machine are not returned: the
- * A350's X -19..339 is not a statement about the Ray.
+ * (= not stated). Read from that machine's own entry, so the A350's
+ * X -19..339 is never a statement about the Ray, and the Ray's never
+ * displaces the A350's. An environment pin applies to whatever is connected.
  */
 export function statedTravel(machineIdentifier: string | null): { xMin: number | null; xMax: number | null; yMin: number | null; yMax: number | null } {
-    const scope = travelScope();
-    if (scope.statedFor === null || machineIdentifier === null || scope.statedFor !== machineIdentifier) {
+    const key = machineStore.keyForIdentifier(machineIdentifier);
+    if (key === null) {
         return { ...NO_TRAVEL };
     }
+    const store = storeFor(key);
     return {
-        xMin: geometryValue('travel_x_min'),
-        xMax: geometryValue('travel_x_max'),
-        yMin: geometryValue('travel_y_min'),
-        yMax: geometryValue('travel_y_max'),
+        xMin: geometryValue('travel_x_min', store),
+        xMax: geometryValue('travel_x_max', store),
+        yMin: geometryValue('travel_y_min', store),
+        yMax: geometryValue('travel_y_max', store),
     };
 }
 
@@ -332,11 +351,12 @@ export function statedTravel(machineIdentifier: string | null): { xMin: number |
 function applyAxisPoints(
     values: { [field: string]: unknown },
     note: string,
-    envOverridden: (spec: typeof GEOMETRY_FIELDS[number]) => boolean
+    envOverridden: (spec: typeof GEOMETRY_FIELDS[number]) => boolean,
+    store: ReturnType<typeof storeFor>
 ): { changed: boolean; points: RotaryAxisPoint[]; line: RotaryAxisLine | null } {
     const replace = values[ROTARY_AXIS_POINTS_FIELD];
     const add = values.rotary_axis_point;
-    const current = storedAxisPoints();
+    const current = storedAxisPoints(store);
     if (replace === undefined && add === undefined) {
         return { changed: false, points: current.points, line: current.points.length >= 2 ? safeFit(current.points) : null };
     }
@@ -377,15 +397,15 @@ function applyAxisPoints(
                 + 'call (rotary_axis_points: [first, second]), or keep the scalar rotary_axis_x / rotary_axis_z_physical until it is measured.');
         }
         if (!points.length) {
-            config.unset(ROTARY_AXIS_POINTS_KEY);
-            config.unset(`${ROTARY_AXIS_POINTS_KEY}Note`);
-            config.unset(`${ROTARY_AXIS_POINTS_KEY}At`);
+            store.unset(ROTARY_AXIS_POINTS_KEY);
+            store.unset(`${ROTARY_AXIS_POINTS_KEY}Note`);
+            store.unset(`${ROTARY_AXIS_POINTS_KEY}At`);
             return { changed: true, points, line: null };
         }
         const line = fitRotaryAxisLine(points);
-        config.set(ROTARY_AXIS_POINTS_KEY, points);
-        config.set(`${ROTARY_AXIS_POINTS_KEY}Note`, note);
-        config.set(`${ROTARY_AXIS_POINTS_KEY}At`, Date.now());
+        store.set(ROTARY_AXIS_POINTS_KEY, points);
+        store.set(`${ROTARY_AXIS_POINTS_KEY}Note`, note);
+        store.set(`${ROTARY_AXIS_POINTS_KEY}At`, Date.now());
         return { changed: true, points, line };
     } catch (err) {
         if (err instanceof RotaryAxisError || err instanceof SyntaxError) {
@@ -396,46 +416,28 @@ function applyAxisPoints(
 }
 
 /**
- * Store operator-stated / measured values (set_probe_geometry). `null` or ''
- * clears a field. Env-overridden fields are refused so the stored value and
- * the live value never disagree silently.
+ * Store operator-stated / measured values (set_probe_geometry) in the entry of
+ * `machineIdentifier` (the connected machine, else the one selected in Luban
+ * Machine Settings - the caller resolves it). `null` or '' clears a field.
+ * Env-overridden fields are refused so the stored value and the live value
+ * never disagree silently. Nothing here touches another machine's entry.
  */
 export function setGeometryValues(
     values: { [field: string]: unknown },
     note: string,
-    /** The machine any travel_* value is being stated for; required when one is. */
-    machineIdentifier: string | null = null
-): { updated: string[]; cleared: string[]; travelScope?: { statedFor: string | null; replaced: string | null } } {
+    /** The machine the values are stated for; required. */
+    machineIdentifier: string | null
+): { updated: string[]; cleared: string[]; machineKey: string } {
+    const machineKey = machineStore.keyForIdentifier(machineIdentifier);
+    if (machineKey === null) {
+        throw new Error(`${Object.keys(values).join(', ')}: geometry and travel are stated for ONE machine, and no machine is connected or `
+            + 'selected to state them for. Connect the machine (or select it in Luban Machine Settings) first.');
+    }
+    const store = storeFor(machineKey);
     const updated: string[] = [];
     const cleared: string[] = [];
     const envOverridden = (spec: typeof GEOMETRY_FIELDS[number]) => process.env[spec.env] !== undefined && String(process.env[spec.env]).trim() !== '';
-    const pointsAfter = applyAxisPoints(values, note, envOverridden);
-    // Travel statements are machine-scoped. Stating any end for a machine
-    // other than the one the stored values belong to retires those values:
-    // the A350's X -19 is not the Ray's X minimum, and keeping it under a
-    // Ray scope would silently make it one.
-    const travelSet = TRAVEL_FIELDS.filter((field) => field in values && values[field] !== undefined && values[field] !== null && values[field] !== '');
-    let travelScopeChange: { statedFor: string | null; replaced: string | null } | undefined;
-    if (travelSet.length) {
-        if (!machineIdentifier) {
-            throw new Error(`${travelSet.join(', ')}: a travel limit is stated for ONE machine, and no machine is connected or selected to `
-                + 'state it for. Connect the machine (or select it in Luban Machine Settings) first.');
-        }
-        const before = travelScope();
-        if (before.statedFor !== null && before.statedFor !== machineIdentifier) {
-            for (const field of TRAVEL_FIELDS) {
-                if (!(field in values) && geometryValue(field) !== null) {
-                    const spec = GEOMETRY_FIELDS.find((f) => f.field === field) as typeof GEOMETRY_FIELDS[number];
-                    config.unset(spec.key);
-                    config.unset(`${spec.key}Note`);
-                    config.unset(`${spec.key}At`);
-                    cleared.push(field);
-                }
-            }
-        }
-        const replaced = before.statedFor !== null && before.statedFor !== machineIdentifier ? before.statedFor : null;
-        travelScopeChange = { statedFor: machineIdentifier, replaced };
-    }
+    const pointsAfter = applyAxisPoints(values, note, envOverridden, store);
     for (const spec of GEOMETRY_FIELDS) {
         if (!(spec.field in values) || values[spec.field] === undefined) {
             continue;
@@ -450,9 +452,9 @@ export function setGeometryValues(
         }
         const raw = values[spec.field];
         if (raw === null || raw === '') {
-            config.unset(spec.key);
-            config.unset(`${spec.key}Note`);
-            config.unset(`${spec.key}At`);
+            store.unset(spec.key);
+            store.unset(`${spec.key}Note`);
+            store.unset(`${spec.key}At`);
             cleared.push(spec.field);
             continue;
         }
@@ -460,16 +462,10 @@ export function setGeometryValues(
         if (!Number.isFinite(n) || n < spec.min || n > spec.max) {
             throw new Error(`${spec.field} must be a number in ${spec.min}..${spec.max} (got ${JSON.stringify(raw)}).`);
         }
-        config.set(spec.key, n);
-        config.set(`${spec.key}Note`, note);
-        config.set(`${spec.key}At`, Date.now());
+        store.set(spec.key, n);
+        store.set(`${spec.key}Note`, note);
+        store.set(`${spec.key}At`, Date.now());
         updated.push(spec.field);
-    }
-    if (travelScopeChange) {
-        config.set(TRAVEL_MACHINE_KEY, travelScopeChange.statedFor);
-    } else if (TRAVEL_FIELDS.every((field) => geometryValue(field) === null)) {
-        // The last travel end was cleared: no scope without values.
-        config.unset(TRAVEL_MACHINE_KEY);
     }
     if (pointsAfter.changed) {
         if (pointsAfter.points.length) {
@@ -487,22 +483,22 @@ export function setGeometryValues(
             const derived: [GeometryField, number][] = [['rotary_axis_x', line.x], ['rotary_axis_z_physical', line.z_physical]];
             for (const [field, value] of derived) {
                 const spec = GEOMETRY_FIELDS.find((f) => f.field === field) as typeof GEOMETRY_FIELDS[number];
-                config.set(spec.key, value);
-                config.set(`${spec.key}Note`, derivedNote);
-                config.set(`${spec.key}At`, Date.now());
+                store.set(spec.key, value);
+                store.set(`${spec.key}Note`, derivedNote);
+                store.set(`${spec.key}At`, Date.now());
                 updated.push(field);
             }
         }
     }
-    return travelScopeChange ? { updated, cleared, travelScope: travelScopeChange } : { updated, cleared };
+    return { updated, cleared, machineKey };
 }
 
 /** Everything stored, with provenance, for get_stored_state / set_probe_geometry. */
 export function geometrySettings() {
     const fields: { [field: string]: GeometryEntry } = {};
     for (const spec of GEOMETRY_FIELDS) {
-        const note = config.get(`${spec.key}Note`);
-        const at = Number(config.get(`${spec.key}At`));
+        const note = machineConfig.get(`${spec.key}Note`);
+        const at = Number(machineConfig.get(`${spec.key}At`));
         fields[spec.field] = {
             ...readSetting(spec),
             env: spec.env,
@@ -522,16 +518,14 @@ export function geometrySettings() {
     return {
         fields,
         /**
-         * Which machine the travel_* statements belong to (#260 follow-up).
-         * `legacy` marks values written before machine scoping, attributed
-         * to the A350 by rule (machineCapability.LEGACY_MACHINE_IDENTIFIER).
+         * Which machine's entry the travel_* statements shown here come from
+         * (every field above is the current machine's; machineStore.ts).
          */
         travel: {
             statedFor: scope.statedFor,
-            legacy: scope.legacy,
             statedFields: scope.stated,
-            legacyRule: `records with no machine tag were set on ${LEGACY_MACHINE_IDENTIFIER}, the only machine the MCP ran on before 2026-10-18`,
-            note: 'A stated end only TIGHTENS the machine model + travel fudge (mcpTravelFudgeMm) for the machine it was stated on; it never widens it.',
+            note: 'A stated end only TIGHTENS the machine model + travel fudge for the machine it was stated on; it never widens it. '
+                + 'Each machine keeps its own ends (get_stored_state.machineStore): stating the Ray\'s leaves the A350\'s untouched.',
         },
         rotary,
         rotaryAxisPoints: {
