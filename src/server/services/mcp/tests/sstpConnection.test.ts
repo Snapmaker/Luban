@@ -528,7 +528,15 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
                 SnapmakerRayMachine: { identifier: 'Ray' },
             },
         });
-        const manager = load('ConnectionManager.ts', dependencies).connectionManager;
+        const managerModule = load('ConnectionManager.ts', dependencies);
+        const { hostAddress } = managerModule;
+        assert.strictEqual(hostAddress('http://192.0.2.20:8080'), '192.0.2.20');
+        assert.strictEqual(hostAddress('192.0.2.20'), '192.0.2.20');
+        assert.strictEqual(hostAddress('https://user:pw@snapmaker.local:8080/api?token=x'), 'snapmaker.local', 'no credentials, port, path or query');
+        assert.strictEqual(hostAddress('http://[fe80::1]:8080'), 'fe80::1');
+        assert.strictEqual(hostAddress(''), null);
+        assert.strictEqual(hostAddress(undefined), null);
+        const manager = managerModule.connectionManager;
         manager.channel = channel;
         manager.bindChannelEvents();
         channel.host = 'http://192.0.2.20:8080';
@@ -537,13 +545,13 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         const ready: Array<{ host?: unknown }> = [];
         channel.on(events.Ready, (data: { host?: unknown }) => ready.push(data));
         channel.resumeVerifiedSession();
-        assert.strictEqual(ready[0].host, 'http://192.0.2.20:8080', 'the Ready payload carries the host');
+        assert.strictEqual(ready[0].host, 'http://192.0.2.20:8080', 'the Ready payload carries the channel\'s base URL');
         const status = manager.getConnectionStatus();
-        assert.strictEqual(status.host, 'http://192.0.2.20:8080');
+        assert.strictEqual(status.host, '192.0.2.20', 'the status carries the machine address');
         assert.strictEqual(status.deviceSerial, null, 'SSTP reports no serial number');
         assert.ok(!JSON.stringify(status).includes('secret-token'), 'never the token');
         channel.emit(events.Ready, { machineIdentifier: 'no instance', host: 'http://user:pw@192.0.2.20:8080' });
-        assert.strictEqual(manager.getConnectionStatus().host, 'http://192.0.2.20:8080', 'credentials in the URL are dropped');
+        assert.strictEqual(manager.getConnectionStatus().host, '192.0.2.20', 'credentials in the URL are dropped');
         channel.emit(events.Disconnected);
         assert.strictEqual(manager.getConnectionStatus().host, null, 'cleared on loss');
         assert.strictEqual(manager.getConnectionStatus().deviceSerial, null);

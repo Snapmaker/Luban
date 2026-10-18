@@ -65,6 +65,24 @@ const ensureRange = (value, min, max) => {
     return Math.max(min, Math.min(max, value));
 };
 
+/**
+ * The machine address out of the SSTP-HTTP base URL a channel reports
+ * ('http://192.168.1.20:8080' -> '192.168.1.20'): no scheme, credentials,
+ * port or path, so the status carries the address the plan's `host:<address>`
+ * device id is built from, and never a secret. Null when there is none.
+ */
+export function hostAddress(host: unknown): string | null {
+    if (typeof host !== 'string') {
+        return null;
+    }
+    let rest = host.trim().replace(/^[a-z][a-z0-9+.-]*:\/\//i, '');
+    rest = rest.replace(/^[^@/]*@/, '');
+    rest = rest.split(/[/?#]/)[0];
+    const bracketed = rest.match(/^\[([^\]]+)\]/);
+    const address = bracketed ? bracketed[1] : rest.replace(/:\d*$/, '');
+    return address || null;
+}
+
 interface ConnectionOpenOptions {
     attemptId?: string;
     clientAt?: number;
@@ -178,8 +196,8 @@ class ConnectionManager {
     private machineIdentifier: string | null = null;
 
     // Per-device identity from the channel's Ready payload (#265): the SACP
-    // controller serial number, and the SSTP-HTTP base URL the session talks
-    // to. Null when the transport has none (text serial). Never the token.
+    // controller serial number, and the address of the SSTP-HTTP machine
+    // (hostAddress). Null when the transport has none (text serial). Never the token.
     private deviceSerial: string | null = null;
 
     private host: string | null = null;
@@ -363,8 +381,7 @@ class ConnectionManager {
         log.debug(`machineIdentifier = ${machineIdentifier}`);
         this.machineIdentifier = machineIdentifier || null;
         this.deviceSerial = typeof data?.deviceSerial === 'string' && data.deviceSerial ? data.deviceSerial : null;
-        // Strip any user:password@ so a status reader never sees credentials.
-        this.host = typeof data?.host === 'string' && data.host ? data.host.replace(/\/\/[^/@]*@/, '//') : null;
+        this.host = hostAddress(data?.host);
 
         // configure machine instance
         this.machineInstance = null;
