@@ -346,7 +346,9 @@ function updateHandle() {
         shell.openPath(savedPath);
     });
     ipcMain.on('open-engine-test-path', (event, enginePath) => {
-        shell.openPath(enginePath);
+        // The renderer derives this from app.getAppPath(), which is the asar
+        // archive in a packaged build; the folder itself is unpacked beside it.
+        shell.openPath(enginePath.replace(/\.asar([\\/])/, '.asar.unpacked$1'));
     });
 }
 
@@ -500,6 +502,7 @@ const showMainWindow = async () => {
     // only start server once
     if (!serverData) {
         if (process.env.NODE_ENV === 'development') {
+            process.env.LUBAN_SERVER_DIR = path.resolve(__dirname, 'server');
             process.chdir(path.resolve(__dirname, 'server'));
             // Use require instead of import to avoid being precompiled in production mode
             const { createServer } = require('./server');

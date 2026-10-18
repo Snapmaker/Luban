@@ -1,4 +1,3 @@
-import { getPath } from '@snapmaker/snapmaker-lunar';
 import childProcess from 'child_process';
 import EventEmitter from 'events';
 import fs from 'fs';
@@ -8,6 +7,7 @@ import { generateRandomPathName } from '../../shared/lib/random-utils';
 import DataStorage from '../DataStorage';
 import { HEAD_PRINTING, PRINTING_CONFIG_SUBCATEGORY } from '../constants';
 import logger from '../lib/logger';
+import { lunar } from './engines';
 import { postProcessorV1, processGcodeHeaderAfterCuraEngine } from './post-processor';
 import { Metadata, SliceProgress, SliceResult } from './slicer-definitions';
 
@@ -27,7 +27,7 @@ const log = logger('service:print3d-slice');
  * @returns process
  */
 function callEngine(globalConfig, modelConfigs, outputPath) {
-    const enginePath = getPath('Slicer');
+    const enginePath = lunar.getPath('Slicer');
     const args = ['slice', '-v', '-p', '-o', outputPath.replace(/\\/g, '/')];
 
     args.push('-j', globalConfig.configPath.replace(/\\/g, '/'));

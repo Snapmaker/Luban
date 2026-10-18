@@ -1,8 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import lubanEngine from 'snapmaker-luban-engine';
-import lunar from '@snapmaker/snapmaker-lunar';
-
+import { lubanEngine, lunar } from './engines';
 import logger from '../lib/logger';
 import DataStorage from '../DataStorage';
 import { pathWithRandomSuffix } from '../../shared/lib/random-utils';

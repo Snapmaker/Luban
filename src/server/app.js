@@ -27,6 +27,7 @@ import settings from './config/settings';
 import { ERR_FORBIDDEN, ERR_UNAUTHORIZED, IP_WHITELIST } from './constants';
 import DataStorage from './DataStorage';
 import logger from './lib/logger';
+import { APP_DIR, SERVER_DIR } from './lib/paths';
 import urljoin from './lib/urljoin';
 import { registerApis } from './services';
 import config from './services/configstore';
@@ -88,8 +89,8 @@ const createApplication = () => {
     }
     app.set('view engine', settings.view.defaultExtension); // The default engine extension to use when omitted
     app.set('views', [
-        path.resolve(__dirname, '../app'),
-        path.resolve(__dirname, 'views')
+        APP_DIR,
+        path.join(SERVER_DIR, 'views')
     ]); // The view directory path
 
     log.debug('app.settings: %j', app.settings);
