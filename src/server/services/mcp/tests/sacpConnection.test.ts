@@ -362,6 +362,15 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
             channel.emit(events.Ready, { machineIdentifier: 'no instance', deviceSerial: '20481234' });
             assert.strictEqual(cm.getConnectionStatus().deviceSerial, '20481234');
 
+            // The position judge's view of the connection (machinePosition.ts JudgeConnectionContext).
+            assert.deepStrictEqual({ ...cm.getJudgeConnectionContext() }, { session: cm.getConnectionGeneration(), positionFrame: null });
+            const logicalChannel = { getLatestMachineState: () => ({ timestamp: 1, positionFrame: 'logical' }) };
+            cm.channel = logicalChannel;
+            assert.strictEqual(cm.getJudgeConnectionContext().positionFrame, 'logical', 'text serial reports the logical frame');
+            cm.channel = null;
+            assert.deepStrictEqual({ ...cm.getJudgeConnectionContext() }, { session: null, positionFrame: null });
+            cm.channel = channel;
+
             // A transport loss clears it with machineIdentifier.
             channel.emit(events.Disconnected);
             status = cm.getConnectionStatus();

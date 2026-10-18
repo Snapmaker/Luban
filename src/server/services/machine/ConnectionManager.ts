@@ -57,6 +57,7 @@ import { connectionDiagnostics, diagnosticId } from './connectionDiagnostics';
 import { safeIdentifier, safeTarget } from './connectionDiagnosticState';
 import { gcodeLease } from './gcodeLease';
 import { noteFrameRestored } from '../mcp/positionOfRecord';
+import { JudgeConnectionContext, setJudgeConnectionContextProvider } from '../mcp/machinePosition';
 import type { EnclosureRawReport, SerialEnclosureReport } from '../mcp/enclosure';
 
 const log = logger('lib:ConnectionManager');
@@ -255,7 +256,8 @@ class ConnectionManager {
      * does not report one (no heartbeat yet, or a channel that keeps none).
      * SSTP over HTTP fills it from its status poll; the SACP channels (TCP,
      * UDP, serial - the Ray, Artisan and J1) from their heartbeat and
-     * coordinate-system subscriptions (#260). Text serial keeps no state.
+     * coordinate-system subscriptions (#260); text serial from the M114
+     * replies MarlinController polls, in the LOGICAL frame (#265).
      */
     public getLatestMachineState(): { [key: string]: unknown; timestamp: number } | null {
         const channel = this.channel as unknown as {
@@ -265,6 +267,19 @@ class ConnectionManager {
             return channel.getLatestMachineState();
         }
         return null;
+    }
+
+    /** The connection session and position frame the position judge keys its learnt state on (machinePosition.ts). */
+    public getJudgeConnectionContext(): JudgeConnectionContext {
+        if (!this.channel) {
+            return { session: null, positionFrame: null };
+        }
+        const state = this.getLatestMachineState();
+        const frame = state ? state.positionFrame : null;
+        return {
+            session: this.getConnectionGeneration(),
+            positionFrame: typeof frame === 'string' ? frame : null,
+        };
     }
 
     /** True while the active channel speaks SACP (TCP, UDP or serial). Read-only (MCP). */
@@ -1889,6 +1904,13 @@ M3`;
 }
 
 const connectionManager = new ConnectionManager();
+
+// The position judge forgets a session's offsets when the session changes and
+// never maps a logical-frame beat (machinePosition.ts JudgeConnectionContext).
+// Guarded: unit-test harnesses load this module with that import stubbed.
+if (typeof setJudgeConnectionContextProvider === 'function') {
+    setJudgeConnectionContextProvider(() => connectionManager.getJudgeConnectionContext());
+}
 
 export function isUsingSACP(protocol: NetworkProtocol | SerialPortProtocol = null): boolean {
     if (!protocol) {
