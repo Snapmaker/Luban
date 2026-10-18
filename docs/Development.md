@@ -48,6 +48,15 @@ folder) needs the real file: see `unpackedPath()` and `requireUnpacked()` in
 `src/server/lib/paths.ts`. Paths to bundled assets (i18n, views, resources,
 workers) come from that module, never from the working directory.
 
+Every process ships as a webpack bundle: the renderer (`src/app`), the server
+(`webpack.config.server.production.js`, forked as `src/server-cli.js`) and the
+Electron main process (`webpack.config.main.production.js`, which emits
+`main.js` and `server-cli.js` into `dist/Luban/src`). Dependencies are compiled
+in; the few that cannot be (native addons, packages that load files out of
+their own directory, lazily required Electron glue) are listed as
+`KEEP_EXTERNAL` in each config and mirrored in `build/pkgsync.js`, which is
+what the packaged app installs into `node_modules`.
+
 ### Build release assets with GitHub Actions
 
 Publish a release or prerelease whose tag includes the current

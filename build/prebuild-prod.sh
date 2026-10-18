@@ -23,10 +23,10 @@ mkdir -p "$SOURCE_DIR"
 npm run pkgsync
 cp -af src/package.json "$SOURCE_DIR"
 
-pushd src
-cross-env NODE_ENV=production babel "*.js" --config-file ../babel.config.js -d "../$SOURCE_DIR"
-cross-env NODE_ENV=production babel "electron-app/**/*.js" --config-file ../babel.config.js -d "../$SOURCE_DIR/electron-app"
-popd
+# The main process (src/main.js, src/electron-app/*) and the server child
+# entry (src/server-cli.js) are bundled by gulp production
+# (webpack.config.main.production.js) into "$SOURCE_DIR"; nothing is compiled
+# file by file here any more.
 
 #
 # Resources Directory
