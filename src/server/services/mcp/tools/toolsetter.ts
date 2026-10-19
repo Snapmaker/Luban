@@ -21,6 +21,7 @@ import { landmarkStore } from '../landmarks';
 import { decideSafeZTraverse } from '../safeZPolicy';
 import { TRAVERSE_Z_TOLERANCE_MM, planTraverseXy } from '../traversePlan';
 import { runPolicyApprovedDirectJob } from './gcode';
+import { OPERATOR_INSTRUCTION_ARG, runDirectOnOperatorInstruction } from './operatorInstruction';
 import { validateStagedEnvelope } from './staging';
 import {
     getPositionSnapshot,
@@ -358,11 +359,12 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
             type: 'object',
             properties: {
                 reason: { type: 'string', description: 'Shown to the operator.' },
+                operator_instruction: OPERATOR_INSTRUCTION_ARG,
             },
             required: ['reason'],
             additionalProperties: false,
         },
-        handler: async (args: { reason?: string }) => {
+        handler: async (args: { reason?: string; operator_instruction?: string }) => {
             probeFeedService.assertNoOvertravel();
             // A tool-change park is a CNC move with a Z step; a machine with
             // no Z axis has neither the step nor the tool change.
@@ -464,7 +466,17 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
                 'direct',
                 steps
             );
+            // #326: the operator-only "Allow moves without an approval page", on the operator's quoted instruction.
+            const onCall = args.operator_instruction !== undefined ? await runDirectOnOperatorInstruction(job, args) : null;
+            if (onCall && onCall.ran) {
+                return {
+                    park: { x: cfg.changeX, y: cfg.changeY, z: cfg.changeZ },
+                    ...onCall.result,
+                    next_step: 'The operator swaps the tool by hand; measure it with run_tool_setter and finish with apply_tool_length_offset.',
+                };
+            }
             return {
+                ...(onCall && onCall.staged_because ? { operator_instruction_not_used: onCall.staged_because } : {}),
                 job: jobManager.describe(job),
                 park: { x: cfg.changeX, y: cfg.changeY, z: cfg.changeZ },
                 staged_because: atParkZ ? policy.reason : `the head is at machine Z ${mz === null ? 'unknown' : mz.toFixed(3)}, not the park Z ${cfg.changeZ}`,

@@ -264,6 +264,12 @@ export interface McpJob {
      * finishes, then the job ends withdrawn instead of re-arming its token.
      */
     withdrawAfterStep?: { actor: 'agent' | 'operator'; at: number } | null;
+    /**
+     * set_motor_power's procedure job (#326): the mode it switches the Ray to.
+     * start_gcode_job does not refuse it for the motors being off - switching
+     * them on is what it is for.
+     */
+    motorPowerSwitch?: 'control' | 'manual';
     // Staged default for direct execution: whether start_gcode_job should
     // block until the move verifiably settles (call-time arg overrides).
     waitUntilMoved?: boolean;

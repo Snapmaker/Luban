@@ -25,8 +25,18 @@ item, quoting the tool result — not an essay):
 0. **Which machine.** `applied_records.connected_machine` (on `get_connection_status` and every
    motion result): identifier, `dialect`, `machineKey`, `gcode_form`. `landmark_review` must be
    `confirmed`, else hand its question to the operator (`confirm_landmarks` stages the page; you
-   never confirm it). On the Ray and the Original every move stages for a click. Never infer a
-   height the records do not hold (`records.zPolicy` `missing` = stop and ask).
+   never confirm it). On the Ray and the Original every move stages for a click, unless the
+   operator turned on "Allow moves without an approval page" for that machine in Luban and you
+   pass their instruction from this session, word for word, as `operator_instruction`. With the
+   setting off, every Ray move stages; never invent or paraphrase an instruction, and no tool
+   can turn the setting on. Never infer a height the records do not hold (`records.zPolicy`
+   `missing` = stop and ask).
+   **Ray motor mode.** The Ray's motor-power mode is Luban's Set Origin Mode. In Manual
+   (SHUTAll) the motors are off: it ACKs `$H` and moves and ignores them, so `home` and starts
+   refuse (`get_position.motor_power`). `set_motor_power {mode: 'control'}` stages a page that
+   powers the steppers and then HOMES (the head moves). `{mode: 'manual'}` releases them, and
+   the position reads unhomed until control. Use it only on the operator's explicit word. It
+   runs on the call only under the separate operator-only setting for motor-mode changes.
 1. **State.** `get_connection_status` connected; `get_position`: `reliability` is `verified`,
    `heartbeat` or `cached-offset` (never `awaiting-resync` or `stale`), `warnings` empty,
    `isHomed` true, `machineStatus` idle. `get_stored_state` for landmarks, limits, geometry.

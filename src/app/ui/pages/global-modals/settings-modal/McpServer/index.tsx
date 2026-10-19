@@ -205,6 +205,18 @@ interface McpMotionRuleMachine {
         bedContactToolheadZ: number | null;
         note: string;
     };
+    // #326: operator-only, default off; no MCP tool can change them.
+    approvalFree?: { moves: McpApprovalFreeSetting; motorMode: McpApprovalFreeSetting };
+}
+
+// #326: an operator-only approval-free setting (tools/machine.ts approvalFreeSettingsFor).
+interface McpApprovalFreeSetting {
+    toggle: string;
+    on: boolean;
+    source: string;
+    setAt: number | null;
+    applies: boolean;
+    reason: string | null;
 }
 
 interface McpMotionRules {
@@ -678,7 +690,7 @@ const McpServer: React.FC = () => {
                     {i18n._('key-App/Settings/McpServer-Move at safe top Z without approval: traverse_xy, the XY step of goto_tool_change_position and an up-only move_z run on the agent\'s call, without your click, only when the head is already at or above that machine\'s safe traverse Z on a verified, homed position, after the usual landmark and travel checks. The job still appears on the dashboard, marked as approved by policy. Everything else always stages a confirm page for your click: any move that descends or starts below the safe traverse Z, programs, probing and jobs. Once the landmark review lands, the machine\'s landmarks must also have been confirmed recently.')}
                 </div>
                 <div className={styles['port-tips']}>
-                    {i18n._('key-App/Settings/McpServer-The A350 has this on by default. An A150, A250 or Artisan stays off until you turn it on here after a hardware session, and only once its safe traverse Z and motion floor are stated (set_machine_policy). An agent can turn it off, but never on off the A350, and never back on after you turned it off here. Relative-step machines (Ray, Original, J1) always stage every move. Heights and the travel fudge are read-only here. Toggles apply at once.')}
+                    {i18n._('key-App/Settings/McpServer-The A350 has this on by default. An A150, A250 or Artisan stays off until you turn it on here after a hardware session, and only once its safe traverse Z and motion floor are stated (set_machine_policy). An agent can turn it off, but never on off the A350, and never back on after you turned it off here. Relative-step machines (Ray, Original, J1) always stage every move, unless you turn on Allow moves without an approval page below. Heights and the travel fudge are read-only here. Toggles apply at once.')}
                 </div>
                 {motionRules?.error && <div className={styles['port-tips']}>{motionRules.error}</div>}
                 {motionRuleError && <div className={styles['port-tips']}>{motionRuleError}</div>}
@@ -783,6 +795,37 @@ const McpServer: React.FC = () => {
                                             </div>
                                         ))}
                                         <div>{computed.note}</div>
+                                    </div>
+                                </div>
+                            )}
+                            {machine.approvalFree && (
+                                <div className="margin-top-8 margin-left-16">
+                                    <div className="sm-flex align-center">
+                                        <Switch
+                                            checked={machine.approvalFree.moves.on}
+                                            loading={motionRuleBusy === machine.machineKey}
+                                            onChange={(checked) => { onMotionRule(machine.machineKey, { movesWithoutApprovalPage: checked }); }}
+                                            disabled={!enabled || motionRuleBusy !== null || !machine.approvalFree.moves.applies}
+                                        />
+                                        <span className="margin-left-8">
+                                            {i18n._('key-App/Settings/McpServer-Allow moves without an approval page')}
+                                        </span>
+                                    </div>
+                                    {machine.approvalFree.motorMode.applies && (
+                                        <div className="sm-flex align-center margin-top-8">
+                                            <Switch
+                                                checked={machine.approvalFree.motorMode.on}
+                                                loading={motionRuleBusy === machine.machineKey}
+                                                onChange={(checked) => { onMotionRule(machine.machineKey, { motorModeWithoutApprovalPage: checked }); }}
+                                                disabled={!enabled || motionRuleBusy !== null}
+                                            />
+                                            <span className="margin-left-8">
+                                                {i18n._('key-App/Settings/McpServer-Allow motor-mode changes without an approval page')}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <div className={styles['port-tips']}>
+                                        {i18n._('key-App/Settings/McpServer-Off by default. When on, the agent can run a move (or, on the Ray, switch the motor-power mode with set_motor_power) on its own call, without your click on a confirm page, but only when it quotes your explicit instruction from the current session. The quote is recorded on the job. Every other check still applies: motor power, the start position, toolhead, travel, landmarks, idle and homed. Only you can change these here; no MCP tool can.')}
                                     </div>
                                 </div>
                             )}

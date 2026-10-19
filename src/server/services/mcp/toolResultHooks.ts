@@ -32,6 +32,8 @@ export const MOTION_RESULT_TOOLS = new Set([
     'submit_gcode_job', 'finish_gcode_upload', 'start_gcode_job',
     // WP7's laser tools (#265): named here so they are covered whenever they exist.
     'laser_frame', 'set_air_assist', 'set_crosshair', 'laser_focus',
+    // #326: switches the Ray's motor power and homes it (control).
+    'set_motor_power',
 ]);
 
 /** Read-only status tools that carry applied_records. */

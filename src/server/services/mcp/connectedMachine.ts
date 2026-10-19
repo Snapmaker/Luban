@@ -27,7 +27,7 @@ import {
     summariseMachine,
 } from './machineCapability';
 import { McpToolError } from './registry';
-import { MotorPowerReading, motorPowerNote, motorPowerRefusal, readMotorPower } from './motorPower';
+import { MOTOR_POWER_SET_BYTES, MotorPowerReading, motorPowerNote, motorPowerRefusal, readMotorPower } from './motorPower';
 import { HeadReadings, McpLaserRecord, ToolheadAssessment, assessToolhead, getMcpLaserRecord, toolheadNote, toolheadOnRefusal } from './toolheadState';
 
 export const MACHINES = [
@@ -198,6 +198,56 @@ export async function assertMotorPowered(action: string, after: string): Promise
         throw new McpToolError(refusal);
     }
     return reading;
+}
+
+/**
+ * What lets set_motor_power switch the mode (#326): the operator's approval of
+ * its staged job, or the operator-only setting with the operator's own
+ * instruction quoted by the agent. Nothing else reaches the setter below.
+ */
+export type MotorPowerAuthority =
+    | { kind: 'approved-job'; jobId: string }
+    | { kind: 'operator-setting'; setting: string; instruction: string };
+
+/**
+ * The ONE place the MCP sets the Ray's motor-power mode (SACP 0x01 0x48 with
+ * STAYPOWER or SHUTAll through the channel's setMotorPowerMode), called only
+ * by set_motor_power's approved paths (tools/motorPower.ts; a source test
+ * holds that). Bounded like the read, and the mode byte the firmware ACKs is
+ * checked: anything but the requested mode throws. Refuses a machine without
+ * the mode, naming it.
+ */
+export async function setConnectedMotorPower(mode: 'STAYPOWER' | 'SHUTAll', authority: MotorPowerAuthority): Promise<MotorPowerReading> {
+    const valid = authority && (authority.kind === 'approved-job'
+        ? typeof authority.jobId === 'string' && authority.jobId !== ''
+        : typeof authority.instruction === 'string' && authority.instruction.trim() !== '' && typeof authority.setting === 'string');
+    if (!valid) {
+        throw new McpToolError('Refusing to set the motor-power mode without the operator\'s approval or instruction.');
+    }
+    if (connectedDialect().motorPower.read !== 'sacp-0x48') {
+        throw new McpToolError(`Refusing to set the motor-power mode: this machine has none (only the Ray does). ${connectedMachineTag()}`);
+    }
+    const manager = connectionManager as unknown as { getCurrentChannel?: () => unknown };
+    let channel: { setMotorPowerMode?: (mode: number) => Promise<number> } | null = null;
+    try {
+        channel = typeof manager.getCurrentChannel === 'function'
+            ? manager.getCurrentChannel() as { setMotorPowerMode?: (mode: number) => Promise<number> } | null : null;
+    } catch (err) {
+        channel = null;
+    }
+    if (!channel || typeof channel.setMotorPowerMode !== 'function') {
+        throw new McpToolError('Refusing to set the motor-power mode: the connected channel cannot send SACP 0x01 0x48 (the Ray switches it '
+            + `only over SACP). ${connectedMachineTag()}`);
+    }
+    const target = channel;
+    const setter = target.setMotorPowerMode as (mode: number) => Promise<number>;
+    const reading = await readMotorPower(async () => setter.call(target, MOTOR_POWER_SET_BYTES[mode]));
+    const set = { ...reading, source: `SACP 0x01 0x48 set ${mode} (${MOTOR_POWER_SET_BYTES[mode]}), the mode byte the firmware ACKed` };
+    if (set.mode !== mode) {
+        throw new McpToolError(`The Ray did not confirm motor-power mode ${mode}: ${set.error || `it reports ${set.mode}`}. `
+            + `${connectedMachineTag()}`);
+    }
+    return set;
 }
 
 /** The `motor_power` block for results, get_position and get_machine_profile; null where the machine has no such mode. */

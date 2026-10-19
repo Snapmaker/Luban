@@ -78,6 +78,7 @@ function fixture(onMove?: () => void) {
         '../safeZPolicy': require('../safeZPolicy'),
         '../traversePlan': require('../traversePlan'),
         './gcode': { runPolicyApprovedDirectJob: async () => { throw new Error('not reached in this test'); } },
+        './operatorInstruction': { OPERATOR_INSTRUCTION_ARG: {}, runDirectOnOperatorInstruction: async () => { throw new Error('not reached in this test'); } },
     });
     toolModule.registerToolSetterTools({ register: (tool: { name: string }) => registryTools.set(tool.name, tool) }, () => 'unused');
     return { store,

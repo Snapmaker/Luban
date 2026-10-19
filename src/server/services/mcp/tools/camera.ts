@@ -35,6 +35,8 @@ import { homeSequence, machineFrameMove, relativeStep, workFrameMove, workFrameR
 import { TraverseMachine } from '../traversePlan';
 import { assertMotorPowered, assertToolheadNotOn, connectedDialect, connectedMachineIdentifier, connectedMachineTag, connectedMotorPowerNote,
     connectedToolheadNote, describeConnectedMachine } from '../connectedMachine';
+import { clearMotorsReleased } from '../motorPower';
+import { OPERATOR_INSTRUCTION_ARG, runDirectOnOperatorInstruction } from './operatorInstruction';
 import { sacpGrblPayloadRefusal, withoutCommentLines } from '../sacpLineGuard';
 import { ToolheadAssessment, laserOffSentIn, noteLaserSend } from '../toolheadState';
 import {
@@ -746,7 +748,7 @@ async function previewOne(entry: string): Promise<{ device: string; frame: Captu
 /** The confirm page's base URL (index.ts passes it to registerCameraTools); bare test registries leave it relative. */
 let confirmBaseUrl: () => string = () => '';
 
-async function stageGotoWorkOrigin(args:{ reason?: string; feed_rate?: number; wait_until_moved?: boolean }): Promise<object> {
+async function stageGotoWorkOrigin(args:{ reason?: string; feed_rate?: number; wait_until_moved?: boolean; operator_instruction?: string }): Promise<object> {
     const reason = String(args.reason || '').trim();
     if (!reason) {
         throw new McpToolError('reason is required: say why the head should go to the work origin (it is shown to the operator).');
@@ -789,7 +791,19 @@ async function stageGotoWorkOrigin(args:{ reason?: string; feed_rate?: number; w
     const job = jobManager.submit(plan.reviewText, plan.name, 'cnc', validation, 'direct');
     job.waitUntilMoved = args.wait_until_moved !== false;
     const toolheadNote = connectedToolheadNote(toolhead);
+    // #326: the operator-only "Allow moves without an approval page", on the operator's quoted instruction.
+    const onCall = args.operator_instruction !== undefined ? await runDirectOnOperatorInstruction(job, args) : null;
+    if (onCall && onCall.ran) {
+        return {
+            connected_machine: describeConnectedMachine(),
+            ...(toolheadNote ? { toolhead: toolheadNote } : {}),
+            gcode_form: motionGcodeForm(),
+            destination_machine: plan.destinationMachine,
+            ...onCall.result,
+        };
+    }
     return {
+        ...(onCall && onCall.staged_because ? { operator_instruction_not_used: onCall.staged_because } : {}),
         job: jobManager.describe(job),
         connected_machine: describeConnectedMachine(),
         ...(toolheadNote ? { toolhead: toolheadNote } : {}),
@@ -953,6 +967,10 @@ export async function homeMachine(tool: string, waitUntilHomed: boolean = true, 
         }
         noteFrameRestored(); // G54 acknowledged after G28; a verified position must still follow.
     }
+    // The home was accepted in Control Mode (the motor-power gate above): the
+    // released-motors latch (set_motor_power manual, #326) has done its job,
+    // and the wait below reads the firmware's own homed state again.
+    clearMotorsReleased(connectedMachineIdentifier());
 
     if (!waitUntilHomed) {
         return {
@@ -1882,8 +1900,9 @@ export function registerCameraTools(registry: ToolRegistry, getConfirmBaseUrl?: 
             + 'USB is homed with G53;G28;G54 like Luban, and waits until its position maps to machine coordinates (a fresh M1007 work '
             + 'offset and the stepper Count agree - get_position.logicalFrame). A Ray or J1 on plain-text USB is refused. '
             + 'On the Ray it first reads the motor-power mode (SACP 0x01 0x48) and sends nothing unless it is STAYPOWER (Luban\'s Set '
-            + 'Origin Mode = Control Mode): in Manual Mode (SHUTAll) the Ray acknowledges $H and ignores it. The MCP never switches '
-            + 'the mode; the operator does. Results carry gcode_form and connected_machine.dialect (and motor_power on the Ray).',
+            + 'Origin Mode = Control Mode): in Manual Mode (SHUTAll) the Ray acknowledges $H and ignores it. home never switches '
+            + 'the mode: set_motor_power {mode:\'control\'} does, behind the operator\'s approval (it powers the steppers and homes). '
+            + 'After set_motor_power manual the position reads unhomed until a home is accepted. Results carry gcode_form and connected_machine.dialect (and motor_power on the Ray).',
         inputSchema: {
             type: 'object',
             properties: {
@@ -1938,11 +1957,12 @@ export function registerCameraTools(registry: ToolRegistry, getConfirmBaseUrl?: 
                     description: 'Default true: start_gcode_job blocks until the move verifiably settles at the '
                         + 'origin. false returns right after the controller accepts it; poll get_position afterwards.',
                 },
+                operator_instruction: OPERATOR_INSTRUCTION_ARG,
             },
             required: ['reason'],
             additionalProperties: false,
         },
-        handler: async (args: { reason?: string; feed_rate?: number; wait_until_moved?: boolean }) => stageGotoWorkOrigin(args),
+        handler: async (args: { reason?: string; feed_rate?: number; wait_until_moved?: boolean; operator_instruction?: string }) => stageGotoWorkOrigin(args),
     });
 
     registry.register({

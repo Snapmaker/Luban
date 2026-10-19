@@ -130,6 +130,8 @@ export function fixture(shape: ChannelShape = 'file+direct', machine: { dialect?
     };
     return {
         manager,
+        /** The loaded tools/gcode.ts (runPolicyApprovedDirectJob for the on-the-call paths, #326). */
+        loaded,
         createJob,
         createDirectJob,
         createDirectBatch,
