@@ -12,6 +12,7 @@
 // gathers the live facts, each one read defensively - a status read never
 // throws, an unreadable record is reported as such.
 import { getActiveTool } from './activeTool';
+import { cameraModelStore } from './cameraModelStore';
 import { connectedMachineCapability } from './connectedMachine';
 import { landmarkStore } from './landmarks';
 import { landmarkReviewForConnected } from './landmarkReviewState';
@@ -57,6 +58,8 @@ export interface AppliedRecordFacts {
     } | null;
     activeTool: { protrusionMm: number; clearanceBasis: string; status: string; toolIdentity: string | null } | null;
     camera: { device: string | null; url: string | null } | null;
+    /** The current machine's camera model (cameraModelStore.ts: per machine; legacy = attributed to the A350 by rule). */
+    cameraModel?: { id: string; state: string; legacy: boolean } | null;
     motionRules: {
         topZWithoutApproval: { on: boolean; gatedBy: string | null };
         computedHeight: { on: boolean; unmet: string[] };
@@ -136,6 +139,9 @@ export function buildAppliedRecords(facts: AppliedRecordFacts) {
             ? `protrusion ${tool.protrusionMm} mm (${tool.clearanceBasis}, ${tool.status})${tool.toolIdentity ? ` ${tool.toolIdentity}` : ''}`
             : 'none confirmed this session',
         camera: facts.camera ? (facts.camera.device || facts.camera.url || 'auto (none stated)') : UNREADABLE,
+        cameraModel: facts.cameraModel
+            ? `${m.identifier} record${facts.cameraModel.legacy ? ' (legacy)' : ''}: ${facts.cameraModel.id} ${facts.cameraModel.state}`
+            : 'none',
         motionRules: rules
             ? {
                 topZWithoutApproval: rules.topZWithoutApproval.on ? 'on' : `off${rules.topZWithoutApproval.gatedBy ? ` - ${rules.topZWithoutApproval.gatedBy}` : ''}`,
@@ -234,6 +240,10 @@ export function appliedRecordFacts(): AppliedRecordFacts {
         const url = machineStore.getFor(key, 'mcpCameraUrl');
         return { device: typeof device === 'string' && device ? device : null, url: typeof url === 'string' && url ? url : null };
     }, null);
+    const cameraModel = read('cameraModel', unreadable, () => {
+        const model = cameraModelStore.current({ machineIdentifier: identifier, basis: current ? current.basis : null, deviceConflict: null });
+        return model ? { id: model.id, state: model.state, legacy: model.legacyScope === true } : null;
+    }, null);
     const motionRules = read('motionRules', unreadable, () => {
         const topZ = traverseWithoutApprovalPolicy(key);
         const computed = key ? computedHeightRuleFor(key) : null;
@@ -253,6 +263,7 @@ export function appliedRecordFacts(): AppliedRecordFacts {
         rotaryGeometry: rotary,
         activeTool,
         camera,
+        cameraModel,
         motionRules,
         unreadable,
     };

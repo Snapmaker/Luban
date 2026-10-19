@@ -3,6 +3,7 @@
 import { connectionManager } from '../../machine/ConnectionManager';
 import { cameraSetting } from '../camera';
 import { calibrationStore } from '../calibration';
+import { cameraModelStore } from '../cameraModelStore';
 import { cameraStreamService } from '../cameraStream';
 import { Landmark, landmarkStore } from '../landmarks';
 import { LandmarkSource } from '../landmarkReview';
@@ -489,6 +490,8 @@ export function registerLandmarkTools(registry: ToolRegistry, getConfirmBaseUrl?
                     calibrationsApplying: calibrationStore.listFor(connected).map((e) => e.id),
                     calibrationsNotApplying: calibrationStore.list().filter((e) => !appliesToMachine(e.machineIdentifier, connected))
                         .map((e) => ({ id: e.id, machineIdentifier: e.machineIdentifier })),
+                    // Camera models are per machine too (connected, else Luban's selected machine).
+                    cameraModels: cameraModelStore.describe(),
                 },
                 calibrations: calibrationStore.list().map((entry) => ({
                     ...entry,

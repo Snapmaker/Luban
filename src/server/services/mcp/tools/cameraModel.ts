@@ -30,7 +30,7 @@ import { jobManager } from '../jobs';
 import { probeFeedService } from '../probeFeed';
 import { TRAVERSE_Z_TOLERANCE_MM } from '../traversePlan';
 import { validateStagedEnvelope } from './staging';
-import { cameraModelStore } from '../cameraModelStore';
+import { cameraModelStore, describeCameraModelScope, noCameraModelMessage } from '../cameraModelStore';
 import { decodeToGray } from '../tracking';
 import { McpToolError, ToolRegistry } from '../registry';
 import {
@@ -72,7 +72,12 @@ export function modelContext(fingerprint: CameraFingerprint | null): CameraModel
  * turns pixels into machine coordinates starts here.
  */
 export function requireCameraModel(what: string): CameraModel {
-    const model = cameraModelStore.current();
+    const scope = cameraModelStore.scope();
+    const model = cameraModelStore.current(scope);
+    if (!model) {
+        // Per machine: another machine's model never stands in for this one's.
+        throw new McpToolError(`Refusing ${what}: ${noCameraModelMessage(scope)} Next: camera_bootstrap.`);
+    }
     // No capture here: judging costs a frame, and the callers that need one
     // take it themselves. A fingerprint mismatch is caught by the verification.
     const judgement = judgeCameraModel(model, modelContext(null));
@@ -127,24 +132,27 @@ export function registerCameraModelTools(registry: ToolRegistry, getConfirmBaseU
             + 'camera entirely. So this reports a state (verified | unverified | superseded) and, when it is not '
             + 'usable, WHY and which tool fixes it (verify_camera_model for a check, camera_bootstrap for a full '
             + 'solve). Read-only, no motion, no capture. Plain captures never need a model - a frame finds things, it '
-            + 'clears nothing.',
+            + 'clears nothing. Models are PER MACHINE (the mounting is one machine\'s rig): machineScope says whose '
+            + 'model applied, and whether it was attributed to the A350 by the legacy untagged rule.',
         inputSchema: {
             type: 'object',
             properties: {
-                history: { type: 'boolean', description: 'Include superseded models, newest first.' },
+                history: { type: 'boolean', description: 'Include this machine\'s superseded models, newest first.' },
             },
             additionalProperties: false,
         },
         handler: async (args: { history?: boolean }) => {
-            const model = cameraModelStore.current();
+            const scope = cameraModelStore.scope();
+            const model = cameraModelStore.current(scope);
             const judgement = judgeCameraModel(model, modelContext(null));
             return {
                 model,
+                machineScope: describeCameraModelScope(scope, model),
                 usable: judgement.usable,
                 state: judgement.state,
-                reasons: judgement.reasons,
+                reasons: model ? judgement.reasons : [noCameraModelMessage(scope)],
                 next: judgement.remedy,
-                history: args.history ? cameraModelStore.list() : undefined,
+                history: args.history ? cameraModelStore.list(scope) : undefined,
             };
         },
     });
@@ -155,7 +163,8 @@ export function registerCameraModelTools(registry: ToolRegistry, getConfirmBaseU
             + 'UNVERIFIED: a model that has only ever agreed with the data it was fitted to has demonstrated nothing, '
             + 'so verify_camera_model must pass it against a pose that was not in the fit before anything converts '
             + 'through it. The previous model is kept as superseded rather than overwritten, so "was the camera moved '
-            + 'between these two jobs?" stays answerable. Takes a frame to fingerprint the camera it describes.',
+            + 'between these two jobs?" stays answerable. Takes a frame to fingerprint the camera it describes. Stored '
+            + 'for the connected machine (else the one selected in Luban) and supersedes only that machine\'s model.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -224,6 +233,10 @@ export function registerCameraModelTools(registry: ToolRegistry, getConfirmBaseU
                 throw new McpToolError('central_region must be a fraction in (0, 1].');
             }
             const r = args.residuals as { [k: string]: number };
+            const scope = cameraModelStore.scope();
+            if (!scope.machineIdentifier) {
+                throw new McpToolError(`Refusing to store a camera model: ${noCameraModelMessage(scope)}`);
+            }
             const fingerprint = await liveFingerprint();
             const stored = cameraModelStore.add({
                 fingerprint: {
@@ -259,9 +272,10 @@ export function registerCameraModelTools(registry: ToolRegistry, getConfirmBaseU
                     poses: [],
                 },
                 verification: null,
-            });
+            }, scope);
             return {
                 model: stored,
+                machineScope: describeCameraModelScope(scope, stored),
                 next_step: 'The model is UNVERIFIED and converts nothing yet. Run verify_camera_model against a target '
                     + 'at a pose that was NOT in the fit, and report the residual it returns.',
             };
@@ -500,9 +514,10 @@ export function registerCameraModelTools(registry: ToolRegistry, getConfirmBaseU
             additionalProperties: false,
         },
         handler: async (args: { [key: string]: unknown }) => {
-            const model = cameraModelStore.current();
+            const scope = cameraModelStore.scope();
+            const model = cameraModelStore.current(scope);
             if (!model) {
-                throw new McpToolError('No camera model is stored; run camera_bootstrap first.');
+                throw new McpToolError(noCameraModelMessage(scope));
             }
             const position = getPositionSnapshot();
             requireReliableMachine(position, 'a camera model verification');
@@ -548,6 +563,7 @@ export function registerCameraModelTools(registry: ToolRegistry, getConfirmBaseU
                 toolhead: { x, y, z },
                 frame_id: fingerprint.frameId,
                 model: updated,
+                machineScope: describeCameraModelScope(scope, updated || model),
                 same_camera: sameCamera,
                 note: (() => {
                     if (passed) {
