@@ -43,6 +43,7 @@ import {
     findMachine,
     machineCapabilityFor,
 } from '../connectedMachine';
+import { currentLandmarkReviewGate } from '../safeZPolicy';
 import { TraverseMachine } from '../traversePlan';
 import { GcodeDialect, dialectById } from '../gcodeDialect';
 import { GcodeForm, gcodeFormOf, genericMotionRefusal } from '../gcodeForms';
@@ -519,6 +520,27 @@ export function traverseWithoutApprovalPolicy(machineKey?: string | null): Trave
 /** What traverse_xy / goto_tool_change_position / move_z honour (safeZPolicy.ts). */
 export function traverseWithoutApprovalAtSafeZ(): boolean {
     return traverseWithoutApprovalPolicy().enabled;
+}
+
+/**
+ * The safeZPolicy inputs for the current machine: whether approval-free
+ * transport is on, and when it is off, why - in the words of the Motion
+ * rules pane (the machine gate, else the host switch), never the config key.
+ */
+export function safeZApprovalInput(): { enabled: boolean; gatedBy: string | null } {
+    const policy = traverseWithoutApprovalPolicy();
+    if (policy.enabled) {
+        return { enabled: true, gatedBy: null };
+    }
+    if (policy.gatedBy) {
+        return { enabled: false, gatedBy: policy.gatedBy };
+    }
+    const where = policy.source === 'env'
+        ? 'pinned off by LUBAN_MCP_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z'
+        : policy.source === 'host-setting'
+            ? `the host-wide switch is off (${MOTION_RULES_PANE})`
+            : `'${MOTION_RULE_TOGGLE}' is off for this machine (${MOTION_RULES_PANE})`;
+    return { enabled: false, gatedBy: `moving at safe top Z without approval: ${where}` };
 }
 
 /** The landmark review validity of the current machine (R4; WP5 reads it). */
@@ -1284,24 +1306,32 @@ export interface MotionRuleLiveFacts {
 }
 
 /**
- * The landmark review (#265 WP5) read defensively: WP5 writes
- * `landmarksConfirmedAt` on the machine's entry. Absent = no review in this
- * build yet (unknown); a time older than the review validity is stale.
+ * The landmark review (#265 WP5) as it stands. A confirmation is valid only on
+ * the connection it was approved on, for the set of landmarks it showed, and
+ * within its validity (landmarkReview.ts confirmationValidity) - so the stored
+ * record alone (`landmarksConfirmed`) proves nothing: the CURRENT machine is
+ * read from the live review (the provider landmarkReviewState.ts registers
+ * with safeZPolicy; imported from there because that module imports this
+ * one), and any other machine is not confirmed by construction.
  */
 function landmarkReviewFact(machineKey: string): { confirmed: boolean | null; note: string } {
-    const entry = machineStore.load().machines[machineKey];
-    const raw = entry ? (entry as { landmarksConfirmedAt?: unknown }).landmarksConfirmedAt : undefined;
-    if (raw === undefined) {
-        return { confirmed: null, note: 'unknown until the landmark review lands (#265 WP5)' };
+    if (machineKey !== machineStore.currentMachine().machineKey || machineStore.currentMachine().basis !== 'connected') {
+        const stored = machineStore.getFor(machineKey, 'mcpLandmarksConfirmed') as { at?: unknown } | undefined;
+        const at = stored && Number.isFinite(Number(stored.at)) ? new Date(Number(stored.at)).toISOString() : null;
+        return {
+            confirmed: false,
+            note: `not connected: a landmark confirmation lives only on the connection it was approved on${at ? ` (last approved ${at})` : ''}`,
+        };
     }
-    if (typeof raw !== 'number' || !Number.isFinite(raw)) {
-        return { confirmed: false, note: 'landmarks not confirmed (confirm_landmarks)' };
+    const gate = currentLandmarkReviewGate();
+    if (gate.status === 'unknown') {
+        return { confirmed: null, note: gate.question || 'the landmark review is not available' };
+    }
+    if (!gate.confirmed) {
+        return { confirmed: false, note: `landmark_review ${gate.status} - confirm_landmarks stages the review page for the operator` };
     }
     const ttl = landmarkConfirmTtlHours(machineKey);
-    if (Date.now() - raw > ttl.hours * 3600 * 1000) {
-        return { confirmed: false, note: `landmark review is stale (older than ${ttl.hours} h)` };
-    }
-    return { confirmed: true, note: `landmarks confirmed ${new Date(raw).toISOString()}` };
+    return { confirmed: true, note: `landmarks confirmed by the operator on this connection (valid up to ${ttl.hours} h)` };
 }
 
 /** Measured physical bed Z for `machineKey` (set_probe_geometry bed_plane_z; env LUBAN_MCP_BED_PLANE_Z pins the current machine). */

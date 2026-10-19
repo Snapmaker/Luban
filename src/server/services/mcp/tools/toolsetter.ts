@@ -29,7 +29,7 @@ import {
     requireReliableMachine,
     requireZAxis,
     safeTraverseZ,
-    traverseWithoutApprovalAtSafeZ,
+    safeZApprovalInput,
 } from './machine';
 
 export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUrl: () => string): void {
@@ -397,7 +397,7 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
             const atParkZ = mx !== null && my !== null && mz !== null
                 && Math.abs(mz - cfg.changeZ) <= TRAVERSE_Z_TOLERANCE_MM;
             const policy = decideSafeZTraverse({
-                enabled: traverseWithoutApprovalAtSafeZ(),
+                ...safeZApprovalInput(),
                 reliability: position.reliability,
                 homed: position.isHomed,
                 currentZ: mz,

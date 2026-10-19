@@ -117,7 +117,9 @@ export function machineToolsFixture(initial: { [key: string]: unknown } = {}, en
         '../machineStore': f.module,
         '../machineCapability': machineCapability,
         '../machinePosition': machinePosition,
-        '../positionOfRecord': { onFrameLatchChange: () => undefined },
+        '../positionOfRecord': { onFrameLatchChange: () => undefined, setFrameLatchMachineSource: () => undefined },
+        // No landmark review provider here (landmarkReviewState.ts is not loaded): the review reads unknown.
+        '../safeZPolicy': { currentLandmarkReviewGate: () => ({ confirmed: false, status: 'unknown', question: 'the landmark review is not available in this build' }) },
         '../procedureLimits': procedureLimits,
         '../motionRules': motionRules,
         '../registry': { McpToolError },

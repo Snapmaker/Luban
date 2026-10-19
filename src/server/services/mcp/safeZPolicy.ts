@@ -20,10 +20,18 @@ import { TRAVERSE_Z_TOLERANCE_MM } from './traversePlan';
 
 export const SAFE_Z_TRAVERSE_POLICY = 'policy:safe-z-traverse';
 export const SAFE_Z_RAISE_POLICY = 'policy:safe-z-raise';
+/** Where the operator turns approval-free transport on or off. */
+export const MOTION_RULES_WHERE = 'Settings > MCP > Motion rules';
 
 export interface SafeZPolicyInput {
     /** mcpTraverseWithoutApprovalAtSafeZ (Settings -> MCP Server -> Job approval). */
     enabled: boolean;
+    /**
+     * Why approval-free transport is off for this machine, in the operator's
+     * words (tools/machine.ts traverseWithoutApprovalPolicy().gatedBy, or the
+     * host switch). Omitted = the generic sentence naming the setting.
+     */
+    gatedBy?: string | null;
     /** The judged reliability of the position of record (get_position). */
     reliability: Reliability;
     homed: boolean | null;
@@ -77,6 +85,15 @@ function landmarkGate(input: SafeZPolicyInput): LandmarkReviewGate {
     }
 }
 
+/**
+ * The connected machine's landmark review as the policy sees it, for readers
+ * that cannot import landmarkReviewState.ts (tools/machine.ts: it imports
+ * tools/machine.ts itself). 'unknown' when no provider is registered.
+ */
+export function currentLandmarkReviewGate(): LandmarkReviewGate {
+    return landmarkGate({} as SafeZPolicyInput);
+}
+
 export type SafeZDecision =
     | { allowed: true; policy: string; reason: string }
     | { allowed: false; reason: string };
@@ -99,7 +116,11 @@ function commonRefusal(input: SafeZPolicyInput): string | null {
             + 'the operator\'s click (the top-Z policy is about a head already parked at the top of a Z axis)';
     }
     if (!input.enabled) {
-        return 'mcpTraverseWithoutApprovalAtSafeZ is off - staged for the operator\'s click as usual';
+        // The old config key name meant nothing to the operator (WP9): say
+        // which toggle holds it off and where it lives.
+        return input.gatedBy
+            ? `${input.gatedBy} - staged for the operator's click as usual`
+            : `moving at safe top Z without approval is off (${MOTION_RULES_WHERE}) - staged for the operator's click as usual`;
     }
     if (!verifiedForPolicy(input.reliability)) {
         return `the position of record is ${input.reliability}, not verified/heartbeat - staged for the operator's click`;
@@ -115,7 +136,8 @@ function commonRefusal(input: SafeZPolicyInput): string | null {
     const gate = landmarkGate(input);
     if (!gate.confirmed) {
         return `the operator has not confirmed this machine's landmarks (landmark_review ${gate.status}) - staged for the operator's `
-            + `click, which also answers the review for this one move${gate.question ? `. Review: ${gate.question}` : ''}. `
+            + 'click: approving it approves this one move with the landmarks listed on its page (Landmarks row); it does not '
+            + `confirm the review${gate.question ? `. Review: ${gate.question}` : ''}. `
             + 'confirm_landmarks stages the review page; once the operator approves it, top-Z transport runs on the call again';
     }
     return null;

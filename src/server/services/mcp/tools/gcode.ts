@@ -66,7 +66,7 @@ import {
     requireZAxis,
     safeTraverseZ,
     traverseMachine,
-    traverseWithoutApprovalAtSafeZ,
+    safeZApprovalInput,
 } from './machine';
 
 // Motion policy (#23): compound motion leaves this process only as a G-code
@@ -1702,7 +1702,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             // the top, stages as before.
             const machineTargets = targets.map((t) => (coordinateSystem === 'machine' ? t : t - position.originOffset.z));
             const policy = decideSafeZRaise({
-                enabled: traverseWithoutApprovalAtSafeZ(),
+                ...safeZApprovalInput(),
                 reliability: position.reliability,
                 homed: position.isHomed,
                 currentZ: position.machine.z,
@@ -1926,7 +1926,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             // the console reason and stop_gcode_job are unchanged; only the
             // click is gone. Anything else stages exactly as before.
             const policy = decideSafeZTraverse({
-                enabled: traverseWithoutApprovalAtSafeZ(),
+                ...safeZApprovalInput(),
                 reliability: position.reliability,
                 homed: position.isHomed,
                 currentZ: mz,

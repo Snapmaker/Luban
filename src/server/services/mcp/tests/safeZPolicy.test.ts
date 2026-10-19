@@ -33,7 +33,7 @@ export const tests: Array<[string, () => void]> = [
     ['the setting off stages exactly as before', () => {
         const d = decideSafeZTraverse(input({ enabled: false }));
         assert.equal(d.allowed, false);
-        assert.ok(d.reason.includes('mcpTraverseWithoutApprovalAtSafeZ is off'));
+        assert.ok(d.reason.includes('without approval is off (Settings > MCP > Motion rules)'));
     }],
 
     ['above the motion floor but below the traverse height (Z325) stays a staged job', () => {
@@ -119,7 +119,7 @@ export const tests: Array<[string, () => void]> = [
             // An explicit input wins over the provider.
             assert.equal(decideSafeZTraverse(input({ landmarksConfirmed: false })).allowed, false);
             // An earlier reason keeps its own text: the review is checked last.
-            assert.match(decideSafeZTraverse({ ...rest, enabled: false }).reason, /mcpTraverseWithoutApprovalAtSafeZ is off/);
+            assert.match(decideSafeZTraverse({ ...rest, enabled: false }).reason, /without approval is off/);
         } finally {
             setLandmarkReviewProvider(null);
         }
@@ -147,5 +147,21 @@ export const tests: Array<[string, () => void]> = [
         } finally {
             setLandmarkReviewProvider(null);
         }
+    }],
+    ['WP8: a staged reason names the Motion rules toggle (gatedBy), never the old config key', () => {
+        const gatedBy = 'enable \'Move at safe top Z without approval\' for Snapmaker 2.0 A250 in Settings > MCP > Motion rules to move at safe top Z without approval';
+        const d = decideSafeZTraverse(input({ enabled: false, gatedBy }));
+        assert.ok(!d.allowed);
+        assert.ok(d.reason.startsWith(gatedBy), d.reason);
+        assert.ok(!d.reason.includes('mcpTraverseWithoutApprovalAtSafeZ'));
+        const raise = decideSafeZRaise({ ...input({ enabled: false, gatedBy }), machineTargets: [328] });
+        assert.ok(!raise.allowed && raise.reason.includes('Motion rules'));
+        assert.ok(!decideSafeZTraverse(input({ enabled: false })).reason.includes('mcpTraverseWithoutApprovalAtSafeZ'));
+    }],
+    ['WP8: the unconfirmed-review reason no longer claims the job click confirms the review', () => {
+        const d = decideSafeZTraverse(input({ landmarksConfirmed: false }));
+        assert.ok(!d.allowed);
+        assert.ok(d.reason.includes('it does not confirm the review'), d.reason);
+        assert.ok(!d.reason.includes('also answers the review'));
     }],
 ];

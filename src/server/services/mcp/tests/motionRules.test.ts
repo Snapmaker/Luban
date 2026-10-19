@@ -238,7 +238,9 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         f.store.machineConfig.set('mcpBedPlaneZ', 5);
         rule = f.tools.computedHeightRuleFor(A250, { toolProtrusionMm: 25 });
         assert.equal(rule.bedContactToolheadZ, 40);
-        assert.deepEqual(rule.unmet, ['unknown until the landmark review lands (#265 WP5)']);
+        // WP8: read from the live review (no provider in this fixture -> unknown), never from a stale field.
+        assert.equal(rule.unmet.length, 1);
+        assert.match(rule.unmet[0], /landmark/);
         f.tools.setMachinePolicy({ traverse_without_approval_at_computed_height: false });
         assert.equal(f.tools.computedHeightRuleFor(A250).on, false);
         assert.throws(() => f.tools.setMotionRuleFromSettings({ machineKey: A250, clearanceIdealMm: 10 }), /cannot be below/);
