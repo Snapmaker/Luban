@@ -296,20 +296,47 @@ export function parseGrblStatus(text: string | null | undefined): GrblStatusRepo
 
 // ---- M1005 ------------------------------------------------------------------
 
+export interface SerialCandidate {
+    /** The words before `SN` on its line, lower case ('' for a bare `SN:`), e.g. 'product', 'laser module'. */
+    label: string;
+    value: string;
+}
+
+/** Labels that name the MACHINE (or nothing): only these can identify it. Anything else ('laser', 'module', ...) is a part's serial. */
+const MACHINE_SERIAL_LABELS = ['', 'product', 'machine', 'device'];
+const QUALIFIED_MACHINE_LABELS = ['product', 'machine', 'device'];
+
 /**
- * The product SN in an M1005 reply. The Ray's exact wording is not
- * documented (the wiki only says M1005 reports machine info including the
- * SN), so this takes `SN: X`, `SN:X`, `Serial Number: X`, `Product SN: X`
- * (any case, `:` or `=`), 6+ characters of letters, digits, '-' or '_'. A value
- * made of one repeated character (0000..., FFFF...) is no SN. null when none.
+ * Every `<label> SN: <value>` in an M1005 reply, one per line: `SN: X`,
+ * `Product SN = X`, `Serial Number: X`, `Laser SN: X` ... (any case, `:` or
+ * `=`, `S/N` too), values of 6+ letters, digits, '-' or '_'. A value of one
+ * repeated character (0000..., FFFF...) is no serial and is left out.
+ */
+export function m1005SerialCandidates(text: string | null | undefined): SerialCandidate[] {
+    const out: SerialCandidate[] = [];
+    for (const line of String(text || '').split(/\r?\n/)) {
+        const match = /^[\s[]*([A-Za-z][A-Za-z ]*?)?\s*(?:SN|S\/N|serial(?:\s*number)?)\s*[:=]\s*([A-Za-z0-9_-]{6,})/i.exec(line);
+        if (match && !/^(.)\1*$/.test(match[2])) {
+            out.push({ label: (match[1] || '').trim().toLowerCase(), value: match[2] });
+        }
+    }
+    return out;
+}
+
+/**
+ * The MACHINE's product SN in an M1005 reply, or null. The Ray's exact
+ * wording is not documented (the wiki only says M1005 reports machine info
+ * including the SN), and a wrong pick would become a permanent device alias,
+ * so this is strict: only a bare `SN` or one labelled product / machine /
+ * device counts (a `Laser SN` is the module's); a labelled one wins over a
+ * bare one; two different candidates of the same standing adopt nothing.
  */
 export function parseM1005Serial(text: string | null | undefined): string | null {
-    const match = /(?:^|[^A-Za-z])(?:product\s*)?(?:SN|serial(?:\s*number)?)\s*[:=]\s*([A-Za-z0-9_-]{6,})/i.exec(String(text || ''));
-    if (!match) {
-        return null;
-    }
-    const sn = match[1];
-    return /^(.)\1*$/.test(sn) ? null : sn;
+    const machine = m1005SerialCandidates(text).filter((c) => MACHINE_SERIAL_LABELS.includes(c.label));
+    const qualified = machine.filter((c) => QUALIFIED_MACHINE_LABELS.includes(c.label));
+    const pool = qualified.length ? qualified : machine;
+    const values = Array.from(new Set(pool.map((c) => c.value)));
+    return values.length === 1 ? values[0] : null;
 }
 
 // ---- What the MCP uses from a read ------------------------------------------

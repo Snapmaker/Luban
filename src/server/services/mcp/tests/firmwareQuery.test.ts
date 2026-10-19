@@ -9,7 +9,8 @@ import * as machineCapability from '../machineCapability';
 import * as machineTravel from '../machineTravel';
 import {
     FIRMWARE_QUERY_ALLOW_LIST, configurationQueriesFor, firmwareQueryRefusal, firmwareValuesFrom, laserAccelerationFrom,
-    parseGrblBuildInfo, parseGrblOffsets, parseGrblParserState, parseGrblSettings, parseGrblStatus, parseM1005Serial, positionQueryFor,
+    m1005SerialCandidates, parseGrblBuildInfo, parseGrblOffsets, parseGrblParserState, parseGrblSettings, parseGrblStatus, parseM1005Serial,
+    positionQueryFor,
 } from '../firmwareQuery';
 import { isFillPatternSerial, sacpDeviceSerial } from '../../machine/channels/sacpMachineState';
 import { assembleReply } from '../../machine/channels/sacpGcodeReply';
@@ -236,6 +237,13 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.equal(parseM1005Serial('Product SN = 2048ABCDEF'), '2048ABCDEF');
         assert.equal(parseM1005Serial('Serial Number: 00000000'), null, 'a repeated character is no SN');
         assert.equal(parseM1005Serial('Firmware Version: V1.7.4\nok'), null);
+        // A module's serial is never the machine's: a wrong pick would become a permanent device alias.
+        assert.equal(parseM1005Serial('Laser SN: LSR2040000001\nSN: RAY20AB1234567\nok'), 'RAY20AB1234567');
+        assert.equal(parseM1005Serial('Laser SN: LSR2040000001\nok'), null, 'only a module serial: nothing adopted');
+        assert.equal(parseM1005Serial('SN: RAY20AB1234567\nProduct SN: RAY20AB7654321'), 'RAY20AB7654321', 'a product label wins over a bare SN');
+        assert.equal(parseM1005Serial('SN: RAY20AB1234567\nSN: RAY20AB7654321'), null, 'two different bare SNs: ambiguous, nothing adopted');
+        assert.deepEqual(m1005SerialCandidates('Laser SN: LSR2040000001\nSN: RAY20AB1234567').map((c) => ({ ...c })),
+            [{ label: 'laser', value: 'LSR2040000001' }, { label: '', value: 'RAY20AB1234567' }]);
     }],
 
     // ---- Serial identity -------------------------------------------------------

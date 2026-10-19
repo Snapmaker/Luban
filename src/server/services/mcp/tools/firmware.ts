@@ -42,6 +42,8 @@ import {
     parseGrblParserState,
     parseGrblSettings,
     parseGrblStatus,
+    SerialCandidate,
+    m1005SerialCandidates,
     parseM1005Serial,
 } from '../firmwareQuery';
 import { FIRMWARE_QUERY_TIMEOUT_MS, FIRMWARE_REPLY_QUIET_MS, FIRST_CONNECT_READ_WAIT_MS, clampTo } from '../procedureLimits';
@@ -114,6 +116,8 @@ export interface FirmwareParsed {
     parserState: GrblParserState | null;
     buildInfo: GrblBuildInfoView | null;
     m1005Serial: string | null;
+    /** Every `<label> SN:` M1005 printed, so a read shows what was (not) adopted and why. */
+    m1005SerialCandidates: SerialCandidate[];
 }
 
 /** Everything parsed from a record's replies (each part null when its query has not returned text). */
@@ -132,6 +136,7 @@ export function parseFirmwareRecord(current: FirmwareRecord | null): FirmwarePar
         parserState: parseGrblParserState(text('$G')),
         buildInfo: buildText ? parseGrblBuildInfo(buildText) : null,
         m1005Serial: parseM1005Serial(text('M1005')),
+        m1005SerialCandidates: m1005SerialCandidates(text('M1005')),
     };
 }
 
