@@ -5,6 +5,10 @@
 // 2026-09-12). Pure: no server imports, unit-tested in tests/traversePlan.test.ts.
 import { MotionSegment, ObstacleBox, POSITION_EPSILON_MM, checkMotion, describeViolations } from './envelopeChecks';
 import { TravelLimits, outsideTravel } from './machineTravel';
+import { GcodeDialect, dialectById } from './gcodeDialect';
+import { machineFrameMove, needsPlannerSync, relativeStep, relativeStepText, workFrameMove } from './gcodeForms';
+
+export { SETTLE_COMMENT_PREFIX, parseSettleComment, settleComment } from './gcodeForms';
 
 export interface Xyz {
     x: number;
@@ -75,27 +79,25 @@ export interface TraverseMachine {
      * verify arrival against the heartbeat (tools/gcode.ts parseDirectTarget).
      */
     gcode: 'snapmaker-2' | 'grbl-relative';
+    /**
+     * The connected machine's dialect row (gcodeDialect.ts), from which `gcode`
+     * was derived (tools/machine.ts traverseMachine). The steps are written by
+     * gcodeForms.ts from it; omitted = the Snapmaker 2.0 row for 'snapmaker-2'
+     * and #264's Ray form (no planner sync) for 'grbl-relative'.
+     */
+    dialect?: GcodeDialect;
 }
 
 export const DEFAULT_TRAVERSE_MACHINE: TraverseMachine = { hasZ: true, gcode: 'snapmaker-2' };
 
-/** The comment a relative step carries so the settle check knows the absolute machine endpoint. Stripped before sending. */
-export const SETTLE_COMMENT_PREFIX = '; mcp-settle machine';
-
-export function settleComment(to: { x: number; y: number }): string {
-    return `${SETTLE_COMMENT_PREFIX} X${to.x.toFixed(3)} Y${to.y.toFixed(3)}`;
-}
-
-/** The absolute machine endpoint a relative step declared, or null when the text carries none. */
-export function parseSettleComment(gcode: string): { x: number; y: number } | null {
-    const m = gcode.match(/^; mcp-settle machine X(-?\d+(?:\.\d+)?) Y(-?\d+(?:\.\d+)?)\s*$/m);
-    return m ? { x: Number(m[1]), y: Number(m[2]) } : null;
-}
-
-/** A relative XY step in Luban's own GRBL jog form (see TraverseMachine.gcode), with its settle comment. */
+/**
+ * A relative XY step in Luban's own GRBL jog form (see TraverseMachine.gcode),
+ * with its settle comment and no planner sync - #264's Ray form, byte for byte
+ * (gcodeForms.relativeStepText). The settle comment helpers moved to
+ * gcodeForms.ts and are re-exported above.
+ */
 export function relativeXyStep(from: { x: number; y: number }, to: { x: number; y: number }, feedRate: number, command: 'G0' | 'G1' = 'G1'): string {
-    const f3 = (n: number) => n.toFixed(3);
-    return `${settleComment(to)}\nG91\n${command} X${f3(to.x - from.x)} Y${f3(to.y - from.y)} F${feedRate}\nG90`;
+    return relativeStepText({ from: { x: from.x, y: from.y }, to: { x: to.x, y: to.y } }, feedRate, { command });
 }
 
 export interface TraverseStep {
@@ -224,15 +226,18 @@ export function planTraverseXy(input: TraversePlanInput): TraversePlan {
         segments.push({ what: `step ${i + 1}`, kind: 'hop', from: { ...fromMachine }, to: { ...to } });
         let gcode: string;
         if (machine.gcode === 'grbl-relative') {
-            // The Ray: Luban's own jog form, a delta from the planned previous
-            // endpoint with the absolute machine endpoint declared for the
-            // settle check (see TraverseMachine.gcode).
-            gcode = relativeXyStep(fromMachine, to, feedRate);
+            // Ray / Original: a delta from the planned previous endpoint with
+            // the absolute machine endpoint declared for the settle check (see
+            // TraverseMachine.gcode); never a G53/G54 (gcodeForms.ts). XY only:
+            // a traverse writes no Z word.
+            const ends = { from: { x: fromMachine.x, y: fromMachine.y }, to: { x: to.x, y: to.y } };
+            gcode = machine.dialect ? relativeStep(machine.dialect, ends, feedRate) : relativeXyStep(fromMachine, to, feedRate);
         } else {
-            const move = `G1 X${f3(target.x)} Y${f3(target.y)} F${feedRate}`;
             // Every MCP-emitted motion declares its frame: G53 for machine, an
             // explicit G54 for the work workspace (operator law 2026-09-14).
-            gcode = frame === 'machine' ? `G90\nG53;\n${move};\nG54;` : `G90\nG54;\n${move}`;
+            const dialect = machine.dialect || dialectById('sm2-marlin');
+            const words = `X${f3(target.x)} Y${f3(target.y)}`;
+            gcode = frame === 'machine' ? machineFrameMove(dialect, words, feedRate) : workFrameMove(dialect, words, feedRate);
         }
         steps.push({ from: { ...fromMachine }, to, target, distanceMm, gcode });
         fromMachine = to;
@@ -263,7 +268,11 @@ export function planTraverseXy(input: TraversePlanInput): TraversePlan {
             : '; no Z axis: the series runs at the machine\'s only height; no motion floor or traverse height applies and no Z word is written',
         ...(relative
             ? ['; steps are RELATIVE (G91 .. G90, Luban\'s own jog form for this machine): each is the delta from the previous planned endpoint,',
-                '; and its "; mcp-settle machine" line names the absolute machine endpoint the heartbeat must report before the next step']
+                '; and its "; mcp-settle machine" line names the absolute machine endpoint the heartbeat must report before the next step',
+                ...(machine.dialect && needsPlannerSync(machine.dialect)
+                    ? ['; each step ends G4 P0 (planner sync): this controller\'s M114 reports the QUEUED target, so only a report',
+                        '; taken after the sync proves the head has arrived']
+                    : [])]
             : []),
         ...steps.map((s, i) => `; step ${i + 1}: ${frame} (${f3(toFrame(s.from).x)}, ${f3(toFrame(s.from).y)}) -> (${f3(s.target.x)}, ${f3(s.target.y)})`
             + ` = machine (${f3(s.to.x)}, ${f3(s.to.y)}), ${s.distanceMm.toFixed(1)} mm F${feedRate}`),

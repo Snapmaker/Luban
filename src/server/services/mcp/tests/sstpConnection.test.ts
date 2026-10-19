@@ -7,6 +7,7 @@ import ts from 'typescript';
 import * as procedureLimits from '../procedureLimits';
 import { reliableForMotion } from '../machinePosition';
 import * as machineCapability from '../machineCapability';
+import { dialectById } from '../gcodeDialect';
 import { ConnectionDiagnosticState, httpEvidence, safeIdentifier, safeTarget } from '../../machine/connectionDiagnosticState';
 import { GcodeLease } from '../../machine/gcodeLease';
 
@@ -120,7 +121,13 @@ function cameraFixture() {
         './machine': {
             getPositionSnapshot: () => state,
             assertFreshHeartbeat: () => { throw new Error('Refusing home: unreliable heartbeat'); },
+            motionDialect: () => dialectById('sm2-marlin'),
+            motionGcodeForm: () => 'sm2',
         },
+        // WP4a: pure modules, the real ones.
+        '../logicalFrame': require('../logicalFrame'),
+        '../gcodeForms': require('../gcodeForms'),
+        '../gcodeDialect': require('../gcodeDialect'),
         // The home decision is pure (machineCapability.homeCommandFor); the
         // identifier read is the defensive one in connectedMachine.ts, which
         // this stub replaces - the ConnectionManager stub below has no

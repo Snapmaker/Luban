@@ -17,6 +17,8 @@ import {
 } from '../frameRecovery';
 import * as machinePosition from '../machinePosition';
 import * as procedureLimits from '../procedureLimits';
+import * as gcodeForms from '../gcodeForms';
+import { dialectById } from '../gcodeDialect';
 import { resolveJobFrame, validateGcode } from '../validator';
 
 // A350 travel, and the live 2026-09 work offset: work = machine + offset.
@@ -75,7 +77,13 @@ function restoreFixture(
         '../jobs': { jobManager: { getActive: () => activeJob } },
         '../procedureAbort': { procedureStopRequested: () => null },
         '../probeFeed': { probeFeedService: { motionBegin: () => undefined, motionEnd: () => undefined } },
-        './machine': { getPositionSnapshot: () => snapshots.shift(), machineBounds: () => BOUNDS },
+        './machine': { getPositionSnapshot: () => snapshots.shift(),
+            machineBounds: () => BOUNDS,
+            motionDialect: () => dialectById('sm2-marlin'),
+            motionGcodeForm: () => 'sm2' },
+        // WP4a: the restore is written by the pure gcodeForms.ts from the A350 row.
+        '../gcodeForms': gcodeForms,
+        '../connectedMachine': { describeConnectedMachine: () => ({ identifier: 'A350', type: null, hasZ: true, dialect: 'sm2-marlin' }) },
         '../../machine/ConnectionManager': { connectionManager: {
             getConnectionStatus: () => ({ connected: true, machineIdentifier: 'A350' }),
             getConnectionGeneration: () => '1.0',

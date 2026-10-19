@@ -264,7 +264,7 @@ export function isLegacyScope(raw: unknown): boolean {
 
 // ---- Homing -----------------------------------------------------------------
 
-export type HomeCommandKind = 'grbl-home' | 'sacp-home-request' | 'g28-sequence';
+export type HomeCommandKind = 'grbl-home' | 'sacp-home-request' | 'g28-sequence' | 'g28-only';
 
 export interface HomeCommand {
     kind: HomeCommandKind;

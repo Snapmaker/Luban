@@ -34,6 +34,8 @@ import { clearProcedureStop, procedureStopRequested, requestProcedureStop } from
 import { McpToolError, ToolRegistry } from '../registry';
 import { decideSafeZRaise, decideSafeZTraverse } from '../safeZPolicy';
 import { parseSettleComment, planTraverseXy } from '../traversePlan';
+import { machineFrameMove, needsPlannerSync, relativeStep, workFrameMove } from '../gcodeForms';
+import { machineStatusOf } from '../logicalFrame';
 import { connectedMachineCapability, connectedMachineTag, describeConnectedMachine } from '../connectedMachine';
 import { JobFrame, TRANSPORT_REFUSAL, isPureTransport, resolveJobFrame, spindleRefusal, suggestGcode, validateGcode } from '../validator';
 import { GcodeChannel, sendGcodeVisible } from './camera';
@@ -57,7 +59,9 @@ import {
     describePlanningTravel,
     getMachineSizeByIdentifier,
     getPositionSnapshot,
+    motionDialect,
     motionFloorZ,
+    motionGcodeForm,
     requirePlanningTravel,
     requireZAxis,
     safeTraverseZ,
@@ -162,6 +166,13 @@ async function waitForStableHeartbeat(
         if (reportTime <= issuedAt || !stable || now.machineStatus !== 'idle') {
             continue;
         }
+        // USB text serial (the Original): its M114 is the planner's QUEUED
+        // target, so only a report taken after the step's planner sync proves
+        // arrival, and only while the logical frame is still the machine frame
+        // (a G92 written meanwhile voids it).
+        if (now.motionAtRest === false || (now.logicalFrame && !now.logicalFrame.trusted)) {
+            continue;
+        }
         if (expect) {
             // Machine-frame targets accept a report in either frame: a beat
             // inside the move's G53 window carries machine coordinates with
@@ -190,8 +201,8 @@ async function waitForStableHeartbeat(
 
 
 function machineStatus(): string | null {
-    const state = connectionManager.getLatestMachineState();
-    return state ? ((state as { status?: string }).status || null) : null;
+    // SACP/SSTP `status`, or the text-serial workflowState mapped explicitly (tools/machine.ts).
+    return machineStatusOf(connectionManager.getLatestMachineState() as { [key: string]: unknown } | null);
 }
 
 const log = logger('service:mcp:gcode-jobs');
@@ -237,12 +248,13 @@ async function executeDirectStep(job: McpJob, channel: GcodeChannel, shouldWait:
             jobManager.appendEvent(job, 'failed', { note: job.error });
             throw new McpToolError(job.error);
         }
-        // A relative (grbl-relative) step names its absolute machine endpoint
-        // in a `; mcp-settle machine` comment (stripped before sending, read
-        // from the staged text here); an absolute step is parsed from its G1.
+        // A relative step names its absolute machine endpoint in a
+        // `; mcp-settle machine X.. Y.. [Z..]` comment (stripped before
+        // sending, read from the staged text here) - Z too for a relative Z
+        // step (move_z on the Original); an absolute step is parsed from its G1.
         const settleTarget = parseSettleComment(gcodeText);
         const expect: DirectTarget | undefined = settleTarget
-            ? { frame: 'machine', x: settleTarget.x, y: settleTarget.y, z: undefined }
+            ? { frame: 'machine', x: settleTarget.x, y: settleTarget.y, z: settleTarget.z }
             : parseDirectTarget(executable);
         settle = !shouldWait
             ? {
@@ -1477,6 +1489,8 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
     registry.register({
         name: 'move_z',
         description: 'Request absolute Z motion, executed on the direct path so positions PERSIST '
+            + '(on the Snapmaker Original: relative G91 Z steps with a Z settle comment and a G4 P0 planner sync, never G53/G54; '
+            + 'refused on a machine with no Z axis or a J1; results carry gcode_form) '
             + '(the machine interpreter raises Z to top at the finish position when a file job '
             + 'completes, so a file job cannot hold a working Z - firmware behaviour). '
             + 'Either one target (z) or an ordered list (z_targets, max 20) for a methodical search: '
@@ -1544,9 +1558,15 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             wait_until_moved?: boolean;
         }) => {
             probeFeedService.assertNoOvertravel();
+            // Which form this machine's Z steps take (gcodeForms.ts): the
+            // Snapmaker 2.0's absolute G53/G54 step, or a relative step with a
+            // Z settle comment (the Original). A printer (J1) or a machine the
+            // dialect table does not list is refused here, naming it.
+            const machine = traverseMachine('move_z');
             // A machine with no Z axis (the Ray) has no Z to move: say so
             // plainly, naming the machine, before anything else.
             requireZAxis('move_z');
+            const relative = machine.gcode === 'grbl-relative';
             // Targets and per-step feeds (#240), every feed clamped to
             // MOVE_Z_FEED with the clip reported - moveZPlan.ts, pure.
             let zPlan: ReturnType<typeof resolveZTargets>;
@@ -1604,10 +1624,26 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             // Each step carries ITS OWN F word: the controller's modal feed
             // survives between files (A350, 2026-10-05), so a step without
             // one would run at whatever the previous step set.
-            const stepGcode = (t: number, feed: number) => (coordinateSystem === 'machine'
-                ? `G90\nG53;\nG1 Z${t.toFixed(3)} F${feed};\nG54;`
-                : `G90\nG54;\nG1 Z${t.toFixed(3)} F${feed}`);
-            const steps = zSteps.map((step) => stepGcode(step.z, step.feedRate));
+            const dialect = machine.dialect || motionDialect();
+            const { x: atX, y: atY } = position.machine;
+            if (relative && (atX === null || atY === null || position.machine.z === null)) {
+                throw new McpToolError(`Current machine position unknown; a relative Z step names its machine endpoint ${connectedMachineTag()}.`);
+            }
+            const toMachineZ = (t: number) => (coordinateSystem === 'machine' ? t : t - position.originOffset.z);
+            const stepGcode = (t: number, feed: number, previous: number) => {
+                if (relative) {
+                    // A G91 Z increment from the previous planned endpoint, its
+                    // `; mcp-settle machine X Y Z` naming the absolute machine
+                    // endpoint (the current X/Y, so drift is caught too) - never
+                    // a G53/G54 on this machine.
+                    const at = { x: atX as number, y: atY as number };
+                    return relativeStep(dialect, { from: { ...at, z: toMachineZ(previous) }, to: { ...at, z: toMachineZ(t) } }, feed,
+                        { hasZ: machine.hasZ });
+                }
+                const words = `Z${t.toFixed(3)}`;
+                return coordinateSystem === 'machine' ? machineFrameMove(dialect, words, feed) : workFrameMove(dialect, words, feed);
+            };
+            const steps = zSteps.map((step, i) => stepGcode(step.z, step.feedRate, i === 0 ? currentZ : targets[i - 1]));
             const isBatch = targets.length > 1;
             const delta = targetZ - currentZ;
             // The gcode preview must let the operator validate the numbers
@@ -1641,6 +1677,11 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                     return `; step ${i + 1}: Z ${from.toFixed(3)} -> ${step.z.toFixed(3)} (${d >= 0 ? '+' : ''}${d.toFixed(3)} mm) F${step.feedRate}${feedNote}`;
                 }),
                 ...feedClampLines.map((line) => `; CLAMPED: ${line}`),
+                ...(relative
+                    ? ['; steps are RELATIVE (G91 Z.. G90, no G53/G54 on this machine): each is the delta from the previous planned Z,',
+                        '; and its "; mcp-settle machine" line names the absolute machine X Y Z the position must report before the next step',
+                        ...(needsPlannerSync(dialect) ? ['; each step ends G4 P0 (planner sync): only a report taken after it proves arrival'] : [])]
+                    : []),
                 '; sensors: NO contact expected during these moves - a probe/toolsetter trigger',
                 '; while moving latches the CRASH alarm (probe feed must be armed).',
             ].join('\n');
@@ -1649,7 +1690,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 ? `z-series ${coordinateSystem} [${targets.map((t) => t.toFixed(1)).join(', ')}] - ${String(args.reason).slice(0, 40)}`
                 : `z-move ${coordinateSystem} Z${targetZ.toFixed(1)} (${delta >= 0 ? '+' : ''}${delta.toFixed(1)}mm) - ${String(args.reason).slice(0, 40)}`;
 
-            const validation = validateStagedEnvelope(reviewText, 'move_z');
+            const validation = validateStagedEnvelope(reviewText, 'move_z', { relativeTransport: relative });
             const job = jobManager.submit(reviewText, name, 'cnc', validation, 'direct', isBatch ? steps : undefined);
             job.waitUntilMoved = args.wait_until_moved !== false;
 
@@ -1674,6 +1715,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 return {
                     job: jobManager.describe(job),
                     connected_machine: describeConnectedMachine(),
+                    gcode_form: motionGcodeForm(),
                     executed_without_approval: true,
                     approval: { source: 'policy', policy: policy.policy, reason: policy.reason },
                     current_z: currentZ,
@@ -1697,6 +1739,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             return {
                 job: jobManager.describe(job),
                 connected_machine: describeConnectedMachine(),
+                gcode_form: motionGcodeForm(),
                 current_z: currentZ,
                 targets,
                 final_delta_mm: delta,
@@ -1738,7 +1781,9 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             + 'runs at the machine\'s only height, the top-Z policy never auto-executes (there is no safe height to justify skipping '
             + 'approval, staged_because says so), and the steps are RELATIVE G91/G90 increments (Luban\'s own Ray jog form; each step '
             + 'names its absolute machine endpoint for the settle check) rather than G53. Landmarks, calibrations and stated travel '
-            + 'are machine-scoped: only records set on the connected machine apply; the travel is the machine model +/- mcpTravelFudgeMm.',
+            + 'are machine-scoped: only records set on the connected machine apply; the travel is the machine model +/- mcpTravelFudgeMm. '
+            + 'The Snapmaker Original takes the same relative steps, each ending G4 P0 (its M114 is the queued target; only a report after '
+            + 'the sync verifies arrival); a J1 is refused (printer). Results carry gcode_form (sm2 | relative-steps).',
         inputSchema: {
             type: 'object',
             properties: {
@@ -1798,6 +1843,11 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 throw new McpToolError('reason is required; it is shown to the operator.');
             }
 
+            // Which machine this is decides which laws apply: a Z axis or not,
+            // and which gcode form its firmware is known to execute
+            // (tools/machine.ts traverseMachine). A printer (J1) or an unlisted
+            // machine is refused first, naming it.
+            const machine = traverseMachine('traverse_xy');
             assertFreshHeartbeat('staging an XY traverse');
             const position = getPositionSnapshot();
             if (position.machineStatus !== 'idle') {
@@ -1815,10 +1865,6 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             if (mx === null || my === null) {
                 throw new McpToolError('Current machine position unknown; cannot plan the traverse.');
             }
-            // Which machine this is decides which laws apply: a Z axis or not,
-            // and which gcode form its firmware is known to execute
-            // (tools/machine.ts traverseMachine, machineCapability.ts).
-            const machine = traverseMachine();
             const capability = connectedMachineCapability();
             if (machine.hasZ && mz === null) {
                 throw new McpToolError('Current machine Z unknown; cannot plan the traverse.');
@@ -1858,8 +1904,9 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 current_machine: { x: mx, y: my, z: mz },
                 /** null on a machine with no Z axis: no traverse height exists there. */
                 traverse_z: machine.hasZ ? safeTraverseZ() : null,
-                gcode_form: plan.relative
-                    ? 'relative G91/G90 increments (Luban\'s own jog form for this GRBL machine); each step names its machine endpoint'
+                gcode_form: motionGcodeForm(),
+                gcode_form_note: plan.relative
+                    ? 'relative G91/G90 increments (no G53/G54 on this machine); each step names its machine endpoint in a settle comment'
                     : 'absolute, frame declared per step (G53 machine / G54 work)',
                 coordinate_system: coordinateSystem,
                 feed_rate: feedRate,

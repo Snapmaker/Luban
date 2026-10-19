@@ -107,6 +107,12 @@ class TextSerialChannel extends Channel implements
             controller.on('originOffsetReport', (payload) => {
                 this.machineState.noteOriginOffset(payload, this.getConnectionGeneration());
             });
+            // Every line written to the port, whoever wrote it: the write-path
+            // evidence of homes, position shifts and planner syncs
+            // (textSerialMachineState.ts, WP4a).
+            controller.on('lineWritten', (data) => {
+                this.machineState.noteLineWritten(String(data), this.getConnectionGeneration());
+            });
         }
 
         controller.addConnection(this.socket);

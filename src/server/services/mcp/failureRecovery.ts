@@ -350,9 +350,9 @@ function g53Exposed(exposure: Exposure): boolean {
  * may be active - a deliberate G55-G59, even one whose outcome is unknown, is
  * left alone (and warned about).
  */
-export function restoreCommands(exposure: Exposure): string[] {
+export function restoreCommands(exposure: Exposure, selectsWorkspace: boolean = true): string[] {
     const commands = ['G90'];
-    if (g53Exposed(exposure)) {
+    if (selectsWorkspace && g53Exposed(exposure)) {
         commands.push('G54');
     }
     return commands;
@@ -448,6 +448,13 @@ export interface PositionReading {
 export interface RecoveryDeps {
     /** Connection generation now; null when no machine is connected. Never throws. */
     connectionId(): string | null;
+    /**
+     * Whether the connected machine's frame restore selects a workspace
+     * (gcodeForms.workFrameRestoreCommands: `G54` on the Snapmaker 2.0 only).
+     * false on the Ray / Original: cleanup is `G90` alone and never latches -
+     * the MCP sends no G53 there. Absent = true (the A350, as always).
+     */
+    selectsWorkspace?(): boolean;
     send(label: string, gcode: string): Promise<{ result: number; text?: string }>;
     settle(): Promise<void>;
     /** Only called while connected. */
@@ -730,7 +737,7 @@ async function decideAndRecover(ctx: OperationContext, failureKind: FailureKind,
     }
 
     evidence.status = 'attempted';
-    const commands = restoreCommands(exposure);
+    const commands = restoreCommands(exposure, deps.selectsWorkspace ? safe(() => (deps.selectsWorkspace as () => boolean)(), true) : true);
     evidence.explanation = `Restoring ${commands.join(' then ')} as separate commands with no axis words.`;
     const sentG54 = commands.includes('G54');
     if (sentG54) {
