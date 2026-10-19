@@ -358,7 +358,8 @@ async function executeDirectStep(job: McpJob, channel: GcodeChannel, shouldWait:
  * unreadable at staging (null) refuses.
  */
 function assertDirectStartPosition(job: McpJob, after: string): void {
-    if (job.kind !== 'direct' || job.stagedAtMachine === undefined) {
+    // A job that cannot start (withdrawn, ended, never approved) gets consumeToken's own refusal, not a position one.
+    if (job.kind !== 'direct' || job.stagedAtMachine === undefined || job.confirmToken === null || TERMINAL_JOB_STATES.includes(job.state)) {
         return;
     }
     let relative = false;
