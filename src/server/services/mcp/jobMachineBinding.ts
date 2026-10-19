@@ -69,6 +69,8 @@ export interface StagedLandmarks {
     status: string;
     landmarks: Array<{ name: string; requiredToolheadZ?: number | null; basis?: string | null }>;
     question: string | null;
+    /** The rotary keep-out this job was planned against when the call stated `stock` (rotaryCallContext.ts); else absent. */
+    rotaryNote?: string | null;
 }
 
 /** The confirm page's Landmarks row; null when the job carries no record (jobs staged before WP8, inert harnesses). */
@@ -86,5 +88,5 @@ export function describeStagedLandmarks(staged: StagedLandmarks | null | undefin
         ? 'review confirmed by the operator'
         : `review ${staged.status} - approving this page approves THIS job with the landmarks listed; it does not confirm the review `
             + '(the agent stages that with confirm_landmarks)';
-    return `${list}. Enforced in full whatever the review says; ${review}.`;
+    return `${list}. Enforced in full whatever the review says; ${review}.${staged.rotaryNote ? ` ${staged.rotaryNote}.` : ''}`;
 }

@@ -60,11 +60,24 @@ export function compactLandmarkReview(review: LandmarkReview & { pending_reviews
     };
 }
 
+/** The confirm page's line for a job staged under a computed / raised rotary keep-out. */
+export function rotaryNote(resolution: RotaryResolution): string | null {
+    const r = resolution.report;
+    const stock = r.stock ? `stock r${r.stock.radius_mm ?? '-'}${r.stock.top_z !== null ? ` top Z${r.stock.top_z}` : ''}` : 'no stock';
+    if (r.applied === 'computed') {
+        return `rotary keep-out for THIS job: computed toolhead Z${r.zMm} (${stock}) - '${r.legacy_landmark}' legacy requirement superseded for this job only`;
+    }
+    if (r.applied === 'raised') {
+        return `rotary keep-out for THIS job: raised to toolhead Z${r.zMm} (${stock}) - crossing the rotary refused`;
+    }
+    return null;
+}
+
 export interface ToolCallHookSources {
     appliedRecords: () => AppliedRecords;
     landmarkReview: () => LandmarkReview & { pending_reviews?: object[] };
     rotaryForCall: (args: { stock?: unknown }) => RotaryResolution | null;
-    runScoped: <T>(transform: ObstacleTransform, fn: () => T) => T;
+    runScoped: <T>(transform: ObstacleTransform, fn: () => Promise<T>, note: string | null) => Promise<T>;
 }
 
 export function createToolCallHooks(sources: ToolCallHookSources): ToolCallHooks {
@@ -73,13 +86,27 @@ export function createToolCallHooks(sources: ToolCallHookSources): ToolCallHooks
             if (!STOCK_TOOLS.has(name)) {
                 return run();
             }
-            const resolution = sources.rotaryForCall(args as { stock?: unknown });
+            const stated = (args as { stock?: unknown }).stock !== undefined && (args as { stock?: unknown }).stock !== null;
+            let resolution: RotaryResolution | null;
+            try {
+                resolution = sources.rotaryForCall(args as { stock?: unknown });
+            } catch (err) {
+                if (stated) {
+                    // A stated stock that cannot be resolved refuses: never plan a crossing on a guess.
+                    throw err;
+                }
+                // Without stock nothing changes, so a failed read must not block the call (the A350 stays as it was).
+                const result = await run();
+                return { ...result, rotary_clearance: { error: (err as Error).message, applied: 'legacy' } };
+            }
             if (!resolution) {
                 return run();
             }
             let result: object;
             try {
-                result = resolution.transform ? await sources.runScoped(resolution.transform, run) : await run();
+                result = resolution.transform
+                    ? await sources.runScoped(resolution.transform, run, rotaryNote(resolution))
+                    : await run();
             } catch (err) {
                 // Duck-typed: an McpToolError from another realm (or a subclass) is still an error with a message.
                 if (resolution.report.applied === 'raised' && err && typeof (err as Error).message === 'string') {

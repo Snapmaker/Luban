@@ -30,6 +30,7 @@ function inert(file: string, overrides: Record<string, unknown> = {}) {
 const plain = (v: unknown) => JSON.parse(JSON.stringify(v));
 
 const applied = inert('appliedRecords.ts');
+const hooksForNote = inert('toolResultHooks.ts');
 
 function facts(over: Record<string, unknown> = {}) {
     return {
@@ -332,5 +333,32 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.match(String(row), /^rotary \(needs toolhead Z280\), clamp\. Enforced in full/);
         assert.match(String(row), /it does not confirm the review/);
         assert.match(String(jobs.describeStagedLandmarks({ status: 'confirmed', landmarks: [], question: null })), /none stored for this machine.*review confirmed by the operator/);
+        const computed = { report: { applied: 'computed', zMm: 155, legacy_landmark: 'rotary', stock: { radius_mm: 25, top_z: null } }, transform: null };
+        const note = hooksForNote.rotaryNote(computed);
+        assert.match(note, /computed toolhead Z155 \(stock r25\) - 'rotary' legacy requirement superseded for this job only/);
+        assert.match(String(jobs.describeStagedLandmarks({ status: 'confirmed', landmarks: [{ name: 'rotary', requiredToolheadZ: 280 }], question: null, rotaryNote: note })), /Z280.*THIS job: computed toolhead Z155/);
+    }],
+    ['rotary scope: the transform applies only while the call runs; a failed read without stock never blocks the call', async () => {
+        const boxes = [LEGACY_ROTARY];
+        const lower = (b: typeof boxes) => b.map((x) => ({ ...x, clearanceZ: 155 }));
+        let late: (() => number) | null = null;
+        const seen = await rotaryCallContext.runWithObstacleTransform(lower, async () => {
+            late = () => rotaryCallContext.applyCallObstacleTransform(boxes)[0].clearanceZ;
+            return rotaryCallContext.applyCallObstacleTransform(boxes)[0].clearanceZ;
+        }, 'note');
+        assert.equal(seen, 155);
+        assert.equal((late as unknown as () => number)(), 280, 'a callback run after the call settles sees the stored box');
+        assert.equal(rotaryCallContext.callRotaryNote(), null);
+        const hooksModule = inert('toolResultHooks.ts', { './rotaryWiring': { STOCK_TOOLS: wiring.STOCK_TOOLS } });
+        const hooks = hooksModule.createToolCallHooks({
+            appliedRecords: () => ({}),
+            landmarkReview: () => ({ confirmed: true }),
+            rotaryForCall: () => { throw new Error('axis fit failed'); },
+            runScoped: rotaryCallContext.runWithObstacleTransform,
+        });
+        const out = plain(await hooks.around('traverse_xy', {}, async () => ({ ran: true })));
+        assert.equal(out.ran, true, 'no stock: the A350 traverse still runs');
+        assert.equal(out.rotary_clearance.error, 'axis fit failed');
+        await assert.rejects(hooks.around('traverse_xy', { stock: { radius_mm: 25 } }, async () => ({ ran: true })), /axis fit failed/);
     }],
 ];

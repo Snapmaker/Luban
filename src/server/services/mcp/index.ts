@@ -18,6 +18,7 @@ import { McpToolError, ToolRegistry } from './registry';
 import { connectedMachineCapability } from './connectedMachine';
 import { procedureRefusal } from './procedureGates';
 import { liveToolCallHooks } from './toolResultHooks';
+import { callRotaryNote } from './rotaryCallContext';
 import { registerCalibrationTools } from './tools/calibration';
 import { registerCameraTools } from './tools/camera';
 import { registerCameraProgramTool } from './cameraProgram';
@@ -311,6 +312,7 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
             status: review.status,
             landmarks: review.landmarks.map((l) => ({ name: l.name, requiredToolheadZ: l.requiredToolheadZ, basis: l.basis })),
             question: review.question,
+            rotaryNote: callRotaryNote(),
         };
     });
     registeredToolCount = registry.list().length;

@@ -13,17 +13,41 @@ import { ObstacleBox } from './envelopeChecks';
 
 export type ObstacleTransform = (boxes: ObstacleBox[]) => ObstacleBox[];
 
-const storage = new AsyncLocalStorage<ObstacleTransform>();
+interface CallScope {
+    transform: ObstacleTransform;
+    /** One line for the confirm page: what this call's rotary keep-out was. */
+    note: string | null;
+    /** Cleared when the call settles: a timer or poller started inside the call never inherits the computed box. */
+    active: boolean;
+}
 
-/** Run `fn` with `transform` applied to every landmark obstacle list read inside it. */
-export function runWithObstacleTransform<T>(transform: ObstacleTransform, fn: () => T): T {
-    return storage.run(transform, fn);
+const storage = new AsyncLocalStorage<CallScope>();
+
+/** Run `fn` with `transform` applied to every landmark obstacle list read inside it, until `fn` settles. */
+export async function runWithObstacleTransform<T>(transform: ObstacleTransform, fn: () => Promise<T>, note: string | null = null): Promise<T> {
+    const scope: CallScope = { transform, note, active: true };
+    try {
+        return await storage.run(scope, fn);
+    } finally {
+        scope.active = false;
+    }
+}
+
+function activeScope(): CallScope | null {
+    const scope = storage.getStore();
+    return scope && scope.active ? scope : null;
 }
 
 /** The obstacle list as this call should see it; unchanged outside a stated-stock call. */
 export function applyCallObstacleTransform(boxes: ObstacleBox[]): ObstacleBox[] {
-    const transform = storage.getStore();
-    return transform ? transform(boxes) : boxes;
+    const scope = activeScope();
+    return scope ? scope.transform(boxes) : boxes;
+}
+
+/** The rotary keep-out line for a job staged inside this call (jobs.ts Landmarks row); null outside one. */
+export function callRotaryNote(): string | null {
+    const scope = activeScope();
+    return scope ? scope.note : null;
 }
 
 /** The `stock` argument's schema, shared by every tool that can cross the rotary (rotaryWiring.ts reads it). */
