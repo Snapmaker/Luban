@@ -499,6 +499,16 @@ the rotary stock's geometry — wrong twice over) destroyed the fitted touch pro
 step had also been chained onto an approved Z move in one command, executing 117 ms after
 it with no decision point, when the operator had authorised "step 1" only. Laws:
 
+**Machine-aware (tyeth/Luban#265).** The laws are written for the A350 (Z328 park, Z320 floor);
+on any other machine the numbers come from that machine's own records, and the agent reads
+which ones from `applied_records` on every result (`connected_machine`: identifier, dialect,
+machineKey, gcode_form; `records.zPolicy`, `records.landmarks`, `records.landmarkReview`). A Z
+machine with no stated Z policy refuses Z planning until `set_machine_policy` states it; the Ray
+has no Z, so the Z laws do not apply and every move stages; the Original and the Ray move in
+relative steps with no G53/G54. Landmarks, calibrations, stated travel and the frame latch
+apply only to the machine they were recorded on, and until the operator confirms the landmark
+review every approval-free move stages instead.
+
 1. **One motion per instruction, no inferred approvals** — never chain motion tool calls
    in a single command or turn; each motion gets its own decision point. Enumerated steps
    run one at a time. Only an explicit imperative in the operator's latest message
