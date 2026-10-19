@@ -25,6 +25,7 @@ import { registerCamTools } from './tools/cam';
 import { registerEnclosureTools } from './tools/enclosure';
 import { registerGcodeTools, stopGcodeJob } from './tools/gcode';
 import { registerLandmarkTools } from './tools/landmarks';
+import { currentReviewMachineKey, operatorReviews } from './landmarkReviewState';
 import { registerMachineTools } from './tools/machine';
 import { registerProbeTools } from './tools/probe';
 import { registerProbingTools } from './tools/probing';
@@ -278,7 +279,7 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
     registerCameraProgramTool(registry, baseUrl);
     registerCameraModelTools(registry, baseUrl);
     registerCalibrationTools(registry);
-    registerLandmarkTools(registry);
+    registerLandmarkTools(registry, baseUrl);
     registerProbeTools(registry);
     registerTelemetryTools(registry);
     registerVibrationTools(registry);
@@ -366,8 +367,11 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
             return;
         }
         if (url.pathname.startsWith('/confirm')) {
-            // Human job-confirmation pages (jobs.ts)
-            jobManager.handleConfirmRequest(req, res, url.pathname);
+            // Staged landmark / device decisions (/confirm/r<id>, landmarkReviewState.ts) first,
+            // then the human job-confirmation pages (jobs.ts).
+            if (!operatorReviews.handleConfirmRequest(req, res, url.pathname, currentReviewMachineKey)) {
+                jobManager.handleConfirmRequest(req, res, url.pathname);
+            }
             return;
         }
         if (url.pathname === '/camera' || url.pathname.startsWith('/camera/')) {

@@ -101,6 +101,7 @@ import { tests as jobMachineBindingTests } from './jobMachineBinding.test';
 import { tests as procedureGatesTests } from './procedureGates.test';
 import { tests as gcodeFormsTests } from './gcodeForms.test';
 import { tests as logicalFrameTests } from './logicalFrame.test';
+import { tests as landmarkReviewTests } from './landmarkReview.test';
 
 type TestCase = [string, () => void | Promise<void>];
 
@@ -195,6 +196,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['procedureGates', procedureGatesTests],
     ['gcodeForms', gcodeFormsTests],
     ['logicalFrame', logicalFrameTests],
+    ['landmarkReview', landmarkReviewTests],
 ];
 
 async function main(): Promise<void> {

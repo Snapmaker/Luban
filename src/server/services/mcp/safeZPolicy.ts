@@ -38,6 +38,43 @@ export interface SafeZPolicyInput {
      * the operator's click: every transport stages, and the reason says so.
      */
     hasZ?: boolean;
+    /**
+     * Whether the operator has confirmed the connected machine's landmarks
+     * on a staged review page (landmarkReview.ts, WP5). Omitted = asked of
+     * the registered provider (landmarkReviewState.ts registers it with the
+     * landmark tools), so existing callers need no edit; no provider at all
+     * reads as NOT confirmed. Not confirmed never refuses a move - it only
+     * stages it, with the review question in the reason.
+     */
+    landmarksConfirmed?: boolean;
+}
+
+/** What the landmark review says now: whether it is confirmed, and the question to put to the operator if not. */
+export interface LandmarkReviewGate {
+    confirmed: boolean;
+    status: string;
+    question: string | null;
+}
+
+let landmarkReviewProvider: (() => LandmarkReviewGate) | null = null;
+
+/** Registered once by landmarkReviewState.ts; null unregisters (tests). */
+export function setLandmarkReviewProvider(provider: (() => LandmarkReviewGate) | null): void {
+    landmarkReviewProvider = provider;
+}
+
+function landmarkGate(input: SafeZPolicyInput): LandmarkReviewGate {
+    if (input.landmarksConfirmed !== undefined) {
+        return { confirmed: input.landmarksConfirmed, status: input.landmarksConfirmed ? 'confirmed' : 'unconfirmed', question: null };
+    }
+    if (!landmarkReviewProvider) {
+        return { confirmed: false, status: 'unknown', question: 'the landmark review is not available in this build' };
+    }
+    try {
+        return landmarkReviewProvider();
+    } catch (err) {
+        return { confirmed: false, status: 'unknown', question: `the landmark review could not be read (${(err as Error).message})` };
+    }
 }
 
 export type SafeZDecision =
@@ -72,6 +109,14 @@ function commonRefusal(input: SafeZPolicyInput): string | null {
     }
     if (input.currentZ === null || !Number.isFinite(input.currentZ)) {
         return 'machine Z is unknown - staged for the operator\'s click';
+    }
+    // Last, so a move refused for a reason above keeps that reason. Every
+    // landmark is still enforced on the route; this only adds the click.
+    const gate = landmarkGate(input);
+    if (!gate.confirmed) {
+        return `the operator has not confirmed this machine's landmarks (landmark_review ${gate.status}) - staged for the operator's `
+            + `click, which also answers the review for this one move${gate.question ? `. Review: ${gate.question}` : ''}. `
+            + 'confirm_landmarks stages the review page; once the operator approves it, top-Z transport runs on the call again';
     }
     return null;
 }
