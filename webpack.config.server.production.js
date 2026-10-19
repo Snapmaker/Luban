@@ -140,10 +140,13 @@ module.exports = {
                 test: /[\\/]node_modules[\\/]formidable[\\/]src[\\/]Formidable\.js$/,
                 loader: REPLACE_LOADER,
                 options: {
+                    // (the source text being matched and inserted is itself a template literal)
+                    /* eslint-disable no-template-curly-in-string */
                     replacements: [{
                         from: 'this.use(require(path.join(__dirname, \'plugins\', `${plgName}.js`)));',
                         to: 'this.use(require(`./plugins/${plgName}.js`));',
                     }],
+                    /* eslint-enable no-template-curly-in-string */
                 },
             },
             {
