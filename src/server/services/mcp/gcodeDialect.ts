@@ -116,8 +116,25 @@ export interface GcodeDialect {
     verifiedOnHardware: boolean;
     /** Whether the toolhead-on guards can read this machine's head state, and what the MCP does where they cannot. */
     toolhead: ToolheadReadback;
+    /** Whether the firmware keeps a motor-power mode that home and job starts must read first (motorPower.ts). */
+    motorPower: MotorPowerReadback;
     sources: readonly string[];
 }
+
+/**
+ * A firmware-held motor-power mode, per dialect (tyeth/Luban#321). 'sacp-0x48':
+ * the Ray keeps one (Luban's Set Origin Mode: Manual Mode = SHUTAll, Control
+ * Mode = STAYPOWER), read with SACP 0x01 0x48 GETCURRENTMODE before `home` and
+ * before a job start, which refuse unless it reads STAYPOWER. 'none': no such
+ * mode; the MCP reads nothing and gates nothing (the A350, the Original).
+ */
+export interface MotorPowerReadback {
+    read: 'sacp-0x48' | 'none';
+    /** Why, for results and refusals. */
+    basis: string;
+}
+
+const MOTOR_POWER_NONE: MotorPowerReadback = { read: 'none', basis: 'no firmware motor-power mode; nothing is read or gated' };
 
 /**
  * What Luban's machine state says about the toolhead being ON (headPower /
@@ -215,6 +232,15 @@ const RAY: GcodeDialect = {
         basis: 'the Ray firmware (V1.7.4) never reports laser power or head state to Luban - its laser power field is always 0 '
             + '(tyeth/Luban#315 mismatch 2) - so a zero reading means unknown, not off',
     },
+    // Ray V1.7.4 (#321): the motor-power mode (motion_platform.cpp:441-506,
+    // registered :763-764) is DISABLE_ALL after every boot (snapmaker.cpp:706)
+    // and every alarm (Protocol.cpp:292). In that mode (Luban's Manual Mode)
+    // the Ray ACKed $H with result 0 and never moved (2026-10-19).
+    motorPower: {
+        read: 'sacp-0x48',
+        basis: 'the Ray keeps a motor-power mode (Luban\'s Set Origin Mode) and ACKs $H and motion and then ignores them unless it is '
+            + 'Control Mode (STAYPOWER) - tyeth/Luban#321',
+    },
     sources: [WIKI.ray, 'Luban generateGcode.js / GcodeGenerator.js / ControlPanel.tsx / SetOriginView.tsx'],
 };
 
@@ -255,6 +281,7 @@ const SM2: GcodeDialect = {
     transportForm: 'sm2',
     verifiedOnHardware: true,
     toolhead: TOOLHEAD_REPORTED,
+    motorPower: MOTOR_POWER_NONE,
     sources: [WIKI.sm2, 'this MCP on the A350 (own-line G53, G28 homes B); A150/A250 never run with it'],
 };
 
@@ -295,6 +322,7 @@ const ARTISAN: GcodeDialect = {
     transportForm: 'sm2',
     verifiedOnHardware: false,
     toolhead: TOOLHEAD_REPORTED,
+    motorPower: MOTOR_POWER_NONE,
     sources: [WIKI.artisan, 'PR #264 (SACP home request)'],
 };
 
@@ -324,6 +352,7 @@ const J1: GcodeDialect = {
     transportForm: 'relative-steps',
     verifiedOnHardware: false,
     toolhead: TOOLHEAD_REPORTED,
+    motorPower: MOTOR_POWER_NONE,
     sources: [WIKI.j1, 'PR #264 (SACP home request)'],
 };
 
@@ -361,6 +390,7 @@ const ORIGINAL: GcodeDialect = {
     transportForm: 'relative-steps',
     verifiedOnHardware: false,
     toolhead: TOOLHEAD_REPORTED,
+    motorPower: MOTOR_POWER_NONE,
     sources: [
         'from Luban generators, unverified against wiki (no Snapmaker wiki page for the Original): '
         + 'GcodeGenerator.js, generateLaserFocusGcode.js, MarlinController.js, ConnectionManager.goHome',
@@ -386,6 +416,7 @@ const UNKNOWN: GcodeDialect = {
     transportForm: 'none',
     verifiedOnHardware: false,
     toolhead: TOOLHEAD_REPORTED,
+    motorPower: MOTOR_POWER_NONE,
     sources: ['not in the MCP dialect table (gcodeDialect.ts)'],
 };
 

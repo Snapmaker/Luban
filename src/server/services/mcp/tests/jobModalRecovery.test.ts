@@ -148,6 +148,8 @@ function gcodeTools(manager: JobManager, files: Map<string, string>, firmwareSto
         '../probeFeed': { probeFeedService: { assertNoOvertravel: () => undefined, getTrip: () => null } },
         '../spindleTelemetry': { spindleTelemetryService: { startForJob: () => undefined, summary: () => null } },
         './machine': { assertFreshHeartbeat: () => undefined },
+        // The A350: no motor-power mode, nothing read or gated (motorPower.test.ts covers the Ray).
+        '../connectedMachine': { assertMotorPowered: async () => null },
         // WP4a: status mapping and the settle-comment parser are pure - the real modules.
         '../logicalFrame': require('../logicalFrame'),
         '../traversePlan': require('../traversePlan'),

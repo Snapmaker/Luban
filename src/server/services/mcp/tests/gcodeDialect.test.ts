@@ -64,6 +64,7 @@ function loadConnectedMachine(connected: string | null) {
         './machineCapability': machineCapability,
         './registry': { McpToolError },
         './toolheadState': require('../toolheadState'),
+        './motorPower': require('../motorPower'),
     };
     const exports = {} as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
     vm.runInNewContext(compiled.outputText, {

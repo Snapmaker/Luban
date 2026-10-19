@@ -97,8 +97,11 @@ function fixture() {
     return { channel, workers, replies, sent, requests, timeouts, diagnostics, diagnosticModule, lease };
 }
 
-/** camera.ts over stubs: the A350 as the MCP always assumed it, or (ray) a Ray on SACP whose head state is never reported. */
-function cameraFixture(ray = false) {
+/**
+ * camera.ts over stubs: the A350 as the MCP always assumed it, or (ray) a Ray on SACP whose head state is never reported.
+ * `readMotorPowerMode` is the Ray channel's 0x01 0x48 read (default STAYPOWER = Control Mode, #321).
+ */
+export function cameraFixture(ray = false, readMotorPowerMode: () => Promise<unknown> = async () => 3) {
     const dialect = dialectById(ray ? 'ray-grbl' : 'sm2-marlin');
     const source = fs.readFileSync(path.join(__dirname, '../tools/camera.ts'), 'utf8');
     const dependencies = stubImports(source);
@@ -140,7 +143,7 @@ function cameraFixture(ray = false) {
         '../toolheadState': require('../toolheadState'),
         '../sacpLineGuard': require('../sacpLineGuard'),
         '../connectedMachine': {
-            ...toolheadStubs(() => state, dialect),
+            ...toolheadStubs(() => state, dialect, Error, readMotorPowerMode),
             connectedMachineIdentifier: () => (ray ? 'Ray' : null),
             connectedDialect: () => dialect,
             connectedMachineTag: () => (ray ? '(machine: Ray)' : '(machine: Snapmaker 2.0 A350)'),

@@ -27,6 +27,7 @@ import {
     summariseMachine,
 } from './machineCapability';
 import { McpToolError } from './registry';
+import { MotorPowerReading, motorPowerNote, motorPowerRefusal, readMotorPower } from './motorPower';
 import { HeadReadings, McpLaserRecord, ToolheadAssessment, assessToolhead, getMcpLaserRecord, toolheadNote, toolheadOnRefusal } from './toolheadState';
 
 export const MACHINES = [
@@ -155,4 +156,51 @@ export function connectedLaserRecord(): McpLaserRecord {
  */
 export function connectedToolheadNote(assessment: ToolheadAssessment = connectedToolhead(), laserOffSent: string | null = null) {
     return toolheadNote(assessment, connectedLaserRecord(), laserOffSent);
+}
+
+/**
+ * The CONNECTED machine's motor-power mode, read fresh (motorPower.ts,
+ * tyeth/Luban#321): on a machine whose dialect row keeps one (the Ray), a
+ * bounded SACP 0x01 0x48 GETCURRENTMODE read through the channel's read-only
+ * getMotorPowerMode; null elsewhere, with nothing sent (the A350, the
+ * Original). A Ray channel without the read (plain-text USB) reads 'unknown'.
+ * Never throws.
+ */
+export async function connectedMotorPower(): Promise<MotorPowerReading | null> {
+    if (connectedDialect().motorPower.read !== 'sacp-0x48') {
+        return null;
+    }
+    const manager = connectionManager as unknown as { getCurrentChannel?: () => unknown };
+    let channel: { getMotorPowerMode?: () => Promise<number> } | null = null;
+    try {
+        channel = typeof manager.getCurrentChannel === 'function'
+            ? manager.getCurrentChannel() as { getMotorPowerMode?: () => Promise<number> } | null : null;
+    } catch (err) {
+        channel = null;
+    }
+    const read = channel && typeof channel.getMotorPowerMode === 'function' ? channel.getMotorPowerMode.bind(channel) : null;
+    return readMotorPower(read);
+}
+
+/**
+ * Read the motor-power mode and throw `action`'s refusal as an McpToolError
+ * unless it is STAYPOWER (Control Mode); `after` says what the refusal left
+ * untouched. Returns the reading for the result, or null where the machine
+ * has no such mode (nothing read, nothing gated).
+ */
+export async function assertMotorPowered(action: string, after: string): Promise<MotorPowerReading | null> {
+    const reading = await connectedMotorPower();
+    if (!reading) {
+        return null;
+    }
+    const refusal = motorPowerRefusal(reading, action, connectedMachineTag(), after);
+    if (refusal) {
+        throw new McpToolError(refusal);
+    }
+    return reading;
+}
+
+/** The `motor_power` block for results, get_position and get_machine_profile; null where the machine has no such mode. */
+export function connectedMotorPowerNote(reading: MotorPowerReading | null) {
+    return reading ? motorPowerNote(reading, connectedDialect().motorPower.basis) : null;
 }

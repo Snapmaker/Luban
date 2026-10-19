@@ -321,6 +321,8 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
             '../registry': { McpToolError: Error },
             '../probeFeed': { probeFeedService: { assertNoOvertravel: () => undefined } },
             './machine': { assertFreshHeartbeat: () => undefined },
+            // The A350: no motor-power mode, nothing read or gated (motorPower.test.ts covers the Ray).
+            '../connectedMachine': { assertMotorPowered: async () => null },
             // WP4a: pure modules, the real ones.
             '../logicalFrame': require('../logicalFrame'),
             '../gcodeForms': require('../gcodeForms'),

@@ -1755,6 +1755,15 @@ class SacpChannelBase extends Channel implements
     public async setMotorPowerMode(setMotorPowerHoldMode: MotorPowerMode) {
         return this.sacpClient.setMotorPowerHoldMode(setMotorPowerHoldMode);
     }
+
+    /**
+     * Read-only: the current motor-power mode byte (0x01 0x48 with
+     * GETCURRENTMODE, which changes nothing). The MCP reads the Ray's mode
+     * through this so it never holds a function that can set it (tyeth/Luban#321).
+     */
+    public async getMotorPowerMode(): Promise<number> {
+        return this.sacpClient.setMotorPowerHoldMode(MotorPowerMode.GETCURRENTMODE);
+    }
 }
 
 export default SacpChannelBase;
