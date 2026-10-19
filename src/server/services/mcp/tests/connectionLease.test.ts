@@ -101,7 +101,12 @@ function machineToolsFixture(userDataDir: string) {
         '../machinePosition': machinePosition,
         '../machineTravel': machineTravel,
         '../machineCapability': machineCapability,
+        // WP4a: pure modules, the real ones.
+        '../logicalFrame': require('../logicalFrame'),
+        '../gcodeForms': require('../gcodeForms'),
+        '../gcodeDialect': require('../gcodeDialect'),
         '../connectedMachine': {
+            connectedDialect: () => require('../gcodeDialect').dialectById('sm2-marlin'),
             MACHINES: [machine('A350'), machine('Ray')],
             findMachine: (id: string | null) => (id ? [machine('A350'), machine('Ray')].find((m) => m.identifier === id) || null : null),
             connectedMachineIdentifier: () => 'A350',

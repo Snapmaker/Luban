@@ -120,7 +120,13 @@ function cameraFixture() {
         './machine': {
             getPositionSnapshot: () => state,
             assertFreshHeartbeat: () => { throw new Error('Refusing home: unreliable heartbeat'); },
+            motionDialect: () => require('../gcodeDialect').dialectById('sm2-marlin'),
+            motionGcodeForm: () => 'sm2',
         },
+        // WP4a: pure modules, the real ones.
+        '../logicalFrame': require('../logicalFrame'),
+        '../gcodeForms': require('../gcodeForms'),
+        '../gcodeDialect': require('../gcodeDialect'),
         // The home decision is pure (machineCapability.homeCommandFor); the
         // identifier read is the defensive one in connectedMachine.ts, which
         // this stub replaces - the ConnectionManager stub below has no

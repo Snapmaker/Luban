@@ -138,3 +138,27 @@ export function judgeLogicalFrame(dialect: GcodeDialect, evidence: LogicalFrameE
             + 'no position shift written since; it has no workspaces.',
     };
 }
+
+/**
+ * The MCP's idle/running notion from a channel state. SACP/SSTP states carry
+ * `status` ('idle', 'running', ...). The USB text-serial state has none:
+ * Marlin reports no motion state over M114, so its `workflowState` - Luban's
+ * sender ('idle' | 'running' | 'paused': is a FILE streaming) - is mapped
+ * explicitly, and anything else is unknown (null, which refuses).
+ * `controllerHomed` and the like are never read as status.
+ */
+export function machineStatusOf(state: { [key: string]: unknown } | null): string | null {
+    if (!state) {
+        return null;
+    }
+    if (typeof state.status === 'string' && state.status) {
+        return state.status;
+    }
+    if (state.positionFrame === 'logical') {
+        const workflow = state.workflowState;
+        if (workflow === 'idle' || workflow === 'running' || workflow === 'paused') {
+            return workflow;
+        }
+    }
+    return null;
+}

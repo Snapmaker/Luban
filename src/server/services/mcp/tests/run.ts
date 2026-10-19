@@ -95,6 +95,8 @@ import { tests as gcodeDialectTests } from './gcodeDialect.test';
 import { tests as machineStoreTests } from './machineStore.test';
 import { tests as textSerialStateTests } from './textSerialState.test';
 import { tests as rotaryClearanceTests } from './rotaryClearance.test';
+import { tests as gcodeFormsTests } from './gcodeForms.test';
+import { tests as logicalFrameTests } from './logicalFrame.test';
 
 type TestCase = [string, () => void | Promise<void>];
 
@@ -183,6 +185,8 @@ const suites: Array<[string, TestCase[]]> = [
     ['machineStore', machineStoreTests],
     ['textSerialState', textSerialStateTests],
     ['rotaryClearance', rotaryClearanceTests],
+    ['gcodeForms', gcodeFormsTests],
+    ['logicalFrame', logicalFrameTests],
 ];
 
 async function main(): Promise<void> {

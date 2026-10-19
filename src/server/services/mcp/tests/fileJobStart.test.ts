@@ -53,6 +53,10 @@ function fixture() {
         '../spindleTelemetry': { spindleTelemetryService: { startForJob: () => { telemetry++; } } },
         '../vibrationCaptures': { vibrationCaptureService: { startForJob: () => { vibrations++; } } },
         './machine': { assertFreshHeartbeat: () => undefined },
+        // WP4a: pure modules, the real ones.
+        '../logicalFrame': require('../logicalFrame'),
+        '../gcodeForms': require('../gcodeForms'),
+        '../gcodeDialect': require('../gcodeDialect'),
     });
     const loaded = isolatedModule('tools/gcode.ts', dependencies, {
         Date: { now: () => now },
