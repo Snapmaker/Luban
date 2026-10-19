@@ -370,7 +370,8 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
                 '../registry': { McpToolError },
             });
             const handlers: Record<string, (args: object) => Promise<object>> = {};
-            statusTools.registerStatusTools({ register: (tool: { name: string; handler: (args: object) => Promise<object> }) => { handlers[tool.name] = tool.handler; } });
+            type Tool = { name: string; handler: (args: object) => Promise<object> };
+            statusTools.registerStatusTools({ register: (tool: Tool) => { handlers[tool.name] = tool.handler; } });
             return plain(await handlers.get_connection_status({}));
         };
         const ray = await run({ connected: true, machineIdentifier: 'Ray', deviceSerial: 'SN1', host: null }, 'Ray');
