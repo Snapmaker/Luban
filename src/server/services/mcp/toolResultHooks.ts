@@ -81,9 +81,10 @@ export function createToolCallHooks(sources: ToolCallHookSources): ToolCallHooks
             try {
                 result = resolution.transform ? await sources.runScoped(resolution.transform, run) : await run();
             } catch (err) {
-                if (resolution.report.applied === 'raised' && err instanceof Error) {
+                // Duck-typed: an McpToolError from another realm (or a subclass) is still an error with a message.
+                if (resolution.report.applied === 'raised' && err && typeof (err as Error).message === 'string') {
                     try {
-                        err.message = `${err.message}\nRotary clearance: ${resolution.report.reasons.join('; ')}`;
+                        (err as Error).message = `${(err as Error).message}\nRotary clearance: ${resolution.report.reasons.join('; ')}`;
                     } catch (rewriteErr) {
                         // The original refusal goes out unchanged.
                     }
