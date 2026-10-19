@@ -73,7 +73,7 @@ function switchFixture(options: { machine?: string; settingOn?: boolean; initial
     const handlers: Record<string, (args: object) => Promise<any>> = {};
     loaded.registerMotorPowerTools({ register: (tool: { name: string; handler: typeof handlers[string] }) => { handlers[tool.name] = tool.handler; } },
         () => 'http://localhost');
-    return { call: handlers.set_motor_power, manager, commands, mode, files, settings };
+    return { call: handlers.set_motor_power, review: loaded.motorPowerReview, manager, commands, mode, files, settings };
 }
 
 /**
@@ -269,6 +269,24 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         moved.f.setPosition({ at: { x: 50 } });
         await assert.rejects(moved.helper.runDirectOnOperatorInstruction(stale, { operator_instruction: 'go' }), /head moved since staging/);
         assert.deepEqual([...off.f.executed, ...moved.f.executed], []);
+    }],
+    ['the review text passes the REAL staged validation on the Ray: no motion, no refusal, no frame refusal', () => {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const validator = require('../validator');
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { dialectById } = require('../gcodeDialect');
+        const f = switchFixture();
+        const review = f.review;
+        for (const mode of ['control', 'manual']) {
+            const text = review(mode, 'operator asked', 'SHUTAll', '(machine: Ray)');
+            const report = validator.validateGcode(text, {
+                dialect: dialectById('ray-grbl'), machineIdentifier: RAY, hasZ: false, supportsRotary: false, travel: null, headType: null, phase: 'staged',
+            });
+            assert.deepEqual(report.machine ? report.machine.refusals : [], [], mode);
+            assert.equal(report.motionLineCount, 0, mode);
+            assert.equal(validator.resolveJobFrame(report, { originOffsetZ: null, offsetReliable: false, machineZMax: null }).refusal, null, mode);
+        }
+        assert.deepEqual(f.commands, []);
     }],
     ['non-Ray machines are refused, naming the machine; nothing is staged or sent', async () => {
         const f = switchFixture({ machine: A350 });

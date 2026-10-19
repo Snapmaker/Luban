@@ -199,5 +199,6 @@ export function clearMotorsReleased(machineIdentifier?: string | null): void {
 export function motorsReleasedReason(latch: MotorsReleasedLatch): string {
     return `The motors were released (Manual Mode / SHUTAll) by ${latch.by} at ${new Date(latch.at).toISOString()}: the head may `
         + 'have been pushed by hand, so the position is untrusted and reads unhomed until a home in Control Mode '
-        + '(set_motor_power {mode:\'control\'} homes).';
+        + '(set_motor_power {mode:\'control\'} switches and homes; if the operator already switched to Control Mode in Luban, '
+        + '`home` is enough).';
 }
