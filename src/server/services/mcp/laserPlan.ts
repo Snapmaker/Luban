@@ -411,6 +411,23 @@ export function laserHeadCheck(dialect: GcodeDialect, head: HeadFacts, action: s
     };
 }
 
+/**
+ * laser_frame's head rule, at ANY power: on a machine that also takes spindle
+ * words (2.0, Artisan, Original) the frame runs XY at the current Z, below
+ * the motion floor - only a laser at its focus height justifies that, and M3
+ * would also drive a CNC spindle - so the connection must REPORT a laser head.
+ * An unreported head is refused rather than guessed. The Ray always passes.
+ */
+export function requireLaserHeadForFrame(dialect: GcodeDialect, head: HeadFacts): LaserHeadCheck {
+    const check = laserHeadCheck(dialect, head, 'laser_frame');
+    if (!check.laserKnown) {
+        throw new LaserPlanError(`Refusing laser_frame: this connection does not report which head is fitted. On the ${dialect.label} a `
+            + 'frame runs XY at the current Z, below the motion floor, which only a laser module at its focus height justifies, and M3 '
+            + 'also drives a CNC spindle - so a laser head must be reported, not assumed. Nothing was sent.');
+    }
+    return check;
+}
+
 // ---- set_air_assist / set_crosshair --------------------------------------------
 
 export interface LaserSwitchPlan {

@@ -5,8 +5,8 @@ import { clearanceOptions } from '../clearanceContext';
 import { connectedMachineCapability, connectedMachineTag, describeConnectedMachine } from '../connectedMachine';
 import { jobManager } from '../jobs';
 import { landmarkStore } from '../landmarks';
-import { HeadFacts, LaserBox, LaserSwitchPlan, boxFromCorners, boxFromJobExtents, laserFocusRefusal, laserHeadCheck, planAirAssist,
-    planCrosshair, planLaserFrame } from '../laserPlan';
+import { HeadFacts, LaserBox, LaserSwitchPlan, boxFromCorners, boxFromJobExtents, laserFocusRefusal, planAirAssist,
+    planCrosshair, planLaserFrame, requireLaserHeadForFrame } from '../laserPlan';
 import { probeFeedService } from '../probeFeed';
 import { McpToolError, ToolRegistry } from '../registry';
 import { assertFreshHeartbeat, assertWithinTravel, describePlanningTravel, getPositionSnapshot, motionGcodeForm, requirePlanningTravel,
@@ -88,8 +88,9 @@ export function registerLaserTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             + 'approval and executed one step per start_gcode_job call, like traverse_xy - and NEVER auto-executed (staged_because '
             + 'says why). Motion is relative G91/G90 steps with settle comments on the Ray and the Original, the own-line G53 '
             + 'machine-frame form on the Snapmaker 2.0 and the Artisan; on a Z machine the frame runs at the CURRENT Z (the focus '
-            + 'height) and Z is never written. power_percent > 0 needs a laser head the connection reports (a 2.0 / Artisan / '
-            + 'Original with a CNC or unreported head is refused: M3 would spin a spindle). Results carry connected_machine and gcode_form.',
+            + 'height) and Z is never written. On the 2.0 / Artisan / Original the connection must REPORT a laser head, at any '
+            + 'power (a CNC or unreported head is refused: the frame runs below the motion floor, and M3 would spin a spindle). '
+            + 'Results carry connected_machine and gcode_form.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -136,16 +137,9 @@ export function registerLaserTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 throw new McpToolError('Current machine position unknown; cannot plan the frame.');
             }
             const dialect = machine.dialect || capability.dialect;
-            const head = connectedHead();
             let headNote: string;
             try {
-                const check = laserHeadCheck(dialect, head, 'laser_frame');
-                headNote = check.note;
-                if (Number(args.power_percent) > 0 && !check.laserKnown) {
-                    throw new McpToolError('Refusing a powered laser_frame: this connection does not report which head is fitted, and on the '
-                        + `${dialect.label} M3 also drives a CNC spindle. A frame at power_percent 0 (M5, G0 only) needs no laser head. `
-                        + `${connectedMachineTag()}`);
-                }
+                headNote = requireLaserHeadForFrame(dialect, connectedHead()).note;
             } catch (err) {
                 plannerError(err);
             }
@@ -222,6 +216,12 @@ export function registerLaserTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 run_z: plan.runZ,
                 head: headNote,
                 steps: plan.steps.map((s) => ({ what: s.what, laser: s.laser, machine: s.to, distance_mm: Number(s.distanceMm.toFixed(1)) })),
+                // The direct runner waits 45 s for a step to settle (tools/gcode.ts waitForStableHeartbeat); a longer
+                // side still runs, but returns position_verified: false.
+                settle_warning: plan.steps.some((s) => (s.distanceMm / plan.feed) * 60 > 45)
+                    ? `at F${plan.feed} a side takes over 45 s, longer than the direct runner waits for a settle: that step returns `
+                        + 'position_verified false - poll get_position before the next step, or raise feed.'
+                    : null,
                 perimeter_mm: Number(plan.perimeterMm.toFixed(1)),
                 total_distance_mm: Number(plan.totalDistanceMm.toFixed(1)),
                 travel: { ...travel.limits, basis: describePlanningTravel(travel), conflicts: travel.conflicts },
@@ -255,13 +255,14 @@ export function registerLaserTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             }
             const reason = String(args.reason || '').trim() || (args.on ? 'air assist on' : 'air assist off');
             const machine = traverseMachine('set_air_assist');
-            assertReadyForLaser('air assist');
             let plan: LaserSwitchPlan;
             try {
                 plan = planAirAssist(machine.dialect || connectedMachineCapability().dialect, connectedHead(), args.on, reason);
             } catch (err) {
                 plannerError(err);
             }
+            // The row's refusal (no air assist on the Original) comes before the readiness checks, so a stale beat cannot hide it.
+            assertReadyForLaser('air assist');
             return stageSwitch(plan, 'set_air_assist', getConfirmBaseUrl);
         },
     });
@@ -286,13 +287,13 @@ export function registerLaserTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             }
             const reason = String(args.reason || '').trim() || (args.on ? 'crosshair on' : 'crosshair off');
             const machine = traverseMachine('set_crosshair');
-            assertReadyForLaser('the crosshair');
             let plan: LaserSwitchPlan;
             try {
                 plan = planCrosshair(machine.dialect || connectedMachineCapability().dialect, connectedHead(), args.on, reason);
             } catch (err) {
                 plannerError(err);
             }
+            assertReadyForLaser('the crosshair');
             return stageSwitch(plan, 'set_crosshair', getConfirmBaseUrl);
         },
     });

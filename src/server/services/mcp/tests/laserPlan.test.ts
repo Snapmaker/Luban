@@ -14,6 +14,7 @@ import {
     planAirAssist,
     planCrosshair,
     planLaserFrame,
+    requireLaserHeadForFrame,
 } from '../laserPlan';
 import { TravelLimits } from '../machineTravel';
 import { MachineCapability, deriveMachineCapability } from '../machineCapability';
@@ -294,6 +295,14 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
             assert.match(refusal, /This refusal is deliberate: .* the laser tools write each machine's own laser words/);
             assert.doesNotMatch(refusal, /refuses rather than translates/);
             assert.match(procedureRefusal(deriveMachineCapability(null, null), tool) || '', /no machine is connected/);
+        }
+    }],
+    ['laser_frame needs a REPORTED laser head at any power where M3 also drives a spindle; the Ray always passes', () => {
+        assert.match(requireLaserHeadForFrame(RAY, NO_HEAD).note, /only head is its laser module/);
+        assert.match(requireLaserHeadForFrame(SM2, LASER_20W).note, /20W Laser Module/);
+        for (const dialect of [SM2, ARTISAN, ORIGINAL]) {
+            assert.throws(() => requireLaserHeadForFrame(dialect, NO_HEAD), /does not report which head is fitted.*below the motion floor/);
+            assert.throws(() => requireLaserHeadForFrame(dialect, { headType: 'cnc', toolHead: null }), /not a laser module/);
         }
     }],
     ['laser_focus is refused: no Z on the Ray (focus is mechanical), deferred everywhere else', () => {
