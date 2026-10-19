@@ -11,6 +11,7 @@ import { McpServer, isTrustedAddress, isTrustedOrigin, localSubnets } from './Mc
 import { McpListeners, resolveHttpsFiles } from './mcpListeners';
 import { OAuthShim } from './oauth';
 import { handleJobDashboardRequest } from './jobDashboard';
+import { dashboardReviews } from './jobDashboardState';
 import { jobManager } from './jobs';
 import { probeFeedService, resolveActiveProbeConfig } from './probeFeed';
 import { pendantRuntime } from './pendantRuntime';
@@ -366,7 +367,7 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
                 // The dashboard links to the CA trust page only once HTTPS is configured.
                 const https = resolveHttpsFiles(process.env, (key) => config.get(key));
                 return https.certFile || https.keyFile ? { url: `${publicBaseUrl(listeners.httpPort || port, settings.allowLan)}/trust` } : null;
-            });
+            }, () => dashboardReviews(operatorReviews.list())); // links only; the decision stays on /confirm/r<id>
             return;
         }
         if (handleTrustRequest(req, res, url, {

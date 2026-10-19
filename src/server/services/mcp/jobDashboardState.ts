@@ -1,4 +1,5 @@
 import type { McpJob } from './jobs';
+import { OperatorReviewItem, operatorReviewKindLabel } from './operatorReviews';
 
 const NOTICE_PHASES = new Set(['start_unverified', 'submitted', 'approved', 'rejected', 'started', 'completed', 'stopped', 'failed', 'stop-requested']);
 
@@ -25,6 +26,69 @@ export function summarizeDashboardJob(job: McpJob) {
         } : null,
         lastEvent: job.events.length ? job.events[job.events.length - 1] : null,
     };
+}
+
+/**
+ * Reviews on the feed: every pending one, then the most recently decided up to
+ * this total. Matches the job list's retention (JOB_RETENTION_LIMIT = 50 in
+ * jobs.ts, not imported so this module stays free of server dependencies).
+ */
+export const DASHBOARD_REVIEW_LIMIT = 50;
+
+export type DashboardReviewState = 'pending' | 'approved' | 'rejected' | 'stale';
+
+export interface DashboardReview {
+    id: string;
+    kind: string;
+    kindLabel: string;
+    machine: string | null;
+    title: string;
+    createdAt: number;
+    decidedAt: number | null;
+    state: DashboardReviewState;
+    /** The store's own state, so 'stale' can say whether it was superseded or its approval was refused. */
+    detail: OperatorReviewItem['state'];
+    error: string | null;
+    /** Relative, so it follows whatever origin (loopback, LAN, HTTPS) the dashboard was loaded from. */
+    link: string;
+}
+
+const REVIEW_STATE: { [state in OperatorReviewItem['state']]: DashboardReviewState } = {
+    awaiting_confirmation: 'pending',
+    approved: 'approved',
+    rejected: 'rejected',
+    superseded: 'stale',
+    refused: 'stale',
+};
+
+/**
+ * Small, explicit public list view of an operator review (operatorReviews.ts):
+ * no page body, summary object (a policy loosening carries its raw args),
+ * result, or apply/precondition. The decision stays on /confirm/r<id>.
+ */
+export function summarizeDashboardReview(item: Readonly<OperatorReviewItem>): DashboardReview {
+    return {
+        id: item.id,
+        kind: item.kind,
+        kindLabel: operatorReviewKindLabel(item.kind),
+        machine: item.machineKey,
+        title: item.title,
+        createdAt: item.createdAt,
+        decidedAt: item.decidedAt,
+        state: REVIEW_STATE[item.state] || 'stale',
+        detail: item.state,
+        error: item.error,
+        link: `/confirm/${item.id}`,
+    };
+}
+
+/** Pending first (newest staged first), then decided ones newest decision first, bounded as the job list is. */
+export function dashboardReviews(items: ReadonlyArray<Readonly<OperatorReviewItem>>, limit = DASHBOARD_REVIEW_LIMIT): DashboardReview[] {
+    const pending = items.filter((item) => item.state === 'awaiting_confirmation')
+        .sort((a, b) => b.createdAt - a.createdAt);
+    const decided = items.filter((item) => item.state !== 'awaiting_confirmation')
+        .sort((a, b) => (b.decidedAt ?? b.createdAt) - (a.decidedAt ?? a.createdAt));
+    return [...pending, ...decided.slice(0, Math.max(0, limit - pending.length))].map(summarizeDashboardReview);
 }
 
 export interface JobNotice {

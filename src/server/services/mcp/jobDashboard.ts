@@ -1,6 +1,7 @@
 import type http from 'http';
 import type { JobManager } from './jobs';
 import { dashboardHtml, notificationWorker } from './jobDashboardPage';
+import type { DashboardReview } from './jobDashboardState';
 
 function reply(res: http.ServerResponse, status: number, body: unknown, type = 'application/json'): void {
     res.writeHead(status, {
@@ -22,7 +23,9 @@ export function handleJobDashboardRequest(
     manager: JobManager,
     stop: (id: string) => Promise<object>,
     /** The CA trust page (plain HTTP) when HTTPS is configured, else null (#218). */
-    trust: () => { url: string } | null = () => null
+    trust: () => { url: string } | null = () => null,
+    /** Operator review pages (/confirm/r<id>) for the feed, already summarized (jobDashboardState.dashboardReviews). */
+    reviews: () => DashboardReview[] = () => []
 ): void {
     if (req.method === 'GET') {
         if (url.pathname === '/' || url.pathname === '/jobs' || url.pathname === '/jobs/') {
@@ -57,6 +60,7 @@ export function handleJobDashboardRequest(
                 jobs: manager.dashboardJobs(),
                 activeId: manager.getActive()?.id || null,
                 trust: trust(),
+                reviews: reviews(),
                 ...manager.dashboardFeed.read(since, url.searchParams.get('instance')),
             });
             return;
