@@ -25,7 +25,7 @@ function sacpString(text: string): Buffer {
 /** 0x01 0x21's data as the Ray sends it (snapmaker.cpp:159-191): model, hw, the 0x66666666 dummy, version, product SN. */
 function rayMachineInfo(sn: string | null, version = 'V1.7.4'): Buffer {
     const head = Buffer.alloc(6);
-    head.writeUInt8(4, 0);
+    head.writeUInt8(5, 0);
     head.writeUInt8(1, 1);
     head.writeUInt32LE(0x66666666, 2);
     return Buffer.concat([head, sacpString(version), ...(sn === null ? [] : [sacpString(sn)])]);
@@ -83,7 +83,7 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
     ['0x01 0x21: a real efuse SN after the version; the u32 serial is the 0x66666666 dummy', () => {
         const info = parseSacpMachineInfo(rayMachineInfo(EFUSE_SN));
         assert.ok(info);
-        assert.equal(info.model, 4);
+        assert.equal(info.model, 5);
         assert.equal(info.hardwareVersion, 1);
         assert.equal(info.serialU32, 0x66666666);
         assert.ok(isFillPatternSerial(info.serialU32));

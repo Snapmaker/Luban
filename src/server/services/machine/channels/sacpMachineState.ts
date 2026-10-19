@@ -117,6 +117,20 @@ export function mapCoordinateReport(report: SacpCoordinateReport, isFourAxis: bo
 }
 
 /**
+ * True when a product SN string identifies no machine: empty (after NULs and
+ * spaces), any byte outside printable ASCII, or one character repeated - an
+ * unprogrammed Ray efuse reads as 20 x '6' (RayController 91a675f
+ * snapmaker.cpp:159-191).
+ */
+export function isFillPatternProductSn(sn: unknown): boolean {
+    if (typeof sn !== 'string') {
+        return true;
+    }
+    const trimmed = sn.replace(/\0+$/, '').trim();
+    return !trimmed || !/^[\x21-\x7e]+$/.test(trimmed) || /^(.)\1*$/.test(trimmed);
+}
+
+/**
  * True when a SACP `masterControlSerialNumber` (a UInt32) is a FILL PATTERN
  * rather than a serial: 0, 0xFFFFFFFF, or one byte repeated four times
  * (0x66666666 = 1717986918 is what the Ray V1.7.4 reports - observed live
@@ -141,20 +155,6 @@ export function isFillPatternSerial(serial: unknown): boolean {
     }
     const low = value % 256;
     return value === low * 0x01010101;
-}
-
-/**
- * True when a product SN string identifies no machine: empty (after NULs and
- * spaces), any byte outside printable ASCII, or one character repeated - an
- * unprogrammed Ray efuse reads as 20 x '6' (RayController 91a675f
- * snapmaker.cpp:159-191).
- */
-export function isFillPatternProductSn(sn: unknown): boolean {
-    if (typeof sn !== 'string') {
-        return true;
-    }
-    const trimmed = sn.replace(/\0+$/, '').trim();
-    return !trimmed || !/^[\x21-\x7e]+$/.test(trimmed) || /^(.)\1*$/.test(trimmed);
 }
 
 /** SACP 0x01 0x21 (machine info) with the fields the SDK's MachineInfo model leaves unread. */

@@ -186,15 +186,42 @@ export function setGrblTextTransport(provider: (() => FirmwareChannel | null) | 
  * the channel, or - GRBL over SACP - nowhere (unless a GRBL text transport
  * is registered), with the reason. Decided before anything is sent.
  */
-export function firmwareTextRoute(): { channel: FirmwareChannel; via: 'channel' | 'grbl-text-transport' } | { channel: null; reason: string } {
+export function firmwareTextRoute(): { channel: FirmwareChannel | null; via: 'channel' | 'grbl-text-transport' | null; reason: string | null } {
     const dialect = connectedDialect();
     if (dialect.family === 'grbl' && sacpTransport()) {
         const transport = grblTextTransport ? grblTextTransport() : null;
-        return transport ? { channel: transport, via: 'grbl-text-transport' } : { channel: null, reason: SACP_GRBL_NO_REPLY_TEXT };
+        return transport
+            ? { channel: transport, via: 'grbl-text-transport', reason: null }
+            : { channel: null, via: null, reason: SACP_GRBL_NO_REPLY_TEXT };
     }
     const channel = connectionManager.getCurrentChannel() as unknown as FirmwareChannel | null;
-    return channel ? { channel, via: 'channel' } : { channel: null, reason: 'No machine connected.' };
+    return channel ? { channel, via: 'channel', reason: null } : { channel: null, via: null, reason: 'No machine connected.' };
 }
+
+/**
+ * What each GRBL query was for, what SACP gives instead on the Ray V1.7.4, and
+ * what has no SACP equivalent at all (tyeth/Luban#315 section 2, from
+ * RayController 91a675f). There is no structured settings read over SACP.
+ */
+export const SACP_GRBL_QUERY_COVERAGE: Array<{ query: string; overSacp: string; gap: string }> = [
+    { query: '$$ ($100+ steps/mm, $110+ max rate, $120/$121 acceleration, $30 max S, $32 laser mode)',
+        overSacp: 'none',
+        gap: 'no SACP equivalent: text link only' },
+    { query: '$$ ($130/$131 travel)',
+        overSacp: '0x01 0x22 machine size, from a compile-time table (nominal)',
+        gap: 'live or changed settings are invisible' },
+    { query: '$# (work offsets)',
+        overSacp: '0x01 0x30 / 0xa2: active WCS and origin_offset (= -WCO, that system + G92 combined)',
+        gap: 'no SACP equivalent for G54-G59 individually, G92 separately, G28/G30, TLO, PRB' },
+    { query: '$G (modal state)',
+        overSacp: 'active WCS (0x01 0x30); modal F (0xac 0xa2)',
+        gap: 'no SACP equivalent for G0/G1, G90/G91, G20/G21, M3/M4/M5, M8/M9, S (laser power reads 0)' },
+    { query: '$I (build info)', overSacp: '0x01 0x21 version string', gap: 'no SACP equivalent for the build date and [OPT:]' },
+    { query: '? (status report)',
+        overSacp: '0x01 0xa0 workflow status + is_moving; 0x01 0xa2 WPos of the PARSER target',
+        gap: 'no SACP equivalent for live position, FS, Bf, Ov, GRBL Alarm/Hold or rotary position' },
+    { query: 'M1005 (identity)', overSacp: '0x01 0x21 version + product SN; 0x01 0x20 module list', gap: 'only the compile date is missing' },
+];
 
 /** The result of a firmware read that sent nothing because SACP carries no reply text: the reason, the evidence, the identity. */
 export function sacpNoTextReport() {
@@ -207,6 +234,8 @@ export function sacpNoTextReport() {
             firmwareSource: `${RAY_FIRMWARE_SOURCE}, https://github.com/Snapmaker/RayController/tree/91a675fc10d6ac1454d3cfb8fa0581bf851b10eb`,
         },
         identity: machineInfoView(),
+        coverage: SACP_GRBL_QUERY_COVERAGE,
+        coverageSource: 'tyeth/Luban#315 (firmware-query coverage, RayController 91a675f)',
         acceleration: `GRBL $120/$121 unread: the validator's M4 short-segment rule uses its stated ${ASSUMED_LASER_ACCELERATION_MM_S2} mm/s^2 `
             + 'assumption.',
     };

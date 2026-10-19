@@ -81,7 +81,8 @@ function inert(file: string, overrides: Record<string, unknown>) {
 }
 
 /** A Ray V1.7.4's 0x01 0x21 as the channel records it (an efuse SN unless `sn` says otherwise). */
-const RAY_MACHINE_INFO = { firmwareVersion: 'V1.7.4', productSn: 'RAY20AB1234567890123', productSnRaw: 'RAY20AB1234567890123', truncated: null, readAt: 0 };
+interface MachineInfoRecord { firmwareVersion: string | null; productSn: string | null; productSnRaw: string | null; truncated: string | null; readAt: number }
+const RAY_MACHINE_INFO: MachineInfoRecord = { firmwareVersion: 'V1.7.4', productSn: 'RAY20AB1234567890123', productSnRaw: 'RAY20AB1234567890123', truncated: null, readAt: 0 };
 
 /**
  * tools/firmware.ts with a scripted Ray channel. `sacp` true = the channel
@@ -145,7 +146,7 @@ const FULL_SCRIPT = { $$: SETTINGS_TEXT, '$#': OFFSETS_TEXT, $G: PARSER_TEXT, $I
 function connectSequence(prepare: () => Promise<void>, options: {
     transport?: 'sacp' | 'text';
     script?: { [query: string]: string | null };
-    machineInfo?: typeof RAY_MACHINE_INFO | null;
+    machineInfo?: MachineInfoRecord | null;
     levelResult?: number | null;
 } = {}) {
     const script = options.script || FULL_SCRIPT;
@@ -557,6 +558,9 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.match(report.evidence.firmwareSource, /91a675fc10d6ac1454d3cfb8fa0581bf851b10eb/);
         assert.equal(report.identity.version, 'V1.7.4');
         assert.equal(report.identity.productSn, 'RAY20AB1234567890123');
+        assert.deepEqual(report.coverage.map((c: { query: string }) => c.query.split(' ')[0]), ['$$', '$$', '$#', '$G', '$I', '?', 'M1005']);
+        assert.ok(report.coverage.filter((c: { gap: string }) => /no SACP equivalent/.test(c.gap)).length >= 5);
+        assert.match(report.coverageSource, /#315/);
         assert.match(report.acceleration, /1000 mm\/s\^2/);
         const view = f.firmware.firmwareView();
         assert.equal(view.version, 'V1.7.4');
