@@ -720,26 +720,33 @@ export function readPersistedFrameLatch(): Partial<FrameLatch> | Partial<Persist
  * Pure: the latches a saved file stands for, each with the machine it binds.
  * A pre-WP8 file is ONE untagged latch: it was raised on the A350 (the only
  * machine the MCP drove before latches were per machine), so it migrates as
- * the A350's. An UNREADABLE file binds EVERY machine (stamped null, as a
- * latch raised with no machine known): which machine it was raised on cannot
- * be read, and unknown is conservative (#265 WP10, lead review of WP8) - a
- * readable file is the only thing that lets the Original or the Ray past an
- * A350 latch. Restoring the work frame on whichever machine is connected
- * clears it (positionOfRecord.clearFrameLatch).
+ * the A350's. An UNREADABLE file cannot say which machine it was raised on,
+ * and unknown is conservative (#265 WP10): it raises a latch of its own for
+ * EVERY machine in `knownMachines` (the per-machine store) - each cleared only
+ * by that machine's own verified restore - plus an unscoped one (null) for
+ * machines not known yet, which releases each such machine on its own restore
+ * and goes once no machine's own latch is left (positionOfRecord.clearFrameLatch).
  */
-export function persistedFrameLatches(saved: ReturnType<typeof readPersistedFrameLatch>): Array<{ machineIdentifier: string | null; reason: string }> {
+export function persistedFrameLatches(
+    saved: ReturnType<typeof readPersistedFrameLatch>,
+    knownMachines: string[] = [],
+    now: number = Date.now()
+): Array<{ machineIdentifier: string | null; reason: string }> {
     const carried = (reason: unknown) => `Carried over from before Luban restarted: ${String(reason || 'a queued pendant run')} `
         + 'Restore the work frame before any motion.';
     if (saved === null) {
         return [];
     }
     if (saved === 'unreadable') {
-        return [{
-            machineIdentifier: null,
-            reason: `Carried over from before Luban restarted: an unreadable latch file (${FRAME_LATCH_FILE}) says a `
-                + 'machine workspace may have been left selected, and which machine it was raised on cannot be read, so it binds '
-                + 'every machine. Restore the work frame before any motion.',
-        }];
+        const at = new Date(now).toISOString();
+        const reason = (whom: string) => `Carried over from before Luban restarted: latch file unreadable at ${at} - an unreadable latch `
+            + `file (${FRAME_LATCH_FILE}) cannot say which machine's workspace may have been left selected, so it binds ${whom}. `
+            + 'Restore the work frame on this machine before any motion.';
+        const unique = knownMachines.filter((id, i) => id && knownMachines.indexOf(id) === i);
+        return [
+            ...unique.map((id) => ({ machineIdentifier: id, reason: reason(`every machine the MCP knows, ${id} included`) })),
+            { machineIdentifier: null, reason: reason('every machine not known yet as well') },
+        ];
     }
     const latches = Array.isArray((saved as Partial<PersistedFrameLatches>).latches)
         ? (saved as PersistedFrameLatches).latches
@@ -750,12 +757,21 @@ export function persistedFrameLatches(saved: ReturnType<typeof readPersistedFram
     }));
 }
 
+/** Every machine identifier the per-machine store knows (an unreadable latch file binds each); [] when it cannot be read. */
+function knownMachineIdentifiers(): string[] {
+    try {
+        return Object.keys(machineStore.load().machines).map((key) => baseIdentifier(key));
+    } catch (err) {
+        return [];
+    }
+}
+
 export function restorePersistedFrameLatch(): void {
     const saved = readPersistedFrameLatch();
     if (saved === 'unreadable') {
-        log.warn(`The frame latch file ${frameLatchPath()} exists but could not be read: raising a latch that binds every machine.`);
+        log.warn(`The frame latch file ${frameLatchPath()} exists but could not be read: raising a latch for every known machine and one for machines not known yet.`);
     }
-    for (const latch of persistedFrameLatches(saved)) {
+    for (const latch of persistedFrameLatches(saved, saved === 'unreadable' ? knownMachineIdentifiers() : [])) {
         latchFrameUncertain(latch.reason, Date.now(), latch.machineIdentifier);
     }
 }

@@ -22,6 +22,7 @@ import { machineToolsFixture } from './machineStore.test';
 const A350 = 'Snapmaker 2.0 A350';
 const ORIGINAL = 'Original';
 const RAY = 'Ray';
+const J1 = 'Snapmaker J1';
 
 function withMachine(run: (connect: (id: string | null) => void) => void): void {
     let connected: string | null = null;
@@ -96,10 +97,49 @@ export const tests: Array<[string, () => void]> = [
         const unreadable = plain(tools.persistedFrameLatches('unreadable'));
         assert.deepEqual(unreadable.map((l: { machineIdentifier: string | null }) => l.machineIdentifier), [null]);
         assert.match(unreadable[0].reason, /unreadable latch file/);
-        assert.match(unreadable[0].reason, /binds every machine/);
+        assert.match(unreadable[0].reason, /every machine not known yet/);
         assert.deepEqual(plain(tools.persistedFrameLatches(null)), []);
     }],
-    ['one verified restore clears the machine latch and an unscoped one together; another machine latch stays', () => {
+    ['unreadable file, store knows the A350 and the Ray: a restore on the Ray leaves the A350 latched; the A350 clears its own', () => {
+        const { tools } = machineToolsFixture({});
+        const restored = JSON.parse(JSON.stringify(tools.persistedFrameLatches('unreadable', [A350, RAY, A350], Date.UTC(2026, 9, 19)))) as Array<{
+            machineIdentifier: string | null;
+            reason: string;
+        }>;
+        assert.deepEqual(restored.map((l) => l.machineIdentifier), [A350, RAY, null], 'one per known machine, plus the unscoped one');
+        assert.match(restored[0].reason, /latch file unreadable at 2026-10-19T00:00:00\.000Z/);
+        withMachine((connect) => {
+            for (const latch of restored) {
+                latchFrameUncertain(latch.reason, 1000, latch.machineIdentifier);
+            }
+            connect(RAY);
+            assert.equal(getFrameLatch()?.machineIdentifier, RAY);
+            noteFrameRestored(2000);
+            clearFrameLatch();
+            assert.equal(getFrameLatch(), null, 'the Ray is free after its own restore');
+            connect(A350);
+            assert.equal(getFrameLatch()?.machineIdentifier, A350, 'a restore on the Ray proves nothing about the A350');
+            connect(ORIGINAL); // not in the store: the unscoped latch binds it
+            assert.equal(getFrameLatch()?.machineIdentifier, null);
+            assert.equal(getFrameLatch()?.restoredAt, null, 'the Ray restore does not count for the Original either');
+            noteFrameRestored(3000);
+            assert.equal(getFrameLatch()?.restoredAt, 3000, 'its own restore does');
+            connect(J1);
+            assert.equal(getFrameLatch()?.restoredAt, null, 'and only for itself');
+            connect(ORIGINAL);
+            clearFrameLatch();
+            assert.equal(getFrameLatch(), null, 'the Original is released from the unscoped latch');
+            connect(J1);
+            assert.ok(getFrameLatch(), 'the unscoped latch stays for the others while the A350 is latched');
+            connect(A350);
+            clearFrameLatch();
+            assert.equal(getFrameLatch(), null, 'the A350 clears its own');
+            connect(J1);
+            assert.equal(getFrameLatch(), null, 'no machine latch left: the unscoped one is gone');
+            assert.deepEqual(allFrameLatches(), []);
+        });
+    }],
+    ['an unscoped latch stays while another machine still holds its own; the connected machine is released alone', () => {
         withMachine((connect) => {
             latchFrameUncertain('unreadable file', 1000, null);
             connect(A350);
@@ -111,7 +151,7 @@ export const tests: Array<[string, () => void]> = [
             clearFrameLatch();
             assert.equal(getFrameLatch(), null, 'the A350 is free after one restore');
             connect(RAY);
-            assert.equal(getFrameLatch(), null, 'the unscoped latch went with it');
+            assert.equal(getFrameLatch()?.reason, 'unreadable file', 'the Ray is still bound by the unscoped latch');
             connect(ORIGINAL);
             assert.equal(getFrameLatch()?.reason, 'Original run', 'the Original keeps its own');
         });

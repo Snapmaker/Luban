@@ -246,11 +246,11 @@ export const tests: Array<[string, () => Promise<void>]> = [
             // A raise rewrites the file whole: no temp file left behind, and it parses.
             positionOfRecord.latchFrameUncertain('fresh');
             assert.deepEqual(fs.readdirSync(dir), ['mcp-frame-latch.json']);
-            // v2 file: every machine's latch. The unreadable file's latch binds EVERY machine (stamped null, #265 WP10) and
-            // stays beside the connected machine's own fresh one; one verified restore clears both.
+            // v2 file: every machine's latch. The unreadable file raises the unscoped latch for machines not known yet
+            // (#265 WP10) beside the connected machine's own; with no other machine latched, its restore clears both.
             const saved = JSON.parse(fs.readFileSync(file, 'utf8')).latches as Array<{ reason: string; machineIdentifier: string | null }>;
             assert.deepEqual(saved.map((l) => l.machineIdentifier === null), [true, false], 'v2 file: the unscoped latch, then the machine latch');
-            assert.match(saved[0].reason, /unreadable latch file.*binds every machine/);
+            assert.match(saved[0].reason, /latch file unreadable at .*every machine not known yet/);
             assert.equal(saved[1].reason, 'fresh');
             assert.equal(positionOfRecord.getFrameLatch()?.reason, 'fresh', 'the machine latch applies first');
             positionOfRecord.clearFrameLatch();
