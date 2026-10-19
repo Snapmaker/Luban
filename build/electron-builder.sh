@@ -41,6 +41,26 @@ popd
 
 echo "Rebuild native modules using electron ${electron_version}"
 
+if [[ " $* " == *" --linux "* ]]; then
+    # Linux: ship serialport's N-API prebuild (prebuilds/linux-x64/
+    # node.napi.glibc.node, needs glibc 2.2.5) instead of compiling it here -
+    # a runner-compiled addon inherits the runner's glibc (2.42 on 26.04) and
+    # will not load on older distros. electron-rebuild misses that prebuild
+    # (it only looks for node.napi.node) and --which-module adds to the list
+    # rather than limiting it, so rebuild with --only. node-gyp-build prefers
+    # build/Release over prebuilds/, so nothing compiled may be left beside
+    # it, and electron-builder's own rebuild is off for the same reason
+    # (font-scanner is already built for Electron here).
+    echo "Native addons in dist/Luban:"
+    find dist/Luban/node_modules -name binding.gyp -not -path '*/node-addon-api/*'
+    npm run electron-rebuild -- --version=${electron_version:1} --module-dir=dist/Luban --only=font-scanner || exit 1
+    find dist/Luban/node_modules -type d -path '*/@serialport/bindings-cpp' | while read -r dir; do
+        rm -rf "$dir/build" "$dir/bin"
+    done
+    cross-env USE_HARD_LINKS=false npm run electron-builder -- "$@" -c.npmRebuild=false
+    exit $?
+fi
+
 npm run electron-rebuild -- --version=${electron_version:1} --module-dir=dist/Luban --which-module=font-scanner,serialport
 
 cross-env USE_HARD_LINKS=false npm run electron-builder -- "$@"
