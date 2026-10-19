@@ -75,7 +75,10 @@ import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from '..
 import { gcodeLease } from '../gcodeLease';
 import { connectionDiagnostics } from '../connectionDiagnostics';
 import { SacpMachineState, SacpMachineStateTracker, sacpDeviceSerial } from './sacpMachineState';
-import { GcodeReply, ReplyEmitter, assembleReply, readGcodeReply } from './sacpGcodeReply';
+import {
+    GcodeReply, LOG_FEEDBACK_INTERVAL_MS, LogFeedCallback, LogFeedOps, LubanLogFeed, ReplyEmitter, SACP_LOG_FEEDBACK, assembleReply,
+    readGcodeReply, sacpBusinessId, withLogFeed,
+} from './sacpGcodeReply';
 
 const log = logger('machine:channels:SacpChannel');
 
@@ -326,12 +329,35 @@ class SacpChannelBase extends Channel implements
     // log, so two reads in flight could not tell their lines apart.
     private replyReadChain: Promise<unknown> = Promise.resolve();
 
+    // What Luban's own connect (startHeartbeatLegacy) did to the log feed on
+    // this connection; reset by each startHeartbeatLegacy. Read only by the
+    // MCP's reply reads (withLogFeed) to leave Luban's subscription alone.
+    private lubanLogFeed: LubanLogFeed = { callback: null, requestedAt: null, pending: false, levelResult: null };
+
+    /** The SDK calls withLogFeed drives, on this connection's client. */
+    private logFeedOps(client: SacpClient): LogFeedOps {
+        const event = sacpBusinessId(SACP_LOG_FEEDBACK);
+        const emitter = client as unknown as {
+            listeners(name: string): LogFeedCallback[];
+            removeListener(name: string, callback: LogFeedCallback): void;
+        };
+        return {
+            listeners: () => emitter.listeners(event),
+            removeListener: (callback) => emitter.removeListener(event, callback),
+            setLevel: async (level) => (await client.logFeedbackLevel(level)).response.result,
+            subscribe: async (callback) => (await client.subscribeLogFeedback({ interval: LOG_FEEDBACK_INTERVAL_MS }, callback as ResponseCallback)).code,
+            unsubscribe: async (callback) => (await client.unSubscribeLogFeedback(callback as ResponseCallback)).code,
+        };
+    }
+
     /**
      * ONE G-code line with the firmware's reply text (MCP firmware queries,
      * #265 follow-up). executeGcode answers `ok` and drops the payload, and
      * stays exactly as it is for Luban's UI; this reads the two places a SACP
      * reply can be (sacpGcodeReply.ts): bytes after the result in the 0x01
      * 0x02 ACK, and the 0x01 0xa1 log feedback received during the read.
+     * When Luban's own log subscription is not live (the Ray, 2026-10-19),
+     * the read subscribes for itself and undoes it after (withLogFeed).
      * Refuses multi-line input (executeGcode would send every line).
      */
     public async executeGcodeWithReply(gcode: string, options: { timeoutMs?: number; quietMs?: number } = {}): Promise<GcodeReply> {
@@ -350,12 +376,17 @@ class SacpChannelBase extends Channel implements
             return refusedReply('no SACP session');
         }
         const client = this.sacpClient;
-        const read = this.replyReadChain.then(async () => readGcodeReply({
+        const read = this.replyReadChain.then(async () => withLogFeed({
+            ops: this.logFeedOps(client),
+            luban: () => this.lubanLogFeed,
+            stepTimeoutMs: options.timeoutMs,
+        }, async (subscribedBefore) => readGcodeReply({
             emitter: client as unknown as ReplyEmitter,
             send: async () => client.executeGcode(line),
             timeoutMs: options.timeoutMs,
             quietMs: options.quietMs,
-        }));
+            subscribed: subscribedBefore,
+        })));
         this.replyReadChain = read.catch(() => undefined);
         return read;
     }
@@ -922,8 +953,13 @@ class SacpChannelBase extends Channel implements
             enclosure: false
         };
 
+        // Bookkeeping only (lubanLogFeed): what this connect did to the log
+        // feed, so an MCP reply read knows whether the subscription is Luban's.
+        const logFeed: LubanLogFeed = { callback: null, requestedAt: Date.now(), pending: true, levelResult: null };
+        this.lubanLogFeed = logFeed;
         this.sacpClient.logFeedbackLevel(2).then(({ response }) => {
             log.info(`logLevel, ${response}`);
+            logFeed.levelResult = response.result;
             if (response.result === 0) {
                 this.subscribeLogCallback = (data) => {
                     const result = readString(data.response.data, 1).result;
@@ -932,7 +968,11 @@ class SacpChannelBase extends Channel implements
                     }
                     // this.socket && this.socket.emit('serialport:read', { data: result });
                 };
-                this.sacpClient.subscribeLogFeedback({ interval: 60000 }, this.subscribeLogCallback);
+                logFeed.callback = this.subscribeLogCallback as unknown as LogFeedCallback;
+                this.sacpClient.subscribeLogFeedback({ interval: 60000 }, this.subscribeLogCallback)
+                    .then(() => { logFeed.pending = false; }, (err) => { logFeed.pending = false; throw err; });
+            } else {
+                logFeed.pending = false;
             }
         });
 

@@ -1,6 +1,7 @@
 import assert from 'assert';
 import fs from 'fs';
 import path from 'path';
+import { EventEmitter } from 'events';
 import { dialectById } from '../gcodeDialect';
 import * as gcodeDialect from '../gcodeDialect';
 import * as firmwareQuery from '../firmwareQuery';
@@ -17,6 +18,7 @@ import { assembleReply } from '../../machine/channels/sacpGcodeReply';
 import { validateGcode } from '../validator';
 import { resolveTravel } from '../machineTravel';
 import { isolatedModule } from './jobDashboard.test';
+import { connectionManager as loadConnectionManager, diagnostics } from './sacpConnection.test';
 import { machineStoreFixture, machineToolsFixture } from './machineStore.test';
 
 // Read-only firmware queries (#265 follow-up): the allow-list, the GRBL
@@ -116,6 +118,67 @@ function firmwareFixture(script: { [query: string]: string | null } = {}) {
 }
 
 const FULL_SCRIPT = { $$: SETTINGS_TEXT, '$#': OFFSETS_TEXT, $G: PARSER_TEXT, $I: BUILD_TEXT, M1005: M1005_TEXT };
+
+/**
+ * The connect sequence end to end: the real ConnectionManager (inert
+ * harness, captured timers) with a stub machine instance whose onPrepare
+ * the test controls, a Ray-like channel answering the five queries, and the
+ * real tools/firmware.ts registered on that manager. Both modules' info
+ * lines are captured.
+ */
+function connectSequence(prepare: () => Promise<void>, script: { [query: string]: string | null } = FULL_SCRIPT) {
+    const lines: string[] = [];
+    const capture = () => ({ info: (m: string) => lines.push(m), warn: (m: string) => lines.push(`WARN ${m}`), debug: () => undefined, error: () => undefined });
+    const sent: string[] = [];
+    const live = { generation: 1 };
+    const channel = Object.assign(new EventEmitter(), {
+        getConnectionGeneration: () => live.generation,
+        getLatestMachineState: () => ({ status: 'idle', timestamp: Date.now() }),
+        executeGcodeWithReply: async (line: string) => {
+            sent.push(line);
+            const text = line in script ? script[line] : null;
+            const replyLines = text ? [{ level: 2, text }] : [];
+            return assembleReply({
+                result: 0, ackData: null, ackReceived: true, listening: true, subscribed: false, lines: replyLines, timedOut: false, elapsedMs: 3,
+            });
+        },
+    });
+    class StubInstance {
+        public setChannel(): void { /* the test's channel */ }
+
+        public setSocket(): void { /* no UI */ }
+
+        public async onPrepare() { return prepare(); }
+    }
+    const timers = { pending: [] as Array<{ fn: () => void; ms: number }> };
+    const cm = loadConnectionManager(channel, diagnostics(), {
+        '../../lib/logger': capture,
+        './instances': { RayMachineInstance: StubInstance, SM2Instance: StubInstance, J1MachineInstance: StubInstance, ArtisanMachineInstance: StubInstance },
+    }, timers);
+    cm.bindChannelEvents();
+    const firmware = inert('tools/firmware.ts', {
+        '../../../lib/logger': capture,
+        '../../machine/ConnectionManager': { connectionManager: cm },
+        '../index': { mcpBroadcast: () => undefined },
+        '../jobs': { jobManager: { getActive: () => null } },
+        '../connectedMachine': {
+            connectedDialect: () => (cm.getConnectionStatus().machineIdentifier === 'Ray' ? RAY : SM2),
+            connectedMachineTag: () => '(machine: test)',
+        },
+        '../gcodeDialect': gcodeDialect,
+        '../firmwareQuery': firmwareQuery,
+        '../procedureLimits': procedureLimits,
+        '../registry': { McpToolError: Error },
+    });
+    /** Fire the captured ready-listener bound (ConnectionManager's prepare wait). */
+    const fireReadyBound = () => {
+        const bound = timers.pending.filter((t) => t.ms >= 10000);
+        assert.equal(bound.length, 1, 'one bounded wait per Ready');
+        bound[0].fn();
+    };
+    const firstConnectLines = () => lines.filter((l) => /^first-connect firmware read/.test(l));
+    return { cm, channel, firmware, lines, sent, live, timers, fireReadyBound, firstConnectLines };
+}
 
 /** Wait until `done()` or ~1 s. */
 async function until(done: () => boolean): Promise<void> {
@@ -365,6 +428,71 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         await until(() => idle.sent.length === 5 && !!idle.firmware.currentFirmwareRecord());
         assert.deepEqual(idle.sent, ['$$', '$#', '$G', '$I', 'M1005']);
         assert.equal(idle.firmware.currentFirmwareRecord().trigger, 'first-connect');
+    }],
+
+    // ---- The connect sequence: ConnectionManager Ready -> first-connect read (2026-10-19) ----
+    ['Ray Ready whose prepare never settles: the listeners are told after the bound and the read runs (one line)', async () => {
+        const s = connectSequence(async () => new Promise(() => undefined));
+        s.firmware.startFirmwareReadOnConnect();
+        s.channel.emit('ready', { machineIdentifier: 'Ray' });
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        assert.deepEqual(s.sent, [], 'nothing before the bound: prepare may still finish');
+        s.fireReadyBound();
+        assert.ok(s.lines.some((l) => /machine ready \(Ray\): notifying 1 listener\(s\) \(prepare not settled after 15000 ms\)/.test(l)), s.lines.join('\n'));
+        await until(() => s.firstConnectLines().length > 0);
+        assert.deepEqual(s.sent, ['$$', '$#', '$G', '$I', 'M1005']);
+        assert.equal(s.firstConnectLines().length, 1, 'exactly one first-connect line');
+        assert.match(s.firstConnectLines()[0],
+            /first-connect firmware read on Ray \[machine prepare: not settled after 15000 ms\] \(ray-grbl\): \$\$ \$# \$G \$I M1005 answered/);
+    }],
+    ['Ray Ready whose prepare throws: told at once with the reason, the read runs, and the rejection still reaches onChannelReady', async () => {
+        const s = connectSequence(async () => Promise.reject(new Error('module info lost')));
+        s.firmware.startFirmwareReadOnConnect();
+        await assert.rejects(s.cm.onChannelReady({ machineIdentifier: 'Ray' }), /module info lost/, 'prepare behaves exactly as before');
+        assert.ok(s.lines.some((l) => /notifying 1 listener\(s\) \(prepare failed: module info lost\)/.test(l)));
+        await until(() => s.firstConnectLines().length > 0);
+        assert.equal(s.sent.length, 5);
+        assert.match(s.firstConnectLines()[0], /\[machine prepare: failed: module info lost\] \(ray-grbl\)/);
+        s.fireReadyBound(); // the bound fires late: notifies nothing a second time
+        assert.equal(s.lines.filter((l) => /notifying/.test(l)).length, 1);
+    }],
+    ['prepare done: the Ray reads; the A350 sends nothing and says why; a changed connection is a logged skip', async () => {
+        const ray = connectSequence(async () => Promise.resolve());
+        ray.firmware.startFirmwareReadOnConnect();
+        await ray.cm.onChannelReady({ machineIdentifier: 'Ray' });
+        await until(() => ray.firstConnectLines().length > 0);
+        assert.match(ray.firstConnectLines()[0], /^first-connect firmware read on Ray \(ray-grbl\): /);
+        const a350 = connectSequence(async () => Promise.resolve());
+        a350.firmware.startFirmwareReadOnConnect();
+        await a350.cm.onChannelReady({ machineIdentifier: 'A350' });
+        await until(() => a350.firstConnectLines().length > 0);
+        assert.deepEqual(a350.sent, [], 'A350: nothing sent, as before');
+        assert.deepEqual(a350.firstConnectLines(), ['first-connect firmware read on A350: skipped, its dialect is sm2-marlin (only a GRBL configuration is read on connect)']);
+        const moved = connectSequence(async () => Promise.resolve());
+        moved.firmware.startFirmwareReadOnConnect();
+        moved.channel.getLatestMachineState = () => { moved.live.generation = 2; return { status: 'idle', timestamp: Date.now() }; };
+        await moved.cm.onChannelReady({ machineIdentifier: 'Ray' });
+        await until(() => moved.firstConnectLines().length > 0);
+        assert.deepEqual(moved.sent, []);
+        assert.match(moved.firstConnectLines()[0], /skipped, the connection changed while waiting/);
+    }],
+    ['the MCP starting with a Ray already connected reads it now; a close before the bound notifies nobody', async () => {
+        const s = connectSequence(async () => Promise.resolve());
+        await s.cm.onChannelReady({ machineIdentifier: 'Ray' }); // connected before the MCP registered
+        assert.equal(s.firstConnectLines().length, 0);
+        s.firmware.startFirmwareReadOnConnect();
+        await until(() => s.firstConnectLines().length > 1);
+        assert.match(s.firstConnectLines()[0], /the MCP started with Ray already connected, reading it now/);
+        assert.match(s.firstConnectLines()[1], /\[machine prepare: before the MCP started\] \(ray-grbl\)/);
+        assert.equal(s.sent.length, 5);
+        const closed = connectSequence(async () => new Promise(() => undefined));
+        closed.firmware.startFirmwareReadOnConnect();
+        closed.channel.emit('ready', { machineIdentifier: 'Ray' });
+        closed.cm.channel = null;
+        closed.fireReadyBound();
+        assert.ok(closed.lines.some((l) => /1 listener\(s\) not notified, the connection closed or changed/.test(l)));
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        assert.deepEqual(closed.sent, []);
     }],
 
     // ---- Tool routing (tools/camera.ts) -------------------------------------------------

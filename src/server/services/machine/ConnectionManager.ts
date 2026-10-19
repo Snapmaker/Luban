@@ -62,6 +62,23 @@ import type { EnclosureRawReport, SerialEnclosureReport } from '../mcp/enclosure
 
 const log = logger('lib:ConnectionManager');
 
+/**
+ * How long the machine-ready listeners wait for a machine instance's
+ * onPrepare before being told anyway. A Ray prepares in about 1 s (connect
+ * 14:25:05, subscriptions 14:25:06 on 2026-10-19); prepare awaits SACP
+ * requests that have no SDK timeout, so without a bound a lost reply meant
+ * the listeners were never called.
+ */
+const READY_LISTENER_PREPARE_WAIT_MS = 15000;
+
+/** What a machine-ready listener gets: the connection's generation, and how the instance's prepare ended. */
+export interface MachineReadyEvent {
+    generation: string;
+    machineIdentifier: string | null;
+    /** 'done', 'failed: <reason>', 'not settled after N ms', or 'none: no machine instance'. */
+    prepare: string;
+}
+
 const ensureRange = (value, min, max) => {
     return Math.max(min, Math.min(max, value));
 };
@@ -208,10 +225,11 @@ class ConnectionManager {
 
     private host: string | null = null;
 
-    // Called once a machine instance has prepared (a new connection is ready),
+    // Called once per Ready, when the machine instance has prepared - or has
+    // failed to, or has not settled within READY_LISTENER_PREPARE_WAIT_MS -
     // with that connection's generation. The MCP's first-connect firmware read
     // registers here; a listener's failure never reaches the connection.
-    private readyListeners: Array<(ready: { generation: string; machineIdentifier: string | null }) => void> = [];
+    private readyListeners: Array<(ready: MachineReadyEvent) => void> = [];
 
     private scheduledTasksHandle;
 
@@ -337,7 +355,7 @@ class ConnectionManager {
     }
 
     /** Register for "a new connection is ready" (after the machine instance prepared). Returns the unregister function. */
-    public onMachineReady(listener: (ready: { generation: string; machineIdentifier: string | null }) => void): () => void {
+    public onMachineReady(listener: (ready: MachineReadyEvent) => void): () => void {
         this.readyListeners.push(listener);
         return () => {
             this.readyListeners = this.readyListeners.filter((l) => l !== listener);
@@ -491,11 +509,44 @@ class ConnectionManager {
         if (this.machineInstance) {
             log.info(`instance = ${this.machineInstance.constructor.name}`);
             log.info('On preparing machine instance...');
-            await this.machineInstance.onPrepare();
+            // The listeners no longer wait on prepare alone: it awaits SACP
+            // requests the SDK never times out, and a prepare that hung or threw
+            // left them uncalled with nothing logged (the Ray, 2026-10-19).
+            // Prepare itself is awaited (and throws) exactly as before.
+            const prepare = this.machineInstance.onPrepare();
+            this.notifyMachineReady(prepare);
+            await prepare;
+        } else {
+            this.notifyMachineReady(null);
         }
+    };
 
-        if (this.channel) {
-            const ready = { generation: this.getConnectionGeneration(), machineIdentifier: this.machineIdentifier };
+    /**
+     * Tell the machine-ready listeners about this Ready once `prepare`
+     * settles, or after READY_LISTENER_PREPARE_WAIT_MS if it has not - once,
+     * with one info line either way. Not when the channel closed or changed.
+     */
+    private notifyMachineReady(prepare: Promise<void> | null): void {
+        const channel = this.channel;
+        const machineIdentifier = this.machineIdentifier;
+        let notified = false;
+        let timer: ReturnType<typeof setTimeout> | null = null;
+        const notify = (outcome: string) => {
+            if (notified) {
+                return;
+            }
+            notified = true;
+            if (timer) {
+                clearTimeout(timer);
+                timer = null;
+            }
+            if (!this.channel || this.channel !== channel || this.machineIdentifier !== machineIdentifier) {
+                log.info(`machine ready (${machineIdentifier}): ${this.readyListeners.length} listener(s) not notified, `
+                    + `the connection closed or changed (prepare ${outcome})`);
+                return;
+            }
+            const ready: MachineReadyEvent = { generation: this.getConnectionGeneration(), machineIdentifier, prepare: outcome };
+            log.info(`machine ready (${machineIdentifier}): notifying ${this.readyListeners.length} listener(s) (prepare ${outcome})`);
             for (const listener of this.readyListeners) {
                 try {
                     listener(ready);
@@ -503,8 +554,17 @@ class ConnectionManager {
                     log.warn(`machine-ready listener failed: ${(err as Error).message}`);
                 }
             }
+        };
+        if (!prepare) {
+            notify('none: no machine instance');
+            return;
         }
-    };
+        prepare.then(
+            () => notify('done'),
+            (err) => notify(`failed: ${err && err.message ? err.message : String(err)}`),
+        );
+        timer = setTimeout(() => notify(`not settled after ${READY_LISTENER_PREPARE_WAIT_MS} ms`), READY_LISTENER_PREPARE_WAIT_MS);
+    }
 
     private onChannelErrorReport = async (data: { level: number; owner: number; errorCode: number }) => {
         const { level, owner, errorCode } = data;

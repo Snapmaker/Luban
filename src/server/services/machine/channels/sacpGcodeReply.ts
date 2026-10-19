@@ -16,6 +16,12 @@
 // 2 and has always ignored. Which source carried the text (if any) is reported
 // with the reply, so the first read on hardware settles it.
 //
+// The Ray (V1.7.4 over UDP, 2026-10-19) acknowledged every query with result 0
+// and no payload, and Luban's own log subscription was NOT live on that
+// connection - nothing pushed a log. So a read that finds no subscription
+// makes one for itself (withLogFeed): level 2 and 0x01 0xa1 for the read,
+// then removes exactly what it added; Luban's own subscription is never touched.
+//
 // Pure module: no server or SDK imports, unit-tested in
 // mcp/tests/sacpGcodeReply.test.ts against packets built with the SDK.
 
@@ -127,6 +133,8 @@ export interface GcodeReply {
      * controller is pushing its log; false = nothing pushes it, null = unknown.
      */
     log: { listening: boolean; subscribed: boolean | null; lines: LogFeedbackLine[] };
+    /** What the read did to the log feed around itself (withLogFeed); null when it did not manage it. */
+    feed: LogFeedReport | null;
     timedOut: boolean;
     elapsedMs: number;
     /** Why the read failed, when result is -1. */
@@ -146,6 +154,7 @@ export function assembleReply(input: {
     listening: boolean;
     subscribed?: boolean | null;
     lines: LogFeedbackLine[];
+    feed?: LogFeedReport | null;
     timedOut: boolean;
     elapsedMs: number;
     error?: string;
@@ -167,6 +176,7 @@ export function assembleReply(input: {
         source,
         ack: { ...ack, received: input.ackReceived },
         log: { listening: input.listening, subscribed: input.subscribed === undefined ? null : input.subscribed, lines: input.lines },
+        feed: input.feed || null,
         timedOut: input.timedOut,
         elapsedMs: input.elapsedMs,
         ...(input.error ? { error: input.error } : {}),
@@ -184,10 +194,10 @@ export interface ReplyEmitter {
  * One G-code with its reply: listens to the log feedback BEFORE sending,
  * sends, then collects until a terminator line, a quiet period after the
  * ACK, or the timeout. The listener is a plain EventEmitter listener on the
- * Dispatcher, added and removed here - never subscribe/unsubscribe, which
- * would send 0x01 0x00 / 0x01 0x01 to the controller and (unsubscribe) tear
- * down Luban's own log subscription. `send` resolves with the SDK's
- * `{ response }` for the 0x01 0x02 request.
+ * Dispatcher, added and removed here - this function never subscribes or
+ * unsubscribes (withLogFeed does that around it, only when Luban has not
+ * subscribed). `send` resolves with the SDK's `{ response }` for the 0x01
+ * 0x02 request.
  */
 export async function readGcodeReply(input: {
     emitter: ReplyEmitter | null;
@@ -195,6 +205,8 @@ export async function readGcodeReply(input: {
     timeoutMs?: number;
     quietMs?: number;
     now?: () => number;
+    /** Whether a log subscription was live before the read (withLogFeed knows; else the listener count says). */
+    subscribed?: boolean | null;
 }): Promise<GcodeReply> {
     const now = input.now || (() => Date.now());
     const timeoutMs = input.timeoutMs || REPLY_TIMEOUT_MS_DEFAULT;
@@ -221,7 +233,10 @@ export async function readGcodeReply(input: {
             wake();
         }
     };
-    const subscribed = emitter && typeof emitter.listenerCount === 'function' ? emitter.listenerCount(event) > 0 : null;
+    let subscribed: boolean | null = input.subscribed === undefined ? null : input.subscribed;
+    if (input.subscribed === undefined && emitter && typeof emitter.listenerCount === 'function') {
+        subscribed = emitter.listenerCount(event) > 0;
+    }
     if (emitter) {
         emitter.on(event, listener);
     }
@@ -288,4 +303,195 @@ export async function readGcodeReply(input: {
         }
     }
     return assembleReply({ result, ackData, ackReceived, listening: !!emitter, subscribed, lines, timedOut, elapsedMs: now() - started, error });
+}
+
+/** The level Luban's own connect sets (startHeartbeatLegacy `logFeedbackLevel(2)`); a read that sets one uses the same. */
+export const LOG_FEEDBACK_LEVEL = 2;
+/** The subscription interval Luban's own connect asks for (startHeartbeatLegacy). */
+export const LOG_FEEDBACK_INTERVAL_MS = 60000;
+/**
+ * Luban's own log setup (level, then subscribe) is not awaited on connect, so
+ * a read right after connecting (the first-connect read) waits up to this long
+ * after Luban's level request for it to settle before deciding whose
+ * subscription it is. Later reads find it settled and do not wait.
+ */
+export const LUBAN_LOG_SETUP_WAIT_MS = 5000;
+
+export type LogFeedCallback = (data: { response: { result: number; data: Buffer } }) => void;
+
+/** Luban's own log-feed setup on this connection (startHeartbeatLegacy), as the channel records it. */
+export interface LubanLogFeed {
+    /** Luban's 0x01 0xa1 callback, or null before startHeartbeatLegacy made one. */
+    callback: LogFeedCallback | null;
+    /** When Luban sent its level request (ms), null when it never did on this connection. */
+    requestedAt: number | null;
+    /** Luban's level + subscribe chain is still in flight. */
+    pending: boolean;
+    /** The controller's answer to Luban's level request; null = none (yet, or it failed). */
+    levelResult: number | null;
+}
+
+/** The SDK surface withLogFeed drives (SacpClient / Dispatcher, adapted by the channel). */
+export interface LogFeedOps {
+    /** The Dispatcher's current 0x01 0xa1 listeners. */
+    listeners(): LogFeedCallback[];
+    removeListener(callback: LogFeedCallback): void;
+    /** 0x01 0x10 set log level; resolves the result code. */
+    setLevel(level: number): Promise<number>;
+    /** Dispatcher.subscribe(0x01, 0xa1): resolves the result code (the SDK adds `callback` on result 0). */
+    subscribe(callback: LogFeedCallback): Promise<number>;
+    /** Dispatcher.unsubscribe(0x01, 0xa1): resolves the result code. */
+    unsubscribe(callback: LogFeedCallback): Promise<number>;
+}
+
+/** What a read did to the log feed around itself - the evidence when no text arrives. */
+export interface LogFeedReport {
+    /** Luban's own subscription was live before the read: used as it is, nothing sent, nothing changed. */
+    lubanSubscribed: boolean;
+    /** Luban's connect had set the level (result 0), so the read did not. */
+    lubanLevelSet: boolean;
+    /** The read sent 0x01 0x10 (level 2); `levelResult` = the controller's answer, null = none. */
+    levelSetByRead: boolean;
+    levelResult: number | null;
+    /** The controller accepted the read's own 0x01 0xa1 subscribe; `subscribeResult` null = no answer. */
+    subscribedByRead: boolean;
+    subscribeResult: number | null;
+    /** The read's unsubscribe (null = not sent, or no answer). */
+    unsubscribeResult: number | null;
+    /** The subscription is as it was before the read (Luban's untouched, the read's own removed). */
+    restored: boolean;
+    /** false when the read set the level (it cannot be put back); null when the read did not set it. */
+    levelRestored: boolean | null;
+    notes: string[];
+}
+
+/** One SDK step with a bound: the SDK puts no timeout on a non-RTO request, and a failed send resolves undefined. */
+async function boundedStep(run: () => Promise<number>, timeoutMs: number, what: string): Promise<{ result: number | null; error: string | null }> {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    try {
+        const outcome = await Promise.race([
+            run().then((result) => ({ result: typeof result === 'number' ? result : null, error: null as string | null })),
+            new Promise<{ result: null; error: string }>((resolve) => {
+                timer = setTimeout(() => resolve({ result: null, error: `${what}: no answer within ${timeoutMs} ms` }), timeoutMs);
+            }),
+        ]);
+        return outcome.result === null && !outcome.error ? { result: null, error: `${what}: no result` } : outcome;
+    } catch (err) {
+        return { result: null, error: `${what}: ${err && (err as Error).message ? (err as Error).message : String(err)}` };
+    } finally {
+        if (timer) {
+            clearTimeout(timer);
+        }
+    }
+}
+
+/**
+ * Run a reply read with the log feed on. Luban's own subscription
+ * (startHeartbeatLegacy) is used as it is when live - nothing is sent. When
+ * it is not: set level 2 (only when Luban's connect did not), subscribe
+ * 0x01 0xa1 with a placeholder callback (the Dispatcher only routes a
+ * notification while a listener exists; the read collects with its own), run
+ * the read, then - in `finally`, whatever the read did - unsubscribe and drop
+ * the placeholder, unless Luban subscribed while the read ran (then only the
+ * placeholder goes). Every SDK step is bounded. The level is set-only (no read
+ * in the SDK or the Snapmaker-SACP docs, and no documented default), so a
+ * level the read set stays at 2, the value Luban's own connect sets.
+ */
+export async function withLogFeed(input: {
+    ops: LogFeedOps | null;
+    luban: () => LubanLogFeed;
+    stepTimeoutMs?: number;
+    setupWaitMs?: number;
+    now?: () => number;
+    sleep?: (ms: number) => Promise<void>;
+}, read: (subscribedBefore: boolean | null) => Promise<GcodeReply>): Promise<GcodeReply> {
+    const ops = input.ops;
+    if (!ops) {
+        return read(null);
+    }
+    const now = input.now || (() => Date.now());
+    const sleep = input.sleep || (async (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
+    const stepTimeoutMs = input.stepTimeoutMs || REPLY_TIMEOUT_MS_DEFAULT;
+    const setupWaitMs = input.setupWaitMs === undefined ? LUBAN_LOG_SETUP_WAIT_MS : input.setupWaitMs;
+    const report: LogFeedReport = {
+        lubanSubscribed: false,
+        lubanLevelSet: false,
+        levelSetByRead: false,
+        levelResult: null,
+        subscribedByRead: false,
+        subscribeResult: null,
+        unsubscribeResult: null,
+        restored: false,
+        levelRestored: null,
+        notes: [],
+    };
+    let luban = input.luban();
+    while (luban.pending && luban.requestedAt !== null && now() - luban.requestedAt < setupWaitMs) {
+        await sleep(Math.min(100, setupWaitMs - (now() - luban.requestedAt)));
+        luban = input.luban();
+    }
+    if (luban.pending) {
+        report.notes.push(`Luban's own log setup has not settled (level request sent ${luban.requestedAt === null ? '?' : now() - luban.requestedAt} ms ago)`);
+    }
+    const lubanOwnsFeed = () => {
+        const callback = input.luban().callback;
+        return !!callback && ops.listeners().includes(callback);
+    };
+    report.lubanSubscribed = lubanOwnsFeed();
+    report.lubanLevelSet = luban.levelResult === 0;
+    if (report.lubanSubscribed) {
+        report.restored = true;
+        return { ...await read(true), feed: report };
+    }
+
+    const placeholder: LogFeedCallback = () => undefined;
+    let finished = false;
+    let subscribeSent = false;
+    let reply: GcodeReply;
+    try {
+        if (!report.lubanLevelSet) {
+            report.levelSetByRead = true;
+            const level = await boundedStep(async () => ops.setLevel(LOG_FEEDBACK_LEVEL), stepTimeoutMs, 'set log level');
+            report.levelResult = level.result;
+            if (level.error) {
+                report.notes.push(level.error);
+            }
+        }
+        subscribeSent = true;
+        const subscribing = Promise.resolve().then(async () => ops.subscribe(placeholder));
+        // A late ACK (after the bound) still makes the SDK add the placeholder: drop it then.
+        subscribing.then(() => finished && ops.removeListener(placeholder), () => undefined);
+        const subscribed = await boundedStep(async () => subscribing, stepTimeoutMs, 'subscribe log feed');
+        report.subscribeResult = subscribed.result;
+        report.subscribedByRead = subscribed.result === 0;
+        if (subscribed.error) {
+            report.notes.push(subscribed.error);
+        }
+        reply = await read(false);
+    } finally {
+        finished = true;
+        // Undo a subscription the controller took - or may have taken (no answer).
+        const mayBeSubscribed = subscribeSent && (report.subscribeResult === 0 || report.subscribeResult === null);
+        if (!mayBeSubscribed) {
+            report.restored = true;
+        } else if (lubanOwnsFeed()) {
+            report.restored = true;
+            report.notes.push('Luban subscribed the log feed while the read ran: its subscription stays, only the read\'s listener was removed');
+        } else {
+            const unsubscribed = await boundedStep(async () => ops.unsubscribe(placeholder), stepTimeoutMs, 'unsubscribe log feed');
+            report.unsubscribeResult = unsubscribed.result;
+            report.restored = unsubscribed.result === 0;
+            if (unsubscribed.error) {
+                report.notes.push(unsubscribed.error);
+            } else if (unsubscribed.result !== 0) {
+                report.notes.push(`unsubscribe log feed: the controller answered result ${unsubscribed.result}`);
+            }
+        }
+        ops.removeListener(placeholder);
+        if (report.levelSetByRead) {
+            report.levelRestored = false;
+            report.notes.push(`log level left at ${LOG_FEEDBACK_LEVEL} (the level Luban's own connect sets): 0x01 0x10 is set-only and its default is undocumented`);
+        }
+    }
+    return { ...reply, feed: report };
 }

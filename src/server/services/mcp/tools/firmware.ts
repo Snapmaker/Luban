@@ -21,7 +21,7 @@
 
 import logger from '../../../lib/logger';
 import { connectionManager } from '../../machine/ConnectionManager';
-import { GcodeReply } from '../../machine/channels/sacpGcodeReply';
+import { GcodeReply, LogFeedReport } from '../../machine/channels/sacpGcodeReply';
 import { mcpBroadcast } from '../index';
 import { jobManager } from '../jobs';
 import { connectedDialect, connectedMachineTag } from '../connectedMachine';
@@ -68,7 +68,20 @@ export interface QueryReply {
     elapsedMs: number;
     timedOut: boolean;
     /** SACP only: what the read saw, so "no text" can be told apart from "nothing pushes a log". */
-    sacp: { ackDataBytes: number; ackHex: string | null; logListening: boolean; logSubscribed: boolean | null; logLines: number } | null;
+    sacp: {
+        ackDataBytes: number;
+        ackHex: string | null;
+        logListening: boolean;
+        /** Luban's own log subscription was live before the read. */
+        logSubscribed: boolean | null;
+        logLines: number;
+        /** The read subscribed the log feed for itself / set its level / put the subscription back (null: not managed). */
+        subscribedByRead: boolean | null;
+        levelSetByRead: boolean | null;
+        restored: boolean | null;
+        /** The whole log-feed bookkeeping: result codes and notes (sacpGcodeReply.ts withLogFeed). */
+        logFeed: LogFeedReport | null;
+    } | null;
     error: string | null;
 }
 
@@ -193,10 +206,18 @@ function noTextNote(reply: QueryReply): string {
         return 'the channel returned no reply text';
     }
     const { sacp } = reply;
-    return `SACP ACK result ${reply.result} with ${sacp.ackDataBytes} payload byte(s) after the result`
-        + `${sacp.ackHex ? ` (hex ${sacp.ackHex})` : ''}; log feedback ${sacp.logSubscribed === false
-            ? 'is NOT subscribed on this connection'
-            : `${sacp.logLines} line(s) during the read${sacp.logSubscribed === null ? '' : ' (subscribed)'}`}`;
+    const ack = `SACP ACK result ${reply.result} with ${sacp.ackDataBytes} payload byte(s) after the result`
+        + `${sacp.ackHex ? ` (hex ${sacp.ackHex})` : ''}`;
+    const feed = sacp.logFeed;
+    if (feed && !feed.lubanSubscribed) {
+        const code = (value: number | null) => (value === null ? 'no answer' : `result ${value}`);
+        return `${ack}; log feed not subscribed by Luban, so the read subscribed it (${code(feed.subscribeResult)}`
+            + `${feed.levelSetByRead ? `, level 2 ${code(feed.levelResult)}` : ''}): ${sacp.logLines} line(s) during the read; `
+            + `${feed.restored ? 'unsubscribed after' : `NOT restored (unsubscribe ${code(feed.unsubscribeResult)})`}`;
+    }
+    return `${ack}; log feedback ${sacp.logSubscribed === false
+        ? 'is NOT subscribed on this connection'
+        : `${sacp.logLines} line(s) during the read${sacp.logSubscribed === null ? '' : ' (subscribed)'}`}`;
 }
 
 /**
@@ -233,6 +254,10 @@ export async function sendFirmwareQuery(channel: FirmwareChannel, tool: string, 
                 logListening: read.log.listening,
                 logSubscribed: read.log.subscribed,
                 logLines: read.log.lines.length,
+                subscribedByRead: read.feed ? read.feed.subscribedByRead : null,
+                levelSetByRead: read.feed ? read.feed.levelSetByRead : null,
+                restored: read.feed ? read.feed.restored : null,
+                logFeed: read.feed || null,
             },
             error: read.error || null,
         };
@@ -377,54 +402,87 @@ export async function queryGrblPosition(tool: string): Promise<{ reply: QueryRep
     return { reply, status };
 }
 
+/** What ConnectionManager hands a machine-ready listener (`prepare`: how the instance's prepare ended, when known). */
+export interface MachineReady {
+    generation: string | null;
+    machineIdentifier: string | null;
+    prepare?: string;
+}
+
 /**
  * First-connect read: when a GRBL connection becomes ready, read its
  * configuration once in the background - after the first heartbeat shows it
- * idle with no MCP job, never otherwise - and log one line with what came
- * back. Nothing here throws into the connection.
+ * idle with no MCP job, never otherwise. EVERY outcome logs one info line
+ * (ran, skipped and why, failed and why): on 2026-10-19 the Ray connected and
+ * nothing was logged at all. Nothing here throws into the connection.
  */
-async function firstConnectRead(ready: { generation: string; machineIdentifier: string | null }): Promise<void> {
+async function firstConnectRead(ready: MachineReady): Promise<void> {
+    const name = `first-connect firmware read on ${ready.machineIdentifier || 'an unidentified machine'}`
+        + `${ready.prepare && ready.prepare !== 'done' ? ` [machine prepare: ${ready.prepare}]` : ''}`;
     record = null;
     const dialect = connectedDialect();
     if (dialect.family !== 'grbl') {
+        log.info(`${name}: skipped, its dialect is ${dialect.id} (only a GRBL configuration is read on connect)`);
         return;
     }
     const deadline = Date.now() + FIRST_CONNECT_READ_WAIT_MS;
     while (!connectionManager.getLatestMachineState() && Date.now() < deadline) {
         await new Promise((resolve) => setTimeout(resolve, 250));
     }
-    if (connectionGeneration() !== ready.generation) {
+    const generation = connectionGeneration();
+    if (generation !== ready.generation) {
+        log.info(`${name}: skipped, the connection changed while waiting (generation ${ready.generation} -> ${generation})`);
         return;
     }
     if (!connectionManager.getLatestMachineState()) {
-        log.info(`first-connect firmware read on ${ready.machineIdentifier}: skipped, no heartbeat within ${FIRST_CONNECT_READ_WAIT_MS} ms`);
+        log.info(`${name}: skipped, no heartbeat within ${FIRST_CONNECT_READ_WAIT_MS} ms`);
         return;
     }
     const blocker = firmwareReadBlocker();
     if (blocker) {
-        log.info(`first-connect firmware read on ${ready.machineIdentifier}: skipped, ${blocker}`);
+        log.info(`${name}: skipped, ${blocker}`);
         return;
     }
     try {
         const { replies, serialAdopted } = await readFirmwareConfiguration({ tool: 'first-connect firmware read', trigger: 'first-connect' });
-        log.info(`first-connect firmware read on ${ready.machineIdentifier} (${dialect.id}): ${describeFirmwareRead(replies)}`
+        log.info(`${name} (${dialect.id}): ${describeFirmwareRead(replies)}`
             + `${serialAdopted ? '; deviceSerial set from M1005' : ''}`);
     } catch (err) {
-        log.info(`first-connect firmware read on ${ready.machineIdentifier}: failed, ${(err as Error).message}`);
+        log.info(`${name}: failed, ${(err as Error).message}`);
+    }
+}
+
+/** firstConnectRead, never rejecting: an unexpected throw is still one info line. */
+async function runFirstConnectRead(ready: MachineReady): Promise<void> {
+    try {
+        await firstConnectRead(ready);
+    } catch (err) {
+        log.info(`first-connect firmware read on ${ready.machineIdentifier || 'an unidentified machine'}: failed, ${(err as Error).message}`);
     }
 }
 
 let unregister: (() => void) | null = null;
 
-/** Register the first-connect read with the connection manager (once; absent in the inert test stub). */
+/**
+ * Register the first-connect read with the connection manager (once; absent
+ * in the inert test stub). When the MCP starts while a machine is already
+ * connected and prepared (MCP enabled after connecting), that connection gets
+ * its read now - it will see no Ready.
+ */
 export function startFirmwareReadOnConnect(): void {
     const manager = connectionManager as unknown as {
-        onMachineReady?: (listener: (ready: { generation: string; machineIdentifier: string | null }) => void) => () => void;
+        onMachineReady?: (listener: (ready: MachineReady) => void) => () => void;
+        getConnectionStatus?: () => { connected?: boolean; machineReady?: boolean; machineIdentifier?: string | null };
     };
     if (unregister || typeof manager.onMachineReady !== 'function') {
         return;
     }
     unregister = manager.onMachineReady((ready) => {
-        firstConnectRead(ready).catch((err) => log.warn(`first-connect firmware read: ${(err as Error).message}`));
+        runFirstConnectRead(ready);
     });
+    const status = typeof manager.getConnectionStatus === 'function' ? manager.getConnectionStatus() : null;
+    if (status && status.connected && status.machineReady) {
+        log.info(`first-connect firmware read: the MCP started with ${status.machineIdentifier || 'a machine'} already connected, reading it now`);
+        runFirstConnectRead({ generation: connectionGeneration(), machineIdentifier: status.machineIdentifier || null, prepare: 'before the MCP started' });
+    }
 }

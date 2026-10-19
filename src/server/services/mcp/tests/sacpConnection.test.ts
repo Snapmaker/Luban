@@ -9,10 +9,14 @@ import fs from 'fs';
 import path from 'path';
 import vm from 'vm';
 import ts from 'typescript';
+import { PeerId } from '@snapmaker/snapmaker-sacp-sdk/dist/communication/Header';
+import { stringToBuffer } from '@snapmaker/snapmaker-sacp-sdk/dist/helper';
 import { ConnectionDiagnosticState } from '../../machine/connectionDiagnosticState';
 import * as sacpMachineState from '../../machine/channels/sacpMachineState';
 import { GcodeLease } from '../../machine/gcodeLease';
 import * as positionOfRecord from '../positionOfRecord';
+import * as sacpGcodeReply from '../../machine/channels/sacpGcodeReply';
+import { answered, controller } from './sacpGcodeReply.test';
 
 type Exports = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -128,6 +132,53 @@ class FakeSacpClient {
     }
 }
 
+/**
+ * FakeSacpClient whose log-feed and G-code calls go through a real SDK
+ * Dispatcher to a scripted controller (sacpGcodeReply.test controller()),
+ * shaped like SacpClient's: logFeedbackLevel / subscribeLogFeedback /
+ * unSubscribeLogFeedback / executeGcode, and the Dispatcher's listeners.
+ */
+class LogFeedSacpClient extends FakeSacpClient {
+    public static script: Parameters<typeof controller>[0] = {};
+
+    public static last: ReturnType<typeof controller> | null = null;
+
+    private c = controller(LogFeedSacpClient.script);
+
+    public constructor() {
+        super();
+        LogFeedSacpClient.last = this.c;
+    }
+
+    public async logFeedbackLevel(level = 2) {
+        const { response, packet } = answered(await this.c.client.send(0x01, 0x10, PeerId.CONTROLLER, Buffer.alloc(1, level)));
+        return { response, packet, data: {} };
+    }
+
+    public async subscribeLogFeedback({ interval = 3600000 }, callback: (data: object) => void) {
+        const { response, packet } = answered(await this.c.client.subscribe(0x01, 0xa1, interval, callback));
+        return { code: response.result, packet, data: {} };
+    }
+
+    public async unSubscribeLogFeedback(callback: (data: object) => void) {
+        const { response, packet } = answered(await this.c.client.unsubscribe(0x01, 0xa1, callback));
+        return { code: response.result, packet, data: {} };
+    }
+
+    public async executeGcode(gcode: string) {
+        const { response, packet } = answered(await this.c.client.send(0x01, 0x02, PeerId.CONTROLLER, stringToBuffer(gcode)));
+        return { response, packet, data: {} };
+    }
+
+    public on(event: string, listener: (...args: unknown[]) => void) { this.c.client.on(event, listener); return this; }
+
+    public removeListener(event: string, listener: (...args: unknown[]) => void) { this.c.client.removeListener(event, listener); return this; }
+
+    public listenerCount(event: string) { return this.c.client.listenerCount(event); }
+
+    public listeners(event: string) { return this.c.client.listeners(event); }
+}
+
 class FakeUdpSocket extends EventEmitter {
     public bind(): void { /* no port is bound */ }
 }
@@ -146,11 +197,11 @@ class FakeCoordinateSystemInfo {
     }
 }
 
-function diagnostics() {
+export function diagnostics() {
     return new ConnectionDiagnosticState({ instanceId: 'test', pid: 1, startedAt: 0, version: 'test', build: 'test' }, () => undefined);
 }
 
-function udpChannel(diag: ConnectionDiagnosticState) {
+function udpChannel(diag: ConnectionDiagnosticState, Client: unknown = FakeSacpClient) {
     const timers: Timers = { pending: [] };
     const base = load('channels/SacpChannel.ts', {
         '@snapmaker/luban-platform': { WorkflowStatus: { Idle: 'idle', Unknown: 'unknown', Starting: 'starting', Running: 'running', Paused: 'paused' } },
@@ -162,16 +213,18 @@ function udpChannel(diag: ConnectionDiagnosticState) {
         '../../../../app/constants/machines': { MODULEID_MAP: {}, MODULEID_TOOLHEAD_MAP: { 0: 'extruder' } },
         lodash: { includes: (items: unknown[], value: unknown) => items.includes(value), find: () => undefined },
         '../../../lib/logger': logger,
-        '../sacp/SacpClient': FakeSacpClient,
+        '../sacp/SacpClient': Client,
         '../connectionDiagnostics': { connectionDiagnostics: diag },
         './sacpMachineState': sacpMachineState,
+        './sacpGcodeReply': sacpGcodeReply,
+        '../gcodeLease': { gcodeLease: new GcodeLease() },
         './Channel': Channel,
         './ChannelEvent': { ChannelEvent: events },
     }, timers);
     const module = load('channels/SacpUdpChannel.ts', {
         dgram: { createSocket: () => new FakeUdpSocket() },
         '../../../lib/logger': logger,
-        '../sacp/SacpClient': FakeSacpClient,
+        '../sacp/SacpClient': Client,
         './ChannelEvent': { ChannelEvent: events },
         './SacpChannel': base,
         './Channel': {},
@@ -184,8 +237,7 @@ function udpChannel(diag: ConnectionDiagnosticState) {
     return { channel, timers };
 }
 
-function connectionManager(channel: object, diag: ConnectionDiagnosticState) {
-    const timers: Timers = { pending: [] };
+export function connectionManager(channel: object, diag: ConnectionDiagnosticState, extra: Record<string, unknown> = {}, timers: Timers = { pending: [] }) {
     const module = load('ConnectionManager.ts', {
         '../../lib/logger': logger,
         lodash: { includes: (items: unknown[], value: unknown) => items.includes(value) },
@@ -206,6 +258,7 @@ function connectionManager(channel: object, diag: ConnectionDiagnosticState) {
             SnapmakerJ1Machine: { identifier: 'J1' },
             SnapmakerRayMachine: { identifier: 'Ray' },
         },
+        ...extra,
     }, timers);
     const cm = module.connectionManager;
     cm.channel = channel;
@@ -389,5 +442,44 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         } finally {
             FakeSacpClient.serialNumber = undefined;
         }
+    }],
+
+    ['Ray whose controller refuses Luban\'s log level: a reply read subscribes the log feed for itself, gets the text, and undoes it', async () => {
+        LogFeedSacpClient.script = { level: 1, reply: ['[VER:1.1f.20170801:]', 'ok'] };
+        const diag = diagnostics();
+        const { channel } = udpChannel(diag, LogFeedSacpClient);
+        await channel.connectionOpen({ address: '192.0.2.9' });
+        await channel.startHeartbeatLegacy(channel.sacpClient, undefined, 'ray-id');
+        const c = LogFeedSacpClient.last as ReturnType<typeof controller>;
+        await new Promise((resolve) => setTimeout(resolve, 20)); // Luban's (unawaited) level request is answered: refused
+        assert.deepStrictEqual(c.wire(), ['1 10'], 'Luban asked for level 2 and, refused, subscribed nothing');
+        const reply = await channel.executeGcodeWithReply('$I', { timeoutMs: 400, quietMs: 100 });
+        assert.deepStrictEqual(c.wire(), ['1 10', '1 10', '1 0', '1 2', '1 1']);
+        assert.strictEqual(reply.text, '[VER:1.1f.20170801:]\nok');
+        assert.strictEqual(reply.source, 'log-feedback');
+        assert.strictEqual(reply.feed.lubanSubscribed, false);
+        assert.strictEqual(reply.feed.levelSetByRead, true);
+        assert.strictEqual(reply.feed.levelResult, 1, 'refused again - reported, the read carries on');
+        assert.strictEqual(reply.feed.subscribedByRead, true);
+        assert.strictEqual(reply.feed.restored, true);
+        assert.strictEqual(c.state.subscribed, false, 'as before the read: not subscribed');
+        assert.strictEqual(c.client.listenerCount('417'), 0);
+    }],
+    ['Ray whose controller takes Luban\'s log level: Luban\'s subscription serves the read and is left exactly as it was', async () => {
+        LogFeedSacpClient.script = { reply: ['[GC:G0 G54 G17 G21 G90 G94 M5 M9 T0 F0 S0]', 'ok'] };
+        const diag = diagnostics();
+        const { channel } = udpChannel(diag, LogFeedSacpClient);
+        await channel.connectionOpen({ address: '192.0.2.9' });
+        await channel.startHeartbeatLegacy(channel.sacpClient, undefined, 'ray-id');
+        const c = LogFeedSacpClient.last as ReturnType<typeof controller>;
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        assert.deepStrictEqual(c.wire(), ['1 10', '1 0'], 'Luban: level 2, then subscribe');
+        const reply = await channel.executeGcodeWithReply('$G', { timeoutMs: 400, quietMs: 100 });
+        assert.deepStrictEqual(c.wire(), ['1 10', '1 0', '1 2'], 'the read sent only the query');
+        assert.strictEqual(reply.text, '[GC:G0 G54 G17 G21 G90 G94 M5 M9 T0 F0 S0]\nok');
+        assert.strictEqual(reply.feed.lubanSubscribed, true);
+        assert.strictEqual(reply.log.subscribed, true);
+        assert.strictEqual(c.state.subscribed, true);
+        assert.deepStrictEqual(c.client.listeners('417'), [channel.subscribeLogCallback], 'Luban\'s own callback only');
     }],
 ];
