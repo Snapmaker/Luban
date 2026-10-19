@@ -96,15 +96,42 @@ interface JobChannel {
 
 type FileJobChannel = JobChannel & Required<Pick<JobChannel, 'uploadGcodeFile' | 'startGcodeJob'>>;
 
-function getJobChannel(): FileJobChannel {
+function getConnectedChannel(): JobChannel {
     const channel = connectionManager.getCurrentChannel() as unknown as JobChannel;
     if (!channel) {
         throw new McpToolError('No machine connected.');
     }
+    return channel;
+}
+
+function getJobChannel(): FileJobChannel {
+    const channel = getConnectedChannel();
     if (typeof channel.uploadGcodeFile !== 'function' || typeof channel.startGcodeJob !== 'function') {
         throw new McpToolError('The connected channel does not support file job submission.');
     }
     return channel as FileJobChannel;
+}
+
+/**
+ * The connected channel, checked for what THIS job kind's executor uses: a
+ * file job uploads and starts a file; a direct job (executeDirectStep) and a
+ * procedure runner (sendGcodeVisible) send G-code through executeGcode. The
+ * Ray (SacpUdpChannel) and the Original (TextSerialChannel) have executeGcode
+ * but no file-job path, so requiring file upload for every kind refused every
+ * approved direct move there (live 2026-10-19, jobs 36fa11c67b4e/7a19f87b186a).
+ * The A350 over Wi-Fi (SstpHttpChannel) has both.
+ */
+function getJobChannelFor(kind: McpJob['kind']): JobChannel {
+    if (kind === 'file') {
+        return getJobChannel();
+    }
+    const channel = getConnectedChannel();
+    if (typeof channel.executeGcode !== 'function') {
+        throw new McpToolError(kind === 'direct'
+            ? `The connected channel does not support direct moves. ${connectedMachineTag()}`
+            : `The connected channel cannot send G-code, so it cannot run a server-driven procedure. ${connectedMachineTag()}`);
+    }
+    return channel;
 }
 
 interface DirectTarget {
@@ -992,7 +1019,8 @@ export async function stopGcodeJob(args: { job_id?: string; wait_ms?: number }, 
             job: jobManager.describe(job),
         };
     }
-    const channel = getJobChannel();
+    // A started direct batch stops here too, so only the stop itself is required (not file upload).
+    const channel = getConnectedChannel();
     if (typeof channel.stopGcodeJob !== 'function') {
         throw new McpToolError('The connected channel does not support stopping jobs.');
     }
@@ -1353,7 +1381,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             // before the token is consumed, so an offline attempt does not
             // waste an approval.
             assertFreshHeartbeat('starting a job');
-            const channel = getJobChannel();
+            const channel = getJobChannelFor(job.kind);
             const status = machineStatus();
             if (status !== 'idle') {
                 throw new McpToolError(`Machine is ${status || 'in an unknown state'}, not idle.`);
@@ -1520,6 +1548,8 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 };
             }
 
+            // Only a file job reaches here; getJobChannelFor checked its upload and start.
+            const fileChannel = channel as FileJobChannel;
             job.state = 'starting';
             jobManager.setActive(job);
             if (job.validation.machineZResolvedFor) {
@@ -1547,7 +1577,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             // subsequently dispatch a start.
             if (job.state !== 'starting') return { ok: false, job: jobManager.describe(job), retry_safe: false };
             const uploadError = await new Promise<string | null>((resolve) => {
-                channel.uploadGcodeFile(job.filePath, job.headType, `${job.name}.nc`, (msg) => {
+                fileChannel.uploadGcodeFile(job.filePath, job.headType, `${job.name}.nc`, (msg) => {
                     resolve(msg ? String(msg) : null);
                 });
             }).catch((err: Error) => err.message);
@@ -1573,10 +1603,10 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 retrySafe: false };
             // Observe before sending: even a slow/lost reply must not hide a
             // complete short run or its pauses/progress from the job record.
-            const poll = watchFileJobCompletion(job, channel);
+            const poll = watchFileJobCompletion(job, fileChannel);
             let started: { ok: boolean; code?: number; text?: string; notSent?: boolean };
             try {
-                started = await channel.startGcodeJob();
+                started = await fileChannel.startGcodeJob();
             } catch (err) {
                 started = { ok: false, text: (err as Error).message };
             }

@@ -741,7 +741,10 @@ async function previewOne(entry: string): Promise<{ device: string; frame: Captu
  * assumed offset is how this move becomes dangerous. No escape hatch - the
  * confirm page is the operator's word.
  */
-async function stageGotoWorkOrigin(args: { reason?: string; feed_rate?: number; wait_until_moved?: boolean }): Promise<object> {
+/** The confirm page's base URL (index.ts passes it to registerCameraTools); bare test registries leave it relative. */
+let confirmBaseUrl: () => string = () => '';
+
+async function stageGotoWorkOrigin(args:{ reason?: string; feed_rate?: number; wait_until_moved?: boolean }): Promise<object> {
     const reason = String(args.reason || '').trim();
     if (!reason) {
         throw new McpToolError('reason is required: say why the head should go to the work origin (it is shown to the operator).');
@@ -792,6 +795,9 @@ async function stageGotoWorkOrigin(args: { reason?: string; feed_rate?: number; 
         destination_machine: plan.destinationMachine,
         work_origin_offset_at_staging: position.originOffset,
         current_machine: { x, y, z },
+        confirm_url: `${confirmBaseUrl()}/confirm/${job.id}`,
+        next_step: 'Ask the operator to open confirm_url, review the DIRECT-move banner (machine destination, from, to, '
+            + 'distance, feed, Z unchanged) and approve; start_gcode_job with wait_for_approval_ms executes the move.',
         note: 'Staged, awaiting the operator\'s click on the confirm page - read them the MACHINE destination, not "work zero". '
             + 'Then start_gcode_job {job_id, wait_for_approval_ms: 110000}. Z is not touched; no frame is captured on arrival - call capture_frame after.',
     };
@@ -1104,7 +1110,10 @@ export const failureRecoveryDeps: RecoveryDeps = {
     now: () => Date.now(),
 };
 
-export function registerCameraTools(registry: ToolRegistry): void {
+export function registerCameraTools(registry: ToolRegistry, getConfirmBaseUrl?: () => string): void {
+    if (getConfirmBaseUrl) {
+        confirmBaseUrl = getConfirmBaseUrl;
+    }
     // Guarded: inert test harnesses hand in a bare registry stub.
     if (typeof registry.setFailureRecovery === 'function') {
         registry.setFailureRecovery(failureRecoveryDeps);

@@ -14,7 +14,12 @@ import { managerFixture } from './jobModalRecovery.test';
 
 // Exercise the registered tool with the real job manager and a fake clock,
 // channel and heartbeat. No machine/server/network access.
-function fixture() {
+// Channel shapes: 'file+direct' is the A350 over Wi-Fi (SstpHttpChannel: file
+// upload/start AND executeGcode); 'direct-only' is the Ray (SacpUdpChannel) or
+// the Original (TextSerialChannel): executeGcode, no file-job path.
+type ChannelShape = 'file+direct' | 'direct-only' | 'none';
+
+function fixture(shape: ChannelShape = 'file+direct') {
     const files = new Map<string, string>();
     const manager = managerFixture(files);
     let now = Date.now();
@@ -30,11 +35,14 @@ function fixture() {
     let stops = 0;
     let start: () => Promise<{ ok: boolean; text?: string; notSent?: boolean }> = async () => ({ ok: true });
     let upload: (callback: (msg: unknown) => void) => void = (callback) => callback(null);
-    const channel = {
+    const executed: string[] = [];
+    const fileApi = {
         uploadGcodeFile: (_path: string, _head: string, _name: string, callback: (msg: unknown) => void) => { uploads++; upload(callback); },
         startGcodeJob: async () => { starts++; return start(); },
         stopGcodeJob: async () => { stops++; return { ok: true }; },
     };
+    const executeGcode = async (gcode: string) => { executed.push(gcode); return { result: 0, text: 'ok' }; };
+    const channel = { 'file+direct': { ...fileApi, executeGcode }, 'direct-only': { executeGcode }, none: {} }[shape];
     const dependencies: Record<string, unknown> = {};
     const source = fs.readFileSync(path.join(__dirname, '../tools/gcode.ts'), 'utf8');
     for (const match of source.matchAll(/from '([^']+)'/g)) dependencies[match[1]] = {};
@@ -63,7 +71,14 @@ function fixture() {
         '../connectedMachine': {
             ...toolheadStubs(() => report as never, dialectById('sm2-marlin'), McpToolError),
             connectedDialect: () => dialectById('sm2-marlin'),
+            connectedMachineTag: () => `(machine: ${shape})`,
         },
+        // The direct-step path (executeDirectStep): the send goes straight to the channel.
+        './camera': {
+            GcodeNotSentError: class GcodeNotSentError extends Error {},
+            sendGcodeVisible: async (target: { executeGcode: typeof executeGcode }, _tool: string, payload: string) => target.executeGcode(payload),
+        },
+        '../traversePlan': { parseSettleComment: () => null },
     });
     const loaded = isolatedModule('tools/gcode.ts', dependencies, {
         Date: { now: () => now },
@@ -80,9 +95,19 @@ function fixture() {
         job.state = 'approved'; job.confirmToken = 'human'; job.approvedAt = Date.now();
         return job;
     };
+    // An approved direct job as traverse_xy / goto_work_origin stage it on the Ray (M5 leads the step).
+    const createDirectJob = (kind: 'direct' | 'procedure' = 'direct') => {
+        const validation = { warnings: [], extents: {}, spindle: {}, motionLineCount: 1 } as unknown as McpJob['validation'];
+        const job = manager.submit('; direct move\nM5\nG91\nG0 X10 Y0\nG90', 'traverse', 'cnc', validation, kind);
+        job.state = 'approved'; job.confirmToken = 'human'; job.approvedAt = Date.now();
+        return job;
+    };
     return {
         manager,
         createJob,
+        createDirectJob,
+        executed,
+        startDirect: async (job: McpJob) => handlers.start_gcode_job({ job_id: job.id, confirm_token: 'human', wait_until_moved: false }),
         handlers,
         setStart: (fn: typeof start) => { start = fn; },
         setUpload: (fn: typeof upload) => { upload = fn; },
@@ -215,5 +240,45 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         const report = { status: 'running', timestamp: 200, gcodePrintingInfo: { total: 208 } };
         assert.equal(fileStart.fileStartEvidence(report, 100, 1000, true, 'drill.nc', 208), 'active');
         assert.equal(fileStart.fileStartEvidence(report, 100, 1000, true, 'drill.nc', 500), 'unknown');
+    }],
+    // Live 2026-10-19 on the Ray (jobs 36fa11c67b4e, 7a19f87b186a): every approved
+    // direct job was refused at start by the file-upload check.
+    ['executeGcode-only channel (Ray, Original): an approved direct job runs through the direct-step path', async () => {
+        const f = fixture('direct-only'); const job = f.createDirectJob();
+        const result = await f.startDirect(job);
+        assert.equal(job.state, 'completed', JSON.stringify(result));
+        assert.equal(f.executed.length, 1);
+        assert.match(f.executed[0], /^M5\n/, 'the staged M5 still leads the step');
+        assert.ok(!/^;/m.test(f.executed[0]), 'comment lines are not sent');
+        assert.equal(f.counts().uploads, 0); assert.equal(f.counts().starts, 0);
+    }],
+    ['executeGcode-only channel still refuses a FILE job, before the approval is consumed', async () => {
+        const f = fixture('direct-only'); const job = f.createJob();
+        await assert.rejects(f.call(job), /does not support file job submission/);
+        assert.equal(job.state, 'approved'); assert.equal(job.confirmToken, 'human'); assert.ok(!job.tokenUsed);
+        assert.equal(f.executed.length, 0); assert.equal(f.counts().uploads, 0);
+    }],
+    ['a channel without executeGcode refuses direct jobs and procedures by name, before the approval is consumed', async () => {
+        const f = fixture('none');
+        const direct = f.createDirectJob();
+        await assert.rejects(f.startDirect(direct), /does not support direct moves\. \(machine: none\)/);
+        assert.equal(direct.state, 'approved'); assert.ok(!direct.tokenUsed);
+        const procedure = f.createDirectJob('procedure');
+        let ran = false;
+        procedure.runner = async () => { ran = true; return {}; };
+        await assert.rejects(f.call(procedure), /cannot run a server-driven procedure/);
+        assert.equal(procedure.state, 'approved'); assert.ok(!procedure.tokenUsed); assert.equal(ran, false);
+    }],
+    ['both-capability channel (A350): a direct job runs over executeGcode and never uploads', async () => {
+        const f = fixture(); const job = f.createDirectJob();
+        await f.startDirect(job);
+        assert.equal(job.state, 'completed');
+        assert.equal(f.executed.length, 1);
+        assert.equal(f.counts().uploads, 0); assert.equal(f.counts().starts, 0);
+    }],
+    ['stopping a handed-over direct job on an executeGcode-only channel names the missing stop, not file submission', async () => {
+        const f = fixture('direct-only'); const job = f.createDirectJob();
+        job.state = 'started';
+        await assert.rejects(f.stop(job), /does not support stopping jobs/);
     }],
 ];
