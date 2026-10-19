@@ -93,9 +93,18 @@ const loadModel = (options: LoadModelOptions) => {
             (progress: number) => {
                 observer.next({ type: 'LOAD_MODEL_PROGRESS', progress });
             },
-            (err: string) => {
-                log.error(`loadModel: failed ${err}`);
-                observer.next({ type: 'LOAD_MODEL_FAILED', err });
+            (err: unknown) => {
+                // The loader reports a failed fetch as a ProgressEvent, which
+                // postMessage cannot clone; send something that crosses the
+                // worker boundary or the page never hears that the load failed.
+                let reason = String(err);
+                if (err instanceof Error) {
+                    reason = err.message;
+                } else if (err && typeof err === 'object' && 'type' in err) {
+                    reason = `${(err as { type: string }).type} while fetching the file`;
+                }
+                log.error(`loadModel: failed ${reason}`);
+                observer.next({ type: 'LOAD_MODEL_FAILED', err: reason });
                 observer.complete();
             }
         );
