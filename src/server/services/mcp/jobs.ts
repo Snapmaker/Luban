@@ -23,6 +23,7 @@ import { describeActiveTool } from './activeTool';
 import type { RecoveryEvidence } from './failureRecovery';
 import type { FileStartAttempt } from './fileJobStart';
 import type { HoldRecord } from './approachHold';
+import type { StagedPosition } from './startPosition';
 
 const log = logger('service:mcp:jobs');
 
@@ -202,6 +203,15 @@ export interface McpJob {
      */
     landmarksAtStaging?: StagedLandmarks | null;
     /**
+     * Direct jobs: the judged machine position when the job was staged
+     * (#323). On a relative-steps machine every start compares the position
+     * now with where the step was planned from (startPosition.ts) and refuses
+     * before the approval is used. null = the position was unreadable at
+     * staging (the start then refuses there); undefined = no source wired (the
+     * inert test harnesses) or not a direct job.
+     */
+    stagedAtMachine?: StagedPosition | null;
+    /**
      * Size, SHA-256, line counts and first/last motion lines of EXACTLY the
      * text written to filePath - what start_gcode_job streams. On the
      * confirm page and in describe() so the operator can tell a complete
@@ -316,6 +326,21 @@ export class JobManager {
         this.machineSource = source;
     }
 
+    /** Reads the judged machine position for a direct job's stagedAtMachine (#323); wired by registerGcodeTools. */
+    private positionSource: (() => StagedPosition | null) | null = null;
+
+    public setPositionSource(source: (() => StagedPosition | null) | null): void {
+        this.positionSource = source;
+    }
+
+    private positionNow(): StagedPosition | null {
+        try {
+            return this.positionSource ? this.positionSource() : null;
+        } catch (err) {
+            return null;
+        }
+    }
+
     /** Reads the landmark review of the connected machine (landmarkReviewState.ts); wired by index.ts (#265 WP8). */
     private landmarksSource: (() => StagedLandmarks | null) | null = null;
 
@@ -367,6 +392,7 @@ export class JobManager {
             validation,
             ...(this.machineSource ? { stagedFor: this.machineSource() } : {}),
             ...(this.landmarksSource ? { landmarksAtStaging: this.landmarksNow() } : {}),
+            ...(this.positionSource && kind === 'direct' ? { stagedAtMachine: this.positionNow() } : {}),
             identity: describeProgramIdentity(gcode),
             source: source || (kind === 'file' ? { kind: 'inline' } : { kind: 'server' }),
             workspaceRevision: this.workspaceRevision,
@@ -552,6 +578,8 @@ export class JobManager {
             staged_for: job.stagedFor === undefined ? null : job.stagedFor,
             // eslint-disable-next-line camelcase
             landmarks_at_staging: job.landmarksAtStaging === undefined ? null : job.landmarksAtStaging,
+            // eslint-disable-next-line camelcase
+            ...(job.stagedAtMachine === undefined ? {} : { staged_at_machine: job.stagedAtMachine }),
             startedAt: job.startedAt,
             // eslint-disable-next-line camelcase
             start_attempt: job.startAttempt || null,

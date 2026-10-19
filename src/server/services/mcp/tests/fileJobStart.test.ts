@@ -20,8 +20,22 @@ import { managerFixture } from './jobModalRecovery.test';
 type ChannelShape = 'file+direct' | 'direct-only' | 'none';
 
 /** `machine` 'ray' loads the Ray's dialect row, whose motor-power mode is read through `readMotorPowerMode` (#321). */
+/**
+ * The judged position getPositionSnapshot reports (#323: a direct job records it
+ * at staging and a relative-steps start compares it); setPosition moves it.
+ */
+export interface FixturePosition {
+    machine: { x: number | null; y: number | null; z: number | null };
+    reliability: string;
+    isHomed: boolean | null;
+    connectedMachine: { hasZ: boolean };
+}
+
 export function fixture(shape: ChannelShape = 'file+direct', machine: { dialect?: DialectId; readMotorPowerMode?: () => Promise<unknown> } = {}) {
     const dialect = dialectById(machine.dialect || 'sm2-marlin');
+    let position: FixturePosition = {
+        machine: { x: 1, y: 399, z: 0 }, reliability: 'heartbeat', isHomed: true, connectedMachine: { hasZ: dialect.id !== 'ray-grbl' },
+    };
     const files = new Map<string, string>();
     const manager = managerFixture(files);
     let now = Date.now();
@@ -64,7 +78,8 @@ export function fixture(shape: ChannelShape = 'file+direct', machine: { dialect?
         '../probeFeed': { probeFeedService: { assertNoOvertravel: () => undefined } },
         '../spindleTelemetry': { spindleTelemetryService: { startForJob: () => { telemetry++; } } },
         '../vibrationCaptures': { vibrationCaptureService: { startForJob: () => { vibrations++; } } },
-        './machine': { assertFreshHeartbeat: () => undefined },
+        './machine': { assertFreshHeartbeat: () => undefined, getPositionSnapshot: () => position },
+        '../startPosition': require('../startPosition'),
         // WP4a: pure modules, the real ones.
         '../logicalFrame': require('../logicalFrame'),
         '../gcodeForms': require('../gcodeForms'),
@@ -104,10 +119,22 @@ export function fixture(shape: ChannelShape = 'file+direct', machine: { dialect?
         job.state = 'approved'; job.confirmToken = 'human'; job.approvedAt = Date.now();
         return job;
     };
+    // An approved direct BATCH (traverse_xy on the Ray): each step names its endpoint in a settle line.
+    const createDirectBatch = (steps: string[]) => {
+        const validation = { warnings: [], extents: {}, spindle: {}, motionLineCount: steps.length } as unknown as McpJob['validation'];
+        const job = manager.submit(steps.join('\n; --- next approved step ---\n'), 'traverse', 'cnc', validation, 'direct', steps);
+        job.state = 'approved'; job.confirmToken = 'human'; job.approvedAt = Date.now();
+        return job;
+    };
     return {
         manager,
         createJob,
         createDirectJob,
+        createDirectBatch,
+        setPosition: (change: Partial<FixturePosition> & { at?: Partial<FixturePosition['machine']> }) => {
+            const { at, ...rest } = change;
+            position = { ...position, ...rest, machine: { ...position.machine, ...(at || {}) } };
+        },
         executed,
         startDirect: async (job: McpJob) => handlers.start_gcode_job({ job_id: job.id, confirm_token: 'human', wait_until_moved: false }),
         handlers,

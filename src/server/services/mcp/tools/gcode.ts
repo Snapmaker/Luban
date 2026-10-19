@@ -38,7 +38,8 @@ import { McpToolError, ToolRegistry } from '../registry';
 import { STOCK_ARG_SCHEMA } from '../rotaryCallContext';
 import { ComputedHeightDecision, decideComputedHeightTraverse, decideSafeZRaise, decideSafeZTraverse } from '../safeZPolicy';
 import { TraversePlan, TraversePlanInput, parseSettleComment, planTraverseXy, traverseMachinePath } from '../traversePlan';
-import { machineFrameMove, needsPlannerSync, relativeStep, workFrameMove } from '../gcodeForms';
+import { gcodeFormOf, machineFrameMove, needsPlannerSync, relativeStep, workFrameMove } from '../gcodeForms';
+import { expectedStepStart, startPositionRefusal } from '../startPosition';
 import { machineStatusOf } from '../logicalFrame';
 import { assertMotorPowered, assertToolheadNotOn, connectedConnectionId, connectedDialect, connectedMachineCapability, connectedMachineTag, connectedToolhead,
     connectedToolheadNote, describeConnectedMachine } from '../connectedMachine';
@@ -346,6 +347,48 @@ async function executeDirectStep(job: McpJob, channel: GcodeChannel, shouldWait:
 }
 
 /**
+ * #323: refuse a direct step that would start somewhere other than where it
+ * was planned from (startPosition.ts) - the position recorded at staging for
+ * the first step, the previous step's settle line for a later one. Only on a
+ * relative-steps machine (the Ray, the Original, the J1), where a step is an
+ * increment from that position; the A350's absolute G53 steps are not
+ * checked. Call it before the token is consumed; `after` says what the
+ * refusal left untouched. A job with no recorded position (undefined: no
+ * source wired, or not direct) is not checked; one whose position was
+ * unreadable at staging (null) refuses.
+ */
+function assertDirectStartPosition(job: McpJob, after: string): void {
+    if (job.kind !== 'direct' || job.stagedAtMachine === undefined) {
+        return;
+    }
+    let relative = false;
+    try {
+        relative = gcodeFormOf(connectedDialect()) === 'relative-steps';
+    } catch (err) {
+        // A machine outside the dialect table: the motion gates refuse it elsewhere.
+        relative = false;
+    }
+    if (!relative) {
+        return;
+    }
+    const batch = Array.isArray(job.steps) && job.steps.length > 0 ? job.steps : null;
+    const stepIndex = batch ? (job.nextStep ?? 0) : 0;
+    const position = getPositionSnapshot();
+    const refusal = startPositionRefusal({
+        expected: expectedStepStart(job, stepIndex),
+        current: position.machine,
+        reliability: position.reliability,
+        isHomed: position.isHomed,
+        hasZ: position.connectedMachine.hasZ,
+    });
+    if (refusal) {
+        const what = batch ? `step ${stepIndex + 1}/${batch.length}` : 'this job';
+        jobManager.appendEvent(job, 'start_refused', { note: refusal, position: position.machine });
+        throw new McpToolError(`Refusing to start ${what}: ${refusal} ${after} ${connectedMachineTag()}`);
+    }
+}
+
+/**
  * Run a POLICY-approved direct job to completion on the staging call itself
  * (safeZPolicy.ts; operator ruling 2026-10-17, #241). The caller has already
  * made every check the staging path makes (fresh heartbeat, idle, homed,
@@ -475,6 +518,7 @@ export async function runPolicyApprovedDirectJob(job: McpJob, token: string, sho
     }
     // As start_gcode_job: the Ray's motors must be powered before the policy approval is spent (#321).
     await assertMotorPowered('this policy-approved move', 'Nothing was sent.');
+    assertDirectStartPosition(job, 'Nothing was sent.');
     const verdict = jobManager.consumeToken(job, token);
     if (!verdict.ok) {
         throw new McpToolError(verdict.reason || 'Policy approval could not be consumed.');
@@ -487,6 +531,11 @@ export async function runPolicyApprovedDirectJob(job: McpJob, token: string, sho
         // (stop_gcode_job withdraws / machine-stops the job) ends it here.
         if (job.state !== 'started' || job.confirmToken === null) {
             break;
+        }
+        try {
+            assertDirectStartPosition(job, 'The remaining steps were not sent.');
+        } catch (err) {
+            throw new McpToolError(`Series interrupted after ${stepsExecuted} step(s): ${(err as Error).message}`);
         }
         const next = jobManager.consumeToken(job, job.confirmToken);
         if (!next.ok) {
@@ -1059,6 +1108,13 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
     if (typeof jobManager.setMachineSource === 'function') {
         jobManager.setMachineSource(connectedStagingMachine);
     }
+    // Every direct job records the judged machine position it was staged at (#323, assertDirectStartPosition).
+    if (typeof jobManager.setPositionSource === 'function' && typeof getPositionSnapshot === 'function') {
+        jobManager.setPositionSource(() => {
+            const { machine } = getPositionSnapshot();
+            return { x: machine.x, y: machine.y, z: machine.z };
+        });
+    }
     registry.register({
         name: 'validate_gcode',
         description: 'Statically inspect G-code: motion extents, feeds, spindle commands and '
@@ -1294,7 +1350,11 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             + 'stop_gcode_job remains available. Results include retry_safe and machine_status_after. On the Ray the motor-power '
             + 'mode (SACP 0x01 0x48) is read before the approval is used: unless it is STAYPOWER (Control Mode) the start is refused '
             + 'and nothing is sent. Switching Luban\'s Set Origin Mode to Control Mode homes the Ray, and the job was planned from the '
-            + 'position before that: withdraw it (stop_gcode_job) and restage after the switch.',
+            + 'position before that: withdraw it (stop_gcode_job) and restage after the switch. On a relative-steps machine (Ray, '
+            + 'Original, J1) a direct job\'s start, and each later step of a batch, is refused with "the head moved since staging - '
+            + 'withdraw and restage" when the judged machine position differs by more than 0.05 mm from where the step was planned '
+            + 'from (job.staged_at_machine, then the previous step\'s endpoint), or the machine is unhomed or its position unreliable; '
+            + 'nothing is sent and the approval is not used.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -1406,6 +1466,11 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             // is a relative increment planned from the position before it.
             await assertMotorPowered('starting this job', 'Nothing was sent and the approval was not used. Switching to Control Mode homes the '
                 + 'Ray, and this job was planned from the position before that: withdraw it with stop_gcode_job and restage it after the switch.');
+            // A relative step lands where it was planned only from where it
+            // was planned (#323): re-check the head before the token is spent,
+            // for the first step and for every later step of a batch.
+            assertDirectStartPosition(job, 'Nothing was sent and the approval was not used; withdraw it with stop_gcode_job and restage it '
+                + 'from the current position.');
 
             // Consumed from here on, success or not - a failed start needs a
             // fresh human approval, not a retry loop.
