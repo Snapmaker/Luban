@@ -93,6 +93,7 @@ class FakeMarlinController extends EventEmitter {
         super();
         this.controller.on('pos', (res: unknown) => this.emit('positionReport', res));
         this.controller.on('originOffset', (res: unknown) => this.emit('originOffsetReport', res));
+        this.controller.on('selected', (res: unknown) => this.emit('originSelectionReport', res));
     }
 
     public addConnection(): void { /* socket joined */ }
@@ -142,6 +143,30 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.ok(posHandler.includes('this.emit(\'positionReport\', res)'), 'the pos handler emits positionReport');
         const offsetHandler = source.slice(source.indexOf('this.controller.on(\'originOffset\''), source.indexOf('this.controller.on(\'headStatus\''));
         assert.ok(offsetHandler.includes('this.emit(\'originOffsetReport\', res)'), 'the originOffset handler emits originOffsetReport');
+        const selectedHandler = source.slice(source.indexOf('this.controller.on(\'selected\''), source.indexOf('this.controller.on(\'cnc:stop\''));
+        assert.ok(selectedHandler.includes('this.emit(\'originSelectionReport\', res)'), 'the selected handler emits originSelectionReport');
+    }],
+
+    ['channel: a whole M1007 reply through the real parser gives a complete, fresh work offset matched to its write', async () => {
+        clock.now = 1000;
+        const channel = textChannel();
+        await channel.connectionOpen({ port: 'COM3' });
+        const controller = channel.getController() as FakeMarlinController;
+        controller.emit('lineWritten', 'G54;');
+        controller.emit('lineWritten', 'M1007');
+        // Snapmaker2-Controller snapmaker/src/gcode/M1005_1007.cpp, in its order.
+        for (const line of ['Homed: YES', 'Selected origin num: 1', 'Selected == Current: YES', 'Origin offset X: 120.50',
+            'Origin offset Y: 80.25', 'Origin offset Z: 200.00', 'Origin offset B: 0.00']) {
+            controller.receive(line);
+        }
+        controller.emit('lineWritten', 'M114');
+        controller.receive(SM2_M114);
+        const evidence = channel.getLatestMachineState().frameEvidence;
+        assert.deepStrictEqual(plain({ ...evidence.workOffset, at: 0, writtenAt: 0 }), {
+            x: 120.5, y: 80.25, z: 200, selectedOrigin: 1, selectedEqualsCurrent: true, at: 0, writtenAt: 0, staleBecause: null,
+        });
+        assert.strictEqual(evidence.lastSelect.origin, 1);
+        assert.strictEqual(evidence.reportStaleBecause, null);
     }],
 
     ['the real Marlin parser hands strings; the state carries numbers, the Count tail and the logical frame', () => {

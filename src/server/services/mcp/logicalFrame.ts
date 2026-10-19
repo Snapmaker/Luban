@@ -372,7 +372,9 @@ function judgeWorkOffset(dialect: GcodeDialect, evidence: LogicalFrameEvidence |
             + `the post-home anchor reads ${xyz(fromCount)} - ${apart.join('/')} differ by more than ${POSITION_EPSILON_MM} mm. Either the head `
             + 'is still moving (M114 is the planner\'s queued target, Count is the steppers) or the work origin changed where the MCP cannot '
             + 'see it (touchscreen, another host). Waiting for a resting report; if it persists, hand the work frame back '
-            + '(restore_work_frame) or home again.', null, false);
+            + '(restore_work_frame) or home again. If it persists right after every move, the Count scale is wrong: the MCP assumes '
+            + `${spm.x}/${spm.y}/${spm.z} steps per mm (8 mm-lead linear modules); 2.5-generation modules with a 20 mm lead on X/Y `
+            + 'are not supported over USB.', null, false);
     }
     return {
         mappable: true,
