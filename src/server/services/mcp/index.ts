@@ -17,6 +17,7 @@ import { pendantRuntime } from './pendantRuntime';
 import { McpToolError, ToolRegistry } from './registry';
 import { connectedMachineCapability } from './connectedMachine';
 import { procedureRefusal } from './procedureGates';
+import { liveToolCallHooks } from './toolResultHooks';
 import { registerCalibrationTools } from './tools/calibration';
 import { registerCameraTools } from './tools/camera';
 import { registerCameraProgramTool } from './cameraProgram';
@@ -296,6 +297,10 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
             throw new McpToolError(refusal);
         }
     });
+    // Machine visibility (#265 WP8): applied records and the landmark review
+    // on every motion / staging result, the rotary `stock` scope around the
+    // tools that take it (toolResultHooks.ts).
+    registry.setCallHooks(liveToolCallHooks());
     registeredToolCount = registry.list().length;
 
     // Operator-facing live camera view; also the single frame source for

@@ -30,6 +30,7 @@ import { describeProbeApproachHoldAsGcode, planProbeApproachHold, runProbeApproa
 import { probeFeedService } from '../probeFeed';
 import { TRAVEL_FEED, assertMachineReadyForProcedure, moveMachineSettled } from '../probing';
 import { McpToolError, ToolRegistry } from '../registry';
+import { STOCK_ARG_SCHEMA } from '../rotaryCallContext';
 import { geometryValue } from '../rotaryGeometry';
 import { RIM_ARG_SCHEMA } from '../stylusReachGuard';
 import { checkMotion, describeViolations } from '../envelopeChecks';
@@ -1516,6 +1517,7 @@ ${describeProbeTracePlanAsGcode(plan)}`;
         inputSchema: {
             type: 'object',
             properties: {
+                stock: STOCK_ARG_SCHEMA,
                 name: { type: 'string', description: 'Program name shown to the operator.' },
                 ops: {
                     type: 'array',

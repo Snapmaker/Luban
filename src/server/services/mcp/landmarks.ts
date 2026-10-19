@@ -9,6 +9,7 @@ import { ObstacleBox, POSITION_EPSILON_MM, segmentHitsBox2D } from './envelopeCh
 import { ClearanceBasis, normaliseClearanceBasis, requiredToolheadZ } from './landmarkClearance';
 import { LandmarkSource, LegacyClearance } from './landmarkReview';
 import { appliesToMachine, isLegacyScope, recordMachineScope } from './machineCapability';
+import { applyCallObstacleTransform } from './rotaryCallContext';
 
 const log = logger('service:mcp:landmarks');
 
@@ -234,7 +235,9 @@ export class LandmarkStore {
      * landmark covers the whole stock, and probing the stock is the job.
      */
     public obstacleBoxes(machineIdentifier: string | null = connectedMachineIdentifier()): ObstacleBox[] {
-        return this.listFor(machineIdentifier)
+        // Inside a tool call that stated `stock`, the rotary keep-out may be
+        // the computed one (rotaryCallContext.ts); elsewhere unchanged.
+        return applyCallObstacleTransform(this.listFor(machineIdentifier)
             .filter((l) => l.clearanceZ !== null)
             .map((l) => ({
                 name: l.name,
@@ -242,7 +245,7 @@ export class LandmarkStore {
                 clearanceZ: l.clearanceZ as number,
                 clearanceBasis: l.clearanceBasis,
                 mode: 'crossing' as const,
-            }));
+            })));
     }
 
     /**

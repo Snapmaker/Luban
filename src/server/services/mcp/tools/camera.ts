@@ -29,6 +29,7 @@ import { jobManager } from '../jobs';
 import { bumpGcodeSequence, noteDirectGcodeEnd, noteDirectGcodeStart, noteFrameRestored } from '../positionOfRecord';
 import { decodeToGray, trackFeature } from '../tracking';
 import { McpToolError, ToolRegistry } from '../registry';
+import { STOCK_ARG_SCHEMA } from '../rotaryCallContext';
 import { gateDirectXy, planGotoWorkOrigin } from '../directMovePlan';
 import { homeSequence, machineFrameMove, relativeStep, workFrameMove, workFrameRestore, workFrameRestoreCommands } from '../gcodeForms';
 import { TraverseMachine } from '../traversePlan';
@@ -1751,6 +1752,7 @@ export function registerCameraTools(registry: ToolRegistry): void {
         inputSchema: {
             type: 'object',
             properties: {
+                stock: STOCK_ARG_SCHEMA,
                 reason: { type: 'string', description: 'Why this move is needed; shown to the operator on the confirm page.' },
                 feed_rate: { type: 'number', description: `mm/min, default ${TRAVERSE_FEED.default}, max ${TRAVERSE_FEED.max}.` },
                 wait_until_moved: {
@@ -1785,6 +1787,7 @@ export function registerCameraTools(registry: ToolRegistry): void {
         inputSchema: {
             type: 'object',
             properties: {
+                stock: STOCK_ARG_SCHEMA,
                 x: { type: 'number', description: 'Target X. Omit to keep current X.' },
                 y: { type: 'number', description: 'Target Y. Omit to keep current Y.' },
                 reason: { type: 'string', description: 'Why this move is needed; shown to the operator.' },

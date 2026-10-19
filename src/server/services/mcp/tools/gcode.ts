@@ -32,6 +32,7 @@ import { spindleTelemetryService } from '../spindleTelemetry';
 import { vibrationCaptureService } from '../vibrationCaptures';
 import { clearProcedureStop, procedureStopRequested, requestProcedureStop } from '../probing';
 import { McpToolError, ToolRegistry } from '../registry';
+import { STOCK_ARG_SCHEMA } from '../rotaryCallContext';
 import { decideSafeZRaise, decideSafeZTraverse } from '../safeZPolicy';
 import { parseSettleComment, planTraverseXy } from '../traversePlan';
 import { machineFrameMove, needsPlannerSync, relativeStep, workFrameMove } from '../gcodeForms';
@@ -1787,6 +1788,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
         inputSchema: {
             type: 'object',
             properties: {
+                stock: STOCK_ARG_SCHEMA,
                 x: { type: 'number', description: 'Absolute target X (single move). Omit to keep the current X.' },
                 y: { type: 'number', description: 'Absolute target Y (single move). Omit to keep the current Y.' },
                 targets: {

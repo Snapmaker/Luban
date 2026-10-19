@@ -68,6 +68,12 @@ export interface McpToolDefinition {
     handler(args: object): Promise<object>;
 }
 
+/** Per-call hooks (#265 WP8): see ToolRegistry.setCallHooks. */
+export interface ToolCallHooks {
+    around?(name: string, args: object, run: () => Promise<object>): Promise<object>;
+    decorate?(name: string, args: object, result: object): object;
+}
+
 export class ToolRegistry {
     private tools = new Map<string, McpToolDefinition>();
 
@@ -111,6 +117,16 @@ export class ToolRegistry {
         this.procedureGate = gate;
     }
 
+    // Injected by index.ts (toolResultHooks.ts, #265 WP8): `around` runs the
+    // handler inside a per-call scope (the rotary stock), `decorate` adds the
+    // machine / applied-records / landmark-review fields to a successful
+    // result. Without them every tool runs and reports as before.
+    private callHooks: ToolCallHooks | null = null;
+
+    public setCallHooks(hooks: ToolCallHooks | null): void {
+        this.callHooks = hooks;
+    }
+
     public async call(name: string, args: object): Promise<object> {
         const tool = this.tools.get(name);
         if (!tool) {
@@ -141,7 +157,10 @@ export class ToolRegistry {
         let evidence: RecoveryEvidence | null = null;
         try {
             try {
-                result = await runWithLedger(ledger, async () => tool.handler(args || {}));
+                const hooks = this.callHooks;
+                result = await runWithLedger(ledger, async () => (hooks && hooks.around
+                    ? hooks.around(name, args || {}, () => tool.handler(args || {}))
+                    : tool.handler(args || {})));
             } catch (err) {
                 threw = true;
                 thrown = err;
@@ -196,6 +215,14 @@ ${describeEvidence(evidence)}`;
         }
         if (evidenceIsRelevant(evidence)) {
             result = { ...(result as object), failure_recovery: evidence };
+        }
+        if (this.callHooks && this.callHooks.decorate) {
+            // Reporting only: a move that already ran never fails because its description could not be built.
+            try {
+                result = this.callHooks.decorate(name, args || {}, result as object);
+            } catch (err) {
+                result = { ...(result as object), applied_records_error: (err as Error).message };
+            }
         }
         // Every result that carries a confirm_url is a staged job: say how the
         // link is to be handed over, every time, from one place.
