@@ -86,10 +86,11 @@ export const tests: Array<[string, () => void]> = [
         const legacy = plain(tools.persistedFrameLatches({ reason: 'A queued pendant run.', since: 5, restoredAt: null }));
         assert.deepEqual(legacy.map((l: { machineIdentifier: string }) => l.machineIdentifier), [A350]);
         assert.match(legacy[0].reason, /A queued pendant run/);
-        const v2 = plain(tools.persistedFrameLatches({ version: 2, latches: [
-            { reason: 'a', since: 1, restoredAt: null, machineIdentifier: A350 },
-            { reason: 'b', since: 2, restoredAt: null, machineIdentifier: null },
-        ] }));
+        const v2 = plain(tools.persistedFrameLatches({ version: 2,
+            latches: [
+                { reason: 'a', since: 1, restoredAt: null, machineIdentifier: A350 },
+                { reason: 'b', since: 2, restoredAt: null, machineIdentifier: null },
+            ] }));
         assert.deepEqual(v2.map((l: { machineIdentifier: string | null }) => l.machineIdentifier), [A350, null]);
         const unreadable = plain(tools.persistedFrameLatches('unreadable'));
         assert.deepEqual(unreadable.map((l: { machineIdentifier: string }) => l.machineIdentifier), [A350]);

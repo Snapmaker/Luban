@@ -32,12 +32,12 @@ import { ObstacleBox, POSITION_EPSILON_MM } from './envelopeChecks';
 import { landmarkStore } from './landmarks';
 import { McpToolError } from './registry';
 import { ObstacleTransform } from './rotaryCallContext';
-
-export { STOCK_ARG_SCHEMA } from './rotaryCallContext';
 import { RotaryStock, RotarySafeHeight, rotaryKeepOutBox, rotarySafeHeight, supersedesLegacy } from './rotaryClearance';
 import { rotaryGeometry } from './rotaryGeometry';
 import { axisAt } from './rotaryAxisLine';
 import { safeTraverseZ } from './tools/machine';
+
+export { STOCK_ARG_SCHEMA } from './rotaryCallContext';
 
 /** The tools that take `stock` (the plan's list: transport, the work-origin move, the vision nudge, probe programs). */
 export const STOCK_TOOLS = new Set(['traverse_xy', 'goto_work_origin', 'move_and_capture', 'probe_program']);
@@ -102,11 +102,17 @@ export function rotaryLegacyCandidates(obstacles: ObstacleBox[], g: RotaryCleara
     const lo = Math.min(g.chuckFaceY, g.tailstockY);
     const hi = Math.max(g.chuckFaceY, g.tailstockY);
     const e = POSITION_EPSILON_MM;
+    const axisX = g.axisX;
     return obstacles.filter((box) => {
         const m = box.machine;
-        return Math.min(m.x0, m.x1) - e <= g.axisX! && g.axisX! <= Math.max(m.x0, m.x1) + e
+        return Math.min(m.x0, m.x1) - e <= axisX && axisX <= Math.max(m.x0, m.x1) + e
             && Math.min(m.y0, m.y1) - e <= hi && lo <= Math.max(m.y0, m.y1) + e;
     });
+}
+
+function sameBox(a: ObstacleBox, b: ObstacleBox): boolean {
+    return a.name === b.name && a.clearanceZ === b.clearanceZ
+        && a.machine.x0 === b.machine.x0 && a.machine.y0 === b.machine.y0 && a.machine.x1 === b.machine.x1 && a.machine.y1 === b.machine.y1;
 }
 
 /**
@@ -186,11 +192,6 @@ export function resolveRotaryClearance(input: {
         reasons.push('computed, but with no single legacy box to replace the stored requirements stand');
     }
     return { report: { ...base, basis: height.basis, zMm: height.zMm, applied: 'legacy', reasons }, transform: null };
-}
-
-function sameBox(a: ObstacleBox, b: ObstacleBox): boolean {
-    return a.name === b.name && a.clearanceZ === b.clearanceZ
-        && a.machine.x0 === b.machine.x0 && a.machine.y0 === b.machine.y0 && a.machine.x1 === b.machine.x1 && a.machine.y1 === b.machine.y1;
 }
 
 /** The live geometry from the per-machine store (rotaryGeometry.ts); the axis Z is the higher end of a pitched axis. */

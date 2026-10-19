@@ -470,6 +470,12 @@ function applyingKey(): string | null {
     return newest;
 }
 
+/** The latch that applies to the connected machine (its own, or one raised with no machine known); null when none. */
+export function getFrameLatch(): FrameLatch | null {
+    const key = applyingKey();
+    return key === null ? null : { ...(frameLatches.get(key) as FrameLatch) };
+}
+
 // Listeners: tools/machine.ts persists the latch across Luban restarts; the
 // pendant releases its held crash guard when the latch clears. Every change
 // (raised, restore acknowledged, cleared) is reported with the latch that
@@ -513,12 +519,6 @@ export function noteFrameRestored(now: number = Date.now()): void {
         (frameLatches.get(key) as FrameLatch).restoredAt = now;
         notifyFrameLatch();
     }
-}
-
-/** The latch that applies to the connected machine (its own, or one raised with no machine known); null when none. */
-export function getFrameLatch(): FrameLatch | null {
-    const key = applyingKey();
-    return key === null ? null : { ...(frameLatches.get(key) as FrameLatch) };
 }
 
 /** Latches held for OTHER machines: ignored for this one, kept for theirs, and reported. */

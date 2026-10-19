@@ -34,8 +34,16 @@ const applied = inert('appliedRecords.ts');
 function facts(over: Record<string, unknown> = {}) {
     return {
         machine: {
-            identifier: A350, type: 'Multi-function 3D Printer', hasZ: true, dialect: 'sm2-marlin', verifiedOnHardware: true,
-            gcodeForm: 'sm2', deviceId: 'host:192.168.1.20', machineKey: A350, basis: 'connected', deviceConflict: null,
+            identifier: A350,
+            type: 'Multi-function 3D Printer',
+            hasZ: true,
+            dialect: 'sm2-marlin',
+            verifiedOnHardware: true,
+            gcodeForm: 'sm2',
+            deviceId: 'host:192.168.1.20',
+            machineKey: A350,
+            basis: 'connected',
+            deviceConflict: null,
         },
         travel: { stated: ['xMin', 'xMax'], fudge: { x: 25, y: 25, source: 'default' } },
         zPolicy: { applies: true, safeTraverseZ: { value: 328, source: 'default' }, motionFloorZ: { value: 320, source: 'default' }, missing: [] },
@@ -53,12 +61,28 @@ function facts(over: Record<string, unknown> = {}) {
 }
 
 const RAY_MACHINE = {
-    identifier: 'Ray', type: 'Laser', hasZ: false, dialect: 'ray-grbl', verifiedOnHardware: true,
-    gcodeForm: 'relative-steps', deviceId: null, machineKey: 'Ray', basis: 'connected', deviceConflict: null,
+    identifier: 'Ray',
+    type: 'Laser',
+    hasZ: false,
+    dialect: 'ray-grbl',
+    verifiedOnHardware: true,
+    gcodeForm: 'relative-steps',
+    deviceId: null,
+    machineKey: 'Ray',
+    basis: 'connected',
+    deviceConflict: null,
 };
 const ORIGINAL_MACHINE = {
-    identifier: 'Original', type: 'Multi-function 3D Printer', hasZ: true, dialect: 'original-marlin', verifiedOnHardware: false,
-    gcodeForm: 'relative-steps', deviceId: null, machineKey: 'Original', basis: 'connected', deviceConflict: null,
+    identifier: 'Original',
+    type: 'Multi-function 3D Printer',
+    hasZ: true,
+    dialect: 'original-marlin',
+    verifiedOnHardware: false,
+    gcodeForm: 'relative-steps',
+    deviceId: null,
+    machineKey: 'Original',
+    basis: 'connected',
+    deviceConflict: null,
 };
 
 // --- rotary wiring, isolated with live sources stubbed ---
@@ -94,8 +118,14 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
     ['applied records: the A350 names its record set, A350 defaults and the review status (compact strings)', () => {
         const report = plain(applied.buildAppliedRecords(facts()));
         assert.deepEqual(report.connected_machine, {
-            identifier: A350, type: 'Multi-function 3D Printer', hasZ: true, dialect: 'sm2-marlin', deviceId: 'host:192.168.1.20',
-            machineKey: A350, verifiedOnHardware: true, gcode_form: 'sm2',
+            identifier: A350,
+            type: 'Multi-function 3D Printer',
+            hasZ: true,
+            dialect: 'sm2-marlin',
+            deviceId: 'host:192.168.1.20',
+            machineKey: A350,
+            verifiedOnHardware: true,
+            gcode_form: 'sm2',
         });
         assert.equal(report.records.travel, `stated in the ${A350} record (xMin, xMax), else model size +/- fudge X25/Y25 (default)`);
         assert.equal(report.records.zPolicy, 'A350 defaults (park Z328, floor Z320)');
@@ -152,9 +182,14 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         const sources = {
             appliedRecords: () => applied.buildAppliedRecords(facts({ machine: RAY_MACHINE })),
             landmarkReview: () => ({
-                status: confirmed ? 'confirmed' : 'unconfirmed', confirmed, machine: { identifier: 'Ray', machineKey: 'Ray', connected: true },
-                landmarks: [{ name: 'honeycomb' }], question: confirmed ? null : 'Is this what is on the bed?', answer_with: ['confirm_landmarks'],
-                invalidated_because: null, pending_reviews: [],
+                status: confirmed ? 'confirmed' : 'unconfirmed',
+                confirmed,
+                machine: { identifier: 'Ray', machineKey: 'Ray', connected: true },
+                landmarks: [{ name: 'honeycomb' }],
+                question: confirmed ? null : 'Is this what is on the bed?',
+                answer_with: ['confirm_landmarks'],
+                invalidated_because: null,
+                pending_reviews: [],
             }),
             rotaryForCall: () => null,
             runScoped: (_t: unknown, fn: () => unknown) => fn(),
@@ -292,10 +327,10 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
     ['confirm page: the Landmarks row lists what was enforced at staging and says the click does not confirm the review', () => {
         const jobs = jobMachineBinding;
         assert.equal(jobs.describeStagedLandmarks(undefined), null, 'jobs staged before WP8 show no row');
-        assert.match(jobs.describeStagedLandmarks(null), /no machine connected/);
+        assert.match(String(jobs.describeStagedLandmarks(null)), /no machine connected/);
         const row = jobs.describeStagedLandmarks({ status: 'unconfirmed', landmarks: [{ name: 'rotary', requiredToolheadZ: 280 }, { name: 'clamp', requiredToolheadZ: null }], question: 'q' });
-        assert.match(row, /^rotary \(needs toolhead Z280\), clamp\. Enforced in full/);
-        assert.match(row, /it does not confirm the review/);
-        assert.match(jobs.describeStagedLandmarks({ status: 'confirmed', landmarks: [], question: null }), /none stored for this machine.*review confirmed by the operator/);
+        assert.match(String(row), /^rotary \(needs toolhead Z280\), clamp\. Enforced in full/);
+        assert.match(String(row), /it does not confirm the review/);
+        assert.match(String(jobs.describeStagedLandmarks({ status: 'confirmed', landmarks: [], question: null })), /none stored for this machine.*review confirmed by the operator/);
     }],
 ];

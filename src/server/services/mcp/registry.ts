@@ -159,7 +159,7 @@ export class ToolRegistry {
             try {
                 const hooks = this.callHooks;
                 result = await runWithLedger(ledger, async () => (hooks && hooks.around
-                    ? hooks.around(name, args || {}, () => tool.handler(args || {}))
+                    ? hooks.around(name, args || {}, async () => tool.handler(args || {}))
                     : tool.handler(args || {})));
             } catch (err) {
                 threw = true;

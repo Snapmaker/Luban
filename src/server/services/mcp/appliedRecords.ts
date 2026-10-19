@@ -96,6 +96,13 @@ function zPolicyText(facts: AppliedRecordFacts): string {
         : `stated (${values}; ${z.safeTraverseZ.source})`;
 }
 
+function computedHeightText(rule: { on: boolean; unmet: string[] }): string {
+    if (!rule.on) {
+        return 'off';
+    }
+    return rule.unmet.length ? `on, not usable: ${rule.unmet.join('; ')}` : 'on';
+}
+
 /** Pure: the compact report every motion / staging result and the status tools carry. */
 export function buildAppliedRecords(facts: AppliedRecordFacts) {
     const m = facts.machine;
@@ -132,9 +139,7 @@ export function buildAppliedRecords(facts: AppliedRecordFacts) {
         motionRules: rules
             ? {
                 topZWithoutApproval: rules.topZWithoutApproval.on ? 'on' : `off${rules.topZWithoutApproval.gatedBy ? ` - ${rules.topZWithoutApproval.gatedBy}` : ''}`,
-                computedHeight: rules.computedHeight.on
-                    ? (rules.computedHeight.unmet.length ? `on, not usable: ${rules.computedHeight.unmet.join('; ')}` : 'on')
-                    : 'off',
+                computedHeight: computedHeightText(rules.computedHeight),
             }
             : UNREADABLE,
         ...(Object.keys(facts.unreadable).length ? { unreadable: facts.unreadable } : {}),
@@ -173,7 +178,10 @@ export function appliedRecordFacts(): AppliedRecordFacts {
     const current = read('machine', unreadable, () => machineStore.currentMachine(), null);
     const capability = read('capability', unreadable, () => connectedMachineCapability(), null);
     const key = current ? current.machineKey : null;
-    const identifier = capability && capability.identifier ? capability.identifier : (current ? current.machineIdentifier : null);
+    let identifier = current ? current.machineIdentifier : null;
+    if (capability && capability.identifier) {
+        identifier = capability.identifier;
+    }
     const machine = {
         identifier,
         type: capability ? capability.type : null,
@@ -208,10 +216,11 @@ export function appliedRecordFacts(): AppliedRecordFacts {
     const probe = read('probeGeometry', unreadable, () => probeGeometry(), null);
     const rotary = read('rotaryGeometry', unreadable, () => {
         const g = rotaryGeometry();
-        return g ? {
-            axisX: g.axisX, axisZ: g.axisZ, skew: g.skew, chuckFaceY: g.chuckFaceY, tailstockY: g.tailstockY,
-            chuckTopZ: g.chuckTopZ, tailstockTopZ: g.tailstockTopZ,
-        } : null;
+        if (!g) {
+            return null;
+        }
+        const { axisX, axisZ, skew, chuckFaceY, tailstockY, chuckTopZ, tailstockTopZ } = g;
+        return { axisX, axisZ, skew, chuckFaceY, tailstockY, chuckTopZ, tailstockTopZ };
     }, null);
     const activeTool = read('activeTool', unreadable, () => {
         const t = getActiveTool();

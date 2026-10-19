@@ -538,11 +538,12 @@ export function safeZApprovalInput(): { enabled: boolean; gatedBy: string | null
     if (policy.gatedBy) {
         return { enabled: false, gatedBy: policy.gatedBy };
     }
-    const where = policy.source === 'env'
-        ? 'pinned off by LUBAN_MCP_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z'
-        : policy.source === 'host-setting'
-            ? `the host-wide switch is off (${MOTION_RULES_PANE})`
-            : `'${MOTION_RULE_TOGGLE}' is off for this machine (${MOTION_RULES_PANE})`;
+    let where = `'${MOTION_RULE_TOGGLE}' is off for this machine (${MOTION_RULES_PANE})`;
+    if (policy.source === 'env') {
+        where = 'pinned off by LUBAN_MCP_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z';
+    } else if (policy.source === 'host-setting') {
+        where = `the host-wide switch is off (${MOTION_RULES_PANE})`;
+    }
     return { enabled: false, gatedBy: `moving at safe top Z without approval: ${where}` };
 }
 
@@ -673,10 +674,9 @@ export interface PersistedFrameLatches {
 /**
  * Writes EVERY machine's latch (positionOfRecord.allFrameLatches), not just
  * the one that applies now: an A350 latch must survive a session on the
- * Original. The argument is the listener's (the applying latch) and is not
- * needed - kept so the listener signature stays.
+ * Original.
  */
-export function persistFrameLatch(_applying: FrameLatch | null = null, latches: FrameLatch[] = allFrameLatches()): void {
+export function persistFrameLatch(latches: FrameLatch[] = allFrameLatches()): void {
     const file = frameLatchPath();
     if (!file) { return; }
     try {
@@ -764,7 +764,7 @@ setFrameLatchMachineSource(() => connectedMachineIdentifier());
 
 // Persist every change; the lease's recovery hold needs no update because it
 // reads the latch itself (machine/gcodeLease.ts).
-onFrameLatchChange((latch) => persistFrameLatch(latch));
+onFrameLatchChange(() => persistFrameLatch());
 restorePersistedFrameLatch();
 
 /**
