@@ -40,6 +40,14 @@ export interface LogicalFrameEvidence {
 }
 
 export interface LogicalFrameTrust {
+    /**
+     * The logical frame CAN be the machine frame on this machine at all: a
+     * known dialect with no workspaces and no G53 (the Original). false on an
+     * A350 or a Ray over USB text serial - nothing (not even a home) makes
+     * their logical position a machine position, and the MCP does not home them
+     * over this transport either.
+     */
+    mappable: boolean;
     /** The logical position IS the machine position on this connection right now. */
     trusted: boolean;
     /** A full home was observed complete on this connection and nothing since may have lost it (isHomed for the MCP). */
@@ -77,6 +85,7 @@ export function judgeLogicalFrame(dialect: GcodeDialect, evidence: LogicalFrameE
     const homed = !!evidence && evidence.homedAt !== null;
     if (dialect.id === 'unknown' || dialect.frames.workspaces.length > 0 || dialect.frames.g53 !== 'none') {
         return {
+            mappable: false,
             trusted: false,
             homed,
             reason: `The ${dialect.label} reports M114 in its selected work workspace over USB text serial, and nothing on this `
@@ -86,10 +95,16 @@ export function judgeLogicalFrame(dialect: GcodeDialect, evidence: LogicalFrameE
     }
     const name = `the ${dialect.label}`;
     if (!evidence) {
-        return { trusted: false, homed: false, reason: `No write-path evidence for ${name} on this connection yet; home it with the MCP home tool.` };
+        return {
+            mappable: true,
+            trusted: false,
+            homed: false,
+            reason: `No write-path evidence for ${name} on this connection yet; home it with the MCP home tool.`,
+        };
     }
     if (evidence.persistentShift) {
         return {
+            mappable: true,
             trusted: false,
             homed,
             reason: `A ${evidence.persistentShift.line} was written to ${name} at ${when(evidence.persistentShift.at)}: it changes the `
@@ -100,6 +115,7 @@ export function judgeLogicalFrame(dialect: GcodeDialect, evidence: LogicalFrameE
     if (evidence.homedAt === null) {
         if (evidence.lost) {
             return {
+                mappable: true,
                 trusted: false,
                 homed: false,
                 reason: `Home ${name} first: the position may have been lost after ${evidence.lost.line} at ${when(evidence.lost.at)} `
@@ -108,6 +124,7 @@ export function judgeLogicalFrame(dialect: GcodeDialect, evidence: LogicalFrameE
         }
         if (evidence.homePending) {
             return {
+                mappable: true,
                 trusted: false,
                 homed: false,
                 reason: `Homing ${name} (${evidence.homePending.line} written at ${when(evidence.homePending.at)}); waiting for the first `
@@ -115,6 +132,7 @@ export function judgeLogicalFrame(dialect: GcodeDialect, evidence: LogicalFrameE
             };
         }
         return {
+            mappable: true,
             trusted: false,
             homed: false,
             reason: `Home ${name} first: the position shift is unknown since connect${evidence.shift
@@ -124,6 +142,7 @@ export function judgeLogicalFrame(dialect: GcodeDialect, evidence: LogicalFrameE
     }
     if (evidence.shift) {
         return {
+            mappable: true,
             trusted: false,
             homed: true,
             reason: `Home ${name} first: a ${evidence.shift.line} was written at ${when(evidence.shift.at)} after the home, so the logical `
@@ -132,6 +151,7 @@ export function judgeLogicalFrame(dialect: GcodeDialect, evidence: LogicalFrameE
         };
     }
     return {
+        mappable: true,
         trusted: true,
         homed: true,
         reason: `Logical = machine on ${name}: homed (${evidence.homeLine || 'G28'}) at ${when(evidence.homedAt)} on this connection, `

@@ -445,11 +445,12 @@ export async function executeBoundedMoveAndCapture(args: BoundedMoveArgs): Promi
     }
     const feedRate = clampTo(args.feed_rate, DIRECT_MOVE_FEED);
 
+    // Which machine: a Z axis or not, and which gcode form its firmware is
+    // known to execute (tools/machine.ts traverseMachine). A printer (J1) or
+    // an unlisted machine is refused first, naming it.
+    const machine = traverseMachine('move_and_capture');
     const before = getPositionSnapshot();
     assertSafeToMove(before, args.operator_confirmed_clearance === true);
-    // Which machine: a Z axis or not, and which gcode form its firmware is
-    // known to execute (tools/machine.ts traverseMachine).
-    const machine = traverseMachine('move_and_capture');
 
     const current = coordinateSystem === 'work' ? before.work : before.machine;
     if (current.x === null || current.y === null) {
@@ -711,11 +712,12 @@ async function stageGotoWorkOrigin(args: { reason?: string; feed_rate?: number; 
         throw new McpToolError('reason is required: say why the head should go to the work origin (it is shown to the operator).');
     }
     const feedRate = clampTo(args.feed_rate, TRAVERSE_FEED);
+    // Refuse a printer (J1) or an unlisted machine first, naming it.
+    const machine = traverseMachine('goto_work_origin');
     const position = getPositionSnapshot();
     // Overtravel, fresh + reliable heartbeat, idle, toolhead off, homed - the
     // same gate as a direct move, with no operator override.
     assertSafeToMove(position, false);
-    const machine = traverseMachine('goto_work_origin');
     const { x, y, z } = position.machine;
     if (x === null || y === null || (machine.hasZ && z === null)) {
         throw new McpToolError('Current machine position unknown; cannot plan the move to the work origin.');
@@ -1698,7 +1700,11 @@ export function registerCameraTools(registry: ToolRegistry): void {
             + 'This does not bypass alarms, toolhead/idle checks or verification after homing. '
             + 'On the Ray it sends GRBL $H, as Luban\'s Home button does for it (Ray firmware never answers the SACP home '
             + 'request); on other SACP machines (Artisan, J1) the channel\'s own home request is used instead of G53;G28;G54. '
-            + 'Either way the homed state comes back through the coordinate subscription; a Ray homes to about X-1..1, Y399.',
+            + 'Either way the homed state comes back through the coordinate subscription; a Ray homes to about X-1..1, Y399. '
+            + 'On the Snapmaker Original (USB text serial, no workspaces) it sends G28 ALONE - never G53/G54 - and the Original\'s '
+            + 'position counts as machine coordinates only once this home is observed complete and nothing has shifted it since '
+            + '(a G92 from Luban\'s set-work-origin, Luban\'s own G53/G28/G54 Home button): get_position.logicalFrame says why not. '
+            + 'A Ray or J1 on plain-text USB, and an A350 over USB, are refused. Results carry gcode_form and connected_machine.dialect.',
         inputSchema: {
             type: 'object',
             properties: {

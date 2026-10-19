@@ -21,6 +21,7 @@ import { WORK_FRAME_RESTORE_GCODE } from '../frameRecovery';
 import { G28_HOME_SEQUENCE, GRBL_HOME, RAY_IDENTIFIER } from '../machineCapability';
 import { planTraverseXy, relativeXyStep } from '../traversePlan';
 import { restoreCommands } from '../failureRecovery';
+import { resolveJobFrame, validateGcode } from '../validator';
 
 const SM2 = dialectById('sm2-marlin');
 const RAY = dialectById('ray-grbl');
@@ -149,6 +150,11 @@ export const tests: Array<[string, () => void]> = [
         assert.ok(!/G53|G54/.test(original.gcode as string));
         assert.equal(homeSequence(dialectFor('Original Long Z-axis'), text).gcode, 'G28');
         throwsNamed(() => homeSequence(UNKNOWN, text), /emits nothing/);
+        // Never the 2.0 sequence on another machine's text transport: GRBL's G28 is not a home.
+        throwsNamed(() => homeSequence(RAY, { sacp: false, machineIdentifier: RAY_IDENTIFIER, canExecuteGcode: true, canGoHome: false }),
+            /cannot be homed over this transport/);
+        throwsNamed(() => homeSequence(J1, { sacp: false, machineIdentifier: 'Snapmaker J1', canExecuteGcode: true, canGoHome: false }),
+            /cannot be homed over this transport/);
     }],
 
     ['generic motion: J1 refused with the printer text, unknown refused, the rest allowed', () => {
@@ -157,5 +163,20 @@ export const tests: Array<[string, () => void]> = [
         for (const dialect of [SM2, RAY, ORIGINAL, ARTISAN]) {
             assert.equal(genericMotionRefusal(dialect, 'traverse_xy'), null, dialect.id);
         }
+    }],
+
+    ['the Original\'s relative traverse and move_z texts pass the staged frame check (relative transport)', () => {
+        const ctx = { frameArgument: null, originOffsetZ: null, offsetReliable: false, machineZMax: null, relativeTransport: true };
+        const plan = planTraverseXy({ ...baseTraverse,
+            currentMachine: { x: 10, y: 10, z: 50 },
+            motionFloorZ: 40,
+            traverseZ: 50,
+            targets: [{ x: 30, y: 10 }, { x: 30, y: 40 }],
+            machine: { hasZ: true, gcode: 'grbl-relative', dialect: ORIGINAL } });
+        assert.equal(resolveJobFrame(validateGcode(plan.reviewText), ctx).refusal, null, 'traverse');
+        const zStep = relativeStep(ORIGINAL, { from: { x: 10, y: 20, z: 50 }, to: { x: 10, y: 20, z: 40 } }, 300, { hasZ: true });
+        assert.equal(resolveJobFrame(validateGcode(`; reason: test\n${zStep}`), ctx).refusal, null, 'move_z step');
+        assert.notEqual(resolveJobFrame(validateGcode(zStep), { ...ctx, relativeTransport: false }).refusal, null,
+            'without the relative-transport flag the frame doctrine still refuses it');
     }],
 ];

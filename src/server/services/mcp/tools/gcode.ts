@@ -1459,6 +1459,8 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
     registry.register({
         name: 'move_z',
         description: 'Request absolute Z motion, executed on the direct path so positions PERSIST '
+            + '(on the Snapmaker Original: relative G91 Z steps with a Z settle comment and a G4 P0 planner sync, never G53/G54; '
+            + 'refused on a machine with no Z axis or a J1; results carry gcode_form) '
             + '(the machine interpreter raises Z to top at the finish position when a file job '
             + 'completes, so a file job cannot hold a working Z - firmware behaviour). '
             + 'Either one target (z) or an ordered list (z_targets, max 20) for a methodical search: '
@@ -1749,7 +1751,9 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             + 'runs at the machine\'s only height, the top-Z policy never auto-executes (there is no safe height to justify skipping '
             + 'approval, staged_because says so), and the steps are RELATIVE G91/G90 increments (Luban\'s own Ray jog form; each step '
             + 'names its absolute machine endpoint for the settle check) rather than G53. Landmarks, calibrations and stated travel '
-            + 'are machine-scoped: only records set on the connected machine apply; the travel is the machine model +/- mcpTravelFudgeMm.',
+            + 'are machine-scoped: only records set on the connected machine apply; the travel is the machine model +/- mcpTravelFudgeMm. '
+            + 'The Snapmaker Original takes the same relative steps, each ending G4 P0 (its M114 is the queued target; only a report after '
+            + 'the sync verifies arrival); a J1 is refused (printer). Results carry gcode_form (sm2 | relative-steps).',
         inputSchema: {
             type: 'object',
             properties: {
@@ -1809,6 +1813,11 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 throw new McpToolError('reason is required; it is shown to the operator.');
             }
 
+            // Which machine this is decides which laws apply: a Z axis or not,
+            // and which gcode form its firmware is known to execute
+            // (tools/machine.ts traverseMachine). A printer (J1) or an unlisted
+            // machine is refused first, naming it.
+            const machine = traverseMachine('traverse_xy');
             assertFreshHeartbeat('staging an XY traverse');
             const position = getPositionSnapshot();
             if (position.machineStatus !== 'idle') {
@@ -1826,10 +1835,6 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             if (mx === null || my === null) {
                 throw new McpToolError('Current machine position unknown; cannot plan the traverse.');
             }
-            // Which machine this is decides which laws apply: a Z axis or not,
-            // and which gcode form its firmware is known to execute
-            // (tools/machine.ts traverseMachine, machineCapability.ts).
-            const machine = traverseMachine('traverse_xy');
             const capability = connectedMachineCapability();
             if (machine.hasZ && mz === null) {
                 throw new McpToolError('Current machine Z unknown; cannot plan the traverse.');

@@ -228,5 +228,14 @@ export function homeSequence(dialect: GcodeDialect, input: HomeCommandInput): Ho
             reason: `the ${dialect.label} has no workspaces: it homes on ${dialect.home.gcode} alone, never with G53/G54 around it`,
         };
     }
-    return homeCommandFor(input);
+    const command = homeCommandFor(input);
+    // G53;G28;G54 is the Snapmaker 2.0 form. Any other machine whose transport
+    // offers neither its own home ($H, the SACP request) - a Ray or a J1 on
+    // plain-text USB - is refused rather than sent it (on GRBL, G28 moves to a
+    // stored position; it does not home).
+    if (command.kind === 'g28-sequence' && gcodeFormOf(dialect) !== 'sm2') {
+        throw new GcodeFormError(`the ${dialect.label} cannot be homed over this transport: its home is ${dialect.home.form}, and the `
+            + 'Snapmaker 2.0 G53;G28;G54 sequence is never sent to it. Connect it over its own transport (SACP) to home it');
+    }
+    return command;
 }

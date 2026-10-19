@@ -942,7 +942,9 @@ export function assertFreshHeartbeat(what: string, options: { homing?: boolean }
             + 'Reconnect the machine, verify get_position reports a fresh, correct position, then retry.');
     }
     const snapshot = getPositionSnapshot();
-    if (options.homing === true && snapshot.logicalFrame && !snapshot.logicalFrame.trusted) {
+    // Only where a home CAN make the logical frame the machine frame (the
+    // Original); an A350 or a Ray on plain-text USB stays refused.
+    if (options.homing === true && snapshot.logicalFrame && snapshot.logicalFrame.mappable && !snapshot.logicalFrame.trusted) {
         // Homing is what ESTABLISHES a logical-frame position (the Original):
         // refusing it for lacking one would be circular. The beat is fresh;
         // a frame latch still refuses, as for every other motion.

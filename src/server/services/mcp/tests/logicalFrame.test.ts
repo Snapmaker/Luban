@@ -56,6 +56,9 @@ export const tests: Array<[string, () => void]> = [
         assert.equal(classifyWrittenLine('M114'), 'm114');
         assert.equal(classifyWrittenLine('G90 ; G92 in a comment'), 'other');
         assert.equal(classifyWrittenLine('M105'), 'other');
+        assert.equal(classifyWrittenLine('G28.2 X Y Z'), 'motion', 'MarlinController\'s own G28.2: motion, never a full home');
+        assert.equal(classifyWrittenLine('G17'), 'other');
+        assert.equal(classifyWrittenLine('G29'), 'motion', 'an unlisted G word counts as motion');
     }],
 
     ['position refused before any home: "home first: position shift unknown since connect"', () => {
@@ -156,6 +159,9 @@ export const tests: Array<[string, () => void]> = [
         const verdict = judgeLogicalFrame(SM2, readLogicalFrameEvidence(m.state()?.frameEvidence));
         assert.equal(verdict.trusted, false);
         assert.match(verdict.reason, /selected work workspace over USB text serial/);
+        assert.equal(verdict.mappable, false, 'no home bypass for an A350 over USB');
+        assert.equal(judgeLogicalFrame(dialectById('ray-grbl'), null).mappable, false, 'nor a Ray over USB');
+        assert.equal(judgeLogicalFrame(ORIGINAL, null).mappable, true);
     }],
 
     ['the judge: a trusted logical beat is the machine position (zero offset); untrusted keeps the WPC refusal plus the reason', () => {

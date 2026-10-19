@@ -164,7 +164,13 @@ function lineWords(raw: string): { codes: string[]; axes: string[] } {
 const SHIFT_CODE = /^(G92(\.\d+)?|G53|G5[4-8]|G59(\.[1-3])?)$/;
 const PERSISTENT_SHIFT_CODE = /^(M206|M428|M501|M502)$/;
 const LOST_CODE = /^(M112|M410|M18|M84)$/;
-const MOTION_CODE = /^(G0|G1|G2|G3|G5|G29|G30|G38(\.\d+)?)$/;
+/**
+ * G words known NOT to move (planes, units, distance mode). Every other G word
+ * counts as motion - an unlisted one (MarlinController's own `G28.2 X Y Z`, a
+ * G29 probe) must never leave an outstanding M114 marked at rest. G4 is the
+ * sync; the shifts and G28 are classified before this is consulted.
+ */
+const NON_MOTION_G = /^(G17|G18|G19|G20|G21|G90|G91)$/;
 const SYNC_CODE = /^(G4|M400)$/;
 
 /** What one written line means to the frame evidence; the most consequential kind wins. */
@@ -186,7 +192,8 @@ export function classifyWrittenLine(raw: string): WrittenLineKind {
         const all = ['X', 'Y', 'Z'].every((axis) => axes.includes(axis));
         return axes.length === 0 || all ? 'full-home' : 'partial-home';
     }
-    if (codes.some((code) => MOTION_CODE.test(code))) {
+    // A G28 subcode (G28.2) moves but is never a full home.
+    if (codes.some((code) => code.startsWith('G') && !SYNC_CODE.test(code) && !NON_MOTION_G.test(code))) {
         return 'motion';
     }
     if (codes.some((code) => SYNC_CODE.test(code))) {
