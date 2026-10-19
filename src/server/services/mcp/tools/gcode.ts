@@ -25,7 +25,7 @@ import { clearanceOptions, currentToolProtrusion } from '../clearanceContext';
 import { ComputedTravel, computeTravelHeight } from '../computedHeight';
 import { machineStore } from '../machineStore';
 import { COMPUTED_HEIGHT_TOGGLE } from '../motionRules';
-import { classifyProcedureEnding, countMeasured, planJobStop } from '../jobEnding';
+import { DirectStepContext, classifyProcedureEnding, countMeasured, directStepsLeft, planJobStop } from '../jobEnding';
 import { FILE_JOB_ACTIVE_STATUSES, FileStartReport, fileStartEvidence } from '../fileJobStart';
 import { summarizeJobTiming } from '../jobTiming';
 import { landmarkStore } from '../landmarks';
@@ -329,8 +329,32 @@ async function executeDirectStep(job: McpJob, channel: GcodeChannel, shouldWait:
     } finally {
         jobManager.setActive(null);
     }
+    if (TERMINAL_JOB_STATES.includes(job.state)) {
+        // stop_gcode_job's firmware stop ended the job while this step ran
+        // (#320): keep that ending - never re-arm the token or mark it completed.
+        if (batch) {
+            job.nextStep = stepIndex + 1;
+        }
+        return { settle, remainingSteps: 0, laserOffSent };
+    }
     if (batch) {
         job.nextStep = stepIndex + 1;
+        if (job.withdrawAfterStep && job.nextStep < batch.length) {
+            // stop_gcode_job withdrew the remaining steps while this one ran
+            // on a channel with no firmware stop (#320): end it withdrawn now
+            // that the step is done, and never re-arm the token.
+            const { actor } = job.withdrawAfterStep;
+            job.state = 'stopped';
+            job.endedAt = Date.now();
+            job.ending = {
+                kind: 'withdrawn',
+                reason: `withdrawn by the ${actor} during step ${job.nextStep} of ${batch.length}; the remaining ${batch.length - job.nextStep} `
+                    + 'step(s) were never sent',
+                at: job.endedAt,
+            };
+            jobManager.appendEvent(job, 'stopped', { note: job.ending.reason });
+            return { settle, remainingSteps: 0, laserOffSent };
+        }
         if (job.nextStep < batch.length) {
             // Same operator-approved list; keep the token usable for the
             // remaining steps.
@@ -1025,13 +1049,42 @@ function describeSuggestion(suggestion: { gcode: string; changes: string[] } | n
     return `\n\nRe-submit this instead (${suggestion.changes.join('; ')}):\n${suggestion.gcode}`;
 }
 
+/**
+ * Where a direct job stands, for planJobStop (#320); undefined for any other
+ * kind or a terminal job, so their plan is unchanged. A step that was not
+ * awaited (wait_until_moved false) may still be moving after its call
+ * returned: the machine not reading idle (or no status) counts as moving.
+ */
+function directStepContext(job: McpJob): DirectStepContext | undefined {
+    if (job.kind !== 'direct' || TERMINAL_JOB_STATES.includes(job.state)) {
+        return undefined;
+    }
+    const totalSteps = Array.isArray(job.steps) ? job.steps.length : 0;
+    const left = directStepsLeft(job);
+    // executeDirectStep sets 'starting' and makes the job active for the step's duration; nextStep advances after it.
+    const stepInFlight = job.state === 'starting' || jobManager.getActive() === job;
+    let firmwareStop = false;
+    try {
+        firmwareStop = typeof getConnectedChannel().stopGcodeJob === 'function';
+    } catch (err) {
+        firmwareStop = false;
+    }
+    return {
+        totalSteps,
+        stepsLeft: stepInFlight ? Math.max(0, left - 1) : left,
+        stepInFlight,
+        machineMoving: !stepInFlight && machineStatus() !== 'idle',
+        firmwareStop,
+    };
+}
+
 /** Shared operator/MCP stop path; actor is server-supplied, never an MCP argument. */
 export async function stopGcodeJob(args: { job_id?: string; wait_ms?: number }, actor: 'agent' | 'operator' = 'agent'): Promise<object> {
     const job = jobManager.get(String(args.job_id || ''));
     if (!job) {
         throw new McpToolError('Unknown job_id.');
     }
-    const plan = planJobStop(job.kind, job.state);
+    const plan = planJobStop(job.kind, job.state, directStepContext(job));
     if (plan.action === 'already-ended') {
         return { ok: true, stopped: true, stopping: false, withdrawn: false, note: plan.note, job: jobManager.describe(job) };
     }
@@ -1070,6 +1123,32 @@ export async function stopGcodeJob(args: { job_id?: string; wait_ms?: number }, 
                 : `Stop requested ${Date.now() - request.requestedAt} ms ago; the runner is finishing its current step and raising. Long-poll get_gcode_job_status.`,
             job: jobManager.describe(job),
         };
+    }
+    if (plan.action === 'withdraw-remaining') {
+        // Between the steps of a direct batch (#320): nothing is executing, so
+        // nothing is sent - the token is cleared and the job ends withdrawn.
+        job.state = 'stopped';
+        job.endedAt = Date.now();
+        job.ending = { kind: 'withdrawn', reason: `withdrawn by the ${actor} between steps: ${plan.note}`, at: job.endedAt };
+        job.confirmToken = null;
+        jobManager.appendEvent(job, 'stopped', { note: `withdrawn by the ${actor} between steps; nothing sent` });
+        if (jobManager.getActive() === job) {
+            jobManager.setActive(null);
+        }
+        return { ok: true, stopped: true, stopping: false, withdrawn: true, note: plan.note, job: jobManager.describe(job) };
+    }
+    if (plan.action === 'withdraw-after-step') {
+        // A step is executing and this transport has no firmware stop: the
+        // token is cleared now so no further step can start, and the step's
+        // own completion ends the job withdrawn (executeDirectStep).
+        job.confirmToken = null;
+        job.withdrawAfterStep = { actor, at: Date.now() };
+        jobManager.appendEvent(job, 'stop-requested', { note: `remaining steps withdrawn by the ${actor}; the running step cannot be stopped `
+            + `by firmware command over this transport ${connectedMachineTag()}` });
+        return { ok: true, stopped: false, stopping: true, withdrawn: true, note: `${plan.note} ${connectedMachineTag()}`, job: jobManager.describe(job) };
+    }
+    if (plan.action === 'no-firmware-stop') {
+        throw new McpToolError(`${plan.note} ${connectedMachineTag()}`);
     }
     // A started direct batch stops here too, so only the stop itself is required (not file upload).
     const channel = getConnectedChannel();
@@ -1624,7 +1703,9 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                     position: outcome.settle.position,
                     position_verified: outcome.settle.verified,
                     warning: outcome.settle.warning,
-                    note: 'Direct move executed; the position persists (no end-of-job park).',
+                    note: job.state === 'stopped'
+                        ? 'This step executed; the remaining steps were withdrawn while it ran (stop_gcode_job) and were never sent.'
+                        : 'Direct move executed; the position persists (no end-of-job park).',
                 };
             }
 

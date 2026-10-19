@@ -30,7 +30,7 @@ function job(id = 'abcdef', state: McpJob['state'] = 'awaiting_confirmation'): M
     } as unknown as McpJob;
 }
 
-async function request(manager: object, route: string, method = 'GET', headers = {}, stop: (id: string) => Promise<object> = async () => ({ ok: true }),
+export async function request(manager: object, route: string, method = 'GET', headers = {}, stop: (id: string) => Promise<object> = async () => ({ ok: true }),
     reviews?: () => DashboardReview[]) {
     return new Promise<{ status: number; body: string; headers: Record<string, string> }>((resolve) => {
         let status: number;

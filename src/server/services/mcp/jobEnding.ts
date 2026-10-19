@@ -121,8 +121,45 @@ export function countMeasured(result: unknown): number | undefined {
  *  - 'request-procedure-stop': a running server-driven runner stops at its
  *    next step boundary and raises.
  *  - 'machine-stop': a file/direct job already handed over - firmware stop.
+ *
+ * A direct batch (tyeth/Luban#320) re-arms its token after each step and
+ * reads `started` between steps. With its `step` context:
+ *  - 'withdraw-remaining': no step call in flight and steps left - withdraw
+ *    it: the token is cleared, the job ends withdrawn and nothing is sent.
+ *    If the machine is still moving the last step (it was not awaited) and
+ *    the channel has a firmware stop, the firmware stop is sent instead, as
+ *    before; without one the note says that step cannot be stopped.
+ *  - 'withdraw-after-step': a step call is executing on a channel with no
+ *    firmware stop (SACP over UDP, text serial) - the remaining steps are
+ *    withdrawn, the running step finishes, then the job ends withdrawn.
+ *  - 'no-firmware-stop': a single move (or the last step) is executing on such
+ *    a channel - nothing is left to withdraw and nothing stops it by command.
+ * Without the context (every caller before #320) the plan is unchanged.
  */
-export type JobStopAction = 'already-ended' | 'withdraw' | 'request-procedure-stop' | 'machine-stop';
+export type JobStopAction = 'already-ended' | 'withdraw' | 'request-procedure-stop' | 'machine-stop'
+    | 'withdraw-remaining' | 'withdraw-after-step' | 'no-firmware-stop';
+
+/** A direct job's step position, for planJobStop (#320). */
+export interface DirectStepContext {
+    /** Steps not yet sent, NOT counting one whose call is executing. */
+    stepsLeft: number;
+    /** Steps the batch has, 0 for a single move. */
+    totalSteps: number;
+    /** A step's start_gcode_job call is executing (the job is `starting` or the active job). */
+    stepInFlight: boolean;
+    /** No step call is executing but the machine is not (known to be) idle: a step that was not awaited may still be moving. */
+    machineMoving: boolean;
+    /** The connected channel has a firmware stop (stopGcodeJob). */
+    firmwareStop: boolean;
+}
+
+/** Steps a direct batch has not sent yet (nextStep onwards); 0 for anything else. */
+export function directStepsLeft(job: { kind: McpJobKind; steps?: string[]; nextStep?: number }): number {
+    if (job.kind !== 'direct' || !Array.isArray(job.steps) || job.steps.length === 0) {
+        return 0;
+    }
+    return Math.max(0, job.steps.length - (job.nextStep || 0));
+}
 
 export interface JobStopPlan {
     action: JobStopAction;
@@ -130,7 +167,7 @@ export interface JobStopPlan {
     note: string;
 }
 
-export function planJobStop(kind: McpJobKind, state: McpJobState): JobStopPlan {
+export function planJobStop(kind: McpJobKind, state: McpJobState, step?: DirectStepContext): JobStopPlan {
     if (TERMINAL_JOB_STATES.includes(state)) {
         return { action: 'already-ended', note: `Job already ${state}.` };
     }
@@ -153,6 +190,34 @@ export function planJobStop(kind: McpJobKind, state: McpJobState): JobStopPlan {
             note: `Job withdrawn before it reached the machine (it was ${state}). Its confirm link is dead - approving `
                 + 'it now does nothing, and no one needs to be told to leave it alone.',
         };
+    }
+    if (kind === 'direct' && step) {
+        const done = step.totalSteps - step.stepsLeft - (step.stepInFlight ? 1 : 0);
+        const cannotStop = 'a running step cannot be stopped by firmware command over this transport';
+        if (!step.stepInFlight && step.stepsLeft > 0 && (!step.machineMoving || !step.firmwareStop)) {
+            const moving = step.machineMoving
+                ? ` The machine does not read idle: step ${done} (not awaited) may still be moving, and ${cannotStop} - use the machine's own stop.`
+                : '';
+            return {
+                action: 'withdraw-remaining',
+                note: `Batch withdrawn between steps, after step ${done} of ${step.totalSteps}: the remaining ${step.stepsLeft} step(s) were `
+                    + `never sent and nothing was sent now. Its approval is dead - start_gcode_job refuses the remaining steps.${moving}`,
+            };
+        }
+        if (step.stepInFlight && !step.firmwareStop && step.stepsLeft > 0) {
+            return {
+                action: 'withdraw-after-step',
+                note: `Step ${done + 1} of ${step.totalSteps} is executing, and ${cannotStop}. The remaining ${step.stepsLeft} step(s) are `
+                    + 'withdrawn and will never be sent; the running step finishes and the job then ends withdrawn. To halt the running '
+                    + 'step use the machine\'s own stop.',
+            };
+        }
+        if (!step.firmwareStop) {
+            return {
+                action: 'no-firmware-stop',
+                note: `The move is executing, and ${cannotStop}; nothing is left to withdraw. To halt it use the machine's own stop.`,
+            };
+        }
     }
     return { action: 'machine-stop', note: 'Job already handed to the machine; sending the firmware stop.' };
 }
