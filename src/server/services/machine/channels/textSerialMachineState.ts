@@ -140,7 +140,11 @@ export type WrittenLineKind = 'm114' | 'full-home' | 'partial-home' | 'motion' |
 
 /** The G/M code words of one line, comments (`;`, `(...)`), line numbers and checksums removed: ['G28'], ['G92', 'X'...]. */
 function lineWords(raw: string): { codes: string[]; axes: string[] } {
-    const line = String(raw).replace(/\(.*?\)/g, ' ').replace(/;.*$/, '').replace(/\*\d+\s*$/, '').toUpperCase();
+    const line = String(raw)
+        .replace(/\(.*?\)/g, ' ')
+        .replace(/;.*$/, '')
+        .replace(/\*\d+\s*$/, '')
+        .toUpperCase();
     const codes: string[] = [];
     const axes: string[] = [];
     const pattern = /([A-Z])\s*(-?\d+(?:\.\d+)?)?/g;

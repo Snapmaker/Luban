@@ -46,8 +46,6 @@ import { TraverseMachine } from '../traversePlan';
 import { GcodeDialect, dialectById } from '../gcodeDialect';
 import { GcodeForm, gcodeFormOf, genericMotionRefusal } from '../gcodeForms';
 import { LogicalFrameTrust, judgeLogicalFrame, machineStatusOf, readLogicalFrameEvidence } from '../logicalFrame';
-
-export { machineStatusOf } from '../logicalFrame';
 import { statedTravel } from '../rotaryGeometry';
 import {
     FrameLatch,
@@ -66,6 +64,8 @@ import {
 import { describeFrameLatch, resyncHint } from '../frameRecovery';
 import { McpToolError, ToolRegistry } from '../registry';
 import logger from '../../../lib/logger';
+
+export { machineStatusOf } from '../logicalFrame';
 
 const log = logger('service:mcp:machine');
 
@@ -134,6 +134,17 @@ export function getMachineSizeByIdentifier(identifier: string | null): { x: numb
 }
 
 /**
+ * The dialect generic motion is written in: the connected machine's row, or
+ * the Snapmaker 2.0 row when NO machine identifier is known (the A350 as the
+ * MCP always assumed - zPolicyFor treats null the same way; the test harness's
+ * ConnectionManager stub has no getConnectionStatus). A connected machine the
+ * table does not list gets the 'unknown' row, which emits nothing.
+ */
+export function motionDialect(): GcodeDialect {
+    return connectedMachineIdentifier() === null ? dialectById('sm2-marlin') : connectedDialect();
+}
+
+/**
  * The transport traits of the CONNECTED machine for the XY planners
  * (traversePlan.ts TraverseMachine): whether it has a Z axis, and which
  * gcode form its firmware is known to execute. A GRBL-flavoured machine (the
@@ -153,16 +164,6 @@ export function traverseMachine(action: string = 'this motion'): TraverseMachine
     return { hasZ: capability.hasZ, gcode: gcodeFormOf(dialect) === 'relative-steps' ? 'grbl-relative' : 'snapmaker-2', dialect };
 }
 
-/**
- * The dialect generic motion is written in: the connected machine's row, or
- * the Snapmaker 2.0 row when NO machine identifier is known (the A350 as the
- * MCP always assumed - zPolicyFor treats null the same way; the test harness's
- * ConnectionManager stub has no getConnectionStatus). A connected machine the
- * table does not list gets the 'unknown' row, which emits nothing.
- */
-export function motionDialect(): GcodeDialect {
-    return connectedMachineIdentifier() === null ? dialectById('sm2-marlin') : connectedDialect();
-}
 
 /** `gcode_form` for tool results: 'sm2' | 'relative-steps' (throws, naming the machine, where nothing is emitted). */
 export function motionGcodeForm(): GcodeForm {

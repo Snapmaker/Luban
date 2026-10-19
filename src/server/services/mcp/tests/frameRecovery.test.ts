@@ -77,8 +77,10 @@ function restoreFixture(
         '../jobs': { jobManager: { getActive: () => activeJob } },
         '../procedureAbort': { procedureStopRequested: () => null },
         '../probeFeed': { probeFeedService: { motionBegin: () => undefined, motionEnd: () => undefined } },
-        './machine': { getPositionSnapshot: () => snapshots.shift(), machineBounds: () => BOUNDS,
-            motionDialect: () => dialectById('sm2-marlin'), motionGcodeForm: () => 'sm2' },
+        './machine': { getPositionSnapshot: () => snapshots.shift(),
+            machineBounds: () => BOUNDS,
+            motionDialect: () => dialectById('sm2-marlin'),
+            motionGcodeForm: () => 'sm2' },
         // WP4a: the restore is written by the pure gcodeForms.ts from the A350 row.
         '../gcodeForms': gcodeForms,
         '../connectedMachine': { describeConnectedMachine: () => ({ identifier: 'A350', type: null, hasZ: true, dialect: 'sm2-marlin' }) },

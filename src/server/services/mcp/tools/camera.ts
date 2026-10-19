@@ -951,6 +951,19 @@ export async function homeMachine(tool: string, waitUntilHomed: boolean = true, 
         + `Last state: ${JSON.stringify(last && { isHomed: last.isHomed, machineStatus: last.machineStatus })}`);
 }
 
+/**
+ * The connected machine's no-motion frame restore (gcodeForms.workFrameRestore):
+ * `G90\nG54;` on the Snapmaker 2.0 (WORK_FRAME_RESTORE_GCODE, unchanged), `G90`
+ * alone where Luban selects no workspace (Ray) or there are none (Original).
+ */
+export function workFrameRestoreText(): string {
+    try {
+        return workFrameRestore(motionDialect());
+    } catch (err) {
+        throw new McpToolError(`Refusing the frame restore: ${(err as Error).message}.`);
+    }
+}
+
 /** Shared operator/agent frame recovery; deliberately no axis words. */
 export async function sendWorkFrameRestore(tool: string): Promise<SentGcode> {
     const channel = connectionManager.getCurrentChannel() as unknown as GcodeChannel;
@@ -966,18 +979,6 @@ export async function sendWorkFrameRestore(tool: string): Promise<SentGcode> {
     return executed;
 }
 
-/**
- * The connected machine's no-motion frame restore (gcodeForms.workFrameRestore):
- * `G90\nG54;` on the Snapmaker 2.0 (WORK_FRAME_RESTORE_GCODE, unchanged), `G90`
- * alone where Luban selects no workspace (Ray) or there are none (Original).
- */
-export function workFrameRestoreText(): string {
-    try {
-        return workFrameRestore(motionDialect());
-    } catch (err) {
-        throw new McpToolError(`Refusing the frame restore: ${(err as Error).message}.`);
-    }
-}
 
 /** The position-of-record fields a frame verification reads (frameRecovery.verifyWorkFrame). */
 function frameReading(snapshot: PositionSnapshot): FrameReading {

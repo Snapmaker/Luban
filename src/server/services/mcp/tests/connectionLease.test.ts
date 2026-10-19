@@ -14,6 +14,7 @@ import * as frameRecovery from '../frameRecovery';
 import * as machinePosition from '../machinePosition';
 import * as machineTravel from '../machineTravel';
 import * as machineCapability from '../machineCapability';
+import { dialectById } from '../gcodeDialect';
 import * as positionOfRecord from '../positionOfRecord';
 import { McpToolError } from '../registry';
 
@@ -106,7 +107,7 @@ function machineToolsFixture(userDataDir: string) {
         '../gcodeForms': require('../gcodeForms'),
         '../gcodeDialect': require('../gcodeDialect'),
         '../connectedMachine': {
-            connectedDialect: () => require('../gcodeDialect').dialectById('sm2-marlin'),
+            connectedDialect: () => dialectById('sm2-marlin'),
             MACHINES: [machine('A350'), machine('Ray')],
             findMachine: (id: string | null) => (id ? [machine('A350'), machine('Ray')].find((m) => m.identifier === id) || null : null),
             connectedMachineIdentifier: () => 'A350',

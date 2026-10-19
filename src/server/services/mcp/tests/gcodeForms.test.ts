@@ -86,11 +86,17 @@ export const tests: Array<[string, () => void]> = [
         assert.equal(needsPlannerSync(RAY), false);
         assert.equal(needsPlannerSync(ORIGINAL), true);
         assert.equal(relativeStep(ORIGINAL, ends, 1500), `; mcp-settle machine X-1.000 Y349.000\nG91\nG1 X0.000 Y-50.000 F1500\nG90\n${PLANNER_SYNC}`);
-        const rayPlan = planTraverseXy({ ...baseTraverse, currentMachine: { x: -1, y: 399, z: 0 }, targets: [{ x: -1, y: 349 }],
+        const rayPlan = planTraverseXy({ ...baseTraverse,
+            currentMachine: { x: -1, y: 399, z: 0 },
+            targets: [{ x: -1, y: 349 }],
             machine: { hasZ: false, gcode: 'grbl-relative', dialect: RAY } });
         assert.equal(rayPlan.steps[0].gcode, '; mcp-settle machine X-1.000 Y349.000\nG91\nG1 X0.000 Y-50.000 F1500\nG90');
-        const originalPlan = planTraverseXy({ ...baseTraverse, currentMachine: { x: 10, y: 10, z: 50 }, motionFloorZ: 40, traverseZ: 50,
-            targets: [{ x: 30, y: 10 }], machine: { hasZ: true, gcode: 'grbl-relative', dialect: ORIGINAL } });
+        const originalPlan = planTraverseXy({ ...baseTraverse,
+            currentMachine: { x: 10, y: 10, z: 50 },
+            motionFloorZ: 40,
+            traverseZ: 50,
+            targets: [{ x: 30, y: 10 }],
+            machine: { hasZ: true, gcode: 'grbl-relative', dialect: ORIGINAL } });
         assert.equal(originalPlan.steps[0].gcode, '; mcp-settle machine X30.000 Y10.000\nG91\nG1 X20.000 Y0.000 F1500\nG90\nG4 P0');
         assert.ok(!/G53|G54/.test(originalPlan.reviewText), 'no G53/G54 anywhere on the Original');
         assert.ok(originalPlan.relative);
