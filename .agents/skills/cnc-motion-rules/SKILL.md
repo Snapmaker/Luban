@@ -22,6 +22,11 @@ original measurements, including each indexed first pass and its uncertainty.
 Run through it every time, and state the answers in your reply in one short block (a line per
 item, quoting the tool result — not an essay):
 
+0. **Which machine.** `applied_records.connected_machine` (on `get_connection_status` and every
+   motion result): identifier, `dialect`, `machineKey`, `gcode_form`. `landmark_review` must be
+   `confirmed`, else hand its question to the operator (`confirm_landmarks` stages the page; you
+   never confirm it). On the Ray and the Original every move stages for a click. Never infer a
+   height the records do not hold (`records.zPolicy` `missing` = stop and ask).
 1. **State.** `get_connection_status` connected; `get_position`: `reliability` is `verified`,
    `heartbeat` or `cached-offset` (never `awaiting-resync` or `stale`), `warnings` empty,
    `isHomed` true, `machineStatus` idle. `get_stored_state` for landmarks, limits, geometry.
