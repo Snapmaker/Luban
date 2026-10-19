@@ -3,14 +3,18 @@
 import { connectionManager } from '../../machine/ConnectionManager';
 import { clearanceOptions } from '../clearanceContext';
 import { connectedMachineCapability, connectedMachineTag, describeConnectedMachine } from '../connectedMachine';
+import { POSITION_EPSILON_MM } from '../envelopeChecks';
 import { jobManager } from '../jobs';
 import { landmarkStore } from '../landmarks';
-import { HeadFacts, LaserBox, LaserFramePlan, LaserSwitchPlan, boxFromCorners, boxFromJobExtents, laserFocusRefusal, planAirAssist,
-    planCrosshair, planLaserFrame, requireLaserHeadForFrame } from '../laserPlan';
+import { ConfirmedOffset, HeadFacts, LaserBox, LaserFramePlan, LaserSwitchPlan, OFFSET_CONFIRM_WAIT_MS, OffsetBeat,
+    RAY_COORDINATE_INTERVAL_MS, boxFromCorners, boxFromJobExtents, confirmRayWorkOffset, describeRayWorkBoxSource, laserFocusRefusal,
+    planAirAssist, planCrosshair, planLaserFrame, requireLaserHeadForFrame, usableJobExtents } from '../laserPlan';
+import { RAY_IDENTIFIER } from '../machineCapability';
+import { reliableForMotion } from '../machinePosition';
 import { probeFeedService } from '../probeFeed';
 import { McpToolError, ToolRegistry } from '../registry';
-import { assertFreshHeartbeat, assertWithinTravel, describePlanningTravel, getPositionSnapshot, motionGcodeForm, requirePlanningTravel,
-    traverseMachine } from './machine';
+import { HEARTBEAT_STALE_MS, PositionSnapshot, assertFreshHeartbeat, assertWithinTravel, describePlanningTravel, getPositionSnapshot,
+    motionGcodeForm, requirePlanningTravel, traverseMachine } from './machine';
 import { validateStagedEnvelope } from './staging';
 
 /**
@@ -59,6 +63,36 @@ function assertReadyForLaser(what: string): void {
     }
 }
 
+function offsetBeat(position: PositionSnapshot): OffsetBeat {
+    return {
+        offset: { x: position.originOffset.x, y: position.originOffset.y },
+        source: position.originOffsetSource,
+        reliability: position.reliability,
+        reliable: reliableForMotion(position.reliability),
+        reportedAt: position.reportedAt,
+        warnings: position.warnings,
+    };
+}
+
+/**
+ * The next beat at least one SACP coordinate interval newer than `first`
+ * (laserPlan.ts RAY_COORDINATE_INTERVAL_MS), or null when none arrives within
+ * OFFSET_CONFIRM_WAIT_MS. Read-only: polls the position of record.
+ */
+async function nextCoordinateBeat(first: PositionSnapshot): Promise<PositionSnapshot | null> {
+    const deadline = Date.now() + OFFSET_CONFIRM_WAIT_MS;
+    while (Date.now() < deadline) {
+        await new Promise((resolve) => {
+            setTimeout(resolve, 250);
+        });
+        const now = getPositionSnapshot();
+        if (now.reportedAt >= first.reportedAt + RAY_COORDINATE_INTERVAL_MS) {
+            return now;
+        }
+    }
+    return null;
+}
+
 function stageSwitch(plan: LaserSwitchPlan, tool: string, baseUrl: () => string) {
     const machine = traverseMachine(tool);
     const validation = validateStagedEnvelope(plan.reviewText, tool, { relativeTransport: machine.gcode === 'grbl-relative' });
@@ -80,7 +114,11 @@ export function registerLaserTools(registry: ToolRegistry, getConfirmBaseUrl: ()
         name: 'laser_frame',
         description: 'Trace the bounding box of a laser job so the operator can see where it will run. Box from x0, y0, x1, y1 '
             + '(MACHINE coordinates) or from a staged job\'s validator extents (job_id; a work-frame job only while the live '
-            + 'work-origin offset is reliable). power_percent 0 (default) = laser OFF: M5 first, then G0 moves only (G0 is laser-off '
+            + 'work-origin offset is reliable). On the Ray a work-frame job (a Luban export, header `;machine: Ray`, origin from '
+            + 'Luban\'s Set Origin) is mapped machine = work - offset only when two consecutive fresh heartbeats agree on the offset '
+            + '(waits up to a few seconds for the second) and it is unchanged since the job was staged - otherwise refused: set the '
+            + 'origin, re-stage, frame the new job; work_offset in the result shows the check. A Ray job whose every move carries '
+            + 'the same-line G53 prefix is machine-frame and maps directly. power_percent 0 (default) = laser OFF: M5 first, then G0 moves only (G0 is laser-off '
             + 'by definition on the Ray). power_percent > 0 = a dim visible trace: M3 at that power, CAPPED at 5 % '
             + '(LASER_FRAME_POWER_PERCENT; Ray S0-1000 -> 5 % = S50; Snapmaker 2.0 / Artisan / Original `M3 P<%> S<PWM>`); a clip '
             + 'is REPORTED in `clipped` and on the confirm page. Each powered side is its own approved step ending M5, so the laser is '
@@ -132,8 +170,7 @@ export function registerLaserTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             if (position.isHomed !== true) {
                 throw new McpToolError(`Machine does not report homed; home before a laser frame ${connectedMachineTag()}.`);
             }
-            const { x: mx, y: my, z: mz } = position.machine;
-            if (mx === null || my === null) {
+            if (position.machine.x === null || position.machine.y === null) {
                 throw new McpToolError('Current machine position unknown; cannot plan the frame.');
             }
             const dialect = machine.dialect || capability.dialect;
@@ -146,6 +183,9 @@ export function registerLaserTools(registry: ToolRegistry, getConfirmBaseUrl: ()
 
             let box: LaserBox;
             let boxSource: string;
+            // The snapshot the frame is planned from: the newer beat when a Ray work-frame job waited for one.
+            let planFrom = position;
+            let workOffset: { offset: ConfirmedOffset; staged: unknown; beats: Array<{ offset: { x: number; y: number }; at: string }> } | null = null;
             try {
                 if (fromJob) {
                     const job = jobManager.get(String(args.job_id));
@@ -157,15 +197,47 @@ export function registerLaserTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                         throw new McpToolError(`Job ${job.id} was staged for the ${stagedFor}, not the connected machine ${connectedMachineTag()}; `
                             + 'its extents are not a box on this machine.');
                     }
-                    const offsetReliable = position.originOffsetSource === 'heartbeat' && position.warnings.length === 0;
-                    box = boxFromJobExtents(job.id, job.validation, offsetReliable ? position.originOffset : null);
-                    boxSource = `job ${job.id} validator extents (${job.validation.frame.declared} frame)`;
+                    if (dialect.id === 'ray-grbl' && job.validation.frame.declared === 'work') {
+                        // A Luban Ray export (work frame, origin from Set Origin's G92): mapped only with an offset two
+                        // consecutive fresh beats agree on AND unchanged since staging (laserPlan.ts confirmRayWorkOffset).
+                        usableJobExtents(job.id, job.validation);
+                        const second = await nextCoordinateBeat(position);
+                        const beats = second ? [position, second] : [position];
+                        const confirmed = confirmRayWorkOffset({
+                            jobId: job.id,
+                            header: job.validation.header,
+                            rayIdentifier: RAY_IDENTIFIER,
+                            staged: job.validation.originOffsetAtStaging,
+                            beats: beats.map(offsetBeat),
+                            now: Date.now(),
+                            staleMs: HEARTBEAT_STALE_MS,
+                        });
+                        planFrom = second as PositionSnapshot;
+                        box = boxFromJobExtents(job.id, job.validation, confirmed);
+                        boxSource = describeRayWorkBoxSource(job.id, confirmed);
+                        workOffset = {
+                            offset: confirmed,
+                            staged: job.validation.originOffsetAtStaging,
+                            beats: beats.map((b) => ({ offset: { x: b.originOffset.x, y: b.originOffset.y }, at: new Date(b.reportedAt).toISOString() })),
+                        };
+                    } else {
+                        const offsetReliable = position.originOffsetSource === 'heartbeat' && position.warnings.length === 0;
+                        box = boxFromJobExtents(job.id, job.validation, offsetReliable ? position.originOffset : null);
+                        boxSource = `job ${job.id} validator extents (${job.validation.frame.declared} frame)`;
+                    }
                 } else {
                     box = boxFromCorners(Number(args.x0), Number(args.y0), Number(args.x1), Number(args.y1));
                     boxSource = 'arguments (machine coordinates)';
                 }
             } catch (err) {
                 plannerError(err);
+            }
+            if (planFrom !== position && planFrom.machineStatus !== 'idle') {
+                throw new McpToolError(`Machine is ${planFrom.machineStatus || 'in an unknown state'}, not idle.`);
+            }
+            const { x: mx, y: my, z: mz } = planFrom.machine;
+            if (mx === null || my === null) {
+                throw new McpToolError('Current machine position unknown; cannot plan the frame.');
             }
             const travel = requirePlanningTravel('a laser frame', { x: mx, y: my });
             assertWithinTravel([
@@ -207,6 +279,7 @@ export function registerLaserTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                     ? 'relative G91/G90 steps (no G53/G54 on this machine); each names its machine endpoint in a settle comment'
                     : 'absolute machine-frame steps (own-line G53; .. G54;), each naming its endpoint in a settle comment',
                 box: { ...plan.box, source: boxSource },
+                ...(workOffset ? { work_offset: { ...workOffset, epsilon_mm: POSITION_EPSILON_MM, convention: 'machine = work - offset' } } : {}),
                 power: plan.power.line
                     ? { percent: plan.power.percent, line: plan.power.line, note: 'each side is M3 .. move .. M5 - never on between steps' }
                     : { percent: 0, line: null, note: 'laser OFF: M5 first, G0 moves only, no M3/M4' },

@@ -69,13 +69,11 @@ export interface JobExtentsInput {
 }
 
 /**
- * The machine-coordinate box of a staged job, from its validator extents. A
- * machine-frame job's extents are machine coordinates already; a work-frame
- * job's are converted with machine = work - originOffset, ONLY when the live
- * offset is reliable. Refused - never guessed - when the extents are missing,
- * relative, mixed-frame or undeclared.
+ * A staged job's XY extents when they are its real footprint in ONE frame:
+ * refused when missing, relative or mixed-frame. Checked before laser_frame
+ * spends any time confirming an offset.
  */
-export function boxFromJobExtents(jobId: string, report: JobExtentsInput, originOffset: { x: number; y: number } | null): LaserBox {
+export function usableJobExtents(jobId: string, report: JobExtentsInput): { x: { min: number; max: number }; y: { min: number; max: number } } {
     const { x, y } = report.extents;
     if (!x || !y) {
         throw new LaserPlanError(`Job ${jobId} has no XY extents in its validation report (no absolute XY motion), so there is no box to frame. `
@@ -89,6 +87,18 @@ export function boxFromJobExtents(jobId: string, report: JobExtentsInput, origin
         throw new LaserPlanError(`Job ${jobId} moves in both the machine and a work frame, so its extents are not one box. Give the box `
             + 'as x0, y0, x1, y1 in machine coordinates.');
     }
+    return { x, y };
+}
+
+/**
+ * The machine-coordinate box of a staged job, from its validator extents. A
+ * machine-frame job's extents are machine coordinates already; a work-frame
+ * job's are converted with machine = work - originOffset, ONLY when the live
+ * offset is reliable. Refused - never guessed - when the extents are missing,
+ * relative, mixed-frame or undeclared.
+ */
+export function boxFromJobExtents(jobId: string, report: JobExtentsInput, originOffset: { x: number; y: number } | null): LaserBox {
+    const { x, y } = usableJobExtents(jobId, report);
     if (report.frame.declared === 'machine') {
         return boxFromCorners(x.min, y.min, x.max, y.max);
     }
@@ -101,6 +111,138 @@ export function boxFromJobExtents(jobId: string, report: JobExtentsInput, origin
             + 'Give the box as x0, y0, x1, y1 in machine coordinates.');
     }
     return boxFromCorners(x.min - originOffset.x, y.min - originOffset.y, x.max - originOffset.x, y.max - originOffset.y);
+}
+
+// ---- A Ray work-frame job ---------------------------------------------------
+//
+// Luban's Ray exports are work-frame files: Set Origin
+// (RaySetOriginWidget/SetOriginView.tsx) sends `G92 X0 Y0 B0` at the head and
+// the job runs from there. The SACP coordinate report carries the resulting
+// work-origin offset (sacpMachineState.ts; live 2026-10-18: machine X181 Y49,
+// offset (-181, -49), raw work (0, 0) - the head on a just-set origin). The
+// extents map to machine coordinates by the repo convention machine = work -
+// offset, and ONLY while that offset is the one the job was staged against
+// and two consecutive fresh beats agree on it: an origin moved after staging
+// moves the job's outline on the bed, and a frame drawn from the old one
+// would show the operator the wrong place.
+
+/**
+ * A beat laser_frame waits for must be this much newer than the first: the
+ * SACP coordinate report is subscribed at `{ interval: 1000 }` (SacpChannel.ts),
+ * and the state timestamp also moves on a plain heartbeat, so a beat less than
+ * one interval newer may carry the SAME coordinate sample.
+ */
+export const RAY_COORDINATE_INTERVAL_MS = 1000;
+
+/** How long laser_frame waits for that beat: one coordinate interval plus the 2 s status poll period, twice over. */
+export const OFFSET_CONFIRM_WAIT_MS = 2 * (RAY_COORDINATE_INTERVAL_MS + 2000);
+
+/** One beat's offset, as get_position reports it (PositionSnapshot). */
+export interface OffsetBeat {
+    offset: { x: number; y: number };
+    /** originOffsetSource: only 'heartbeat' (carried by this very beat) counts. */
+    source: string;
+    reliability: string;
+    /** reliableForMotion(reliability) (machinePosition.ts). */
+    reliable: boolean;
+    reportedAt: number;
+    warnings: string[];
+}
+
+export interface RayWorkOffsetInput {
+    jobId: string;
+    /** The job's Luban header (validator report `header`). */
+    header: { machine: string | null } | null | undefined;
+    /** The identifier a Ray export names in `;machine:` (machineCapability.ts RAY_IDENTIFIER). */
+    rayIdentifier: string;
+    /** validator report originOffsetAtStaging: undefined = staged before it was recorded. */
+    staged: { x: number; y: number; reportedAt: number | null } | null | undefined;
+    /** Consecutive beats, oldest first. */
+    beats: OffsetBeat[];
+    now: number;
+    staleMs: number;
+}
+
+export interface ConfirmedOffset {
+    x: number;
+    y: number;
+    /** The newest beat's timestamp. */
+    reportedAt: number;
+    stagedAt: number | null;
+}
+
+const RESTAGE = 'Set the origin in Luban, wait until get_position reports reliability "heartbeat" with no warnings, then '
+    + 're-stage the job (submit_gcode_job with frame: "work") and frame the new job_id - or give the box as x0, y0, x1, y1 in '
+    + 'machine coordinates.';
+
+const xy = (o: { x: number; y: number }) => `(${f3(o.x)}, ${f3(o.y)})`;
+
+/**
+ * The work-origin offset a Ray work-frame job's extents may be mapped with -
+ * or a refusal saying why not and what to do. Requires: a Luban header naming
+ * the Ray; an offset recorded when the job was staged; at least two distinct
+ * beats, each fresh, reliable, carrying its own offset ('heartbeat') and no
+ * warnings; the beats agreeing within POSITION_EPSILON_MM; and the newest
+ * equal to the staged offset within it.
+ */
+export function confirmRayWorkOffset(input: RayWorkOffsetInput): ConfirmedOffset {
+    const { jobId } = input;
+    const machine = input.header ? input.header.machine : null;
+    if (machine !== input.rayIdentifier) {
+        throw new LaserPlanError(`Job ${jobId} is a work-frame job whose Luban header ${machine === null ? 'names no machine (no '
+            + '`;machine:` line)' : `names "${machine}"`}, not \`;machine: ${input.rayIdentifier}\`: its extents are not known to be `
+            + `${input.rayIdentifier} work coordinates from Luban's Set Origin, so they are not mapped to the bed. Give the box as x0, y0, `
+            + 'x1, y1 in machine coordinates.');
+    }
+    if (input.staged === undefined) {
+        throw new LaserPlanError(`Job ${jobId} was staged before the work-origin offset was recorded with a job, so there is no way to `
+            + `tell whether the origin has moved since. ${RESTAGE}`);
+    }
+    if (input.staged === null) {
+        throw new LaserPlanError(`Job ${jobId} was staged while the work-origin offset was not reliable (no heartbeat offset, or the `
+            + `position of record carried warnings), so no offset was recorded with it. ${RESTAGE}`);
+    }
+    const beats = input.beats;
+    if (beats.length < 2 || beats[beats.length - 1].reportedAt <= beats[0].reportedAt) {
+        throw new LaserPlanError(`Job ${jobId}: the work-origin offset needs two consecutive heartbeats to agree, and no second beat `
+            + `arrived within ${(OFFSET_CONFIRM_WAIT_MS / 1000).toFixed(0)} s. Check get_position and retry.`);
+    }
+    for (const beat of beats) {
+        const age = input.now - beat.reportedAt;
+        const at = new Date(beat.reportedAt).toISOString();
+        if (age > input.staleMs) {
+            throw new LaserPlanError(`Job ${jobId}: the heartbeat at ${at} is ${(age / 1000).toFixed(0)} s old - stale - so its `
+                + 'work-origin offset is not the live one. Reconnect the machine, check get_position, and retry.');
+        }
+        if (!beat.reliable || beat.source !== 'heartbeat' || beat.warnings.length) {
+            const why = beat.source !== 'heartbeat'
+                ? `its offset is ${beat.source}, not carried by the beat itself`
+                : `the position is ${beat.reliability}${beat.warnings.length ? ` (${beat.warnings[0]})` : ''}`;
+            throw new LaserPlanError(`Job ${jobId}: the heartbeat at ${at} does not vouch for the work-origin offset - ${why}. ${RESTAGE}`);
+        }
+    }
+    for (let i = 1; i < beats.length; i += 1) {
+        const a = beats[i - 1].offset;
+        const b = beats[i].offset;
+        if (Math.abs(a.x - b.x) > POSITION_EPSILON_MM || Math.abs(a.y - b.y) > POSITION_EPSILON_MM) {
+            throw new LaserPlanError(`Job ${jobId}: the work-origin offset changed between consecutive heartbeats, ${xy(a)} then ${xy(b)} `
+                + `(more than ${POSITION_EPSILON_MM} mm) - the origin is being set or the report is in flux. ${RESTAGE}`);
+        }
+    }
+    const live = beats[beats.length - 1];
+    const staged = input.staged;
+    if (Math.abs(live.offset.x - staged.x) > POSITION_EPSILON_MM || Math.abs(live.offset.y - staged.y) > POSITION_EPSILON_MM) {
+        throw new LaserPlanError(`Job ${jobId}: the work origin has moved since the job was staged - offset ${xy(staged)} then, `
+            + `${xy(live.offset)} now (machine = work - offset). The job would now run somewhere else on the bed, so its staged `
+            + `extents are not framed. ${RESTAGE}`);
+    }
+    return { x: live.offset.x, y: live.offset.y, reportedAt: live.reportedAt, stagedAt: staged.reportedAt };
+}
+
+/** laser_frame's box_source for a Ray work-frame job. */
+export function describeRayWorkBoxSource(jobId: string, offset: ConfirmedOffset): string {
+    return `job ${jobId} (work frame, offset ${f3(offset.x)},${f3(offset.y)} from heartbeat at ${new Date(offset.reportedAt).toISOString()}; `
+        + 'machine = work - offset; unchanged since staging)';
 }
 
 // ---- Power -----------------------------------------------------------------

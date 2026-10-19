@@ -18,6 +18,10 @@ export function stagingFrameContext(frameArgument: JobFrame | null): FrameResolu
     let originOffsetZ: number | null = null;
     let offsetReliable = false;
     let machineZMax: number | null = null;
+    // Recorded with a work-frame job (originOffsetAtStaging): laser_frame on
+    // the Ray refuses once the live offset has moved away from it.
+    let originOffset: { x: number; y: number; z: number } | null = null;
+    let offsetReportedAt: number | null = null;
     try {
         const size = getMachineSizeByIdentifier(connectionManager.getConnectionStatus().machineIdentifier);
         // The definition's size.z (325 on the A350) is below the park / home
@@ -29,10 +33,12 @@ export function stagingFrameContext(frameArgument: JobFrame | null): FrameResolu
         const position = getPositionSnapshot();
         originOffsetZ = position.originOffset.z;
         offsetReliable = position.originOffsetSource === 'heartbeat' && position.warnings.length === 0;
+        originOffset = { ...position.originOffset };
+        offsetReportedAt = position.reportedAt;
     } catch (err) {
         // Not connected / no heartbeat yet: resolution falls back to "unresolved".
     }
-    return { frameArgument, originOffsetZ, offsetReliable, machineZMax };
+    return { frameArgument, originOffsetZ, offsetReliable, machineZMax, originOffset, offsetReportedAt };
 }
 
 /**
