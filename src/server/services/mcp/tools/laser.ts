@@ -5,7 +5,7 @@ import { clearanceOptions } from '../clearanceContext';
 import { connectedMachineCapability, connectedMachineTag, describeConnectedMachine } from '../connectedMachine';
 import { jobManager } from '../jobs';
 import { landmarkStore } from '../landmarks';
-import { HeadFacts, LaserBox, LaserSwitchPlan, boxFromCorners, boxFromJobExtents, laserFocusRefusal, planAirAssist,
+import { HeadFacts, LaserBox, LaserFramePlan, LaserSwitchPlan, boxFromCorners, boxFromJobExtents, laserFocusRefusal, planAirAssist,
     planCrosshair, planLaserFrame, requireLaserHeadForFrame } from '../laserPlan';
 import { probeFeedService } from '../probeFeed';
 import { McpToolError, ToolRegistry } from '../registry';
@@ -175,7 +175,7 @@ export function registerLaserTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 { label: 'Frame corner (xMin, yMax)', x: box.xMin, y: box.yMax },
             ], travel);
 
-            let plan;
+            let plan: LaserFramePlan;
             try {
                 plan = planLaserFrame({
                     dialect,
