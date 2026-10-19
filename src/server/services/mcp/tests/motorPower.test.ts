@@ -168,7 +168,7 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         const f = jobFixture('direct-only', { dialect: 'ray-grbl', readMotorPowerMode: r.read });
         const job = f.createDirectJob();
         await assert.rejects(f.startDirect(job), (err: Error) => err.message.includes(SHUT_ALL_MESSAGE)
-            && /the approval was not used/.test(err.message));
+            && /the approval was not used. Switching to Control Mode homes the Ray.*restage it after the switch/.test(err.message));
         r.mode = ONLY_LINEAR;
         await assert.rejects(f.startDirect(job), /ONLYLINEAR/);
         r.mode = new Error('timeout');
@@ -181,7 +181,8 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         r.mode = SHUT_ALL;
         await assert.rejects(f.call(procedure), /Manual Mode \/ SHUTAll/);
         assert.equal(procedure.state, 'approved'); assert.ok(!procedure.tokenUsed); assert.equal(ran, false);
-        r.mode = STAY_POWER; // the operator switched to Control Mode: the same approval now starts
+        // The gate itself passes STAYPOWER (operationally the refusal says to restage after the switch, which homes the Ray).
+        r.mode = STAY_POWER;
         await f.startDirect(job);
         assert.equal(job.state, 'completed');
         assert.equal(f.executed.length, 1);

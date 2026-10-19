@@ -1293,7 +1293,8 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             + 'start_unverified means it may have run: never retry/restage. Poll status and ask the operator to review; '
             + 'stop_gcode_job remains available. Results include retry_safe and machine_status_after. On the Ray the motor-power '
             + 'mode (SACP 0x01 0x48) is read before the approval is used: unless it is STAYPOWER (Control Mode) the start is refused '
-            + 'with the approval intact - the operator switches Luban\'s Set Origin Mode to Control Mode, then call again.',
+            + 'and nothing is sent. Switching Luban\'s Set Origin Mode to Control Mode homes the Ray, and the job was planned from the '
+            + 'position before that: withdraw it (stop_gcode_job) and restage after the switch.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -1400,7 +1401,11 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             // ignores it (#321): read the mode now - the operator can switch
             // it in Luban at any time - and refuse before the token is spent.
             // Nothing is read on a machine without the mode (A350, Original).
-            await assertMotorPowered('starting this job', 'Nothing was sent and the approval was not used: start_gcode_job again once it is fixed.');
+            // The token stays unconsumed, but the refusal says to restage: Luban
+            // homes the Ray on the switch to Control Mode, and a Ray direct step
+            // is a relative increment planned from the position before it.
+            await assertMotorPowered('starting this job', 'Nothing was sent and the approval was not used. Switching to Control Mode homes the '
+                + 'Ray, and this job was planned from the position before that: withdraw it with stop_gcode_job and restage it after the switch.');
 
             // Consumed from here on, success or not - a failed start needs a
             // fresh human approval, not a retry loop.
