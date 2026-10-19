@@ -1903,8 +1903,8 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             + 'the series runs without approval at or above max(bed, physical landmark tops under the whole swept path) + the lowest '
             + 'point of toolhead + tool + the clearance (ideal, reduced toward the minimum under top Z; never below the motion floor). '
             + 'Z is never lowered: a head above that height traverses where it is, a head below it is first raised straight up to it '
-            + '(entry_raise). The result carries computed_height {allowed, travelZ, clearanceUsed, ideal, min, governedBy, unmet}; '
-            + 'otherwise staged_because lists what is unmet. A legacy toolhead-basis landmark on the path has no physical top: '
+            + '(entry_raise). Unless the top-Z policy already ran the call, the result carries computed_height {allowed, travelZ, '
+            + 'clearanceUsed, ideal, min, governedBy, unmet}; when it stages, staged_because lists what is unmet. A legacy toolhead-basis landmark on the path has no physical top: '
             + 'top-Z behaviour there.',
         inputSchema: {
             type: 'object',
