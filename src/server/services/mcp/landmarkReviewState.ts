@@ -18,7 +18,7 @@ import { FlowLandmark, LandmarkStoreLike, createLandmarkReviewFlow } from './lan
 import { machineStore } from './machineStore';
 import { OperatorReviewStore } from './operatorReviews';
 import { setLandmarkReviewProvider } from './safeZPolicy';
-import { landmarkConfirmTtlHours } from './tools/machine';
+import { landmarkConfirmTtlHours, setMachinePolicyReviews } from './tools/machine';
 
 const CONFIRMED_KEY = 'mcpLandmarksConfirmed';
 
@@ -61,6 +61,9 @@ let confirmBaseUrl: () => string = () => '';
 export function setLandmarkReviewConfirmBaseUrl(base: () => string): void {
     confirmBaseUrl = base;
 }
+
+// set_machine_policy stages a loosened safety bound on the same pages (#265 WP10).
+setMachinePolicyReviews(operatorReviews, () => confirmBaseUrl());
 
 export const landmarkReviewFlow = createLandmarkReviewFlow({
     store: storeAdapter,

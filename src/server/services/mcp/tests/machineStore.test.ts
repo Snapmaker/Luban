@@ -11,6 +11,7 @@ import ts from 'typescript';
 import * as machineCapability from '../machineCapability';
 import * as machinePosition from '../machinePosition';
 import * as motionRules from '../motionRules';
+import * as operatorReviews from '../operatorReviews';
 import * as procedureLimits from '../procedureLimits';
 import * as rotaryAxisLine from '../rotaryAxisLine';
 import * as stylusReach from '../stylusReach';
@@ -122,6 +123,7 @@ export function machineToolsFixture(initial: { [key: string]: unknown } = {}, en
         '../safeZPolicy': { currentLandmarkReviewGate: () => ({ confirmed: false, status: 'unknown', question: 'the landmark review is not available in this build' }) },
         '../procedureLimits': procedureLimits,
         '../motionRules': motionRules,
+        '../operatorReviews': operatorReviews,
         '../registry': { McpToolError },
         '../machineTravel': { DEFAULT_TRAVEL_FUDGE_MM: 25 },
         '../connectedMachine': {
@@ -429,12 +431,21 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         const f = machineToolsFixture({});
         assert.throws(() => f.tools.setMachinePolicy({ safe_traverse_z: 300 }), /none is connected/);
         f.connect({ machineIdentifier: A350 });
-        f.tools.setMachinePolicy({ safe_traverse_z: 300, motion_floor_z: 290, landmark_confirm_ttl_hours: 4 });
+        // Lowering the A350's 328 / 320 loosens a stated bound: staged, applied on the operator's click (#265 WP10).
+        const reviews = new operatorReviews.OperatorReviewStore();
+        f.tools.setMachinePolicyReviews(reviews);
+        const staged = f.tools.setMachinePolicy({ safe_traverse_z: 300, motion_floor_z: 290, landmark_confirm_ttl_hours: 4 });
+        same(staged.updated, ['landmark_confirm_ttl_hours'], 'the shorter TTL (tightening) applies at once');
+        assert.equal(f.tools.safeTraverseZ(), 328, 'not lowered until the operator approves');
+        assert.equal(reviews.decide(reviews.pending()[0].id, 'approve', A350).state, 'approved');
         assert.equal(f.tools.safeTraverseZ(), 300);
         assert.equal(f.tools.landmarkConfirmTtlHours().hours, 4);
         f.tools.setMachinePolicy({ safe_traverse_z: null, motion_floor_z: null, landmark_confirm_ttl_hours: null });
         assert.equal(f.tools.safeTraverseZ(), 328);
         assert.equal(f.tools.motionFloorZ(), 320);
+        // Back to the 24 h default is a LONGER validity than the stated 4 h: staged like any loosening.
+        assert.equal(f.tools.landmarkConfirmTtlHours().hours, 4);
+        reviews.decide(reviews.pending()[0].id, 'approve', A350);
         assert.equal(f.tools.landmarkConfirmTtlHours().hours, procedureLimits.LANDMARK_CONFIRM_TTL_HOURS.default);
         assert.equal(f.store.load().machines[A350].zPolicy.safeTraverseZ, undefined);
     }],

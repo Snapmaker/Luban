@@ -1,6 +1,7 @@
 // Staged operator decisions that carry no G-code (tyeth/Luban#265 WP5): the
-// landmark review (confirm_landmarks), a landmark deletion or loosening, and
-// the answer to a device conflict (assign_machine_device).
+// landmark review (confirm_landmarks), a landmark deletion or loosening, the
+// answer to a device conflict (assign_machine_device), and (WP10) a
+// set_machine_policy change that loosens a stated safety bound.
 //
 // Same gate as a staged job - an agent stages, the operator reads a page on
 // the loopback/LAN confirm server and clicks Approve or Reject - and the same
@@ -16,7 +17,7 @@
 import crypto from 'crypto';
 import type { IncomingMessage, ServerResponse } from 'http';
 
-export type OperatorReviewKind = 'landmark-review' | 'landmark-change' | 'landmark-delete' | 'device-assign';
+export type OperatorReviewKind = 'landmark-review' | 'landmark-change' | 'landmark-delete' | 'device-assign' | 'policy-loosen';
 
 export type OperatorReviewState = 'awaiting_confirmation' | 'approved' | 'rejected' | 'superseded' | 'refused';
 
@@ -60,6 +61,7 @@ const KIND_LABEL: { [kind in OperatorReviewKind]: string } = {
     'landmark-change': 'Landmark loosening',
     'landmark-delete': 'Landmark deletion',
     'device-assign': 'Device assignment',
+    'policy-loosen': 'Machine policy loosening',
 };
 
 export class OperatorReviewStore {
@@ -200,7 +202,9 @@ export class OperatorReviewStore {
                 <button type="submit" style="font-size:1.2em;padding:8px 24px">Reject</button>
             </form>`;
         } else if (item.state === 'approved') {
-            footer = '<h3>Approved and applied</h3><p>The agent sees the result in get_stored_state.landmark_review; there is no code to copy.</p>';
+            footer = item.kind === 'policy-loosen'
+                ? '<h3>Approved and applied</h3><p>The agent sees the result in get_machine_profile.policy; there is no code to copy.</p>'
+                : '<h3>Approved and applied</h3><p>The agent sees the result in get_stored_state.landmark_review; there is no code to copy.</p>';
         } else if (item.state === 'refused') {
             footer = `<h3>Not applied</h3><p>${escapeHtml(item.error || '')}</p>`;
         } else if (item.state === 'rejected') {

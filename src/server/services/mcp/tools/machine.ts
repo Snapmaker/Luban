@@ -69,6 +69,7 @@ import {
 } from '../positionOfRecord';
 import { describeFrameLatch, resyncHint } from '../frameRecovery';
 import { McpToolError, ToolRegistry } from '../registry';
+import { OperatorReviewStore, escapeHtml } from '../operatorReviews';
 import logger from '../../../lib/logger';
 
 export { machineStatusOf } from '../logicalFrame';
@@ -1152,8 +1153,215 @@ function policyNumber(name: string, raw: unknown, range: [number, number], why: 
     return n;
 }
 
-/** set_machine_policy: validate everything first, then write into the connected machine's entry only. */
-export function setMachinePolicy(args: { [key: string]: unknown }) {
+// ---- Loosening a stated safety bound needs the operator (#265 WP10, R11 spirit) ----
+//
+// R11: "landmarks are temporary but only a human removes them" - loosening one
+// is staged for the operator. The same holds for the per-machine bounds
+// set_machine_policy writes: lowering safe_traverse_z or motion_floor_z,
+// widening a travel fudge, a shallower toolhead body (the computed safe height
+// of R13 comes lower) or a longer landmark-confirmation validity. Such a
+// change is staged on an operator review page (/confirm/r<id>, the WP5 store)
+// and applied on the operator's click, after the store re-checks the machine
+// and this module re-checks that the value is still the one the page showed.
+// Tightening, clearing to unknown (the tools then refuse) and a first
+// statement on a machine with no value apply at once as before. The A350's
+// built-in 328 / 320 and every default count as stated values.
+
+const POLICY_ARGS = ['safe_traverse_z', 'motion_floor_z', 'traverse_without_approval_at_safe_z', 'travel_fudge_mm', 'travel_fudge_x_mm',
+    'travel_fudge_y_mm', 'landmark_confirm_ttl_hours', 'traverse_without_approval_at_computed_height', 'toolhead_body_below_reference_mm'];
+
+let policyReviews: OperatorReviewStore | null = null;
+let policyReviewBaseUrl: () => string = () => '';
+
+/** Injected by landmarkReviewState.ts (the store behind /confirm/r<id>); null unsets (tests). */
+export function setMachinePolicyReviews(store: OperatorReviewStore | null, confirmBaseUrl: () => string = () => ''): void {
+    policyReviews = store;
+    policyReviewBaseUrl = confirmBaseUrl;
+}
+
+/** What set_machine_policy returns: what it applied now and, when it loosens a bound, the staged page. */
+export interface MachinePolicyResult {
+    machineKey: string;
+    updated: string[];
+    cleared: string[];
+    policy: ReturnType<typeof describeMachinePolicy> | null;
+    staged?: object;
+    // eslint-disable-next-line camelcase
+    staged_because?: string;
+    // eslint-disable-next-line camelcase
+    next_step?: string;
+}
+
+/** Which way a bound loosens. */
+export type BoundDirection = 'lower-loosens' | 'higher-loosens';
+
+/**
+ * Pure: whether moving a bound from `before` to `after` loosens it. No stated
+ * value before (a first statement) or none after (cleared: the tools that need
+ * it refuse) never does.
+ */
+export function loosensBound(direction: BoundDirection, before: number | null, after: number | null): boolean {
+    if (before === null || after === null || !Number.isFinite(before) || !Number.isFinite(after)) {
+        return false;
+    }
+    return direction === 'lower-loosens' ? after < before : after > before;
+}
+
+export interface PolicyLoosening {
+    /** The bound ('travel_fudge_x' / '_y' for the per-axis fudge the fudge arguments resolve to). */
+    name: string;
+    /** The set_machine_policy arguments that move it (staged together). */
+    args: string[];
+    before: number;
+    after: number;
+    why: string;
+}
+
+/** The bound as it applies to the connected machine now (what a staged page is re-checked against). */
+function boundNow(key: string, name: string): number | null {
+    switch (name) {
+        case 'safe_traverse_z': return zPolicyFor(key).safeTraverseZ.value;
+        case 'motion_floor_z': return zPolicyFor(key).motionFloorZ.value;
+        case 'travel_fudge_x': return travelFudge().x;
+        case 'travel_fudge_y': return travelFudge().y;
+        case 'landmark_confirm_ttl_hours': return landmarkConfirmTtlHours(key).hours;
+        case 'toolhead_body_below_reference_mm': {
+            const body = motionRulesOf({ motionRules: machineStore.getFor(key, 'mcpMotionRules') }).toolheadBodyBelowReferenceMm;
+            return body ? body.value : null;
+        }
+        default: return null;
+    }
+}
+
+/** Every bound this (already validated) call would loosen on the connected machine. */
+function policyLoosenings(key: string, identifier: string, args: { [key: string]: unknown }): PolicyLoosening[] {
+    const given = (name: string) => args[name] !== undefined;
+    const out: PolicyLoosening[] = [];
+    const add = (name: string, moved: string[], direction: BoundDirection, after: number | null, why: string) => {
+        const before = boundNow(key, name);
+        if (loosensBound(direction, before, after)) {
+            out.push({ name, args: moved, before: before as number, after: after as number, why });
+        }
+    };
+    const stated = (name: string): number | null => (args[name] === null ? null : Number(args[name]));
+    if (given('safe_traverse_z')) {
+        add('safe_traverse_z', ['safe_traverse_z'], 'lower-loosens',
+            args.safe_traverse_z === null && hasA350Defaults(identifier) ? DEFAULT_SAFE_TRAVERSE_Z : stated('safe_traverse_z'),
+            'a lower park / top height lets transport and the approval-free top-Z moves run lower');
+    }
+    if (given('motion_floor_z')) {
+        add('motion_floor_z', ['motion_floor_z'], 'lower-loosens',
+            args.motion_floor_z === null && hasA350Defaults(identifier) ? DEFAULT_MOTION_FLOOR_Z : stated('motion_floor_z'),
+            'a lower floor lets XY transport (law 2) and the computed safe height run lower');
+    }
+    const fudgeArgs = FUDGE_ARGS.filter(([name]) => given(name));
+    if (fudgeArgs.length) {
+        const after = (name: string, env: string, configKey: string): number | null => {
+            if (given(name)) {
+                return stated(name);
+            }
+            const setting = fudgeSetting(env, configKey, key);
+            return setting ? setting.value : null;
+        };
+        const [common, x, y] = FUDGE_ARGS.map(([name, configKey, env]) => after(name, env, configKey));
+        const moved = fudgeArgs.map(([name]) => name);
+        const why = 'a wider fudge admits targets further beyond the model travel';
+        const fallback = common !== null ? common : DEFAULT_TRAVEL_FUDGE_MM;
+        add('travel_fudge_x', moved, 'higher-loosens', x !== null ? x : fallback, why);
+        add('travel_fudge_y', moved, 'higher-loosens', y !== null ? y : fallback, why);
+    }
+    if (given('landmark_confirm_ttl_hours')) {
+        add('landmark_confirm_ttl_hours', ['landmark_confirm_ttl_hours'], 'higher-loosens',
+            args.landmark_confirm_ttl_hours === null ? LANDMARK_CONFIRM_TTL_HOURS.default : stated('landmark_confirm_ttl_hours'),
+            'a longer validity keeps an operator landmark confirmation in force longer');
+    }
+    if (given('toolhead_body_below_reference_mm')) {
+        add('toolhead_body_below_reference_mm', ['toolhead_body_below_reference_mm'], 'lower-loosens', stated('toolhead_body_below_reference_mm'),
+            'a shallower toolhead body lets the computed safe height (R13) come lower');
+    }
+    return out;
+}
+
+/** Stage the loosening part of a set_machine_policy call for the operator; apply the rest now. */
+function stagePolicyLoosening(args: { [key: string]: unknown }, loose: PolicyLoosening[]): MachinePolicyResult {
+    const current = machineStore.currentMachine();
+    const key = current.machineKey as string;
+    const listed = loose.map((l) => `${l.name} ${l.before} -> ${l.after}`).join(', ');
+    if (!policyReviews) {
+        throw new McpToolError(`Refusing: ${listed} would LOOSEN a stated safety bound on ${key}, which only the operator may approve, `
+            + 'and the operator review pages are not available in this build. Nothing was changed.');
+    }
+    const stagedNames = new Set(loose.reduce((all: string[], l) => all.concat(l.args), []));
+    const withReason = (names: string[]) => {
+        const picked: { [key: string]: unknown } = {};
+        for (const name of names) {
+            picked[name] = args[name];
+        }
+        if (args.reason !== undefined) {
+            picked.reason = args.reason;
+        }
+        return picked;
+    };
+    const restNames = POLICY_ARGS.filter((name) => args[name] !== undefined && !stagedNames.has(name));
+    let stagedArgs = withReason(POLICY_ARGS.filter((name) => stagedNames.has(name) && args[name] !== undefined));
+    let immediate: MachinePolicyResult | null = null;
+    let immediateNote: string | null = null;
+    if (restNames.length) {
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+            immediate = setMachinePolicy(withReason(restNames));
+        } catch (err) {
+            // The tightening half alone does not validate (e.g. a floor raised
+            // above the park height that the same call lowers): nothing is
+            // applied now and the whole call goes on the page instead.
+            immediateNote = `the rest of the call does not stand on its own (${(err as Error).message}), so the whole call is staged`;
+            stagedArgs = withReason(POLICY_ARGS.filter((name) => args[name] !== undefined));
+        }
+    }
+    const rows = loose.map((l) => `<tr><td>${escapeHtml(l.name)}</td><td>${l.before}</td><td><strong>${l.after}</strong></td>`
+        + `<td>${escapeHtml(l.why)}</td></tr>`).join('');
+    let id = '';
+    const item = policyReviews.stage({
+        kind: 'policy-loosen',
+        title: `loosen ${loose.map((l) => l.name).join(', ')}`,
+        machineKey: key,
+        subject: 'machine-policy',
+        bodyHtml: '<p>An agent asks to LOOSEN a stated safety bound of this machine with set_machine_policy'
+            + `${args.reason ? ` (reason: <em>${escapeHtml(String(args.reason))}</em>)` : ''}. It applies only if you approve.</p>`
+            + `<table border="1" cellpadding="6" style="border-collapse:collapse"><tr><th>Bound</th><th>Now</th><th>Requested</th><th>Effect</th></tr>${rows}</table>`
+            + `<p>Arguments applied on approval: <code>${escapeHtml(JSON.stringify(stagedArgs))}</code></p>`,
+        summary: { loosens: loose, args: stagedArgs },
+        precondition: () => {
+            const now = machineStore.currentMachine();
+            if (now.deviceConflict) {
+                return `a device conflict is open (${now.deviceConflict.note})`;
+            }
+            for (const l of loose) {
+                const value = boundNow(key, l.name);
+                if (value !== l.before) {
+                    return `${l.name} is ${value === null ? 'not stated' : value} now, not the ${l.before} this page showed`;
+                }
+            }
+            return null;
+        },
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        apply: () => setMachinePolicy(stagedArgs, { approvedReview: id }),
+    });
+    id = item.id;
+    return {
+        machineKey: key,
+        updated: immediate ? immediate.updated : [],
+        cleared: immediate ? immediate.cleared : [],
+        staged: policyReviews.describe(item, policyReviewBaseUrl()),
+        staged_because: `${listed} would LOOSEN a stated safety bound (${loose.map((l) => l.why).join('; ')}): only the operator approves `
+            + `that (#265 R11). Those fields are unchanged until they do${immediateNote ? `; ${immediateNote}` : ''}.`,
+        next_step: 'Ask the operator to open staged.confirm_url and approve; the change applies on their click, after re-checking that '
+            + 'this machine is connected and the values are still the ones the page showed.',
+        policy: describeMachinePolicy(key),
+    };
+}
+
+function machinePolicyCall(args: { [key: string]: unknown }, options: { dryRun?: boolean; approvedReview?: string }): MachinePolicyResult {
     const current = machineStore.currentMachine();
     if (current.basis !== 'connected' || !current.machineKey || !current.machineIdentifier) {
         throw new McpToolError('set_machine_policy states the policy of the CONNECTED machine, and none is connected. Connect it first.');
@@ -1165,13 +1373,12 @@ export function setMachinePolicy(args: { [key: string]: unknown }) {
     const identifier = current.machineIdentifier;
     const capability = machineCapabilityFor(identifier);
     const given = (name: string) => args[name] !== undefined;
-    const names = ['safe_traverse_z', 'motion_floor_z', 'traverse_without_approval_at_safe_z', 'travel_fudge_mm', 'travel_fudge_x_mm',
-        'travel_fudge_y_mm', 'landmark_confirm_ttl_hours', 'traverse_without_approval_at_computed_height', 'toolhead_body_below_reference_mm'];
-    if (!names.some(given)) {
-        throw new McpToolError(`Nothing to set: pass one or more of ${names.join(', ')}.`);
+    if (!POLICY_ARGS.some(given)) {
+        throw new McpToolError(`Nothing to set: pass one or more of ${POLICY_ARGS.join(', ')}.`);
     }
     const reason = String(args.reason || '').trim();
-    const source = reason ? `set_machine_policy: ${reason}` : 'set_machine_policy';
+    const approved = options.approvedReview ? ` (approved by the operator, review ${options.approvedReview})` : '';
+    const source = `${reason ? `set_machine_policy: ${reason}` : 'set_machine_policy'}${approved}`;
     const at = Date.now();
     const writes: Array<[string, unknown]> = [];
     const updated: string[] = [];
@@ -1333,6 +1540,9 @@ export function setMachinePolicy(args: { [key: string]: unknown }) {
         }
     }
 
+    if (options.dryRun) {
+        return { machineKey: key, updated, cleared, policy: null };
+    }
     for (const [configKey, value] of writes) {
         if (value === undefined) {
             machineStore.unsetFor(key, configKey);
@@ -1341,6 +1551,24 @@ export function setMachinePolicy(args: { [key: string]: unknown }) {
         }
     }
     return { machineKey: key, updated, cleared, policy: describeMachinePolicy(key) };
+}
+
+/**
+ * set_machine_policy: validate everything first, then write into the
+ * connected machine's entry only - except that a change that LOOSENS a stated
+ * safety bound is staged for the operator (see above). `approvedReview` is
+ * the operator review whose click is applying it (the store's apply).
+ */
+export function setMachinePolicy(args: { [key: string]: unknown }, options: { approvedReview?: string } = {}): MachinePolicyResult {
+    if (!options.approvedReview) {
+        machinePolicyCall(args, { dryRun: true });
+        const current = machineStore.currentMachine();
+        const loose = policyLoosenings(current.machineKey as string, current.machineIdentifier as string, args);
+        if (loose.length) {
+            return stagePolicyLoosening(args, loose);
+        }
+    }
+    return machinePolicyCall(args, { approvedReview: options.approvedReview });
 }
 
 /** Every machine the MCP knows: the per-machine store's entries plus the connected / selected machine. */
@@ -1695,7 +1923,10 @@ export function registerMachineTools(registry: ToolRegistry): void {
             + 'no Z axis (the Ray). traverse_without_approval_at_safe_z: false turns approval-free top-Z moves OFF on any machine; '
             + 'true only on the A350 (verified on hardware) and never over the operator\'s own OFF - on an A150 / A250 / Artisan '
             + 'only the operator turns it on, in Settings > MCP > Motion rules. travel_fudge_* widen the model box at each end of '
-            + 'each axis (default 25 mm). null clears a value. '
+            + 'each axis (default 25 mm). null clears a value. LOOSENING a stated bound (lower safe_traverse_z or motion_floor_z - the '
+            + 'A350\'s 328 / 320 count as stated - a wider travel fudge, a shallower toolhead_body_below_reference_mm, a longer '
+            + 'landmark_confirm_ttl_hours) is NOT applied: it is staged on an operator review page (staged.confirm_url) and applies on '
+            + 'the operator\'s click; tightening and a first statement apply at once. '
             + 'Each value records its source and time; get_machine_profile.policy reads them back.',
         inputSchema: {
             type: 'object',
