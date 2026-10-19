@@ -306,12 +306,14 @@ export function registerCameraModelTools(registry: ToolRegistry, getConfirmBaseU
             additionalProperties: false,
         },
         handler: async (args: { target?: unknown; toolhead_z?: number }) => {
+            const scope = cameraModelStore.scope();
             const model = requireCameraModel('a viewing pose');
             const target = parseVec3(args.target, 'target');
             const toolheadZ = Number.isFinite(Number(args.toolhead_z)) ? Number(args.toolhead_z) : safeTraverseZ();
             const pose = viewPose(model, target, toolheadZ);
             const fov = fovAt(model, pose.toolhead, target.z);
             return {
+                machineScope: describeCameraModelScope(scope, model),
                 toolhead: {
                     x: Number(pose.toolhead.x.toFixed(3)),
                     y: Number(pose.toolhead.y.toFixed(3)),
