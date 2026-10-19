@@ -444,6 +444,24 @@ export function setFrameLatchMachineSource(source: (() => string | null) | null)
     latchMachineSource = source;
 }
 
+/**
+ * A latch source that keeps naming the LAST connected machine while nothing is
+ * connected: a failed call's cleanup can raise the latch after the connection
+ * has already dropped (that is often why the call failed), and stamping that
+ * latch "no machine" would make it apply to every machine - the lockout of
+ * the Original this exists to stop. Process start = null until a machine is seen.
+ */
+export function stickyMachineSource(read: () => string | null): () => string | null {
+    let last: string | null = null;
+    return () => {
+        const now = read();
+        if (now) {
+            last = now;
+        }
+        return now || last;
+    };
+}
+
 function latchMachine(): string | null {
     try {
         return latchMachineSource ? latchMachineSource() : null;

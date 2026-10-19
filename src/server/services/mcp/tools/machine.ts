@@ -65,6 +65,7 @@ import {
     allFrameLatches,
     otherMachineFrameLatches,
     setFrameLatchMachineSource,
+    stickyMachineSource,
 } from '../positionOfRecord';
 import { describeFrameLatch, resyncHint } from '../frameRecovery';
 import { McpToolError, ToolRegistry } from '../registry';
@@ -760,7 +761,7 @@ export function restorePersistedFrameLatch(): void {
 // The latch belongs to the machine it is raised on (positionOfRecord.ts):
 // stamp it with the connected identifier. Set before the restore below, which
 // names its machines itself.
-setFrameLatchMachineSource(() => connectedMachineIdentifier());
+setFrameLatchMachineSource(stickyMachineSource(() => connectedMachineIdentifier()));
 
 // Persist every change; the lease's recovery hold needs no update because it
 // reads the latch itself (machine/gcodeLease.ts).

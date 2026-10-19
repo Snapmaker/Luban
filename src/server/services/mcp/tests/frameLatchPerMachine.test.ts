@@ -15,6 +15,7 @@ import {
     otherMachineFrameLatches,
     resetFrameLatchesForTest,
     setFrameLatchMachineSource,
+    stickyMachineSource,
 } from '../positionOfRecord';
 import { machineToolsFixture } from './machineStore.test';
 
@@ -96,5 +97,24 @@ export const tests: Array<[string, () => void]> = [
         assert.deepEqual(unreadable.map((l: { machineIdentifier: string }) => l.machineIdentifier), [A350]);
         assert.match(unreadable[0].reason, /unreadable latch file/);
         assert.deepEqual(plain(tools.persistedFrameLatches(null)), []);
+    }],
+    ['a latch raised after the A350 dropped (cleanup of a failed call) is still the A350 latch, not every machine latch', () => {
+        let connected: string | null = null;
+        resetFrameLatchesForTest();
+        setFrameLatchMachineSource(stickyMachineSource(() => connected));
+        try {
+            connected = A350;
+            assert.equal(getFrameLatch(), null);
+            connected = null; // unplugged: the call that was running fails, its cleanup raises the latch
+            latchFrameUncertain('cleanup after the connection dropped', 1000);
+            assert.equal(getFrameLatch()?.machineIdentifier, A350);
+            connected = ORIGINAL;
+            assert.equal(getFrameLatch(), null, 'the Original is not locked out');
+            connected = A350;
+            assert.equal(getFrameLatch()?.reason, 'cleanup after the connection dropped');
+        } finally {
+            setFrameLatchMachineSource(null);
+            resetFrameLatchesForTest();
+        }
     }],
 ];
