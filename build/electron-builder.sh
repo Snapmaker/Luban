@@ -51,6 +51,16 @@ if [[ " $* " == *" --linux "* ]]; then
     # build/Release over prebuilds/, so nothing compiled may be left beside
     # it, and electron-builder's own rebuild is off for the same reason
     # (font-scanner is already built for Electron here).
+    # Compile for baseline x86-64 whatever the runner image's compiler
+    # defaults to: the 26.04 image targets x86-64-v3, and its font-scanner
+    # build died with SIGILL ("trap invalid opcode in fontmanager.node") on
+    # the Luban host's Celeron N4020, which is x86-64-v2 (no AVX2/BMI2).
+    # node-gyp's make honours CFLAGS/CXXFLAGS; an explicit -march overrides
+    # the compiler's default. check-linux-native-floor.sh guards the result.
+    if [[ " $* " == *" --x64 "* ]]; then
+        export CFLAGS="-march=x86-64 -mtune=generic ${CFLAGS:-}"
+        export CXXFLAGS="-march=x86-64 -mtune=generic ${CXXFLAGS:-}"
+    fi
     echo "Native addons in dist/Luban:"
     find dist/Luban/node_modules -name binding.gyp -not -path '*/node-addon-api/*'
     npm run electron-rebuild -- --version=${electron_version:1} --module-dir=dist/Luban --only=font-scanner || exit 1
