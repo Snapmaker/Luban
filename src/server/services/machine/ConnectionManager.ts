@@ -494,7 +494,8 @@ class ConnectionManager {
         // The Ray's UInt32 serial is a dummy (0x66666666): its identity is the
         // efuse product SN in the same 0x01 0x21 reply. Adopted here, before
         // the instance and the ready listeners, so the store keys on it from the start.
-        const machineInfo = this.getMachineInfoRecord();
+        // Ray only: RayController is the firmware whose 0x01 0x21 layout is known (#315).
+        const machineInfo = this.machineIdentifier === SnapmakerRayMachine.identifier ? this.getMachineInfoRecord() : null;
         if (!this.deviceSerial && machineInfo && machineInfo.productSn) {
             this.adoptFirmwareSerial(machineInfo.productSn, this.getConnectionGeneration(), 'sacp-product-sn');
         }

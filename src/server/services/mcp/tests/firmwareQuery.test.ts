@@ -508,6 +508,10 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         await a350.cm.onChannelReady({ machineIdentifier: 'A350' });
         await until(() => a350.firstConnectLines().length > 0);
         assert.deepEqual(a350.sent, [], 'A350: nothing sent, as before');
+        const a350Info = connectSequence(async () => Promise.resolve());
+        await a350Info.cm.onChannelReady({ machineIdentifier: 'A350' });
+        assert.equal(a350Info.firmware.firmwareView(), null, 'a Marlin machine\'s firmware view is unchanged even when 0x01 0x21 was read');
+        assert.equal(a350Info.cm.getConnectionStatus().deviceSerial, null, 'and only the Ray adopts the trailing SN');
         assert.deepEqual(a350.firstConnectLines(), ['first-connect firmware read on A350: skipped, its dialect is sm2-marlin (only a GRBL configuration is read on connect)']);
         const moved = connectSequence(async () => Promise.resolve(), { transport: 'text' });
         moved.firmware.startFirmwareReadOnConnect();

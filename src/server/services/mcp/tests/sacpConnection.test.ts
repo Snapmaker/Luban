@@ -85,10 +85,13 @@ class FakeSacpClient {
     /** 0x01 0x21's data after the result byte, for the channel's own parse; null = the SDK model only. */
     public static machineInfoData: Buffer | null = null;
 
+    /** MachineInfo.type (5 = the Ray in the harness's SACP_TYPE_SERIES_MAP; 0 = unmapped). */
+    public static machineType = 0;
+
     public async getMachineInfo() {
         const data = FakeSacpClient.machineInfoData;
         return {
-            data: { type: 0, masterControlSerialNumber: FakeSacpClient.serialNumber },
+            data: { type: FakeSacpClient.machineType, masterControlSerialNumber: FakeSacpClient.serialNumber },
             packet: data ? { payload: Buffer.concat([Buffer.from([0]), data]) } : undefined,
         };
     }
@@ -184,7 +187,7 @@ function udpChannel(diag: ConnectionDiagnosticState) {
         './ChannelEvent': { ChannelEvent: events },
         './SacpChannel': base,
         './Channel': {},
-        '../../../../app/constants/machines': { SACP_TYPE_SERIES_MAP: {} },
+        '../../../../app/constants/machines': { SACP_TYPE_SERIES_MAP: { 5: 'Ray' } },
         '../gcodeLease': { gcodeLease: new GcodeLease() },
     }, timers);
     const UdpChannel = module.default;
@@ -336,11 +339,19 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         const head = Buffer.from([4, 1, 0x66, 0x66, 0x66, 0x66]);
         const str = (text: string) => Buffer.concat([Buffer.from([text.length, 0]), Buffer.from(text, 'latin1')]);
         FakeSacpClient.serialNumber = 0x66666666;
+        FakeSacpClient.machineType = 5;
         FakeSacpClient.machineInfoData = Buffer.concat([head, str('V1.7.4'), str('RAY20AB1234567890123')]);
         try {
             const diag = diagnostics();
             const { channel } = udpChannel(diag);
-            const cm = connectionManager(channel, diag, { './channels/sacpMachineState': sacpMachineState });
+            class RayStub {
+                public setChannel(): void { /* the harness channel */ }
+
+                public setSocket(): void { /* no UI */ }
+
+                public async onPrepare(): Promise<void> { /* prepared */ }
+            }
+            const cm = connectionManager(channel, diag, { './channels/sacpMachineState': sacpMachineState, './instances': { RayMachineInstance: RayStub } });
             cm.bindChannelEvents();
             await channel.connectionOpen({ address: '192.0.2.9' });
             const info = channel.getMachineInfoRecord();
@@ -369,7 +380,13 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
             await channel.connectionOpen({ address: '192.0.2.9' });
             assert.strictEqual(cm.getConnectionStatus().deviceSerial, '20481234');
             assert.strictEqual(cm.getConnectionStatus().deviceSerialSource, 'sacp-machine-info');
+            // Only the Ray: another machine's trailing bytes are never adopted as its identity.
+            FakeSacpClient.serialNumber = 0x66666666;
+            FakeSacpClient.machineType = 0;
+            await channel.connectionOpen({ address: '192.0.2.9' });
+            assert.strictEqual(cm.getConnectionStatus().deviceSerial, null);
         } finally {
+            FakeSacpClient.machineType = 0;
             FakeSacpClient.serialNumber = undefined;
             FakeSacpClient.machineInfoData = null;
         }

@@ -146,7 +146,8 @@ export function machineInfoView() {
     const manager = connectionManager as unknown as { getMachineInfoRecord?: () => {
         firmwareVersion: string | null; productSn: string | null; productSnRaw: string | null; truncated: string | null; readAt: number;
     } | null; };
-    const info = typeof manager.getMachineInfoRecord === 'function' ? manager.getMachineInfoRecord() : null;
+    // GRBL (the Ray) only: a Marlin machine's firmware view stays as it was (the A350 unchanged).
+    const info = connectedDialect().family === 'grbl' && typeof manager.getMachineInfoRecord === 'function' ? manager.getMachineInfoRecord() : null;
     if (!info) {
         return null;
     }
