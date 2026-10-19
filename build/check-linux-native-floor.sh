@@ -26,6 +26,26 @@ max_version() {
     objdump -T "$2" | grep -o "$1_[0-9][0-9.]*" | sed "s/^$1_//" | sort -V | tail -1
 }
 
+# Instruction-level ceiling: x86-64-v2 (SSE4.2, SSSE3, POPCNT, CMPXCHG16B).
+# The glibc floor cannot see this - an addon compiled with the runner
+# compiler's default -march (x86-64-v3 on the 26.04 image) links against an
+# old glibc yet dies with "invalid opcode" on a v2 CPU. Disassemble and list
+# the VEX/EVEX (any 'v'-prefixed mnemonic or ymm/zmm/opmask register) and
+# BMI1/BMI2/LZCNT/MOVBE/ADX instructions found, most frequent first. tzcnt is
+# allowed: compilers emit it for baseline as 'rep bsf', which older CPUs run
+# as bsf.
+beyond_v2_instructions() {
+    objdump -d --no-show-raw-insn "$1" | awk -F'\t' '
+        NF >= 2 {
+            split($2, w, " ");
+            m = w[1];
+            if (m == "rep" || m == "repz" || m == "repnz" || m == "lock" || m == "notrack" || m == "bnd") { m = w[2] }
+            if ((m ~ /^v/ && m !~ /^ver[rw]$/) \
+                || m ~ /^(andn|bextr|blsi|blsmsk|blsr|bzhi|mulx|pdep|pext|rorx|sarx|shlx|shrx|lzcnt|movbe|adcx|adox)$/ \
+                || $2 ~ /%[yz]mm[0-9]/ || $2 ~ /%k[0-7]([^0-9]|$)/) { print m }
+        }' | sort | uniq -c | sort -rn | head -8
+}
+
 # True if version $1 is newer than $2.
 newer_than() {
     [ -n "$1" ] && [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -1)" = "$1" ]
@@ -56,6 +76,12 @@ for root in "$@"; do
             echo "::error file=$f::needs CXXABI_$cxxabi (floor is $CXXABI_MAX)"
             failed=1
         fi
+        isa=$(beyond_v2_instructions "$f")
+        if [ -n "$isa" ]; then
+            echo "::error file=$f::uses instructions beyond x86-64-v2 (AVX/AVX2/AVX-512/BMI/FMA/MOVBE), which fault with SIGILL on x86-64-v2 CPUs such as the Luban host's Celeron N4020. Most frequent:"
+            echo "$isa"
+            failed=1
+        fi
     done < <(find "$root" -type f -name '*.node' -print0)
 
     compiled=$(find "$root" -type f -path '*/@serialport/bindings-cpp/*' \( -path '*/bindings-cpp/build/*' -o -path '*/bindings-cpp/bin/*' \))
@@ -77,4 +103,4 @@ fi
 if [ "$failed" -ne 0 ]; then
     exit 1
 fi
-echo "OK: $checked x86-64 native addons within GLIBC $GLIBC_MAX / CXXABI $CXXABI_MAX"
+echo "OK: $checked x86-64 native addons within GLIBC $GLIBC_MAX / CXXABI $CXXABI_MAX and the x86-64-v2 instruction set"
