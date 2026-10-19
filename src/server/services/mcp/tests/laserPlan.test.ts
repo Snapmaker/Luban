@@ -7,8 +7,12 @@ import { parseSettleComment } from '../gcodeForms';
 import {
     HeadFacts,
     LaserFramePlan,
+    OffsetBeat,
+    RayWorkOffsetInput,
     boxFromCorners,
     boxFromJobExtents,
+    confirmRayWorkOffset,
+    describeRayWorkBoxSource,
     laserFocusRefusal,
     laserPowerWords,
     planAirAssist,
@@ -77,6 +81,47 @@ function assertStagedAccepted(dialect: GcodeDialect, body: string, relative: boo
     assert.equal(resolved.refusal, null, `${what}: frame refusal ${resolved.refusal}`);
 }
 
+// A Luban Ray laser export: header, GRBL compact words, no workspace select (work frame, origin from Set Origin's G92).
+const RAY_EXPORT = ';Header Start\n;header_type: laser\n;tool_head: 20W Laser Module\n;machine: Ray\n;gcode_flavor: grbl\n'
+    + ';Header End\nG90\nG0 X10Y20F3000\nM3 S300\nG1 X60Y20F1500\nG1 X60Y70\nG1 X10Y70\nG1 X10Y20\nM5\n';
+// The live Ray reading of 2026-10-18: head on a just-set origin, machine X181 Y49, offset (-181, -49).
+const RAY_OFFSET = { x: -181, y: -49, z: 0 };
+const T0 = Date.parse('2026-10-18T12:00:00Z');
+
+/** The Ray export staged as submit_gcode_job does (frame: "work"), with the live offset recorded at T0. */
+function stagedRayJob(gcode: string = RAY_EXPORT, offset: { x: number; y: number; z: number } | null = RAY_OFFSET) {
+    const report = validateGcode(gcode, { dialect: RAY, machineIdentifier: 'Ray', hasZ: false, phase: 'submit', headType: 'laser' });
+    assert.deepEqual(report.machine && report.machine.refusals, [], 'a Luban Ray export passes the Ray rules');
+    const resolved = resolveJobFrame(report, {
+        frameArgument: 'work',
+        originOffsetZ: offset ? offset.z : null,
+        offsetReliable: offset !== null,
+        machineZMax: null,
+        originOffset: offset,
+        offsetReportedAt: T0,
+        verifiesG54AtStart: true,
+    });
+    assert.equal(resolved.refusal, null);
+    return resolved.report;
+}
+
+function beat(at: number, offset: { x: number; y: number } = RAY_OFFSET, extra: Partial<OffsetBeat> = {}): OffsetBeat {
+    return { offset, source: 'heartbeat', reliability: 'heartbeat', reliable: true, reportedAt: at, warnings: [], ...extra };
+}
+
+function rayInput(report: ReturnType<typeof stagedRayJob>, extra: Partial<RayWorkOffsetInput> = {}): RayWorkOffsetInput {
+    return {
+        jobId: 'r1',
+        header: report.header,
+        rayIdentifier: 'Ray',
+        staged: report.originOffsetAtStaging,
+        beats: [beat(T0 + 60000), beat(T0 + 61000)],
+        now: T0 + 61500,
+        staleMs: 10000,
+        ...extra,
+    };
+}
+
 /** The header with its comment wrapping undone, for matching a wrapped sentence. */
 const oneLine = (header: string) => header.split('\n; ').join(' ');
 const executable = (gcode: string) => gcode.split('\n').filter((l) => l.trim() && !l.trim().startsWith(';'));
@@ -104,6 +149,83 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
             /both the machine and a work frame/);
         assert.throws(() => boxFromJobExtents('j7', { extents, frame: { declared: null, mixed: false }, usesRelativeMotion: false }, null),
             /declares no coordinate frame/);
+    }],
+    ['a Ray work-frame job with a fresh consistent offset unchanged since staging maps to the bed: machine = work - offset', () => {
+        const report = stagedRayJob();
+        assert.deepEqual(report.frame.declared, 'work');
+        assert.deepEqual(report.originOffsetAtStaging, { ...RAY_OFFSET, reportedAt: T0 }, 'the offset is recorded with the job at staging');
+        const confirmed = confirmRayWorkOffset(rayInput(report));
+        assert.deepEqual(confirmed, { x: -181, y: -49, reportedAt: T0 + 61000, stagedAt: T0 });
+        // Work X10..60 Y20..70 on an origin at machine (181, 49).
+        assert.deepEqual(boxFromJobExtents('r1', report, confirmed), { xMin: 191, xMax: 241, yMin: 69, yMax: 119 });
+        // The hardware reading itself: work (0, 0) with offset (-181, -49) is machine (181, 49).
+        const origin = boxFromJobExtents('r0', { extents: { x: { min: 0, max: 1 }, y: { min: 0, max: 1 } },
+            frame: { declared: 'work', mixed: false },
+            usesRelativeMotion: false }, confirmed);
+        assert.equal(origin.xMin, 181);
+        assert.equal(origin.yMin, 49);
+        assert.equal(describeRayWorkBoxSource('r1', confirmed),
+            'job r1 (work frame, offset -181.000,-49.000 from heartbeat at 2026-10-18T12:01:01.000Z; machine = work - offset; unchanged since staging)');
+        // Within the 0.05 mm epsilon is the same offset.
+        assert.doesNotThrow(() => confirmRayWorkOffset(rayInput(report, { beats: [beat(T0 + 60000, { x: -181.04, y: -49 }), beat(T0 + 61000)] })));
+    }],
+    ['a Ray work-frame job is refused once the origin has moved since staging, or moved between consecutive beats', () => {
+        const report = stagedRayJob();
+        const moved = { x: -231, y: -79 };
+        assert.throws(() => confirmRayWorkOffset(rayInput(report, { beats: [beat(T0 + 60000, moved), beat(T0 + 61000, moved)] })),
+            /work origin has moved since the job was staged - offset \(-181\.000, -49\.000\) then, \(-231\.000, -79\.000\) now.*re-stage the job/);
+        assert.throws(() => confirmRayWorkOffset(rayInput(report, { beats: [beat(T0 + 60000, { x: -181.06, y: -49 }), beat(T0 + 61000)] })),
+            /changed between consecutive heartbeats/);
+    }],
+    ['a Ray work-frame job is refused on a stale beat, an untrustworthy beat, or without a second beat', () => {
+        const report = stagedRayJob();
+        assert.throws(() => confirmRayWorkOffset(rayInput(report, { now: T0 + 72000 })), /is 12 s old - stale/);
+        assert.throws(() => confirmRayWorkOffset(rayInput(report, { beats: [beat(T0 + 60000), beat(T0 + 61000, RAY_OFFSET, { source: 'cached' })] })),
+            /offset is cached, not carried by the beat itself/);
+        assert.throws(() => confirmRayWorkOffset(rayInput(report, { beats: [beat(T0 + 60000), beat(T0 + 61000, RAY_OFFSET,
+            { reliability: 'awaiting-resync', reliable: false, warnings: ['Status report jumped by exactly the origin offset'] })] })),
+        /position is awaiting-resync \(Status report jumped/);
+        assert.throws(() => confirmRayWorkOffset(rayInput(report, { beats: [beat(T0 + 60000)] })), /no second beat arrived within 6 s/);
+        assert.throws(() => confirmRayWorkOffset(rayInput(report, { beats: [beat(T0 + 60000), beat(T0 + 60000)] })), /no second beat/);
+    }],
+    ['a Ray work-frame job needs a `;machine: Ray` header and an offset recorded at staging', () => {
+        const report = stagedRayJob();
+        assert.throws(() => confirmRayWorkOffset(rayInput(report, { header: null })), /names no machine .*not `;machine: Ray`/);
+        assert.throws(() => confirmRayWorkOffset(rayInput(report, { header: { machine: 'Snapmaker 2.0 A350' } })), /names "Snapmaker 2\.0 A350"/);
+        assert.throws(() => confirmRayWorkOffset(rayInput(report, { staged: undefined })), /staged before the work-origin offset was recorded/);
+        const unreliable = stagedRayJob(RAY_EXPORT, null);
+        assert.equal(unreliable.originOffsetAtStaging, null);
+        assert.throws(() => confirmRayWorkOffset(rayInput(unreliable)), /staged while the work-origin offset was not reliable.*Set the origin in Luban/);
+    }],
+    ['a Ray job whose every move carries the same-line G53 prefix is machine-frame and maps directly', () => {
+        const gcode = ';Header Start\n;machine: Ray\n;Header End\nG90\nG53 G0 X100Y100F3000\nM3 S300\nG53 G1 X150Y100F1500\n'
+            + 'G53 G1 X150Y140\nM5\n';
+        const report = validateGcode(gcode, { dialect: RAY, machineIdentifier: 'Ray', hasZ: false, phase: 'submit', headType: 'laser' });
+        assert.deepEqual(report.machine && report.machine.refusals, []);
+        const resolved = resolveJobFrame(report, { frameArgument: null,
+            originOffsetZ: 0,
+            offsetReliable: true,
+            machineZMax: null,
+            originOffset: RAY_OFFSET,
+            offsetReportedAt: T0 });
+        assert.equal(resolved.refusal, null);
+        assert.equal(resolved.report.frame.declared, 'machine');
+        assert.equal(resolved.report.originOffsetAtStaging, null, 'no offset is recorded with a machine-frame job');
+        assert.deepEqual(boxFromJobExtents('m1', resolved.report, null), { xMin: 100, xMax: 150, yMin: 100, yMax: 140 });
+    }],
+    ['the A350 path is unchanged: a work-frame job maps with the live reliable offset, the staged one only recorded', () => {
+        const report = validateGcode('G90\nG0 X10 Y20 Z5\nG1 X60 Y70 Z5 F600\n', { dialect: SM2, machineIdentifier: 'Snapmaker 2.0 A350', phase: 'submit' });
+        const resolved = resolveJobFrame(report, { frameArgument: 'work',
+            originOffsetZ: -200,
+            offsetReliable: true,
+            machineZMax: 328,
+            originOffset: { x: -100, y: -50, z: -200 },
+            offsetReportedAt: T0 });
+        assert.equal(resolved.refusal, null);
+        assert.deepEqual(resolved.report.originOffsetAtStaging, { x: -100, y: -50, z: -200, reportedAt: T0 });
+        assert.equal(resolved.report.originOffsetZAtStaging, -200);
+        // tools/laser.ts hands the A350 the LIVE offset, as before - even one that differs from the staged record.
+        assert.deepEqual(boxFromJobExtents('a1', resolved.report, { x: -110, y: -50 }), { xMin: 120, xMax: 170, yMin: 70, yMax: 120 });
     }],
     ['power 0 on the Ray: M5 first, G0 relative steps with settle comments only - no M3/M4 anywhere', () => {
         const plan = rayFrame();

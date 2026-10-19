@@ -113,6 +113,15 @@ export interface GcodeValidationReport {
      * one, which the live offset describes) and when the extents are unresolved.
      */
     machineZResolvedFor: 'G54' | null;
+    /**
+     * The work-origin offset (machine = work - offset, every axis) the position
+     * of record held when this work-frame job was staged, and the beat it came
+     * from. laser_frame on the Ray maps the job's XY extents with it and refuses
+     * once the live offset has moved away from it. Set by resolveJobFrame():
+     * null for a machine-frame job, an unresolved one, or an offset that was not
+     * reliable at staging; absent on reports staged before it existed.
+     */
+    originOffsetAtStaging?: StagedOriginOffset | null;
     warnings: string[];
     /**
      * Which machine the file was judged for, by which rules (dialectRules.ts),
@@ -122,6 +131,15 @@ export interface GcodeValidationReport {
     machine?: ValidationMachine;
     /** The Luban `;Header Start` block (gcodeHeader.ts), or null when the file has none. */
     header?: GcodeHeader | null;
+}
+
+/** GcodeValidationReport.originOffsetAtStaging. */
+export interface StagedOriginOffset {
+    x: number;
+    y: number;
+    z: number;
+    /** Timestamp of the heartbeat the offset came from; null when the caller did not say. */
+    reportedAt: number | null;
 }
 
 export interface ValidationMachine {
@@ -668,6 +686,13 @@ export interface FrameResolutionContext {
     frameArgument?: JobFrame | null;
     /** Work-origin Z offset from the position of record (machine = work - offset), or null when unknown. */
     originOffsetZ: number | null;
+    /**
+     * The whole offset (X/Y/Z) and its beat's timestamp, recorded with a
+     * work-frame job as originOffsetAtStaging when offsetReliable. Optional:
+     * without it nothing is recorded (null).
+     */
+    originOffset?: { x: number; y: number; z: number } | null;
+    offsetReportedAt?: number | null;
     /** False when the offset is cached / assumed / the position is awaiting resync - resolution is then refused for work jobs. */
     offsetReliable: boolean;
     /** Machine Z travel (home height), for bounds warnings; null when the machine is unknown. */
@@ -804,6 +829,7 @@ export function resolveJobFrame(input: GcodeValidationReport, ctx: FrameResoluti
         || (report.frame.declared === 'work' && report.frame.workspaceSelects.length > 0 && !selectsOnlyG54)) {
         report.machineZExtents = null;
         report.originOffsetZAtStaging = null;
+        report.originOffsetAtStaging = null;
         report.warnings.push('Machine Z extents are UNRESOLVED: this file selects a named workspace, mixes frames, or rewrites an origin. '
             + 'The live heartbeat does not identify every named workspace offset. Verify each required workspace and review each section against its own offset; '
             + 'one current offset cannot validate the whole file. Prefer one WCS; additional workspaces are supported for existing jobs that require them.');
@@ -812,6 +838,7 @@ export function resolveJobFrame(input: GcodeValidationReport, ctx: FrameResoluti
 
     const zMax = ctx.machineZMax;
     const rawZ = report.extents.z;
+    report.originOffsetAtStaging = null;
     if (report.frame.declared === 'machine') {
         report.machineZExtents = rawZ ? { ...rawZ } : null;
         if (rawZ && zMax !== null && (rawZ.min < -1 || rawZ.max > zMax + 1)) {
@@ -826,6 +853,9 @@ export function resolveJobFrame(input: GcodeValidationReport, ctx: FrameResoluti
                 + 'Re-check get_position before approving.');
         } else {
             report.originOffsetZAtStaging = ctx.originOffsetZ;
+            if (ctx.originOffset) {
+                report.originOffsetAtStaging = { ...ctx.originOffset, reportedAt: ctx.offsetReportedAt ?? null };
+            }
             report.machineZExtents = rawZ
                 ? { min: rawZ.min - ctx.originOffsetZ, max: rawZ.max - ctx.originOffsetZ }
                 : null;
