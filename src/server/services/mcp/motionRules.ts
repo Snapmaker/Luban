@@ -228,11 +228,17 @@ export function computedHeightTraversePolicy(
         {
             id: 'landmarks',
             met: facts.landmarksConfirmed,
-            detail: facts.landmarksNote
-                || (facts.landmarksConfirmed === null ? 'unknown until the landmark review lands (#265 WP5)'
-                    : facts.landmarksConfirmed ? 'landmarks confirmed' : 'landmarks not confirmed'),
+            detail: facts.landmarksNote || '',
         },
     ];
+    const landmarks = requirements[requirements.length - 1];
+    if (!facts.landmarksNote) {
+        if (facts.landmarksConfirmed === null) {
+            landmarks.detail = 'unknown until the landmark review lands (#265 WP5)';
+        } else {
+            landmarks.detail = facts.landmarksConfirmed ? 'landmarks confirmed' : 'landmarks not confirmed';
+        }
+    }
     const unmet = requirements.filter((r) => r.met !== true).map((r) => r.detail);
     return {
         allowed: unmet.length === 0,

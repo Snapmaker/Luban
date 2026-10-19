@@ -224,6 +224,14 @@ function describeZValue(value: McpZPolicyValue): string {
     return `Z${value.value} (${value.source})`;
 }
 
+/** A requirement's mark: met, not met, or not judgeable yet (which counts as not met). */
+function needMark(met: boolean | null): string {
+    if (met === null) {
+        return '?';
+    }
+    return met ? '✓' : '✗';
+}
+
 const MQTT_FIELDS: Array<{ name: keyof McpMqttSettings['values']; labelKey: string; placeholder?: string; channel?: string }> = [
     { name: 'host', labelKey: 'key-App/Settings/McpServer-MQTT host', placeholder: 'io.adafruit.com' },
     { name: 'port', labelKey: 'key-App/Settings/McpServer-MQTT port', placeholder: '8883 (TLS)' },
@@ -688,7 +696,7 @@ const McpServer: React.FC = () => {
                                 <Switch
                                     checked={rule.on}
                                     loading={motionRuleBusy === machine.machineKey}
-                                    onChange={(checked) => onMotionRule(machine.machineKey, { traverseWithoutApprovalAtSafeZ: checked })}
+                                    onChange={(checked) => { onMotionRule(machine.machineKey, { traverseWithoutApprovalAtSafeZ: checked }); }}
                                     disabled={!enabled || motionRuleBusy !== null || (!rule.on && !rule.eligible)}
                                 />
                                 <span className="margin-left-8">
@@ -719,7 +727,7 @@ const McpServer: React.FC = () => {
                                         <Switch
                                             checked={computed.on}
                                             loading={motionRuleBusy === machine.machineKey}
-                                            onChange={(checked) => onMotionRule(machine.machineKey, { computedHeightTraverse: checked })}
+                                            onChange={(checked) => { onMotionRule(machine.machineKey, { computedHeightTraverse: checked }); }}
                                             disabled={!enabled || motionRuleBusy !== null || (!computed.on && !computed.eligible)}
                                         />
                                         <span className="margin-left-8">
@@ -769,7 +777,7 @@ const McpServer: React.FC = () => {
                                             : i18n._('key-App/Settings/McpServer-Needs:')}
                                         {computed.requirements.map((need) => (
                                             <div key={need.id}>
-                                                {need.met === true ? '✓' : (need.met === null ? '?' : '✗')}
+                                                {needMark(need.met)}
                                                 {' '}
                                                 {need.detail}
                                             </div>
