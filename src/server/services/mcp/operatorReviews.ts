@@ -64,6 +64,11 @@ const KIND_LABEL: { [kind in OperatorReviewKind]: string } = {
     'policy-loosen': 'Machine policy loosening',
 };
 
+/** The heading a review page uses for its kind (also the /jobs dashboard label). */
+export function operatorReviewKindLabel(kind: OperatorReviewKind): string {
+    return KIND_LABEL[kind] || kind;
+}
+
 export class OperatorReviewStore {
     private readonly items = new Map<string, OperatorReviewItem>();
 
@@ -97,6 +102,11 @@ export class OperatorReviewStore {
 
     public get(id: string): OperatorReviewItem | null {
         return this.items.get(id) || null;
+    }
+
+    /** Every staged item, decided or not, in staging order (read-only view for the /jobs dashboard). */
+    public list(): ReadonlyArray<Readonly<OperatorReviewItem>> {
+        return [...this.items.values()];
     }
 
     public pending(machineKey?: string | null): OperatorReviewItem[] {

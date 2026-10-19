@@ -10,7 +10,7 @@ button,a.button{cursor:pointer}button:disabled{opacity:.5;cursor:wait}.danger{ba
 .panel,article{background:#192330;border:1px solid #344359;border-radius:12px;padding:18px;margin:14px 0}
 .muted,time{color:#b1bfd1;font-size:.9rem}.badge{border-radius:20px;background:#334760;padding:4px 10px;font-size:.85rem}
 article h3{margin:0;overflow-wrap:anywhere}.row{justify-content:space-between}.summary{overflow-wrap:anywhere}
-.error{color:#ffb9bc}.empty{color:#a8b7ca;padding:10px 0}h2{font-size:1.25rem;margin-top:28px}
+.error{color:#ffb9bc}.empty,.review-empty{color:#a8b7ca;padding:10px 0}#review-history li{margin:6px 0;overflow-wrap:anywhere}h2{font-size:1.25rem;margin-top:28px}
 pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:380px;overflow:auto;font-size:12px}
 #toasts{position:fixed;bottom:16px;right:16px;max-width:min(420px,calc(100vw - 32px));z-index:2}
 .toast{padding:14px;background:#254466;border:1px solid #79baff;border-radius:10px;margin-top:8px;box-shadow:0 6px 20px #0008}
@@ -26,6 +26,9 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:380px;overflow:auto;f
 <p class="muted">Off by default; settings last for this tab session only. Browser permission may be remembered, but alerts must be enabled here for each new session. Keep this page open and connected. Phone sleep or a suspended tab can delay alerts; this is not background push.</p>
 </section>
 <p id="message" role="status"></p>
+<section><h2>Reviews waiting for you <span id="reviews-count" class="badge">0</span></h2><div id="reviews"></div>
+<p class="muted">Landmark, device and machine-policy decisions an agent staged. Open each review page to read it and approve or reject there; nothing is decided from this list.</p>
+<p class="muted">Recently decided reviews</p><ul id="review-history"></ul></section>
 <section><h2>Running <span id="running-count" class="badge">0</span></h2><div id="running"></div><p class="muted">Stop requests use the controller’s existing stop behavior. Procedures stop at the next step boundary and attempt their guarded retreat; file/direct jobs send a firmware stop.</p></section>
 <section><h2>Ready for approval <span id="ready-count" class="badge">0</span></h2><div id="ready"></div></section>
 <section><h2>Approved, waiting to run <span id="approved-count" class="badge">0</span></h2><div id="approved"></div></section>
@@ -111,6 +114,30 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:380px;overflow:auto;f
     article.append(row,meta,summary,controls,details);
     return {article:article,badge:badge,meta:meta,summary:summary,stop:stop,dismiss:dismiss,review:review};
   }
+  // Operator reviews (/confirm/r<id>): links only, text via textContent; approving or rejecting stays on the review page.
+  var reviewKey=null, reviewLabels={approved:'Approved',rejected:'Rejected',superseded:'Superseded, not applied',refused:'Not applied (stale)'};
+  function reviewLink(review,text){var a=node('a',text);if(/^r[0-9a-f]+$/.test(String(review.id))){a.href='/confirm/'+review.id;a.target='_blank';a.rel='noopener';}return a;}
+  function renderReviews(){
+    var reviews=Array.isArray(snapshot.reviews)?snapshot.reviews:[], key=JSON.stringify(reviews);
+    if(key===reviewKey){return;}reviewKey=key;
+    var waiting=reviews.filter(function(r){return r.state==='pending';}), decided=reviews.filter(function(r){return r.state!=='pending';}).slice(0,8);
+    el('reviews').textContent='';el('review-history').textContent='';el('reviews-count').textContent=waiting.length;
+    waiting.forEach(function(review){
+      var article=node('article',''), row=node('div','','row'), controls=node('div','','controls'), open=reviewLink(review,'Open review page');
+      open.className='button';row.append(node('h3',review.title),node('span',review.kindLabel,'badge'));controls.append(open);
+      article.append(row,node('p',(review.machine||'no machine')+' · '+review.id+' · staged '+new Date(review.createdAt).toLocaleString(),'muted'),controls);
+      el('reviews').append(article);
+    });
+    if(!waiting.length){el('reviews').append(node('p','No reviews waiting for you.','review-empty'));}
+    decided.forEach(function(review){
+      var li=node('li','');
+      li.append(node('strong',reviewLabels[review.detail]||reviewLabels[review.state]||review.state),
+        document.createTextNode(' · '+review.kindLabel+': '+review.title+' · '+(review.machine||'no machine')+' · '+new Date(review.decidedAt||review.createdAt).toLocaleString()+(review.error?' · '+review.error:'')+' · '),
+        reviewLink(review,'View'));
+      el('review-history').append(li);
+    });
+    if(!decided.length){el('review-history').append(node('li','None yet.','muted'));}
+  }
   function render(){
     if(!snapshot){return;}
     var counts={running:0,ready:0,approved:0,history:0}, ids=new Set();
@@ -131,6 +158,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:380px;overflow:auto;f
       if(position!==card.article){el(group).insertBefore(card.article,position||null);}
     });
     cards.forEach(function(card,id){if(!ids.has(id)){card.article.remove();cards.delete(id);}});
+    renderReviews();
     Object.keys(counts).forEach(function(group){if(el(group+'-count')){el(group+'-count').textContent=counts[group];}if(!counts[group]){el(group).append(node('p',group==='running'?'No running jobs.':group==='history'?'No matching recent jobs.':'No jobs waiting here.','empty'));}});
   }
   async function poll(){

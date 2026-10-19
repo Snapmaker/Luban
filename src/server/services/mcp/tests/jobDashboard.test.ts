@@ -9,7 +9,8 @@ import * as jobEnding from '../jobEnding';
 import * as workspace from '../workspace';
 import { validateGcode } from '../validator';
 import { handleJobDashboardRequest } from '../jobDashboard';
-import { JobDashboardFeed, summarizeDashboardJob } from '../jobDashboardState';
+import { DASHBOARD_REVIEW_LIMIT, DashboardReview, JobDashboardFeed, dashboardReviews, summarizeDashboardJob } from '../jobDashboardState';
+import { OperatorReviewSpec, OperatorReviewStore } from '../operatorReviews';
 import { dashboardHtml, notificationWorker } from '../jobDashboardPage';
 
 function job(id = 'abcdef', state: McpJob['state'] = 'awaiting_confirmation'): McpJob {
@@ -27,7 +28,8 @@ function job(id = 'abcdef', state: McpJob['state'] = 'awaiting_confirmation'): M
     } as unknown as McpJob;
 }
 
-async function request(manager: object, route: string, method = 'GET', headers = {}, stop: (id: string) => Promise<object> = async () => ({ ok: true })) {
+async function request(manager: object, route: string, method = 'GET', headers = {}, stop: (id: string) => Promise<object> = async () => ({ ok: true }),
+    reviews?: () => DashboardReview[]) {
     return new Promise<{ status: number; body: string; headers: Record<string, string> }>((resolve) => {
         let status: number;
         let responseHeaders: Record<string, string>;
@@ -35,7 +37,7 @@ async function request(manager: object, route: string, method = 'GET', headers =
             writeHead(code: number, values: Record<string, string>) { status = code; responseHeaders = values; },
             end(body: string) { resolve({ status, body, headers: responseHeaders }); },
         } as http.ServerResponse;
-        handleJobDashboardRequest({ method, headers } as http.IncomingMessage, res, new URL(route, 'http://localhost'), manager as JobManager, stop);
+        handleJobDashboardRequest({ method, headers } as http.IncomingMessage, res, new URL(route, 'http://localhost'), manager as JobManager, stop, undefined, reviews);
     });
 }
 
@@ -83,6 +85,172 @@ function managerFixture() {
         './activeTool': { describeActiveTool: () => ({ active: null }) },
     });
     return loaded;
+}
+
+function reviewSpec(overrides: Partial<OperatorReviewSpec> = {}): OperatorReviewSpec {
+    return {
+        kind: 'landmark-review',
+        title: 'review',
+        machineKey: 'a350',
+        subject: 'review',
+        bodyHtml: '<p>page body only</p>',
+        summary: { args: 'raw policy args' },
+        precondition: () => null,
+        apply: () => ({ result: 'apply result' }),
+        ...overrides,
+    };
+}
+
+function feedManager() {
+    return { dashboardJobs: () => [], getActive: () => null, dashboardFeed: new JobDashboardFeed() };
+}
+
+function escapeText(text: string): string {
+    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// Just enough DOM to run the dashboard script: text only ever goes in through
+// textContent / text nodes, and innerHTML throws, so markup in feed data can
+// only ever end up as text. html() serializes the way a browser would.
+class FakeNode {
+    public children: FakeNode[] = [];
+
+    public parent: FakeNode | null = null;
+
+    public className = '';
+
+    public id = '';
+
+    public href = '';
+
+    public target = '';
+
+    public rel = '';
+
+    public value = 'all';
+
+    public hidden = false;
+
+    public disabled = false;
+
+    public attributes: Record<string, string> = {};
+
+    private text = '';
+
+    public readonly tagName: string;
+
+    public constructor(tagName: string) {
+        this.tagName = tagName;
+    }
+
+    public get textContent(): string {
+        return this.tagName === '#text' ? this.text : this.children.map((child) => child.textContent).join('');
+    }
+
+    public set textContent(value: string) {
+        this.children = [];
+        if (this.tagName === '#text') {
+            this.text = String(value);
+        } else if (String(value) !== '') {
+            const child = new FakeNode('#text');
+            child.textContent = String(value);
+            this.append(child);
+        }
+    }
+
+    public get innerHTML(): string {
+        throw new Error(`innerHTML read on <${this.tagName}>`);
+    }
+
+    public set innerHTML(_value: string) {
+        throw new Error(`innerHTML written on <${this.tagName}>`);
+    }
+
+    public get firstChild(): FakeNode | null {
+        return this.children[0] || null;
+    }
+
+    public append(...nodes: FakeNode[]): void {
+        for (const node of nodes) {
+            node.remove();
+            node.parent = this;
+            this.children.push(node);
+        }
+    }
+
+    public insertBefore(node: FakeNode, before: FakeNode | null): void {
+        node.remove();
+        node.parent = this;
+        const index = before ? this.children.indexOf(before) : -1;
+        if (index < 0) { this.children.push(node); } else { this.children.splice(index, 0, node); }
+    }
+
+    public remove(): void {
+        if (this.parent) {
+            this.parent.children.splice(this.parent.children.indexOf(this), 1);
+            this.parent = null;
+        }
+    }
+
+    public setAttribute(name: string, value: string): void {
+        this.attributes[name] = String(value);
+    }
+
+    public addEventListener = (): void => undefined;
+
+    public all(): FakeNode[] {
+        return [this, ...this.children.flatMap((child) => child.all())];
+    }
+
+    public html(): string {
+        if (this.tagName === '#text') {
+            return escapeText(this.text);
+        }
+        const attributes = `${this.className ? ` class="${escapeText(this.className)}"` : ''}${this.href ? ` href="${escapeText(this.href)}"` : ''}`;
+        return `<${this.tagName}${attributes}>${this.children.map((child) => child.html()).join('')}</${this.tagName}>`;
+    }
+}
+
+/** Runs the real dashboard script against one status.json snapshot; nothing polls again (setInterval is inert). */
+async function renderDashboard(snapshot: object) {
+    const byId = new Map<string, FakeNode>();
+    const created: FakeNode[] = [];
+    const document = {
+        hidden: false,
+        getElementById: (id: string) => {
+            if (!byId.has(id)) {
+                const root = new FakeNode('div');
+                root.id = id;
+                byId.set(id, root);
+            }
+            return byId.get(id);
+        },
+        createElement: (tag: string) => { const node = new FakeNode(tag); created.push(node); return node; },
+        createTextNode: (text: string) => { const node = new FakeNode('#text'); node.textContent = text; return node; },
+        querySelectorAll: (selector: string) => [...byId.values()].flatMap((root) => root.all())
+            .filter((node) => node.className.split(' ').includes(selector.replace(/^\./, ''))),
+        addEventListener: () => undefined,
+    };
+    const script = dashboardHtml.match(/<script>([\s\S]*?)<\/script>/);
+    assert(script);
+    vm.runInNewContext(script[1], {
+        document,
+        URL,
+        AbortController,
+        window: { location: { href: 'http://127.0.0.1:40889/jobs' }, isSecureContext: false },
+        navigator: {},
+        sessionStorage: { getItem: () => null, setItem: () => undefined },
+        setTimeout: () => 0,
+        clearTimeout: () => undefined,
+        setInterval: () => 0,
+        fetch: async () => ({ ok: true, json: async () => snapshot }),
+    });
+    await new Promise((resolve) => setImmediate(resolve));
+    return { byId, created };
+}
+
+function dashboardSnapshot(reviews?: unknown[]) {
+    return { jobs: [], activeId: null, trust: null, instance: 'test', cursor: 0, reset: true, missed: false, notices: [], ...(reviews ? { reviews } : {}) };
 }
 
 export const tests: Array<[string, () => void | Promise<void>]> = [
@@ -372,5 +540,133 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         }
         manager.submit('', 'new', 'cnc', validation);
         assert.strictEqual(manager.get(first.id), null);
+    }],
+    ['status feed lists operator reviews pending first with links, decided ones marked, no page internals', async () => {
+        let clock = 10;
+        const store = new OperatorReviewStore(() => clock);
+        const approved = store.stage(reviewSpec({ kind: 'landmark-delete', subject: 'x', title: "delete 'corner'" }));
+        clock = 11;
+        store.decide(approved.id, 'approve', 'a350');
+        clock = 12;
+        const rejected = store.stage(reviewSpec({ kind: 'landmark-change', subject: 'y' }));
+        clock = 13;
+        store.decide(rejected.id, 'reject', 'a350');
+        clock = 14;
+        const refused = store.stage(reviewSpec({ subject: 'z', precondition: () => 'the landmark changed since this page was staged' }));
+        clock = 15;
+        store.decide(refused.id, 'approve', 'a350');
+        clock = 16;
+        const superseded = store.stage(reviewSpec({ subject: 'w' }));
+        clock = 17;
+        const replacement = store.stage(reviewSpec({ subject: 'w', title: '2 landmark(s) on a350' }));
+        clock = 18;
+        const device = store.stage(reviewSpec({ kind: 'device-assign', subject: 'dev', machineKey: 'ray', title: 'COM7 is a different machine' }));
+        assert.strictEqual(superseded.state, 'superseded');
+        assert.strictEqual(refused.state, 'refused');
+
+        const feed = dashboardReviews(store.list());
+        assert.deepStrictEqual(feed.map((review) => review.id), [device.id, replacement.id, superseded.id, refused.id, rejected.id, approved.id]);
+        assert.deepStrictEqual(feed.map((review) => review.state), ['pending', 'pending', 'stale', 'stale', 'rejected', 'approved']);
+        assert.deepStrictEqual(feed.map((review) => review.detail),
+            ['awaiting_confirmation', 'awaiting_confirmation', 'superseded', 'refused', 'rejected', 'approved']);
+        assert.deepStrictEqual(feed[0], {
+            id: device.id,
+            kind: 'device-assign',
+            kindLabel: 'Device assignment',
+            machine: 'ray',
+            title: 'COM7 is a different machine',
+            createdAt: 18,
+            decidedAt: null,
+            state: 'pending',
+            detail: 'awaiting_confirmation',
+            error: null,
+            link: `/confirm/${device.id}`,
+        });
+        assert(feed.every((review) => /^\/confirm\/r[0-9a-f]+$/.test(review.link)));
+        assert.strictEqual(feed[5].decidedAt, 11);
+        assert.strictEqual(feed[5].kindLabel, 'Landmark deletion');
+        assert(feed[3].error && feed[3].error.includes('the landmark changed'));
+        const json = JSON.stringify(feed);
+        for (const internal of ['page body only', 'raw policy args', 'apply result', 'bodyHtml', 'summary', 'precondition']) {
+            assert(!json.includes(internal), `feed leaks ${internal}`);
+        }
+
+        const status = await request(feedManager(), '/jobs/status.json', 'GET', {}, undefined, () => dashboardReviews(store.list()));
+        assert.strictEqual(status.status, 200);
+        assert.strictEqual(status.headers['Cache-Control'], 'no-store');
+        assert.deepStrictEqual(JSON.parse(status.body).reviews, feed);
+        // The dashboard only links: no review route or action is served under /jobs.
+        assert.strictEqual((await request(feedManager(), `/jobs/${device.id}/approve`, 'POST', { 'x-luban-job-action': '1' })).status, 405);
+        assert.strictEqual(device.state, 'awaiting_confirmation');
+    }],
+    ['review feed keeps every pending review and bounds decided history like the job list', () => {
+        let clock = 0;
+        const store = new OperatorReviewStore(() => clock);
+        for (let i = 0; i < 60; i++) {
+            clock += 1;
+            const item = store.stage(reviewSpec({ subject: `decided-${i}` }));
+            store.decide(item.id, 'reject', 'a350');
+        }
+        const pending = [1, 2, 3].map((i) => { clock += 1; return store.stage(reviewSpec({ subject: `pending-${i}` })); });
+        assert.strictEqual(DASHBOARD_REVIEW_LIMIT, 50);
+        const feed = dashboardReviews(store.list());
+        assert.strictEqual(feed.length, DASHBOARD_REVIEW_LIMIT);
+        assert.deepStrictEqual(feed.slice(0, 3).map((review) => review.id), pending.map((item) => item.id).reverse());
+        assert(feed.slice(3).every((review) => review.state === 'rejected'));
+        const decidedAt = feed.slice(3).map((review) => review.decidedAt as number);
+        assert.deepStrictEqual(decidedAt, [...decidedAt].sort((a, b) => b - a));
+        assert.strictEqual(decidedAt[0], 60);
+        // Pending reviews are never dropped, even past the bound.
+        assert.deepStrictEqual(dashboardReviews(store.list(), 2).map((review) => review.state), ['pending', 'pending', 'pending']);
+    }],
+    ['review feed empty state: no store items and the default injector both give an empty list', async () => {
+        assert.deepStrictEqual(dashboardReviews(new OperatorReviewStore().list()), []);
+        const status = await request(feedManager(), '/jobs/status.json');
+        assert.strictEqual(status.status, 200);
+        assert.deepStrictEqual(JSON.parse(status.body).reviews, []);
+    }],
+    ['dashboard renders reviews as escaped text with links to the review page and no decision controls', async () => {
+        const store = new OperatorReviewStore();
+        const hostile = store.stage(reviewSpec({ title: '<img src=x onerror=alert(1)> & "quoted"', machineKey: 'a350<b>' }));
+        const decided = store.stage(reviewSpec({ kind: 'landmark-delete', subject: 'gone', title: "delete '<script>'" }));
+        store.decide(decided.id, 'approve', 'a350');
+        const feed = dashboardReviews(store.list());
+        feed.push({ ...feed[0], id: 'not-a-review"><a', state: 'rejected', detail: 'rejected', title: 'forged id' });
+        const { byId, created } = await renderDashboard(dashboardSnapshot(feed));
+
+        assert.strictEqual(byId.get('reviews-count')?.textContent, '1');
+        const pendingHtml = byId.get('reviews')?.html() || '';
+        assert(pendingHtml.includes('&lt;img src=x onerror=alert(1)&gt; &amp; &quot;quoted&quot;'), pendingHtml);
+        assert(pendingHtml.includes('a350&lt;b&gt;'));
+        assert(!/<img|<script|<b>/.test(pendingHtml));
+        assert(!created.some((node) => ['img', 'script', 'b'].includes(node.tagName)), 'markup in feed data never becomes an element');
+        const reviewNodes = byId.get('reviews')?.all() || [];
+        assert(!reviewNodes.some((node) => node.tagName === 'button' || node.tagName === 'form'), 'no decision controls on the dashboard');
+        const link = reviewNodes.find((node) => node.tagName === 'a');
+        assert.strictEqual(link?.href, `/confirm/${hostile.id}`);
+        assert.strictEqual(link?.target, '_blank');
+        assert.strictEqual(link?.textContent, 'Open review page');
+
+        const historyNodes = byId.get('review-history')?.all() || [];
+        const historyText = byId.get('review-history')?.textContent || '';
+        assert(historyText.includes('Approved'));
+        assert(historyText.includes("delete '<script>'"));
+        assert(!(byId.get('review-history')?.html() || '').includes('<script>'));
+        const historyLinks = historyNodes.filter((node) => node.tagName === 'a');
+        assert.deepStrictEqual(historyLinks.map((node) => node.href), [`/confirm/${decided.id}`, '']);
+        // The job groups keep their own empty notices alongside the review list.
+        assert.strictEqual(byId.get('running')?.textContent, 'No running jobs.');
+    }],
+    ['dashboard review section empty state, and an older feed without reviews still renders', async () => {
+        for (const snapshot of [dashboardSnapshot([]), dashboardSnapshot()]) {
+            // eslint-disable-next-line no-await-in-loop
+            const { byId } = await renderDashboard(snapshot);
+            assert.strictEqual(byId.get('reviews-count')?.textContent, '0');
+            assert.strictEqual(byId.get('reviews')?.textContent, 'No reviews waiting for you.');
+            assert.strictEqual(byId.get('review-history')?.textContent, 'None yet.');
+            assert.strictEqual(byId.get('ready')?.textContent, 'No jobs waiting here.');
+        }
+        assert(!/innerHTML|outerHTML|insertAdjacentHTML|document\.write/.test(dashboardHtml));
+        assert(!/\/(approve|reject)\b/.test(dashboardHtml), 'the dashboard never posts a review decision');
     }],
 ];
