@@ -19,6 +19,7 @@ import * as machinePosition from '../machinePosition';
 import * as procedureLimits from '../procedureLimits';
 import * as gcodeForms from '../gcodeForms';
 import { dialectById } from '../gcodeDialect';
+import { toolheadStubs } from './fixtures/toolheadStubs';
 import { resolveJobFrame, validateGcode } from '../validator';
 
 // A350 travel, and the live 2026-09 work offset: work = machine + offset.
@@ -83,8 +84,10 @@ function restoreFixture(
             motionGcodeForm: () => 'sm2' },
         // WP4a: the restore is written by the pure gcodeForms.ts from the A350 row.
         '../gcodeForms': gcodeForms,
+        '../toolheadState': require('../toolheadState'),
         '../connectedMachine': {
-            connectedDialect: () => ({ family: 'marlin' }),
+            ...toolheadStubs(() => null, dialectById('sm2-marlin')),
+            connectedDialect: () => dialectById('sm2-marlin'),
             describeConnectedMachine: () => ({ identifier: 'A350', type: null, hasZ: true, dialect: 'sm2-marlin' }),
         },
         '../../machine/ConnectionManager': { connectionManager: {

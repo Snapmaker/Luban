@@ -274,6 +274,8 @@ export interface HomeCommand {
     label: string;
     /** Why this path, for the log. */
     reason: string;
+    /** Sent as its own payload before the home where the toolhead state is unknown (the Ray's M5, gcodeForms.homeSequence). */
+    laserOff?: string;
 }
 
 export interface HomeCommandInput {

@@ -7,6 +7,8 @@ import * as jobEnding from '../jobEnding';
 import type { McpJob } from '../jobs';
 import { frameRestoreJobRefusal } from '../frameRecovery';
 import { McpToolError } from '../registry';
+import { dialectById } from '../gcodeDialect';
+import { toolheadStubs } from './fixtures/toolheadStubs';
 import { isolatedModule } from './jobDashboard.test';
 import { managerFixture } from './jobModalRecovery.test';
 
@@ -57,6 +59,11 @@ function fixture() {
         '../logicalFrame': require('../logicalFrame'),
         '../gcodeForms': require('../gcodeForms'),
         '../gcodeDialect': require('../gcodeDialect'),
+        '../toolheadState': require('../toolheadState'),
+        '../connectedMachine': {
+            ...toolheadStubs(() => report as never, dialectById('sm2-marlin'), McpToolError),
+            connectedDialect: () => dialectById('sm2-marlin'),
+        },
     });
     const loaded = isolatedModule('tools/gcode.ts', dependencies, {
         Date: { now: () => now },

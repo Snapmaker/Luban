@@ -2,7 +2,7 @@
 // MCP tool arguments are snake_case by convention.
 import { connectionManager } from '../../machine/ConnectionManager';
 import { clearanceOptions } from '../clearanceContext';
-import { connectedMachineCapability, connectedMachineTag, describeConnectedMachine } from '../connectedMachine';
+import { assertToolheadNotOn, connectedMachineCapability, connectedMachineTag, connectedToolheadNote, describeConnectedMachine } from '../connectedMachine';
 import { POSITION_EPSILON_MM } from '../envelopeChecks';
 import { jobManager } from '../jobs';
 import { landmarkStore } from '../landmarks';
@@ -16,6 +16,7 @@ import { McpToolError, ToolRegistry } from '../registry';
 import { HEARTBEAT_STALE_MS, PositionSnapshot, assertFreshHeartbeat, assertWithinTravel, describePlanningTravel, getPositionSnapshot,
     motionGcodeForm, requirePlanningTravel, traverseMachine } from './machine';
 import { validateStagedEnvelope } from './staging';
+import { ToolheadAssessment } from '../toolheadState';
 
 /**
  * Laser tools (#265 WP7, plan 2.5; Ray first): laser_frame, set_air_assist,
@@ -49,18 +50,14 @@ function connectedHead(): HeadFacts {
 }
 
 /** The checks every laser body shares with traverse_xy: no overtravel, fresh heartbeat, idle, and the toolhead not already on. */
-function assertReadyForLaser(what: string): void {
+function assertReadyForLaser(what: string): ToolheadAssessment {
     probeFeedService.assertNoOvertravel();
     assertFreshHeartbeat(`staging ${what}`);
     const position = getPositionSnapshot();
     if (position.machineStatus !== 'idle') {
         throw new McpToolError(`Machine is ${position.machineStatus || 'in an unknown state'}, not idle.`);
     }
-    const state = connectionManager.getLatestMachineState() as { headStatus?: unknown; headPower?: unknown } | null;
-    const headPower = Number(state && state.headPower);
-    if ((Number.isFinite(headPower) && headPower > 0) || (state && (state.headStatus === true || state.headStatus === 'on'))) {
-        throw new McpToolError(`Toolhead appears to be on; refusing to stage ${what}.`);
-    }
+    return assertToolheadNotOn(`Toolhead appears to be on; refusing to stage ${what}.`);
 }
 
 function offsetBeat(position: PositionSnapshot): OffsetBeat {
@@ -93,7 +90,13 @@ async function nextCoordinateBeat(first: PositionSnapshot): Promise<PositionSnap
     return null;
 }
 
-function stageSwitch(plan: LaserSwitchPlan, tool: string, baseUrl: () => string) {
+/** `toolhead` for a result where the head state is unknown (the Ray); nothing where the machine reports it. */
+function toolheadField(assessment: ToolheadAssessment) {
+    const note = connectedToolheadNote(assessment);
+    return note ? { toolhead: note } : {};
+}
+
+function stageSwitch(plan: LaserSwitchPlan, tool: string, baseUrl: () => string, toolhead: ToolheadAssessment) {
     const machine = traverseMachine(tool);
     const validation = validateStagedEnvelope(plan.reviewText, tool, { relativeTransport: machine.gcode === 'grbl-relative' });
     const job = jobManager.submit(plan.reviewText, plan.name, 'laser', validation, 'direct');
@@ -103,6 +106,7 @@ function stageSwitch(plan: LaserSwitchPlan, tool: string, baseUrl: () => string)
         gcode_form: motionGcodeForm(),
         gcode: plan.gcode,
         head: plan.headNote,
+        ...toolheadField(toolhead),
         staged_because: NEVER_AUTO,
         confirm_url: `${baseUrl()}/confirm/${job.id}`,
         next_step: 'Ask the operator to open confirm_url, review the line and approve; start_gcode_job with wait_for_approval_ms sends it.',
@@ -165,7 +169,7 @@ export function registerLaserTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             }
             const machine = traverseMachine('laser_frame');
             const capability = connectedMachineCapability();
-            assertReadyForLaser('a laser frame');
+            const toolhead = assertReadyForLaser('a laser frame');
             const position = getPositionSnapshot();
             if (position.isHomed !== true) {
                 throw new McpToolError(`Machine does not report homed; home before a laser frame ${connectedMachineTag()}.`);
@@ -288,6 +292,7 @@ export function registerLaserTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 repeat: plan.repeat,
                 run_z: plan.runZ,
                 head: headNote,
+                ...toolheadField(toolhead),
                 steps: plan.steps.map((s) => ({ what: s.what, laser: s.laser, machine: s.to, distance_mm: Number(s.distanceMm.toFixed(1)) })),
                 // The direct runner waits 45 s for a step to settle (tools/gcode.ts waitForStableHeartbeat); a longer
                 // side still runs, but returns position_verified: false.
@@ -335,8 +340,8 @@ export function registerLaserTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 plannerError(err);
             }
             // The row's refusal (no air assist on the Original) comes before the readiness checks, so a stale beat cannot hide it.
-            assertReadyForLaser('air assist');
-            return stageSwitch(plan, 'set_air_assist', getConfirmBaseUrl);
+            const toolhead = assertReadyForLaser('air assist');
+            return stageSwitch(plan, 'set_air_assist', getConfirmBaseUrl, toolhead);
         },
     });
 
@@ -366,8 +371,8 @@ export function registerLaserTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             } catch (err) {
                 plannerError(err);
             }
-            assertReadyForLaser('the crosshair');
-            return stageSwitch(plan, 'set_crosshair', getConfirmBaseUrl);
+            const toolhead = assertReadyForLaser('the crosshair');
+            return stageSwitch(plan, 'set_crosshair', getConfirmBaseUrl, toolhead);
         },
     });
 

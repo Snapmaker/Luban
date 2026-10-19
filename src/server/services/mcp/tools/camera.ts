@@ -33,8 +33,10 @@ import { STOCK_ARG_SCHEMA } from '../rotaryCallContext';
 import { gateDirectXy, planGotoWorkOrigin } from '../directMovePlan';
 import { homeSequence, machineFrameMove, relativeStep, workFrameMove, workFrameRestore, workFrameRestoreCommands } from '../gcodeForms';
 import { TraverseMachine } from '../traversePlan';
-import { connectedDialect, connectedMachineIdentifier, connectedMachineTag, describeConnectedMachine } from '../connectedMachine';
+import { assertToolheadNotOn, connectedDialect, connectedMachineIdentifier, connectedMachineTag, connectedToolheadNote,
+    describeConnectedMachine } from '../connectedMachine';
 import { sacpGrblPayloadRefusal, withoutCommentLines } from '../sacpLineGuard';
+import { ToolheadAssessment, laserOffSentIn, noteLaserSend } from '../toolheadState';
 import {
     currentFirmwareRecord, describeFirmwareRead, firmwareReadBlocker, firmwareTextRoute, firmwareView, parseFirmwareRecord, queryGrblPosition,
     readFirmwareConfiguration, sacpNoTextReport,
@@ -241,12 +243,16 @@ export async function sendGcodeVisible(channel: GcodeChannel, tool: string, payl
     // The tool call's modal ledger (#221): what left, on which channel, and
     // how it ended - read by the failure hook in ToolRegistry.call().
     const settleLedger = recordModalSend(currentConnectionId() || 'none', gcode);
+    // The MCP's own laser words, where the head state cannot be read back (the Ray; toolheadState.ts, advisory).
+    const settleLaser = connectedDialect().toolhead.state === 'unknown' ? noteLaserSend(currentConnectionId() || 'none', gcode) : () => undefined;
     let executed;
     try {
         executed = await channel.executeGcode(gcode);
         settleLedger(classifyReply(executed));
+        settleLaser(classifyReply(executed));
     } catch (err) {
         settleLedger('indeterminate');
+        settleLaser('indeterminate');
         throw err;
     } finally {
         probeFeedService.motionEnd();
@@ -335,17 +341,13 @@ function frameContent(frame: CapturedFrame, meta: object): object {
     };
 }
 
-function assertSafeToMove(position: PositionSnapshot, operatorConfirmedClearance: boolean): void {
+function assertSafeToMove(position: PositionSnapshot, operatorConfirmedClearance: boolean): ToolheadAssessment {
     probeFeedService.assertNoOvertravel();
     assertFreshHeartbeat('a direct move');
     if (position.machineStatus !== 'idle') {
         throw new McpToolError(`Machine is ${position.machineStatus || 'in an unknown state'}, not idle.`);
     }
-    const state = connectionManager.getLatestMachineState() as { headStatus?: unknown; headPower?: unknown } | null;
-    const headPower = Number(state?.headPower);
-    if ((Number.isFinite(headPower) && headPower > 0) || state?.headStatus === true || state?.headStatus === 'on') {
-        throw new McpToolError('Toolhead appears to be on (headStatus/headPower); refusing to move.');
-    }
+    const toolhead = assertToolheadNotOn('Toolhead appears to be on (headStatus/headPower); refusing to move.');
     // Homing raises Z first and is the only cure for a stale position state
     // after a reconnect, so it is the default precondition. The override is
     // for when the OPERATOR has confirmed the Z height and a clear path at
@@ -355,6 +357,7 @@ function assertSafeToMove(position: PositionSnapshot, operatorConfirmedClearance
             + 'XY), or - only after the operator has explicitly confirmed the current Z and an '
             + 'obstacle-free path at this Z - retry with operator_confirmed_clearance: true.');
     }
+    return toolhead;
 }
 
 
@@ -476,7 +479,7 @@ export async function executeBoundedMoveAndCapture(args: BoundedMoveArgs): Promi
     // an unlisted machine is refused first, naming it.
     const machine = traverseMachine('move_and_capture');
     const before = getPositionSnapshot();
-    assertSafeToMove(before, args.operator_confirmed_clearance === true);
+    const toolhead = assertSafeToMove(before, args.operator_confirmed_clearance === true);
 
     const current = coordinateSystem === 'work' ? before.work : before.machine;
     if (current.x === null || current.y === null) {
@@ -615,6 +618,9 @@ export async function executeBoundedMoveAndCapture(args: BoundedMoveArgs): Promi
     if (executed.result !== 0) {
         throw new McpToolError(`Move rejected by controller: ${executed.text || executed.result}`);
     }
+    // The Ray: head state unknown, and this step led with M5 (gcodeForms.relativeStep).
+    const moveToolheadNote = connectedToolheadNote(toolhead, laserOffSentIn(toolhead, gcode));
+    const moveToolhead = moveToolheadNote ? { toolhead: moveToolheadNote } : {};
 
     if (args.wait_until_moved === false) {
         // Fire-and-return: no settle, no capture - the frame would not show
@@ -623,6 +629,7 @@ export async function executeBoundedMoveAndCapture(args: BoundedMoveArgs): Promi
             connected_machine: describeConnectedMachine(),
             gcode_form: motionGcodeForm(),
             commanded: { ...target, coordinate_system: coordinateSystem, feed_rate: feedRate },
+            ...moveToolhead,
             position: null,
             position_verified: false,
             raised_first: raisedFirst,
@@ -657,6 +664,7 @@ export async function executeBoundedMoveAndCapture(args: BoundedMoveArgs): Promi
             connected_machine: describeConnectedMachine(),
             gcode_form: motionGcodeForm(),
             commanded: { ...target, coordinate_system: coordinateSystem, feed_rate: feedRate },
+            ...moveToolhead,
             position: getPositionSnapshot(),
             position_verified: true,
             raised_first: raisedFirst,
@@ -672,6 +680,7 @@ export async function executeBoundedMoveAndCapture(args: BoundedMoveArgs): Promi
         connected_machine: describeConnectedMachine(),
         gcode_form: motionGcodeForm(),
         commanded: { ...target, coordinate_system: coordinateSystem, feed_rate: feedRate },
+        ...moveToolhead,
         position: after,
         position_verified: true,
         raised_first: raisedFirst,
@@ -743,7 +752,7 @@ async function stageGotoWorkOrigin(args: { reason?: string; feed_rate?: number; 
     const position = getPositionSnapshot();
     // Overtravel, fresh + reliable heartbeat, idle, toolhead off, homed - the
     // same gate as a direct move, with no operator override.
-    assertSafeToMove(position, false);
+    const toolhead = assertSafeToMove(position, false);
     const { x, y, z } = position.machine;
     if (x === null || y === null || (machine.hasZ && z === null)) {
         throw new McpToolError('Current machine position unknown; cannot plan the move to the work origin.');
@@ -774,9 +783,11 @@ async function stageGotoWorkOrigin(args: { reason?: string; feed_rate?: number; 
     const validation = validateStagedEnvelope(plan.reviewText, 'goto_work_origin', { relativeTransport: plan.relative });
     const job = jobManager.submit(plan.reviewText, plan.name, 'cnc', validation, 'direct');
     job.waitUntilMoved = args.wait_until_moved !== false;
+    const toolheadNote = connectedToolheadNote(toolhead);
     return {
         job: jobManager.describe(job),
         connected_machine: describeConnectedMachine(),
+        ...(toolheadNote ? { toolhead: toolheadNote } : {}),
         gcode_form: motionGcodeForm(),
         destination_machine: plan.destinationMachine,
         work_origin_offset_at_staging: position.originOffset,
@@ -837,11 +848,7 @@ export async function homeMachine(tool: string, waitUntilHomed: boolean = true, 
     if (before.machineStatus !== 'idle') {
         throw new McpToolError(`Machine is ${before.machineStatus || 'in an unknown state'}, not idle.`);
     }
-    const state = connectionManager.getLatestMachineState() as { headStatus?: unknown; headPower?: unknown } | null;
-    const headPower = Number(state?.headPower);
-    if ((Number.isFinite(headPower) && headPower > 0) || state?.headStatus === true || state?.headStatus === 'on') {
-        throw new McpToolError('Toolhead appears to be on (headStatus/headPower); refusing to home.');
-    }
+    const toolhead = assertToolheadNotOn('Toolhead appears to be on (headStatus/headPower); refusing to home.');
 
     const channel = connectionManager.getCurrentChannel() as unknown as GcodeChannel;
     if (!channel || (typeof channel.executeGcode !== 'function' && typeof channel.goHome !== 'function')) {
@@ -867,6 +874,19 @@ export async function homeMachine(tool: string, waitUntilHomed: boolean = true, 
         throw new McpToolError(`Refusing ${tool}: ${(err as Error).message}.`);
     }
     const homeRequest = command.label;
+    // The Ray: its laser-off line goes out as its own payload before the home
+    // (gcodeForms.homeSequence), so `$H` itself stays byte-identical.
+    let laserOffSent: string | null = null;
+    if (command.laserOff) {
+        const off = await sendGcodeVisible(channel, `${tool} - laser off`, command.laserOff);
+        if (off.result !== 0) {
+            throw new McpToolError(`Refusing ${tool}: the laser-off line ${command.laserOff} was rejected by the controller `
+                + `(${off.text || off.result}), so the home was not sent. ${connectedMachineTag()}`);
+        }
+        laserOffSent = command.laserOff;
+    }
+    const homeToolheadNote = connectedToolheadNote(toolhead, laserOffSent);
+    const homeToolhead = homeToolheadNote ? { toolhead: homeToolheadNote } : {};
     if (command.kind === 'grbl-home') {
         // The Ray homes on GRBL $H - what Luban's Home button sends for it
         // (ConnectionControl/ControlPanel.tsx). Ray firmware V1.7.4 never
@@ -924,6 +944,7 @@ export async function homeMachine(tool: string, waitUntilHomed: boolean = true, 
             connected_machine: describeConnectedMachine(),
             gcode_form: motionGcodeForm(),
             home_command: command.label,
+            ...homeToolhead,
             position_verified: false,
             note: `wait_until_moved was false: ${homeRequest} accepted but not awaited (homing takes `
                 + '~15-20s). Poll get_position until isHomed is true and the position is '
@@ -971,6 +992,7 @@ export async function homeMachine(tool: string, waitUntilHomed: boolean = true, 
                 connected_machine: describeConnectedMachine(),
                 gcode_form: motionGcodeForm(),
                 home_command: command.label,
+                ...homeToolhead,
                 position: now,
                 note: 'Work origins are user-set per workspace and persist across homing. '
                     + 'Check position.warnings, and if coordinates look wrong verify the frame '

@@ -80,10 +80,11 @@ export const tests: Array<[string, () => void]> = [
         throwsNamed(() => relativeStep(SM2, { from: { x: 0, y: 0 }, to: { x: 1, y: 1 } }, 100), /absolute steps/);
     }],
 
-    ['Ray relative step is #264\'s bytes; the Original adds the planner sync', () => {
+    ['Ray relative step is #264\'s bytes led by M5 (head state unknown); the Original adds the planner sync, no M5', () => {
         const ends = { from: { x: -1, y: 399 }, to: { x: -1, y: 349 } };
-        assert.equal(relativeStep(RAY, ends, 1500), relativeXyStep(ends.from, ends.to, 1500));
-        assert.equal(relativeStep(RAY, ends, 1500), '; mcp-settle machine X-1.000 Y349.000\nG91\nG1 X0.000 Y-50.000 F1500\nG90');
+        // #264's form unchanged, with the laser-off line after the settle comment (#315: the Ray never reports its laser).
+        assert.equal(relativeStep(RAY, ends, 1500, { laserOff: false }), relativeXyStep(ends.from, ends.to, 1500));
+        assert.equal(relativeStep(RAY, ends, 1500), '; mcp-settle machine X-1.000 Y349.000\nM5\nG91\nG1 X0.000 Y-50.000 F1500\nG90');
         assert.equal(needsPlannerSync(RAY), false);
         assert.equal(needsPlannerSync(ORIGINAL), true);
         assert.equal(relativeStep(ORIGINAL, ends, 1500), `; mcp-settle machine X-1.000 Y349.000\nG91\nG1 X0.000 Y-50.000 F1500\nG90\n${PLANNER_SYNC}`);
@@ -91,7 +92,7 @@ export const tests: Array<[string, () => void]> = [
             currentMachine: { x: -1, y: 399, z: 0 },
             targets: [{ x: -1, y: 349 }],
             machine: { hasZ: false, gcode: 'grbl-relative', dialect: RAY } });
-        assert.equal(rayPlan.steps[0].gcode, '; mcp-settle machine X-1.000 Y349.000\nG91\nG1 X0.000 Y-50.000 F1500\nG90');
+        assert.equal(rayPlan.steps[0].gcode, '; mcp-settle machine X-1.000 Y349.000\nM5\nG91\nG1 X0.000 Y-50.000 F1500\nG90');
         const originalPlan = planTraverseXy({ ...baseTraverse,
             currentMachine: { x: 10, y: 10, z: 50 },
             motionFloorZ: 40,
@@ -141,7 +142,9 @@ export const tests: Array<[string, () => void]> = [
         assert.equal(a350.gcode, G28_HOME_SEQUENCE);
         assert.equal(a350.kind, 'g28-sequence');
         const ray = homeSequence(RAY, { sacp: true, machineIdentifier: RAY_IDENTIFIER, canExecuteGcode: true, canGoHome: true });
-        assert.equal(ray.gcode, GRBL_HOME);
+        assert.equal(ray.gcode, GRBL_HOME, '$H stays the exact string observed homing the Ray');
+        assert.equal(ray.laserOff, 'M5', 'the Ray\'s laser-off goes out as its own payload before the home');
+        assert.equal('laserOff' in a350, false, 'nothing new on the A350');
         assert.equal(homeSequence(ARTISAN, { sacp: true, machineIdentifier: 'A400', canExecuteGcode: true, canGoHome: true }).kind, 'sacp-home-request');
         assert.equal(homeSequence(J1, { sacp: true, machineIdentifier: 'Snapmaker J1', canExecuteGcode: true, canGoHome: true }).kind, 'sacp-home-request');
         const original = homeSequence(ORIGINAL, text);

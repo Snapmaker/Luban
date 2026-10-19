@@ -114,8 +114,27 @@ export interface GcodeDialect {
     transportForm: TransportForm;
     /** This MCP has driven this dialect on real hardware. True only for 'sm2-marlin' - and within it only the A350. */
     verifiedOnHardware: boolean;
+    /** Whether the toolhead-on guards can read this machine's head state, and what the MCP does where they cannot. */
+    toolhead: ToolheadReadback;
     sources: readonly string[];
 }
+
+/**
+ * What Luban's machine state says about the toolhead being ON (headPower /
+ * headStatus), per dialect. 'reported': the toolhead-on guards read them as
+ * before. 'unknown': the firmware never sends a usable value (the Ray, #315
+ * mismatch 2), so an absent or zero reading is "unknown", never "off", and the
+ * MCP leads its own motion with `laserOff` instead (gcodeForms.ts).
+ */
+export interface ToolheadReadback {
+    state: 'reported' | 'unknown';
+    /** The laser-disable line every MCP motion step leads with where the state is unknown; null where it is reported. */
+    laserOff: string | null;
+    /** Why, for results and refusals. */
+    basis: string;
+}
+
+const TOOLHEAD_REPORTED: ToolheadReadback = { state: 'reported', laserOff: null, basis: 'headPower/headStatus from the connection state' };
 
 // ---- Code lists -------------------------------------------------------------
 
@@ -185,6 +204,17 @@ const RAY: GcodeDialect = {
     incompatible: ['G59.1', 'G59.2', 'G59.3'],
     transportForm: 'relative-steps',
     verifiedOnHardware: false,
+    // Ray V1.7.4 (RayController 91a675f, tyeth/Luban#315 mismatch 2): the
+    // laser power Luban reads (SACP 0x12 0xa1, 0x12 0x01) is set to 0 at init
+    // and never written (toolhead_laser.cpp:1400, :1633-1652); no SACP channel
+    // sets headStatus; the USB text link's state parser is Marlin's and never
+    // reads GRBL's report. M5 is the laser disable (Grbl_Esp32 GCode.cpp:1449-1451).
+    toolhead: {
+        state: 'unknown',
+        laserOff: 'M5',
+        basis: 'the Ray firmware (V1.7.4) never reports laser power or head state to Luban - its laser power field is always 0 '
+            + '(tyeth/Luban#315 mismatch 2) - so a zero reading means unknown, not off',
+    },
     sources: [WIKI.ray, 'Luban generateGcode.js / GcodeGenerator.js / ControlPanel.tsx / SetOriginView.tsx'],
 };
 
@@ -224,6 +254,7 @@ const SM2: GcodeDialect = {
     incompatible: codes('G29 G38 M25 M31 M42 M75 M77 M81 M85 M112 M117 M120 M121 M206 M217 M218 M226 M303 M401 M402 M410 M413 M428 M851 M999'),
     transportForm: 'sm2',
     verifiedOnHardware: true,
+    toolhead: TOOLHEAD_REPORTED,
     sources: [WIKI.sm2, 'this MCP on the A350 (own-line G53, G28 homes B); A150/A250 never run with it'],
 };
 
@@ -263,6 +294,7 @@ const ARTISAN: GcodeDialect = {
     ),
     transportForm: 'sm2',
     verifiedOnHardware: false,
+    toolhead: TOOLHEAD_REPORTED,
     sources: [WIKI.artisan, 'PR #264 (SACP home request)'],
 };
 
@@ -291,6 +323,7 @@ const J1: GcodeDialect = {
     incompatible: codes('G20 G92.1 M31 M75 M76 M77 M81 M85 M112 M120 M121 M141 M191 M200 M206 M217 M218 M410 M428 M999'),
     transportForm: 'relative-steps',
     verifiedOnHardware: false,
+    toolhead: TOOLHEAD_REPORTED,
     sources: [WIKI.j1, 'PR #264 (SACP home request)'],
 };
 
@@ -327,6 +360,7 @@ const ORIGINAL: GcodeDialect = {
     incompatible: [],
     transportForm: 'relative-steps',
     verifiedOnHardware: false,
+    toolhead: TOOLHEAD_REPORTED,
     sources: [
         'from Luban generators, unverified against wiki (no Snapmaker wiki page for the Original): '
         + 'GcodeGenerator.js, generateLaserFocusGcode.js, MarlinController.js, ConnectionManager.goHome',
@@ -351,6 +385,7 @@ const UNKNOWN: GcodeDialect = {
     incompatible: [],
     transportForm: 'none',
     verifiedOnHardware: false,
+    toolhead: TOOLHEAD_REPORTED,
     sources: ['not in the MCP dialect table (gcodeDialect.ts)'],
 };
 

@@ -4,6 +4,7 @@ import path from 'path';
 import { EventEmitter } from 'events';
 import { dialectById } from '../gcodeDialect';
 import * as gcodeDialect from '../gcodeDialect';
+import { toolheadStubs } from './fixtures/toolheadStubs';
 import * as firmwareQuery from '../firmwareQuery';
 import * as procedureLimits from '../procedureLimits';
 import * as machineCapability from '../machineCapability';
@@ -228,6 +229,7 @@ function cameraTools(dialectId: 'ray-grbl' | 'sm2-marlin' | 'unknown', options: 
         '../probeFeed': { probeFeedService: { motionBegin: () => undefined, motionEnd: () => undefined } },
         '../jobs': { jobManager: { getActive: () => null } },
         './machine': { motionDialect: () => dialectById(dialectId), getPositionSnapshot: () => null },
+        '../toolheadState': require('../toolheadState'),
         '../connectedMachine': {
             connectedDialect: () => dialectById(dialectId),
             connectedMachineTag: () => `(machine: ${dialectId})`,
@@ -651,6 +653,7 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
                 findMachine: (id: string) => machines.find((m) => m.identifier === id) || null,
                 machineCapabilityFor: capabilityFor,
                 connectedMachineTag: () => '(test machine)',
+                ...toolheadStubs(() => null, RAY),
             },
             '../machineTravel': machineTravel,
             './firmware': { firmwareView: () => firmwareBlock },
@@ -666,5 +669,9 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         const a350 = await handlers.get_machine_profile({ identifier: 'Snapmaker 2.0 A350' });
         assert.equal(a350.dialect, 'sm2-marlin');
         assert.equal(a350.firmware, null, 'not the connected machine');
+        // The Ray's head state is unknown, never "off": the profile of the CONNECTED Ray says so; the A350's carries nothing new.
+        assert.equal((ray.toolhead as { state: string }).state, 'unknown');
+        assert.equal((ray.toolhead as Record<string, unknown>).laser_off_lead, 'M5');
+        assert.equal('toolhead' in a350, false);
     }],
 ];

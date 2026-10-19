@@ -8,6 +8,8 @@ import * as procedureLimits from '../procedureLimits';
 import { reliableForMotion } from '../machinePosition';
 import * as machineCapability from '../machineCapability';
 import { dialectById } from '../gcodeDialect';
+import { TEST_CONNECTION, toolheadStubs } from './fixtures/toolheadStubs';
+import { clearMcpLaserRecord } from '../toolheadState';
 import { ConnectionDiagnosticState, httpEvidence, safeIdentifier, safeTarget } from '../../machine/connectionDiagnosticState';
 import { GcodeLease } from '../../machine/gcodeLease';
 
@@ -95,7 +97,9 @@ function fixture() {
     return { channel, workers, replies, sent, requests, timeouts, diagnostics, diagnosticModule, lease };
 }
 
-function cameraFixture() {
+/** camera.ts over stubs: the A350 as the MCP always assumed it, or (ray) a Ray on SACP whose head state is never reported. */
+function cameraFixture(ray = false) {
+    const dialect = dialectById(ray ? 'ray-grbl' : 'sm2-marlin');
     const source = fs.readFileSync(path.join(__dirname, '../tools/camera.ts'), 'utf8');
     const dependencies = stubImports(source);
     const commands: string[] = [];
@@ -121,8 +125,8 @@ function cameraFixture() {
         './machine': {
             getPositionSnapshot: () => state,
             assertFreshHeartbeat: () => { throw new Error('Refusing home: unreliable heartbeat'); },
-            motionDialect: () => dialectById('sm2-marlin'),
-            motionGcodeForm: () => 'sm2',
+            motionDialect: () => dialect,
+            motionGcodeForm: () => (ray ? 'grbl-relative' : 'sm2'),
         },
         // WP4a: pure modules, the real ones.
         '../logicalFrame': require('../logicalFrame'),
@@ -133,15 +137,23 @@ function cameraFixture() {
         // this stub replaces - the ConnectionManager stub below has no
         // getConnectionStatus, exactly like the first CI run of fd3c8c7da.
         '../machineCapability': machineCapability,
+        '../toolheadState': require('../toolheadState'),
+        '../sacpLineGuard': require('../sacpLineGuard'),
         '../connectedMachine': {
-            connectedMachineIdentifier: () => null,
-            connectedDialect: () => ({ family: 'marlin' }),
-            connectedMachineTag: () => '(machine: Snapmaker 2.0 A350)',
+            ...toolheadStubs(() => state, dialect),
+            connectedMachineIdentifier: () => (ray ? 'Ray' : null),
+            connectedDialect: () => dialect,
+            connectedMachineTag: () => (ray ? '(machine: Ray)' : '(machine: Snapmaker 2.0 A350)'),
             describeConnectedMachine: () => ({ identifier: null, type: null, hasZ: true }),
         },
         '../../machine/ConnectionManager': { connectionManager: {
             getLatestMachineState: () => state,
             getCurrentChannel: () => ({ executeGcode: async (gcode: string) => { commands.push(gcode); return replies.shift() || { result: 0 }; } }),
+            ...(ray ? {
+                isSacpChannel: () => true,
+                getConnectionStatus: () => ({ connected: true, machineIdentifier: 'Ray' }),
+                getConnectionGeneration: () => TEST_CONNECTION,
+            } : {}),
         } },
     });
     return { camera: load('../mcp/tools/camera.ts', dependencies), state, commands, alarm, replies };
@@ -424,6 +436,7 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         const result = await camera.homeMachine('home', false, true);
         assert.strictEqual(result.position_verified, false);
         assert.deepStrictEqual(commands, ['G53;\nG28;\nG54;']);
+        assert.ok(!('toolhead' in result), 'the A350 home result is unchanged: no toolhead block');
         state.reliability = 'awaiting-resync';
         await assert.rejects(camera.homeMachine('home', false, true), /unreliable heartbeat/);
         state.reliability = 'stale';
@@ -436,6 +449,23 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         alarm.tripped = true;
         await assert.rejects(camera.homeMachine('home', false, true), /alarm/);
         assert.strictEqual(commands.length, 1);
+    }],
+    ['Ray home: M5 goes out alone before $H, the result says the head state is unknown; a non-zero reading still refuses', async () => {
+        clearMcpLaserRecord();
+        const { camera, state, commands, replies } = cameraFixture(true);
+        const result = await camera.homeMachine('home', false, true);
+        assert.deepStrictEqual(commands, ['M5', '$H'], 'the laser-off line, then the exact $H');
+        assert.strictEqual(result.toolhead.state, 'unknown');
+        assert.strictEqual(result.toolhead.laser_off_sent, 'M5');
+        assert.match(result.toolhead.basis, /never reports laser power/);
+        assert.strictEqual(result.toolhead.mcp_sent_laser.laser, 'off', 'the acknowledged M5 is in the MCP-sent record');
+        replies.push({ result: 1 });
+        await assert.rejects(camera.homeMachine('home', false, true), /laser-off line M5 was rejected .* home was not sent/);
+        assert.deepStrictEqual(commands, ['M5', '$H', 'M5'], 'no $H after a refused M5');
+        state.headPower = 40;
+        await assert.rejects(camera.homeMachine('home', false, true), /Toolhead appears to be on .*not known to report/);
+        assert.strictEqual(commands.length, 3);
+        clearMcpLaserRecord();
     }],
     ['fresh M114 does not combine its work coordinates with a stale heartbeat offset', async () => {
         const { camera, commands, replies } = cameraFixture();

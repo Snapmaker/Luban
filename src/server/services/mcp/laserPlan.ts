@@ -402,7 +402,9 @@ export function planLaserFrame(input: LaserFrameInput): LaserFramePlan {
     const runZ = hasZ ? (current.z as number) : null;
     const move = (from: { x: number; y: number }, to: { x: number; y: number }, command: 'G0' | 'G1'): string => {
         if (form === 'relative-steps') {
-            return relativeStep(dialect, { from, to }, feed, { command, hasZ, plannerSync: false });
+            // laserOff false: this body manages its own M5/M3/M5 (above), so
+            // gcodeForms' laser-off lead must not land between M3 and the move.
+            return relativeStep(dialect, { from, to }, feed, { command, hasZ, plannerSync: false, laserOff: false });
         }
         return [settleComment(to), machineFrameMove(dialect, `X${f3(to.x)} Y${f3(to.y)}`, feed, { command })].join('\n');
     };

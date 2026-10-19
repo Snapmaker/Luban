@@ -40,7 +40,9 @@ import { ComputedHeightDecision, decideComputedHeightTraverse, decideSafeZRaise,
 import { TraversePlan, TraversePlanInput, parseSettleComment, planTraverseXy, traverseMachinePath } from '../traversePlan';
 import { machineFrameMove, needsPlannerSync, relativeStep, workFrameMove } from '../gcodeForms';
 import { machineStatusOf } from '../logicalFrame';
-import { connectedMachineCapability, connectedMachineTag, describeConnectedMachine } from '../connectedMachine';
+import { assertToolheadNotOn, connectedConnectionId, connectedDialect, connectedMachineCapability, connectedMachineTag, connectedToolheadNote,
+    describeConnectedMachine } from '../connectedMachine';
+import { noteMcpFileJob } from '../toolheadState';
 import { JobFrame, TRANSPORT_REFUSAL, isPureTransport, resolveJobFrame, spindleRefusal, suggestGcode, validateGcode } from '../validator';
 import { GcodeChannel, GcodeNotSentError, sendGcodeVisible } from './camera';
 import { connectedStagingMachine, connectedValidationOptions, stagingFrameContext, validateStagedEnvelope } from './staging';
@@ -1563,6 +1565,10 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             } catch (err) {
                 started = { ok: false, text: (err as Error).message };
             }
+            if (connectedDialect().toolhead.state === 'unknown' && started.notSent !== true) {
+                // The Ray: the file's own laser words run in the firmware, so the MCP's laser record can no longer vouch for them.
+                noteMcpFileJob(connectedConnectionId() || 'none', job.name);
+            }
             poll();
             job.startAttempt.acknowledged = started.ok;
             if (!started.ok) {
@@ -1722,11 +1728,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             if (position.isHomed !== true) {
                 throw new McpToolError('Machine does not report homed; home before any Z positioning.');
             }
-            const state = connectionManager.getLatestMachineState() as { headStatus?: unknown; headPower?: unknown } | null;
-            const headPower = Number(state && state.headPower);
-            if ((Number.isFinite(headPower) && headPower > 0) || (state && (state.headStatus === true || state.headStatus === 'on'))) {
-                throw new McpToolError('Toolhead appears to be on; refusing to move Z.');
-            }
+            assertToolheadNotOn('Toolhead appears to be on; refusing to move Z.');
 
             const currentZ = coordinateSystem === 'work' ? position.work.z : position.machine.z;
             if (currentZ === null) {
@@ -1992,11 +1994,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             if (position.isHomed !== true) {
                 throw new McpToolError(`Machine does not report homed; home before any XY transport ${connectedMachineTag()}.`);
             }
-            const state = connectionManager.getLatestMachineState() as { headStatus?: unknown; headPower?: unknown } | null;
-            const headPower = Number(state && state.headPower);
-            if ((Number.isFinite(headPower) && headPower > 0) || (state && (state.headStatus === true || state.headStatus === 'on'))) {
-                throw new McpToolError('Toolhead appears to be on; refusing to traverse.');
-            }
+            const toolhead = assertToolheadNotOn('Toolhead appears to be on; refusing to traverse.');
             const { x: mx, y: my, z: mz } = position.machine;
             if (mx === null || my === null) {
                 throw new McpToolError('Current machine position unknown; cannot plan the traverse.');
@@ -2076,8 +2074,11 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             const stepGcodes = isBatch ? plan.stepGcodes : undefined;
             const job = jobManager.submit(plan.reviewText, plan.name, 'cnc', validation, 'direct', stepGcodes);
             job.waitUntilMoved = args.wait_until_moved !== false;
+            // The Ray: head state unknown, and every step leads with M5 (gcodeForms.relativeStep).
+            const toolheadNote = connectedToolheadNote(toolhead);
             const summary = {
                 connected_machine: describeConnectedMachine(),
+                ...(toolheadNote ? { toolhead: toolheadNote } : {}),
                 current_machine: { x: mx, y: my, z: mz },
                 /** null on a machine with no Z axis: no traverse height exists there. */
                 traverse_z: machine.hasZ ? safeTraverseZ() : null,

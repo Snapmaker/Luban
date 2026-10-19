@@ -39,6 +39,7 @@ import {
     connectedMachineCapability,
     connectedMachineIdentifier,
     connectedMachineTag,
+    connectedToolheadNote,
     describeConnectedMachine,
     findMachine,
     machineCapabilityFor,
@@ -1955,6 +1956,7 @@ export function registerMachineTools(registry: ToolRegistry): void {
 
             const capability = machineCapabilityFor(machine.identifier);
             const connected = identifier === status.machineIdentifier;
+            const toolheadNote = connected ? connectedToolheadNote() : null;
             return {
                 identifier: machine.identifier,
                 fullName: machine.fullName,
@@ -2006,6 +2008,8 @@ export function registerMachineTools(registry: ToolRegistry): void {
                     headType: (state as { headType?: string }).headType || null,
                     toolHead: (state as { toolHead?: string }).toolHead || null,
                 } : null,
+                // The Ray only: head state unknown (never "off") and the MCP's own laser words, advisory.
+                ...(connected && toolheadNote ? { toolhead: toolheadNote } : {}),
             };
         },
     });
@@ -2018,13 +2022,19 @@ export function registerMachineTools(registry: ToolRegistry): void {
             + 'says which machine this is ({identifier, type, hasZ}): on a machine with hasZ false (the Ray) there is no Z '
             + 'axis, no motion floor and no traverse height - XY moves run at its only height and move_z is refused. Motion '
             + 'and staging refuse unless reliability is verified/heartbeat/cached-offset; awaiting-resync clears on the next '
-            + 'coherent beat (2 s). Never compute machine = work - originOffset yourself. Read-only.',
+            + 'coherent beat (2 s). Never compute machine = work - originOffset yourself. On a machine whose firmware never reports '
+            + 'its head state (the Ray) `toolhead` says so - state unknown, never off - with `mcp_sent_laser`, an ADVISORY record of '
+            + 'the laser words this MCP itself sent (jobs from Luban\'s UI or the phone app are invisible to it). Read-only.',
         inputSchema: {
             type: 'object',
             properties: {},
             additionalProperties: false,
         },
-        handler: async () => getPositionSnapshot(),
+        handler: async () => {
+            const snapshot = getPositionSnapshot();
+            const toolheadNote = connectedToolheadNote();
+            return toolheadNote ? { ...snapshot, toolhead: toolheadNote } : snapshot;
+        },
     });
 
     registry.register({
