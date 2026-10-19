@@ -541,3 +541,27 @@ export const TRACK_SEARCH_RADIUS_PX: Bounded = { default: 120, min: 20, max: 250
  * outliving the bed it described - a stored setting, so it must be bounded.
  */
 export const LANDMARK_CONFIRM_TTL_HOURS: Bounded = { default: 24, min: 1, max: 168 };
+
+/**
+ * Motion rules (Settings -> MCP Server -> Motion rules, R13): the head-room a
+ * move at a COMPUTED safe height (below top Z) keeps above the highest known
+ * obstacle or bed contact of the toolhead + tool. Operator-stated per machine,
+ * Settings only. Ideal 50 mm is the operator's figure (2026-10-19); the
+ * minimum defaults to 20 mm, four times the per-obstacle CLEARANCE_MARGIN_MM
+ * (landmarkClearance.ts), because a computed height also has to absorb what
+ * no landmark records. The floor of 5 mm is that margin itself - a computed
+ * height may never be tighter than the slack every crossing check already
+ * adds - and the 150 mm cap matches MARCH_TRAVEL_MM: beyond it the head is
+ * near top Z anyway, where the top-Z rule applies. Ideal >= min is enforced.
+ */
+export const MOTION_RULE_CLEARANCE_IDEAL_MM: Bounded = { default: 50, min: 5, max: 150 };
+export const MOTION_RULE_CLEARANCE_MIN_MM: Bounded = { default: 20, min: 5, max: 150 };
+
+/**
+ * How far the toolhead unit's own lowest point (module body, collet nut,
+ * clip-on shoe) sits below the toolhead reference that tool protrusion is
+ * measured from (set_machine_policy toolhead_body_below_reference_mm). No
+ * default: unstated means unknown. Bounded only because it is stored: no
+ * Snapmaker module is 150 mm tall (the 200 W CNC body is 104.6 mm).
+ */
+export const TOOLHEAD_BODY_BELOW_REFERENCE_MM: Range = { min: 0, max: 150 };

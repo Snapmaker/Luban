@@ -10,6 +10,7 @@ import vm from 'vm';
 import ts from 'typescript';
 import * as machineCapability from '../machineCapability';
 import * as machinePosition from '../machinePosition';
+import * as motionRules from '../motionRules';
 import * as procedureLimits from '../procedureLimits';
 import * as rotaryAxisLine from '../rotaryAxisLine';
 import * as stylusReach from '../stylusReach';
@@ -19,6 +20,9 @@ const A350 = 'Snapmaker 2.0 A350';
 const A150 = 'Snapmaker 2.0 A150';
 const RAY = 'Ray';
 const ORIGINAL = 'Original';
+const A250 = 'Snapmaker 2.0 A250';
+const ARTISAN = 'A400';
+const J1 = 'Snapmaker J1';
 
 /** The operator's per-machine keys as the Luban host held them (pre-#264 build: no mcpTravelMachine). */
 const BOX: { [key: string]: unknown } = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'box-mcp-per-machine-keys.json'), 'utf8'));
@@ -99,10 +103,13 @@ const DEFINITIONS: { [id: string]: machineCapability.MachineDefinitionLike } = {
     [A150]: { identifier: A150, machineType: 'Multi-function 3D Printer', metadata: { size: { x: 160, y: 160, z: 140 } } },
     [RAY]: { identifier: RAY, machineType: 'Laser', metadata: { size: { x: 600, y: 400, z: 0 } } },
     [ORIGINAL]: { identifier: ORIGINAL, machineType: 'Multi-function 3D Printer', metadata: { size: { x: 125, y: 125, z: 125 } } },
+    [A250]: { identifier: A250, machineType: 'Multi-function 3D Printer', metadata: { size: { x: 230, y: 250, z: 230 } } },
+    [ARTISAN]: { identifier: ARTISAN, machineType: 'Multi-function 3D Printer', metadata: { size: { x: 400, y: 400, z: 400 } } },
+    [J1]: { identifier: J1, machineType: 'Printer', metadata: { size: { x: 324, y: 200, z: 200 } } },
 };
 
 /** tools/machine.ts on the real store: Z policy, travel fudge, set_machine_policy. Nothing else of it is exercised. */
-function machineToolsFixture(initial: { [key: string]: unknown } = {}, env: Record<string, string> = {}) {
+export function machineToolsFixture(initial: { [key: string]: unknown } = {}, env: Record<string, string> = {}) {
     const f = machineStoreFixture(initial, env);
     const capabilityFor = (id: string | null) => machineCapability.deriveMachineCapability(id ? DEFINITIONS[id] || null : null, id);
     const tools = load('tools/machine.ts', {
@@ -112,6 +119,7 @@ function machineToolsFixture(initial: { [key: string]: unknown } = {}, env: Reco
         '../machinePosition': machinePosition,
         '../positionOfRecord': { onFrameLatchChange: () => undefined },
         '../procedureLimits': procedureLimits,
+        '../motionRules': motionRules,
         '../registry': { McpToolError },
         '../machineTravel': { DEFAULT_TRAVEL_FUDGE_MM: 25 },
         '../connectedMachine': {

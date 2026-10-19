@@ -102,6 +102,7 @@ import { tests as procedureGatesTests } from './procedureGates.test';
 import { tests as gcodeFormsTests } from './gcodeForms.test';
 import { tests as logicalFrameTests } from './logicalFrame.test';
 import { tests as landmarkReviewTests } from './landmarkReview.test';
+import { tests as motionRulesTests } from './motionRules.test';
 
 type TestCase = [string, () => void | Promise<void>];
 
@@ -197,6 +198,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['gcodeForms', gcodeFormsTests],
     ['logicalFrame', logicalFrameTests],
     ['landmarkReview', landmarkReviewTests],
+    ['motionRules', motionRulesTests],
 ];
 
 async function main(): Promise<void> {

@@ -104,6 +104,7 @@ function registerApis(app) {
     app.get(urljoin(settings.route, 'api/mcp/health'), api.mcp.getHealth);
     app.post(urljoin(settings.route, 'api/mcp'), api.mcp.updateSettings);
     app.post(urljoin(settings.route, 'api/mcp/clear-alarm'), api.mcp.clearAlarm);
+    app.post(urljoin(settings.route, 'api/mcp/motion-rules'), api.mcp.setMotionRule);
 
     // State
     // depecated?

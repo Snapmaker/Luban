@@ -134,6 +134,8 @@ const PLAIN_KEYS: Array<[string, StorePath]> = [
     // the Settings pane's host-wide switch and stays global (tools/machine.ts).
     ['mcpMachineTraverseWithoutApprovalAtSafeZ', ['zPolicy', 'traverseWithoutApprovalAtSafeZ']],
     ['mcpLandmarkConfirmTtlHours', ['landmarkConfirmTtlHours']],
+    // Motion rules R13 (motionRules.ts): computed-height toggle, clearances, toolhead body offset.
+    ['mcpMotionRules', ['motionRules']],
     // {field: {source, setAt}} for what set_machine_policy (or the migration) wrote.
     ['mcpZPolicyProvenance', ['zPolicy', 'provenance']],
     ['mcpTravelFudgeProvenance', ['travelFudge', 'provenance']],
@@ -152,7 +154,8 @@ const PLAIN_KEYS: Array<[string, StorePath]> = [
 
 /** Keys that never existed before WP2: addressed through the store, never migrated. */
 const NEW_KEYS = new Set(['mcpRotaryChuckTopZ', 'mcpRotaryTailstockTopZ', 'mcpMachineTraverseWithoutApprovalAtSafeZ', 'mcpLandmarkConfirmTtlHours',
-    'mcpZPolicyProvenance', 'mcpTravelFudgeProvenance', 'mcpLandmarkConfirmTtlProvenance', 'mcpLandmarksConfirmed']);
+    'mcpZPolicyProvenance', 'mcpTravelFudgeProvenance', 'mcpLandmarkConfirmTtlProvenance', 'mcpLandmarksConfirmed',
+    'mcpMotionRules']);
 
 export const PER_MACHINE_KEYS: { [key: string]: StorePath } = (() => {
     const table: { [key: string]: StorePath } = {};

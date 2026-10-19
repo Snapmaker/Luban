@@ -31,7 +31,8 @@ import {
 } from '../machineTravel';
 import { LEGACY_MACHINE_IDENTIFIER, MachineSummary } from '../machineCapability';
 import { ConnectionStatusLike, baseIdentifier, machineStore, setMachineStoreSources } from '../machineStore';
-import { LANDMARK_CONFIRM_TTL_HOURS } from '../procedureLimits';
+import { LANDMARK_CONFIRM_TTL_HOURS, TOOLHEAD_BODY_BELOW_REFERENCE_MM } from '../procedureLimits';
+import { COMPUTED_HEIGHT_TOGGLE, MotionRulesSection, computedHeightTraversePolicy, motionRulesOf, validateClearanceSettings } from '../motionRules';
 import {
     MACHINES,
     connectedDialect,
@@ -384,53 +385,135 @@ export function traverseWithoutApprovalSource(): 'env' | 'config' | 'default' {
     return stored === undefined || stored === null || stored === '' ? 'default' : 'config';
 }
 
+/** The per-machine toggle's name on Settings -> MCP Server -> Motion rules (and in every reason that points there). */
+export const MOTION_RULE_TOGGLE = 'Move at safe top Z without approval';
+const MOTION_RULES_PANE = 'Settings > MCP > Motion rules';
+/** The provenance source the Settings pane writes; nothing on the MCP tool surface may write it. */
+export const MOTION_RULE_SETTINGS_SOURCE = 'settings';
+
+export interface MotionRuleEligibility {
+    /** Whether the Motion rules toggle can be turned ON for this machine at all. */
+    eligible: boolean;
+    /** Why not, or null when eligible. */
+    reason: string | null;
+}
+
+/**
+ * Whether `machineKey` may move at safe top Z without approval once the
+ * operator allows it (operator ruling 2026-10-19, tyeth/Luban#265 WP9): the
+ * 2.0-family absolute transport (gcodeDialect.ts transportForm 'sm2': A150 /
+ * A250 / A350 and the Artisan), a Z axis and a stated Z policy (the A350 has
+ * defaults). A relative-step machine (Ray, Original, J1) has no top-Z
+ * transport to skip a click for. Evaluated on every gate read, so clearing a
+ * machine's Z policy takes its toggle back out of force.
+ */
+export function motionRuleEligibility(machineKey: string | null): MotionRuleEligibility {
+    if (machineKey === null) {
+        return { eligible: false, reason: 'no machine is connected or selected' };
+    }
+    const identifier = baseIdentifier(machineKey);
+    const capability = machineCapabilityFor(identifier);
+    const form = capability.dialect ? capability.dialect.transportForm : 'none';
+    if (form === 'relative-steps') {
+        return { eligible: false, reason: 'relative-step machine: every move is staged' };
+    }
+    if (form !== 'sm2') {
+        return {
+            eligible: false,
+            reason: `no known transport form (dialect ${capability.dialect ? capability.dialect.id : 'unknown'}): every move is staged`,
+        };
+    }
+    if (!capability.hasZ) {
+        return { eligible: false, reason: 'no Z axis, so there is no safe top Z: every move is staged' };
+    }
+    const policy = zPolicyFor(machineKey);
+    if (policy.missing.length) {
+        return { eligible: false, reason: `no ${policy.missing.join(' / ')} is stated: state both heights with set_machine_policy first` };
+    }
+    return { eligible: true, reason: null };
+}
+
+/** The per-machine flag and who set it: the stored value, else ON for the A350 and OFF for every other machine. */
+function machineTraverseFlag(machineKey: string | null): { value: boolean; stored: boolean | null; source: string; setAt: number | null } {
+    const identifier = machineKey === null ? null : baseIdentifier(machineKey);
+    const stored = parseSwitch(machineKey === null ? undefined : machineStore.getFor(machineKey, 'mcpMachineTraverseWithoutApprovalAtSafeZ'));
+    const provenance = storedProvenance(machineKey, 'mcpZPolicyProvenance');
+    const stated = provenance && provenance.traverseWithoutApprovalAtSafeZ;
+    if (stored === null) {
+        return { value: identifier === LEGACY_MACHINE_IDENTIFIER && DEFAULT_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z, stored, source: 'default', setAt: null };
+    }
+    return { value: stored, stored, source: (stated && stated.source) || 'config', setAt: (stated && stated.setAt) || null };
+}
+
 export interface TraverseApproval {
     /** What the motion tools honour: the setting AND the machine gate. */
     enabled: boolean;
     /** The setting before the gate. */
     setting: boolean;
-    /** env > host switch OFF > this machine's set_machine_policy value > host switch ON > default. */
+    /** env > host switch OFF > this machine's flag (Motion rules / set_machine_policy) > host switch ON > default. */
     source: 'env' | 'host-setting' | 'machine' | 'default';
     /** Why the gate holds approval-free transport off on this machine, or null when it does not. */
     gatedBy: string | null;
+    /** The machine's Motion rules toggle: its value, who set it ('settings' = the operator's click) and when. */
+    machineFlag: { value: boolean; source: string; setAt: number | null };
+    eligibility: MotionRuleEligibility;
 }
 
 /**
- * Approval-free transport for `machineKey` (default: the current machine).
- * R9: never on a machine whose motion has not been verified on hardware -
- * today only the A350 - and never while a device conflict (machineStore.ts)
- * leaves the records unconfirmed. The host switch OFF wins over any machine.
+ * Approval-free transport for `machineKey` (default: the current machine):
+ * host switch ON (env > configstore > default) AND this machine's Motion
+ * rules toggle ON AND the machine eligible (motionRuleEligibility), and never
+ * while a device conflict (machineStore.ts) leaves the records unconfirmed.
+ * The host switch OFF wins over any machine. The A350's toggle defaults ON
+ * (unchanged since #241); every other eligible machine (A150, A250, Artisan)
+ * stays OFF until the operator turns it on in Settings - set_machine_policy
+ * can turn it off but never on there (R9 still holds for the agent).
  */
 export function traverseWithoutApprovalPolicy(machineKey?: string | null): TraverseApproval {
     const current = machineStore.currentMachine();
     const key = machineKey === undefined ? current.machineKey : machineKey;
     const identifier = key === null ? null : baseIdentifier(key);
+    const a350 = identifier === LEGACY_MACHINE_IDENTIFIER;
     let setting: boolean;
     let source: TraverseApproval['source'];
     const env = parseSwitch(process.env.LUBAN_MCP_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z);
     const host = parseSwitch(config.get('mcpTraverseWithoutApprovalAtSafeZ'));
-    const perMachine = parseSwitch(key === null ? undefined : machineStore.getFor(key, 'mcpMachineTraverseWithoutApprovalAtSafeZ'));
-    if (env !== null) {
+    const flag = machineTraverseFlag(key);
+    const operatorOff = flag.stored === false && flag.source === MOTION_RULE_SETTINGS_SOURCE;
+    if (env !== null && !(env && operatorOff)) {
+        // The env pin is the host switch: it can never turn ON a machine the
+        // operator turned OFF on the Motion rules pane.
         [setting, source] = [env, 'env'];
     } else if (host === false) {
         [setting, source] = [false, 'host-setting'];
-    } else if (perMachine !== null) {
-        [setting, source] = [perMachine, 'machine'];
+    } else if (flag.stored !== null) {
+        [setting, source] = [flag.stored, 'machine'];
+    } else if (!a350) {
+        [setting, source] = [false, 'default'];
     } else if (host !== null) {
         [setting, source] = [host, 'host-setting'];
     } else {
         [setting, source] = [DEFAULT_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z, 'default'];
     }
+    const eligibility = motionRuleEligibility(key);
     let gatedBy: string | null = null;
-    // TODO(WP1, tyeth/Luban#265): gate on the dialect's verifiedOnHardware once
-    // machineCapability carries it; until then the A350 is the one verified machine.
-    if (identifier !== LEGACY_MACHINE_IDENTIFIER) {
-        gatedBy = `approval-free transport is allowed only on a machine verified on hardware (the ${LEGACY_MACHINE_IDENTIFIER}); `
-            + `${identifier || 'no machine'} stages every move`;
+    if (!eligibility.eligible) {
+        gatedBy = `${identifier || 'no machine'}: ${eligibility.reason}`;
+    } else if (!a350 && !(flag.value && flag.source === MOTION_RULE_SETTINGS_SOURCE)) {
+        // Off the A350 only the operator's click in Settings turns it on - an
+        // env pin or a hand-edited store does not.
+        gatedBy = `enable '${MOTION_RULE_TOGGLE}' for ${key} in ${MOTION_RULES_PANE} to move at safe top Z without approval`;
     } else if (key === current.machineKey && current.deviceConflict) {
         gatedBy = `device conflict: ${current.deviceConflict.note}`;
     }
-    return { enabled: setting && gatedBy === null, setting, source, gatedBy };
+    return {
+        enabled: setting && gatedBy === null,
+        setting,
+        source,
+        gatedBy,
+        machineFlag: { value: flag.value, source: flag.source, setAt: flag.setAt },
+        eligibility,
+    };
 }
 
 /** What traverse_xy / goto_tool_change_position / move_z honour (safeZPolicy.ts). */
@@ -1006,7 +1089,7 @@ export function setMachinePolicy(args: { [key: string]: unknown }) {
     const capability = machineCapabilityFor(identifier);
     const given = (name: string) => args[name] !== undefined;
     const names = ['safe_traverse_z', 'motion_floor_z', 'traverse_without_approval_at_safe_z', 'travel_fudge_mm', 'travel_fudge_x_mm',
-        'travel_fudge_y_mm', 'landmark_confirm_ttl_hours'];
+        'travel_fudge_y_mm', 'landmark_confirm_ttl_hours', 'traverse_without_approval_at_computed_height', 'toolhead_body_below_reference_mm'];
     if (!names.some(given)) {
         throw new McpToolError(`Nothing to set: pass one or more of ${names.join(', ')}.`);
     }
@@ -1016,6 +1099,9 @@ export function setMachinePolicy(args: { [key: string]: unknown }) {
     const writes: Array<[string, unknown]> = [];
     const updated: string[] = [];
     const cleared: string[] = [];
+    // One provenance object for the Z heights and the approval flag, written once below.
+    const zProvenance = { ...(storedProvenance(key, 'mcpZPolicyProvenance') || {}) };
+    let zProvenanceChanged = false;
 
     const zArgs: Array<[string, string, 'safeTraverseZ' | 'motionFloorZ']> = [
         ['safe_traverse_z', 'mcpSafeTraverseZ', 'safeTraverseZ'],
@@ -1031,7 +1117,6 @@ export function setMachinePolicy(args: { [key: string]: unknown }) {
         // The model's Z travel. The A350's park Z328 sits above its profile
         // (stagingFrameContext), so its own default stays statable.
         const zMax = identifier === LEGACY_MACHINE_IDENTIFIER ? Math.max(capability.size.z, DEFAULT_SAFE_TRAVERSE_Z) : capability.size.z;
-        const zProvenance = { ...(storedProvenance(key, 'mcpZPolicyProvenance') || {}) };
         const before = zPolicyFor(key);
         const after: { [field: string]: number | null } = {};
         for (const [name, configKey, field] of zArgs) {
@@ -1057,25 +1142,83 @@ export function setMachinePolicy(args: { [key: string]: unknown }) {
             throw new McpToolError(`motion_floor_z ${after.motionFloorZ} is above safe_traverse_z ${after.safeTraverseZ}: the floor can never `
                 + 'be above the park height.');
         }
-        writes.push(['mcpZPolicyProvenance', zProvenance]);
+        zProvenanceChanged = true;
     }
 
     if (given('traverse_without_approval_at_safe_z')) {
         const raw = args.traverse_without_approval_at_safe_z;
-        if (raw === null) {
-            writes.push(['mcpMachineTraverseWithoutApprovalAtSafeZ', undefined]);
-            cleared.push('traverse_without_approval_at_safe_z');
-        } else if (typeof raw !== 'boolean') {
+        if (raw !== null && typeof raw !== 'boolean') {
             throw new McpToolError('traverse_without_approval_at_safe_z must be true, false or null.');
+        }
+        // The agent may always turn it OFF. ON (or null, which is ON again on
+        // the A350) only where the A350 default applies - the one machine whose
+        // motion is verified on hardware (R9) - and never over the operator's
+        // own OFF from Settings -> MCP -> Motion rules. Any other machine is
+        // turned on there by the operator, never here.
+        const flag = machineTraverseFlag(key);
+        const operatorOff = flag.stored === false && flag.source === MOTION_RULE_SETTINGS_SOURCE;
+        if (raw === true && identifier !== LEGACY_MACHINE_IDENTIFIER) {
+            throw new McpToolError(`Refusing to turn approval-free transport ON for ${identifier}: off the ${LEGACY_MACHINE_IDENTIFIER} (the `
+                + `machine verified on hardware) only the operator can enable '${MOTION_RULE_TOGGLE}', in ${MOTION_RULES_PANE}.`);
+        }
+        if (raw !== false && operatorOff && identifier === LEGACY_MACHINE_IDENTIFIER) {
+            throw new McpToolError(`Refusing to turn approval-free transport back ON for ${key}: the operator turned '${MOTION_RULE_TOGGLE}' `
+                + `OFF in ${MOTION_RULES_PANE}; only they can turn it on again there.`);
+        }
+        if (raw === false && operatorOff) {
+            // Already off by the operator's click: keep their provenance, so a
+            // later agent ON stays refused.
+        } else if (raw === null) {
+            writes.push(['mcpMachineTraverseWithoutApprovalAtSafeZ', undefined]);
+            delete zProvenance.traverseWithoutApprovalAtSafeZ;
+            cleared.push('traverse_without_approval_at_safe_z');
         } else {
-            // TODO(WP1, tyeth/Luban#265): verifiedOnHardware from the dialect table instead of the identifier.
-            if (raw && identifier !== LEGACY_MACHINE_IDENTIFIER) {
-                throw new McpToolError(`Refusing to turn approval-free transport ON for ${identifier}: only a machine whose motion is verified `
-                    + `on hardware (the ${LEGACY_MACHINE_IDENTIFIER}) may skip the confirm page.`);
-            }
             writes.push(['mcpMachineTraverseWithoutApprovalAtSafeZ', raw]);
+            zProvenance.traverseWithoutApprovalAtSafeZ = { source, setAt: at };
             updated.push('traverse_without_approval_at_safe_z');
         }
+        zProvenanceChanged = true;
+    }
+    if (zProvenanceChanged) {
+        writes.push(['mcpZPolicyProvenance', zProvenance]);
+    }
+
+    // Motion rules R13 (motionRules.ts). The computed-height toggle: an agent
+    // may only turn it OFF, on any machine - the operator turns it on in
+    // Settings. The toolhead body offset is agent-measurable, so it is stated
+    // here like every other measured machine value.
+    if (given('traverse_without_approval_at_computed_height') || given('toolhead_body_below_reference_mm')) {
+        const rules: MotionRulesSection = { ...motionRulesOf({ motionRules: machineStore.getFor(key, 'mcpMotionRules') }) };
+        if (given('traverse_without_approval_at_computed_height')) {
+            const raw = args.traverse_without_approval_at_computed_height;
+            if (raw === true) {
+                throw new McpToolError(`Refusing to turn '${COMPUTED_HEIGHT_TOGGLE}' ON for ${key}: only the operator can, in ${MOTION_RULES_PANE}.`);
+            }
+            if (raw !== false && raw !== null) {
+                throw new McpToolError('traverse_without_approval_at_computed_height must be false or null (only the operator turns it on).');
+            }
+            // Never overwrite the operator's own OFF: their provenance stays.
+            if (!(rules.computedHeight && rules.computedHeight.value === false && rules.computedHeight.source === MOTION_RULE_SETTINGS_SOURCE)) {
+                rules.computedHeight = { value: false, source, setAt: at };
+            }
+            updated.push('traverse_without_approval_at_computed_height');
+        }
+        if (given('toolhead_body_below_reference_mm')) {
+            if (args.toolhead_body_below_reference_mm === null) {
+                delete rules.toolheadBodyBelowReferenceMm;
+                cleared.push('toolhead_body_below_reference_mm');
+            } else {
+                rules.toolheadBodyBelowReferenceMm = {
+                    value: policyNumber('toolhead_body_below_reference_mm', args.toolhead_body_below_reference_mm,
+                        [TOOLHEAD_BODY_BELOW_REFERENCE_MM.min, TOOLHEAD_BODY_BELOW_REFERENCE_MM.max],
+                        'mm the toolhead unit\'s lowest point sits below the toolhead reference, measured'),
+                    source,
+                    setAt: at,
+                };
+                updated.push('toolhead_body_below_reference_mm');
+            }
+        }
+        writes.push(['mcpMotionRules', rules]);
     }
 
     if (FUDGE_ARGS.some(([name]) => given(name))) {
@@ -1121,6 +1264,222 @@ export function setMachinePolicy(args: { [key: string]: unknown }) {
         }
     }
     return { machineKey: key, updated, cleared, policy: describeMachinePolicy(key) };
+}
+
+/** Every machine the MCP knows: the per-machine store's entries plus the connected / selected machine. */
+function knownMachineKeys(): string[] {
+    const keys = Object.keys(machineStore.load().machines);
+    const current = machineStore.currentMachine().machineKey;
+    if (current && !keys.includes(current)) {
+        keys.push(current);
+    }
+    return keys;
+}
+
+/** The facts a caller outside this module supplies for the CURRENT machine (api-mcp.js reads clearanceContext). */
+export interface MotionRuleLiveFacts {
+    /** Trusted tool protrusion of the connected machine's fitted tool (clearanceContext.currentToolProtrusion().mm). */
+    toolProtrusionMm?: number | null;
+    toolProtrusionNote?: string | null;
+}
+
+/**
+ * The landmark review (#265 WP5) read defensively: WP5 writes
+ * `landmarksConfirmedAt` on the machine's entry. Absent = no review in this
+ * build yet (unknown); a time older than the review validity is stale.
+ */
+function landmarkReviewFact(machineKey: string): { confirmed: boolean | null; note: string } {
+    const entry = machineStore.load().machines[machineKey];
+    const raw = entry ? (entry as { landmarksConfirmedAt?: unknown }).landmarksConfirmedAt : undefined;
+    if (raw === undefined) {
+        return { confirmed: null, note: 'unknown until the landmark review lands (#265 WP5)' };
+    }
+    if (typeof raw !== 'number' || !Number.isFinite(raw)) {
+        return { confirmed: false, note: 'landmarks not confirmed (confirm_landmarks)' };
+    }
+    const ttl = landmarkConfirmTtlHours(machineKey);
+    if (Date.now() - raw > ttl.hours * 3600 * 1000) {
+        return { confirmed: false, note: `landmark review is stale (older than ${ttl.hours} h)` };
+    }
+    return { confirmed: true, note: `landmarks confirmed ${new Date(raw).toISOString()}` };
+}
+
+/** Measured physical bed Z for `machineKey` (set_probe_geometry bed_plane_z; env LUBAN_MCP_BED_PLANE_Z pins the current machine). */
+function bedPlaneZFor(machineKey: string, isCurrent: boolean): number | null {
+    const env = String(process.env.LUBAN_MCP_BED_PLANE_Z || '').trim();
+    const raw = isCurrent && env ? env : machineStore.getFor(machineKey, 'mcpBedPlaneZ');
+    if (raw === undefined || raw === null || raw === '') {
+        return null;
+    }
+    const z = Number(raw);
+    return Number.isFinite(z) ? z : null;
+}
+
+/**
+ * Motion rules R13 for one machine (motionRules.ts computedHeightTraversePolicy):
+ * what moving at a computed safe height below top Z needs, and whether the
+ * machine has it. Display and storage only - no motion path reads it yet.
+ */
+export function computedHeightRuleFor(machineKey: string, live: MotionRuleLiveFacts = {}) {
+    const current = machineStore.currentMachine();
+    const isCurrent = machineKey === current.machineKey;
+    const eligibility = motionRuleEligibility(machineKey);
+    const review = landmarkReviewFact(machineKey);
+    const liveProtrusion = live.toolProtrusionMm === undefined ? null : live.toolProtrusionMm;
+    let protrusionNote: string | null = null;
+    if (!isCurrent || current.basis !== 'connected') {
+        protrusionNote = 'judged only for the connected machine';
+    } else if (liveProtrusion === null) {
+        protrusionNote = live.toolProtrusionNote || null;
+    }
+    const verdict = computedHeightTraversePolicy({ motionRules: machineStore.getFor(machineKey, 'mcpMotionRules') }, {
+        hostEnabled: traverseWithoutApprovalHostSetting(),
+        eligible: eligibility.eligible,
+        eligibilityReason: eligibility.reason,
+        toolProtrusionMm: isCurrent && current.basis === 'connected' ? liveProtrusion : null,
+        toolProtrusionNote: protrusionNote,
+        bedPlaneZ: bedPlaneZFor(machineKey, isCurrent),
+        landmarksConfirmed: review.confirmed,
+        landmarksNote: review.note,
+    });
+    const section = motionRulesOf({ motionRules: machineStore.getFor(machineKey, 'mcpMotionRules') });
+    const toggle = section.computedHeight;
+    return {
+        toggle: COMPUTED_HEIGHT_TOGGLE,
+        on: !!toggle && toggle.value === true && toggle.source === MOTION_RULE_SETTINGS_SOURCE,
+        source: toggle ? toggle.source : 'default',
+        setAt: toggle ? toggle.setAt : null,
+        eligible: eligibility.eligible,
+        reason: eligibility.reason,
+        clearanceSource: {
+            ideal: section.clearanceIdealMm ? section.clearanceIdealMm.source : 'default',
+            min: section.clearanceMinMm ? section.clearanceMinMm.source : 'default',
+        },
+        toolheadBodyBelowReferenceMm: section.toolheadBodyBelowReferenceMm || null,
+        ...verdict,
+        note: 'Stored and displayed only: no move uses the computed height yet (a later #265 package); below top Z every move stages.',
+    };
+}
+
+/**
+ * Settings -> MCP Server -> Motion rules (GET /api/mcp): the host switch and,
+ * per known machine, its dialect, Z axis, Z policy and travel fudge (read-only
+ * here - heights are stated with set_machine_policy), its "Move at safe top Z
+ * without approval" toggle with eligibility and provenance, and the R13
+ * computed-height rule with what it needs.
+ */
+export function describeMotionRules(live: MotionRuleLiveFacts = {}) {
+    const current = machineStore.currentMachine();
+    return {
+        host: { enabled: traverseWithoutApprovalHostSetting(), source: traverseWithoutApprovalSource() },
+        toggle: MOTION_RULE_TOGGLE,
+        machines: knownMachineKeys().map((machineKey) => {
+            const identifier = baseIdentifier(machineKey);
+            const capability = machineCapabilityFor(identifier);
+            const policy = describeMachinePolicy(machineKey);
+            const approval = policy.traverseWithoutApprovalAtSafeZ;
+            return {
+                machineKey,
+                identifier,
+                current: machineKey === current.machineKey ? current.basis : null,
+                dialect: capability.dialect
+                    ? { id: capability.dialect.id, label: capability.dialect.label, transportForm: capability.dialect.transportForm }
+                    : null,
+                hasZ: capability.hasZ,
+                zPolicy: policy.zPolicy,
+                travelFudge: { xMm: policy.travelFudge.xMm, yMm: policy.travelFudge.yMm, source: policy.travelFudge.source },
+                traverseWithoutApproval: {
+                    on: approval.machineFlag.value && (identifier === LEGACY_MACHINE_IDENTIFIER
+                        || approval.machineFlag.source === MOTION_RULE_SETTINGS_SOURCE),
+                    effective: approval.enabled,
+                    eligible: approval.eligibility.eligible,
+                    reason: approval.eligibility.reason,
+                    source: approval.machineFlag.source,
+                    setAt: approval.machineFlag.setAt,
+                    gatedBy: approval.gatedBy,
+                },
+                computedHeight: computedHeightRuleFor(machineKey, live),
+            };
+        }),
+    };
+}
+
+/**
+ * The operator's edit of one machine's Motion rules (POST
+ * /api/mcp/motion-rules). The ONE path that turns either approval-free rule
+ * ON off the A350 defaults; it is served only by the settings API, never
+ * registered as an MCP tool. OFF is accepted for any known machine; ON only
+ * for an eligible one, refused with the reason. Every write records source
+ * 'settings' and the time. Body fields (each optional, at least one):
+ * traverseWithoutApprovalAtSafeZ, computedHeightTraverse (booleans),
+ * clearanceIdealMm, clearanceMinMm (mm; null or '' = default).
+ */
+export function setMotionRuleFromSettings(body: { [field: string]: unknown }) {
+    const { machineKey } = body;
+    if (typeof machineKey !== 'string' || !machineKey.trim()) {
+        throw new McpToolError('machineKey must name a machine from the Motion rules list.');
+    }
+    const fields = ['traverseWithoutApprovalAtSafeZ', 'computedHeightTraverse', 'clearanceIdealMm', 'clearanceMinMm'];
+    if (!fields.some((field) => body[field] !== undefined)) {
+        throw new McpToolError(`Nothing to set: pass one or more of ${fields.join(', ')}.`);
+    }
+    for (const field of ['traverseWithoutApprovalAtSafeZ', 'computedHeightTraverse']) {
+        if (body[field] !== undefined && typeof body[field] !== 'boolean') {
+            throw new McpToolError(`${field} must be true or false.`);
+        }
+    }
+    const key = machineKey.trim();
+    if (!knownMachineKeys().includes(key)) {
+        throw new McpToolError(`${key} is not a machine the MCP knows (connect or select it first).`);
+    }
+    const current = machineStore.currentMachine();
+    if (key === current.machineKey && current.deviceConflict) {
+        throw new McpToolError(`Refusing to change ${key} while its device conflict is open: ${current.deviceConflict.note}`);
+    }
+    if (body.traverseWithoutApprovalAtSafeZ === true || body.computedHeightTraverse === true) {
+        const eligibility = motionRuleEligibility(key);
+        if (!eligibility.eligible) {
+            const toggle = body.traverseWithoutApprovalAtSafeZ === true ? MOTION_RULE_TOGGLE : COMPUTED_HEIGHT_TOGGLE;
+            throw new McpToolError(`'${toggle}' cannot be turned on for ${key}: ${eligibility.reason}.`);
+        }
+    }
+    // Validate everything before the first write.
+    const rules: MotionRulesSection = { ...motionRulesOf({ motionRules: machineStore.getFor(key, 'mcpMotionRules') }) };
+    let clearances: { idealMm: number | null; minMm: number | null } | null = null;
+    if (body.clearanceIdealMm !== undefined || body.clearanceMinMm !== undefined) {
+        try {
+            clearances = validateClearanceSettings(body, rules);
+        } catch (err) {
+            throw new McpToolError((err as Error).message);
+        }
+    }
+    const at = Date.now();
+    const stated = { source: MOTION_RULE_SETTINGS_SOURCE, setAt: at };
+    if (typeof body.traverseWithoutApprovalAtSafeZ === 'boolean') {
+        const provenance = { ...(storedProvenance(key, 'mcpZPolicyProvenance') || {}) };
+        provenance.traverseWithoutApprovalAtSafeZ = stated;
+        machineStore.setFor(key, 'mcpMachineTraverseWithoutApprovalAtSafeZ', body.traverseWithoutApprovalAtSafeZ);
+        machineStore.setFor(key, 'mcpZPolicyProvenance', provenance);
+    }
+    if (typeof body.computedHeightTraverse === 'boolean') {
+        rules.computedHeight = { value: body.computedHeightTraverse, ...stated };
+    }
+    if (clearances) {
+        for (const [field, value] of [['clearanceIdealMm', clearances.idealMm], ['clearanceMinMm', clearances.minMm]] as const) {
+            if (body[field] === undefined) {
+                continue;
+            }
+            if (value === null) {
+                delete rules[field];
+            } else {
+                rules[field] = { value, ...stated };
+            }
+        }
+    }
+    if (typeof body.computedHeightTraverse === 'boolean' || clearances) {
+        machineStore.setFor(key, 'mcpMotionRules', rules);
+    }
+    return { machineKey: key, traverseWithoutApprovalAtSafeZ: traverseWithoutApprovalPolicy(key), computedHeight: computedHeightRuleFor(key) };
 }
 
 export function registerMachineTools(registry: ToolRegistry): void {
@@ -1247,15 +1606,19 @@ export function registerMachineTools(registry: ToolRegistry): void {
             + 'lowest machine Z any XY move over 1 mm may happen at. Both are machine Z, stated from this machine (its home Z / '
             + 'top of travel), never copied from another model. Only the Snapmaker 2.0 A350 has defaults (328 / 320); on any '
             + 'other machine with a Z axis every Z-planning tool refuses until both are stated. Not applicable on a machine with '
-            + 'no Z axis (the Ray). traverse_without_approval_at_safe_z can only be turned ON for a machine verified on hardware '
-            + '(the A350). travel_fudge_* widen the model box at each end of each axis (default 25 mm). null clears a value. '
+            + 'no Z axis (the Ray). traverse_without_approval_at_safe_z: false turns approval-free top-Z moves OFF on any machine; '
+            + 'true only on the A350 (verified on hardware) and never over the operator\'s own OFF - on an A150 / A250 / Artisan '
+            + 'only the operator turns it on, in Settings > MCP > Motion rules. travel_fudge_* widen the model box at each end of '
+            + 'each axis (default 25 mm). null clears a value. '
             + 'Each value records its source and time; get_machine_profile.policy reads them back.',
         inputSchema: {
             type: 'object',
             properties: {
                 safe_traverse_z: { type: ['number', 'null'], description: 'Park height, machine Z. Must be within this machine\'s Z travel.' },
                 motion_floor_z: { type: ['number', 'null'], description: 'Lowest machine Z for XY transport; not above safe_traverse_z.' },
-                traverse_without_approval_at_safe_z: { type: ['boolean', 'null'], description: 'Approval-free transport at the park height. ON only on a hardware-verified machine.' },
+                traverse_without_approval_at_safe_z: { type: ['boolean', 'null'], description: 'Approval-free transport at the park height. OFF on any machine; ON only on the A350 (others: Settings > MCP > Motion rules).' },
+                traverse_without_approval_at_computed_height: { type: ['boolean', 'null'], description: 'Approval-free moves at a computed safe height below top Z: false only (the operator turns it on in Settings > MCP > Motion rules).' },
+                toolhead_body_below_reference_mm: { type: ['number', 'null'], description: 'Measured mm the toolhead unit\'s own lowest point (body, collet nut, clip-on shoe) sits below the toolhead reference tool protrusion is measured from.' },
                 travel_fudge_mm: { type: ['number', 'null'], description: 'mm beyond the model box at each end of X and Y (default 25).' },
                 travel_fudge_x_mm: { type: ['number', 'null'], description: 'Per-axis override of travel_fudge_mm for X.' },
                 travel_fudge_y_mm: { type: ['number', 'null'], description: 'Per-axis override of travel_fudge_mm for Y.' },

@@ -1,11 +1,12 @@
 import config from '../configstore';
 import { getMcpHealth, getMcpStatus } from '../mcp';
 import { CA_FILE_CONFIG_KEY } from '../mcp/caTrust';
+import { currentToolProtrusion } from '../mcp/clearanceContext';
 import { MAX_MAX_CLIENTS, MAX_STREAM_FPS, MIN_STREAM_FPS, STREAM_ENABLED_KEY, STREAM_FPS_KEY, STREAM_MAX_CLIENTS_KEY, cameraStreamService } from '../mcp/cameraStream';
 import { MAX_RECENT_LIMIT, MIN_RECENT_LIMIT, diagnosticsRecentLimit } from '../mcp/diagnostics';
 import { DEFAULT_BLINKA_ENV, resolveGpioFeedConfig } from '../mcp/gpioFeed';
 import { JOB_INBOX_EXTRA_ENV, JOB_INBOX_EXTRA_KEY, MAX_JOB_EVENT_LIMIT, MIN_JOB_EVENT_LIMIT, approvalHandoff, gcodeUploads, jobEventLimit, jobInbox } from '../mcp/jobs';
-import { traverseWithoutApprovalHostSetting, traverseWithoutApprovalSource } from '../mcp/tools/machine';
+import { describeMotionRules, setMotionRuleFromSettings, traverseWithoutApprovalHostSetting, traverseWithoutApprovalSource } from '../mcp/tools/machine';
 import { probeFeedService, resolveProbeFeedConfig, resolveProbeTransportKind, resolveSensorEnabled } from '../mcp/probeFeed';
 import { listAudioSources } from '../mcp/audioDevices';
 import { describeSourceChoice, matchAudioDevice } from '../mcp/audioSelection';
@@ -261,6 +262,26 @@ function settingsPayload() {
     };
 }
 
+// Motion rules (tools/machine.ts describeMotionRules, tyeth/Luban#265 WP9):
+// per known machine, its dialect, Z policy, travel fudge, the "Move at safe
+// top Z without approval" toggle and the R13 computed-height rule with what it
+// needs (the fitted tool's trusted protrusion comes from clearanceContext).
+// A status read must never fail the pane.
+function motionRulesSettings() {
+    try {
+        let live = {};
+        try {
+            const protrusion = currentToolProtrusion();
+            live = { toolProtrusionMm: protrusion.mm, toolProtrusionNote: protrusion.mm === null ? protrusion.note : null };
+        } catch (err) {
+            live = { toolProtrusionMm: null, toolProtrusionNote: err.message };
+        }
+        return describeMotionRules(live);
+    } catch (err) {
+        return { error: err.message };
+    }
+}
+
 export const getHealth = (req, res) => {
     res.send(getMcpHealth());
 };
@@ -272,6 +293,7 @@ export const getStatus = async (req, res) => {
     } catch (err) {
         payload.vibration = { error: err.message };
     }
+    payload.motionRules = motionRulesSettings();
     try {
         payload.spindleTelemetry = await spindleTelemetrySettings();
     } catch (err) {
@@ -300,6 +322,26 @@ export const clearAlarm = (req, res) => {
     }
     const reason = String((req.body || {}).reason || 'cleared from the Workspace connection panel');
     res.send({ cleared: true, previousTrip: trip, reason, probeFeed: probeFeedService.status() });
+};
+
+/**
+ * The operator's edit of one machine's Motion rules (Settings -> MCP Server ->
+ * Motion rules): the "Move at safe top Z without approval" and computed-height
+ * toggles and the computed-height clearances. The only way either toggle is
+ * turned ON off the A350 default - no MCP tool can. Applies at once (read on every
+ * traverse_xy / goto_tool_change_position / move_z call); an ineligible machine
+ * is refused (400) with the reason. Body: { machineKey, traverseWithoutApprovalAtSafeZ?,
+ * computedHeightTraverse?, clearanceIdealMm?, clearanceMinMm? }.
+ */
+export const setMotionRule = (req, res) => {
+    let result;
+    try {
+        result = setMotionRuleFromSettings(req.body || {});
+    } catch (err) {
+        res.status(ERR_BAD_REQUEST).send({ msg: err.message, motionRules: motionRulesSettings() });
+        return;
+    }
+    res.send({ ...result, motionRules: motionRulesSettings() });
 };
 
 /**
