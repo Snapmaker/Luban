@@ -1733,7 +1733,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                     warning: run.settle.warning,
                     note: `Executed on the call under ${policy.policy} (no confirm page): a Z-only, UP-only move to no higher than the `
                         + `traverse height ${safeTraverseZ()} on a ${position.reliability} position. The job is on the dashboard with this reason. `
-                        + 'Turn this off in Settings -> MCP Server -> Job approval.',
+                        + 'Turn this off in Settings > MCP > Motion rules.',
                 };
             }
 
@@ -1951,7 +1951,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                     note: `Executed on the call under ${policy.policy} (no confirm page): the head was already at the traverse height `
                         + `(machine Z ${mz.toFixed(3)}) on a ${position.reliability} position, Z was never written, and every leg was `
                         + 'checked against the landmarks and the travel. The job is on the dashboard with this reason; stop_gcode_job '
-                        + 'still applies to a running series. Turn this off in Settings -> MCP Server -> Job approval.',
+                        + 'still applies to a running series. Turn this off in Settings > MCP > Motion rules.',
                 };
             }
 
