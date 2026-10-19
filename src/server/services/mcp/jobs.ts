@@ -18,7 +18,7 @@ import { JobDashboardFeed, summarizeDashboardJob } from './jobDashboardState';
 import { JobEnding, McpJobKind, McpJobState, TERMINAL_JOB_STATES } from './jobEnding';
 import { resolveTelemetryConfig } from './telemetryConfig';
 import { GcodeValidationReport } from './validator';
-import { StagedMachine, machineBindingRefusal } from './jobMachineBinding';
+import { StagedLandmarks, StagedMachine, describeStagedLandmarks, machineBindingRefusal } from './jobMachineBinding';
 import { describeActiveTool } from './activeTool';
 import type { RecoveryEvidence } from './failureRecovery';
 import type { FileStartAttempt } from './fileJobStart';
@@ -194,6 +194,14 @@ export interface McpJob {
      */
     stagedFor?: StagedMachine | null;
     /**
+     * The landmarks enforced on the connected machine when the job was staged
+     * and the operator review's status then (#265 WP8): the confirm page's
+     * Landmarks row. Approving the page approves this job with these
+     * landmarks; it does not confirm the review (confirm_landmarks does).
+     * undefined = no source wired (the inert test harnesses).
+     */
+    landmarksAtStaging?: StagedLandmarks | null;
+    /**
      * Size, SHA-256, line counts and first/last motion lines of EXACTLY the
      * text written to filePath - what start_gcode_job streams. On the
      * confirm page and in describe() so the operator can tell a complete
@@ -308,6 +316,21 @@ export class JobManager {
         this.machineSource = source;
     }
 
+    /** Reads the landmark review of the connected machine (landmarkReviewState.ts); wired by index.ts (#265 WP8). */
+    private landmarksSource: (() => StagedLandmarks | null) | null = null;
+
+    public setLandmarksSource(source: (() => StagedLandmarks | null) | null): void {
+        this.landmarksSource = source;
+    }
+
+    private landmarksNow(): StagedLandmarks | null {
+        try {
+            return this.landmarksSource ? this.landmarksSource() : null;
+        } catch (err) {
+            return { status: 'unknown', landmarks: [], question: `the landmark review could not be read (${(err as Error).message})` };
+        }
+    }
+
     /** Why `action` must be refused because the job is not for the connected machine, or null. */
     public machineBindingRefusal(job: McpJob, action: 'approve' | 'start'): string | null {
         if (!this.machineSource) {
@@ -343,6 +366,7 @@ export class JobManager {
             createdAt: Date.now(),
             validation,
             ...(this.machineSource ? { stagedFor: this.machineSource() } : {}),
+            ...(this.landmarksSource ? { landmarksAtStaging: this.landmarksNow() } : {}),
             identity: describeProgramIdentity(gcode),
             source: source || (kind === 'file' ? { kind: 'inline' } : { kind: 'server' }),
             workspaceRevision: this.workspaceRevision,
@@ -526,6 +550,8 @@ export class JobManager {
             approval: job.approval,
             // eslint-disable-next-line camelcase
             staged_for: job.stagedFor === undefined ? null : job.stagedFor,
+            // eslint-disable-next-line camelcase
+            landmarks_at_staging: job.landmarksAtStaging === undefined ? null : job.landmarksAtStaging,
             startedAt: job.startedAt,
             // eslint-disable-next-line camelcase
             start_attempt: job.startAttempt || null,
@@ -723,6 +749,8 @@ export class JobManager {
             machineText += `; file header: ;machine: ${v.header.machine}${v.header.gcodeFlavor ? `, ;gcode_flavor: ${v.header.gcodeFlavor}` : ''}`;
         }
 
+        const landmarksText = describeStagedLandmarks(job.landmarksAtStaging);
+
         let directBanner = '';
         if (job.kind === 'direct') {
             directBanner = `<p style="background:#fff3cd;border:1px solid #b8860b;padding:10px">
@@ -752,6 +780,7 @@ export class JobManager {
             <table border="1" cellpadding="6" style="border-collapse:collapse">
                 <tr><td>Head</td><td>${escapeHtml(job.headType)}</td></tr>
                 <tr><td><strong>Machine</strong></td><td><strong>${escapeHtml(machineText)}</strong></td></tr>
+                ${landmarksText === null ? '' : `<tr><td><strong>Landmarks</strong></td><td><strong>${escapeHtml(landmarksText)}</strong></td></tr>`}
                 <tr><td>Lines / motion lines</td><td>${v.lineCount} / ${v.motionLineCount}</td></tr>
                 <tr><td>X extents</td><td>${range(v.extents.x)}</td></tr>
                 <tr><td>Y extents</td><td>${range(v.extents.y)}</td></tr>

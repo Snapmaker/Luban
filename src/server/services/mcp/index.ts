@@ -26,7 +26,7 @@ import { registerCamTools } from './tools/cam';
 import { registerEnclosureTools } from './tools/enclosure';
 import { registerGcodeTools, stopGcodeJob } from './tools/gcode';
 import { registerLandmarkTools } from './tools/landmarks';
-import { currentReviewMachineKey, operatorReviews } from './landmarkReviewState';
+import { currentReviewMachineKey, landmarkReviewForConnected, operatorReviews } from './landmarkReviewState';
 import { registerMachineTools } from './tools/machine';
 import { registerProbeTools } from './tools/probe';
 import { registerProbingTools } from './tools/probing';
@@ -301,6 +301,18 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
     // on every motion / staging result, the rotary `stock` scope around the
     // tools that take it (toolResultHooks.ts).
     registry.setCallHooks(liveToolCallHooks());
+    // The confirm page's Landmarks row: what was enforced, and the review status, when each job was staged.
+    jobManager.setLandmarksSource(() => {
+        const review = landmarkReviewForConnected();
+        if (!review.machine.connected) {
+            return null;
+        }
+        return {
+            status: review.status,
+            landmarks: review.landmarks.map((l) => ({ name: l.name, requiredToolheadZ: l.requiredToolheadZ, basis: l.basis })),
+            question: review.question,
+        };
+    });
     registeredToolCount = registry.list().length;
 
     // Operator-facing live camera view; also the single frame source for

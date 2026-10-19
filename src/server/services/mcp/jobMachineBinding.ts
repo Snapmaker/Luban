@@ -63,3 +63,28 @@ export function machineBindingRefusal(staged: StagedMachine | null | undefined, 
     }
     return null;
 }
+
+/** The landmark review as a job records it at staging (#265 WP8). */
+export interface StagedLandmarks {
+    status: string;
+    landmarks: Array<{ name: string; requiredToolheadZ?: number | null; basis?: string | null }>;
+    question: string | null;
+}
+
+/** The confirm page's Landmarks row; null when the job carries no record (jobs staged before WP8, inert harnesses). */
+export function describeStagedLandmarks(staged: StagedLandmarks | null | undefined): string | null {
+    if (staged === undefined) {
+        return null;
+    }
+    if (staged === null) {
+        return 'no machine connected at staging - no landmarks applied';
+    }
+    const list = staged.landmarks.length
+        ? staged.landmarks.map((l) => `${l.name}${l.requiredToolheadZ !== undefined && l.requiredToolheadZ !== null ? ` (needs toolhead Z${l.requiredToolheadZ})` : ''}`).join(', ')
+        : 'none stored for this machine';
+    const review = staged.status === 'confirmed'
+        ? 'review confirmed by the operator'
+        : `review ${staged.status} - approving this page approves THIS job with the landmarks listed; it does not confirm the review `
+            + '(the agent stages that with confirm_landmarks)';
+    return `${list}. Enforced in full whatever the review says; ${review}.`;
+}

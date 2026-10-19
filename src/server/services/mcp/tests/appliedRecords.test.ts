@@ -9,6 +9,7 @@ import * as fs from 'fs';
 import path from 'path';
 
 import * as envelopeChecks from '../envelopeChecks';
+import * as jobMachineBinding from '../jobMachineBinding';
 import * as rotaryAxisLine from '../rotaryAxisLine';
 import * as rotaryCallContext from '../rotaryCallContext';
 import * as rotaryClearance from '../rotaryClearance';
@@ -287,5 +288,14 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         }
         assert.ok(tool.includes('protrusion_reference') || fs.readFileSync(path.join(__dirname, '..', 'tools', 'toolsetter.ts'), 'utf8').includes('protrusion_reference'),
             'set_active_tool protrusion_reference exists');
+    }],
+    ['confirm page: the Landmarks row lists what was enforced at staging and says the click does not confirm the review', () => {
+        const jobs = jobMachineBinding;
+        assert.equal(jobs.describeStagedLandmarks(undefined), null, 'jobs staged before WP8 show no row');
+        assert.match(jobs.describeStagedLandmarks(null), /no machine connected/);
+        const row = jobs.describeStagedLandmarks({ status: 'unconfirmed', landmarks: [{ name: 'rotary', requiredToolheadZ: 280 }, { name: 'clamp', requiredToolheadZ: null }], question: 'q' });
+        assert.match(row, /^rotary \(needs toolhead Z280\), clamp\. Enforced in full/);
+        assert.match(row, /it does not confirm the review/);
+        assert.match(jobs.describeStagedLandmarks({ status: 'confirmed', landmarks: [], question: null }), /none stored for this machine.*review confirmed by the operator/);
     }],
 ];
