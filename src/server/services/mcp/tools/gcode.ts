@@ -40,7 +40,7 @@ import { ComputedHeightDecision, decideComputedHeightTraverse, decideSafeZRaise,
 import { TraversePlan, TraversePlanInput, parseSettleComment, planTraverseXy, traverseMachinePath } from '../traversePlan';
 import { machineFrameMove, needsPlannerSync, relativeStep, workFrameMove } from '../gcodeForms';
 import { machineStatusOf } from '../logicalFrame';
-import { assertToolheadNotOn, connectedConnectionId, connectedDialect, connectedMachineCapability, connectedMachineTag, connectedToolhead,
+import { assertMotorPowered, assertToolheadNotOn, connectedConnectionId, connectedDialect, connectedMachineCapability, connectedMachineTag, connectedToolhead,
     connectedToolheadNote, describeConnectedMachine } from '../connectedMachine';
 import { laserOffSentIn, noteMcpFileJob } from '../toolheadState';
 import { JobFrame, TRANSPORT_REFUSAL, isPureTransport, resolveJobFrame, spindleRefusal, suggestGcode, validateGcode } from '../validator';
@@ -473,6 +473,8 @@ export async function runPolicyApprovedDirectJob(job: McpJob, token: string, sho
     if (!channel || typeof channel.executeGcode !== 'function') {
         throw new McpToolError('The connected channel does not support direct moves.');
     }
+    // As start_gcode_job: the Ray's motors must be powered before the policy approval is spent (#321).
+    await assertMotorPowered('this policy-approved move', 'Nothing was sent.');
     const verdict = jobManager.consumeToken(job, token);
     if (!verdict.ok) {
         throw new McpToolError(verdict.reason || 'Policy approval could not be consumed.');
@@ -1289,7 +1291,9 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             + 'the link: they cannot click what they have not seen. The hand-off can be disabled in Settings -> MCP Server, '
             + 'in which case only confirm_token works. File start transport errors are reconciled against fresh heartbeats; '
             + 'start_unverified means it may have run: never retry/restage. Poll status and ask the operator to review; '
-            + 'stop_gcode_job remains available. Results include retry_safe and machine_status_after.',
+            + 'stop_gcode_job remains available. Results include retry_safe and machine_status_after. On the Ray the motor-power '
+            + 'mode (SACP 0x01 0x48) is read before the approval is used: unless it is STAYPOWER (Control Mode) the start is refused '
+            + 'with the approval intact - the operator switches Luban\'s Set Origin Mode to Control Mode, then call again.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -1392,6 +1396,11 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             if (active && ['starting', 'started', 'start_unverified'].includes(active.state)) {
                 throw new McpToolError('Another job or step is still active; wait for it to finish before starting this job.');
             }
+            // The Ray in Manual Mode (motor power SHUTAll) ACKs motion and
+            // ignores it (#321): read the mode now - the operator can switch
+            // it in Luban at any time - and refuse before the token is spent.
+            // Nothing is read on a machine without the mode (A350, Original).
+            await assertMotorPowered('starting this job', 'Nothing was sent and the approval was not used: start_gcode_job again once it is fixed.');
 
             // Consumed from here on, success or not - a failed start needs a
             // fresh human approval, not a retry loop.

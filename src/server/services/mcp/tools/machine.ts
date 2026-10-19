@@ -39,6 +39,8 @@ import {
     connectedMachineCapability,
     connectedMachineIdentifier,
     connectedMachineTag,
+    connectedMotorPower,
+    connectedMotorPowerNote,
     connectedToolheadNote,
     describeConnectedMachine,
     findMachine,
@@ -1957,6 +1959,8 @@ export function registerMachineTools(registry: ToolRegistry): void {
             const capability = machineCapabilityFor(machine.identifier);
             const connected = identifier === status.machineIdentifier;
             const toolheadNote = connected ? connectedToolheadNote() : null;
+            // The Ray only: its motor-power mode, read fresh (bounded); nothing is read elsewhere.
+            const motorPowerNote = connected ? connectedMotorPowerNote(await connectedMotorPower()) : null;
             return {
                 identifier: machine.identifier,
                 fullName: machine.fullName,
@@ -2010,6 +2014,8 @@ export function registerMachineTools(registry: ToolRegistry): void {
                 } : null,
                 // The Ray only: head state unknown (never "off") and the MCP's own laser words, advisory.
                 ...(connected && toolheadNote ? { toolhead: toolheadNote } : {}),
+                // eslint-disable-next-line camelcase
+                ...(motorPowerNote ? { motor_power: motorPowerNote } : {}),
             };
         },
     });
@@ -2024,7 +2030,10 @@ export function registerMachineTools(registry: ToolRegistry): void {
             + 'and staging refuse unless reliability is verified/heartbeat/cached-offset; awaiting-resync clears on the next '
             + 'coherent beat (2 s). Never compute machine = work - originOffset yourself. On a machine whose firmware never reports '
             + 'its head state (the Ray) `toolhead` says so - state unknown, never off - with `mcp_sent_laser`, an ADVISORY record of '
-            + 'the laser words this MCP itself sent (jobs from Luban\'s UI or the phone app are invisible to it). Read-only.',
+            + 'the laser words this MCP itself sent (jobs from Luban\'s UI or the phone app are invisible to it). On the Ray '
+            + '`motor_power` is its motor-power mode read fresh over SACP 0x01 0x48 ({mode, raw, source, read_at, error, '
+            + 'motion_allowed}): home and job starts refuse unless it is STAYPOWER (Luban\'s Set Origin Mode = Control Mode); '
+            + 'SHUTAll (Manual Mode), ONLYLINEAR and unknown refuse. Read-only.',
         inputSchema: {
             type: 'object',
             properties: {},
@@ -2033,7 +2042,13 @@ export function registerMachineTools(registry: ToolRegistry): void {
         handler: async () => {
             const snapshot = getPositionSnapshot();
             const toolheadNote = connectedToolheadNote();
-            return toolheadNote ? { ...snapshot, toolhead: toolheadNote } : snapshot;
+            const motorPowerNote = connectedMotorPowerNote(await connectedMotorPower());
+            return {
+                ...snapshot,
+                ...(toolheadNote ? { toolhead: toolheadNote } : {}),
+                // eslint-disable-next-line camelcase
+                ...(motorPowerNote ? { motor_power: motorPowerNote } : {}),
+            };
         },
     });
 

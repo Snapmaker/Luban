@@ -33,8 +33,8 @@ import { STOCK_ARG_SCHEMA } from '../rotaryCallContext';
 import { gateDirectXy, planGotoWorkOrigin } from '../directMovePlan';
 import { homeSequence, machineFrameMove, relativeStep, workFrameMove, workFrameRestore, workFrameRestoreCommands } from '../gcodeForms';
 import { TraverseMachine } from '../traversePlan';
-import { assertToolheadNotOn, connectedDialect, connectedMachineIdentifier, connectedMachineTag, connectedToolheadNote,
-    describeConnectedMachine } from '../connectedMachine';
+import { assertMotorPowered, assertToolheadNotOn, connectedDialect, connectedMachineIdentifier, connectedMachineTag, connectedMotorPowerNote,
+    connectedToolheadNote, describeConnectedMachine } from '../connectedMachine';
 import { sacpGrblPayloadRefusal, withoutCommentLines } from '../sacpLineGuard';
 import { ToolheadAssessment, laserOffSentIn, noteLaserSend } from '../toolheadState';
 import {
@@ -574,6 +574,8 @@ export async function executeBoundedMoveAndCapture(args: BoundedMoveArgs): Promi
         [{ label: 'Target', x: machineTarget.x, y: machineTarget.y }],
         requirePlanningTravel('a direct move', { x: before.machine.x, y: before.machine.y })
     );
+    // The Ray ignores motion while its motors are off (#321); nothing read elsewhere.
+    await assertMotorPowered('the direct move', 'Nothing was sent.');
 
     // Pacing: warn on the 2nd+ direct move inside the window; refuse from
     // the 4th unless the operator explicitly confirmed the sequence.
@@ -860,6 +862,10 @@ export async function homeMachine(tool: string, waitUntilHomed: boolean = true, 
     if (!channel || (typeof channel.executeGcode !== 'function' && typeof channel.goHome !== 'function')) {
         throw new McpToolError('The connected channel does not support direct commands.');
     }
+    // The Ray in Manual Mode (motor power SHUTAll) ACKs $H and never moves
+    // (#321): read its mode before anything is sent, M5 included. Null and
+    // nothing read on a machine without the mode (the A350, the Original).
+    const motorPower = await assertMotorPowered(tool, 'Nothing was sent.');
 
     const issuedAt = Date.now();
     // How THIS machine is homed is decided from the transport and the machine
@@ -892,7 +898,11 @@ export async function homeMachine(tool: string, waitUntilHomed: boolean = true, 
         laserOffSent = command.laserOff;
     }
     const homeToolheadNote = connectedToolheadNote(toolhead, laserOffSent);
-    const homeToolhead = homeToolheadNote ? { toolhead: homeToolheadNote } : {};
+    const homeMotorPower = connectedMotorPowerNote(motorPower);
+    const homeToolhead = {
+        ...(homeToolheadNote ? { toolhead: homeToolheadNote } : {}),
+        ...(homeMotorPower ? { motor_power: homeMotorPower } : {}),
+    };
     if (command.kind === 'grbl-home') {
         // The Ray homes on GRBL $H - what Luban's Home button sends for it
         // (ConnectionControl/ControlPanel.tsx). Ray firmware V1.7.4 never
@@ -1871,7 +1881,9 @@ export function registerCameraTools(registry: ToolRegistry, getConfirmBaseUrl?: 
             + 'Its steppers may release after stepper_idle_timeout_s idle, which also voids the home. A Snapmaker 2.0 (A350) over '
             + 'USB is homed with G53;G28;G54 like Luban, and waits until its position maps to machine coordinates (a fresh M1007 work '
             + 'offset and the stepper Count agree - get_position.logicalFrame). A Ray or J1 on plain-text USB is refused. '
-            + 'Results carry gcode_form and connected_machine.dialect.',
+            + 'On the Ray it first reads the motor-power mode (SACP 0x01 0x48) and sends nothing unless it is STAYPOWER (Luban\'s Set '
+            + 'Origin Mode = Control Mode): in Manual Mode (SHUTAll) the Ray acknowledges $H and ignores it. The MCP never switches '
+            + 'the mode; the operator does. Results carry gcode_form and connected_machine.dialect (and motor_power on the Ray).',
         inputSchema: {
             type: 'object',
             properties: {

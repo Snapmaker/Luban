@@ -7,7 +7,7 @@ import * as jobEnding from '../jobEnding';
 import type { McpJob } from '../jobs';
 import { frameRestoreJobRefusal } from '../frameRecovery';
 import { McpToolError } from '../registry';
-import { dialectById } from '../gcodeDialect';
+import { DialectId, dialectById } from '../gcodeDialect';
 import { toolheadStubs } from './fixtures/toolheadStubs';
 import { isolatedModule } from './jobDashboard.test';
 import { managerFixture } from './jobModalRecovery.test';
@@ -19,7 +19,9 @@ import { managerFixture } from './jobModalRecovery.test';
 // the Original (TextSerialChannel): executeGcode, no file-job path.
 type ChannelShape = 'file+direct' | 'direct-only' | 'none';
 
-function fixture(shape: ChannelShape = 'file+direct') {
+/** `machine` 'ray' loads the Ray's dialect row, whose motor-power mode is read through `readMotorPowerMode` (#321). */
+export function fixture(shape: ChannelShape = 'file+direct', machine: { dialect?: DialectId; readMotorPowerMode?: () => Promise<unknown> } = {}) {
+    const dialect = dialectById(machine.dialect || 'sm2-marlin');
     const files = new Map<string, string>();
     const manager = managerFixture(files);
     let now = Date.now();
@@ -69,8 +71,8 @@ function fixture(shape: ChannelShape = 'file+direct') {
         '../gcodeDialect': require('../gcodeDialect'),
         '../toolheadState': require('../toolheadState'),
         '../connectedMachine': {
-            ...toolheadStubs(() => report as never, dialectById('sm2-marlin'), McpToolError),
-            connectedDialect: () => dialectById('sm2-marlin'),
+            ...toolheadStubs(() => report as never, dialect, McpToolError, machine.readMotorPowerMode || null),
+            connectedDialect: () => dialect,
             connectedMachineTag: () => `(machine: ${shape})`,
         },
         // The direct-step path (executeDirectStep): the send goes straight to the channel.
