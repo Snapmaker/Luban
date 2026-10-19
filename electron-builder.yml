@@ -111,6 +111,12 @@ rpm:
     artifactName: Snapmaker-luban-${version}-linux.${arch}.${ext}
     afterInstall: build/linux-after-install.sh
     afterRemove: build/linux-after-remove.sh
+    # rpm 6 writes the v6 package format by default, which rpm 4.x (RHEL 8/9,
+    # older Fedora/openSUSE) reads only partially. Keep the v4 format every
+    # earlier release shipped; older rpmbuild ignores the unknown macro.
+    fpm:
+        - --rpm-rpmbuild-define
+        - _rpmformat 4
 
 #
 # Hooks

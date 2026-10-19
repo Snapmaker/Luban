@@ -242,7 +242,9 @@ jobs:
         name: Build Linux Packages
         if: github.event_name != 'workflow_dispatch' || inputs.platforms == 'linux' || inputs.platforms == 'all'
 
-        # Pinned: ubuntu-latest moved to a 26.04 image (2026-10-19) whose rpmbuild fails the .rpm target.
+        # ubuntu-latest (26.04) has rpm 6.0.1, which ignores the bundled fpm's
+        # '--define buildroot'; build/rpmbuild-buildroot wraps rpmbuild to fix it.
+        # Pinned to 24.04: built on 26.04, serialport's native addon needs GLIBC 2.42 (breaks 24.04/Debian 12/RHEL 9).
         runs-on: ubuntu-24.04
         steps:
             -   name: Checkout Code
@@ -258,6 +260,7 @@ jobs:
                 run: |
                     sudo apt-get update
                     sudo apt-get install -y python3 make g++ build-essential fontconfig libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
+                    echo "$GITHUB_WORKSPACE/build/rpmbuild-buildroot" >> "$GITHUB_PATH"
 
             -   name: Set up Python
                 uses: actions/setup-python@v6
@@ -284,6 +287,12 @@ jobs:
             # ----------------------------------------------------------------
             -   name: Build Linux x64 Binaries
                 run: npm run build:linux-x64
+
+            -   name: Check rpm package format
+                run: |
+                    # Must stay v4 (see rpm.fpm in electron-builder.yml); v6 is only partly readable by rpm 4.x.
+                    rpm -qp --qf 'rpm package format: %{RPMFORMAT}\n' output/*.rpm
+                    ! rpm -qp --qf '%{RPMFORMAT}' output/*.rpm | grep -qx 6
 
             -   run: |
                     PRODUCT_NAME="Snapmaker Luban"

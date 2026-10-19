@@ -1,0 +1,29 @@
+#!/bin/bash
+# rpmbuild wrapper for the Linux packaging job (CI puts this directory first
+# on PATH). electron-builder's bundled fpm 1.9.3 names the buildroot only with
+# '--define buildroot <dir>'. rpm 4.20+ (rpm 6.0.1 on the ubuntu-latest 26.04
+# image) ignores that and looks in %{_builddir}/<name>-<version>-build/BUILDROOT,
+# so every packaged file is "File not found". Repeat the directory as
+# '--buildroot', the form rpm still honours (fpm >= 1.16 passes both).
+# Older rpmbuild accepts it too, so the wrapper is harmless there.
+
+self="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/rpmbuild"
+real=""
+for candidate in $(type -ap rpmbuild); do
+    if [ "$(cd "$(dirname "$candidate")" && pwd)/rpmbuild" != "$self" ]; then
+        real="$candidate"
+        break
+    fi
+done
+if [ -z "$real" ]; then
+    echo "rpmbuild wrapper: no real rpmbuild on PATH" >&2
+    exit 127
+fi
+
+args=("$@")
+for ((i = 0; i + 1 < ${#args[@]}; i++)); do
+    if [ "${args[i]}" = "--define" ] && [[ "${args[i + 1]}" == "buildroot "* ]]; then
+        exec "$real" --buildroot "${args[i + 1]#buildroot }" "$@"
+    fi
+done
+exec "$real" "$@"
