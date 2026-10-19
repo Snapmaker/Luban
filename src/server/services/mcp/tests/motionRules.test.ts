@@ -114,6 +114,11 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.equal(f.tools.traverseWithoutApprovalAtSafeZ(), false);
         const env = connectedWithPolicy(A250, {}, { LUBAN_MCP_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z: '1' });
         assert.equal(env.tools.traverseWithoutApprovalAtSafeZ(), false, 'an env pin never enables a machine the operator has not');
+        const envA350 = machineToolsFixture({}, { LUBAN_MCP_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z: '1' });
+        envA350.connect({ machineIdentifier: A350 });
+        assert.equal(envA350.tools.traverseWithoutApprovalAtSafeZ(), true, 'the A350 env pin is unchanged');
+        envA350.tools.setMotionRuleFromSettings({ machineKey: A350, traverseWithoutApprovalAtSafeZ: false });
+        assert.equal(envA350.tools.traverseWithoutApprovalAtSafeZ(), false, 'nor does it beat the operator\'s OFF');
     }],
 
     ['agent set_machine_policy: can disable any machine, can never enable a non-A350, never overrides the operator\'s A350 OFF', () => {

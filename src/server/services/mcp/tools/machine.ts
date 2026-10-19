@@ -444,7 +444,10 @@ export function traverseWithoutApprovalPolicy(machineKey?: string | null): Trave
     const env = parseSwitch(process.env.LUBAN_MCP_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z);
     const host = parseSwitch(config.get('mcpTraverseWithoutApprovalAtSafeZ'));
     const flag = machineTraverseFlag(key);
-    if (env !== null) {
+    const operatorOff = flag.stored === false && flag.source === MOTION_RULE_SETTINGS_SOURCE;
+    if (env !== null && !(env && operatorOff)) {
+        // The env pin is the host switch: it can never turn ON a machine the
+        // operator turned OFF on the Motion rules pane.
         [setting, source] = [env, 'env'];
     } else if (host === false) {
         [setting, source] = [false, 'host-setting'];
