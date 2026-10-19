@@ -15,7 +15,9 @@
 // create the job record - auto-approved with the policy named - so the
 // dashboard, the job log, get_job_timing, the console `reason` broadcast and
 // stop_gcode_job all keep working. Only the click is removed.
+import { ComputedTravel } from './computedHeight';
 import { Reliability } from './machinePosition';
+import { COMPUTED_HEIGHT_TOGGLE } from './motionRules';
 import { TRAVERSE_Z_TOLERANCE_MM } from './traversePlan';
 
 export const SAFE_Z_TRAVERSE_POLICY = 'policy:safe-z-traverse';
@@ -216,5 +218,116 @@ export function decideSafeZRaise(input: SafeZPolicyInput & { machineTargets: num
         policy: SAFE_Z_RAISE_POLICY,
         reason: `Z-only, UP-only: machine Z ${f3(input.currentZ as number)} -> ${f3(previous)} <= traverse height ${input.traverseZ}, `
             + `position ${input.reliability}, homed; mcpTraverseWithoutApprovalAtSafeZ is on`,
+    };
+}
+
+export const COMPUTED_HEIGHT_TRAVERSE_POLICY = 'policy:computed-height-traverse';
+
+/** What the computed-height decision needs: the R13 verdict and the swept-path height, both taken at call time. */
+export interface ComputedHeightDecisionInput {
+    /** motionRules.ts computedHeightTraversePolicy() for the connected machine, read on this call. */
+    verdict: { allowed: boolean; unmet: string[]; requirements: Array<{ id: string; met: boolean | null }> };
+    /** computedHeight.ts computeTravelHeight() for this call's swept path; null when it could not be computed (the verdict says why). */
+    travel: ComputedTravel | null;
+    /** machineStore currentMachine().deviceConflict's note, null when none. */
+    deviceConflict: string | null;
+    hasZ: boolean;
+    reliability: Reliability;
+    homed: boolean | null;
+    currentZ: number | null;
+    /** The machine's safe top Z. */
+    topZ: number;
+    /** As SafeZPolicyInput.landmarksConfirmed: omitted = the live landmark review. */
+    landmarksConfirmed?: boolean;
+}
+
+export type ComputedHeightDecision =
+    | {
+        allowed: true;
+        policy: string;
+        reason: string;
+        /** The machine Z the XY series runs at: the current Z, or the computed height after the entry raise. */
+        runZ: number;
+        /** The UP-only entry raise to runZ, from this machine Z; null = Z is not written. */
+        raiseFromZ: number | null;
+        unmet: string[];
+    }
+    | { allowed: false; reason: string; unmet: string[] };
+
+/**
+ * Motion rules R13 (#265 WP10): an XY traverse may run without the operator's
+ * click at the computed safe height when EVERY condition holds now - the R13
+ * verdict (operator toggle, master switch, eligibility, trusted tool
+ * protrusion, toolhead body, bed plane, landmarks confirmed), no device
+ * conflict, a verified/heartbeat position, homed, a known Z, the live landmark
+ * review still confirmed, and a computed height for this swept path.
+ *
+ * Z is never lowered without the operator: only an UP-only Z move runs
+ * without approval (decideSafeZRaise, law 2's "retreat first"), so a head
+ * ABOVE the computed height traverses where it is (higher is more clearance,
+ * never less), and a head BELOW it is first raised straight up to it - a
+ * vertical climb cannot strike anything beneath the tool. Descending to the
+ * computed height is a Z move toward the work and stays a staged move_z.
+ */
+export function decideComputedHeightTraverse(input: ComputedHeightDecisionInput): ComputedHeightDecision {
+    const unmet = [...input.verdict.unmet];
+    if (!input.hasZ) {
+        unmet.push('this machine has no Z axis');
+    }
+    if (input.deviceConflict) {
+        unmet.push(`device conflict: ${input.deviceConflict}`);
+    }
+    if (!verifiedForPolicy(input.reliability)) {
+        unmet.push(`the position of record is ${input.reliability}, not verified/heartbeat`);
+    }
+    if (input.homed !== true) {
+        unmet.push('the machine does not report homed');
+    }
+    if (input.currentZ === null || !Number.isFinite(input.currentZ)) {
+        unmet.push('machine Z is unknown');
+    }
+    // Re-read the review on the call: the verdict may have been built from
+    // an older read, and an edited landmark un-confirms it at once.
+    const landmarks = input.verdict.requirements.find((r) => r.id === 'landmarks');
+    if (landmarks && landmarks.met === true) {
+        const gate = landmarkGate({ landmarksConfirmed: input.landmarksConfirmed } as SafeZPolicyInput);
+        if (!gate.confirmed) {
+            unmet.push(`landmarks not confirmed now (landmark_review ${gate.status}) - confirm_landmarks stages the review page`);
+        }
+    }
+    if (input.travel) {
+        unmet.push(...input.travel.unmet);
+    }
+    const travelZ = input.travel ? input.travel.travelZ : null;
+    if (!unmet.length && (travelZ === null || travelZ > input.topZ + TRAVERSE_Z_TOLERANCE_MM)) {
+        unmet.push(`no computed height under the safe top Z ${input.topZ}`);
+    }
+    if (unmet.length) {
+        return { allowed: false, reason: `computed safe height not allowed: ${unmet.join('; ')}`, unmet };
+    }
+    const z = input.currentZ as number;
+    const target = travelZ as number;
+    const travel = input.travel as ComputedTravel;
+    const how = `computed safe height Z${target} (${travel.governedBy}, clearance ${travel.clearanceUsed} mm, `
+        + `ideal ${travel.idealMm} / min ${travel.minMm})`;
+    const facts = `position ${input.reliability}, homed, landmarks confirmed, swept path landmark- and travel-checked; `
+        + `'${COMPUTED_HEIGHT_TOGGLE}' is on`;
+    if (z >= target - TRAVERSE_Z_TOLERANCE_MM) {
+        return {
+            allowed: true,
+            policy: COMPUTED_HEIGHT_TRAVERSE_POLICY,
+            reason: `XY-only at machine Z ${f3(z)} >= the ${how}; Z not written; ${facts}`,
+            runZ: z,
+            raiseFromZ: null,
+            unmet: [],
+        };
+    }
+    return {
+        allowed: true,
+        policy: COMPUTED_HEIGHT_TRAVERSE_POLICY,
+        reason: `UP-only raise machine Z ${f3(z)} -> ${f3(target)} to the ${how}, then XY at that height; ${facts}`,
+        runZ: target,
+        raiseFromZ: z,
+        unmet: [],
     };
 }

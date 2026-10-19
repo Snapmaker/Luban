@@ -1403,7 +1403,7 @@ function bedPlaneZFor(machineKey: string, isCurrent: boolean): number | null {
 /**
  * Motion rules R13 for one machine (motionRules.ts computedHeightTraversePolicy):
  * what moving at a computed safe height below top Z needs, and whether the
- * machine has it. Display and storage only - no motion path reads it yet.
+ * machine has it. traverse_xy acts on it (tools/gcode.ts, #265 WP10).
  */
 export function computedHeightRuleFor(machineKey: string, live: MotionRuleLiveFacts = {}) {
     const current = machineStore.currentMachine();
@@ -1442,7 +1442,8 @@ export function computedHeightRuleFor(machineKey: string, live: MotionRuleLiveFa
         },
         toolheadBodyBelowReferenceMm: section.toolheadBodyBelowReferenceMm || null,
         ...verdict,
-        note: 'Stored and displayed only: no move uses the computed height yet (a later #265 package); below top Z every move stages.',
+        note: 'When allowed, traverse_xy runs without approval at the computed safe height of its swept path (never lowering Z: '
+            + 'a head below it is raised straight up first); every other move below top Z stages as before.',
     };
 }
 

@@ -190,7 +190,7 @@ interface McpMotionRuleMachine {
         setAt: number | null;
         gatedBy: string | null;
     };
-    // R13: moving without approval at a computed safe height below top Z (stored and displayed only for now).
+    // R13: moving without approval at a computed safe height below top Z (traverse_xy acts on it, #265 WP10).
     computedHeight?: {
         on: boolean;
         source: string;

@@ -105,6 +105,7 @@ import { tests as landmarkReviewTests } from './landmarkReview.test';
 import { tests as motionRulesTests } from './motionRules.test';
 import { tests as frameLatchPerMachineTests } from './frameLatchPerMachine.test';
 import { tests as appliedRecordsTests } from './appliedRecords.test';
+import { tests as computedHeightTests } from './computedHeight.test';
 
 type TestCase = [string, () => void | Promise<void>];
 
@@ -203,6 +204,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['motionRules', motionRulesTests],
     ['frameLatchPerMachine', frameLatchPerMachineTests],
     ['appliedRecords', appliedRecordsTests],
+    ['computedHeight', computedHeightTests],
 ];
 
 async function main(): Promise<void> {

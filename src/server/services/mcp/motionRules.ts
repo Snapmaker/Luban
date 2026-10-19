@@ -7,9 +7,10 @@
 // This file holds what the rule NEEDS and whether a machine has it - the
 // stored per-machine settings, their validation and the pure verdict
 // computedHeightTraversePolicy(). Nothing here plans or runs a move: the
-// planner that computes the height and the gate that uses this verdict are a
-// later package. Until then the rule is displayed and stored only, and every
-// move below top Z stages for the operator's click exactly as before.
+// height over a swept path is computedHeight.ts, the gate that uses this
+// verdict is safeZPolicy.decideComputedHeightTraverse and traverse_xy is its
+// one caller (#265 WP10). With the toggle off (the default everywhere) every
+// move stages or runs exactly as before.
 //
 // Pure: no server imports (procedureLimits.ts is pure too); unit-tested in
 // tests/motionRules.test.ts.
@@ -160,6 +161,8 @@ export interface ComputedHeightVerdict {
      * bed plane and the lowest point are known.
      */
     bedContactToolheadZ: number | null;
+    /** The measured physical bed Z the verdict was judged with (facts.bedPlaneZ); null when not measured. */
+    bedPlaneZ: number | null;
 }
 
 const mm = (n: number) => Number(n.toFixed(3));
@@ -248,5 +251,6 @@ export function computedHeightTraversePolicy(
         requirements,
         lowestPointBelowReferenceMm: lowest,
         bedContactToolheadZ: bedContact,
+        bedPlaneZ: bed,
     };
 }
