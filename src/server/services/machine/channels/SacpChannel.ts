@@ -75,6 +75,7 @@ import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from '..
 import { gcodeLease } from '../gcodeLease';
 import { connectionDiagnostics } from '../connectionDiagnostics';
 import { SacpMachineState, SacpMachineStateTracker, sacpDeviceSerial } from './sacpMachineState';
+import { GcodeReply, ReplyEmitter, assembleReply, readGcodeReply } from './sacpGcodeReply';
 
 const log = logger('machine:channels:SacpChannel');
 
@@ -319,6 +320,44 @@ class SacpChannelBase extends Channel implements
             result: 0,
             text: 'ok',
         };
+    }
+
+    // Reply reads one at a time: the log feedback is the controller's whole
+    // log, so two reads in flight could not tell their lines apart.
+    private replyReadChain: Promise<unknown> = Promise.resolve();
+
+    /**
+     * ONE G-code line with the firmware's reply text (MCP firmware queries,
+     * #265 follow-up). executeGcode answers `ok` and drops the payload, and
+     * stays exactly as it is for Luban's UI; this reads the two places a SACP
+     * reply can be (sacpGcodeReply.ts): bytes after the result in the 0x01
+     * 0x02 ACK, and the 0x01 0xa1 log feedback received during the read.
+     * Refuses multi-line input (executeGcode would send every line).
+     */
+    public async executeGcodeWithReply(gcode: string, options: { timeoutMs?: number; quietMs?: number } = {}): Promise<GcodeReply> {
+        const line = String(gcode || '').trim();
+        const refusedReply = (error: string): GcodeReply => assembleReply({
+            result: -1, ackData: null, ackReceived: false, listening: false, lines: [], timedOut: false, elapsedMs: 0, error,
+        });
+        if (!line || /[\r\n]/.test(line)) {
+            return refusedReply('executeGcodeWithReply takes exactly one line');
+        }
+        const refusal = gcodeLease.refusal(line);
+        if (refusal) {
+            return refusedReply(refusal);
+        }
+        if (!this.sacpClient) {
+            return refusedReply('no SACP session');
+        }
+        const client = this.sacpClient;
+        const read = this.replyReadChain.then(async () => readGcodeReply({
+            emitter: client as unknown as ReplyEmitter,
+            send: async () => client.executeGcode(line),
+            timeoutMs: options.timeoutMs,
+            quietMs: options.quietMs,
+        }));
+        this.replyReadChain = read.catch(() => undefined);
+        return read;
     }
 
     /**

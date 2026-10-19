@@ -33,7 +33,10 @@ import { STOCK_ARG_SCHEMA } from '../rotaryCallContext';
 import { gateDirectXy, planGotoWorkOrigin } from '../directMovePlan';
 import { homeSequence, machineFrameMove, relativeStep, workFrameMove, workFrameRestore, workFrameRestoreCommands } from '../gcodeForms';
 import { TraverseMachine } from '../traversePlan';
-import { connectedMachineIdentifier, describeConnectedMachine } from '../connectedMachine';
+import { connectedMachineIdentifier, connectedMachineTag, describeConnectedMachine } from '../connectedMachine';
+import {
+    currentFirmwareRecord, describeFirmwareRead, firmwareReadBlocker, firmwareView, parseFirmwareRecord, queryGrblPosition, readFirmwareConfiguration,
+} from './firmware';
 import { clearanceOptions } from '../clearanceContext';
 import { FrameReading, frameRestoreJobRefusal, verifyWorkFrame, workFrameVerificationNote } from '../frameRecovery';
 import { NotSentError, RecoveryDeps, classifyReply, recordModalSend } from '../failureRecovery';
@@ -60,7 +63,9 @@ import {
 } from './machine';
 import { validateStagedEnvelope } from './staging';
 import { outsideBounds, reliableForMotion } from '../machinePosition';
-import { DIRECT_MOVE_FEED, TRACK_PATCH_PX, TRACK_SEARCH_RADIUS_PX, TRAVEL_FEED, TRAVERSE_FEED, clampCount, clampTo } from '../procedureLimits';
+import {
+    DIRECT_MOVE_FEED, FIRMWARE_QUERY_TIMEOUT_MS, TRACK_PATCH_PX, TRACK_SEARCH_RADIUS_PX, TRAVEL_FEED, TRAVERSE_FEED, clampCount, clampReported, clampTo,
+} from '../procedureLimits';
 
 // Motion policy (#23, refined): the direct move path is for the odd single
 // action only. move_and_capture performs ONE bounded XY move at the current
@@ -90,9 +95,10 @@ export interface GcodeChannel {
     goHome?: (headType?: string) => Promise<boolean | void>;
 }
 
-const SACP_NO_REPLY_TEXT = 'This channel speaks SACP: a G-code is acknowledged with a result code only and the firmware\'s '
-    + 'reply text is never forwarded (SacpClient.executeGcode discards the payload), so a bare "ok" is the transport working '
-    + 'as designed, NOT a dead connection.';
+const SACP_NO_REPLY_TEXT = 'This channel speaks SACP: a G-code is acknowledged with a result code only (SACP documents the '
+    + '0x01 0x02 ACK as result-only and the channel\'s executeGcode answers "ok"), and on a Marlin machine the MCP reads no '
+    + 'reply text over SACP, so a bare "ok" is the transport working as designed, NOT a dead connection. (The Ray\'s GRBL '
+    + 'queries read the reply path instead: tools/firmware.ts.)';
 
 /** True while the connected channel speaks SACP (ConnectionManager.isSacpChannel; absent in test stubs). */
 function sacpTransport(): boolean {
@@ -1597,14 +1603,76 @@ export function registerCameraTools(registry: ToolRegistry): void {
 
     registry.register({
         name: 'query_firmware_configuration',
-        description: 'Read the configuration currently used by the firmware with M503 S (not necessarily EEPROM values). No motion or settings changes. '
-            + 'Use as a liveness diagnostic if M114 returns no position text. An empty reply or transport error '
-            + 'is a failure, never proof of a live machine. Does not reconnect or initiate pairing.',
-        inputSchema: { type: 'object', properties: {}, additionalProperties: false },
-        handler: async () => {
+        description: 'Read the firmware\'s current configuration. READ-ONLY: no motion, no settings change, one '
+            + 'allow-listed query at a time. Per dialect: on the Ray (GRBL) it sends $$ (settings), $# (offsets), $G (parser '
+            + 'state), $I (build info) and M1005 (machine info incl. product SN) and returns each raw reply plus a parsed view '
+            + '($$ by number with names: $110/$111 max rate, $120/$121 acceleration, $130/$131 max travel, $30/$31 S range, '
+            + '$32 laser mode; $# G54..G59/G28/G30/G92/TLO/PRB; $G modal state). Over SACP the reply is read from the ACK '
+            + 'payload and the controller log feedback, and the result says which carried it (or that neither did). '
+            + 'The values are kept in memory for this connection only (also read once at connect) and feed '
+            + 'get_machine_profile.firmware and the validator\'s M4 rule. On a Marlin machine (A350) it sends M503 S as before '
+            + '(refused over SACP, where Marlin reply text never arrives). Nothing else can be sent: $X, $H, $RST, $N=value '
+            + 'writes, jogs and any motion are refused. Does not reconnect or initiate pairing.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                queries: {
+                    type: 'array',
+                    items: { type: 'string' },
+                    description: 'Optional subset to read, each from the allow-list for this machine (GRBL: $$, $#, $G, $I, M1005; '
+                        + 'Marlin: M503 S). Omit for the full read.',
+                },
+                timeout_ms: { type: 'number', description: 'Per-query reply wait, ms (bounded by procedureLimits FIRMWARE_QUERY_TIMEOUT_MS).' },
+            },
+            additionalProperties: false,
+        },
+        handler: async (args: { queries?: unknown; timeout_ms?: number } = {}) => {
             const channel = connectionManager.getCurrentChannel() as unknown as GcodeChannel;
             if (!channel || typeof channel.executeGcode !== 'function') {
                 throw new McpToolError('No machine connected, or the channel does not support direct commands.');
+            }
+            // motionDialect: the connected row, or the Snapmaker 2.0 row when no identifier is known (as before).
+            const dialect = motionDialect();
+            if (dialect.family === 'unknown') {
+                throw new McpToolError(`No firmware query is known for this machine (dialect "unknown"), so nothing was sent. ${connectedMachineTag()}`);
+            }
+            const queries = args.queries;
+            if (queries !== undefined && (!Array.isArray(queries) || queries.some((q) => typeof q !== 'string'))) {
+                throw new McpToolError('queries must be an array of strings.');
+            }
+            if (dialect.family === 'grbl') {
+                const blocker = firmwareReadBlocker();
+                if (blocker) {
+                    throw new McpToolError(`Not read: ${blocker}. Nothing was sent. ${connectedMachineTag()}`);
+                }
+                const timeout = clampReported(args.timeout_ms, FIRMWARE_QUERY_TIMEOUT_MS);
+                const { replies, serialAdopted } = await readFirmwareConfiguration({
+                    tool: 'query_firmware_configuration',
+                    trigger: 'on-demand',
+                    queries: queries as string[] | undefined,
+                    timeoutMs: timeout.value,
+                });
+                const answered = replies.filter((r) => r.text);
+                const parsed = parseFirmwareRecord(currentFirmwareRecord());
+                const status = connectionManager.getConnectionStatus() as { deviceSerial?: string | null; deviceSerialSource?: string | null };
+                return {
+                    connected_machine: describeConnectedMachine(),
+                    dialect: dialect.id,
+                    replies,
+                    parsed,
+                    firmware: firmwareView(),
+                    device_serial: { value: status.deviceSerial || null, source: status.deviceSerialSource || null, adoptedFromM1005Now: serialAdopted },
+                    ...(timeout.clipped ? { timeout_ms_clipped: { requested: timeout.requested, used: timeout.value } } : {}),
+                    note: answered.length === replies.length
+                        ? `Every query answered (via ${Array.from(new Set(answered.map((r) => r.source))).join(', ')}). Read-only; nothing moved.`
+                        : `${replies.length - answered.length} of ${replies.length} queries returned no text: ${describeFirmwareRead(replies)}. `
+                            + 'An acknowledged query without text is the transport working, not a value - nothing is '
+                            + 'assumed from it. Read-only; nothing moved.',
+                };
+            }
+            if (queries !== undefined && !(queries.length === 1 && String(queries[0]).trim().toUpperCase() === 'M503 S')) {
+                throw new McpToolError(`On ${dialect.label} the configuration query is M503 S only (M114 is query_firmware_position); `
+                    + `nothing was sent. ${connectedMachineTag()}`);
             }
             if (sacpTransport()) {
                 throw new McpToolError(`${SACP_NO_REPLY_TEXT} M503 S can therefore never return configuration text here; `
@@ -1620,8 +1688,10 @@ export function registerCameraTools(registry: ToolRegistry): void {
 
     registry.register({
         name: 'query_firmware_position',
-        description: 'Ask the firmware directly for its position report (M114) and return the RAW '
-            + 'controller response alongside the heartbeat-derived view. M114 reports the selected workspace; '
+        description: 'Ask the firmware directly for its position report and return the RAW '
+            + 'controller response alongside the heartbeat-derived view. Marlin (A350): M114. GRBL (Ray): "?" (M114 is never '
+            + 'sent to it), refused with a reason when the reply text does not come back over SACP - use get_position then. '
+            + 'M114 reports the selected workspace; '
             + 'it does not independently identify that workspace or validate an old origin offset. '
             + 'Returned machine coordinates are derived using the heartbeat offset, not independent frame proof. Read-only, no motion.',
         inputSchema: { type: 'object', properties: {}, additionalProperties: false },
@@ -1629,6 +1699,27 @@ export function registerCameraTools(registry: ToolRegistry): void {
             const channel = connectionManager.getCurrentChannel() as unknown as GcodeChannel;
             if (!channel || typeof channel.executeGcode !== 'function') {
                 throw new McpToolError('No machine connected, or the channel does not support direct commands.');
+            }
+            // motionDialect: the connected row, or the Snapmaker 2.0 row when no identifier is known (as before).
+            const dialect = motionDialect();
+            if (dialect.family === 'unknown') {
+                throw new McpToolError(`No position query is known for this machine (dialect "unknown"), so nothing was sent. ${connectedMachineTag()}`);
+            }
+            if (dialect.family === 'grbl') {
+                // GRBL has no M114 (gcodeDialect.ts status 'grbl-?'): its report is "?", read on the reply path.
+                const { reply, status } = await queryGrblPosition('query_firmware_position');
+                return {
+                    raw: reply.text,
+                    result: reply.result,
+                    query: '?',
+                    reply_source: reply.source,
+                    grbl_status: status,
+                    firmware_machine: status.mpos,
+                    firmware_work: status.wpos,
+                    heartbeat: positionOrNull(),
+                    note: 'GRBL status report ("?"): MPos is MACHINE position, WPos work position (which one is reported '
+                        + 'depends on $10). M114 is never sent to a GRBL machine. Compare with get_position, the position of record.',
+                };
             }
             const executed = await sendGcodeVisible(channel, 'query_firmware_position', 'M114');
             const raw = executed.text || null;

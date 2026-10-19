@@ -111,6 +111,8 @@ import { tests as laserPlanTests } from './laserPlan.test';
 import { tests as usbPositionTests } from './usbPosition.test';
 import { tests as connectionLinkIdentityTests } from './connectionLinkIdentity.test';
 import { tests as cameraModelStoreTests } from './cameraModelStore.test';
+import { tests as sacpGcodeReplyTests } from './sacpGcodeReply.test';
+import { tests as firmwareQueryTests } from './firmwareQuery.test';
 
 type TestCase = [string, () => void | Promise<void>];
 
@@ -215,6 +217,8 @@ const suites: Array<[string, TestCase[]]> = [
     ['usbPosition', usbPositionTests],
     ['connectionLinkIdentity', connectionLinkIdentityTests],
     ['cameraModelStore', cameraModelStoreTests],
+    ['sacpGcodeReply', sacpGcodeReplyTests],
+    ['firmwareQuery', firmwareQueryTests],
 ];
 
 async function main(): Promise<void> {

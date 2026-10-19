@@ -172,6 +172,8 @@ export interface ValidationOptions {
     headType?: string | null;
     /** Default 'validate'. */
     phase?: RulePhase;
+    /** The controller's acceleration as read on this connection (dialectRules DialectRuleContext.laserAcceleration). */
+    laserAcceleration?: { value: number; source: string } | null;
 }
 
 const MOTION_RE = /^G0*[0123](?:\.\d+)?$/;
@@ -502,6 +504,7 @@ export function validateGcode(gcode: string, options?: ValidationOptions): Gcode
             phase: options.phase || 'validate',
             frame: { declared: frame.declared, source: frame.source, mixed: frame.mixed },
             extents: { x, y },
+            laserAcceleration: options.laserAcceleration || null,
         });
         machine.identifier = options.machineIdentifier || null;
         machine.rulesApplied = result.rulesApplied;

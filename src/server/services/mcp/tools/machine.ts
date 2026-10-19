@@ -46,6 +46,7 @@ import {
 import { currentLandmarkReviewGate } from '../safeZPolicy';
 import { TraverseMachine } from '../traversePlan';
 import { GcodeDialect, dialectById } from '../gcodeDialect';
+import { firmwareView } from './firmware';
 import { GcodeForm, gcodeFormOf, genericMotionRefusal } from '../gcodeForms';
 import { LogicalFrameReport, LogicalFrameTrust, judgeLogicalFrame, machineStatusOf, readLogicalFrameEvidence } from '../logicalFrame';
 import { statedTravel } from '../rotaryGeometry';
@@ -1953,10 +1954,21 @@ export function registerMachineTools(registry: ToolRegistry): void {
             const hasOffset = netOffset.some((v) => v !== 0);
 
             const capability = machineCapabilityFor(machine.identifier);
+            const connected = identifier === status.machineIdentifier;
             return {
                 identifier: machine.identifier,
                 fullName: machine.fullName,
                 machineType: machine.machineType,
+                /** This machine's G-code dialect row (gcodeDialect.ts), e.g. 'ray-grbl', 'sm2-marlin'; 'unknown' when not in the table. */
+                dialect: capability.dialect.id,
+                dialectLabel: capability.dialect.label,
+                /**
+                 * What the connected controller's firmware reported on THIS
+                 * connection (tools/firmware.ts: the Ray's $$ acceleration, S max,
+                 * ... with readAt and source), in memory only; null when this is
+                 * not the connected machine or nothing was read.
+                 */
+                firmware: connected ? firmwareView() : null,
                 size: machine.metadata.size,
                 /** false on the Ray (size.z 0): no Z axis, so no motion floor, traverse height or move_z - XY runs at the only height. */
                 hasZ: capability.hasZ,
@@ -1989,7 +2001,7 @@ export function registerMachineTools(registry: ToolRegistry): void {
                 netWorkRangeOffset: hasOffset ? netOffset : null,
                 // null means "not recorded" - do not guess kinematics.
                 kinematics: KINEMATICS_BY_IDENTIFIER[machine.identifier] || null,
-                connected: identifier === status.machineIdentifier,
+                connected,
                 connectedHead: state ? {
                     headType: (state as { headType?: string }).headType || null,
                     toolHead: (state as { toolHead?: string }).toolHead || null,

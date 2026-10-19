@@ -93,6 +93,13 @@ export interface DialectRuleContext {
     frame: { declared: 'machine' | 'work' | null; source: 'gcode' | 'argument' | null; mixed: boolean };
     /** Raw XY extents (machine coordinates only when frame.declared === 'machine' from the gcode). */
     extents: { x: { min: number; max: number } | null; y: { min: number; max: number } | null };
+    /**
+     * The connected controller's XY acceleration as READ from its firmware on
+     * this connection (tools/firmware.ts: the lower of GRBL $120/$121), for the
+     * M4 short-segment rule; null/absent = not read, the rule states its
+     * ASSUMED_LASER_ACCELERATION_MM_S2 assumption instead.
+     */
+    laserAcceleration?: { value: number; source: string } | null;
 }
 
 export interface RuleFinding {
@@ -349,6 +356,8 @@ function dynamicShortSegments(lines: RuleLine[], ctx: DialectRuleContext, push: 
     if (ctx.header && ctx.header.renderMethods.includes('point')) {
         return;
     }
+    const read = ctx.laserAcceleration && ctx.laserAcceleration.value > 0 ? ctx.laserAcceleration : null;
+    const acceleration = read ? read.value : ASSUMED_LASER_ACCELERATION_MM_S2;
     const state: LaserState = { mode: null, s: null, f: null };
     let relative = false;
     let x: number | null = null;
@@ -409,7 +418,7 @@ function dynamicShortSegments(lines: RuleLine[], ctx: DialectRuleContext, push: 
             unknownFeed += 1;
             continue;
         }
-        if (length < accelerationDistanceMm(state.f)) {
+        if (length < accelerationDistanceMm(state.f, acceleration)) {
             short.push({ length, f: state.f, s: state.s });
         }
     }
@@ -426,9 +435,11 @@ function dynamicShortSegments(lines: RuleLine[], ctx: DialectRuleContext, push: 
     const unjudged = unknownFeed ? ` (${unknownFeed} more M4 segment(s) ran before any F word and were not judged.)` : '';
     push('laser-mode-dynamic-short-segments', 'warning', `[laser-mode-dynamic-short-segments] ${short.length} of ${cuts} M4 (dynamic power) `
         + `cutting segments are shorter than the distance needed to reach their programmed feed (median ${round(median(short.map((s) => s.length)))} mm; `
-        + `at F${fastest} that distance is ${round(accelerationDistanceMm(fastest))} mm). In M4 the firmware scales power by the speed ACHIEVED, `
+        + `at F${fastest} that distance is ${round(accelerationDistanceMm(fastest, acceleration))} mm). In M4 the firmware scales power by the speed ACHIEVED, `
         + `so these segments never reach S${powers[0]}${powers.length > 1 ? ` (S ${powers.join('/')})` : ''} - a short opening can fail to `
-        + `fire at all. ASSUMPTION: acceleration ${ASSUMED_LASER_ACCELERATION_MM_S2} mm/s^2 (the controller's real value was not read; `
+        + `fire at all. ${read
+            ? `Acceleration ${read.value} mm/s^2 (${read.source}; `
+            : `ASSUMPTION: acceleration ${ASSUMED_LASER_ACCELERATION_MM_S2} mm/s^2 (the controller's real value was not read; `}`
         + `the threshold is (F/60)^2 / (2a)). Feeds involved: F${feeds.slice(0, 4).join(', F')}${feeds.length > 4 ? ' ...' : ''}. `
         + `Fix: use M3 (constant power) for cuts, or lower F.${unjudged}`);
 }

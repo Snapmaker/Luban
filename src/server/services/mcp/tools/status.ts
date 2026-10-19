@@ -7,6 +7,7 @@ import { getPositionOfRecord, getTrustedOffset } from '../positionOfRecord';
 import { probeFeedService } from '../probeFeed';
 import { McpToolError, ToolRegistry } from '../registry';
 import { currentGcodeSequence } from './camera';
+import { firmwareView } from './firmware';
 import { machinePositionDiagnostics } from './machine';
 
 // Seed tool: read-only report of the machine connection. Proves the bridge
@@ -16,8 +17,9 @@ export function registerStatusTools(registry: ToolRegistry): void {
     registry.register({
         name: 'get_connection_status',
         description: 'Report whether Luban is connected to a machine, and over which channel: machineIdentifier, '
-            + 'deviceSerial (SACP) / host (SSTP), machineKey (the per-machine record set that applies), dialect, and '
-            + 'applied_records (which stored records the MCP applies to this machine). Read-only; sends nothing to the machine.',
+            + 'deviceSerial (SACP, or the M1005 product SN when the SACP one is a fill pattern; deviceSerialSource says which) / host (SSTP), '
+            + 'machineKey (the per-machine record set that applies), dialect, firmware (what the controller reported on this '
+            + 'connection, in memory only), and applied_records (which stored records the MCP applies to this machine). Read-only; sends nothing to the machine.',
         inputSchema: {
             type: 'object',
             properties: {},
@@ -32,6 +34,8 @@ export function registerStatusTools(registry: ToolRegistry): void {
                 ...status,
                 machineKey: current.basis === 'connected' ? current.machineKey : null,
                 dialect: status && status.connected ? connectedMachineCapability().dialect.id : null,
+                // The firmware read on this connection (tools/firmware.ts), in memory only; null when none.
+                firmware: status && status.connected ? firmwareView() : null,
             };
         },
     });

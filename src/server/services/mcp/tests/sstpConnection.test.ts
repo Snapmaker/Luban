@@ -133,7 +133,11 @@ function cameraFixture() {
         // this stub replaces - the ConnectionManager stub below has no
         // getConnectionStatus, exactly like the first CI run of fd3c8c7da.
         '../machineCapability': machineCapability,
-        '../connectedMachine': { connectedMachineIdentifier: () => null, describeConnectedMachine: () => ({ identifier: null, type: null, hasZ: true }) },
+        '../connectedMachine': {
+            connectedMachineIdentifier: () => null,
+            connectedMachineTag: () => '(machine: Snapmaker 2.0 A350)',
+            describeConnectedMachine: () => ({ identifier: null, type: null, hasZ: true }),
+        },
         '../../machine/ConnectionManager': { connectionManager: {
             getLatestMachineState: () => state,
             getCurrentChannel: () => ({ executeGcode: async (gcode: string) => { commands.push(gcode); return replies.shift() || { result: 0 }; } }),
