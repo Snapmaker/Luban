@@ -514,6 +514,24 @@ export const tests: Array<[string, () => void]> = [
         assert.equal(again.reliability, 'awaiting-resync');
     }],
 
+    ['A350 (changed): the G54 return after a zero offset was BELIEVED is accepted at rest as an origin change', () => {
+        const state = createMachinePositionState();
+        judgeBeatStateful(state, workBeat(T0), ctx(T0 + 100));
+        // A long G53 window: the zero offset is believed after ZERO_OFFSET_ACCEPT_BEATS quiet beats, raw = machine.
+        let zero = null as ReturnType<typeof judgeBeatStateful> | null;
+        for (let beat = 1; beat <= 4; beat++) {
+            zero = judgeBeatStateful(state, { raw: { x: 170, y: 199, z: 240 }, offsetReported: { x: 0, y: 0, z: 0 }, reportedAt: T0 + (2000 * beat) },
+                ctx(T0 + (2000 * beat) + 100));
+        }
+        assert.equal(zero?.accepted, true, 'the zero offset is believed');
+        // The window ends at rest: the offset comes back and raw is the work position again. The machine
+        // position both beats derive is the same, so it is accepted at once (was frame-flip until motion).
+        const back = judgeBeatStateful(state, workBeat(T0 + 10000), ctx(T0 + 10100));
+        assert.equal(back.reliability, 'heartbeat', back.reasons.join(' | '));
+        assert.deepEqual(back.machine, { x: 170, y: 199, z: 240 });
+        assert.ok(back.reasons.some((r) => r.startsWith('Work origin changed')));
+    }],
+
     ['an offset change WITH a machine jump on the flip signature is still a frame flip', () => {
         // Within the 0.5 mm flip tolerance, but the machine is 0.3 mm off: not an origin change.
         const small = createMachinePositionState();
