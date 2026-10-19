@@ -16,6 +16,12 @@
 // 2 and has always ignored. Which source carried the text (if any) is reported
 // with the reply, so the first read on hardware settles it.
 //
+// Settled for the Ray V1.7.4 (live read 2026-10-19 and Snapmaker/RayController
+// 91a675f): NEITHER route carries text there - the ACK is the result byte
+// alone, and the firmware has no log feed (0x01 0x10 -> E_INVALID_CMD_ID).
+// tools/firmware.ts therefore sends no query to a GRBL machine over SACP;
+// this read remains for controllers that do answer.
+//
 // Pure module: no server or SDK imports, unit-tested in
 // mcp/tests/sacpGcodeReply.test.ts against packets built with the SDK.
 

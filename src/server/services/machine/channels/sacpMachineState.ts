@@ -117,6 +117,20 @@ export function mapCoordinateReport(report: SacpCoordinateReport, isFourAxis: bo
 }
 
 /**
+ * True when a product SN string identifies no machine: empty (after NULs and
+ * spaces), any byte outside printable ASCII, or one character repeated - an
+ * unprogrammed Ray efuse reads as 20 x '6' (RayController 91a675f
+ * snapmaker.cpp:159-191).
+ */
+export function isFillPatternProductSn(sn: unknown): boolean {
+    if (typeof sn !== 'string') {
+        return true;
+    }
+    const trimmed = sn.replace(/\0+$/, '').trim();
+    return !trimmed || !/^[\x21-\x7e]+$/.test(trimmed) || /^(.)\1*$/.test(trimmed);
+}
+
+/**
  * True when a SACP `masterControlSerialNumber` (a UInt32) is a FILL PATTERN
  * rather than a serial: 0, 0xFFFFFFFF, or one byte repeated four times
  * (0x66666666 = 1717986918 is what the Ray V1.7.4 reports - observed live
@@ -128,8 +142,11 @@ export function isFillPatternSerial(serial: unknown): boolean {
     let value: number;
     if (typeof serial === 'number') {
         value = serial;
-    } else if (typeof serial === 'string' && /^\d+$/.test(serial.trim())) {
+    } else if (typeof serial === 'string' && /^\d{1,10}$/.test(serial.trim())) {
         value = Number(serial.trim());
+    } else if (typeof serial === 'string') {
+        // Not a UInt32: a product SN (0x01 0x21's efuse SN, M1005's SN).
+        return isFillPatternProductSn(serial);
     } else {
         return false;
     }
@@ -138,6 +155,67 @@ export function isFillPatternSerial(serial: unknown): boolean {
     }
     const low = value % 256;
     return value === low * 0x01010101;
+}
+
+/** SACP 0x01 0x21 (machine info) with the fields the SDK's MachineInfo model leaves unread. */
+export interface SacpMachineInfoFields {
+    model: number;
+    hardwareVersion: number;
+    /** The UInt32 serial (the Ray: always the 0x66666666 dummy). */
+    serialU32: number;
+    firmwareVersion: string | null;
+    /** The product SN after the version (the Ray: 20-character efuse SN); null when absent, truncated or a fill pattern. */
+    productSn: string | null;
+    /** The product SN as sent, for the report (null when the buffer ends before it). */
+    productSnRaw: string | null;
+    /** The buffer ended before a field it announced (a reason, null when whole). */
+    truncated: string | null;
+}
+
+/**
+ * Parse 0x01 0x21's data (the ACK payload after the result byte): model u8,
+ * hardware version u8, serial u32 LE, version (u16 LE length + bytes), then
+ * on the Ray a product SN (u16 LE length + bytes) - RayController 91a675f
+ * snapmaker.cpp:159-191. null when even the fixed 6 bytes are missing.
+ */
+export function parseSacpMachineInfo(data: Buffer | null | undefined): SacpMachineInfoFields | null {
+    if (!data || data.length < 6) {
+        return null;
+    }
+    const fields: SacpMachineInfoFields = {
+        model: data.readUInt8(0),
+        hardwareVersion: data.readUInt8(1),
+        serialU32: data.readUInt32LE(2),
+        firmwareVersion: null,
+        productSn: null,
+        productSnRaw: null,
+        truncated: null,
+    };
+    const text = (at: number, what: string): { value: string; next: number } | null => {
+        if (data.length < at + 2) {
+            if (data.length > at) {
+                fields.truncated = `${what}: length field cut short`;
+            }
+            return null;
+        }
+        const length = data.readUInt16LE(at);
+        if (data.length < at + 2 + length) {
+            fields.truncated = `${what}: ${length} byte(s) announced, ${data.length - at - 2} present`;
+            return null;
+        }
+        return { value: data.slice(at + 2, at + 2 + length).toString('latin1'), next: at + 2 + length };
+    };
+    const version = text(6, 'firmware version');
+    if (!version) {
+        return fields;
+    }
+    fields.firmwareVersion = version.value.replace(/\0+$/, '').trim() || null;
+    const sn = text(version.next, 'product SN');
+    if (sn) {
+        fields.productSnRaw = sn.value;
+        fields.productSn = isFillPatternProductSn(sn.value) ? null : sn.value.replace(/\0+$/, '').trim();
+    }
+    return fields;
 }
 
 /**

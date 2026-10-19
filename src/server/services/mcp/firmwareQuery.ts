@@ -60,6 +60,14 @@ export function firmwareQueryRefusal(dialect: GcodeDialect, query: unknown): str
         return `Refused ${JSON.stringify(query)}: one query per call - line breaks and ';' are not allowed (a second line would be sent too).`;
     }
     const wanted = query.trim().toUpperCase();
+    // Never on any list (RayController 91a675f): a line starting "$PS" - any
+    // prefix - switches the Ray's USB port to SACP; non-ASCII bytes are realtime commands.
+    if (wanted.startsWith('$PS')) {
+        return `Refused ${JSON.stringify(query.trim())}: a line starting "$PS" switches the Ray's USB port to SACP; it is never sent.`;
+    }
+    if (!/^[\x20-\x7e]+$/.test(query.trim())) {
+        return `Refused ${JSON.stringify(query.trim())}: only printable ASCII is sent (GRBL acts on other bytes as realtime commands).`;
+    }
     const allowed = FIRMWARE_QUERY_ALLOW_LIST[dialect.family];
     if (allowed.some((entry) => entry.toUpperCase() === wanted)) {
         return null;

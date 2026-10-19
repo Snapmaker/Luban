@@ -439,7 +439,8 @@ function dynamicShortSegments(lines: RuleLine[], ctx: DialectRuleContext, push: 
         + `so these segments never reach S${powers[0]}${powers.length > 1 ? ` (S ${powers.join('/')})` : ''} - a short opening can fail to `
         + `fire at all. ${read
             ? `Acceleration ${read.value} mm/s^2 (${read.source}; `
-            : `ASSUMPTION: acceleration ${ASSUMED_LASER_ACCELERATION_MM_S2} mm/s^2 (the controller's real value was not read; `}`
+            : `ASSUMPTION: acceleration ${ASSUMED_LASER_ACCELERATION_MM_S2} mm/s^2 (the controller's real value was not read - `
+                + 'GRBL $120/$121 cannot be read over SACP: the Ray V1.7.4 returns no reply text there; '}`
         + `the threshold is (F/60)^2 / (2a)). Feeds involved: F${feeds.slice(0, 4).join(', F')}${feeds.length > 4 ? ' ...' : ''}. `
         + `Fix: use M3 (constant power) for cuts, or lower F.${unjudged}`);
 }

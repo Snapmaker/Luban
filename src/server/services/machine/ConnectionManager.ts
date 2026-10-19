@@ -56,11 +56,32 @@ import { octo } from './adaptor/Octo';
 import { connectionDiagnostics, diagnosticId } from './connectionDiagnostics';
 import { safeIdentifier, safeTarget } from './connectionDiagnosticState';
 import { gcodeLease } from './gcodeLease';
+import { isFillPatternSerial } from './channels/sacpMachineState';
 import { noteFrameRestored } from '../mcp/positionOfRecord';
 import { JudgeConnectionContext, setJudgeConnectionContextProvider } from '../mcp/machinePosition';
 import type { EnclosureRawReport, SerialEnclosureReport } from '../mcp/enclosure';
 
 const log = logger('lib:ConnectionManager');
+
+/**
+ * How long the machine-ready listeners wait for a machine instance's
+ * onPrepare before being told anyway. A Ray prepares in about 1 s (connect
+ * 14:25:05, subscriptions 14:25:06 on 2026-10-19); prepare awaits SACP
+ * requests that have no SDK timeout, so without a bound a lost reply meant
+ * the listeners were never called.
+ */
+const READY_LISTENER_PREPARE_WAIT_MS = 15000;
+
+/** Where a connection's deviceSerial came from (ConnectionManager.adoptFirmwareSerial). */
+export type DeviceSerialSource = 'sacp-machine-info' | 'sacp-product-sn' | 'firmware-m1005';
+
+/** What a machine-ready listener gets: the connection's generation, and how the instance's prepare ended. */
+export interface MachineReadyEvent {
+    generation: string;
+    machineIdentifier: string | null;
+    /** 'done', 'failed: <reason>', 'not settled after N ms', or 'none: no machine instance'. */
+    prepare: string;
+}
 
 const ensureRange = (value, min, max) => {
     return Math.max(min, Math.min(max, value));
@@ -201,17 +222,19 @@ class ConnectionManager {
     // (hostAddress). Null when the transport has none (text serial). Never the token.
     private deviceSerial: string | null = null;
 
-    // Where deviceSerial came from: the SACP MachineInfo, or the product SN the
-    // firmware reported to M1005 when the SACP one was a fill pattern (MCP
-    // firmware query, adoptFirmwareSerial). Cleared with the identity.
-    private deviceSerialSource: 'sacp-machine-info' | 'firmware-m1005' | null = null;
+    // Where deviceSerial came from: the SACP MachineInfo UInt32, the product SN
+    // after the version in that same 0x01 0x21 reply (the Ray's efuse SN), or
+    // the product SN the firmware reported to M1005 - the last two only when
+    // the UInt32 was a fill pattern (adoptFirmwareSerial). Cleared with the identity.
+    private deviceSerialSource: DeviceSerialSource | null = null;
 
     private host: string | null = null;
 
-    // Called once a machine instance has prepared (a new connection is ready),
+    // Called once per Ready, when the machine instance has prepared - or has
+    // failed to, or has not settled within READY_LISTENER_PREPARE_WAIT_MS -
     // with that connection's generation. The MCP's first-connect firmware read
     // registers here; a listener's failure never reaches the connection.
-    private readyListeners: Array<(ready: { generation: string; machineIdentifier: string | null }) => void> = [];
+    private readyListeners: Array<(ready: MachineReadyEvent) => void> = [];
 
     private scheduledTasksHandle;
 
@@ -337,7 +360,7 @@ class ConnectionManager {
     }
 
     /** Register for "a new connection is ready" (after the machine instance prepared). Returns the unregister function. */
-    public onMachineReady(listener: (ready: { generation: string; machineIdentifier: string | null }) => void): () => void {
+    public onMachineReady(listener: (ready: MachineReadyEvent) => void): () => void {
         this.readyListeners.push(listener);
         return () => {
             this.readyListeners = this.readyListeners.filter((l) => l !== listener);
@@ -345,24 +368,39 @@ class ConnectionManager {
     }
 
     /**
-     * The firmware's own product SN (M1005, read by the MCP's firmware query)
-     * as this connection's deviceSerial - only while the connection is the one
-     * it was read on (`generation`) and the SACP serial was absent or a fill
-     * pattern (sacpDeviceSerial already made that null). A real SACP serial is
+     * The firmware's own product SN as this connection's deviceSerial - the
+     * 0x01 0x21 efuse SN at Ready ('sacp-product-sn'), or M1005's
+     * ('firmware-m1005') - only while the connection is the one it was read on
+     * (`generation`), the SACP UInt32 serial was absent or a fill pattern
+     * (sacpDeviceSerial already made that null), and the SN itself is no fill
+     * pattern (20 x '6' on an unprogrammed efuse). A real SACP UInt32 serial is
      * never replaced. true when adopted.
      */
-    public adoptFirmwareSerial(serial: string, generation: string): boolean {
+    public adoptFirmwareSerial(serial: string, generation: string, source: 'sacp-product-sn' | 'firmware-m1005' = 'firmware-m1005'): boolean {
         const value = String(serial || '').trim();
-        if (!value || !this.channel || this.getConnectionGeneration() !== generation) {
+        if (!value || isFillPatternSerial(value) || !this.channel || this.getConnectionGeneration() !== generation) {
             return false;
         }
-        if (this.deviceSerial && this.deviceSerialSource !== 'firmware-m1005') {
+        if (this.deviceSerial && this.deviceSerialSource === 'sacp-machine-info') {
             return false;
         }
         this.deviceSerial = value;
-        this.deviceSerialSource = 'firmware-m1005';
-        log.info(`deviceSerial from the firmware's M1005 product SN: ${value}`);
+        this.deviceSerialSource = source;
+        log.info(`deviceSerial from the firmware's product SN (${source}): ${value}`);
         return true;
+    }
+
+    /** The 0x01 0x21 machine info the SACP channel read on this connection (version, product SN), or null. */
+    public getMachineInfoRecord(): { firmwareVersion: string | null; productSn: string | null; productSnRaw: string | null;
+        truncated: string | null; readAt: number; } | null {
+        const channel = this.channel as unknown as { getMachineInfoRecord?: () => ReturnType<ConnectionManager['getMachineInfoRecord']> } | null;
+        return channel && typeof channel.getMachineInfoRecord === 'function' ? channel.getMachineInfoRecord() : null;
+    }
+
+    /** What the controller answered Luban's own log-level request on this connection (SACP 0x01 0x10), or null. */
+    public getLogLevelRequest(): { requestedAt: number; result: number | null } | null {
+        const channel = this.channel as unknown as { getLogLevelRequest?: () => { requestedAt: number; result: number | null } | null } | null;
+        return channel && typeof channel.getLogLevelRequest === 'function' ? channel.getLogLevelRequest() : null;
     }
 
     // TODO: Refactor this
@@ -453,6 +491,14 @@ class ConnectionManager {
         this.deviceSerial = typeof data?.deviceSerial === 'string' && data.deviceSerial ? data.deviceSerial : null;
         this.deviceSerialSource = this.deviceSerial ? 'sacp-machine-info' : null;
         this.host = hostAddress(data?.host);
+        // The Ray's UInt32 serial is a dummy (0x66666666): its identity is the
+        // efuse product SN in the same 0x01 0x21 reply. Adopted here, before
+        // the instance and the ready listeners, so the store keys on it from the start.
+        // Ray only: RayController is the firmware whose 0x01 0x21 layout is known (#315).
+        const machineInfo = this.machineIdentifier === SnapmakerRayMachine.identifier ? this.getMachineInfoRecord() : null;
+        if (!this.deviceSerial && machineInfo && machineInfo.productSn) {
+            this.adoptFirmwareSerial(machineInfo.productSn, this.getConnectionGeneration(), 'sacp-product-sn');
+        }
 
         // configure machine instance
         this.machineInstance = null;
@@ -491,11 +537,48 @@ class ConnectionManager {
         if (this.machineInstance) {
             log.info(`instance = ${this.machineInstance.constructor.name}`);
             log.info('On preparing machine instance...');
-            await this.machineInstance.onPrepare();
+            // The listeners no longer wait on prepare alone: it awaits SACP
+            // requests the SDK never times out, and a prepare that hung or threw
+            // left them uncalled with nothing logged (the Ray, 2026-10-19).
+            // Prepare itself is awaited (and throws) exactly as before.
+            const prepare = this.machineInstance.onPrepare();
+            this.notifyMachineReady(prepare);
+            await prepare;
+        } else {
+            this.notifyMachineReady(null);
         }
+    };
 
-        if (this.channel) {
-            const ready = { generation: this.getConnectionGeneration(), machineIdentifier: this.machineIdentifier };
+    /**
+     * Tell the machine-ready listeners about this Ready once `prepare`
+     * settles, or after READY_LISTENER_PREPARE_WAIT_MS if it has not - once,
+     * with one info line either way. Not when the channel closed or changed
+     * (another channel, machine or connection generation: a reconnect within
+     * the bound has its own Ready).
+     */
+    private notifyMachineReady(prepare: Promise<void> | null): void {
+        const channel = this.channel;
+        const machineIdentifier = this.machineIdentifier;
+        const generation = this.getConnectionGeneration();
+        let notified = false;
+        let timer: ReturnType<typeof setTimeout> | null = null;
+        const notify = (outcome: string) => {
+            if (notified) {
+                return;
+            }
+            notified = true;
+            if (timer) {
+                clearTimeout(timer);
+                timer = null;
+            }
+            if (!this.channel || this.channel !== channel || this.machineIdentifier !== machineIdentifier
+                || this.getConnectionGeneration() !== generation) {
+                log.info(`machine ready (${machineIdentifier}): ${this.readyListeners.length} listener(s) not notified, `
+                    + `the connection closed or changed (prepare ${outcome})`);
+                return;
+            }
+            const ready: MachineReadyEvent = { generation, machineIdentifier, prepare: outcome };
+            log.info(`machine ready (${machineIdentifier}): notifying ${this.readyListeners.length} listener(s) (prepare ${outcome})`);
             for (const listener of this.readyListeners) {
                 try {
                     listener(ready);
@@ -503,8 +586,17 @@ class ConnectionManager {
                     log.warn(`machine-ready listener failed: ${(err as Error).message}`);
                 }
             }
+        };
+        if (!prepare) {
+            notify('none: no machine instance');
+            return;
         }
-    };
+        prepare.then(
+            () => notify('done'),
+            (err) => notify(`failed: ${err && err.message ? err.message : String(err)}`),
+        );
+        timer = setTimeout(() => notify(`not settled after ${READY_LISTENER_PREPARE_WAIT_MS} ms`), READY_LISTENER_PREPARE_WAIT_MS);
+    }
 
     private onChannelErrorReport = async (data: { level: number; owner: number; errorCode: number }) => {
         const { level, owner, errorCode } = data;

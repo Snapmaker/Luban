@@ -135,6 +135,7 @@ function cameraFixture() {
         '../machineCapability': machineCapability,
         '../connectedMachine': {
             connectedMachineIdentifier: () => null,
+            connectedDialect: () => ({ family: 'marlin' }),
             connectedMachineTag: () => '(machine: Snapmaker 2.0 A350)',
             describeConnectedMachine: () => ({ identifier: null, type: null, hasZ: true }),
         },

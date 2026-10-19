@@ -83,7 +83,10 @@ function restoreFixture(
             motionGcodeForm: () => 'sm2' },
         // WP4a: the restore is written by the pure gcodeForms.ts from the A350 row.
         '../gcodeForms': gcodeForms,
-        '../connectedMachine': { describeConnectedMachine: () => ({ identifier: 'A350', type: null, hasZ: true, dialect: 'sm2-marlin' }) },
+        '../connectedMachine': {
+            connectedDialect: () => ({ family: 'marlin' }),
+            describeConnectedMachine: () => ({ identifier: 'A350', type: null, hasZ: true, dialect: 'sm2-marlin' }),
+        },
         '../../machine/ConnectionManager': { connectionManager: {
             getConnectionStatus: () => ({ connected: true, machineIdentifier: 'A350' }),
             getConnectionGeneration: () => '1.0',

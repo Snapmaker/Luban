@@ -74,7 +74,9 @@ import { ChannelEvent } from './ChannelEvent';
 import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from '../../../../app/machines/snapmaker-2-toolheads';
 import { gcodeLease } from '../gcodeLease';
 import { connectionDiagnostics } from '../connectionDiagnostics';
-import { SacpMachineState, SacpMachineStateTracker, sacpDeviceSerial } from './sacpMachineState';
+import {
+    SacpMachineInfoFields, SacpMachineState, SacpMachineStateTracker, parseSacpMachineInfo, sacpDeviceSerial,
+} from './sacpMachineState';
 import { GcodeReply, ReplyEmitter, assembleReply, readGcodeReply } from './sacpGcodeReply';
 
 const log = logger('machine:channels:SacpChannel');
@@ -294,6 +296,12 @@ class SacpChannelBase extends Channel implements
 
     /**
      * Generic execute G-code commands.
+     *
+     * Result 0 of SACP 0x01 0x02 does NOT mean the line ran: the Ray V1.7.4
+     * ACKs before it even queues the line, and then drops lines it cannot take
+     * (80+ bytes, a full input ring, G-code in Alarm) without a word
+     * (RayController 91a675f snapmaker.cpp:272-291). Confirm effects by state.
+     * Never resend on a lost ACK: the firmware does not dedupe 0x01 0x02.
      */
     public async executeGcode(gcode: string): Promise<ExecuteGcodeResult> {
         const refusal = gcodeLease.refusal(gcode);
@@ -424,9 +432,35 @@ class SacpChannelBase extends Channel implements
      * Get Machine info.
      */
     public async getMachineInfo(): Promise<MachineInfo> {
-        const { data: machineInfo } = await this.sacpClient.getMachineInfo();
+        const { data: machineInfo, packet } = await this.sacpClient.getMachineInfo();
+        // The same 0x01 0x21 reply, read past the SDK model: the firmware
+        // version and the Ray's efuse product SN (parseSacpMachineInfo). No extra request.
+        const payload = packet && Buffer.isBuffer(packet.payload) ? packet.payload : null;
+        const fields = parseSacpMachineInfo(payload ? payload.slice(1) : null);
+        this.machineInfoRecord = fields ? { ...fields, readAt: Date.now(), generation: this.connectionGeneration } : null;
 
         return machineInfo;
+    }
+
+    // The last 0x01 0x21 this connection read (getMachineInfo), with when.
+    private machineInfoRecord: (SacpMachineInfoFields & { readAt: number; generation: number }) | null = null;
+
+    /** The machine info read on THIS connection (version, product SN), or null; in memory only. */
+    public getMachineInfoRecord(): (SacpMachineInfoFields & { readAt: number }) | null {
+        const record = this.machineInfoRecord;
+        return record && record.generation === this.connectionGeneration ? record : null;
+    }
+
+    // What the controller answered Luban's own log-level request
+    // (startHeartbeatLegacy 0x01 0x10). The Ray V1.7.4 has no such command:
+    // E_INVALID_CMD_ID (5), so Luban never subscribes its log (RayController
+    // 91a675f sacp_hmi.cpp:1082-1096). Recorded, never acted on.
+    private logLevelRequest: { requestedAt: number; result: number | null; generation: number } | null = null;
+
+    /** Luban's log-level request on THIS connection and its result (null = unanswered so far); null when none was sent. */
+    public getLogLevelRequest(): { requestedAt: number; result: number | null } | null {
+        const request = this.logLevelRequest;
+        return request && request.generation === this.connectionGeneration ? { requestedAt: request.requestedAt, result: request.result } : null;
     }
 
     /** The Ready payload's `deviceSerial`: the controller's serial number, null when it reported none. */
@@ -922,8 +956,12 @@ class SacpChannelBase extends Channel implements
             enclosure: false
         };
 
+        // Passive record only (getLogLevelRequest): what the controller answered.
+        const levelRequest = { requestedAt: Date.now(), result: null as number | null, generation: this.connectionGeneration };
+        this.logLevelRequest = levelRequest;
         this.sacpClient.logFeedbackLevel(2).then(({ response }) => {
             log.info(`logLevel, ${response}`);
+            levelRequest.result = response.result;
             if (response.result === 0) {
                 this.subscribeLogCallback = (data) => {
                     const result = readString(data.response.data, 1).result;

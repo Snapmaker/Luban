@@ -125,6 +125,12 @@ class SacpUdpChannel extends SacpChannelBase {
 
     /**
      * Generic execute G-code commands.
+     *
+     * Result 0 of SACP 0x01 0x02 does NOT mean the line ran: the Ray V1.7.4
+     * ACKs before it even queues the line, and then drops lines it cannot take
+     * (80+ bytes, a full input ring, G-code in Alarm) without a word
+     * (RayController 91a675f snapmaker.cpp:272-291). Confirm effects by state.
+     * Never resend on a lost ACK: the firmware does not dedupe 0x01 0x02.
      */
     public async executeGcode(gcode: string): Promise<ExecuteGcodeResult> {
         const refusal = gcodeLease.refusal(gcode);

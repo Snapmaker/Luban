@@ -42,7 +42,7 @@ import { machineFrameMove, needsPlannerSync, relativeStep, workFrameMove } from 
 import { machineStatusOf } from '../logicalFrame';
 import { connectedMachineCapability, connectedMachineTag, describeConnectedMachine } from '../connectedMachine';
 import { JobFrame, TRANSPORT_REFUSAL, isPureTransport, resolveJobFrame, spindleRefusal, suggestGcode, validateGcode } from '../validator';
-import { GcodeChannel, sendGcodeVisible } from './camera';
+import { GcodeChannel, GcodeNotSentError, sendGcodeVisible } from './camera';
 import { connectedStagingMachine, connectedValidationOptions, stagingFrameContext, validateStagedEnvelope } from './staging';
 import { parseGcodeHeader } from '../gcodeHeader';
 import { verifyFileJobWorkspace } from './workspace';
@@ -246,7 +246,20 @@ async function executeDirectStep(job: McpJob, channel: GcodeChannel, shouldWait:
     jobManager.setActive(job);
     let settle: DirectSettle;
     try {
-        const executed = await sendGcodeVisible(channel, `direct:${job.name}`, executable);
+        let executed;
+        try {
+            executed = await sendGcodeVisible(channel, `direct:${job.name}`, executable);
+        } catch (err) {
+            // Refused before sending (GRBL over SACP, sacpLineGuard.ts): the job ends here, nothing ran.
+            if (err instanceof GcodeNotSentError) {
+                job.state = 'start_failed';
+                job.error = err.message;
+                job.endedAt = Date.now();
+                job.ending = { kind: 'operation-failure', reason: job.error, at: job.endedAt };
+                jobManager.appendEvent(job, 'failed', { note: job.error, not_sent: true });
+            }
+            throw err;
+        }
         if (executed.result !== 0) {
             job.state = 'start_failed';
             job.error = `Controller rejected the move: ${executed.text || executed.result}`;
