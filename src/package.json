@@ -19,18 +19,11 @@
     "@electron/remote": "2.0.8",
     "@sentry/electron": "^5.6.0",
     "@snapmaker/snapmaker-lunar": "^1.4.9",
-    "consolidate": "0.15.1",
     "electron-updater": "4.3.9",
-    "errorhandler": "1.5.1",
     "font-scanner": "0.2.1",
-    "hogan.js": "3.0.2",
     "node-fetch": "2.6.7",
-    "opencv-wasm": "^4.3.0-10",
     "serialport": "10.5.0",
-    "snapmaker-luban-engine": "^0.9.1",
-    "socket.io": "4.5.3",
-    "formidable": "2.1.2",
-    "encoding": "0.1.13"
+    "snapmaker-luban-engine": "^0.9.1"
   },
   "config": {
     "commitizen": {

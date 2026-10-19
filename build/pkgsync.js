@@ -23,17 +23,13 @@ const mainExternals = [
     'node-fetch',
     'font-scanner',
 ];
-// Mirror of KEEP_EXTERNAL in webpack.config.server.production.js.
+// Mirror of KEEP_EXTERNAL in webpack.config.server.production.js (which
+// records, per package, why it is external and how the rest were bundled).
 const serverExternals = [
     'serialport',
     'font-scanner',
     '@snapmaker/snapmaker-lunar',
     'snapmaker-luban-engine',
-    'opencv-wasm',
-    'consolidate',
-    'hogan.js',
-    'errorhandler',
-    'socket.io',
 ];
 const deps = [...new Set([...mainExternals, ...serverExternals])].sort();
 
@@ -46,11 +42,6 @@ pkgApp.repository = pkg.repository;
 
 // Copy only Node.js dependencies to application package.json
 pkgApp.dependencies = _.pick(pkg.dependencies, deps);
-// Runtime externals of the server bundle whose former parents (superagent,
-// node-fetch) are now bundled, so they are not root dependencies: pin them
-// to the versions the parents resolve today.
-pkgApp.dependencies.formidable = '2.1.2';
-pkgApp.dependencies.encoding = '0.1.13';
 pkgApp.config = pkg.config;
 
 const target = path.resolve(__dirname, '../src/package.json');

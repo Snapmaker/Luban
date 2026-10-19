@@ -120,7 +120,6 @@
     "compression": "1.7.4",
     "connect-multiparty": "2.2.0",
     "connect-restreamer": "1.0.3",
-    "consolidate": "0.15.1",
     "cookie-parser": "1.4.6",
     "core-js": "3.6.5",
     "debug": "3.1.0",

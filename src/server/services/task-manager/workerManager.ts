@@ -1,7 +1,7 @@
 import path from 'path';
 import workerpool, { WorkerPool } from 'workerpool';
 import DataStorage from '../../DataStorage';
-import { SERVER_DIR } from '../../lib/paths';
+import { SERVER_DIR, SERVER_DIR_ENV } from '../../lib/paths';
 
 // Avoid TSC precompiling, at the same time, webpack can collect dependencies
 if (process.env.NODE_ENV === 'production') {
@@ -36,9 +36,14 @@ class WorkerManager {
             const config: workerpool.WorkerPoolOptions = {
                 workerType: 'process',
                 forkOpts: {
+                    // This replaces the worker's environment rather than
+                    // extending it: pass the server directory on, so the
+                    // worker resolves files emitted beside the bundles
+                    // (opencv.wasm) from the same place the server does.
                     env: {
                         Tmpdir: DataStorage.tmpDir,
                         fontDir: DataStorage.fontDir,
+                        [SERVER_DIR_ENV]: SERVER_DIR,
                     }
                 }
             };
