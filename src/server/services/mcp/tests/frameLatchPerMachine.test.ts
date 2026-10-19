@@ -99,6 +99,23 @@ export const tests: Array<[string, () => void]> = [
         assert.match(unreadable[0].reason, /binds every machine/);
         assert.deepEqual(plain(tools.persistedFrameLatches(null)), []);
     }],
+    ['one verified restore clears the machine latch and an unscoped one together; another machine latch stays', () => {
+        withMachine((connect) => {
+            latchFrameUncertain('unreadable file', 1000, null);
+            connect(A350);
+            latchFrameUncertain('A350 run', 2000);
+            connect(ORIGINAL);
+            latchFrameUncertain('Original run', 3000);
+            connect(A350);
+            assert.equal(getFrameLatch()?.reason, 'A350 run', 'the machine latch applies first');
+            clearFrameLatch();
+            assert.equal(getFrameLatch(), null, 'the A350 is free after one restore');
+            connect(RAY);
+            assert.equal(getFrameLatch(), null, 'the unscoped latch went with it');
+            connect(ORIGINAL);
+            assert.equal(getFrameLatch()?.reason, 'Original run', 'the Original keeps its own');
+        });
+    }],
     ['an unreadable latch file binds the A350, the Original and the Ray (unknown -> conservative, #265 WP10)', () => {
         const { tools } = machineToolsFixture({});
         const [restored] = tools.persistedFrameLatches('unreadable') as Array<{ machineIdentifier: string | null; reason: string }>;

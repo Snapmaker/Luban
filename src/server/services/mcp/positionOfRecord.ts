@@ -550,11 +550,19 @@ export function allFrameLatches(): FrameLatch[] {
     return [...frameLatches.values()].map((latch) => ({ ...latch }));
 }
 
-/** Clears the latch that applies to the connected machine; another machine's latch stays until that machine clears it. */
+/**
+ * Clears the latch that applies to the connected machine; another machine's
+ * latch stays until that machine clears it. A latch raised with no machine
+ * known (an unreadable latch file, #265 WP10) binds every machine and is
+ * cleared by the first verified restore on any machine - the same restore
+ * clears the connected machine's own latch and it together, so one restore
+ * never leaves the machine still refused by the other.
+ */
 export function clearFrameLatch(): void {
     const key = applyingKey();
     if (key !== null) {
         frameLatches.delete(key);
+        frameLatches.delete(UNSCOPED);
         notifyFrameLatch();
     }
 }
