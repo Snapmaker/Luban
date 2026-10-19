@@ -81,7 +81,7 @@ export const tests: Array<[string, () => void]> = [
         clearFrameLatch();
         assert.equal(getFrameLatch(), null);
     }],
-    ['persisted latches: a pre-WP8 untagged file migrates as the A350\'s; v2 keeps each machine; unreadable binds the A350 only', () => {
+    ['persisted latches: a pre-WP8 untagged file migrates as the A350\'s; v2 keeps each machine; unreadable binds every machine', () => {
         const { tools } = machineToolsFixture({});
         const plain = (v: unknown) => JSON.parse(JSON.stringify(v));
         const legacy = plain(tools.persistedFrameLatches({ reason: 'A queued pendant run.', since: 5, restoredAt: null }));
@@ -94,9 +94,27 @@ export const tests: Array<[string, () => void]> = [
             ] }));
         assert.deepEqual(v2.map((l: { machineIdentifier: string | null }) => l.machineIdentifier), [A350, null]);
         const unreadable = plain(tools.persistedFrameLatches('unreadable'));
-        assert.deepEqual(unreadable.map((l: { machineIdentifier: string }) => l.machineIdentifier), [A350]);
+        assert.deepEqual(unreadable.map((l: { machineIdentifier: string | null }) => l.machineIdentifier), [null]);
         assert.match(unreadable[0].reason, /unreadable latch file/);
+        assert.match(unreadable[0].reason, /binds every machine/);
         assert.deepEqual(plain(tools.persistedFrameLatches(null)), []);
+    }],
+    ['an unreadable latch file binds the A350, the Original and the Ray (unknown -> conservative, #265 WP10)', () => {
+        const { tools } = machineToolsFixture({});
+        const [restored] = tools.persistedFrameLatches('unreadable') as Array<{ machineIdentifier: string | null; reason: string }>;
+        withMachine((connect) => {
+            latchFrameUncertain(restored.reason, 1000, restored.machineIdentifier);
+            for (const id of [A350, ORIGINAL, RAY]) {
+                connect(id);
+                assert.match(String(getFrameLatch()?.reason), /unreadable latch file/, `${id} must be bound`);
+            }
+            connect(ORIGINAL);
+            clearFrameLatch();
+            for (const id of [A350, ORIGINAL, RAY]) {
+                connect(id);
+                assert.equal(getFrameLatch(), null, `${id} after the restore`);
+            }
+        });
     }],
     ['a latch raised after the A350 dropped (cleanup of a failed call) is still the A350 latch, not every machine latch', () => {
         let connected: string | null = null;

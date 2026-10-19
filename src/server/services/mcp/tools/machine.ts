@@ -719,11 +719,12 @@ export function readPersistedFrameLatch(): Partial<FrameLatch> | Partial<Persist
  * Pure: the latches a saved file stands for, each with the machine it binds.
  * A pre-WP8 file is ONE untagged latch: it was raised on the A350 (the only
  * machine the MCP drove before latches were per machine), so it migrates as
- * the A350's. An unreadable file is ALSO attributed to the A350 rather than to
- * every machine: only an sm2-transport machine (G53 written) can be left in
- * the machine workspace, the A350 is the only one that has run with this MCP,
- * and binding it to every machine would recreate the lockout of the Original
- * and the Ray this fixes.
+ * the A350's. An UNREADABLE file binds EVERY machine (stamped null, as a
+ * latch raised with no machine known): which machine it was raised on cannot
+ * be read, and unknown is conservative (#265 WP10, lead review of WP8) - a
+ * readable file is the only thing that lets the Original or the Ray past an
+ * A350 latch. Restoring the work frame on whichever machine is connected
+ * clears it (positionOfRecord.clearFrameLatch).
  */
 export function persistedFrameLatches(saved: ReturnType<typeof readPersistedFrameLatch>): Array<{ machineIdentifier: string | null; reason: string }> {
     const carried = (reason: unknown) => `Carried over from before Luban restarted: ${String(reason || 'a queued pendant run')} `
@@ -733,10 +734,10 @@ export function persistedFrameLatches(saved: ReturnType<typeof readPersistedFram
     }
     if (saved === 'unreadable') {
         return [{
-            machineIdentifier: LEGACY_MACHINE_IDENTIFIER,
-            reason: `Carried over from before Luban restarted: an unreadable latch file (${FRAME_LATCH_FILE}) says the `
-                + `machine workspace may have been left selected (attributed to the ${LEGACY_MACHINE_IDENTIFIER}, the only machine that writes G53 here). `
-                + 'Restore the work frame before any motion.',
+            machineIdentifier: null,
+            reason: `Carried over from before Luban restarted: an unreadable latch file (${FRAME_LATCH_FILE}) says a `
+                + 'machine workspace may have been left selected, and which machine it was raised on cannot be read, so it binds '
+                + 'every machine. Restore the work frame before any motion.',
         }];
     }
     const latches = Array.isArray((saved as Partial<PersistedFrameLatches>).latches)
@@ -751,7 +752,7 @@ export function persistedFrameLatches(saved: ReturnType<typeof readPersistedFram
 export function restorePersistedFrameLatch(): void {
     const saved = readPersistedFrameLatch();
     if (saved === 'unreadable') {
-        log.warn(`The frame latch file ${frameLatchPath()} exists but could not be read: raising the ${LEGACY_MACHINE_IDENTIFIER}'s latch.`);
+        log.warn(`The frame latch file ${frameLatchPath()} exists but could not be read: raising a latch that binds every machine.`);
     }
     for (const latch of persistedFrameLatches(saved)) {
         latchFrameUncertain(latch.reason, Date.now(), latch.machineIdentifier);
