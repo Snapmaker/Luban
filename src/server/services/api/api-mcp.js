@@ -331,7 +331,9 @@ export const clearAlarm = (req, res) => {
  * turned ON off the A350 default - no MCP tool can. Applies at once (read on every
  * traverse_xy / goto_tool_change_position / move_z call); an ineligible machine
  * is refused (400) with the reason. Body: { machineKey, traverseWithoutApprovalAtSafeZ?,
- * computedHeightTraverse?, clearanceIdealMm?, clearanceMinMm? }.
+ * computedHeightTraverse?, clearanceIdealMm?, clearanceMinMm?, movesWithoutApprovalPage?,
+ * motorModeWithoutApprovalPage? }. The last two (tyeth/Luban#326) are operator-only: this
+ * settings route is the only writer, in either direction.
  */
 export const setMotionRule = (req, res) => {
     let result;

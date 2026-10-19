@@ -16,7 +16,8 @@ import { cameraFixture } from './sstpConnection.test';
 import { fixture as jobFixture } from './fileJobStart.test';
 
 const SHUT_ALL_MESSAGE = 'the Ray\'s motors are off (Manual Mode / SHUTAll): it acknowledges commands and ignores them. '
-    + 'Switch Luban\'s Set Origin Mode to Control Mode, then retry.';
+    + 'Switch with set_motor_power {mode:\'control\'} (it stages a confirm page and then homes the Ray), or switch '
+    + 'Luban\'s Set Origin Mode to Control Mode, then retry.';
 
 const SHUT_ALL = 1;
 const ONLY_LINEAR = 2;
@@ -39,7 +40,7 @@ function reader(initial: unknown) {
 }
 
 /** The real connectedMachine.ts over a stub ConnectionManager: `identifier` connected on a channel with (or without) the read. */
-function connectedMachineFor(identifier: string, channel: object | null) {
+export function connectedMachineFor(identifier: string, channel: object | null) {
     const definition = (id: string, z: number) => ({ identifier: id, machineType: 'test', metadata: { size: { x: 600, y: 400, z }, toolHeads: [] } });
     const machines = {
         SnapmakerOriginalMachine: definition('Original', 125),
@@ -99,7 +100,7 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         const read = async (mode: unknown) => motorPower.readMotorPower(async () => mode);
         const shut = motorPower.motorPowerRefusal(await read(SHUT_ALL), 'home', '(machine: Ray)', 'Nothing was sent.') as string;
         assert.ok(shut.includes(SHUT_ALL_MESSAGE), shut);
-        assert.match(shut, /^Refusing home: .*never changes the motor-power mode itself\. Nothing was sent\. \(machine: Ray\)$/);
+        assert.match(shut, /^Refusing home: .*Nothing here changes the motor-power mode silently\. Nothing was sent\. \(machine: Ray\)$/);
         const linear = motorPower.motorPowerRefusal(await read(ONLY_LINEAR), 'home', '', '') as string;
         assert.match(linear, /ONLYLINEAR, which its firmware \(V1\.7\.4\) treats exactly as SHUTAll.*Control Mode, then retry/);
         const unknown = motorPower.motorPowerRefusal(await motorPower.readMotorPower(null), 'home', '', '') as string;
@@ -195,7 +196,7 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.equal(job.state, 'completed');
         assert.equal(r.calls, 0);
     }],
-    ['the MCP never sets the motor-power mode: it only calls the read-only getMotorPowerMode', () => {
+    ['the motor-power setter is reached only through set_motor_power\'s approved job or the operator-only setting', () => {
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const fs = require('fs'); const path = require('path');
         const root = path.join(__dirname, '..');
@@ -211,7 +212,22 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
             }
         };
         walk(root);
-        const offenders = files.filter((file) => /\.setMotorPower\w*\s*\(|SetMotorPowerMode/.test(fs.readFileSync(file, 'utf8')));
-        assert.deepEqual(offenders, [], 'no MCP source may set the motor-power mode');
+        const rel = (file: string) => path.relative(root, file).split(path.sep).join('/');
+        const read = (file: string) => fs.readFileSync(file, 'utf8') as string;
+        // (#326) Only connectedMachine.ts touches the channel's setter, inside setConnectedMotorPower.
+        const channelSetter = files.filter((file) => /\.setMotorPower(?!Mode\b)\w*\s*\(|\.setMotorPowerMode\b|SetMotorPowerMode/.test(read(file)));
+        assert.deepEqual(channelSetter.map(rel), ['connectedMachine.ts'], 'only connectedMachine.ts reaches the channel setter');
+        // Only tools/motorPower.ts calls setConnectedMotorPower (connectedMachine.ts defines it).
+        const callers = files.filter((file) => /setConnectedMotorPower\s*\(/.test(read(file))).map(rel).sort();
+        assert.deepEqual(callers, ['connectedMachine.ts', 'tools/motorPower.ts']);
+        const tool = read(path.join(root, 'tools', 'motorPower.ts'));
+        // Two calls, both inside runMotorPowerSwitch, which takes the authority...
+        assert.equal((tool.match(/setConnectedMotorPower\s*\(/g) || []).length, 2);
+        assert.equal((tool.match(/runMotorPowerSwitch\s*\(/g) || []).length, 3, 'its definition, the approved job\'s runner and the setting path');
+        // ...and reached only from the approved job's runner or from the setting path, which runs only with the setting on AND an instruction.
+        assert.match(tool, /job\.runner = async \(\) => runMotorPowerSwitch\(job, mode, \{ kind: 'approved-job', jobId: job\.id \}\)/);
+        assert.match(tool, /runMotorPowerSwitch\(job, mode, \{ kind: 'operator-setting', setting: MOTOR_MODE_WITHOUT_APPROVAL_TOGGLE, instruction \}\)/);
+        assert.equal((tool.match(/runOnCall\s*\(/g) || []).length, 2, 'its definition and one call');
+        assert.match(tool, /if \(setting\.on && instruction\) \{\s*return \{[^}]*\.\.\.await runOnCall\(/);
     }],
 ];

@@ -205,6 +205,18 @@ interface McpMotionRuleMachine {
         bedContactToolheadZ: number | null;
         note: string;
     };
+    // #326: operator-only, default off; no MCP tool can change them.
+    approvalFree?: { moves: McpApprovalFreeSetting; motorMode: McpApprovalFreeSetting };
+}
+
+// #326: an operator-only approval-free setting (tools/machine.ts approvalFreeSettingsFor).
+interface McpApprovalFreeSetting {
+    toggle: string;
+    on: boolean;
+    source: string;
+    setAt: number | null;
+    applies: boolean;
+    reason: string | null;
 }
 
 interface McpMotionRules {
@@ -783,6 +795,37 @@ const McpServer: React.FC = () => {
                                             </div>
                                         ))}
                                         <div>{computed.note}</div>
+                                    </div>
+                                </div>
+                            )}
+                            {machine.approvalFree && (
+                                <div className="margin-top-8 margin-left-16">
+                                    <div className="sm-flex align-center">
+                                        <Switch
+                                            checked={machine.approvalFree.moves.on}
+                                            loading={motionRuleBusy === machine.machineKey}
+                                            onChange={(checked) => { onMotionRule(machine.machineKey, { movesWithoutApprovalPage: checked }); }}
+                                            disabled={!enabled || motionRuleBusy !== null || !machine.approvalFree.moves.applies}
+                                        />
+                                        <span className="margin-left-8">
+                                            {i18n._('key-App/Settings/McpServer-Allow moves without an approval page')}
+                                        </span>
+                                    </div>
+                                    {machine.approvalFree.motorMode.applies && (
+                                        <div className="sm-flex align-center margin-top-8">
+                                            <Switch
+                                                checked={machine.approvalFree.motorMode.on}
+                                                loading={motionRuleBusy === machine.machineKey}
+                                                onChange={(checked) => { onMotionRule(machine.machineKey, { motorModeWithoutApprovalPage: checked }); }}
+                                                disabled={!enabled || motionRuleBusy !== null}
+                                            />
+                                            <span className="margin-left-8">
+                                                {i18n._('key-App/Settings/McpServer-Allow motor-mode changes without an approval page')}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <div className={styles['port-tips']}>
+                                        {i18n._('key-App/Settings/McpServer-Off by default. When on, the agent can run a move (or, on the Ray, switch the motor-power mode with set_motor_power) on its own call, without your click on a confirm page, but only when it quotes your explicit instruction from the current session. The quote is recorded on the job. Every other check still applies: motor power, the start position, toolhead, travel, landmarks, idle and homed. Only you can change these here; no MCP tool can.')}
                                     </div>
                                 </div>
                             )}

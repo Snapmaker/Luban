@@ -19,7 +19,7 @@ import { landmarkReviewForConnected } from './landmarkReviewState';
 import { machineStore } from './machineStore';
 import { probeGeometry, rotaryGeometry, statedTravel } from './rotaryGeometry';
 import { getToolSetterConfig } from './toolSetter';
-import { computedHeightRuleFor, motionGcodeForm, travelFudge, traverseWithoutApprovalPolicy, zPolicyFor } from './tools/machine';
+import { approvalFreeSettingsFor, computedHeightRuleFor, motionGcodeForm, travelFudge, traverseWithoutApprovalPolicy, zPolicyFor } from './tools/machine';
 
 export interface AppliedRecordFacts {
     machine: {
@@ -63,6 +63,9 @@ export interface AppliedRecordFacts {
     motionRules: {
         topZWithoutApproval: { on: boolean; gatedBy: string | null };
         computedHeight: { on: boolean; unmet: string[] };
+        /** #326, operator-only: absent in facts built before it (reads off). */
+        movesWithoutApprovalPage?: { on: boolean; applies: boolean };
+        motorModeWithoutApprovalPage?: { on: boolean; applies: boolean };
     } | null;
     /** Facts that could not be read, by name, with the reason. */
     unreadable: { [fact: string]: string };
@@ -97,6 +100,14 @@ function zPolicyText(facts: AppliedRecordFacts): string {
     return z.safeTraverseZ.source === 'default' && z.motionFloorZ.source === 'default'
         ? `A350 defaults (${values})`
         : `stated (${values}; ${z.safeTraverseZ.source})`;
+}
+
+/** An operator-only setting (#326): 'on', 'off', or 'n/a' where it cannot apply to the machine. */
+function operatorSettingText(setting: { on: boolean; applies: boolean } | undefined): string {
+    if (setting && !setting.applies) {
+        return 'n/a on this machine';
+    }
+    return setting && setting.on ? 'on (operator-only; runs on the agent\'s quote of the operator\'s instruction)' : 'off';
 }
 
 function computedHeightText(rule: { on: boolean; unmet: string[] }): string {
@@ -146,6 +157,8 @@ export function buildAppliedRecords(facts: AppliedRecordFacts) {
             ? {
                 topZWithoutApproval: rules.topZWithoutApproval.on ? 'on' : `off${rules.topZWithoutApproval.gatedBy ? ` - ${rules.topZWithoutApproval.gatedBy}` : ''}`,
                 computedHeight: computedHeightText(rules.computedHeight),
+                movesWithoutApprovalPage: operatorSettingText(rules.movesWithoutApprovalPage),
+                motorModeWithoutApprovalPage: operatorSettingText(rules.motorModeWithoutApprovalPage),
             }
             : UNREADABLE,
         ...(Object.keys(facts.unreadable).length ? { unreadable: facts.unreadable } : {}),
@@ -250,6 +263,13 @@ export function appliedRecordFacts(): AppliedRecordFacts {
         return {
             topZWithoutApproval: { on: topZ.enabled, gatedBy: topZ.enabled ? null : topZ.gatedBy },
             computedHeight: { on: !!(computed && computed.on), unmet: computed && Array.isArray(computed.unmet) ? computed.unmet : [] },
+            ...(() => {
+                const free = approvalFreeSettingsFor(key);
+                return {
+                    movesWithoutApprovalPage: { on: free.moves.on, applies: free.moves.applies },
+                    motorModeWithoutApprovalPage: { on: free.motorMode.on, applies: free.motorMode.applies },
+                };
+            })(),
         };
     }, null);
     return {

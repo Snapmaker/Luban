@@ -19,6 +19,22 @@ import { Bounded, MOTION_RULE_CLEARANCE_IDEAL_MM, MOTION_RULE_CLEARANCE_MIN_MM, 
 /** The second per-machine toggle's name on the Motion rules pane. */
 export const COMPUTED_HEIGHT_TOGGLE = 'Move without approval at a computed safe height (below top Z)';
 
+/**
+ * The two operator-only approval-free settings (tyeth/Luban#326), per machine,
+ * default OFF. With one on, the matching action runs on the agent's call
+ * instead of staging a confirm page - only when the agent quotes the
+ * operator's explicit instruction from the current session
+ * (`operator_instruction`), which the result and the job record carry. Every
+ * other gate still applies. Only the operator's click on the Motion rules
+ * pane turns either on or off; no MCP tool can (set_machine_policy refuses
+ * both keys).
+ */
+export const MOVES_WITHOUT_APPROVAL_TOGGLE = 'Allow moves without an approval page';
+export const MOTOR_MODE_WITHOUT_APPROVAL_TOGGLE = 'Allow motor-mode changes without an approval page';
+
+/** Who may state the two settings above: the pane's click (tools/machine.ts MOTION_RULE_SETTINGS_SOURCE). */
+export const OPERATOR_SETTINGS_SOURCE = 'settings';
+
 /** A stored value with who stated it ('settings' = the operator's click on the pane) and when. */
 export interface Stated<T> {
     value: T;
@@ -32,6 +48,10 @@ export interface MotionRulesSection {
     clearanceIdealMm?: Stated<number>;
     clearanceMinMm?: Stated<number>;
     toolheadBodyBelowReferenceMm?: Stated<number>;
+    /** MOVES_WITHOUT_APPROVAL_TOGGLE (#326): operator-only. */
+    movesWithoutApprovalPage?: Stated<boolean>;
+    /** MOTOR_MODE_WITHOUT_APPROVAL_TOGGLE (#326): operator-only. */
+    motorModeWithoutApprovalPage?: Stated<boolean>;
 }
 
 function stated<T>(raw: unknown, valid: (value: unknown) => value is T): Stated<T> | undefined {
@@ -65,7 +85,29 @@ export function motionRulesOf(machineEntry: { motionRules?: unknown } | null | u
     if (clearanceIdealMm) { out.clearanceIdealMm = clearanceIdealMm; }
     if (clearanceMinMm) { out.clearanceMinMm = clearanceMinMm; }
     if (body) { out.toolheadBodyBelowReferenceMm = body; }
+    const moves = stated(section.movesWithoutApprovalPage, isBoolean);
+    const motorMode = stated(section.motorModeWithoutApprovalPage, isBoolean);
+    if (moves) { out.movesWithoutApprovalPage = moves; }
+    if (motorMode) { out.motorModeWithoutApprovalPage = motorMode; }
     return out;
+}
+
+/** An operator-only setting is on only when the operator's click stated it on (a value written any other way reads off). */
+export function operatorSettingOn(setting: Stated<boolean> | undefined): boolean {
+    return !!setting && setting.value === true && setting.source === OPERATOR_SETTINGS_SOURCE;
+}
+
+/**
+ * The agent's quote of the operator's explicit instruction from this session,
+ * trimmed, or null when it is missing or blank (the action then stages as
+ * usual - a missing instruction never refuses, it only keeps the page).
+ */
+export function operatorInstructionOf(raw: unknown): string | null {
+    if (typeof raw !== 'string') {
+        return null;
+    }
+    const text = raw.trim();
+    return text || null;
 }
 
 /** The clearances that apply: stated, else the named defaults. A stored pair with ideal < min reads as the defaults. */

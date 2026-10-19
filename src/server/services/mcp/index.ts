@@ -29,6 +29,7 @@ import { registerEnclosureTools } from './tools/enclosure';
 import { registerGcodeTools, stopGcodeJob } from './tools/gcode';
 import { registerLandmarkTools } from './tools/landmarks';
 import { registerLaserTools } from './tools/laser';
+import { registerMotorPowerTools } from './tools/motorPower';
 import { currentReviewMachineKey, landmarkReviewForConnected, operatorReviews } from './landmarkReviewState';
 import { registerMachineTools } from './tools/machine';
 import { registerProbeTools } from './tools/probe';
@@ -293,6 +294,7 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
     registerProbingTools(registry, baseUrl);
     registerCamTools(registry, baseUrl);
     registerLaserTools(registry, baseUrl);
+    registerMotorPowerTools(registry, baseUrl);
     // Read a GRBL machine's configuration once per connection, in memory only
     // (tools/firmware.ts): the validator's M4 rule and get_machine_profile use it.
     startFirmwareReadOnConnect();

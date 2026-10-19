@@ -40,6 +40,7 @@ import { ComputedHeightDecision, decideComputedHeightTraverse, decideSafeZRaise,
 import { TraversePlan, TraversePlanInput, parseSettleComment, planTraverseXy, traverseMachinePath } from '../traversePlan';
 import { gcodeFormOf, machineFrameMove, needsPlannerSync, relativeStep, workFrameMove } from '../gcodeForms';
 import { expectedStepStart, startPositionRefusal } from '../startPosition';
+import { OPERATOR_INSTRUCTION_ARG, runDirectOnOperatorInstruction } from './operatorInstruction';
 import { machineStatusOf } from '../logicalFrame';
 import { assertMotorPowered, assertToolheadNotOn, connectedConnectionId, connectedDialect, connectedMachineCapability, connectedMachineTag, connectedToolhead,
     connectedToolheadNote, describeConnectedMachine } from '../connectedMachine';
@@ -1544,8 +1545,12 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             // The token stays unconsumed, but the refusal says to restage: Luban
             // homes the Ray on the switch to Control Mode, and a Ray direct step
             // is a relative increment planned from the position before it.
-            await assertMotorPowered('starting this job', 'Nothing was sent and the approval was not used. Switching to Control Mode homes the '
-                + 'Ray, and this job was planned from the position before that: withdraw it with stop_gcode_job and restage it after the switch.');
+            // set_motor_power's own job (#326) is exempt: powering the motors is what it does.
+            if (!job.motorPowerSwitch) {
+                await assertMotorPowered('starting this job', 'Nothing was sent and the approval was not used. Switching to Control Mode homes '
+                    + 'the Ray, and this job was planned from the position before that: withdraw it with stop_gcode_job and restage it after '
+                    + 'the switch.');
+            }
             // A relative step lands where it was planned only from where it
             // was planned (#323): re-check the head before the token is spent,
             // for the first step and for every later step of a batch.
@@ -1884,6 +1889,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                         + 'target Z. false: steps return on controller accept with '
                         + 'position_verified: false - poll get_position.',
                 },
+                operator_instruction: OPERATOR_INSTRUCTION_ARG,
             },
             required: ['reason'],
             additionalProperties: false,
@@ -1895,6 +1901,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             feed_rate?: number;
             reason?: string;
             wait_until_moved?: boolean;
+            operator_instruction?: string;
         }) => {
             probeFeedService.assertNoOvertravel();
             // Which form this machine's Z steps take (gcodeForms.ts): the
@@ -2071,7 +2078,23 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 };
             }
 
+            const zSummary = {
+                connected_machine: describeConnectedMachine(),
+                gcode_form: motionGcodeForm(),
+                current_z: currentZ,
+                targets,
+                final_delta_mm: delta,
+                feed_rate: feedRate,
+                coordinate_system: coordinateSystem,
+            };
+            // #326: the operator-only "Allow moves without an approval page", on the operator's quoted instruction.
+            const zOnCall = args.operator_instruction !== undefined ? await runDirectOnOperatorInstruction(job, args) : null;
+            if (zOnCall && zOnCall.ran) {
+                return { ...zSummary, ...zOnCall.result };
+            }
+
             return {
+                ...(zOnCall && zOnCall.staged_because ? { operator_instruction_not_used: zOnCall.staged_because } : {}),
                 job: jobManager.describe(job),
                 connected_machine: describeConnectedMachine(),
                 gcode_form: motionGcodeForm(),
@@ -2159,6 +2182,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                         + 'step blocks until the heartbeat verifiably reports the target XY. false: steps return on '
                         + 'controller accept with position_verified: false - poll get_position.',
                 },
+                operator_instruction: OPERATOR_INSTRUCTION_ARG,
             },
             required: ['reason'],
             additionalProperties: false,
@@ -2171,6 +2195,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             feed_rate?: number;
             reason?: string;
             wait_until_moved?: boolean;
+            operator_instruction?: string;
         }) => {
             probeFeedService.assertNoOvertravel();
             const single = args.x !== undefined || args.y !== undefined;
@@ -2353,7 +2378,14 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 };
             }
 
+            // #326: the operator-only "Allow moves without an approval page", on the operator's quoted instruction.
+            const onCall = args.operator_instruction !== undefined ? await runDirectOnOperatorInstruction(job, args) : null;
+            if (onCall && onCall.ran) {
+                return { ...summary, ...onCall.result };
+            }
+
             return {
+                ...(onCall && onCall.staged_because ? { operator_instruction_not_used: onCall.staged_because } : {}),
                 job: jobManager.describe(job),
                 ...summary,
                 ...(computed ? { computed_height: computed.report } : {}),

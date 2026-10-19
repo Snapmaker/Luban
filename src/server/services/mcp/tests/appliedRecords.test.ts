@@ -136,7 +136,21 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.equal(report.records.rotaryGeometry.axis, 'X170 Z60 (unmeasured)');
         assert.equal(report.records.activeTool, 'none confirmed this session');
         assert.equal(report.records.camera, 'auto (none stated)');
-        assert.deepEqual(report.records.motionRules, { topZWithoutApproval: 'on', computedHeight: 'off' });
+        // #326's operator-only settings read off when the facts do not carry them.
+        assert.deepEqual(report.records.motionRules, {
+            topZWithoutApproval: 'on', computedHeight: 'off', movesWithoutApprovalPage: 'off', motorModeWithoutApprovalPage: 'off',
+        });
+        const withSettings = plain(applied.buildAppliedRecords({
+            ...facts(),
+            motionRules: {
+                topZWithoutApproval: { on: true, gatedBy: null },
+                computedHeight: { on: false, unmet: [] },
+                movesWithoutApprovalPage: { on: true, applies: true },
+                motorModeWithoutApprovalPage: { on: false, applies: false },
+            },
+        }));
+        assert.match(withSettings.records.motionRules.movesWithoutApprovalPage, /^on \(operator-only/);
+        assert.equal(withSettings.records.motionRules.motorModeWithoutApprovalPage, 'n/a on this machine');
         assert.equal(report.records.unreadable, undefined);
     }],
     ['applied records: the Ray reports no Z and no A350 records; the Original reports its missing Z policy and gated motion rule', () => {

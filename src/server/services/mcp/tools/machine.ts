@@ -32,7 +32,16 @@ import {
 import { LEGACY_MACHINE_IDENTIFIER, MachineSummary } from '../machineCapability';
 import { ConnectionStatusLike, baseIdentifier, machineStore, setMachineStoreSources } from '../machineStore';
 import { LANDMARK_CONFIRM_TTL_HOURS, STEPPER_IDLE_TIMEOUT_S, TOOLHEAD_BODY_BELOW_REFERENCE_MM } from '../procedureLimits';
-import { COMPUTED_HEIGHT_TOGGLE, MotionRulesSection, computedHeightTraversePolicy, motionRulesOf, validateClearanceSettings } from '../motionRules';
+import {
+    COMPUTED_HEIGHT_TOGGLE,
+    MOTOR_MODE_WITHOUT_APPROVAL_TOGGLE,
+    MOVES_WITHOUT_APPROVAL_TOGGLE,
+    MotionRulesSection,
+    computedHeightTraversePolicy,
+    motionRulesOf,
+    operatorSettingOn,
+    validateClearanceSettings,
+} from '../motionRules';
 import {
     MACHINES,
     connectedDialect,
@@ -46,6 +55,7 @@ import {
     findMachine,
     machineCapabilityFor,
 } from '../connectedMachine';
+import { motorsReleasedFor, motorsReleasedReason } from '../motorPower';
 import { currentLandmarkReviewGate } from '../safeZPolicy';
 import { TraverseMachine } from '../traversePlan';
 import { GcodeDialect, dialectById } from '../gcodeDialect';
@@ -1029,6 +1039,11 @@ export function getPositionSnapshot(): PositionSnapshot {
     // Inside the declared run the latch is the expected state; it still refuses motion.
     const openLatch = getFrameLatch();
     const frameWarnings = openLatch && !judgement.declaredRun ? [describeFrameLatch(openLatch)] : [];
+    // set_motor_power {mode:'manual'} released the motors (#326): the head may
+    // have been pushed by hand, so the position reads unhomed until a home.
+    const released = motorsReleasedFor(connectedMachineIdentifier());
+    const releasedReasons = released ? [motorsReleasedReason(released)] : [];
+    const reportedHomed = logicalFrame ? logicalFrame.homed : (state as { isHomed?: boolean }).isHomed ?? null;
 
     return {
         connectedMachine: describeConnectedMachine(),
@@ -1039,7 +1054,7 @@ export function getPositionSnapshot(): PositionSnapshot {
         reliability: judgement.reliability,
         frame: judgement.frame,
         machineReportedAt: judgement.machineReportedAt,
-        reasons: judgement.reasons,
+        reasons: [...judgement.reasons, ...releasedReasons],
         judged: {
             accepted: judgement.accepted,
             rejectedReason: judgement.rejectedReason,
@@ -1051,14 +1066,14 @@ export function getPositionSnapshot(): PositionSnapshot {
         // Text serial: homed only when the MCP OBSERVED a full home complete on
         // this connection (logicalFrame.ts) - never MarlinController's
         // isHomed, which a SENT G28 sets.
-        isHomed: logicalFrame ? logicalFrame.homed : (state as { isHomed?: boolean }).isHomed ?? null,
+        isHomed: released ? false : reportedHomed,
         machineStatus: machineStatusOf(state as { [key: string]: unknown }),
         reportAgeMs: now - state.timestamp,
         reportedAt: state.timestamp,
         convention: 'machine = the JUDGED position of record (machinePosition.ts) with `reliability`; work/originOffset are the '
             + 'raw report - never derive machine = work - originOffset by hand. Agents plan in machine coordinates; the work '
             + 'origin is the operator\'s.',
-        warnings: [...judgement.reasons, ...frameWarnings],
+        warnings: [...judgement.reasons, ...frameWarnings, ...releasedReasons],
         logicalFrame,
         motionAtRest: logicalFrame ? logicalMotionAtRest(logicalFrame, state) : null,
         stepper_idle_remaining_s: logicalFrame && logicalFrame.stepperIdle ? logicalFrame.stepperIdle.remainingS : null,
@@ -1450,7 +1465,20 @@ function stagePolicyLoosening(args: { [key: string]: unknown }, loose: PolicyLoo
     };
 }
 
+/** The two operator-only settings (#326) as set_machine_policy would name them; refused in either direction. */
+const OPERATOR_ONLY_POLICY_ARGS: Array<[string, string]> = [
+    ['moves_without_approval_page', MOVES_WITHOUT_APPROVAL_TOGGLE],
+    ['motor_mode_without_approval_page', MOTOR_MODE_WITHOUT_APPROVAL_TOGGLE],
+];
+
 function machinePolicyCall(args: { [key: string]: unknown }, options: { dryRun?: boolean; approvedReview?: string }): MachinePolicyResult {
+    // #326: no MCP tool can change these, on or off - the operator does, in Luban.
+    const operatorOnly = OPERATOR_ONLY_POLICY_ARGS.filter(([name]) => args[name] !== undefined);
+    if (operatorOnly.length) {
+        throw new McpToolError(`Refusing ${operatorOnly.map(([name]) => name).join(', ')}: '${operatorOnly.map(([, toggle]) => toggle).join('\', \'')}' `
+            + `can only be changed by the operator, in Luban's ${MOTION_RULES_PANE}. No MCP tool can turn ${operatorOnly.length > 1 ? 'them' : 'it'} `
+            + 'on or off. Nothing was changed.');
+    }
     const current = machineStore.currentMachine();
     if (current.basis !== 'connected' || !current.machineKey || !current.machineIdentifier) {
         throw new McpToolError('set_machine_policy states the policy of the CONNECTED machine, and none is connected. Connect it first.');
@@ -1781,6 +1809,43 @@ export function computedHeightRuleFor(machineKey: string, live: MotionRuleLiveFa
     };
 }
 
+/** One operator-only approval-free setting (#326) as the pane, the results and applied_records report it. */
+export interface ApprovalFreeSetting {
+    toggle: string;
+    /** On: stated on by the operator's click (a value written any other way reads off). */
+    on: boolean;
+    source: string;
+    setAt: number | null;
+    /** Whether it can apply to this machine at all (the motor-mode setting needs a motor-power mode: the Ray). */
+    applies: boolean;
+    reason: string | null;
+}
+
+/**
+ * The two operator-only settings for `machineKey` (motionRules.ts, #326):
+ * "Allow moves without an approval page" and "Allow motor-mode changes
+ * without an approval page". Default off everywhere.
+ */
+export function approvalFreeSettingsFor(machineKey: string | null): { moves: ApprovalFreeSetting; motorMode: ApprovalFreeSetting } {
+    const section = machineKey ? motionRulesOf({ motionRules: machineStore.getFor(machineKey, 'mcpMotionRules') }) : {};
+    const dialect = machineKey === null ? null : machineCapabilityFor(baseIdentifier(machineKey)).dialect;
+    const hasMotorPower = !!dialect && !!dialect.motorPower && dialect.motorPower.read !== 'none';
+    const describe = (toggle: string, stated: MotionRulesSection['movesWithoutApprovalPage'], applies: boolean, reason: string | null) => ({
+        toggle,
+        on: applies && operatorSettingOn(stated),
+        source: stated ? stated.source : 'default',
+        setAt: stated ? stated.setAt : null,
+        applies,
+        reason,
+    });
+    return {
+        moves: describe(MOVES_WITHOUT_APPROVAL_TOGGLE, section.movesWithoutApprovalPage, machineKey !== null,
+            machineKey === null ? 'no machine' : null),
+        motorMode: describe(MOTOR_MODE_WITHOUT_APPROVAL_TOGGLE, section.motorModeWithoutApprovalPage, hasMotorPower,
+            hasMotorPower ? null : 'this machine has no motor-power mode (only the Ray does)'),
+    };
+}
+
 /**
  * Settings -> MCP Server -> Motion rules (GET /api/mcp): the host switch and,
  * per known machine, its dialect, Z axis, Z policy and travel fudge (read-only
@@ -1819,6 +1884,8 @@ export function describeMotionRules(live: MotionRuleLiveFacts = {}) {
                     gatedBy: approval.gatedBy,
                 },
                 computedHeight: computedHeightRuleFor(machineKey, live),
+                // #326: operator-only, default off.
+                approvalFree: approvalFreeSettingsFor(machineKey),
             };
         }),
     };
@@ -1839,11 +1906,12 @@ export function setMotionRuleFromSettings(body: { [field: string]: unknown }) {
     if (typeof machineKey !== 'string' || !machineKey.trim()) {
         throw new McpToolError('machineKey must name a machine from the Motion rules list.');
     }
-    const fields = ['traverseWithoutApprovalAtSafeZ', 'computedHeightTraverse', 'clearanceIdealMm', 'clearanceMinMm'];
+    const fields = ['traverseWithoutApprovalAtSafeZ', 'computedHeightTraverse', 'clearanceIdealMm', 'clearanceMinMm',
+        'movesWithoutApprovalPage', 'motorModeWithoutApprovalPage'];
     if (!fields.some((field) => body[field] !== undefined)) {
         throw new McpToolError(`Nothing to set: pass one or more of ${fields.join(', ')}.`);
     }
-    for (const field of ['traverseWithoutApprovalAtSafeZ', 'computedHeightTraverse']) {
+    for (const field of ['traverseWithoutApprovalAtSafeZ', 'computedHeightTraverse', 'movesWithoutApprovalPage', 'motorModeWithoutApprovalPage']) {
         if (body[field] !== undefined && typeof body[field] !== 'boolean') {
             throw new McpToolError(`${field} must be true or false.`);
         }
@@ -1862,6 +1930,9 @@ export function setMotionRuleFromSettings(body: { [field: string]: unknown }) {
             const toggle = body.traverseWithoutApprovalAtSafeZ === true ? MOTION_RULE_TOGGLE : COMPUTED_HEIGHT_TOGGLE;
             throw new McpToolError(`'${toggle}' cannot be turned on for ${key}: ${eligibility.reason}.`);
         }
+    }
+    if (body.motorModeWithoutApprovalPage === true && !approvalFreeSettingsFor(key).motorMode.applies) {
+        throw new McpToolError(`'${MOTOR_MODE_WITHOUT_APPROVAL_TOGGLE}' cannot be turned on for ${key}: ${approvalFreeSettingsFor(key).motorMode.reason}.`);
     }
     // Validate everything before the first write.
     const rules: MotionRulesSection = { ...motionRulesOf({ motionRules: machineStore.getFor(key, 'mcpMotionRules') }) };
@@ -1896,10 +1967,23 @@ export function setMotionRuleFromSettings(body: { [field: string]: unknown }) {
             }
         }
     }
-    if (typeof body.computedHeightTraverse === 'boolean' || clearances) {
+    // #326: the operator's click is the only writer of these two.
+    if (typeof body.movesWithoutApprovalPage === 'boolean') {
+        rules.movesWithoutApprovalPage = { value: body.movesWithoutApprovalPage, ...stated };
+    }
+    if (typeof body.motorModeWithoutApprovalPage === 'boolean') {
+        rules.motorModeWithoutApprovalPage = { value: body.motorModeWithoutApprovalPage, ...stated };
+    }
+    if (typeof body.computedHeightTraverse === 'boolean' || clearances || typeof body.movesWithoutApprovalPage === 'boolean'
+        || typeof body.motorModeWithoutApprovalPage === 'boolean') {
         machineStore.setFor(key, 'mcpMotionRules', rules);
     }
-    return { machineKey: key, traverseWithoutApprovalAtSafeZ: traverseWithoutApprovalPolicy(key), computedHeight: computedHeightRuleFor(key) };
+    return {
+        machineKey: key,
+        traverseWithoutApprovalAtSafeZ: traverseWithoutApprovalPolicy(key),
+        computedHeight: computedHeightRuleFor(key),
+        approvalFree: approvalFreeSettingsFor(key),
+    };
 }
 
 export function registerMachineTools(registry: ToolRegistry): void {
@@ -2074,6 +2158,8 @@ export function registerMachineTools(registry: ToolRegistry): void {
                 motion_floor_z: { type: ['number', 'null'], description: 'Lowest machine Z for XY transport; not above safe_traverse_z.' },
                 traverse_without_approval_at_safe_z: { type: ['boolean', 'null'], description: 'Approval-free transport at the park height. OFF on any machine; ON only on the A350 (others: Settings > MCP > Motion rules).' },
                 traverse_without_approval_at_computed_height: { type: ['boolean', 'null'], description: 'Approval-free moves at a computed safe height below top Z: false only (the operator turns it on in Settings > MCP > Motion rules).' },
+                moves_without_approval_page: { type: ['boolean', 'null'], description: 'NOT settable through MCP: always refused. Only the operator changes "Allow moves without an approval page", in Settings > MCP > Motion rules.' },
+                motor_mode_without_approval_page: { type: ['boolean', 'null'], description: 'NOT settable through MCP: always refused. Only the operator changes "Allow motor-mode changes without an approval page", in Settings > MCP > Motion rules.' },
                 toolhead_body_below_reference_mm: { type: ['number', 'null'], description: 'Measured mm the toolhead unit\'s own lowest point (body, collet nut, clip-on shoe) sits below the toolhead reference tool protrusion is measured from.' },
                 travel_fudge_mm: { type: ['number', 'null'], description: 'mm beyond the model box at each end of X and Y (default 25).' },
                 travel_fudge_x_mm: { type: ['number', 'null'], description: 'Per-axis override of travel_fudge_mm for X.' },

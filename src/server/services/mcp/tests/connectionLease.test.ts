@@ -73,7 +73,7 @@ function connectionManagerFixture() {
     return { cm, lease, calls, emitted, socket };
 }
 
-function machineToolsFixture(userDataDir: string) {
+export function machineToolsFixture(userDataDir: string) {
     const lease = new GcodeLease();
     const state = { pos: { x: 119, y: 77, z: -88 }, originOffset: { x: -51, y: -122, z: -328 }, timestamp: Date.now(), status: 'idle', isHomed: true };
     const machine = (identifier: string) => ({ identifier, metadata: { size: { x: 320, y: 350, z: 330 } } });
@@ -127,6 +127,8 @@ function machineToolsFixture(userDataDir: string) {
         '../positionOfRecord': positionOfRecord,
         '../frameRecovery': frameRecovery,
         '../registry': { McpToolError },
+        // #326: the released-motors latch getPositionSnapshot reads (pure).
+        '../motorPower': require('../motorPower'),
     });
     // The latch is per machine (#265 WP8) and a restored pre-WP8 file is the
     // real A350's (its full identifier); this fixture's connection names it 'A350'.

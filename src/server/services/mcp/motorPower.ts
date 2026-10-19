@@ -30,10 +30,15 @@
 //   commit releases only the linear motors. ONLYLINEAR therefore refuses like
 //   SHUTAll: only STAYPOWER is known to move.
 //
-// The MCP only READS the mode. Switching it is the operator's: Manual Mode is
-// the Ray's hand-push mode, and powering the steppers under someone's hands is
-// not the MCP's call. (A future opt-in tool could set STAYPOWER behind the
-// confirm page; nothing here does.)
+// Home and job starts only READ the mode. Switching it is the operator's call:
+// Manual Mode is the Ray's hand-push mode, and powering the steppers under
+// someone's hands must never happen silently. The one way the MCP switches it
+// is set_motor_power (tools/motorPower.ts, tyeth/Luban#326): staged for the
+// operator's click on a confirm page, or on the call only under the
+// operator-only setting "Allow motor-mode changes without an approval page"
+// with the agent quoting the operator's instruction. Control sets STAYPOWER
+// and then homes (M5, $H), as Luban's Control Mode radio does; Manual sets
+// SHUTAll after M5 and latches the position untrusted (below) until a home.
 //
 // Pure: no server imports, unit-tested in tests/motorPower.test.ts.
 
@@ -120,7 +125,8 @@ export async function readMotorPower(
     }
 }
 
-const TO_CONTROL_MODE = 'Switch Luban\'s Set Origin Mode to Control Mode, then retry.';
+const TO_CONTROL_MODE = 'Switch with set_motor_power {mode:\'control\'} (it stages a confirm page and then homes the Ray), or switch '
+    + 'Luban\'s Set Origin Mode to Control Mode, then retry.';
 
 /**
  * The refusal for `action` unless the mode reads STAYPOWER, else null. `tag`
@@ -141,10 +147,57 @@ export function motorPowerRefusal(reading: MotorPowerReading, action: string, ta
         why = `motor power unknown (${reading.error}). In Manual Mode the Ray acknowledges commands and ignores them, so the MCP reads `
             + `its motor-power mode first and refuses rather than guess. Check the connection; if Luban shows Manual Mode, ${TO_CONTROL_MODE}`;
     }
-    return `Refusing ${action}: ${why} The MCP never changes the motor-power mode itself. ${after} ${tag}`;
+    return `Refusing ${action}: ${why} Nothing here changes the motor-power mode silently. ${after} ${tag}`;
 }
 
 /** The `motor_power` block results, get_position and get_machine_profile carry where the machine has the mode (the Ray). */
 export function motorPowerNote(reading: MotorPowerReading, basis: string): MotorPowerReading & { motion_allowed: boolean; basis: string } {
     return { ...reading, motion_allowed: reading.mode === MOTOR_POWER_MOTION_MODE, basis };
+}
+
+/** The firmware's mode bytes set_motor_power sends (snapmaker.h:51-54): SHUTAll 1, STAYPOWER 3. */
+export const MOTOR_POWER_SET_BYTES: Readonly<Record<'SHUTAll' | 'STAYPOWER', number>> = { SHUTAll: 1, STAYPOWER: 3 };
+
+// ---- The position after the motors were released (#326) -------------------
+//
+// With the motors released (SHUTAll) the head can be pushed by hand, and the
+// firmware keeps reporting the old coordinates and "homed". After
+// set_motor_power {mode:'manual'} the MCP latches the position untrusted for
+// that machine: getPositionSnapshot reports isHomed false with the reason, so
+// staging, the start re-check (#323) and the policy paths all refuse until a
+// home is sent in Control Mode (homeMachine clears the latch once the home is
+// accepted). Keyed by machine identifier so another machine's position is
+// never touched. In memory only: a restart of Luban loses it, but a Ray left
+// in SHUTAll is refused by the motor-power gate (#321) anyway, and switching
+// it to Control Mode homes it.
+
+export interface MotorsReleasedLatch {
+    machineIdentifier: string | null;
+    at: number;
+    /** What released them: the approved job, or the setting with the operator's instruction. */
+    by: string;
+}
+
+let motorsReleased: MotorsReleasedLatch | null = null;
+
+export function noteMotorsReleased(latch: MotorsReleasedLatch): void {
+    motorsReleased = { ...latch };
+}
+
+/** The latch for `machineIdentifier`, or null. */
+export function motorsReleasedFor(machineIdentifier: string | null): MotorsReleasedLatch | null {
+    return motorsReleased && motorsReleased.machineIdentifier === machineIdentifier ? motorsReleased : null;
+}
+
+/** Clear the latch for `machineIdentifier` (a home was accepted); with no argument, whatever machine (tests). */
+export function clearMotorsReleased(machineIdentifier?: string | null): void {
+    if (machineIdentifier === undefined || (motorsReleased && motorsReleased.machineIdentifier === machineIdentifier)) {
+        motorsReleased = null;
+    }
+}
+
+export function motorsReleasedReason(latch: MotorsReleasedLatch): string {
+    return `The motors were released (Manual Mode / SHUTAll) by ${latch.by} at ${new Date(latch.at).toISOString()}: the head may `
+        + 'have been pushed by hand, so the position is untrusted and reads unhomed until a home in Control Mode '
+        + '(set_motor_power {mode:\'control\'} homes).';
 }

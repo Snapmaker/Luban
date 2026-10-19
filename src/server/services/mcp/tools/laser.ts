@@ -16,6 +16,7 @@ import { McpToolError, ToolRegistry } from '../registry';
 import { HEARTBEAT_STALE_MS, PositionSnapshot, assertFreshHeartbeat, assertWithinTravel, describePlanningTravel, getPositionSnapshot,
     motionGcodeForm, requirePlanningTravel, traverseMachine } from './machine';
 import { validateStagedEnvelope } from './staging';
+import { OPERATOR_INSTRUCTION_ARG, OperatorInstructionOutcome, runDirectOnOperatorInstruction } from './operatorInstruction';
 import { ToolheadAssessment } from '../toolheadState';
 
 /**
@@ -146,13 +147,14 @@ export function registerLaserTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 repeat: { type: 'number', description: 'Passes round the box, default 1, max 4 (clipped and reported).' },
                 reason: { type: 'string', description: 'Shown to the operator: why this frame is needed.' },
                 wait_until_moved: { type: 'boolean', description: 'Staged default for execution, as traverse_xy. Default true.' },
+                operator_instruction: { ...OPERATOR_INSTRUCTION_ARG, description: `${OPERATOR_INSTRUCTION_ARG.description} Honoured only with power_percent 0 (laser off): a frame that fires the laser always stages.` },
             },
             required: ['reason'],
             additionalProperties: false,
         },
         handler: async (args: {
             x0?: number; y0?: number; x1?: number; y1?: number; job_id?: string;
-            power_percent?: number; feed?: number; repeat?: number; reason?: string; wait_until_moved?: boolean;
+            power_percent?: number; feed?: number; repeat?: number; reason?: string; wait_until_moved?: boolean; operator_instruction?: string;
         }) => {
             const reason = String(args.reason || '').trim();
             if (!reason) {
@@ -275,7 +277,25 @@ export function registerLaserTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             const validation = validateStagedEnvelope(plan.reviewText, 'laser_frame', { relativeTransport: relative });
             const job = jobManager.submit(plan.reviewText, plan.name, 'laser', validation, 'direct', plan.steps.map((s) => s.gcode));
             job.waitUntilMoved = args.wait_until_moved !== false;
+            // #326: the operator-only "Allow moves without an approval page", on the operator's quoted instruction - only for a
+            // laser-OFF frame (pure motion); a frame that fires the laser always stages.
+            let onCall: OperatorInstructionOutcome | null = null;
+            if (args.operator_instruction !== undefined) {
+                onCall = plan.power.line
+                    ? { ran: false, result: null, staged_because: 'operator_instruction is honoured only for a laser-off frame (power_percent 0); this one fires the laser, so it stages' }
+                    : await runDirectOnOperatorInstruction(job, args);
+            }
+            if (onCall && onCall.ran) {
+                return {
+                    connected_machine: describeConnectedMachine(),
+                    gcode_form: motionGcodeForm(),
+                    box: { ...plan.box, source: boxSource },
+                    ...toolheadField(toolhead),
+                    ...onCall.result,
+                };
+            }
             return {
+                ...(onCall && onCall.staged_because ? { operator_instruction_not_used: onCall.staged_because } : {}),
                 job: jobManager.describe(job),
                 connected_machine: describeConnectedMachine(),
                 gcode_form: motionGcodeForm(),

@@ -142,6 +142,8 @@ export function cameraFixture(ray = false, readMotorPowerMode: () => Promise<unk
         '../machineCapability': machineCapability,
         '../toolheadState': require('../toolheadState'),
         '../sacpLineGuard': require('../sacpLineGuard'),
+        // #326: the released-motors latch homeMachine clears (pure).
+        '../motorPower': require('../motorPower'),
         '../connectedMachine': {
             ...toolheadStubs(() => state, dialect, Error, readMotorPowerMode),
             connectedMachineIdentifier: () => (ray ? 'Ray' : null),
