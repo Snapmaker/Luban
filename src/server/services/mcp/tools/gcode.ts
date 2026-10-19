@@ -122,7 +122,8 @@ function getJobChannel(): FileJobChannel {
  * The A350 over Wi-Fi (SstpHttpChannel) has both.
  */
 function getJobChannelFor(kind: McpJob['kind']): JobChannel {
-    if (kind === 'file') {
+    if (kind !== 'direct' && kind !== 'procedure') {
+        // A file job, and fail-closed for any kind added later.
         return getJobChannel();
     }
     const channel = getConnectedChannel();
