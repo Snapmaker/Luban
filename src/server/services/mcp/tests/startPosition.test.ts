@@ -56,6 +56,10 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.equal(job.tokenUsed, false); assert.equal(job.state, 'approved');
         assert.deepEqual(f.executed, []);
         assert.ok(job.events.some((event) => event.phase === 'start_refused'));
+        // A withdrawn job gets the token's own refusal, never a position one.
+        const withdrawn = f.createDirectJob();
+        await f.stop(withdrawn);
+        await assert.rejects(f.startDirect(withdrawn), /not approved/);
         // Moved back to where it was planned from, the approved increment is right again.
         f.setPosition({ at: { x: 1 } });
         await f.startDirect(job);
