@@ -280,7 +280,7 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
     const baseUrl = () => publicBaseUrl(listeners.httpsPort || port, settings.allowLan, listeners.httpsPort ? 'https' : 'http');
     registerGcodeTools(registry, baseUrl);
     registerThreadMillingTools(registry);
-    registerCameraTools(registry);
+    registerCameraTools(registry, baseUrl);
     registerCameraProgramTool(registry, baseUrl);
     registerCameraModelTools(registry, baseUrl);
     registerCalibrationTools(registry);

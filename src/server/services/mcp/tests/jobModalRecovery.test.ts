@@ -121,9 +121,11 @@ function gcodeTools(manager: JobManager, files: Map<string, string>, firmwareSto
     for (const match of source.matchAll(/from '([^']+)'/g)) {
         dependencies[match[1]] = {};
     }
+    // The A350's channel shape: file jobs and executeGcode (a procedure start requires executeGcode).
     const channel = {
         uploadGcodeFile: () => undefined,
         startGcodeJob: async () => ({ ok: true }),
+        executeGcode: async () => ({ result: 0 }),
         stopGcodeJob: async () => { firmwareStops.count += 1; return { ok: true }; },
     };
     Object.assign(dependencies, {

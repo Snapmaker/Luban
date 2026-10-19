@@ -263,7 +263,8 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         let sequence = 0;
         let resetAt = 1;
         let runnerCalls = 0;
-        const channel = { uploadGcodeFile: () => undefined, startGcodeJob: () => undefined };
+        // The A350's channel shape: file jobs and executeGcode (a procedure start requires executeGcode).
+        const channel = { uploadGcodeFile: () => undefined, startGcodeJob: () => undefined, executeGcode: async () => ({ result: 0 }) };
         const state = { timestamp: Date.now(), status: 'idle', headPower: 0 };
         const connection = { getCurrentChannel: () => channel, getLatestMachineState: () => state };
         const position = {
