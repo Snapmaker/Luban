@@ -106,6 +106,7 @@ export function managerFixture(files: Map<string, string>): JobManager {
         './jobEnding': jobEnding,
         './jobDashboardState': require('../jobDashboardState'),
         './telemetryConfig': require('../telemetryConfig'),
+        './jobMachineBinding': require('../jobMachineBinding'),
         './activeTool': { describeActiveTool: () => ({ active: null }) },
         // Program identity + upload store (#237): pure, so the real module.
         './gcodeIntake': require('../gcodeIntake'),
@@ -145,6 +146,9 @@ function gcodeTools(manager: JobManager, files: Map<string, string>, firmwareSto
         '../probeFeed': { probeFeedService: { assertNoOvertravel: () => undefined, getTrip: () => null } },
         '../spindleTelemetry': { spindleTelemetryService: { startForJob: () => undefined, summary: () => null } },
         './machine': { assertFreshHeartbeat: () => undefined },
+        // WP4a: status mapping and the settle-comment parser are pure - the real modules.
+        '../logicalFrame': require('../logicalFrame'),
+        '../traversePlan': require('../traversePlan'),
     });
     return isolatedModule('tools/gcode.ts', dependencies);
 }

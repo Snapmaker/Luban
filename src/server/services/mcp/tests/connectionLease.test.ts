@@ -13,6 +13,8 @@ import { GcodeLease, isHomeSequence, isRecoveryCommand } from '../../machine/gco
 import * as frameRecovery from '../frameRecovery';
 import * as machinePosition from '../machinePosition';
 import * as machineTravel from '../machineTravel';
+import * as machineCapability from '../machineCapability';
+import { dialectById } from '../gcodeDialect';
 import * as positionOfRecord from '../positionOfRecord';
 import { McpToolError } from '../registry';
 
@@ -99,11 +101,36 @@ function machineToolsFixture(userDataDir: string) {
         '../activeTool': { invalidateActiveTool: () => undefined },
         '../machinePosition': machinePosition,
         '../machineTravel': machineTravel,
-        '../rotaryGeometry': { statedTravel: () => null },
+        '../machineCapability': machineCapability,
+        // WP4a: pure modules, the real ones.
+        '../logicalFrame': require('../logicalFrame'),
+        '../gcodeForms': require('../gcodeForms'),
+        '../gcodeDialect': require('../gcodeDialect'),
+        '../connectedMachine': {
+            connectedDialect: () => dialectById('sm2-marlin'),
+            MACHINES: [machine('A350'), machine('Ray')],
+            findMachine: (id: string | null) => (id ? [machine('A350'), machine('Ray')].find((m) => m.identifier === id) || null : null),
+            connectedMachineIdentifier: () => 'A350',
+            machineCapabilityFor: (id: string | null) => machineCapability.deriveMachineCapability(
+                id ? { ...machine(id), machineType: 'test' } : null, id
+            ),
+            connectedMachineCapability: () => machineCapability.deriveMachineCapability({ ...machine('A350'), machineType: 'test' }),
+            describeConnectedMachine: () => ({ identifier: 'A350', type: 'test', hasZ: true }),
+        },
+        '../rotaryGeometry': { statedTravel: () => ({ xMin: null, xMax: null, yMin: null, yMax: null }) },
+        // An empty per-machine store with nothing applying: the A350 defaults (machineStore.test covers the store itself).
+        '../machineStore': {
+            machineStore: { currentMachine: () => ({ machineKey: null, deviceConflict: null }), keyForIdentifier: () => null, getFor: () => undefined },
+            baseIdentifier: (key: string) => key,
+            setMachineStoreSources: () => undefined,
+        },
         '../positionOfRecord': positionOfRecord,
         '../frameRecovery': frameRecovery,
         '../registry': { McpToolError },
     });
+    // The latch is per machine (#265 WP8) and a restored pre-WP8 file is the
+    // real A350's (its full identifier); this fixture's connection names it 'A350'.
+    positionOfRecord.setFrameLatchMachineSource(() => machineCapability.LEGACY_MACHINE_IDENTIFIER);
     return { tools: module, lease, state };
 }
 
@@ -219,8 +246,15 @@ export const tests: Array<[string, () => Promise<void>]> = [
             // A raise rewrites the file whole: no temp file left behind, and it parses.
             positionOfRecord.latchFrameUncertain('fresh');
             assert.deepEqual(fs.readdirSync(dir), ['mcp-frame-latch.json']);
-            assert.equal(JSON.parse(fs.readFileSync(file, 'utf8')).reason, 'fresh');
+            // v2 file: every machine's latch. The unreadable file raises the unscoped latch for machines not known yet
+            // (#265 WP10) beside the connected machine's own; with no other machine latched, its restore clears both.
+            const saved = JSON.parse(fs.readFileSync(file, 'utf8')).latches as Array<{ reason: string; machineIdentifier: string | null }>;
+            assert.deepEqual(saved.map((l) => l.machineIdentifier === null), [true, false], 'v2 file: the unscoped latch, then the machine latch');
+            assert.match(saved[0].reason, /latch file unreadable at .*every machine not known yet/);
+            assert.equal(saved[1].reason, 'fresh');
+            assert.equal(positionOfRecord.getFrameLatch()?.reason, 'fresh', 'the machine latch applies first');
             positionOfRecord.clearFrameLatch();
+            assert.equal(positionOfRecord.getFrameLatch(), null, 'one restore clears both');
             assert.equal(fs.existsSync(file), false);
             // A file that parses to something other than an object is unreadable too.
             fs.writeFileSync(file, '[1, 2]');

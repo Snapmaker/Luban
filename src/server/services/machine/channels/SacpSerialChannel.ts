@@ -93,6 +93,7 @@ class SacpSerialChannel extends SacpChannelBase {
                     // Machine detected
                     this.emit(ChannelEvent.Ready, {
                         machineIdentifier,
+                        deviceSerial: this.deviceSerialOf(machineInfo),
                     });
 
                     resolve(true);

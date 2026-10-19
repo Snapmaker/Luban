@@ -6,6 +6,7 @@ import logger from '../../lib/logger';
 import { gcodeLease } from '../machine/gcodeLease';
 import { connectionManager } from '../machine/ConnectionManager';
 import { clearanceOptions } from './clearanceContext';
+import { connectedMachineCapability } from './connectedMachine';
 import { OBSTACLE_MARGIN_MM, POSITION_EPSILON_MM, isStraightZUp, segmentHitsBox2D } from './envelopeChecks';
 import { jobManager } from './jobs';
 import { landmarkStore } from './landmarks';
@@ -29,13 +30,14 @@ import { pendantSettings, updatePendantSettings } from './pendantSettings';
 import { getFeedOverride } from './failureRecovery';
 import { currentGcodeSequence, getFrameLatch, getPositionOfRecord, getTrustedOffset, latchFrameUncertain, onFrameLatchChange } from './positionOfRecord';
 import { probeFeedService } from './probeFeed';
+import { PENDANT_GATE, gateRefusal } from './procedureGates';
 import {
     assertFullFeedrate, assertMachineReadyForProcedure, enterMachineFrame, moveMachineSettled, queryPositionReport, queueMachineMove,
     readFirmwareMotionConfig, sleep,
     verifyRestoredPosition,
 } from './probing';
 import { homeMachine, sendWorkFrameRestore } from './tools/camera';
-import { HEARTBEAT_STALE_MS, connectionEpoch, declareMachineFrameRun, endMachineFrameRun, getMachineSizeByIdentifier, getPositionSnapshot, requirePlanningTravel, safeTraverseZ } from './tools/machine';
+import { HEARTBEAT_STALE_MS, connectionEpoch, declareMachineFrameRun, endMachineFrameRun, getMachineSizeByIdentifier, getPositionSnapshot, requirePlanningTravel, zTravelTop } from './tools/machine';
 
 const log = logger('service:mcp:pendant');
 
@@ -304,7 +306,7 @@ export class PendantRuntime {
         const size = getMachineSizeByIdentifier(connectionManager.getConnectionStatus().machineIdentifier);
         if (!size) { throw new Error('Machine travel is unknown.'); }
         // Match stagingFrameContext: A350 profile Z325 excludes its reachable Z328 park.
-        return { ...travel.limits, zMin: 0, zMax: Math.max(size.z, safeTraverseZ()) };
+        return { ...travel.limits, zMin: 0, zMax: zTravelTop(size.z) };
     }
 
     private reviewedBounds(requested: JogBounds): JogBounds {
@@ -1644,6 +1646,11 @@ export class PendantRuntime {
                 case '/pendant/connect':
                     await this.connect(String(args.path || '')); break;
                 case '/pendant/arm': {
+                    // G53 windows and M114 Count proofs are the Snapmaker 2.0 form: refused, naming the machine, on any other (#265 WP4b).
+                    const unsupported = gateRefusal(connectedMachineCapability(), PENDANT_GATE);
+                    if (unsupported) {
+                        throw new Error(unsupported);
+                    }
                     if (!this.port?.isOpen || this.busy || Date.now() - this.session.receivedAt > 300) {
                         throw new Error('No recent USB input, or a jog is still settling.');
                     }

@@ -1,32 +1,33 @@
 // Where the TOOLHEAD can actually go, as a planner may assume it.
 //
-// Nothing in the MCP knew this. `checkMotion` checks obstacles, and the
-// position of record checks beats against the machine-definition size with a
-// 50 mm slop - a sanity filter for garbage readings, deliberately loose, and
-// never a statement about reachable travel. So a planner that wanted a band
-// of XY to sweep had nothing to clamp against and invented its own slop:
-// camera_bootstrap's search band used `max(-25, ...)` and `min(size.x + 40,
-// ...)`, which on the A350 plans a first waypoint at X-25 when the travel
-// stops at X-19 (live 2026-09-20). The procedure would have aborted on its
-// first move, after an operator approval.
+// Operator rule (2026-10-18, the Ray follow-up to #260): the travel comes
+// from the CHOSEN MACHINE MODEL - the connected machine's profile size (Ray
+// 600 x 400, A350 320 x 350) - plus a FUDGE at each end of each axis:
 //
-// The numbers vary per machine AND per rig: an A350's definition says
-// 320 x 350, while its machine frame runs X -19...339 (home X-19, and X339
-// found by sweep) and Y 0...342. A bracing kit, an Artisan, a re-homed
-// firmware limit all move them again. So travel resolves in three layers,
-// strongest first:
+//     allowed range per axis = [0 - fudge, size + fudge]
 //
-//   1. STATED - travel_x_min / travel_x_max / travel_y_min / travel_y_max in
-//      the geometry store (set_probe_geometry, env-overridable). The
-//      operator's measured limit for THIS rig.
-//   2. OBSERVED - a position the machine has actually been at is proof that
-//      point is reachable, so it widens an end nobody has stated. Home is the
-//      usual source: an A350 sitting at X-19 has demonstrated X-19.
-//   3. NOMINAL - the machine definition's size box, 0..size per axis.
+// Real homes sit a little outside the nominal box: the Ray homes to about
+// X-1 / Y399 against 600 x 400, the A350's frame runs X -19...339 / Y 0...342
+// against 320 x 350 (home X-19, X339 found by sweep). The default fudge of
+// 25 mm covers every one of those (-19 >= -25, 339 <= 345, 399 <= 425) and
+// still refuses X650 on the Ray (> 625). It is ONE setting per machine
+// (set_machine_policy travel_fudge_mm, per axis travel_fudge_x_mm / _y_mm,
+// stored in the machine's machineStore entry; LUBAN_MCP_TRAVEL_FUDGE_MM wins),
+// read by tools/machine.ts travelFudge(); this module just takes the numbers.
 //
-// Evidence never overrides the operator: an observed position outside a
-// STATED end is reported as a conflict rather than silently widening it,
-// because one of the two is wrong and a planner should not pick.
+// Before this the travel was a global "stated" box (set_probe_geometry
+// travel_*) widened by observed positions, which (a) was the A350's box
+// applied to Ray coordinates and (b) let a wrong statement stand. Now:
+//
+//   1. MODEL  - size +/- fudge, always available for a known machine.
+//   2. STATED - an operator-stated end, scoped to the machine it was stated
+//      on, is honoured only as a TIGHTER override. A statement looser than
+//      the model + fudge is reported and the model governs: the fudge is the
+//      one knob for "my rig reaches further", not a per-end statement.
+//
+// An observed position outside the result is reported as a conflict (the
+// position judge or the statement is wrong), never silently believed: the
+// fudge already covers legitimate overtravel at home.
 //
 // Pure: no server imports, unit-tested in tests/machineTravel.test.ts.
 
@@ -37,28 +38,47 @@ export interface TravelLimits {
     yMax: number;
 }
 
-export type TravelSource = 'stated' | 'observed' | 'nominal';
+export type TravelSource = 'model' | 'stated';
 
 export interface TravelEnd {
     value: number;
     source: TravelSource;
 }
 
+export interface TravelFudge {
+    x: number;
+    y: number;
+}
+
 export interface ResolvedTravel {
     limits: TravelLimits;
     ends: { xMin: TravelEnd; xMax: TravelEnd; yMin: TravelEnd; yMax: TravelEnd };
-    /** Observed positions that contradict a stated limit - neither is silently believed. */
+    /** The model box the limits derive from, for results and the confirm page; null for an unknown machine planned from statements alone. */
+    model: { size: { x: number; y: number }; fudge: TravelFudge; limits: TravelLimits } | null;
+    /** Statements looser than the model, and observed positions outside the result - neither is silently believed. */
     conflicts: string[];
+}
+
+export interface StatedTravel {
+    xMin: number | null;
+    xMax: number | null;
+    yMin: number | null;
+    yMax: number | null;
 }
 
 export interface TravelInput {
     /** The machine definition's size, or null when the machine is unknown. */
     size: { x: number; y: number } | null;
-    /** Operator-stated limits; any end may be null (= not stated). */
-    stated: { xMin: number | null; xMax: number | null; yMin: number | null; yMax: number | null };
+    /** The fudge applied at each end of each axis (tools/machine.ts travelFudge()). */
+    fudge: TravelFudge;
+    /** Operator-stated limits FOR THIS MACHINE; any end may be null (= not stated). Pass all-null when nothing is stated for it. */
+    stated: StatedTravel;
     /** A position the toolhead is known to have occupied, if any. */
     observed: { x: number | null; y: number | null } | null;
 }
+
+/** The default fudge, in mm, at each end of each axis. See the header for why 25. */
+export const DEFAULT_TRAVEL_FUDGE_MM = 25;
 
 /**
  * The heartbeat does not report round numbers: a machine homed to X-19 reports
@@ -72,9 +92,9 @@ export const TRAVEL_EPSILON_MM = 0.05;
 
 /**
  * Operator rule (2026-10-05): the machine accepts attempted overtravel, and so do
- * we, on every axis. A toolhead seen up to this far past a stated end is the
- * result of a permitted overtravel (the DRO corrects on the next sync), not a
- * conflict between the statement and reality.
+ * we, on every axis. A toolhead seen up to this far past an end is the result
+ * of a permitted overtravel (the DRO corrects on the next sync), not a
+ * conflict between the travel and reality.
  */
 export const TRAVEL_OVERTRAVEL_MM = 1;
 
@@ -83,55 +103,93 @@ function beyond(value: number, limit: number, end: 'low' | 'high'): boolean {
     return end === 'low' ? value < limit - TRAVEL_EPSILON_MM : value > limit + TRAVEL_EPSILON_MM;
 }
 
+/** The model box: size +/- fudge on each axis. */
+export function modelTravel(size: { x: number; y: number }, fudge: TravelFudge): TravelLimits {
+    return {
+        xMin: Number((0 - fudge.x).toFixed(3)),
+        xMax: Number((size.x + fudge.x).toFixed(3)),
+        yMin: Number((0 - fudge.y).toFixed(3)),
+        yMax: Number((size.y + fudge.y).toFixed(3)),
+    };
+}
+
 function resolveEnd(
     stated: number | null,
-    nominal: number,
-    observed: number | null,
-    widen: 'low' | 'high',
+    model: number | null,
+    end: 'low' | 'high',
     axis: string,
     conflicts: string[]
 ): TravelEnd {
-    const seen = observed !== null && Number.isFinite(observed) ? observed : null;
-    if (stated !== null && Number.isFinite(stated)) {
-        const allowance = widen === 'low' ? stated - TRAVEL_OVERTRAVEL_MM : stated + TRAVEL_OVERTRAVEL_MM;
-        if (seen !== null && beyond(seen, allowance, widen)) {
-            conflicts.push(`The toolhead has been observed at ${axis} ${Number(seen.toFixed(3))}, outside the stated `
-                + `${axis} ${widen === 'low' ? 'minimum' : 'maximum'} of ${stated} by more than the ${TRAVEL_OVERTRAVEL_MM} mm overtravel allowance. One of the two is wrong: `
-                + 're-state the travel limit, or find out how it got there.');
-        }
-        return { value: stated, source: 'stated' };
+    const said = stated !== null && Number.isFinite(stated) ? stated : null;
+    if (model === null) {
+        // Unknown machine: the caller has checked every end is stated.
+        return { value: said as number, source: 'stated' };
     }
-    if (seen !== null && beyond(seen, nominal, widen)) {
-        // Reachability is evidence: the machine went there.
-        return { value: Number(seen.toFixed(3)), source: 'observed' };
+    if (said === null) {
+        return { value: model, source: 'model' };
     }
-    return { value: nominal, source: 'nominal' };
+    const looser = end === 'low' ? said < model - TRAVEL_EPSILON_MM : said > model + TRAVEL_EPSILON_MM;
+    if (looser) {
+        conflicts.push(`The stated ${axis} ${end === 'low' ? 'minimum' : 'maximum'} ${said} is looser than the machine model plus `
+            + `fudge (${model}); the model governs. Widen this machine's travel fudge (set_machine_policy travel_fudge_mm) if this rig genuinely reaches there.`);
+        return { value: model, source: 'model' };
+    }
+    return { value: said, source: 'stated' };
+}
+
+function noteObserved(axis: string, seen: number | null, min: number, max: number, conflicts: string[]): void {
+    if (seen === null || !Number.isFinite(seen)) {
+        return;
+    }
+    if (beyond(seen, min - TRAVEL_OVERTRAVEL_MM, 'low') || beyond(seen, max + TRAVEL_OVERTRAVEL_MM, 'high')) {
+        conflicts.push(`The toolhead has been observed at ${axis} ${Number(seen.toFixed(3))}, outside the travel ${axis} ${min}..${max} `
+            + `by more than the ${TRAVEL_OVERTRAVEL_MM} mm overtravel allowance. Either the position of record or the travel is wrong: `
+            + 'check get_position, and widen the travel fudge for this machine (set_machine_policy travel_fudge_mm) only if the machine really reaches there.');
+    }
 }
 
 /**
  * The travel a planner may use, or null when the machine is unknown and
- * nothing has been stated - in which case there is no honest box to clamp to
- * and the caller must refuse rather than guess one.
+ * not every end has been stated - in which case there is no honest box to
+ * clamp to and the caller must refuse rather than guess one.
  */
 export function resolveTravel(input: TravelInput): ResolvedTravel | null {
-    const { size, stated } = input;
+    const { size, stated, fudge } = input;
     const statedComplete = [stated.xMin, stated.xMax, stated.yMin, stated.yMax].every((v) => v !== null && Number.isFinite(v));
     if (!size && !statedComplete) {
         return null;
     }
-    const observed = input.observed || { x: null, y: null };
+    const model = size ? modelTravel(size, fudge) : null;
     const conflicts: string[] = [];
     const ends = {
-        xMin: resolveEnd(stated.xMin, size ? 0 : (stated.xMin as number), observed.x, 'low', 'X', conflicts),
-        xMax: resolveEnd(stated.xMax, size ? size.x : (stated.xMax as number), observed.x, 'high', 'X', conflicts),
-        yMin: resolveEnd(stated.yMin, size ? 0 : (stated.yMin as number), observed.y, 'low', 'Y', conflicts),
-        yMax: resolveEnd(stated.yMax, size ? size.y : (stated.yMax as number), observed.y, 'high', 'Y', conflicts),
+        xMin: resolveEnd(stated.xMin, model ? model.xMin : null, 'low', 'X', conflicts),
+        xMax: resolveEnd(stated.xMax, model ? model.xMax : null, 'high', 'X', conflicts),
+        yMin: resolveEnd(stated.yMin, model ? model.yMin : null, 'low', 'Y', conflicts),
+        yMax: resolveEnd(stated.yMax, model ? model.yMax : null, 'high', 'Y', conflicts),
     };
+    const limits = { xMin: ends.xMin.value, xMax: ends.xMax.value, yMin: ends.yMin.value, yMax: ends.yMax.value };
+    const observed = input.observed || { x: null, y: null };
+    noteObserved('X', observed.x, limits.xMin, limits.xMax, conflicts);
+    noteObserved('Y', observed.y, limits.yMin, limits.yMax, conflicts);
     return {
-        limits: { xMin: ends.xMin.value, xMax: ends.xMax.value, yMin: ends.yMin.value, yMax: ends.yMax.value },
+        limits,
         ends,
+        model: size && model ? { size: { x: size.x, y: size.y }, fudge: { ...fudge }, limits: model } : null,
         conflicts,
     };
+}
+
+/** One line for results and refusals: "Ray model 600 x 400 + 25 mm fudge each end: X -25..625, Y -25..425". */
+export function describeTravel(travel: ResolvedTravel, machineIdentifier: string | null): string {
+    const l = travel.limits;
+    const box = `X ${l.xMin}..${l.xMax}, Y ${l.yMin}..${l.yMax}`;
+    if (!travel.model) {
+        return `stated travel (unknown machine): ${box}`;
+    }
+    const m = travel.model;
+    const fudge = m.fudge.x === m.fudge.y ? `${m.fudge.x} mm fudge each end` : `fudge X ${m.fudge.x} / Y ${m.fudge.y} mm each end`;
+    const tightened = Object.values(travel.ends).some((e) => e.source === 'stated') ? '; tightened by an operator statement' : '';
+    return `${machineIdentifier || 'machine'} model ${m.size.x} x ${m.size.y} + ${fudge}: ${box}${tightened}`;
 }
 
 export interface ClampedBand {

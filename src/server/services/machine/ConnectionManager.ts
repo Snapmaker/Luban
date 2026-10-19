@@ -57,6 +57,7 @@ import { connectionDiagnostics, diagnosticId } from './connectionDiagnostics';
 import { safeIdentifier, safeTarget } from './connectionDiagnosticState';
 import { gcodeLease } from './gcodeLease';
 import { noteFrameRestored } from '../mcp/positionOfRecord';
+import { JudgeConnectionContext, setJudgeConnectionContextProvider } from '../mcp/machinePosition';
 import type { EnclosureRawReport, SerialEnclosureReport } from '../mcp/enclosure';
 
 const log = logger('lib:ConnectionManager');
@@ -64,6 +65,24 @@ const log = logger('lib:ConnectionManager');
 const ensureRange = (value, min, max) => {
     return Math.max(min, Math.min(max, value));
 };
+
+/**
+ * The machine address out of the SSTP-HTTP base URL a channel reports
+ * ('http://192.168.1.20:8080' -> '192.168.1.20'): no scheme, credentials,
+ * port or path, so the status carries the address the plan's `host:<address>`
+ * device id is built from, and never a secret. Null when there is none.
+ */
+export function hostAddress(host: unknown): string | null {
+    if (typeof host !== 'string') {
+        return null;
+    }
+    let rest = host.trim().replace(/^[a-z][a-z0-9+.-]*:\/\//i, '');
+    rest = rest.replace(/^[^@/]*@/, '');
+    rest = rest.split(/[/?#]/)[0];
+    const bracketed = rest.match(/^\[([^\]]+)\]/);
+    const address = bracketed ? bracketed[1] : rest.replace(/:\d*$/, '');
+    return address || null;
+}
 
 interface ConnectionOpenOptions {
     attemptId?: string;
@@ -177,6 +196,13 @@ class ConnectionManager {
     // identifier of the connected machine, kept for status reporting
     private machineIdentifier: string | null = null;
 
+    // Per-device identity from the channel's Ready payload (#265): the SACP
+    // controller serial number, and the address of the SSTP-HTTP machine
+    // (hostAddress). Null when the transport has none (text serial). Never the token.
+    private deviceSerial: string | null = null;
+
+    private host: string | null = null;
+
     private scheduledTasksHandle;
 
     /**
@@ -230,7 +256,8 @@ class ConnectionManager {
      * does not report one (no heartbeat yet, or a channel that keeps none).
      * SSTP over HTTP fills it from its status poll; the SACP channels (TCP,
      * UDP, serial - the Ray, Artisan and J1) from their heartbeat and
-     * coordinate-system subscriptions (#260). Text serial keeps no state.
+     * coordinate-system subscriptions (#260); text serial from the M114
+     * replies MarlinController polls, in the LOGICAL frame (#265).
      */
     public getLatestMachineState(): { [key: string]: unknown; timestamp: number } | null {
         const channel = this.channel as unknown as {
@@ -240,6 +267,19 @@ class ConnectionManager {
             return channel.getLatestMachineState();
         }
         return null;
+    }
+
+    /** The connection session and position frame the position judge keys its learnt state on (machinePosition.ts). */
+    public getJudgeConnectionContext(): JudgeConnectionContext {
+        if (!this.channel) {
+            return { session: null, positionFrame: null };
+        }
+        const state = this.getLatestMachineState();
+        const frame = state ? state.positionFrame : null;
+        return {
+            session: this.getConnectionGeneration(),
+            positionFrame: typeof frame === 'string' ? frame : null,
+        };
     }
 
     /** True while the active channel speaks SACP (TCP, UDP or serial). Read-only (MCP). */
@@ -259,7 +299,15 @@ class ConnectionManager {
             protocol: this.channel ? this.protocol : null,
             machineIdentifier: this.machineIdentifier,
             machineReady: !!this.machineInstance,
+            deviceSerial: this.deviceSerial,
+            host: this.host,
         };
+    }
+
+    private clearDeviceIdentity(): void {
+        this.machineIdentifier = null;
+        this.deviceSerial = null;
+        this.host = null;
     }
 
     // TODO: Refactor this
@@ -339,7 +387,7 @@ class ConnectionManager {
      * 2. Start heart beat (or subscribe to heart beat)
      * 3. Subscribe to machine events
      */
-    private onChannelReady = async (data: { machineIdentifier?: string }) => {
+    private onChannelReady = async (data: { machineIdentifier?: string; deviceSerial?: unknown; host?: unknown }) => {
         log.info('channel: Ready');
         connectionDiagnostics.record('channel_ready');
 
@@ -347,6 +395,8 @@ class ConnectionManager {
 
         log.debug(`machineIdentifier = ${machineIdentifier}`);
         this.machineIdentifier = machineIdentifier || null;
+        this.deviceSerial = typeof data?.deviceSerial === 'string' && data.deviceSerial ? data.deviceSerial : null;
+        this.host = hostAddress(data?.host);
 
         // configure machine instance
         this.machineInstance = null;
@@ -443,7 +493,7 @@ class ConnectionManager {
         this.unbindChannelEvents();
         this.channel = null;
         this.channelAssignments += 1;
-        this.machineIdentifier = null;
+        this.clearDeviceIdentity();
         this.machineInstance = null;
         octo.onStop();
         if (instance) {
@@ -643,7 +693,7 @@ class ConnectionManager {
         this.unbindChannelEvents();
         this.channel = null;
         this.channelAssignments += 1;
-        this.machineIdentifier = null;
+        this.clearDeviceIdentity();
 
         // destroy machine instance
         if (this.machineInstance) {
@@ -1854,6 +1904,13 @@ M3`;
 }
 
 const connectionManager = new ConnectionManager();
+
+// The position judge forgets a session's offsets when the session changes and
+// never maps a logical-frame beat (machinePosition.ts JudgeConnectionContext).
+// Guarded: unit-test harnesses load this module with that import stubbed.
+if (typeof setJudgeConnectionContextProvider === 'function') {
+    setJudgeConnectionContextProvider(() => connectionManager.getJudgeConnectionContext());
+}
 
 export function isUsingSACP(protocol: NetworkProtocol | SerialPortProtocol = null): boolean {
     if (!protocol) {

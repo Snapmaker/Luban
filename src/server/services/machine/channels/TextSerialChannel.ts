@@ -8,6 +8,7 @@ import { ChannelEvent } from './ChannelEvent';
 import { L20WLaserToolModule, L40WLaserToolModule } from '../../../../app/machines/snapmaker-2-toolheads';
 import { HEAD_LASER } from '../../../constants';
 import { gcodeLease } from '../gcodeLease';
+import { TextSerialMachineState, TextSerialMachineStateTracker } from './textSerialMachineState';
 
 const log = logger('machine:channels:TextSerialChannel');
 
@@ -29,6 +30,10 @@ class TextSerialChannel extends Channel implements
 
     private observedPort: unknown = null;
 
+    // The M114 replies MarlinController already polls, kept per connection
+    // generation (textSerialMachineState.ts). No query of its own.
+    private readonly machineState = new TextSerialMachineStateTracker();
+
     /** Read-only: lets callers tell a reconnected session from the one they started on. */
     public getConnectionGeneration(): number {
         const port = (this.controller as unknown as { serialport?: unknown } | null)?.serialport ?? null;
@@ -41,6 +46,32 @@ class TextSerialChannel extends Channel implements
 
     public getController(): MarlinController {
         return this.controller;
+    }
+
+    /**
+     * The newest M114 position reply of this connection, in the LOGICAL frame
+     * (positionFrame 'logical', no originOffset: see textSerialMachineState.ts),
+     * stamped with the time it was parsed. Null before the first reply, after
+     * close, and once the port has dropped or been reopened under the channel.
+     */
+    public getLatestMachineState(): TextSerialMachineState | null {
+        const controller = this.controller as unknown as {
+            isOpen?: () => boolean;
+            controller?: { state?: { [key: string]: unknown } } | null;
+            workflow?: { state?: unknown } | null;
+        } | null;
+        if (!controller || typeof controller.isOpen !== 'function' || !controller.isOpen()) {
+            this.machineState.clear();
+            return null;
+        }
+        const marlinState = controller.controller?.state || {};
+        return this.machineState.get(this.getConnectionGeneration(), {
+            workflowState: controller.workflow?.state,
+            isHomed: marlinState.isHomed,
+            headType: marlinState.headType,
+            headStatus: marlinState.headStatus,
+            headPower: marlinState.headPower,
+        });
     }
 
     public onDisconnection = (socket: SocketServer) => {
@@ -56,6 +87,7 @@ class TextSerialChannel extends Channel implements
 
         this.port = port;
         this.dataSource = PROTOCOL_TEXT;
+        this.machineState.clear();
 
         let controller = this.controller;
         if (!controller) {
@@ -68,6 +100,18 @@ class TextSerialChannel extends Channel implements
 
             controller.on('Ready', (data) => {
                 this.emit(ChannelEvent.Ready, data);
+            });
+            controller.on('positionReport', (payload) => {
+                this.machineState.notePosition(payload, this.getConnectionGeneration());
+            });
+            controller.on('originOffsetReport', (payload) => {
+                this.machineState.noteOriginOffset(payload, this.getConnectionGeneration());
+            });
+            // Every line written to the port, whoever wrote it: the write-path
+            // evidence of homes, position shifts and planner syncs
+            // (textSerialMachineState.ts, WP4a).
+            controller.on('lineWritten', (data) => {
+                this.machineState.noteLineWritten(String(data), this.getConnectionGeneration());
             });
         }
 
@@ -121,6 +165,7 @@ class TextSerialChannel extends Channel implements
         }
 
         this.connectionGeneration++;
+        this.machineState.clear();
 
         return new Promise((resolve) => {
             controller.close();

@@ -30,6 +30,7 @@ import { describeProbeApproachHoldAsGcode, planProbeApproachHold, runProbeApproa
 import { probeFeedService } from '../probeFeed';
 import { TRAVEL_FEED, assertMachineReadyForProcedure, moveMachineSettled } from '../probing';
 import { McpToolError, ToolRegistry } from '../registry';
+import { STOCK_ARG_SCHEMA } from '../rotaryCallContext';
 import { geometryValue } from '../rotaryGeometry';
 import { RIM_ARG_SCHEMA } from '../stylusReachGuard';
 import { checkMotion, describeViolations } from '../envelopeChecks';
@@ -47,6 +48,7 @@ import {
     motionFloorZ,
     requirePlanningTravel,
     requireReliableMachine,
+    requireZAxis,
     safeTraverseZ,
 } from './machine';
 import { clampBand, describeClipping } from '../machineTravel';
@@ -799,6 +801,9 @@ ${describeProbeSurfacePlanAsGcode(plan)}`;
             reason?: string;
         }) => {
             probeFeedService.assertNoOvertravel();
+            // The survey plans Z levels, hops and descents (surveyPlan.ts);
+            // on a machine with no Z axis none of that exists.
+            requireZAxis('survey_bed (it plans Z levels, hops and descents)');
             const position = getPositionSnapshot();
             requireReliableMachine(position, 'a bed survey');
             const { x, y, z } = position.machine;
@@ -1512,6 +1517,7 @@ ${describeProbeTracePlanAsGcode(plan)}`;
         inputSchema: {
             type: 'object',
             properties: {
+                stock: STOCK_ARG_SCHEMA,
                 name: { type: 'string', description: 'Program name shown to the operator.' },
                 ops: {
                     type: 'array',

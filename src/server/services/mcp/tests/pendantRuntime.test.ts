@@ -16,7 +16,7 @@ import * as pendantHold from '../pendantHold';
 
 interface Queued { sentAt: number; replyAt: number; target: { x: number; y: number; z: number }; feed: number; run: number; gcode: string }
 
-function fixture(a350 = false, options: { pipeline?: boolean; countCheck?: 'enforced' | 'observe'; serialized?: boolean } = {}) {
+function fixture(a350 = false, options: { pipeline?: boolean; countCheck?: 'enforced' | 'observe'; serialized?: boolean; machineRefusal?: string } = {}) {
     let now = 1000;
     // Pipelined-run doubles: the controller acknowledges each request after rttMs,
     // and an ideal executor (no acceleration) runs accepted segments back to back
@@ -184,6 +184,8 @@ function fixture(a350 = false, options: { pipeline?: boolean; countCheck?: 'enfo
         serialport: { SerialPort: Port },
         '../machine/ConnectionManager': { connectionManager: { getConnectionStatus: () => ({ machineIdentifier: 'mock', connected: true, protocol: 'HTTP' }), getLatestMachineState: () => ({}) } },
         './clearanceContext': { clearanceOptions: () => ({ toolProtrusionMm: null, clearanceMarginMm: 5 }) },
+        './connectedMachine': { connectedMachineCapability: () => ({}) },
+        './procedureGates': { PENDANT_GATE: {}, gateRefusal: () => options.machineRefusal || null },
         './envelopeChecks': envelopeChecks,
         './jobs': { jobManager: { getActive: () => null } },
         './landmarks': { landmarkStore: { obstacleBoxes: () => obstacles } },
@@ -295,6 +297,7 @@ function fixture(a350 = false, options: { pipeline?: boolean; countCheck?: 'enfo
             getMachineSizeByIdentifier: () => ({ x: 350, y: 350, z: a350 ? 325 : 100 }),
             getPositionSnapshot: snapshot,
             safeTraverseZ: () => (a350 ? 328 : 100),
+            zTravelTop: (z: number) => Math.max(z, a350 ? 328 : 100),
             requirePlanningTravel: () => ({ limits: { xMin: a350 ? -19 : 0, xMax: a350 ? 330 : 100, yMin: 0, yMax: a350 ? 342 : 100 }, conflicts: [] }) }
     };
     const exports: Record<string, any> = {}; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -1936,5 +1939,16 @@ export const tests: Array<[string, () => Promise<void>]> = [
         await late.immediate(); await late.flush();
         assert.equal(late.frames.filter((frame) => frame === 'enter').length, 2, 'started from the proved position despite the late beat');
         assert.equal((await readStatus(late)).armed, true);
+    }],
+    ['arming on a machine the pendant gate refuses is refused first, naming it, with nothing sent and no ownership taken (#265 WP4b)', async () => {
+        const f = fixture(false, { machineRefusal: 'The USB pendant needs workspace offsets (G53/G54), which this MCP does not support on Ray.' });
+        await f.initialize();
+        const refused = await f.request('/pendant/arm', { clearanceConfirmed: true, bounds: wide });
+        assert.equal(refused.status, 400);
+        assert.match(JSON.parse(refused.body).error, /^arm refused: The USB pendant needs .* on Ray\./);
+        assert.deepEqual(f.frames, [], 'no G53, no restore');
+        assert.equal(f.m220Sends(), 0, 'no M220 at arm');
+        assert.equal(f.gate.isManual(), false, 'the MCP ownership gate was not taken');
+        assert.equal((await readStatus(f)).armed, false);
     }],
 ];

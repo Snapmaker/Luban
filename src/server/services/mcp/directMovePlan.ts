@@ -22,6 +22,7 @@ import {
     STEP_SEPARATOR,
     TRAVERSE_Z_TOLERANCE_MM,
     TraversePlan,
+    TraverseMachine,
     TraversePlanError,
     TraversePlanInput,
     Xyz,
@@ -57,7 +58,21 @@ export interface DirectXyGate {
  * so no raise - but an unknown Z is refused even then, because nobody can
  * have confirmed a height the record does not hold.
  */
-export function gateDirectXy(machineZ: number | null, floorZ: number, operatorConfirmedClearance: boolean): DirectXyGate {
+export function gateDirectXy(machineZ: number | null, floorZ: number, operatorConfirmedClearance: boolean, hasZ: boolean = true): DirectXyGate {
+    if (!hasZ) {
+        // A machine with no Z axis (the Ray) has no floor to be below and no
+        // height to raise to: the XY runs at its only height. The travel cap,
+        // the pacing guard, the idle/toolhead-off checks and the route checks
+        // all still apply - only the Z precondition is moot.
+        const z = machineZ !== null && Number.isFinite(machineZ) ? machineZ : 0;
+        return {
+            action: 'proceed',
+            reason: 'this machine has no Z axis: no motion floor or traverse height applies, the XY runs at its only height',
+            fromZ: z,
+            toZ: null,
+            planZ: z,
+        };
+    }
     if (machineZ === null || !Number.isFinite(machineZ)) {
         return {
             action: 'refuse',
@@ -113,6 +128,8 @@ export interface GotoWorkOriginInput {
     obstacles: ObstacleBox[];
     toolProtrusionMm?: number | null;
     clearanceMarginMm?: number;
+    /** The connected machine's transport traits; omitted = the A350 (Z axis, own-line G53/G54). */
+    machine?: TraverseMachine;
     reason: string;
 }
 
@@ -150,6 +167,7 @@ export function planGotoWorkOrigin(input: GotoWorkOriginInput): GotoWorkOriginPl
         obstacles: input.obstacles,
         toolProtrusionMm: input.toolProtrusionMm,
         clearanceMarginMm: input.clearanceMarginMm,
+        machine: input.machine,
         reason: input.reason,
     });
     const originLines = [

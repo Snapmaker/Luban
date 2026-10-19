@@ -529,3 +529,68 @@ export const MAX_OPEN_GCODE_UPLOADS = 8;
 /** Odd, so the patch has a centre pixel. */
 export const TRACK_PATCH_PX: Bounded = { default: 41, min: 11, max: 101 };
 export const TRACK_SEARCH_RADIUS_PX: Bounded = { default: 120, min: 20, max: 250 };
+
+// ---------------------------------------------------------------------------
+// Per-machine policy (set_machine_policy, machineStore.ts)
+// ---------------------------------------------------------------------------
+
+/**
+ * How long an operator's landmark review stays valid (amendment R4: until
+ * disconnect or 24 h, whichever comes first). The floor of one hour keeps a
+ * review from expiring mid-procedure; the week cap keeps a review from
+ * outliving the bed it described - a stored setting, so it must be bounded.
+ */
+export const LANDMARK_CONFIRM_TTL_HOURS: Bounded = { default: 24, min: 1, max: 168 };
+
+/**
+ * Motion rules (Settings -> MCP Server -> Motion rules, R13): the head-room a
+ * move at a COMPUTED safe height (below top Z) keeps above the highest known
+ * obstacle or bed contact of the toolhead + tool. Operator-stated per machine,
+ * Settings only. Ideal 50 mm is the operator's figure (2026-10-19); the
+ * minimum defaults to 20 mm, four times the per-obstacle CLEARANCE_MARGIN_MM
+ * (landmarkClearance.ts), because a computed height also has to absorb what
+ * no landmark records. The floor of 5 mm is that margin itself - a computed
+ * height may never be tighter than the slack every crossing check already
+ * adds - and the 150 mm cap matches MARCH_TRAVEL_MM: beyond it the head is
+ * near top Z anyway, where the top-Z rule applies. Ideal >= min is enforced.
+ */
+export const MOTION_RULE_CLEARANCE_IDEAL_MM: Bounded = { default: 50, min: 5, max: 150 };
+export const MOTION_RULE_CLEARANCE_MIN_MM: Bounded = { default: 20, min: 5, max: 150 };
+
+/**
+ * How far the toolhead unit's own lowest point (module body, collet nut,
+ * clip-on shoe) sits below the toolhead reference that tool protrusion is
+ * measured from (set_machine_policy toolhead_body_below_reference_mm). No
+ * default: unstated means unknown. Bounded only because it is stored: no
+ * Snapmaker module is 150 mm tall (the 200 W CNC body is 104.6 mm).
+ */
+export const TOOLHEAD_BODY_BELOW_REFERENCE_MM: Range = { min: 0, max: 150 };
+
+// ---------------------------------------------------------------------------
+// Laser tools (tools/laser.ts, laserPlan.ts; #265 WP7, plan 2.5)
+// ---------------------------------------------------------------------------
+
+/**
+ * laser_frame power, in percent of the module's full power. Default 0 = the
+ * laser stays OFF (M5, G0 moves only). The cap is the plan's (2.5): a frame
+ * PREVIEWS where a job will run - 5 % is S50 on the Ray's S0-1000 scale, a
+ * visible trace - and no higher power ever comes from the MCP itself; a job
+ * file's power is the file's business, judged by the validator's s-range rule.
+ * A request above the cap is clipped and the clip REPORTED (result `clipped`
+ * and a CLIPPED line on the confirm page), never silently planned.
+ */
+export const LASER_FRAME_POWER_PERCENT: Bounded = { default: 0, min: 0, max: 5 };
+/**
+ * laser_frame feed, mm/min. Default and cap are traverse_xy's (TRAVERSE_FEED):
+ * a frame is an XY series the operator watches. The floor is higher than a
+ * traverse's because a powered trace at 100 mm/min already takes 30 s per
+ * 50 mm side; slower than that the "preview" dwells on the stock. G0 (the
+ * power-0 frame) moves at the firmware's rapid rate whatever F says on GRBL.
+ */
+export const LASER_FRAME_FEED: Bounded = { default: 1500, min: 100, max: 3000 };
+/**
+ * laser_frame repeat count. Each repeat adds four approved steps (one per
+ * side), so 4 repeats plus the approach is 17 steps - inside the 20-step
+ * series cap traverse_xy and move_z share (MAX_TRAVERSE_TARGETS, MAX_Z_TARGETS).
+ */
+export const LASER_FRAME_REPEAT: Bounded = { default: 1, min: 1, max: 4 };

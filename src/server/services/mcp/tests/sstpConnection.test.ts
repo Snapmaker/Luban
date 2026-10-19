@@ -6,6 +6,8 @@ import vm from 'vm';
 import ts from 'typescript';
 import * as procedureLimits from '../procedureLimits';
 import { reliableForMotion } from '../machinePosition';
+import * as machineCapability from '../machineCapability';
+import { dialectById } from '../gcodeDialect';
 import { ConnectionDiagnosticState, httpEvidence, safeIdentifier, safeTarget } from '../../machine/connectionDiagnosticState';
 import { GcodeLease } from '../../machine/gcodeLease';
 
@@ -119,7 +121,19 @@ function cameraFixture() {
         './machine': {
             getPositionSnapshot: () => state,
             assertFreshHeartbeat: () => { throw new Error('Refusing home: unreliable heartbeat'); },
+            motionDialect: () => dialectById('sm2-marlin'),
+            motionGcodeForm: () => 'sm2',
         },
+        // WP4a: pure modules, the real ones.
+        '../logicalFrame': require('../logicalFrame'),
+        '../gcodeForms': require('../gcodeForms'),
+        '../gcodeDialect': require('../gcodeDialect'),
+        // The home decision is pure (machineCapability.homeCommandFor); the
+        // identifier read is the defensive one in connectedMachine.ts, which
+        // this stub replaces - the ConnectionManager stub below has no
+        // getConnectionStatus, exactly like the first CI run of fd3c8c7da.
+        '../machineCapability': machineCapability,
+        '../connectedMachine': { connectedMachineIdentifier: () => null, describeConnectedMachine: () => ({ identifier: null, type: null, hasZ: true }) },
         '../../machine/ConnectionManager': { connectionManager: {
             getLatestMachineState: () => state,
             getCurrentChannel: () => ({ executeGcode: async (gcode: string) => { commands.push(gcode); return replies.shift() || { result: 0 }; } }),
@@ -497,5 +511,56 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         workers[0].callback(online);
         assert(manager.getLatestMachineState());
         assert(requests.every(req => req.method === 'GET'));
+    }],
+    ['device identity: the SSTP host reaches getConnectionStatus().host (deviceSerial null, never the token), cleared on loss', async () => {
+        const { channel, diagnosticModule } = fixture();
+        const source = fs.readFileSync(path.join(__dirname, '../../machine/ConnectionManager.ts'), 'utf8');
+        const dependencies = stubImports(source);
+        Object.assign(dependencies, {
+            '../../lib/logger': logger,
+            './connectionDiagnostics': diagnosticModule,
+            './connectionDiagnosticState': { safeIdentifier, safeTarget },
+            './types': { ConnectionType: { WiFi: 'wifi' } },
+            './ProtocolDetector': { NetworkProtocol: { Unknown: 'Unknown', HTTP: 'HTTP' }, SerialPortProtocol: {} },
+            './channels/ChannelEvent': { ChannelEvent: events },
+            './channels/SstpHttpChannel': { sstpHttpChannel: channel },
+            './adaptor/Octo': { octo: { onStop: () => undefined, onStart: () => undefined } },
+            lodash: { includes: (items: unknown[], value: unknown) => items.includes(value) },
+            '../../../app/machines': {
+                SnapmakerA150Machine: { identifier: 'A150' },
+                SnapmakerA250Machine: { identifier: 'A250' },
+                SnapmakerA350Machine: { identifier: 'A350' },
+                SnapmakerArtisanMachine: { identifier: 'Artisan' },
+                SnapmakerJ1Machine: { identifier: 'J1' },
+                SnapmakerRayMachine: { identifier: 'Ray' },
+            },
+        });
+        const managerModule = load('ConnectionManager.ts', dependencies);
+        const { hostAddress } = managerModule;
+        assert.strictEqual(hostAddress('http://192.0.2.20:8080'), '192.0.2.20');
+        assert.strictEqual(hostAddress('192.0.2.20'), '192.0.2.20');
+        assert.strictEqual(hostAddress('https://user:pw@snapmaker.local:8080/api?token=x'), 'snapmaker.local', 'no credentials, port, path or query');
+        assert.strictEqual(hostAddress('http://[fe80::1]:8080'), 'fe80::1');
+        assert.strictEqual(hostAddress(''), null);
+        assert.strictEqual(hostAddress(undefined), null);
+        const manager = managerModule.connectionManager;
+        manager.channel = channel;
+        manager.bindChannelEvents();
+        channel.host = 'http://192.0.2.20:8080';
+        channel.token = 'secret-token';
+        channel.state.series = 'no instance';
+        const ready: Array<{ host?: unknown }> = [];
+        channel.on(events.Ready, (data: { host?: unknown }) => ready.push(data));
+        channel.resumeVerifiedSession();
+        assert.strictEqual(ready[0].host, 'http://192.0.2.20:8080', 'the Ready payload carries the channel\'s base URL');
+        const status = manager.getConnectionStatus();
+        assert.strictEqual(status.host, '192.0.2.20', 'the status carries the machine address');
+        assert.strictEqual(status.deviceSerial, null, 'SSTP reports no serial number');
+        assert.ok(!JSON.stringify(status).includes('secret-token'), 'never the token');
+        channel.emit(events.Ready, { machineIdentifier: 'no instance', host: 'http://user:pw@192.0.2.20:8080' });
+        assert.strictEqual(manager.getConnectionStatus().host, '192.0.2.20', 'credentials in the URL are dropped');
+        channel.emit(events.Disconnected);
+        assert.strictEqual(manager.getConnectionStatus().host, null, 'cleared on loss');
+        assert.strictEqual(manager.getConnectionStatus().deviceSerial, null);
     }],
 ];

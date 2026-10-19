@@ -47,6 +47,7 @@ import { tests as jobEndingTests } from './jobEnding.test';
 import { tests as landmarkClearanceTests } from './landmarkClearance.test';
 import { tests as machinePositionTests } from './machinePosition.test';
 import { tests as machineTravelTests } from './machineTravel.test';
+import { tests as machineCapabilityTests } from './machineCapability.test';
 import { tests as marchCoreTests } from './marchCore.test';
 import { tests as mcpHealthTests } from './mcpHealth.test';
 import { tests as mcpListenersTests } from './mcpListeners.test';
@@ -90,6 +91,23 @@ import { tests as vibrationStreamTests } from './vibrationStream.test';
 import { tests as connectionGenerationTests } from './connectionGeneration.test';
 import { tests as sacpMachineStateTests } from './sacpMachineState.test';
 import { tests as sacpConnectionTests } from './sacpConnection.test';
+import { tests as gcodeDialectTests } from './gcodeDialect.test';
+import { tests as machineStoreTests } from './machineStore.test';
+import { tests as textSerialStateTests } from './textSerialState.test';
+import { tests as rotaryClearanceTests } from './rotaryClearance.test';
+import { tests as dialectRulesTests } from './dialectRules.test';
+import { tests as gcodeHeaderTests } from './gcodeHeader.test';
+import { tests as jobMachineBindingTests } from './jobMachineBinding.test';
+import { tests as procedureGatesTests } from './procedureGates.test';
+import { tests as gcodeFormsTests } from './gcodeForms.test';
+import { tests as logicalFrameTests } from './logicalFrame.test';
+import { tests as landmarkReviewTests } from './landmarkReview.test';
+import { tests as motionRulesTests } from './motionRules.test';
+import { tests as frameLatchPerMachineTests } from './frameLatchPerMachine.test';
+import { tests as appliedRecordsTests } from './appliedRecords.test';
+import { tests as computedHeightTests } from './computedHeight.test';
+import { tests as policyLooseningTests } from './policyLoosening.test';
+import { tests as laserPlanTests } from './laserPlan.test';
 
 type TestCase = [string, () => void | Promise<void>];
 
@@ -112,6 +130,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['threadMilling', threadMillingTests],
     ['machinePosition', machinePositionTests],
     ['machineTravel', machineTravelTests],
+    ['machineCapability', machineCapabilityTests],
     ['envelopeChecks', envelopeChecksTests],
     ['cameraModel', cameraModelTests],
     ['cameraGeometry', cameraGeometryTests],
@@ -173,6 +192,23 @@ const suites: Array<[string, TestCase[]]> = [
     ['spindleTracker', spindleTrackerTests],
     ['audioSelection', audioSelectionTests],
     ['executionModel', executionModelTests],
+    ['gcodeDialect', gcodeDialectTests],
+    ['machineStore', machineStoreTests],
+    ['textSerialState', textSerialStateTests],
+    ['rotaryClearance', rotaryClearanceTests],
+    ['dialectRules', dialectRulesTests],
+    ['gcodeHeader', gcodeHeaderTests],
+    ['jobMachineBinding', jobMachineBindingTests],
+    ['procedureGates', procedureGatesTests],
+    ['gcodeForms', gcodeFormsTests],
+    ['logicalFrame', logicalFrameTests],
+    ['landmarkReview', landmarkReviewTests],
+    ['motionRules', motionRulesTests],
+    ['frameLatchPerMachine', frameLatchPerMachineTests],
+    ['appliedRecords', appliedRecordsTests],
+    ['computedHeight', computedHeightTests],
+    ['policyLoosening', policyLooseningTests],
+    ['laserPlan', laserPlanTests],
 ];
 
 async function main(): Promise<void> {

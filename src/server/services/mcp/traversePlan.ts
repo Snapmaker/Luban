@@ -5,6 +5,10 @@
 // 2026-09-12). Pure: no server imports, unit-tested in tests/traversePlan.test.ts.
 import { MotionSegment, ObstacleBox, POSITION_EPSILON_MM, checkMotion, describeViolations } from './envelopeChecks';
 import { TravelLimits, outsideTravel } from './machineTravel';
+import { GcodeDialect, dialectById } from './gcodeDialect';
+import { machineFrameMove, needsPlannerSync, relativeStep, relativeStepText, workFrameMove } from './gcodeForms';
+
+export { SETTLE_COMMENT_PREFIX, parseSettleComment, settleComment } from './gcodeForms';
 
 export interface Xyz {
     x: number;
@@ -44,7 +48,69 @@ export interface TraversePlanInput {
     /** clearanceContext.currentToolProtrusion().mm - a physically stated obstacle needs it. */
     toolProtrusionMm?: number | null;
     clearanceMarginMm?: number;
+    /**
+     * The connected machine's transport traits (traverseMachine() in
+     * tools/machine.ts). Omitted = the A350 as it always was: a Z axis, and
+     * Snapmaker 2.0 own-line G53 / G54 frame declarations.
+     */
+    machine?: TraverseMachine;
     reason: string;
+    /**
+     * Motion rules R13 (#265 WP10, safeZPolicy.decideComputedHeightTraverse):
+     * an UP-only Z move to this machine Z at the current XY before the first
+     * XY step, and the series then runs at it. Snapmaker 2.0 form only; at or
+     * above the current Z and the motion floor, at or below the traverse
+     * height. Omitted = Z is never written (the plan as it always was, byte
+     * for byte).
+     */
+    entryRaiseZ?: number;
+    /** Feed of the entry raise (mm/min); the caller passes procedureLimits TRAVEL_FEED. */
+    entryRaiseFeed?: number;
+    /** A header comment saying where the series' height came from (the computed safe height); omitted = none. */
+    heightNote?: string;
+}
+
+export interface TraverseMachine {
+    /**
+     * false on a machine with no Z axis (the Ray, definition size.z 0): there
+     * is no motion floor and no traverse height, the series runs at the
+     * machine's only height, and nothing about Z is written or demanded.
+     */
+    hasZ: boolean;
+    /**
+     * 'snapmaker-2' - own-line `G53;` / `G54;` around an absolute G1, the form
+     * the Snapmaker 2.0 Marlin firmware honours (it ignores an inline G53).
+     * 'grbl-relative' - the Ray. Luban's own Ray jog (ConnectionControl/
+     * ControlPanel.tsx relativeMove) sends `G91 / G1 X.. Y.. F.. / G90` over
+     * executeGcode and never a G53 or G54, so that is what its firmware is
+     * known to execute. GRBL's G53 is a same-block prefix (`G53 G1 X Y`),
+     * not the own-line form every MCP emitter uses, and whether the Ray's
+     * GRBL-derived firmware honours either form has not been seen on
+     * hardware; a relative step needs no frame at all. Each step is the
+     * delta from the planned previous endpoint, and carries a `; mcp-settle`
+     * comment naming the absolute MACHINE endpoint so the direct runner can
+     * verify arrival against the heartbeat (tools/gcode.ts parseDirectTarget).
+     */
+    gcode: 'snapmaker-2' | 'grbl-relative';
+    /**
+     * The connected machine's dialect row (gcodeDialect.ts), from which `gcode`
+     * was derived (tools/machine.ts traverseMachine). The steps are written by
+     * gcodeForms.ts from it; omitted = the Snapmaker 2.0 row for 'snapmaker-2'
+     * and #264's Ray form (no planner sync) for 'grbl-relative'.
+     */
+    dialect?: GcodeDialect;
+}
+
+export const DEFAULT_TRAVERSE_MACHINE: TraverseMachine = { hasZ: true, gcode: 'snapmaker-2' };
+
+/**
+ * A relative XY step in Luban's own GRBL jog form (see TraverseMachine.gcode),
+ * with its settle comment and no planner sync - #264's Ray form, byte for byte
+ * (gcodeForms.relativeStepText). The settle comment helpers moved to
+ * gcodeForms.ts and are re-exported above.
+ */
+export function relativeXyStep(from: { x: number; y: number }, to: { x: number; y: number }, feedRate: number, command: 'G0' | 'G1' = 'G1'): string {
+    return relativeStepText({ from: { x: from.x, y: from.y }, to: { x: to.x, y: to.y } }, feedRate, { command });
 }
 
 export interface TraverseStep {
@@ -59,11 +125,18 @@ export interface TraverseStep {
 
 export interface TraversePlan {
     steps: TraverseStep[];
+    /** The UP-only entry raise (entryRaiseZ), sent before the first step; null when Z is not written. */
+    entryRaise: { fromZ: number; toZ: number; feedRate: number; gcode: string } | null;
+    /** Every gcode step in send order: the entry raise (if any), then the XY steps. */
+    stepGcodes: string[];
     header: string;
     /** header + steps joined with the direct-batch separator - what the operator approves. */
     reviewText: string;
     name: string;
     totalDistanceMm: number;
+    /** True when the steps are relative (grbl-relative): frame-independent, verified through their settle comments. */
+    relative: boolean;
+    machine: TraverseMachine;
 }
 
 export class TraversePlanError extends Error {
@@ -107,14 +180,33 @@ const f3 = (n: number) => n.toFixed(3);
 
 export function planTraverseXy(input: TraversePlanInput): TraversePlan {
     const { targets, frame, currentMachine, originOffset, travel, traverseZ, feedRate, obstacles } = input;
+    const machine = input.machine || DEFAULT_TRAVERSE_MACHINE;
     if (!Array.isArray(targets) || targets.length < 1 || targets.length > MAX_TRAVERSE_TARGETS) {
         throw new TraversePlanError(`Provide 1-${MAX_TRAVERSE_TARGETS} targets.`);
     }
     // Law 2: every XY move over 1 mm happens at or above the motion floor.
     // There is deliberately no override here - transport that cannot happen up
-    // there is not transport, it is a procedure with its own envelope.
+    // there is not transport, it is a procedure with its own envelope. On a
+    // machine with no Z axis the law has nothing to say: there is no floor to
+    // be below, and "raise Z first" is advice about an axis that does not
+    // exist (the Ray refusal of 2026-10-18).
     const floorZ = input.motionFloorZ === undefined ? traverseZ : input.motionFloorZ;
-    if (currentMachine.z < floorZ - TRAVERSE_Z_TOLERANCE_MM) {
+    const raiseZ = input.entryRaiseZ === undefined ? null : input.entryRaiseZ;
+    if (raiseZ !== null) {
+        // The only Z this planner ever writes: straight UP at the current XY
+        // to a height the series may legally run at - never down, never past
+        // the top (the decideSafeZRaise rules).
+        if (!machine.hasZ || machine.gcode !== 'snapmaker-2') {
+            throw new TraversePlanError('An entry raise is planned only on a Snapmaker 2.0-form machine with a Z axis.');
+        }
+        if (!Number.isFinite(raiseZ) || raiseZ < currentMachine.z - TRAVERSE_Z_TOLERANCE_MM) {
+            throw new TraversePlanError(`Refused: the entry raise to machine Z ${raiseZ} would not be UP from machine Z ${f3(currentMachine.z)}.`);
+        }
+        if (raiseZ < floorZ - TRAVERSE_Z_TOLERANCE_MM || raiseZ > traverseZ + TRAVERSE_Z_TOLERANCE_MM) {
+            throw new TraversePlanError(`Refused: the entry raise to machine Z ${raiseZ} is outside the motion floor ${floorZ} .. `
+                + `traverse height ${traverseZ}.`);
+        }
+    } else if (machine.hasZ && currentMachine.z < floorZ - TRAVERSE_Z_TOLERANCE_MM) {
         throw new TraversePlanError(`Refused: the toolhead is at machine Z ${f3(currentMachine.z)}, below the motion floor `
             + `${floorZ} (law 2: all XY over 1 mm at or above it). Raise Z with move_z (coordinate_system "machine") first.`);
     }
@@ -133,7 +225,19 @@ export function planTraverseXy(input: TraversePlanInput): TraversePlan {
     // 1 um. Planning them at the park height instead would check a corridor
     // the toolhead is not in - harmless while the floor WAS the park height,
     // wrong the moment transport is allowed lower.
-    const planZ = Math.max(currentMachine.z, floorZ);
+    let planZ = machine.hasZ ? Math.max(currentMachine.z, floorZ) : currentMachine.z;
+    let entryRaise: TraversePlan['entryRaise'] = null;
+    if (raiseZ !== null) {
+        planZ = Math.max(currentMachine.z, raiseZ);
+        const feed = input.entryRaiseFeed === undefined ? feedRate : input.entryRaiseFeed;
+        entryRaise = {
+            fromZ: currentMachine.z,
+            toZ: planZ,
+            feedRate: feed,
+            gcode: machineFrameMove(machine.dialect || dialectById('sm2-marlin'), `Z${f3(planZ)}`, feed),
+        };
+        segments.push({ what: 'entry raise', kind: 'hop', from: { ...currentMachine }, to: { ...currentMachine, z: planZ } });
+    }
     let fromMachine: Xyz = { ...currentMachine, z: planZ };
     let total = 0;
     targets.forEach((raw, i) => {
@@ -164,10 +268,21 @@ export function planTraverseXy(input: TraversePlanInput): TraversePlan {
         const distanceMm = Math.hypot(to.x - fromMachine.x, to.y - fromMachine.y);
         total += distanceMm;
         segments.push({ what: `step ${i + 1}`, kind: 'hop', from: { ...fromMachine }, to: { ...to } });
-        const move = `G1 X${f3(target.x)} Y${f3(target.y)} F${feedRate}`;
-        // Every MCP-emitted motion declares its frame: G53 for machine, an
-        // explicit G54 for the work workspace (operator law 2026-09-14).
-        const gcode = frame === 'machine' ? `G90\nG53;\n${move};\nG54;` : `G90\nG54;\n${move}`;
+        let gcode: string;
+        if (machine.gcode === 'grbl-relative') {
+            // Ray / Original: a delta from the planned previous endpoint with
+            // the absolute machine endpoint declared for the settle check (see
+            // TraverseMachine.gcode); never a G53/G54 (gcodeForms.ts). XY only:
+            // a traverse writes no Z word.
+            const ends = { from: { x: fromMachine.x, y: fromMachine.y }, to: { x: to.x, y: to.y } };
+            gcode = machine.dialect ? relativeStep(machine.dialect, ends, feedRate) : relativeXyStep(fromMachine, to, feedRate);
+        } else {
+            // Every MCP-emitted motion declares its frame: G53 for machine, an
+            // explicit G54 for the work workspace (operator law 2026-09-14).
+            const dialect = machine.dialect || dialectById('sm2-marlin');
+            const words = `X${f3(target.x)} Y${f3(target.y)}`;
+            gcode = frame === 'machine' ? machineFrameMove(dialect, words, feedRate) : workFrameMove(dialect, words, feedRate);
+        }
         steps.push({ from: { ...fromMachine }, to, target, distanceMm, gcode });
         fromMachine = to;
     });
@@ -186,21 +301,39 @@ export function planTraverseXy(input: TraversePlanInput): TraversePlan {
     }
 
     const last = steps[steps.length - 1];
+    const relative = machine.gcode === 'grbl-relative';
     const header = [
         ...wrapCommentText(`reason: ${input.reason}`, 90).map((row) => `; ${row}`),
-        `; frame: ${frame} coords; current machine (${f3(currentMachine.x)}, ${f3(currentMachine.y)}) at machine Z ${f3(currentMachine.z)}`,
-        `; Z does NOT change: the whole series runs at machine Z ${f3(currentMachine.z)} >= traverse height ${traverseZ} (law 2)`,
+        machine.hasZ
+            ? `; frame: ${frame} coords; current machine (${f3(currentMachine.x)}, ${f3(currentMachine.y)}) at machine Z ${f3(currentMachine.z)}`
+            : `; frame: ${frame} coords; current machine (${f3(currentMachine.x)}, ${f3(currentMachine.y)}); this machine has NO Z axis`,
+        ...(entryRaise
+            ? [`; Z: ONE UP-only raise first, machine Z ${f3(entryRaise.fromZ)} -> ${f3(entryRaise.toZ)} at the current XY (F${entryRaise.feedRate}),`,
+                `; then the whole series runs at machine Z ${f3(entryRaise.toZ)} (motion floor ${floorZ}, traverse height ${traverseZ}); Z never descends`]
+            : [machine.hasZ
+                ? `; Z does NOT change: the whole series runs at machine Z ${f3(currentMachine.z)} >= traverse height ${traverseZ} (law 2)`
+                : '; no Z axis: the series runs at the machine\'s only height; no motion floor or traverse height applies and no Z word is written']),
+        ...(input.heightNote ? wrapCommentText(input.heightNote, 90).map((row) => `; ${row}`) : []),
+        ...(relative
+            ? ['; steps are RELATIVE (G91 .. G90, Luban\'s own jog form for this machine): each is the delta from the previous planned endpoint,',
+                '; and its "; mcp-settle machine" line names the absolute machine endpoint the heartbeat must report before the next step',
+                ...(machine.dialect && needsPlannerSync(machine.dialect)
+                    ? ['; each step ends G4 P0 (planner sync): this controller\'s M114 reports the QUEUED target, so only a report',
+                        '; taken after the sync proves the head has arrived']
+                    : [])]
+            : []),
         ...steps.map((s, i) => `; step ${i + 1}: ${frame} (${f3(toFrame(s.from).x)}, ${f3(toFrame(s.from).y)}) -> (${f3(s.target.x)}, ${f3(s.target.y)})`
             + ` = machine (${f3(s.to.x)}, ${f3(s.to.y)}), ${s.distanceMm.toFixed(1)} mm F${feedRate}`),
         `; total XY travel ${total.toFixed(1)} mm over ${steps.length} step(s); landmarks checked against every segment`,
         '; sensors: NO contact expected during these moves - a probe/toolsetter trigger',
         '; while moving latches the CRASH alarm (probe feed must be armed).',
     ].join('\n');
-    const reviewText = `${header}\n${steps.map((s) => s.gcode).join(STEP_SEPARATOR)}`;
+    const stepGcodes = [...(entryRaise ? [entryRaise.gcode] : []), ...steps.map((s) => s.gcode)];
+    const reviewText = `${header}\n${stepGcodes.join(STEP_SEPARATOR)}`;
     const name = steps.length > 1
         ? `xy-series ${frame} x${steps.length} -> (${last.target.x.toFixed(1)}, ${last.target.y.toFixed(1)}) ${total.toFixed(0)}mm - ${input.reason.slice(0, 40)}`
         : `xy-traverse ${frame} -> (${last.target.x.toFixed(1)}, ${last.target.y.toFixed(1)}) ${total.toFixed(0)}mm - ${input.reason.slice(0, 40)}`;
-    return { steps, header, reviewText, name, totalDistanceMm: total };
+    return { steps, entryRaise, stepGcodes, header, reviewText, name, totalDistanceMm: total, relative, machine };
 }
 
 /**
@@ -270,4 +403,36 @@ export function planToolSetterEnd(holdAtTrigger: boolean, triggerZ: number | nul
  */
 export function mayDescend(fromZ: number | null, toZ: number): boolean {
     return fromZ === null || toZ < fromZ - TRAVERSE_Z_TOLERANCE_MM;
+}
+
+/**
+ * The swept XY path of a traverse_xy call in MACHINE coordinates: the current
+ * XY, then every target with an omitted axis kept from the previous one (in
+ * `frame`, as planTraverseXy fills it). null when a target is malformed -
+ * planTraverseXy refuses that call with the reason. Pure; the computed safe
+ * height (computedHeight.ts) is judged over this path.
+ */
+export function traverseMachinePath(
+    targets: TraverseTarget[],
+    frame: 'machine' | 'work',
+    currentMachine: { x: number; y: number },
+    originOffset: { x: number; y: number }
+): Array<{ x: number; y: number }> | null {
+    if (!Array.isArray(targets) || !targets.length) {
+        return null;
+    }
+    const shift = frame === 'machine' ? { x: 0, y: 0 } : originOffset;
+    const path = [{ x: currentMachine.x, y: currentMachine.y }];
+    for (const raw of targets) {
+        const previous = path[path.length - 1];
+        const hasX = raw.x !== undefined && raw.x !== null;
+        const hasY = raw.y !== undefined && raw.y !== null;
+        const x = hasX ? Number(raw.x) - shift.x : previous.x;
+        const y = hasY ? Number(raw.y) - shift.y : previous.y;
+        if ((!hasX && !hasY) || !Number.isFinite(x) || !Number.isFinite(y)) {
+            return null;
+        }
+        path.push({ x, y });
+    }
+    return path;
 }

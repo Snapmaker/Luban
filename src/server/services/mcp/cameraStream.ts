@@ -9,6 +9,7 @@ import {
     FFMPEG_PROVIDER,
     LiveFrameSource,
     cacheFrame,
+    cameraSetting,
     captureFrame,
     fetchHttpSnapshot,
     ffmpegBinary,
@@ -567,7 +568,7 @@ class CameraStreamService implements LiveFrameSource {
             if (!this.hub || !this.hub.hasClients() || !this.isEnabled()) {
                 return;
             }
-            const cameraUrl = config.get('mcpCameraUrl');
+            const cameraUrl = cameraSetting('mcpCameraUrl');
             if (cameraUrl) {
                 this.provider = 'http';
                 this.device = String(cameraUrl);

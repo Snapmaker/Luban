@@ -79,6 +79,7 @@ function managerFixture() {
         './jobEnding': jobEnding,
         './jobDashboardState': require('../jobDashboardState'),
         './telemetryConfig': require('../telemetryConfig'),
+        './jobMachineBinding': require('../jobMachineBinding'),
         './activeTool': { describeActiveTool: () => ({ active: null }) },
     });
     return loaded;
@@ -148,6 +149,10 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
             '../registry': { McpToolError: Error },
             '../probeFeed': { probeFeedService: { assertNoOvertravel: () => undefined } },
             './machine': { assertFreshHeartbeat: () => undefined },
+            // WP4a: pure modules, the real ones.
+            '../logicalFrame': require('../logicalFrame'),
+            '../gcodeForms': require('../gcodeForms'),
+            '../gcodeDialect': require('../gcodeDialect'),
         });
         isolatedModule('tools/gcode.ts', startDeps).registerGcodeTools(registry, () => 'http://localhost');
         await assert.rejects(async () => handlers.start_gcode_job.handler({ job_id: stagedJob.id, confirm_token: 'invented' }), /not approved/);

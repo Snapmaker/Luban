@@ -421,6 +421,8 @@ class MarlinController extends EventEmitter {
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', { data: res.raw });
             }
+            // For the channel's machine state (TextSerialChannel); nothing is written.
+            this.emit('originOffsetReport', res);
         });
         this.controller.on('headStatus', (res) => {
             // log.silly(`controller.on('originOffset'): source=${this.history.writeSource},
@@ -461,6 +463,9 @@ class MarlinController extends EventEmitter {
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', { data: res.raw });
             }
+            // The M114 reply was just parsed: TextSerialChannel stamps its
+            // machine state with THIS moment (not the query timer's tick).
+            this.emit('positionReport', res);
         });
         this.controller.on('temperature', (res) => {
             if (!this.seriesSize) {
@@ -1329,6 +1334,9 @@ class MarlinController extends EventEmitter {
         context.emit && this.emitAll('serialport:write', { data, context });
 
         this.serialport.write(data, context);
+        // The only serial write: TextSerialChannel notes every line (homes,
+        // G92 shifts, syncs, M114 queries) for the MCP's frame evidence.
+        this.emit('lineWritten', data);
     }
 }
 

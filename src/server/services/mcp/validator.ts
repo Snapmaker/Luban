@@ -10,8 +10,21 @@
  * to have selected (operator law, 2026-09-14, after a work-frame `G0 Z0`
  * transit job reached the confirm page reading "Z 0 .. 0, warnings: none").
  *
+ * Machine-aware rules (multi-machine overhaul, #265 WP3): validateGcode()
+ * takes the connected machine's dialect and judges the file by its rules
+ * (dialectRules.ts), reporting which ones under `machine.rulesApplied` with the
+ * Luban header it read (`header`, gcodeHeader.ts). Called without options it
+ * behaves exactly as before: the Snapmaker 2.0 A350's rules, no new findings.
+ *
  * No server imports: unit-testable with ts-node.
  */
+
+import {
+    DialectRuleId, RuleFinding, RuleLine, RulePhase, applyDialectRules,
+} from './dialectRules';
+import { DialectId, G53Form, GcodeDialect, dialectById, dialectFor } from './gcodeDialect';
+import { GcodeHeader, parseGcodeHeader } from './gcodeHeader';
+import { ResolvedTravel } from './machineTravel';
 
 export type JobFrame = 'machine' | 'work';
 
@@ -101,6 +114,46 @@ export interface GcodeValidationReport {
      */
     machineZResolvedFor: 'G54' | null;
     warnings: string[];
+    /**
+     * Which machine the file was judged for, by which rules (dialectRules.ts),
+     * and what those rules refuse. Optional on the type only because jobs
+     * persisted before #265 lack it; validateGcode() always fills it.
+     */
+    machine?: ValidationMachine;
+    /** The Luban `;Header Start` block (gcodeHeader.ts), or null when the file has none. */
+    header?: GcodeHeader | null;
+}
+
+export interface ValidationMachine {
+    /** The machine the rules were applied for; null when validateGcode() was called without options (legacy A350 rules). */
+    identifier: string | null;
+    dialect: DialectId;
+    /** How this machine takes G53 (gcodeDialect.ts), for the frame text and suggestGcode(). */
+    g53Form: G53Form;
+    rulesApplied: DialectRuleId[];
+    /** The phase the rules ran for (validate / submit / staged); null for the legacy call. */
+    phase: RulePhase | null;
+    /** Rule refusals: non-empty = submit_gcode_job and staging refuse. validate_gcode reports them. */
+    refusals: string[];
+    findings: RuleFinding[];
+    codesOutsideReference: Array<{ code: string; status: string; firstLine: number }>;
+}
+
+/** The machine to judge a file for. Omitted = the legacy A350 behaviour, exactly. */
+export interface ValidationOptions {
+    /** The dialect row; defaults to the row for machineIdentifier. */
+    dialect?: GcodeDialect;
+    machineIdentifier?: string | null;
+    /** XY travel for the travel rule (machine-frame files only); null/omitted = not checked. */
+    travel?: ResolvedTravel | null;
+    /** Default true. */
+    hasZ?: boolean;
+    /** MachineCapability.supports.rotary. Default: the dialect has a rotary axis word and the machine a Z. */
+    supportsRotary?: boolean;
+    /** The head the job is staged for (submit head_type), when known. */
+    headType?: string | null;
+    /** Default 'validate'. */
+    phase?: RulePhase;
 }
 
 const MOTION_RE = /^G0*[0123](?:\.\d+)?$/;
@@ -111,6 +164,8 @@ interface ParsedLine {
     codes: string[];
     /** Non-code words: X/Y/Z/B/F/S ... */
     words: { [letter: string]: number };
+    /** The line without comments, trimmed and upper-cased (for `$H` and other non-word commands). */
+    bare: string;
 }
 
 function normaliseCode(token: string): string {
@@ -119,30 +174,46 @@ function normaliseCode(token: string): string {
     return m ? `${m[1]}${m[2]}` : token;
 }
 
+/** A token made only of letter+number words with no spaces: Luban's GRBL export writes `G1 X10Y20F3000S500`. */
+const COMPACT_TOKEN_RE = /^(?:[A-Z][-+]?(?:\d+\.?\d*|\.\d+))+$/;
+const COMPACT_WORD_RE = /([A-Z])([-+]?(?:\d+\.?\d*|\.\d+))/g;
+
 function parseLine(line: string): ParsedLine {
     // strip comments: ; to end, and ( ... )
     const stripped = line.replace(/;.*$/, '').replace(/\([^)]*\)/g, '').trim();
     if (!stripped) {
-        return { codes: [], words: {} };
+        return { codes: [], words: {}, bare: '' };
     }
 
-    const tokens = stripped.toUpperCase().split(/\s+/);
+    const bare = stripped.toUpperCase();
+    const tokens = bare.split(/\s+/);
     const words: { [letter: string]: number } = {};
     const codes: string[] = [];
+    const take = (letter: string, raw: string, value: number) => {
+        if (letter === 'G' || letter === 'M') {
+            codes.push(normaliseCode(`${letter}${raw}`));
+        } else {
+            words[letter] = value;
+        }
+    };
 
     for (const token of tokens) {
         const letter = token[0];
         const value = Number(token.slice(1));
-        if (!letter || Number.isNaN(value)) {
-            continue;
-        }
-        if (letter === 'G' || letter === 'M') {
-            codes.push(normaliseCode(token));
-        } else {
-            words[letter] = value;
+        if (letter && !Number.isNaN(value)) {
+            take(letter, token.slice(1), value);
+        } else if (COMPACT_TOKEN_RE.test(token)) {
+            // Words run together (`X10Y20F3000S500`, `G1X5`): split them
+            // rather than drop the token - a Ray export is written this way.
+            COMPACT_WORD_RE.lastIndex = 0;
+            let m = COMPACT_WORD_RE.exec(token);
+            while (m) {
+                take(m[1], m[2], Number(m[2]));
+                m = COMPACT_WORD_RE.exec(token);
+            }
         }
     }
-    return { codes, words };
+    return { codes, words, bare };
 }
 
 /** Does this line carry a motion code (G0..G3)? Shared with the program identity lines (gcodeIntake.ts). */
@@ -157,8 +228,18 @@ function extend(range: { min: number; max: number } | null, value: number): { mi
     return { min: Math.min(range.min, value), max: Math.max(range.max, value) };
 }
 
-export function validateGcode(gcode: string): GcodeValidationReport {
+const SM2_DIALECT_ID: DialectId = 'sm2-marlin';
+
+export function validateGcode(gcode: string, options?: ValidationOptions): GcodeValidationReport {
     const lines = gcode.split(/\r?\n/);
+    // Rules apply only when the caller names a machine; otherwise the legacy
+    // A350 behaviour, finding for finding.
+    const judged = !!options && (options.dialect !== undefined || (options.machineIdentifier !== undefined && options.machineIdentifier !== null));
+    let dialect: GcodeDialect = dialectById(SM2_DIALECT_ID);
+    if (judged && options) {
+        dialect = options.dialect || dialectFor(options.machineIdentifier || null);
+    }
+    const ruleLines: RuleLine[] = [];
 
     let x: { min: number; max: number } | null = null;
     let y: { min: number; max: number } | null = null;
@@ -201,7 +282,10 @@ export function validateGcode(gcode: string): GcodeValidationReport {
 
     lines.forEach((line, index) => {
         const lineNo = index + 1;
-        const { codes, words } = parseLine(line);
+        const { codes, words, bare } = parseLine(line);
+        if (bare) {
+            ruleLines.push({ lineNo, bare, codes, words });
+        }
         if (!codes.length) {
             return;
         }
@@ -297,6 +381,14 @@ export function validateGcode(gcode: string): GcodeValidationReport {
         }
     });
 
+    // GRBL (the Ray): G53 is a same-line prefix, so a file that prefixes
+    // EVERY move is a machine-frame file - the only machine-frame form there
+    // is. (frame-form refuses one that prefixes only some.)
+    if (judged && dialect.frames.g53 === 'same-line' && declaredAtFirstMotion === null
+        && motionLineCount > 0 && inlineG53Lines.length === motionLineCount) {
+        declaredAtFirstMotion = 'machine';
+        declarationLine = firstMotionLine;
+    }
     const frame: FrameDeclaration = {
         endsInFrame: frameModal,
         declared: declaredAtFirstMotion,
@@ -347,7 +439,10 @@ export function validateGcode(gcode: string): GcodeValidationReport {
             + 'sanctioned MCP origin writes use set_workspace_origin (measured XYZ) or apply_tool_length_offset '
             + '(measured tool change), each human-gated. Remove raw origin writes unless the operator asked for exactly this.');
     }
-    if (inlineG53Lines.length) {
+    // The inline-G53 warning is the Snapmaker 2.0's (own-line G53 is the only
+    // form observed to work there). On GRBL the same-line prefix is the only
+    // form; on a machine without workspaces frame-form refuses G53 outright.
+    if (inlineG53Lines.length && dialect.frames.g53 === 'own-line') {
         warnings.push(`Inline G53 with a move on line(s) ${inlineG53Lines.join(', ')}: this controller does NOT `
             + 'honour a one-shot G53 - the move runs in the selected workspace, not machine coordinates. '
             + 'Put G53 on its own line before the moves (and G54 after) instead.');
@@ -362,6 +457,41 @@ export function validateGcode(gcode: string): GcodeValidationReport {
     }
     if (motionLineCount === 0) {
         warnings.push('No motion commands found.');
+    }
+
+    const header = parseGcodeHeader(gcode);
+    const machine: ValidationMachine = {
+        identifier: null,
+        dialect: dialect.id,
+        g53Form: dialect.frames.g53,
+        // The legacy call still applies the Snapmaker 2.0 inline-G53 warning.
+        rulesApplied: ['frame-form'],
+        phase: null,
+        refusals: [],
+        findings: [],
+        codesOutsideReference: [],
+    };
+    if (judged && options) {
+        const hasZ = options.hasZ !== false;
+        const result = applyDialectRules(ruleLines, {
+            dialect,
+            machineIdentifier: options.machineIdentifier || null,
+            hasZ,
+            supportsRotary: options.supportsRotary !== undefined ? options.supportsRotary : hasZ && dialect.rotaryAxis !== null,
+            travel: options.travel || null,
+            header,
+            headType: options.headType || null,
+            phase: options.phase || 'validate',
+            frame: { declared: frame.declared, source: frame.source, mixed: frame.mixed },
+            extents: { x, y },
+        });
+        machine.identifier = options.machineIdentifier || null;
+        machine.rulesApplied = result.rulesApplied;
+        machine.phase = options.phase || 'validate';
+        machine.refusals = result.refusals;
+        machine.findings = result.findings;
+        machine.codesOutsideReference = result.codesOutsideReference;
+        warnings.push(...result.warnings);
     }
 
     return {
@@ -385,6 +515,8 @@ export function validateGcode(gcode: string): GcodeValidationReport {
         originOffsetZAtStaging: null,
         machineZResolvedFor: null,
         warnings,
+        machine,
+        header,
     };
 }
 
@@ -480,6 +612,12 @@ export interface GcodeSuggestion {
  * certain, and it is verified by re-validating before it is returned.
  */
 export function suggestGcode(gcode: string, report: GcodeValidationReport): GcodeSuggestion | null {
+    // Every edit below writes the Snapmaker 2.0 frame form (own-line G53, a
+    // closing G54). On GRBL that form is refused (frame-form), and a machine
+    // without workspaces takes neither: no suggestion there.
+    if (report.machine && report.machine.g53Form !== 'own-line') {
+        return null;
+    }
     const changes: string[] = [];
     const lines = gcode.split(/\r?\n/);
     const out: string[] = [];
@@ -540,6 +678,32 @@ export interface FrameResolutionContext {
      * resolved on the assumption that the live offset is G54's.
      */
     verifiesG54AtStart?: boolean;
+    /**
+     * The body is a server-emitted RELATIVE transport step (traversePlan.ts
+     * 'grbl-relative': `G91 / G1 X.. Y.. F.. / G90`, Luban's own jog form for
+     * the Ray). A relative move is frame-independent, so the frame doctrine
+     * has nothing to demand of it; accepted only when EVERY motion line is
+     * relative and G90 is restored. Never set for a submitted file.
+     */
+    relativeTransport?: boolean;
+}
+
+/** The note a relative transport body carries on the confirm page in place of a frame declaration. */
+export const RELATIVE_TRANSPORT_NOTE = 'Relative transport (G91 .. G90): every move is an increment from where the head is, so no '
+    + 'workspace frame applies - the "; mcp-settle machine" line names the absolute MACHINE endpoint the heartbeat must report. '
+    + 'This is the form Luban\'s own jog sends to the Ray.';
+
+/**
+ * Every motion line runs under G91 and G90 is restored before the end: the
+ * extents are all null because the validator does not accumulate relative
+ * moves, and nothing moved before the distance mode was set.
+ */
+export function isRelativeOnlyTransport(report: GcodeValidationReport): boolean {
+    return report.motionLineCount > 0
+        && report.usesRelativeMotion
+        && !report.endsInRelativeMode
+        && !report.assumesDistanceMode
+        && report.extents.x === null && report.extents.y === null && report.extents.z === null;
 }
 
 export interface FrameResolution {
@@ -558,6 +722,24 @@ export const FRAME_REFUSAL_UNDECLARED = 'Refused: the job never declares its coo
     + 'whatever workspace the controller happens to have selected. Declare it: put `G53` on its own line before the '
     + 'first move (and `G54` after the last) for MACHINE coordinates, or pass frame: "work" for a Luban/slicer file '
     + 'that runs in the operator\'s work origin. G90/G91 is distance mode, not a frame.';
+
+/**
+ * FRAME_REFUSAL_UNDECLARED tells the agent to write `G53` on its own line - the
+ * Snapmaker 2.0 form. On a machine that does not take it (GRBL: same-line
+ * prefix only; no workspaces at all) the only declaration is the argument.
+ */
+export function frameRefusalUndeclared(report: GcodeValidationReport): string {
+    const machine = report.machine;
+    if (!machine || machine.g53Form === 'own-line') {
+        return FRAME_REFUSAL_UNDECLARED;
+    }
+    const why = machine.g53Form === 'same-line'
+        ? 'G53 is a non-modal same-line prefix on GRBL, so an own-line G53 declares nothing there'
+        : 'it documents no G53/G54 workspaces at all';
+    return 'Refused: the job never declares its coordinate frame, so its moves would run from whatever origin the controller '
+        + `happens to hold. On the ${machine.identifier || 'connected machine'} (${machine.dialect}) ${why}: pass frame: "work" for a `
+        + 'Luban export, which runs from the origin set on the machine. G90/G91 is distance mode, not a frame.';
+}
 
 /**
  * Settle which frame a staged file job runs in, from what the gcode declares
@@ -582,6 +764,12 @@ export function resolveJobFrame(input: GcodeValidationReport, ctx: FrameResoluti
     if (declared === 'work' && arg === 'machine') {
         return { report, refusal: `Refused: the gcode selects a work workspace (${report.frame.workspaceSelects.join('/')}) at line ${report.frame.line} but frame: "machine" was passed. A machine-frame job must contain G53 literally.` };
     }
+    if (declared === null && arg === null && ctx.relativeTransport === true && isRelativeOnlyTransport(report)) {
+        report.warnings = report.warnings.filter((w) => !w.startsWith('Contains G91 relative motion'));
+        report.warnings.push(RELATIVE_TRANSPORT_NOTE);
+        report.machineZExtents = null;
+        return { report, refusal: null };
+    }
     if (declared === null) {
         if (arg === 'work') {
             report.frame.declared = 'work';
@@ -592,7 +780,7 @@ export function resolveJobFrame(input: GcodeValidationReport, ctx: FrameResoluti
                 refusal: `Refused: frame: "machine" was passed but the gcode contains no G53 before its first move (line ${report.frame.firstMotionLine}). The controller runs an undeclared file in the selected WORK workspace, so a machine-frame job must carry G53 literally - the MCP never edits your gcode to add it.`,
             };
         } else {
-            return { report, refusal: FRAME_REFUSAL_UNDECLARED };
+            return { report, refusal: frameRefusalUndeclared(report) };
         }
     }
 

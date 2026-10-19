@@ -323,6 +323,8 @@ class SstpHttpChannel extends Channel implements
                     this.emit(ChannelEvent.Connected);
                     this.emit(ChannelEvent.Ready, {
                         machineIdentifier: series,
+                        // The base URL this session talks to (the app sends http://<address>:8080); never the token.
+                        host: this.host || null,
                     });
 
                     resolve(true);
@@ -436,7 +438,7 @@ class SstpHttpChannel extends Channel implements
 
     public resumeVerifiedSession(): void {
         this.emit(ChannelEvent.Connected);
-        this.emit(ChannelEvent.Ready, { machineIdentifier: this.state.series });
+        this.emit(ChannelEvent.Ready, { machineIdentifier: this.state.series, host: this.host || null });
     }
 
     public async startHeartbeat(): Promise<void> {

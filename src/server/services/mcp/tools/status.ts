@@ -1,6 +1,8 @@
 import { connectionDiagnostics } from '../../machine/connectionDiagnostics';
 import { connectionManager } from '../../machine/ConnectionManager';
+import { connectedMachineCapability } from '../connectedMachine';
 import { diagnosticsSnapshot } from '../diagnostics';
+import { machineStore } from '../machineStore';
 import { getPositionOfRecord, getTrustedOffset } from '../positionOfRecord';
 import { probeFeedService } from '../probeFeed';
 import { McpToolError, ToolRegistry } from '../registry';
@@ -13,15 +15,24 @@ import { machinePositionDiagnostics } from './machine';
 export function registerStatusTools(registry: ToolRegistry): void {
     registry.register({
         name: 'get_connection_status',
-        description: 'Report whether Luban is connected to a machine, and over which channel. '
-            + 'Read-only; sends nothing to the machine.',
+        description: 'Report whether Luban is connected to a machine, and over which channel: machineIdentifier, '
+            + 'deviceSerial (SACP) / host (SSTP), machineKey (the per-machine record set that applies), dialect, and '
+            + 'applied_records (which stored records the MCP applies to this machine). Read-only; sends nothing to the machine.',
         inputSchema: {
             type: 'object',
             properties: {},
             additionalProperties: false,
         },
         handler: async () => {
-            return connectionManager.getConnectionStatus();
+            const status = connectionManager.getConnectionStatus();
+            // #265 WP8: which record set applies and which dialect is spoken, next to
+            // WPC's deviceSerial / host; the registry adds applied_records.
+            const current = machineStore.currentMachine();
+            return {
+                ...status,
+                machineKey: current.basis === 'connected' ? current.machineKey : null,
+                dialect: status && status.connected ? connectedMachineCapability().dialect.id : null,
+            };
         },
     });
 

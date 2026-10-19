@@ -20,9 +20,9 @@ function fixture(onMove?: () => void) {
     const config = { get: (key: string) => store.get(key),
         set: (key: string, value: unknown) => store.set(key, value),
         unset: (key: string) => store.delete(key) };
-    const active = isolatedModule('activeTool.ts', { '../configstore': config });
+    const active = isolatedModule('activeTool.ts', { './machineStore': { machineConfig: config } });
     let effectiveLength: number | null = null;
-    const state = isolatedModule('toolDatumState.ts', { '../configstore': config,
+    const state = isolatedModule('toolDatumState.ts', { './machineStore': { machineConfig: config },
         './activeTool': active,
         './toolDatum': datum,
         './rotaryGeometry': { geometrySettings: () => ({ fields: { probe_effective_length: {
@@ -32,7 +32,7 @@ function fixture(onMove?: () => void) {
     const sensed = () => ({ contact: z <= 175.5 + 1e-8, channel: 'probe', reading: { value: 'contact' } });
     const setter = isolatedModule('toolSetter.ts', {
         '../../lib/logger': () => ({ info: () => undefined, error: () => undefined }),
-        '../configstore': config,
+        './machineStore': { machineConfig: config },
         './index': { mcpBroadcast: () => undefined },
         './traversePlan': { TRAVERSE_Z_TOLERANCE_MM: 0.05 },
         './procedureLimits': limits,

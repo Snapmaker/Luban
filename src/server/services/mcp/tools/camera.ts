@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 
 import logger from '../../../lib/logger';
-import config from '../../configstore';
+import { machineConfig } from '../machineStore';
 import { mcpBroadcast } from '../index';
 import { connectionManager } from '../../machine/ConnectionManager';
 import {
@@ -29,9 +29,13 @@ import { jobManager } from '../jobs';
 import { bumpGcodeSequence, noteDirectGcodeEnd, noteDirectGcodeStart, noteFrameRestored } from '../positionOfRecord';
 import { decodeToGray, trackFeature } from '../tracking';
 import { McpToolError, ToolRegistry } from '../registry';
+import { STOCK_ARG_SCHEMA } from '../rotaryCallContext';
 import { gateDirectXy, planGotoWorkOrigin } from '../directMovePlan';
+import { homeSequence, machineFrameMove, relativeStep, workFrameMove, workFrameRestore, workFrameRestoreCommands } from '../gcodeForms';
+import { TraverseMachine } from '../traversePlan';
+import { connectedMachineIdentifier, describeConnectedMachine } from '../connectedMachine';
 import { clearanceOptions } from '../clearanceContext';
-import { FrameReading, WORK_FRAME_RESTORE_GCODE, frameRestoreJobRefusal, verifyWorkFrame, workFrameVerificationNote } from '../frameRecovery';
+import { FrameReading, frameRestoreJobRefusal, verifyWorkFrame, workFrameVerificationNote } from '../frameRecovery';
 import { NotSentError, RecoveryDeps, classifyReply, recordModalSend } from '../failureRecovery';
 import { gcodeLease } from '../../machine/gcodeLease';
 import { procedureStopRequested } from '../procedureAbort';
@@ -47,9 +51,12 @@ import {
     assertWithinTravel,
     getPositionSnapshot,
     machineBounds,
+    motionDialect,
     motionFloorZ,
+    motionGcodeForm,
     requirePlanningTravel,
     safeTraverseZ,
+    traverseMachine,
 } from './machine';
 import { validateStagedEnvelope } from './staging';
 import { outsideBounds, reliableForMotion } from '../machinePosition';
@@ -243,7 +250,7 @@ async function sleep(ms: number): Promise<void> {
  * frame carries it - turning tool identification into a lookup.
  */
 function expectedToolRegion(): object | null {
-    const raw = config.get('mcpToolRegion');
+    const raw = machineConfig.get('mcpToolRegion');
     if (!raw) {
         return null;
     }
@@ -375,14 +382,21 @@ async function settleUntil(issuedAt: number, matches: (now: PositionSnapshot) =>
  * it twice. Throws if the controller refuses it or it does not settle; the
  * XY is never sent on an unproven Z.
  */
-async function raiseBeforeXy(channel: GcodeChannel, fromZ: number, toZ: number, reason: string): Promise<{ from: number; to: number }> {
-    const gcode = ['G90', 'G53;', `G1 Z${toZ.toFixed(3)} F${TRAVEL_FEED};`, 'G54;'].join('\n');
+async function raiseBeforeXy(channel: GcodeChannel, machine: TraverseMachine, at: { x: number; y: number }, fromZ: number, toZ: number,
+    reason: string): Promise<{ from: number; to: number }> {
+    // The machine's own form (gcodeForms.ts): the Snapmaker 2.0's G53 step, or
+    // a relative Z step (with its planner sync) where G53 is not emitted.
+    const dialect = machine.dialect || motionDialect();
+    const gcode = machine.gcode === 'grbl-relative'
+        ? relativeStep(dialect, { from: { ...at, z: fromZ }, to: { ...at, z: toZ } }, TRAVEL_FEED, { hasZ: machine.hasZ })
+        : machineFrameMove(dialect, `Z${toZ.toFixed(3)}`, TRAVEL_FEED);
     const issuedAt = Date.now();
     const executed = await sendGcodeVisible(channel, `raise before xy - ${reason.slice(0, 50)}`, gcode);
     if (executed.result !== 0) {
         throw new McpToolError(`Raise to the traverse height rejected by controller: ${executed.text || executed.result}. The XY move was NOT sent.`);
     }
-    const settled = await settleUntil(issuedAt, (now) => now.machine.z !== null && Math.abs(now.machine.z - toZ) <= SETTLE_TOLERANCE_MM);
+    const settled = await settleUntil(issuedAt, (now) => now.machine.z !== null && Math.abs(now.machine.z - toZ) <= SETTLE_TOLERANCE_MM
+        && now.motionAtRest !== false);
     if (!settled) {
         const last = positionOrNull();
         throw new McpToolError(`Raise from machine Z ${fromZ.toFixed(3)} to Z ${toZ.toFixed(3)} did not settle within ${SETTLE_TIMEOUT_MS / 1000}s; `
@@ -432,6 +446,10 @@ export async function executeBoundedMoveAndCapture(args: BoundedMoveArgs): Promi
     }
     const feedRate = clampTo(args.feed_rate, DIRECT_MOVE_FEED);
 
+    // Which machine: a Z axis or not, and which gcode form its firmware is
+    // known to execute (tools/machine.ts traverseMachine). A printer (J1) or
+    // an unlisted machine is refused first, naming it.
+    const machine = traverseMachine('move_and_capture');
     const before = getPositionSnapshot();
     assertSafeToMove(before, args.operator_confirmed_clearance === true);
 
@@ -448,7 +466,7 @@ export async function executeBoundedMoveAndCapture(args: BoundedMoveArgs): Promi
     }
 
     const travel = Math.hypot(target.x - current.x, target.y - current.y);
-    const maxTravel = Number(config.get('mcpMaxJogDistance')) || DEFAULT_MAX_TRAVEL_MM;
+    const maxTravel = Number(machineConfig.get('mcpMaxJogDistance')) || DEFAULT_MAX_TRAVEL_MM;
     if (travel > maxTravel) {
         throw new McpToolError(`Requested travel ${travel.toFixed(1)} mm exceeds the ${maxTravel} mm `
                     + 'per-call limit. Split the approach, or submit a gcode job.');
@@ -476,7 +494,7 @@ export async function executeBoundedMoveAndCapture(args: BoundedMoveArgs): Promi
     if (!Number.isFinite(routeClearance.minimumZ)) {
         throw new McpToolError(`XY move refused: ${routeClearance.note}`);
     }
-    if (routeClearance.minimumZ > Math.max(safeTraverseZ(), before.machine.z || 0)) {
+    if (machine.hasZ && routeClearance.minimumZ > Math.max(safeTraverseZ(), before.machine.z || 0)) {
         throw new McpToolError(`Route requires toolhead Z${routeClearance.minimumZ}, above the current/park height; no automatic raise beyond park is allowed.`);
     }
 
@@ -489,13 +507,16 @@ export async function executeBoundedMoveAndCapture(args: BoundedMoveArgs): Promi
     // descend (law 8) - and the XY is sent only once that raise has settled.
     // Direct camera nudges retain the park-height Z gate (law 7); an active
     // tool or a clearance flag cannot disable it. Staged surveys use the floor.
-    const gate = gateDirectXy(before.machine.z, Math.max(safeTraverseZ(), routeClearance.minimumZ), false);
+    // On a machine with no Z axis (the Ray) the gate is moot and says so:
+    // the travel cap, pacing guard, idle/toolhead-off and route checks above
+    // and below still apply.
+    const gate = gateDirectXy(before.machine.z, Math.max(safeTraverseZ(), routeClearance.minimumZ), false, machine.hasZ);
     if (gate.action === 'refuse' || gate.planZ === null) {
         throw new McpToolError(`XY move refused: ${gate.reason}`);
     }
     let raisedFirst: { from: number; to: number } | null = null;
     if (gate.action === 'raise' && gate.fromZ !== null && gate.toZ !== null) {
-        raisedFirst = await raiseBeforeXy(channel, gate.fromZ, gate.toZ, reason);
+        raisedFirst = await raiseBeforeXy(channel, machine, { x: before.machine.x, y: before.machine.y }, gate.fromZ, gate.toZ, reason);
     }
     // Landmarks are checked at the Z the XY will ACTUALLY run at (the raised
     // height, or the current one), never at a height the head has left.
@@ -545,10 +566,25 @@ export async function executeBoundedMoveAndCapture(args: BoundedMoveArgs): Promi
         : undefined;
     recentDirectMoves.push(pacingNow);
 
-    const move = `G0 X${target.x.toFixed(3)} Y${target.y.toFixed(3)} F${feedRate}`;
-    // Every MCP-emitted motion declares its frame (operator law 2026-09-14):
-    // G53 for machine coordinates, an explicit G54 for the work workspace.
-    const gcode = coordinateSystem === 'machine' ? `G53;\n${move};\nG54;` : `G54;\n${move}`;
+    let gcode: string;
+    const dialect = machine.dialect || motionDialect();
+    if (machine.gcode === 'grbl-relative') {
+        // Ray / Original: Luban's own jog form (ControlPanel.tsx relativeMove)
+        // - a G91 increment from the position of record, G90 restored, plus
+        // the planner sync on a Marlin M114 machine (gcodeForms.ts). Frame-
+        // independent, so no G53/G54; arrival is verified against the target
+        // below exactly as for an absolute move.
+        gcode = relativeStep(dialect, {
+            from: { x: before.machine.x as number, y: before.machine.y as number },
+            to: machineTarget,
+        }, feedRate, { command: 'G0', settle: false });
+    } else {
+        const words = `X${target.x.toFixed(3)} Y${target.y.toFixed(3)}`;
+        // Every MCP-emitted motion declares its frame (operator law 2026-09-14):
+        // G53 for machine coordinates, an explicit G54 for the work workspace.
+        const options = { command: 'G0' as const, declareDistance: false };
+        gcode = coordinateSystem === 'machine' ? machineFrameMove(dialect, words, feedRate, options) : workFrameMove(dialect, words, feedRate, options);
+    }
     const issuedAt = Date.now();
     const executed = await sendGcodeVisible(channel, `move - ${reason.slice(0, 60)}`, gcode);
     if (executed.result !== 0) {
@@ -559,10 +595,13 @@ export async function executeBoundedMoveAndCapture(args: BoundedMoveArgs): Promi
         // Fire-and-return: no settle, no capture - the frame would not show
         // the commanded position. Poll get_position before relying on it.
         return {
+            connected_machine: describeConnectedMachine(),
+            gcode_form: motionGcodeForm(),
             commanded: { ...target, coordinate_system: coordinateSystem, feed_rate: feedRate },
             position: null,
             position_verified: false,
             raised_first: raisedFirst,
+            z_gate: gate.reason,
             pacing_warning: pacingWarning,
             note: 'wait_until_moved was false: move accepted but not awaited, and no frame was '
                 + 'captured (it would not show the commanded position). Poll get_position.',
@@ -574,7 +613,8 @@ export async function executeBoundedMoveAndCapture(args: BoundedMoveArgs): Promi
     // was commanded (#11).
     const settled = await settleUntil(issuedAt, (now) => {
         const reported = coordinateSystem === 'work' ? now.work : now.machine;
-        return reported.x !== null && reported.y !== null
+        // motionAtRest false: the Original's M114 may be the queued target, not the head.
+        return now.motionAtRest !== false && reported.x !== null && reported.y !== null
             && Math.abs(reported.x - target.x) <= SETTLE_TOLERANCE_MM
             && Math.abs(reported.y - target.y) <= SETTLE_TOLERANCE_MM;
     });
@@ -589,10 +629,13 @@ export async function executeBoundedMoveAndCapture(args: BoundedMoveArgs): Promi
     await sleep(POST_SETTLE_DWELL_MS);
     if (args.capture === false) {
         return {
+            connected_machine: describeConnectedMachine(),
+            gcode_form: motionGcodeForm(),
             commanded: { ...target, coordinate_system: coordinateSystem, feed_rate: feedRate },
             position: getPositionSnapshot(),
             position_verified: true,
             raised_first: raisedFirst,
+            z_gate: gate.reason,
             pacing_warning: pacingWarning,
             note: 'position is firmware-reported after settling; capture was false so no frame was taken',
         };
@@ -601,10 +644,13 @@ export async function executeBoundedMoveAndCapture(args: BoundedMoveArgs): Promi
     const after = getPositionSnapshot();
 
     return frameContent(frame, {
+        connected_machine: describeConnectedMachine(),
+        gcode_form: motionGcodeForm(),
         commanded: { ...target, coordinate_system: coordinateSystem, feed_rate: feedRate },
         position: after,
         position_verified: true,
         raised_first: raisedFirst,
+        z_gate: gate.reason,
         pacing_warning: pacingWarning,
         note: 'position is firmware-reported after settling, not the commanded target',
         route_clearance: routeClearance,
@@ -667,19 +713,21 @@ async function stageGotoWorkOrigin(args: { reason?: string; feed_rate?: number; 
         throw new McpToolError('reason is required: say why the head should go to the work origin (it is shown to the operator).');
     }
     const feedRate = clampTo(args.feed_rate, TRAVERSE_FEED);
+    // Refuse a printer (J1) or an unlisted machine first, naming it.
+    const machine = traverseMachine('goto_work_origin');
     const position = getPositionSnapshot();
     // Overtravel, fresh + reliable heartbeat, idle, toolhead off, homed - the
     // same gate as a direct move, with no operator override.
     assertSafeToMove(position, false);
     const { x, y, z } = position.machine;
-    if (x === null || y === null || z === null) {
+    if (x === null || y === null || (machine.hasZ && z === null)) {
         throw new McpToolError('Current machine position unknown; cannot plan the move to the work origin.');
     }
     const travel = requirePlanningTravel('the move to the work origin', { x, y });
     let plan;
     try {
         plan = planGotoWorkOrigin({
-            currentMachine: { x, y, z },
+            currentMachine: { x, y, z: z === null ? 0 : z },
             originOffset: position.originOffset,
             offsetSource: position.originOffsetSource,
             positionWarnings: position.warnings,
@@ -689,6 +737,7 @@ async function stageGotoWorkOrigin(args: { reason?: string; feed_rate?: number; 
             feedRate,
             obstacles: landmarkStore.obstacleBoxes(),
             ...clearanceOptions(),
+            machine,
             reason,
         });
     } catch (err) {
@@ -697,11 +746,13 @@ async function stageGotoWorkOrigin(args: { reason?: string; feed_rate?: number; 
         }
         throw err;
     }
-    const validation = validateStagedEnvelope(plan.reviewText, 'goto_work_origin');
+    const validation = validateStagedEnvelope(plan.reviewText, 'goto_work_origin', { relativeTransport: plan.relative });
     const job = jobManager.submit(plan.reviewText, plan.name, 'cnc', validation, 'direct');
     job.waitUntilMoved = args.wait_until_moved !== false;
     return {
         job: jobManager.describe(job),
+        connected_machine: describeConnectedMachine(),
+        gcode_form: motionGcodeForm(),
         destination_machine: plan.destinationMachine,
         work_origin_offset_at_staging: position.originOffset,
         current_machine: { x, y, z },
@@ -754,7 +805,9 @@ export async function homeMachine(tool: string, waitUntilHomed: boolean = true, 
     probeFeedService.assertNoOvertravel();
     const before = await positionForHoming(ignoreStalePosition);
     if (!ignoreStalePosition || before.reliability !== 'stale') {
-        assertFreshHeartbeat(tool);
+        // A logical-frame position (the Original) is refused until a home:
+        // homing is the remedy, so only freshness and the frame latch apply.
+        assertFreshHeartbeat(tool, { homing: true });
     }
     if (before.machineStatus !== 'idle') {
         throw new McpToolError(`Machine is ${before.machineStatus || 'in an unknown state'}, not idle.`);
@@ -771,10 +824,37 @@ export async function homeMachine(tool: string, waitUntilHomed: boolean = true, 
     }
 
     const issuedAt = Date.now();
-    let homeRequest: string;
-    if (sacpTransport() && typeof channel.goHome === 'function') {
-        // A SACP controller (Ray, Artisan, J1) homes on its own request
-        // (0x01/0x35) - the same call as Luban's Home button on this transport
+    // How THIS machine is homed is decided from the transport and the machine
+    // identity and its dialect row (gcodeForms.homeSequence over
+    // machineCapability.homeCommandFor), read through connectedMachine.ts -
+    // the one place that reads the identifier, and a defensive one (the test
+    // harness's ConnectionManager stub has no getConnectionStatus).
+    const dialect = motionDialect();
+    let command;
+    try {
+        command = homeSequence(dialect, {
+            sacp: sacpTransport(),
+            machineIdentifier: connectedMachineIdentifier(),
+            canExecuteGcode: typeof channel.executeGcode === 'function',
+            canGoHome: typeof channel.goHome === 'function',
+        });
+    } catch (err) {
+        throw new McpToolError(`Refusing ${tool}: ${(err as Error).message}.`);
+    }
+    const homeRequest = command.label;
+    if (command.kind === 'grbl-home') {
+        // The Ray homes on GRBL $H - what Luban's Home button sends for it
+        // (ConnectionControl/ControlPanel.tsx). Ray firmware V1.7.4 never
+        // answers the SACP 0x01/0x35 home request (observed 2026-10-18: no
+        // reply, no motion, the call hung). The homed state and position come
+        // back through the coordinate subscription.
+        const executed = await sendGcodeVisible(channel, tool, command.gcode as string);
+        if (executed.result !== 0) {
+            throw new McpToolError(`Homing rejected by controller: ${executed.text || executed.result}`);
+        }
+    } else if (command.kind === 'sacp-home-request') {
+        // A SACP controller (Artisan, J1) homes on its own request (0x01/0x35)
+        // - the same call as Luban's Home button on this transport
         // (ConnectionManager.goHome). Its G-code path acknowledges text with a
         // bare result code, so G53;G28;G54 could neither be relied on nor
         // checked; the homed state comes back through the coordinate
@@ -783,23 +863,30 @@ export async function homeMachine(tool: string, waitUntilHomed: boolean = true, 
         if (leaseRefusal) {
             throw new McpToolError(leaseRefusal);
         }
-        homeRequest = 'SACP home request';
         gcodeLog.info(`[${tool}] > ${homeRequest}`);
         mcpBroadcast('mcp:gcode', { tool, gcode: homeRequest, idleMs: null });
-        const accepted = await channel.goHome();
+        const accepted = await (channel.goHome as () => Promise<boolean | void>)();
         const response = accepted === false ? 'rejected' : 'ok';
         mcpBroadcast('mcp:gcode', { tool, response, execMs: Date.now() - issuedAt });
         gcodeLog.info(`[${tool}] < ${response} (exec ${Date.now() - issuedAt}ms)`);
         if (accepted === false) {
             throw new McpToolError('Homing rejected by controller (SACP home request returned a non-zero result).');
         }
+    } else if (command.kind === 'g28-only') {
+        // The Original (no workspaces): its row's G28 ALONE - never G53/G54
+        // (R6). No G54 was sent, so no frame restore is noted; the text-serial
+        // write path sees this G28 and the first M114 answered after it marks
+        // the home complete (textSerialMachineState.ts frameEvidence).
+        const executed = await sendGcodeVisible(channel, tool, command.gcode as string);
+        if (executed.result !== 0) {
+            throw new McpToolError(`Homing rejected by controller: ${executed.text || executed.result}`);
+        }
     } else {
         // Luban's own Home button sends G53; G28; G54 - home in the
         // machine workspace, then reselect workspace 0. A bare G28 leaves
         // the controller reporting positions in an unselected workspace
         // (observed: derived machine Y 464/Z 656 on the A350).
-        homeRequest = 'G28';
-        const executed = await sendGcodeVisible(channel, tool, 'G53;\nG28;\nG54;');
+        const executed = await sendGcodeVisible(channel, tool, command.gcode as string);
         if (executed.result !== 0) {
             throw new McpToolError(`Homing rejected by controller: ${executed.text || executed.result}`);
         }
@@ -809,6 +896,9 @@ export async function homeMachine(tool: string, waitUntilHomed: boolean = true, 
     if (!waitUntilHomed) {
         return {
             homed: null,
+            connected_machine: describeConnectedMachine(),
+            gcode_form: motionGcodeForm(),
+            home_command: command.label,
             position_verified: false,
             note: `wait_until_moved was false: ${homeRequest} accepted but not awaited (homing takes `
                 + '~15-20s). Poll get_position until isHomed is true and the position is '
@@ -843,10 +933,15 @@ export async function homeMachine(tool: string, waitUntilHomed: boolean = true, 
         // both predate the motion. Require the position to have moved
         // off its pre-G28 value at least once - homing always travels -
         // before accepting stability (or 25s, if it started at home).
-        const changeOk = sawChange || Date.now() - issuedAt > 25000;
+        // On text serial (the Original) isHomed is itself observed - an M114
+        // answered after the G28 - so it needs no movement evidence.
+        const changeOk = sawChange || !!now.logicalFrame || Date.now() - issuedAt > 25000;
         if (reportTime > issuedAt && stable && changeOk && now.isHomed === true && now.machineStatus === 'idle') {
             return {
                 homed: true,
+                connected_machine: describeConnectedMachine(),
+                gcode_form: motionGcodeForm(),
+                home_command: command.label,
                 position: now,
                 note: 'Work origins are user-set per workspace and persist across homing. '
                     + 'Check position.warnings, and if coordinates look wrong verify the frame '
@@ -859,18 +954,34 @@ export async function homeMachine(tool: string, waitUntilHomed: boolean = true, 
         + `Last state: ${JSON.stringify(last && { isHomed: last.isHomed, machineStatus: last.machineStatus })}`);
 }
 
+/**
+ * The connected machine's no-motion frame restore (gcodeForms.workFrameRestore):
+ * `G90\nG54;` on the Snapmaker 2.0 (WORK_FRAME_RESTORE_GCODE, unchanged), `G90`
+ * alone where Luban selects no workspace (Ray) or there are none (Original).
+ */
+export function workFrameRestoreText(): string {
+    try {
+        return workFrameRestore(motionDialect());
+    } catch (err) {
+        throw new McpToolError(`Refusing the frame restore: ${(err as Error).message}.`);
+    }
+}
+
 /** Shared operator/agent frame recovery; deliberately no axis words. */
 export async function sendWorkFrameRestore(tool: string): Promise<SentGcode> {
     const channel = connectionManager.getCurrentChannel() as unknown as GcodeChannel;
     if (!channel || typeof channel.executeGcode !== 'function') {
         throw new McpToolError('No machine connected, or the channel does not support direct commands.');
     }
-    const executed = await sendGcodeVisible(channel, tool, WORK_FRAME_RESTORE_GCODE);
+    const executed = await sendGcodeVisible(channel, tool, workFrameRestoreText());
     // G54 synchronizes the planner, so an acknowledged restore also means no
     // queued motion is left; a fresh verified position still has to follow.
+    // A G90-only restore (Ray, Original) is noted too, so a frame latch
+    // persisted from another machine's session can still clear.
     if (executed.result === 0) { noteFrameRestored(); }
     return executed;
 }
+
 
 /** The position-of-record fields a frame verification reads (frameRecovery.verifyWorkFrame). */
 function frameReading(snapshot: PositionSnapshot): FrameReading {
@@ -894,6 +1005,9 @@ function frameReading(snapshot: PositionSnapshot): FrameReading {
  */
 export const failureRecoveryDeps: RecoveryDeps = {
     connectionId: currentConnectionId,
+    // G54 only where the MCP sends G53 at all (gcodeForms.ts); a machine the
+    // table does not list throws here and the hook falls back to true.
+    selectsWorkspace: () => workFrameRestoreCommands(motionDialect()).includes('G54'),
     send: async (label, gcode) => {
         const channel = connectionManager.getCurrentChannel() as unknown as GcodeChannel;
         if (!channel || typeof channel.executeGcode !== 'function') {
@@ -1318,7 +1432,7 @@ export function registerCameraTools(registry: ToolRegistry): void {
                 v1: box[3],
                 note: args.note ? String(args.note) : undefined,
             };
-            config.set('mcpToolRegion', region);
+            machineConfig.set('mcpToolRegion', region);
             return { stored: region };
         },
     });
@@ -1410,7 +1524,8 @@ export function registerCameraTools(registry: ToolRegistry): void {
 
     registry.register({
         name: 'restore_work_frame',
-        description: 'Put the controller back in the WORK workspace (`G90` then `G54` on its own line). NO MOTION: '
+        description: 'Put the controller back in the WORK workspace (`G90` then `G54` on its own line; on a machine this MCP never '
+            + 'sends G53/G54 to - the Ray, the Original - `G90` alone). NO MOTION: '
             + 'the program carries no axis word, so it is permitted even when the machine position is '
             + 'awaiting-resync or stale - it is the remedy for exactly that state. Use it when get_position '
             + 'reports an incoherent or machine-frame position after a job that declared G53 and never selected a '
@@ -1451,7 +1566,13 @@ export function registerCameraTools(registry: ToolRegistry): void {
             const verification = verifyWorkFrame(frameReading(after), replyAt);
             const recovered = accepted && verification === 'verified' && reliableForMotion(after.reliability);
             return {
-                sent: WORK_FRAME_RESTORE_GCODE,
+                sent: workFrameRestoreText(),
+                connected_machine: describeConnectedMachine(),
+                gcode_form: motionGcodeForm(),
+                ...(motionGcodeForm() === 'relative-steps'
+                    ? { restore_form_note: 'G90 only: this MCP never selects a workspace on this machine (no G53/G54 is ever sent to it), '
+                        + 'so the restore just puts the controller back in absolute distance mode.' }
+                    : {}),
                 result: executed.result,
                 text: executed.text || null,
                 before: { reliability: before.reliability, frame: before.frame, machine: before.machine },
@@ -1578,8 +1699,13 @@ export function registerCameraTools(registry: ToolRegistry): void {
             + 'off. Waits for the firmware to report homed. Stale position is refused by default; '
             + 'ignore_stale_position may be true ONLY when the operator explicitly demands homing despite stale data. '
             + 'This does not bypass alarms, toolhead/idle checks or verification after homing. '
-            + 'On a SACP machine (Ray, Artisan, J1) the channel\'s own home request is used instead of G53;G28;G54, and '
-            + 'the homed state comes back through its coordinate subscription; a Ray homes to about X-1..1, Y399.',
+            + 'On the Ray it sends GRBL $H, as Luban\'s Home button does for it (Ray firmware never answers the SACP home '
+            + 'request); on other SACP machines (Artisan, J1) the channel\'s own home request is used instead of G53;G28;G54. '
+            + 'Either way the homed state comes back through the coordinate subscription; a Ray homes to about X-1..1, Y399. '
+            + 'On the Snapmaker Original (USB text serial, no workspaces) it sends G28 ALONE - never G53/G54 - and the Original\'s '
+            + 'position counts as machine coordinates only once this home is observed complete and nothing has shifted it since '
+            + '(a G92 from Luban\'s set-work-origin, Luban\'s own G53/G28/G54 Home button): get_position.logicalFrame says why not. '
+            + 'A Ray or J1 on plain-text USB, and an A350 over USB, are refused. Results carry gcode_form and connected_machine.dialect.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -1621,10 +1747,12 @@ export function registerCameraTools(registry: ToolRegistry): void {
             + 'a valid retained WCS may have an obstructed zero or approach: do not automatically return there. '
             + 'Recheck the route in the new orientation, or keep the WCS reference and use a separate verified entry. Follow with '
             + 'start_gcode_job {job_id, wait_for_approval_ms: 110000}. No frame is captured on arrival - call '
-            + 'capture_frame after.',
+            + 'capture_frame after. On a machine with no Z axis (connected_machine.hasZ false, the Ray) the motion-floor '
+            + 'refusal does not apply and the step is a relative G91/G90 increment, as traverse_xy.',
         inputSchema: {
             type: 'object',
             properties: {
+                stock: STOCK_ARG_SCHEMA,
                 reason: { type: 'string', description: 'Why this move is needed; shown to the operator on the confirm page.' },
                 feed_rate: { type: 'number', description: `mm/min, default ${TRAVERSE_FEED.default}, max ${TRAVERSE_FEED.max}.` },
                 wait_until_moved: {
@@ -1651,10 +1779,15 @@ export function registerCameraTools(registry: ToolRegistry): void {
             + 'operator-approved mechanisms (survey_bed, move_z batches, probing procedures, '
             + 'submit_gcode_job), and rapid sequential calls are refused (pacing guard). Obstacle landmarks '
             + 'are checked at the Z the XY actually runs at. No Z parameter by design. Requires an idle machine, toolhead '
-            + `off, a stated reason. Travel per call is capped (mcpMaxJogDistance, default ${DEFAULT_MAX_TRAVEL_MM} mm).`,
+            + `off, a stated reason. Travel per call is capped (mcpMaxJogDistance, default ${DEFAULT_MAX_TRAVEL_MM} mm). `
+            + 'On a machine with no Z axis (connected_machine.hasZ false, the Ray) the Z gate is skipped - there is no height '
+            + 'to raise to; the XY runs at the only height as a relative G91/G90 increment (Luban\'s own Ray jog form) - while '
+            + 'the travel cap, pacing guard, idle/toolhead-off and route checks still apply. Only landmarks set on the connected '
+            + 'machine count.',
         inputSchema: {
             type: 'object',
             properties: {
+                stock: STOCK_ARG_SCHEMA,
                 x: { type: 'number', description: 'Target X. Omit to keep current X.' },
                 y: { type: 'number', description: 'Target Y. Omit to keep current Y.' },
                 reason: { type: 'string', description: 'Why this move is needed; shown to the operator.' },
@@ -1681,7 +1814,7 @@ export function registerCameraTools(registry: ToolRegistry): void {
                     type: 'boolean',
                     description: 'Default true. false still settles and verifies the position but '
                         + 'skips the frame - a plain verified move. (The XY travel cap per call is '
-                        + 'the configstore key mcpMaxJogDistance, default 100mm.)',
+                        + 'maxJogDistanceMm in the connected machine\'s entry of the configstore key mcpMachines, default 100mm.)',
                 },
             },
             required: ['reason'],

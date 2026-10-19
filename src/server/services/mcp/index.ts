@@ -14,7 +14,11 @@ import { handleJobDashboardRequest } from './jobDashboard';
 import { jobManager } from './jobs';
 import { probeFeedService, resolveActiveProbeConfig } from './probeFeed';
 import { pendantRuntime } from './pendantRuntime';
-import { ToolRegistry } from './registry';
+import { McpToolError, ToolRegistry } from './registry';
+import { connectedMachineCapability } from './connectedMachine';
+import { procedureRefusal } from './procedureGates';
+import { liveToolCallHooks } from './toolResultHooks';
+import { callRotaryNote } from './rotaryCallContext';
 import { registerCalibrationTools } from './tools/calibration';
 import { registerCameraTools } from './tools/camera';
 import { registerCameraProgramTool } from './cameraProgram';
@@ -23,6 +27,8 @@ import { registerCamTools } from './tools/cam';
 import { registerEnclosureTools } from './tools/enclosure';
 import { registerGcodeTools, stopGcodeJob } from './tools/gcode';
 import { registerLandmarkTools } from './tools/landmarks';
+import { registerLaserTools } from './tools/laser';
+import { currentReviewMachineKey, landmarkReviewForConnected, operatorReviews } from './landmarkReviewState';
 import { registerMachineTools } from './tools/machine';
 import { registerProbeTools } from './tools/probe';
 import { registerProbingTools } from './tools/probing';
@@ -276,7 +282,7 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
     registerCameraProgramTool(registry, baseUrl);
     registerCameraModelTools(registry, baseUrl);
     registerCalibrationTools(registry);
-    registerLandmarkTools(registry);
+    registerLandmarkTools(registry, baseUrl);
     registerProbeTools(registry);
     registerTelemetryTools(registry);
     registerVibrationTools(registry);
@@ -284,6 +290,33 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
     registerWorkspaceTools(registry, baseUrl);
     registerProbingTools(registry, baseUrl);
     registerCamTools(registry, baseUrl);
+    registerLaserTools(registry, baseUrl);
+    // Refuse rather than translate (#265 WP4b): a CNC procedure the connected
+    // machine's dialect row does not allow is refused, naming the machine,
+    // before its handler runs (procedureGates.ts).
+    registry.setProcedureGate((name, args) => {
+        const refusal = procedureRefusal(connectedMachineCapability(), name, args as { [key: string]: unknown });
+        if (refusal) {
+            throw new McpToolError(refusal);
+        }
+    });
+    // Machine visibility (#265 WP8): applied records and the landmark review
+    // on every motion / staging result, the rotary `stock` scope around the
+    // tools that take it (toolResultHooks.ts).
+    registry.setCallHooks(liveToolCallHooks());
+    // The confirm page's Landmarks row: what was enforced, and the review status, when each job was staged.
+    jobManager.setLandmarksSource(() => {
+        const review = landmarkReviewForConnected();
+        if (!review.machine.connected) {
+            return null;
+        }
+        return {
+            status: review.status,
+            landmarks: review.landmarks.map((l) => ({ name: l.name, requiredToolheadZ: l.requiredToolheadZ, basis: l.basis })),
+            question: review.question,
+            rotaryNote: callRotaryNote(),
+        };
+    });
     registeredToolCount = registry.list().length;
 
     // Operator-facing live camera view; also the single frame source for
@@ -355,8 +388,11 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
             return;
         }
         if (url.pathname.startsWith('/confirm')) {
-            // Human job-confirmation pages (jobs.ts)
-            jobManager.handleConfirmRequest(req, res, url.pathname);
+            // Staged landmark / device decisions (/confirm/r<id>, landmarkReviewState.ts) first,
+            // then the human job-confirmation pages (jobs.ts).
+            if (!operatorReviews.handleConfirmRequest(req, res, url.pathname, currentReviewMachineKey)) {
+                jobManager.handleConfirmRequest(req, res, url.pathname);
+            }
             return;
         }
         if (url.pathname === '/camera' || url.pathname.startsWith('/camera/')) {

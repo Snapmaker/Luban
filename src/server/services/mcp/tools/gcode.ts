@@ -21,7 +21,10 @@ import {
     runWithLedger,
 } from '../failureRecovery';
 import { manualControlGate } from '../manualControl';
-import { clearanceOptions } from '../clearanceContext';
+import { clearanceOptions, currentToolProtrusion } from '../clearanceContext';
+import { ComputedTravel, computeTravelHeight } from '../computedHeight';
+import { machineStore } from '../machineStore';
+import { COMPUTED_HEIGHT_TOGGLE } from '../motionRules';
 import { classifyProcedureEnding, countMeasured, planJobStop } from '../jobEnding';
 import { FILE_JOB_ACTIVE_STATUSES, FileStartReport, fileStartEvidence } from '../fileJobStart';
 import { summarizeJobTiming } from '../jobTiming';
@@ -32,11 +35,16 @@ import { spindleTelemetryService } from '../spindleTelemetry';
 import { vibrationCaptureService } from '../vibrationCaptures';
 import { clearProcedureStop, procedureStopRequested, requestProcedureStop } from '../probing';
 import { McpToolError, ToolRegistry } from '../registry';
-import { decideSafeZRaise, decideSafeZTraverse } from '../safeZPolicy';
-import { planTraverseXy } from '../traversePlan';
+import { STOCK_ARG_SCHEMA } from '../rotaryCallContext';
+import { ComputedHeightDecision, decideComputedHeightTraverse, decideSafeZRaise, decideSafeZTraverse } from '../safeZPolicy';
+import { TraversePlan, TraversePlanInput, parseSettleComment, planTraverseXy, traverseMachinePath } from '../traversePlan';
+import { machineFrameMove, needsPlannerSync, relativeStep, workFrameMove } from '../gcodeForms';
+import { machineStatusOf } from '../logicalFrame';
+import { connectedMachineCapability, connectedMachineTag, describeConnectedMachine } from '../connectedMachine';
 import { JobFrame, TRANSPORT_REFUSAL, isPureTransport, resolveJobFrame, spindleRefusal, suggestGcode, validateGcode } from '../validator';
 import { GcodeChannel, sendGcodeVisible } from './camera';
-import { stagingFrameContext, validateStagedEnvelope } from './staging';
+import { connectedStagingMachine, connectedValidationOptions, stagingFrameContext, validateStagedEnvelope } from './staging';
+import { parseGcodeHeader } from '../gcodeHeader';
 import { verifyFileJobWorkspace } from './workspace';
 import { TRAVEL_EPSILON_MM } from '../machineTravel';
 import { MoveZPlanError, describeFeedClamps, resolveZTargets } from '../moveZPlan';
@@ -46,18 +54,26 @@ import {
     MAX_WAIT_MS,
     SETTLE_MATCH_MM,
     STOP_WAIT_DEFAULT_MS,
+    TRAVEL_FEED,
     TRAVERSE_FEED,
     clampTo,
 } from '../procedureLimits';
 import {
+    MotionRuleLiveFacts,
     PositionSnapshot,
     assertFreshHeartbeat,
+    computedHeightRuleFor,
+    describePlanningTravel,
     getMachineSizeByIdentifier,
     getPositionSnapshot,
+    motionDialect,
     motionFloorZ,
+    motionGcodeForm,
     requirePlanningTravel,
+    requireZAxis,
     safeTraverseZ,
-    traverseWithoutApprovalAtSafeZ,
+    traverseMachine,
+    safeZApprovalInput,
 } from './machine';
 
 // Motion policy (#23): compound motion leaves this process only as a G-code
@@ -157,6 +173,13 @@ async function waitForStableHeartbeat(
         if (reportTime <= issuedAt || !stable || now.machineStatus !== 'idle') {
             continue;
         }
+        // USB text serial (the Original): its M114 is the planner's QUEUED
+        // target, so only a report taken after the step's planner sync proves
+        // arrival, and only while the logical frame is still the machine frame
+        // (a G92 written meanwhile voids it).
+        if (now.motionAtRest === false || (now.logicalFrame && !now.logicalFrame.trusted)) {
+            continue;
+        }
         if (expect) {
             // Machine-frame targets accept a report in either frame: a beat
             // inside the move's G53 window carries machine coordinates with
@@ -185,8 +208,8 @@ async function waitForStableHeartbeat(
 
 
 function machineStatus(): string | null {
-    const state = connectionManager.getLatestMachineState();
-    return state ? ((state as { status?: string }).status || null) : null;
+    // SACP/SSTP `status`, or the text-serial workflowState mapped explicitly (tools/machine.ts).
+    return machineStatusOf(connectionManager.getLatestMachineState() as { [key: string]: unknown } | null);
 }
 
 const log = logger('service:mcp:gcode-jobs');
@@ -232,6 +255,14 @@ async function executeDirectStep(job: McpJob, channel: GcodeChannel, shouldWait:
             jobManager.appendEvent(job, 'failed', { note: job.error });
             throw new McpToolError(job.error);
         }
+        // A relative step names its absolute machine endpoint in a
+        // `; mcp-settle machine X.. Y.. [Z..]` comment (stripped before
+        // sending, read from the staged text here) - Z too for a relative Z
+        // step (move_z on the Original); an absolute step is parsed from its G1.
+        const settleTarget = parseSettleComment(gcodeText);
+        const expect: DirectTarget | undefined = settleTarget
+            ? { frame: 'machine', x: settleTarget.x, y: settleTarget.y, z: settleTarget.z }
+            : parseDirectTarget(executable);
         settle = !shouldWait
             ? {
                 position: null,
@@ -239,7 +270,7 @@ async function executeDirectStep(job: McpJob, channel: GcodeChannel, shouldWait:
                 warning: 'wait_until_moved was false: the move was accepted but not awaited - '
                     + 'poll get_position (or query_firmware_position) before relying on position.',
             }
-            : await waitForStableHeartbeat(issuedAt, parseDirectTarget(executable));
+            : await waitForStableHeartbeat(issuedAt, expect);
         jobManager.appendEvent(job, 'settled', { position: settle.position, verified: settle.verified });
     } finally {
         jobManager.setActive(null);
@@ -271,6 +302,112 @@ async function executeDirectStep(job: McpJob, channel: GcodeChannel, shouldWait:
  * the console `reason` broadcast and stop_gcode_job behave identically. Only
  * the confirm page is missing.
  */
+/** What traverse_xy reports and decides under Motion rules R13 (#265 WP10). */
+interface TraverseComputedHeight {
+    decision: ComputedHeightDecision;
+    travel: ComputedTravel | null;
+    report: {
+        allowed: boolean;
+        travelZ: number | null;
+        clearanceUsed: number | null;
+        ideal: number;
+        min: number;
+        governedBy: string | null;
+        unmet: string[];
+        bed_contact_toolhead_z: number | null;
+        lowest_point_below_reference_mm: number | null;
+        highest_on_path: string | null;
+        on_path: ComputedTravel['onPath'];
+        note: string | null;
+    };
+}
+
+/**
+ * Motion rules R13 for one traverse_xy call (#265 WP10): null while the
+ * operator's toggle is off for the connected machine - the call is then
+ * exactly what it was. Otherwise the R13 verdict is read NOW (toggle, master
+ * switch, eligibility, trusted protrusion, toolhead body, bed plane, the live
+ * landmark review), the height is computed over the whole swept path, and
+ * safeZPolicy.decideComputedHeightTraverse adds the call-time conditions
+ * (device conflict, verified/heartbeat position, homed, known Z).
+ */
+function computedHeightForTraverse(input: {
+    targets: Array<{ x?: number; y?: number }>;
+    frame: 'machine' | 'work';
+    position: PositionSnapshot;
+    hasZ: boolean;
+}): TraverseComputedHeight | null {
+    const current = machineStore.currentMachine();
+    if (current.machineKey === null) {
+        return null;
+    }
+    let live: MotionRuleLiveFacts;
+    try {
+        const protrusion = currentToolProtrusion();
+        live = { toolProtrusionMm: protrusion.mm, toolProtrusionNote: protrusion.mm === null ? protrusion.note : null };
+    } catch (err) {
+        live = { toolProtrusionMm: null, toolProtrusionNote: (err as Error).message };
+    }
+    const rule = computedHeightRuleFor(current.machineKey, live);
+    if (!rule.on) {
+        return null;
+    }
+    const { x, y, z } = input.position.machine;
+    let topZ: number | null = null;
+    let travel: ComputedTravel | null = null;
+    const extra: string[] = [];
+    try {
+        topZ = safeTraverseZ();
+        const floorZ = motionFloorZ();
+        const path = x === null || y === null ? null : traverseMachinePath(input.targets, input.frame, { x, y }, input.position.originOffset);
+        if (!path) {
+            extra.push('the swept path is unknown (current XY or a target)');
+        } else if (rule.bedPlaneZ !== null && rule.lowestPointBelowReferenceMm !== null) {
+            travel = computeTravelHeight({
+                path,
+                // Only this machine's landmarks, with this call's rotary keep-out (rotaryCallContext.ts).
+                obstacles: landmarkStore.obstacleBoxes(),
+                bedPlaneZ: rule.bedPlaneZ,
+                lowestPointBelowReferenceMm: rule.lowestPointBelowReferenceMm,
+                idealMm: rule.idealMm,
+                minMm: rule.minMm,
+                topZ,
+                floorZ,
+            });
+        }
+    } catch (err) {
+        extra.push((err as Error).message);
+    }
+    const decision = decideComputedHeightTraverse({
+        verdict: { ...rule, unmet: [...rule.unmet, ...extra] },
+        travel,
+        deviceConflict: current.deviceConflict ? current.deviceConflict.note : null,
+        hasZ: input.hasZ,
+        reliability: input.position.reliability,
+        homed: input.position.isHomed,
+        currentZ: z,
+        topZ: topZ === null ? NaN : topZ,
+    });
+    return {
+        decision,
+        travel,
+        report: {
+            allowed: decision.allowed,
+            travelZ: travel ? travel.travelZ : null,
+            clearanceUsed: travel ? travel.clearanceUsed : null,
+            ideal: rule.idealMm,
+            min: rule.minMm,
+            governedBy: travel ? travel.governedBy : null,
+            unmet: decision.unmet,
+            bed_contact_toolhead_z: rule.bedContactToolheadZ,
+            lowest_point_below_reference_mm: rule.lowestPointBelowReferenceMm,
+            highest_on_path: travel ? travel.highest : null,
+            on_path: travel ? travel.onPath : [],
+            note: travel ? travel.note : null,
+        },
+    };
+}
+
 export async function runPolicyApprovedDirectJob(job: McpJob, token: string, shouldWait: boolean): Promise<{
     settle: DirectSettle;
     stepsExecuted: number;
@@ -862,6 +999,10 @@ export async function stopGcodeJob(args: { job_id?: string; wait_ms?: number }, 
 export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: () => string): void {
     // Read lazily: the camera tools inject the runtime, possibly after this registers.
     recoveryDepsSource = () => (typeof registry.getFailureRecovery === 'function' ? registry.getFailureRecovery() : null);
+    // Every staged job records the machine it is for; approval and start refuse on another (#265 WP3).
+    if (typeof jobManager.setMachineSource === 'function') {
+        jobManager.setMachineSource(connectedStagingMachine);
+    }
     registry.register({
         name: 'validate_gcode',
         description: 'Statically inspect G-code: motion extents, feeds, spindle commands and '
@@ -870,7 +1011,10 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             + 'get_stored_state.jobIntake for the path) or upload_id (a finished chunked upload). A large CAM file '
             + 'belongs in the inbox or an upload, never in one argument. REFUSED, not warned: a program whose spindle '
             + 'is still on at the end (M3/M4 never followed by M5) - the signature of a truncated program. The result '
-            + 'carries the identity (SHA-256, bytes, line counts, first/last motion lines) of exactly what was received.',
+            + 'carries the identity (SHA-256, bytes, line counts, first/last motion lines) of exactly what was received. '
+            + 'The program is judged by the CONNECTED machine\'s G-code rules (machine.rulesApplied: frame form, laser S range, '
+            + 'M4 short segments, Z on a Z-less machine, travel, Luban header, homing form, codes outside the machine\'s '
+            + 'reference); machine.refusals lists what submit_gcode_job will refuse, and header is the Luban header it read.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -882,7 +1026,10 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
         },
         handler: async (args: ProgramArgs) => {
             const input = resolveProgramInput(args);
-            const report = validateGcode(input.text);
+            // Judged for the connected machine (#265 WP3): an incompatible code
+            // or a header for another machine is a warning here and a refusal
+            // at submit; the other rule refusals are listed in machine.refusals.
+            const report = validateGcode(input.text, connectedValidationOptions('validate'));
             const identity = describeProgramIdentity(input.text);
             const refusal = spindleRefusal(report);
             if (refusal) {
@@ -913,7 +1060,9 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             + 'chunked upload finish_gcode_upload has verified). A real CAM file (hundreds of KB) goes through the inbox or '
             + 'an upload - never emit it as one argument. Every route is validated, frame-resolved and staged identically, '
             + 'and the confirm page shows the program identity (SHA-256, bytes, lines, first/last motion lines). REFUSED: a '
-            + 'program whose spindle is still on at the end - the signature of a truncated program.',
+            + 'program whose spindle is still on at the end - the signature of a truncated program; and anything the CONNECTED '
+            + 'machine\'s G-code rules refuse (validate_gcode machine.refusals), including a code its reference calls '
+            + 'incompatible and a Luban header (;machine:) naming another machine.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -952,7 +1101,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             // The frame handshake (operator law 2026-09-14): an agent-authored job
             // must say which coordinate frame it runs in, or it does not reach the
             // confirm page. The gcode itself is never edited to add a declaration.
-            const inspected = validateGcode(input.text);
+            const inspected = validateGcode(input.text, connectedValidationOptions('submit', headType));
             // A program whose spindle is still on at the end is a truncated
             // program (2026-10-15: the first part of a 295 KB V-carve reached
             // the page with only a warning). Refused before anything else,
@@ -970,6 +1119,12 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             if (headType === 'cnc' && isPureTransport(inspected)) {
                 throw new McpToolError(TRANSPORT_REFUSAL);
             }
+            // The connected machine's G-code rules (#265 WP3): this body is
+            // streamed as written, so what they refuse never reaches the page.
+            if (inspected.machine && inspected.machine.refusals.length) {
+                throw new McpToolError(`${inspected.machine.refusals.join('\n\n')}\n\n(${inspected.machine.identifier}, `
+                    + `${inspected.machine.dialect}; rules applied: ${inspected.machine.rulesApplied.join(', ')}.)`);
+            }
             // A file job's start selects G54 and verifies its offset first (see
             // start_gcode_job), so a G54-only file may resolve its machine Z.
             const resolved = resolveJobFrame(inspected, { ...stagingFrameContext(frameArgument), verifiesG54AtStart: true });
@@ -983,6 +1138,8 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             return {
                 job: jobManager.describe(job),
                 confirm_url: `${getConfirmBaseUrl()}/confirm/${job.id}`,
+                machine: validation.machine || null,
+                header: validation.header || null,
                 intake: describeInbox(),
                 next_step: 'Ask the operator to open confirm_url in a browser, review, and approve. Then either call '
                     + 'start_gcode_job with wait_for_approval_ms (their click starts it - nothing to copy) or pass the '
@@ -1010,6 +1167,8 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
         },
         handler: async (args: { name?: unknown; total_bytes?: unknown; sha256?: unknown }) => intake(() => ({
             ...gcodeUploads.begin(args),
+            // The machine validate/submit will judge the upload by (#265 WP3).
+            connected_machine: describeConnectedMachine(),
             chunk_max_bytes: gcodeUploads.limits.chunkMaxBytes,
             next_step: 'append_gcode_chunk {upload_id, seq: 0, text}, then seq 1, 2 ... until remaining_bytes is 0; then finish_gcode_upload.',
         })),
@@ -1047,10 +1206,17 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             required: ['upload_id'],
             additionalProperties: false,
         },
-        handler: async (args: { upload_id?: unknown }) => intake(() => ({
-            ...gcodeUploads.finish(args.upload_id),
-            next_step: 'validate_gcode {upload_id} to read the report, then submit_gcode_job {upload_id, name, frame} to stage it.',
-        })),
+        handler: async (args: { upload_id?: unknown }) => intake(() => {
+            const finished = gcodeUploads.finish(args.upload_id);
+            // The header the rules will compare with the connected machine (#265 WP3).
+            const header = parseGcodeHeader(gcodeUploads.peek(args.upload_id).text);
+            return {
+                ...finished,
+                header,
+                connected_machine: describeConnectedMachine(),
+                next_step: 'validate_gcode {upload_id} to read the report, then submit_gcode_job {upload_id, name, frame} to stage it.',
+            };
+        }),
     });
 
     registry.register({
@@ -1436,6 +1602,8 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
     registry.register({
         name: 'move_z',
         description: 'Request absolute Z motion, executed on the direct path so positions PERSIST '
+            + '(on the Snapmaker Original: relative G91 Z steps with a Z settle comment and a G4 P0 planner sync, never G53/G54; '
+            + 'refused on a machine with no Z axis or a J1; results carry gcode_form) '
             + '(the machine interpreter raises Z to top at the finish position when a file job '
             + 'completes, so a file job cannot hold a working Z - firmware behaviour). '
             + 'Either one target (z) or an ordered list (z_targets, max 20) for a methodical search: '
@@ -1449,7 +1617,8 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             + 'code executes anything - except an UP-only series to no higher than mcpSafeTraverseZ on a verified, homed '
             + 'position with mcpTraverseWithoutApprovalAtSafeZ on (#241), which runs on the call (executed_without_approval: '
             + 'true); anything that descends stages. NOT door-interlocked - the operator supervises. Spindle must be '
-            + 'off; the toolhead always carries a tool.',
+            + 'off; the toolhead always carries a tool. REFUSED on a machine with no Z axis (get_position.connectedMachine.hasZ '
+            + 'false - the Ray): there is nothing to raise, and XY transport there needs no Z first.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -1502,6 +1671,15 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             wait_until_moved?: boolean;
         }) => {
             probeFeedService.assertNoOvertravel();
+            // Which form this machine's Z steps take (gcodeForms.ts): the
+            // Snapmaker 2.0's absolute G53/G54 step, or a relative step with a
+            // Z settle comment (the Original). A printer (J1) or a machine the
+            // dialect table does not list is refused here, naming it.
+            const machine = traverseMachine('move_z');
+            // A machine with no Z axis (the Ray) has no Z to move: say so
+            // plainly, naming the machine, before anything else.
+            requireZAxis('move_z');
+            const relative = machine.gcode === 'grbl-relative';
             // Targets and per-step feeds (#240), every feed clamped to
             // MOVE_Z_FEED with the clip reported - moveZPlan.ts, pure.
             let zPlan: ReturnType<typeof resolveZTargets>;
@@ -1559,10 +1737,26 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             // Each step carries ITS OWN F word: the controller's modal feed
             // survives between files (A350, 2026-10-05), so a step without
             // one would run at whatever the previous step set.
-            const stepGcode = (t: number, feed: number) => (coordinateSystem === 'machine'
-                ? `G90\nG53;\nG1 Z${t.toFixed(3)} F${feed};\nG54;`
-                : `G90\nG54;\nG1 Z${t.toFixed(3)} F${feed}`);
-            const steps = zSteps.map((step) => stepGcode(step.z, step.feedRate));
+            const dialect = machine.dialect || motionDialect();
+            const { x: atX, y: atY } = position.machine;
+            if (relative && (atX === null || atY === null || position.machine.z === null)) {
+                throw new McpToolError(`Current machine position unknown; a relative Z step names its machine endpoint ${connectedMachineTag()}.`);
+            }
+            const toMachineZ = (t: number) => (coordinateSystem === 'machine' ? t : t - position.originOffset.z);
+            const stepGcode = (t: number, feed: number, previous: number) => {
+                if (relative) {
+                    // A G91 Z increment from the previous planned endpoint, its
+                    // `; mcp-settle machine X Y Z` naming the absolute machine
+                    // endpoint (the current X/Y, so drift is caught too) - never
+                    // a G53/G54 on this machine.
+                    const at = { x: atX as number, y: atY as number };
+                    return relativeStep(dialect, { from: { ...at, z: toMachineZ(previous) }, to: { ...at, z: toMachineZ(t) } }, feed,
+                        { hasZ: machine.hasZ });
+                }
+                const words = `Z${t.toFixed(3)}`;
+                return coordinateSystem === 'machine' ? machineFrameMove(dialect, words, feed) : workFrameMove(dialect, words, feed);
+            };
+            const steps = zSteps.map((step, i) => stepGcode(step.z, step.feedRate, i === 0 ? currentZ : targets[i - 1]));
             const isBatch = targets.length > 1;
             const delta = targetZ - currentZ;
             // The gcode preview must let the operator validate the numbers
@@ -1596,6 +1790,11 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                     return `; step ${i + 1}: Z ${from.toFixed(3)} -> ${step.z.toFixed(3)} (${d >= 0 ? '+' : ''}${d.toFixed(3)} mm) F${step.feedRate}${feedNote}`;
                 }),
                 ...feedClampLines.map((line) => `; CLAMPED: ${line}`),
+                ...(relative
+                    ? ['; steps are RELATIVE (G91 Z.. G90, no G53/G54 on this machine): each is the delta from the previous planned Z,',
+                        '; and its "; mcp-settle machine" line names the absolute machine X Y Z the position must report before the next step',
+                        ...(needsPlannerSync(dialect) ? ['; each step ends G4 P0 (planner sync): only a report taken after it proves arrival'] : [])]
+                    : []),
                 '; sensors: NO contact expected during these moves - a probe/toolsetter trigger',
                 '; while moving latches the CRASH alarm (probe feed must be armed).',
             ].join('\n');
@@ -1604,7 +1803,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 ? `z-series ${coordinateSystem} [${targets.map((t) => t.toFixed(1)).join(', ')}] - ${String(args.reason).slice(0, 40)}`
                 : `z-move ${coordinateSystem} Z${targetZ.toFixed(1)} (${delta >= 0 ? '+' : ''}${delta.toFixed(1)}mm) - ${String(args.reason).slice(0, 40)}`;
 
-            const validation = validateStagedEnvelope(reviewText, 'move_z');
+            const validation = validateStagedEnvelope(reviewText, 'move_z', { relativeTransport: relative });
             const job = jobManager.submit(reviewText, name, 'cnc', validation, 'direct', isBatch ? steps : undefined);
             job.waitUntilMoved = args.wait_until_moved !== false;
 
@@ -1616,7 +1815,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             // the top, stages as before.
             const machineTargets = targets.map((t) => (coordinateSystem === 'machine' ? t : t - position.originOffset.z));
             const policy = decideSafeZRaise({
-                enabled: traverseWithoutApprovalAtSafeZ(),
+                ...safeZApprovalInput(),
                 reliability: position.reliability,
                 homed: position.isHomed,
                 currentZ: position.machine.z,
@@ -1628,6 +1827,8 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 const run = await runPolicyApprovedDirectJob(job, token, args.wait_until_moved !== false);
                 return {
                     job: jobManager.describe(job),
+                    connected_machine: describeConnectedMachine(),
+                    gcode_form: motionGcodeForm(),
                     executed_without_approval: true,
                     approval: { source: 'policy', policy: policy.policy, reason: policy.reason },
                     current_z: currentZ,
@@ -1644,12 +1845,14 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                     warning: run.settle.warning,
                     note: `Executed on the call under ${policy.policy} (no confirm page): a Z-only, UP-only move to no higher than the `
                         + `traverse height ${safeTraverseZ()} on a ${position.reliability} position. The job is on the dashboard with this reason. `
-                        + 'Turn this off in Settings -> MCP Server -> Job approval.',
+                        + 'Turn this off in Settings > MCP > Motion rules.',
                 };
             }
 
             return {
                 job: jobManager.describe(job),
+                connected_machine: describeConnectedMachine(),
+                gcode_form: motionGcodeForm(),
                 current_z: currentZ,
                 targets,
                 final_delta_mm: delta,
@@ -1685,10 +1888,28 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             + 'segment is checked against the stored landmarks and every target against the travel; Z is never '
             + 'written. Default frame MACHINE (G53 declared on every step; work-frame steps declare G54). This is the '
             + 'transport tool - move_and_capture is a <= 100 mm vision nudge, and hand-written file jobs for transport '
-            + 'are how a frameless "G0 Z0" got staged on 2026-09-12. NOT door-interlocked - the operator supervises.',
+            + 'are how a frameless "G0 Z0" got staged on 2026-09-12. NOT door-interlocked - the operator supervises. '
+            + 'MACHINE-AWARE (#260 follow-up): the result carries connected_machine {identifier, type, hasZ}. On a machine with NO Z '
+            + 'axis (the Ray, hasZ false) the Z laws do not apply - no motion floor, no traverse height, no raise-first - the series '
+            + 'runs at the machine\'s only height, the top-Z policy never auto-executes (there is no safe height to justify skipping '
+            + 'approval, staged_because says so), and the steps are RELATIVE G91/G90 increments (Luban\'s own Ray jog form; each step '
+            + 'names its absolute machine endpoint for the settle check) rather than G53. Landmarks, calibrations and stated travel '
+            + 'are machine-scoped: only records set on the connected machine apply; the travel is the machine model +/- mcpTravelFudgeMm. '
+            + 'The Snapmaker Original takes the same relative steps, each ending G4 P0 (its M114 is the queued target; only a report after '
+            + 'the sync verifies arrival); a J1 is refused (printer). Results carry gcode_form (sm2 | relative-steps). '
+            + 'COMPUTED SAFE HEIGHT (Motion rules R13, #265 WP10; operator-only toggle, default OFF): when the operator has turned '
+            + 'it on for this machine and every requirement holds on the call (eligible machine, trusted tool protrusion, '
+            + 'toolhead body stated, bed plane measured, landmarks confirmed, no device conflict, verified/heartbeat homed position), '
+            + 'the series runs without approval at or above max(bed, physical landmark tops under the whole swept path) + the lowest '
+            + 'point of toolhead + tool + the clearance (ideal, reduced toward the minimum under top Z; never below the motion floor). '
+            + 'Z is never lowered: a head above that height traverses where it is, a head below it is first raised straight up to it '
+            + '(entry_raise). Unless the top-Z policy already ran the call, the result carries computed_height {allowed, travelZ, '
+            + 'clearanceUsed, ideal, min, governedBy, unmet}; when it stages, staged_because lists what is unmet. A legacy toolhead-basis landmark on the path has no physical top: '
+            + 'top-Z behaviour there.',
         inputSchema: {
             type: 'object',
             properties: {
+                stock: STOCK_ARG_SCHEMA,
                 x: { type: 'number', description: 'Absolute target X (single move). Omit to keep the current X.' },
                 y: { type: 'number', description: 'Absolute target Y (single move). Omit to keep the current Y.' },
                 targets: {
@@ -1745,13 +1966,18 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 throw new McpToolError('reason is required; it is shown to the operator.');
             }
 
+            // Which machine this is decides which laws apply: a Z axis or not,
+            // and which gcode form its firmware is known to execute
+            // (tools/machine.ts traverseMachine). A printer (J1) or an unlisted
+            // machine is refused first, naming it.
+            const machine = traverseMachine('traverse_xy');
             assertFreshHeartbeat('staging an XY traverse');
             const position = getPositionSnapshot();
             if (position.machineStatus !== 'idle') {
                 throw new McpToolError(`Machine is ${position.machineStatus || 'in an unknown state'}, not idle.`);
             }
             if (position.isHomed !== true) {
-                throw new McpToolError('Machine does not report homed; home before any XY transport.');
+                throw new McpToolError(`Machine does not report homed; home before any XY transport ${connectedMachineTag()}.`);
             }
             const state = connectionManager.getLatestMachineState() as { headStatus?: unknown; headPower?: unknown } | null;
             const headPower = Number(state && state.headPower);
@@ -1759,39 +1985,93 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 throw new McpToolError('Toolhead appears to be on; refusing to traverse.');
             }
             const { x: mx, y: my, z: mz } = position.machine;
-            if (mx === null || my === null || mz === null) {
+            if (mx === null || my === null) {
                 throw new McpToolError('Current machine position unknown; cannot plan the traverse.');
             }
-            const travel = requirePlanningTravel('a traverse', { x: mx, y: my });
-            let plan;
-            try {
-                plan = planTraverseXy({
-                    targets,
-                    frame: coordinateSystem,
-                    currentMachine: { x: mx, y: my, z: mz },
-                    originOffset: position.originOffset,
-                    travel: travel.limits,
-                    traverseZ: safeTraverseZ(),
-                    motionFloorZ: motionFloorZ(),
-                    feedRate,
-                    obstacles: landmarkStore.obstacleBoxes(),
-                    ...clearanceOptions(),
-                    reason,
-                });
-            } catch (err) {
-                if ((err as Error).name === 'TraversePlanError') {
-                    throw new McpToolError((err as Error).message);
-                }
-                throw err;
+            const capability = connectedMachineCapability();
+            if (machine.hasZ && mz === null) {
+                throw new McpToolError('Current machine Z unknown; cannot plan the traverse.');
             }
-            const isBatch = plan.steps.length > 1;
-            const validation = validateStagedEnvelope(plan.reviewText, 'traverse_xy');
-            const stepGcodes = isBatch ? plan.steps.map((step) => step.gcode) : undefined;
+            const planZ = mz === null ? 0 : mz;
+            const travel = requirePlanningTravel('a traverse', { x: mx, y: my });
+
+            // Operator ruling 2026-10-17 (#241): with the head ALREADY at the
+            // traverse height on a verified, homed position, an XY-only
+            // transport whose route passes the landmark and travel checks
+            // runs on the call - the page would add nothing. Decided from the
+            // position of record alone; the plan below must still pass.
+            const policy = decideSafeZTraverse({
+                ...safeZApprovalInput(),
+                reliability: position.reliability,
+                homed: position.isHomed,
+                currentZ: mz,
+                traverseZ: safeTraverseZ(),
+                hasZ: capability.hasZ,
+            });
+            // Motion rules R13 (#265 WP10): only when the top-Z policy does
+            // not already run it, and only with the operator's toggle on (null
+            // otherwise - the call is then byte for byte what it was).
+            const computed = policy.allowed ? null : computedHeightForTraverse({ targets, frame: coordinateSystem, position, hasZ: capability.hasZ });
+            const basePlan: TraversePlanInput = {
+                targets,
+                frame: coordinateSystem,
+                currentMachine: { x: mx, y: my, z: planZ },
+                originOffset: position.originOffset,
+                travel: travel.limits,
+                traverseZ: safeTraverseZ(),
+                motionFloorZ: motionFloorZ(),
+                feedRate,
+                // Only landmarks set on THIS machine (landmarks.ts scopes by the connected identifier).
+                obstacles: landmarkStore.obstacleBoxes(),
+                ...clearanceOptions(),
+                machine,
+                reason,
+            };
+            let plan: TraversePlan | null = null;
+            if (computed && computed.decision.allowed) {
+                const decided = computed.decision;
+                try {
+                    plan = planTraverseXy({
+                        ...basePlan,
+                        ...(decided.raiseFromZ !== null ? { entryRaiseZ: decided.runZ, entryRaiseFeed: TRAVEL_FEED } : {}),
+                        heightNote: `computed safe height (${COMPUTED_HEIGHT_TOGGLE}): ${computed.report.note || ''}`,
+                    });
+                } catch (err) {
+                    if ((err as Error).name !== 'TraversePlanError') {
+                        throw err;
+                    }
+                    // The computed plan failed its own landmark/travel check:
+                    // never run it - plan the ordinary way and stage.
+                    const unmet = [`the computed plan was refused: ${(err as Error).message}`];
+                    computed.decision = { allowed: false, reason: `computed safe height not allowed: ${unmet[0]}`, unmet };
+                    computed.report.allowed = false;
+                    computed.report.unmet = unmet;
+                }
+            }
+            if (!plan) {
+                try {
+                    plan = planTraverseXy(basePlan);
+                } catch (err) {
+                    if ((err as Error).name === 'TraversePlanError') {
+                        throw new McpToolError(`${(err as Error).message} ${connectedMachineTag()}`);
+                    }
+                    throw err;
+                }
+            }
+            const isBatch = plan.stepGcodes.length > 1;
+            const validation = validateStagedEnvelope(plan.reviewText, 'traverse_xy', { relativeTransport: plan.relative });
+            const stepGcodes = isBatch ? plan.stepGcodes : undefined;
             const job = jobManager.submit(plan.reviewText, plan.name, 'cnc', validation, 'direct', stepGcodes);
             job.waitUntilMoved = args.wait_until_moved !== false;
             const summary = {
+                connected_machine: describeConnectedMachine(),
                 current_machine: { x: mx, y: my, z: mz },
-                traverse_z: safeTraverseZ(),
+                /** null on a machine with no Z axis: no traverse height exists there. */
+                traverse_z: machine.hasZ ? safeTraverseZ() : null,
+                gcode_form: motionGcodeForm(),
+                gcode_form_note: plan.relative
+                    ? 'relative G91/G90 increments (no G53/G54 on this machine); each step names its machine endpoint in a settle comment'
+                    : 'absolute, frame declared per step (G53 machine / G54 work)',
                 coordinate_system: coordinateSystem,
                 feed_rate: feedRate,
                 steps: plan.steps.map((step) => ({
@@ -1800,23 +2080,13 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                     distance_mm: Number(step.distanceMm.toFixed(1)),
                 })),
                 total_distance_mm: Number(plan.totalDistanceMm.toFixed(1)),
-                travel: { ...travel.limits, conflicts: travel.conflicts },
+                travel: { ...travel.limits, basis: describePlanningTravel(travel), conflicts: travel.conflicts },
             };
 
-            // Operator ruling 2026-10-17 (#241): with the head ALREADY at the
-            // traverse height on a verified, homed position, an XY-only
-            // transport whose route just passed the landmark and travel checks
-            // runs on the call - the page would add nothing. The job record,
-            // the console reason and stop_gcode_job are unchanged; only the
-            // click is gone. Anything else stages exactly as before.
-            const policy = decideSafeZTraverse({
-                enabled: traverseWithoutApprovalAtSafeZ(),
-                reliability: position.reliability,
-                homed: position.isHomed,
-                currentZ: mz,
-                traverseZ: safeTraverseZ(),
-            });
-            if (policy.allowed) {
+            // #241: the job record, the console reason and stop_gcode_job are
+            // unchanged; only the click is gone. Anything else stages exactly
+            // as before.
+            if (policy.allowed && mz !== null) {
                 const token = jobManager.approveByPolicy(job, policy.policy, policy.reason);
                 const run = await runPolicyApprovedDirectJob(job, token, args.wait_until_moved !== false);
                 return {
@@ -1832,14 +2102,43 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                     note: `Executed on the call under ${policy.policy} (no confirm page): the head was already at the traverse height `
                         + `(machine Z ${mz.toFixed(3)}) on a ${position.reliability} position, Z was never written, and every leg was `
                         + 'checked against the landmarks and the travel. The job is on the dashboard with this reason; stop_gcode_job '
-                        + 'still applies to a running series. Turn this off in Settings -> MCP Server -> Job approval.',
+                        + 'still applies to a running series. Turn this off in Settings > MCP > Motion rules.',
+                };
+            }
+
+            if (computed && computed.decision.allowed && mz !== null) {
+                const decided = computed.decision;
+                const token = jobManager.approveByPolicy(job, decided.policy, decided.reason);
+                const run = await runPolicyApprovedDirectJob(job, token, args.wait_until_moved !== false);
+                return {
+                    job: jobManager.describe(job),
+                    executed_without_approval: true,
+                    approval: { source: 'policy', policy: decided.policy, reason: decided.reason },
+                    ran_at_machine_z: decided.runZ,
+                    entry_raise: plan.entryRaise
+                        ? { from_machine_z: plan.entryRaise.fromZ, to_machine_z: plan.entryRaise.toZ, feed_rate: plan.entryRaise.feedRate }
+                        : null,
+                    computed_height: computed.report,
+                    ...summary,
+                    steps_executed: run.stepsExecuted,
+                    position: run.settle.position,
+                    position_verified: run.settle.verified,
+                    warning: run.settle.warning,
+                    note: `Executed on the call under ${decided.policy} (no confirm page): every R13 condition held on this call and `
+                        + `the series ran at machine Z ${decided.runZ.toFixed(3)}, at or above the computed safe height of its swept path`
+                        + `${plan.entryRaise ? ' after ONE straight-up raise to it' : ' (Z not written)'}; Z is never lowered without `
+                        + 'the operator. Every leg was checked against the landmarks and the travel. The job is on the dashboard with '
+                        + `this reason; stop_gcode_job still applies. Turn this off in Settings > MCP > Motion rules ('${COMPUTED_HEIGHT_TOGGLE}').`,
                 };
             }
 
             return {
                 job: jobManager.describe(job),
                 ...summary,
-                staged_because: policy.reason,
+                ...(computed ? { computed_height: computed.report } : {}),
+                staged_because: computed
+                    ? `${policy.reason}. ${computed.decision.reason}`
+                    : policy.reason,
                 confirm_url: `${getConfirmBaseUrl()}/confirm/${job.id}`,
                 next_step: isBatch
                     ? 'Ask the operator to open confirm_url, review the DIRECT-move banner, the frame and every leg, and '
