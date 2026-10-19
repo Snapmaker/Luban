@@ -340,7 +340,7 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
     }],
     ['rotary scope: the transform applies only while the call runs; a failed read without stock never blocks the call', async () => {
         const boxes = [LEGACY_ROTARY];
-        const lower = (b: typeof boxes) => b.map((x) => ({ ...x, clearanceZ: 155 }));
+        const lower: rotaryCallContext.ObstacleTransform = (b) => b.map((x) => ({ ...x, clearanceZ: 155 }));
         let late: (() => number) | null = null;
         const seen = await rotaryCallContext.runWithObstacleTransform(lower, async () => {
             late = () => rotaryCallContext.applyCallObstacleTransform(boxes)[0].clearanceZ;
