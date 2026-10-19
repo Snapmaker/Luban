@@ -295,7 +295,9 @@ class ConnectionManager {
         // A Snapmaker 2.0 over SACP-TCP is identified by the channel but gets no
         // Ready (SacpTcpChannel.getIdentifiedWithoutReady): report its model and
         // serial number, with machineReady false since no instance prepared it.
-        const unprepared = this.channel && this.channel === sacpTcpChannel && !this.machineIdentifier
+        // That identity is per TCP session (reset on open, socket close/error and
+        // close), so it wins over a Ready identity a dropped earlier session left.
+        const unprepared = this.channel && this.channel === sacpTcpChannel
             ? (this.channel as unknown as {
                 getIdentifiedWithoutReady?: () => { machineIdentifier: string; deviceSerial: string | null } | null;
             }).getIdentifiedWithoutReady?.() || null
@@ -567,9 +569,6 @@ class ConnectionManager {
             this.channel = null;
             this.channelAssignments += 1;
         }
-        // A new attempt never inherits the previous machine's identity (a SACP-TCP
-        // socket that dropped emitted no Disconnected to clear it).
-        this.clearDeviceIdentity();
 
         const { connectionType, protocol } = options;
 

@@ -69,7 +69,9 @@ const MACHINES = {
 const SERIES = { 0: 'A150', 1: 'A250', 2: 'A350', 3: 'Artisan', 4: 'J1', 5: 'Ray' };
 
 class Channel extends EventEmitter {
-    public socket = new EventEmitter();
+    public socket: unknown = new EventEmitter();
+
+    public setSocket(socket: unknown): void { this.socket = socket; }
 }
 
 /** The SACP calls SacpTcpChannel.connectionOpen makes, answering as the test sets. */
@@ -176,8 +178,13 @@ function connectionManager(channelStubs: Record<string, unknown>) {
         '../mcp/positionOfRecord': positionOfRecord,
         './connectionDiagnostics': { connectionDiagnostics: diag, diagnosticId: () => 'diagnostic-id' },
         '../../constants': { HEAD_CNC: 'cnc', HEAD_LASER: 'laser', HEAD_PRINTING: 'printing' },
-        './ProtocolDetector': { NetworkProtocol: { HTTP: 'HTTP', SacpOverTCP: 'SACP-TCP', SacpOverUDP: 'SACP-UDP', Unknown: 'Unknown' },
-            SerialPortProtocol: { SacpOverSerialPort: 'SACP-Serial', PlainText: 'text' } },
+        './ProtocolDetector': {
+            __esModule: true,
+            NetworkProtocol: { HTTP: 'HTTP', SacpOverTCP: 'SACP-TCP', SacpOverUDP: 'SACP-UDP', Unknown: 'Unknown' },
+            SerialPortProtocol: { SacpOverSerialPort: 'SACP-Serial', PlainText: 'text' },
+            default: class { public async detectSerialPortProtocol() { return 'text'; } },
+        },
+        './connectionDiagnosticState': { safeIdentifier: (value: unknown) => (typeof value === 'string' ? value : undefined), safeTarget: () => undefined },
         './types': { ConnectionType: { WiFi: 'wifi', Serial: 'serial' } },
         './adaptor/Octo': { octo: { onStart: () => undefined, onStop: () => undefined } },
         './channels/ChannelEvent': { ChannelEvent: events },
@@ -201,6 +208,8 @@ class FakeMarlinController extends EventEmitter {
     public serialport: FakeSerialConnection | null = null;
 
     public state = { headType: 'cnc' };
+
+    public controller = { state: {} }; // the Marlin parser's state, sent on a reused open
 
     public closes = 0;
 
@@ -326,7 +335,7 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         FakeSacpClient.serialNumber = 20481234;
     }],
 
-    ['SACP-TCP: Artisan and J1 keep their Ready, and a Ready identity wins over the fallback', async () => {
+    ['SACP-TCP: Artisan and J1 keep their Ready; an A350 session is never hidden by a stale Ready identity', async () => {
         const { channel, open } = tcpChannel();
         const manager = connectionManager({ './channels/SacpTcpChannel': { sacpTcpChannel: channel } });
         manager.channel = channel;
@@ -342,11 +351,17 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
             assert.strictEqual(ready[0].deviceSerial, '20481234');
             assert.strictEqual(channel.getIdentifiedWithoutReady(), null, `${identifier} is not a fallback identity`);
         }
-        // Were both present, ConnectionManager's own (Ready) identity is the one reported.
-        FakeSacpClient.machineType = 2;
-        assert.strictEqual(await open(), true);
+        // An Artisan Ready identity left by a dropped session (no Disconnected
+        // reaches ConnectionManager on a TCP drop) never hides the A350 now open.
         manager.machineIdentifier = 'Artisan';
         manager.deviceSerial = '777';
+        FakeSacpClient.machineType = 2;
+        assert.strictEqual(await open(), true);
+        assert.strictEqual(manager.getConnectionStatus().deviceSerial, '20481234');
+        assert.strictEqual(manager.getConnectionStatus().machineIdentifier, 'A350');
+        // An Artisan session sets no fallback, so its own Ready identity is reported.
+        FakeSacpClient.machineType = 3;
+        assert.strictEqual(await open(), true);
         assert.strictEqual(manager.getConnectionStatus().deviceSerial, '777');
         assert.strictEqual(manager.getConnectionStatus().machineIdentifier, 'Artisan');
     }],
@@ -391,6 +406,13 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         await open();
         assert.strictEqual(FakeMarlinController.created.length, 2, 'a new MarlinController');
         assert.strictEqual(manager.getConnectionStatus().connected, true);
+        assert.strictEqual(manager.getConnectionStatus().machineIdentifier, 'A350');
+
+        // A second connect through ConnectionManager to the still-open port: the
+        // channel sends no new Ready there, so the identity must survive it.
+        await manager.connectionOpen({ emit: () => undefined }, { connectionType: 'serial', port: 'COM3', baudRate: 115200 });
+        assert.strictEqual(manager.getConnectionStatus().channelName, 'text-serial');
+        assert.strictEqual(FakeMarlinController.created.length, 2, 'the open controller is reused');
         assert.strictEqual(manager.getConnectionStatus().machineIdentifier, 'A350');
     }],
 
