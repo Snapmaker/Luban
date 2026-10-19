@@ -524,11 +524,14 @@ class ConnectionManager {
     /**
      * Tell the machine-ready listeners about this Ready once `prepare`
      * settles, or after READY_LISTENER_PREPARE_WAIT_MS if it has not - once,
-     * with one info line either way. Not when the channel closed or changed.
+     * with one info line either way. Not when the channel closed or changed
+     * (another channel, machine or connection generation: a reconnect within
+     * the bound has its own Ready).
      */
     private notifyMachineReady(prepare: Promise<void> | null): void {
         const channel = this.channel;
         const machineIdentifier = this.machineIdentifier;
+        const generation = this.getConnectionGeneration();
         let notified = false;
         let timer: ReturnType<typeof setTimeout> | null = null;
         const notify = (outcome: string) => {
@@ -540,12 +543,13 @@ class ConnectionManager {
                 clearTimeout(timer);
                 timer = null;
             }
-            if (!this.channel || this.channel !== channel || this.machineIdentifier !== machineIdentifier) {
+            if (!this.channel || this.channel !== channel || this.machineIdentifier !== machineIdentifier
+                || this.getConnectionGeneration() !== generation) {
                 log.info(`machine ready (${machineIdentifier}): ${this.readyListeners.length} listener(s) not notified, `
                     + `the connection closed or changed (prepare ${outcome})`);
                 return;
             }
-            const ready: MachineReadyEvent = { generation: this.getConnectionGeneration(), machineIdentifier, prepare: outcome };
+            const ready: MachineReadyEvent = { generation, machineIdentifier, prepare: outcome };
             log.info(`machine ready (${machineIdentifier}): notifying ${this.readyListeners.length} listener(s) (prepare ${outcome})`);
             for (const listener of this.readyListeners) {
                 try {

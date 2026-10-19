@@ -334,6 +334,9 @@ class SacpChannelBase extends Channel implements
     // MCP's reply reads (withLogFeed) to leave Luban's subscription alone.
     private lubanLogFeed: LubanLogFeed = { callback: null, requestedAt: null, pending: false, levelResult: null };
 
+    // The log level the MCP's reply reads requested on this client (withLogFeed levelMemo): once per connection.
+    private readLevelMemo: { client: SacpClient | null; sent: boolean; result: number | null } = { client: null, sent: false, result: null };
+
     /** The SDK calls withLogFeed drives, on this connection's client. */
     private logFeedOps(client: SacpClient): LogFeedOps {
         const event = sacpBusinessId(SACP_LOG_FEEDBACK);
@@ -376,9 +379,14 @@ class SacpChannelBase extends Channel implements
             return refusedReply('no SACP session');
         }
         const client = this.sacpClient;
+        if (this.readLevelMemo.client !== client) {
+            this.readLevelMemo = { client, sent: false, result: null };
+        }
+        const levelMemo = this.readLevelMemo;
         const read = this.replyReadChain.then(async () => withLogFeed({
             ops: this.logFeedOps(client),
             luban: () => this.lubanLogFeed,
+            levelMemo,
             stepTimeoutMs: options.timeoutMs,
         }, async (subscribedBefore) => readGcodeReply({
             emitter: client as unknown as ReplyEmitter,

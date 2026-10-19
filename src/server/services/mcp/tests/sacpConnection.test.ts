@@ -464,6 +464,11 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.strictEqual(reply.feed.restored, true);
         assert.strictEqual(c.state.subscribed, false, 'as before the read: not subscribed');
         assert.strictEqual(c.client.listenerCount('417'), 0);
+        const second = await channel.executeGcodeWithReply('$G', { timeoutMs: 400, quietMs: 100 });
+        assert.deepStrictEqual(c.wire().slice(5), ['1 0', '1 2', '1 1'], 'the level is requested once per connection');
+        assert.strictEqual(second.feed.levelSetByRead, false);
+        assert.ok(second.feed.notes.some((n: string) => /already requested by an earlier read/.test(n)));
+        assert.strictEqual(c.state.subscribed, false);
     }],
     ['Ray whose controller takes Luban\'s log level: Luban\'s subscription serves the read and is left exactly as it was', async () => {
         LogFeedSacpClient.script = { reply: ['[GC:G0 G54 G17 G21 G90 G94 M5 M9 T0 F0 S0]', 'ok'] };

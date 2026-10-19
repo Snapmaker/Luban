@@ -400,6 +400,13 @@ async function boundedStep(run: () => Promise<number>, timeoutMs: number, what: 
 export async function withLogFeed(input: {
     ops: LogFeedOps | null;
     luban: () => LubanLogFeed;
+    /**
+     * The level request an earlier read on this connection already sent (kept
+     * by the caller, filled here): sent once per connection - repeating it
+     * cannot change a set-only value, and an unanswered one would cost every
+     * query its bound again.
+     */
+    levelMemo?: { sent: boolean; result: number | null };
     stepTimeoutMs?: number;
     setupWaitMs?: number;
     now?: () => number;
@@ -449,10 +456,19 @@ export async function withLogFeed(input: {
     let subscribeSent = false;
     let reply: GcodeReply;
     try {
-        if (!report.lubanLevelSet) {
+        const memo = input.levelMemo;
+        if (!report.lubanLevelSet && memo && memo.sent) {
+            report.levelResult = memo.result;
+            report.notes.push(`level ${LOG_FEEDBACK_LEVEL} already requested by an earlier read on this connection (`
+                + `${memo.result === null ? 'no answer' : `result ${memo.result}`}): not sent again`);
+        } else if (!report.lubanLevelSet) {
             report.levelSetByRead = true;
             const level = await boundedStep(async () => ops.setLevel(LOG_FEEDBACK_LEVEL), stepTimeoutMs, 'set log level');
             report.levelResult = level.result;
+            if (memo) {
+                memo.sent = true;
+                memo.result = level.result;
+            }
             if (level.error) {
                 report.notes.push(level.error);
             }

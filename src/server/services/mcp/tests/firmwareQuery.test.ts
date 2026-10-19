@@ -493,6 +493,14 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.ok(closed.lines.some((l) => /1 listener\(s\) not notified, the connection closed or changed/.test(l)));
         await new Promise((resolve) => setTimeout(resolve, 20));
         assert.deepEqual(closed.sent, []);
+        // A reconnect on the same (singleton) channel within the bound: the stale timer notifies nobody.
+        const again = connectSequence(async () => new Promise(() => undefined));
+        again.firmware.startFirmwareReadOnConnect();
+        again.channel.emit('ready', { machineIdentifier: 'Ray' });
+        again.live.generation = 2;
+        again.fireReadyBound();
+        assert.ok(again.lines.some((l) => /not notified, the connection closed or changed/.test(l)));
+        assert.ok(!again.lines.some((l) => /notifying/.test(l)));
     }],
 
     // ---- Tool routing (tools/camera.ts) -------------------------------------------------
