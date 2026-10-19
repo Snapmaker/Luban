@@ -9,6 +9,7 @@ import {
     RawBeat,
     createMachinePositionState,
     isFrameFlip,
+    isOriginChangeAtRest,
     judgeBeatStateful,
     noteDisconnected,
     outsideBounds,
@@ -40,6 +41,18 @@ function workBeat(at: number, machine = { x: 170, y: 199, z: 240 }): RawBeat {
         offsetReported: { ...OFFSET },
         reportedAt: at,
     };
+}
+
+// The Ray as the follow-up repro (fu-ray-flip.ts) sees it: X/Y travel, Z unbounded.
+const RAY_BOUNDS = { min: { x: -25, y: -25, z: -Infinity }, max: { x: 625, y: 425, z: Infinity } };
+
+function rayCtx(now: number): JudgeContext {
+    return ctx(now, { bounds: RAY_BOUNDS });
+}
+
+/** A Ray beat: raw work X/Y with its own offset, Z 0. */
+function rayBeat(at: number, raw: { x: number; y: number }, offset: { x: number; y: number }): RawBeat {
+    return { raw: { x: raw.x, y: raw.y, z: 0 }, offsetReported: { x: offset.x, y: offset.y, z: 0 }, reportedAt: at };
 }
 
 export const tests: Array<[string, () => void]> = [
@@ -405,6 +418,7 @@ export const tests: Array<[string, () => void]> = [
             assert.ok(state.cachedOffset);
             assert.ok(state.lastAccepted);
             assert.ok(state.previousRaw);
+            assert.ok(state.previousOffset);
             const disconnects = state.disconnects;
 
             // Same session: a beat without an offset still uses the cached one (unchanged behaviour).
@@ -422,6 +436,7 @@ export const tests: Array<[string, () => void]> = [
             assert.equal(reliableForMotion(next.reliability), false);
             assert.equal(state.session, '1.2');
             assert.equal(state.disconnects, disconnects + 1);
+            assert.equal(state.previousOffset, null, 'the origin-change reference is forgotten too');
 
             // A provider with no session (no channel) changes nothing.
             connection.session = null;
@@ -431,5 +446,116 @@ export const tests: Array<[string, () => void]> = [
         } finally {
             setJudgeConnectionContextProvider(null);
         }
+    }],
+
+    // Follow-up to #265 (PR #297): a Luban Set Origin changes the reported
+    // offset and the work coordinates while the machine stays put. From a zero
+    // offset (power-on) the raw fields move by exactly the new offset - the
+    // frame-flip signature - and the record stayed awaiting-resync until the
+    // head moved more than 0.5 mm.
+    ['a work-origin change at rest is an origin change, not a frame flip', () => {
+        const zero = { x: 0, y: 0, z: 0 };
+        const origin = { x: -181, y: -49, z: 0 };
+        assert.equal(isOriginChangeAtRest({ x: 0, y: 0, z: 0 }, { x: 181, y: 49, z: 0 }, origin, zero), true);
+        assert.equal(isOriginChangeAtRest({ x: 0.3, y: 0, z: 0 }, { x: 181, y: 49, z: 0 }, origin, zero), false, 'the machine moved 0.3 mm');
+        assert.equal(isOriginChangeAtRest({ x: 170, y: 199, z: 240 }, { x: 119, y: 77, z: -88 }, OFFSET, OFFSET), false, 'same offset: no change');
+    }],
+
+    ['Ray: the first Set Origin after a zero offset is accepted at rest, machine unchanged, noted once', () => {
+        const state = createMachinePositionState();
+        judgeBeatStateful(state, rayBeat(T0, { x: 181, y: 49 }, { x: 0, y: 0 }), rayCtx(T0 + 100));
+        judgeBeatStateful(state, rayBeat(T0 + 1000, { x: 181, y: 49 }, { x: 0, y: 0 }), rayCtx(T0 + 1100));
+        const set = judgeBeatStateful(state, rayBeat(T0 + 2000, { x: 0, y: 0 }, { x: -181, y: -49 }), rayCtx(T0 + 2100));
+        assert.equal(set.accepted, true, set.reasons.join(' | '));
+        assert.equal(set.rejectedReason, null);
+        assert.equal(set.reliability, 'heartbeat');
+        assert.equal(set.frame, 'work-frame');
+        assert.deepEqual(set.machine, { x: 181, y: 49, z: 0 });
+        assert.ok(set.reasons.some((r) => r.startsWith('Work origin changed')), set.reasons.join(' | '));
+        const next = judgeBeatStateful(state, rayBeat(T0 + 3000, { x: 0, y: 0 }, { x: -181, y: -49 }), rayCtx(T0 + 3100));
+        assert.equal(next.reliability, 'heartbeat');
+        assert.deepEqual(next.machine, { x: 181, y: 49, z: 0 });
+        assert.equal(next.reasons.some((r) => r.startsWith('Work origin changed')), false, 'noted once, on the change');
+        assert.equal(state.rejected.frameFlip, 0);
+    }],
+
+    ['repeated origin changes at rest are each accepted on their first beat', () => {
+        const state = createMachinePositionState();
+        // (-181, -49) -> (-90.5, -24.5) halves the offset: the raw delta is MINUS the new offset, the other flip branch.
+        const offsets = [{ x: 0, y: 0 }, { x: -181, y: -49 }, { x: -90.5, y: -24.5 }, { x: -100, y: -20 }, { x: -181, y: -49 }];
+        offsets.forEach((offset, i) => {
+            const at = T0 + (1000 * i);
+            const j = judgeBeatStateful(state, rayBeat(at, { x: 181 + offset.x, y: 49 + offset.y }, offset), rayCtx(at + 100));
+            assert.equal(j.reliability, 'heartbeat', `change ${i}: ${j.reasons.join(' | ')}`);
+            assert.deepEqual(j.machine, { x: 181, y: 49, z: 0 });
+        });
+        assert.equal(state.rejected.frameFlip, 0);
+    }],
+
+    ['A350: a G53-window flip with the offset unchanged is still rejected, before and after a Set Work Origin', () => {
+        const state = createMachinePositionState();
+        judgeBeatStateful(state, workBeat(T0), ctx(T0 + 100));
+        // Machine coordinates with the offset still populated: the window the flip test exists for.
+        const g53 = judgeBeatStateful(state, { raw: { x: 170, y: 199, z: 240 }, offsetReported: { ...OFFSET }, reportedAt: T0 + 2000 },
+            ctx(T0 + 2100));
+        assert.equal(g53.rejectedReason, 'frame-flip');
+        assert.equal(g53.reliability, 'awaiting-resync');
+        assert.deepEqual(g53.machine, { x: 170, y: 199, z: 240 });
+        // Set Work Origin at rest (new origin at machine (60, 130, 328)): accepted at once.
+        const moved = { x: -60, y: -130, z: -328 };
+        const set = judgeBeatStateful(state, { raw: { x: 110, y: 69, z: -88 }, offsetReported: moved, reportedAt: T0 + 4000 },
+            ctx(T0 + 4100));
+        assert.equal(set.reliability, 'heartbeat', set.reasons.join(' | '));
+        assert.deepEqual(set.machine, { x: 170, y: 199, z: 240 });
+        // The next G53 window under the new origin is still caught.
+        const again = judgeBeatStateful(state, { raw: { x: 170, y: 199, z: 240 }, offsetReported: moved, reportedAt: T0 + 6000 },
+            ctx(T0 + 6100));
+        assert.equal(again.rejectedReason, 'frame-flip');
+        assert.equal(again.reliability, 'awaiting-resync');
+    }],
+
+    ['A350 (changed): the G54 return after a zero offset was BELIEVED is accepted at rest as an origin change', () => {
+        const state = createMachinePositionState();
+        judgeBeatStateful(state, workBeat(T0), ctx(T0 + 100));
+        // A long G53 window: the zero offset is believed after ZERO_OFFSET_ACCEPT_BEATS quiet beats, raw = machine.
+        let zero = null as ReturnType<typeof judgeBeatStateful> | null;
+        for (let beat = 1; beat <= 4; beat++) {
+            zero = judgeBeatStateful(state, { raw: { x: 170, y: 199, z: 240 }, offsetReported: { x: 0, y: 0, z: 0 }, reportedAt: T0 + (2000 * beat) },
+                ctx(T0 + (2000 * beat) + 100));
+        }
+        assert.equal(zero?.accepted, true, 'the zero offset is believed');
+        // The window ends at rest: the offset comes back and raw is the work position again. The machine
+        // position both beats derive is the same, so it is accepted at once (was frame-flip until motion).
+        const back = judgeBeatStateful(state, workBeat(T0 + 10000), ctx(T0 + 10100));
+        assert.equal(back.reliability, 'heartbeat', back.reasons.join(' | '));
+        assert.deepEqual(back.machine, { x: 170, y: 199, z: 240 });
+        assert.ok(back.reasons.some((r) => r.startsWith('Work origin changed')));
+    }],
+
+    ['an offset change WITH a machine jump on the flip signature is still a frame flip', () => {
+        // Within the 0.5 mm flip tolerance, but the machine is 0.3 mm off: not an origin change.
+        const small = createMachinePositionState();
+        judgeBeatStateful(small, rayBeat(T0, { x: 181, y: 49 }, { x: 0, y: 0 }), rayCtx(T0 + 100));
+        const j = judgeBeatStateful(small, rayBeat(T0 + 1000, { x: 0.3, y: 0 }, { x: -181, y: -49 }), rayCtx(T0 + 1100));
+        assert.equal(j.rejectedReason, 'frame-flip');
+        assert.equal(j.reliability, 'awaiting-resync');
+        assert.deepEqual(j.machine, { x: 181, y: 49, z: 0 });
+        // A non-zero previous offset: the derived machine jumps by that whole offset.
+        const big = createMachinePositionState();
+        judgeBeatStateful(big, rayBeat(T0, { x: 50, y: 50 }, { x: -100, y: -100 }), rayCtx(T0 + 100));
+        const k = judgeBeatStateful(big, rayBeat(T0 + 1000, { x: -70, y: -70 }, { x: -120, y: -120 }), rayCtx(T0 + 1100));
+        assert.equal(k.rejectedReason, 'frame-flip');
+        assert.deepEqual(k.machine, { x: 150, y: 150, z: 0 });
+    }],
+
+    ['an origin change against a beat that used a cached offset is not vouched for', () => {
+        const state = createMachinePositionState();
+        judgeBeatStateful(state, rayBeat(T0, { x: 181, y: 49 }, { x: 0, y: 0 }), rayCtx(T0 + 100));
+        // No offset on this beat: the cached zero is used, so it is no fresh-offset reference.
+        judgeBeatStateful(state, { raw: { x: 181, y: 49, z: 0 }, offsetReported: { x: null, y: null, z: null }, reportedAt: T0 + 1000 },
+            rayCtx(T0 + 1100));
+        assert.equal(state.previousOffset, null);
+        const j = judgeBeatStateful(state, rayBeat(T0 + 2000, { x: 0, y: 0 }, { x: -181, y: -49 }), rayCtx(T0 + 2100));
+        assert.equal(j.rejectedReason, 'frame-flip');
     }],
 ];

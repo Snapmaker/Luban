@@ -22,6 +22,7 @@
 //
 // Pure module: no server imports, unit-tested in tests/machinePosition.test.ts.
 import { AXES, Axis, NullableXyz, OffsetJudgement, Xyz, judgeOffsetReport, ZERO_OFFSET_ACCEPT_BEATS } from './positionOfRecord';
+import { POSITION_EPSILON_MM } from './envelopeChecks';
 
 export type Reliability = 'verified' | 'heartbeat' | 'cached-offset' | 'awaiting-resync' | 'stale';
 export type FrameJudgement = 'machine-frame' | 'work-frame' | 'undetermined';
@@ -85,6 +86,12 @@ export interface BeatInput {
     zeroStreak: number;
     /** Raw fields of the previous ACCEPTED beat, for the frame-flip signature. */
     previousRaw: Xyz | null;
+    /**
+     * The fresh offset that beat itself reported (null when it used a cached
+     * or transient-zero offset), so a work-origin change can be told from a
+     * frame flip. Absent = null.
+     */
+    previousOffset?: Xyz | null;
     bounds: MachineBounds | null;
     reportedAt: number;
     now: number;
@@ -153,6 +160,22 @@ export function isFrameFlip(raw: Xyz, previousRaw: Xyz, offset: Xyz, toleranceMm
     const delta = { x: raw.x - previousRaw.x, y: raw.y - previousRaw.y, z: raw.z - previousRaw.z };
     return axes.every((axis) => Math.abs(delta[axis] + offset[axis]) <= toleranceMm)
         || axes.every((axis) => Math.abs(delta[axis] - offset[axis]) <= toleranceMm);
+}
+
+/**
+ * A work-origin change at rest (Luban Set Origin / Set Work Origin): the
+ * offset changed between two beats that each reported their own fresh offset,
+ * and the machine position both derive is the same within
+ * POSITION_EPSILON_MM. From a zero offset (Ray or A350 after power-on) the raw
+ * fields then move by exactly the new offset - the frame-flip signature -
+ * though nothing moved. A genuine flip (the G53 window) reports the SAME
+ * offset, so its derived machine position jumps by that offset instead.
+ */
+export function isOriginChangeAtRest(raw: Xyz, previousRaw: Xyz, offset: Xyz, previousOffset: Xyz): boolean {
+    const offsetChanged = AXES.some((axis) => Math.abs(offset[axis] - previousOffset[axis]) > POSITION_EPSILON_MM);
+    return offsetChanged && AXES.every(
+        (axis) => Math.abs((raw[axis] - offset[axis]) - (previousRaw[axis] - previousOffset[axis])) <= POSITION_EPSILON_MM
+    );
 }
 
 function machineBeatsText(beats: number): string {
@@ -264,6 +287,15 @@ export function judgeBeat(input: BeatInput): BeatJudgement {
             + 'without assuming one, and nothing is assumed.');
     }
     if (!rejectedReason && complete(input.raw) && input.previousRaw && complete(input.offsetReported)
+        && isFrameFlip(input.raw, input.previousRaw, input.offsetReported)
+        && input.previousOffset && offset.source === 'heartbeat'
+        && isOriginChangeAtRest(input.raw, input.previousRaw, input.offsetReported, input.previousOffset)) {
+        const was = input.previousOffset;
+        const now = input.offsetReported;
+        reasons.push(`Work origin changed: offset (${was.x}, ${was.y}, ${was.z}) -> (${now.x}, ${now.y}, ${now.z}) with the `
+            + `machine position unchanged (${AXES.map((axis) => (derived[axis] as number).toFixed(3)).join(', ')}). The report moved by the offset change, `
+            + 'not into the other frame; accepted.');
+    } else if (!rejectedReason && complete(input.raw) && input.previousRaw && complete(input.offsetReported)
         && isFrameFlip(input.raw, input.previousRaw, input.offsetReported)) {
         rejectedReason = 'frame-flip';
         reasons.push(`Status report jumped by exactly the origin offset: raw (${input.raw.x}, ${input.raw.y}, ${input.raw.z}) after `
@@ -465,6 +497,8 @@ export interface MachinePositionState {
     zeroSeenAt: number | null;
     zeroTransients: number;
     previousRaw: Xyz | null;
+    /** The fresh offset the previousRaw beat reported (BeatInput.previousOffset). */
+    previousOffset: Xyz | null;
     lastAccepted: AcceptedPosition | null;
     lastBeatAt: number | null;
     /** Consecutive beats carrying the machine-frame signature (judgeBeat's machineFrameSuspect). */
@@ -487,6 +521,7 @@ export function createMachinePositionState(): MachinePositionState {
         zeroSeenAt: null,
         zeroTransients: 0,
         previousRaw: null,
+        previousOffset: null,
         machineFrameStreak: 0,
         lastAccepted: null,
         lastBeatAt: null,
@@ -533,6 +568,7 @@ export function judgeBeatStateful(state: MachinePositionState, beat: RawBeat, ct
         state.cachedOffset = null;
         state.lastAccepted = null;
         state.previousRaw = null;
+        state.previousOffset = null;
         state.machineFrameStreak = 0;
     }
     const isNewBeat = beat.reportedAt !== state.lastBeatAt;
@@ -555,6 +591,7 @@ export function judgeBeatStateful(state: MachinePositionState, beat: RawBeat, ct
             zeroStreak: state.zeroStreak,
             machineFrameStreak: state.machineFrameStreak,
             previousRaw: state.previousRaw,
+            previousOffset: state.previousOffset,
             bounds: ctx.bounds,
             reportedAt: beat.reportedAt,
             staleMs: ctx.staleMs,
@@ -576,6 +613,7 @@ export function judgeBeatStateful(state: MachinePositionState, beat: RawBeat, ct
             cachedOffset: null,
             lastAccepted: null,
             previousRaw: null,
+            previousOffset: null,
             verified: null,
             declaredRun: null,
             machineFrameStreak: 0,
@@ -599,6 +637,7 @@ export function judgeBeatStateful(state: MachinePositionState, beat: RawBeat, ct
             Object.assign(input, {
                 offsetReported: { x: ctx.logicalOffset.x, y: ctx.logicalOffset.y, z: ctx.logicalOffset.z },
                 previousRaw: null,
+                previousOffset: null,
             });
         }
     }
@@ -630,6 +669,11 @@ export function judgeBeatStateful(state: MachinePositionState, beat: RawBeat, ct
         // A declared-run beat is machine-frame raw: never the work-frame flip reference.
         if (judgement.accepted && !judgement.declaredRun && complete(beat.raw)) {
             state.previousRaw = { x: beat.raw.x, y: beat.raw.y, z: beat.raw.z };
+            // Only an offset this beat reported itself can vouch for an origin
+            // change against it (never a cached or transient-zero stand-in).
+            state.previousOffset = judgement.offset.source === 'heartbeat' && !judgement.offset.transientZero
+                ? { ...judgement.offset.offset }
+                : null;
         }
         state.machineFrameStreak = judgement.machineFrameSuspect ? state.machineFrameStreak + 1 : 0;
         state.lastAccepted = judgement.nextAccepted;
