@@ -361,4 +361,22 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.equal(out.rotary_clearance.error, 'axis fit failed');
         await assert.rejects(hooks.around('traverse_xy', { stock: { radius_mm: 25 } }, async () => ({ ran: true })), /axis fit failed/);
     }],
+    ['get_connection_status adds machineKey and dialect next to deviceSerial / host', async () => {
+        const run = async (status: Record<string, unknown>, machineKey: string | null) => {
+            const statusTools = inert('tools/status.ts', {
+                '../../machine/ConnectionManager': { connectionManager: { getConnectionStatus: () => status } },
+                '../connectedMachine': { connectedMachineCapability: () => ({ dialect: { id: 'ray-grbl' } }) },
+                '../machineStore': { machineStore: { currentMachine: () => ({ basis: machineKey ? 'connected' : 'selected', machineKey }) } },
+                '../registry': { McpToolError },
+            });
+            const handlers: Record<string, (args: object) => Promise<object>> = {};
+            statusTools.registerStatusTools({ register: (tool: { name: string; handler: (args: object) => Promise<object> }) => { handlers[tool.name] = tool.handler; } });
+            return plain(await handlers.get_connection_status({}));
+        };
+        const ray = await run({ connected: true, machineIdentifier: 'Ray', deviceSerial: 'SN1', host: null }, 'Ray');
+        assert.deepEqual(ray, { connected: true, machineIdentifier: 'Ray', deviceSerial: 'SN1', host: null, machineKey: 'Ray', dialect: 'ray-grbl' });
+        const none = await run({ connected: false, machineIdentifier: null }, null);
+        assert.equal(none.machineKey, null);
+        assert.equal(none.dialect, null);
+    }],
 ];
