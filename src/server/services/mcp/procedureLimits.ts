@@ -611,3 +611,24 @@ export const LASER_FRAME_FEED: Bounded = { default: 1500, min: 100, max: 3000 };
  * series cap traverse_xy and move_z share (MAX_TRAVERSE_TARGETS, MAX_Z_TARGETS).
  */
 export const LASER_FRAME_REPEAT: Bounded = { default: 1, min: 1, max: 4 };
+/**
+ * One firmware query's wait for its reply, ms (firmware.ts, the Ray's `$$`,
+ * `$#`, `$G`, `$I`, `M1005`, `?`). The SACP ACK of a line comes back in well
+ * under a second on Wi-Fi; `$$` is the longest reply (about 40 lines). The
+ * floor leaves room for one Wi-Fi retry; the cap keeps a dead link from
+ * holding the read (five queries in a row) for more than about a minute.
+ */
+export const FIRMWARE_QUERY_TIMEOUT_MS: Bounded = { default: 3000, min: 500, max: 12000 };
+/**
+ * After a query's ACK, the read ends once no reply line has arrived for this
+ * long (a terminator `ok` / `error:N` ends it at once). Shorter risks cutting a
+ * reply that streams in packets; longer only collects more unrelated log.
+ */
+export const FIRMWARE_REPLY_QUIET_MS: Bounded = { default: 400, min: 100, max: 2000 };
+/**
+ * First-connect firmware read: how long after the connection is ready it
+ * waits for the first heartbeat (to see the machine is idle and no job runs)
+ * before giving up for this connection. A SACP subscription reports within
+ * about 1 s of connecting (tools/camera.ts FIRST_STATE_WAIT_MS is 6 s).
+ */
+export const FIRST_CONNECT_READ_WAIT_MS = 10000;

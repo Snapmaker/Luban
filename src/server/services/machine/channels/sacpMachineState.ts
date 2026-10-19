@@ -117,18 +117,43 @@ export function mapCoordinateReport(report: SacpCoordinateReport, isFourAxis: bo
 }
 
 /**
+ * True when a SACP `masterControlSerialNumber` (a UInt32) is a FILL PATTERN
+ * rather than a serial: 0, 0xFFFFFFFF, or one byte repeated four times
+ * (0x66666666 = 1717986918 is what the Ray V1.7.4 reports - observed live
+ * 2026-10-19 - the same value as every other unprogrammed board would). Such a
+ * value identifies no machine, so it is treated as absent. Accepts the
+ * decimal string the Ready payload and the store's `sn:` aliases carry.
+ */
+export function isFillPatternSerial(serial: unknown): boolean {
+    let value: number;
+    if (typeof serial === 'number') {
+        value = serial;
+    } else if (typeof serial === 'string' && /^\d+$/.test(serial.trim())) {
+        value = Number(serial.trim());
+    } else {
+        return false;
+    }
+    if (!Number.isInteger(value) || value < 0 || value > 0xffffffff) {
+        return false;
+    }
+    const low = value % 256;
+    return value === low * 0x01010101;
+}
+
+/**
  * Per-device identity for the Ready payload (#265 plan 1.3): the SACP
  * MachineInfo `masterControlSerialNumber` as a string, null when the
- * controller reported none (absent, 0 or not a number).
+ * controller reported none (absent, not a number, or a fill pattern -
+ * isFillPatternSerial, which covers 0).
  */
 export function sacpDeviceSerial(info: { masterControlSerialNumber?: unknown } | null | undefined): string | null {
     const serial = info ? info.masterControlSerialNumber : undefined;
     if (typeof serial === 'number') {
-        return Number.isFinite(serial) && serial !== 0 ? String(serial) : null;
+        return Number.isFinite(serial) && !isFillPatternSerial(serial) ? String(serial) : null;
     }
     if (typeof serial === 'string') {
         const trimmed = serial.trim();
-        return trimmed && trimmed !== '0' ? trimmed : null;
+        return trimmed && !isFillPatternSerial(trimmed) ? trimmed : null;
     }
     return null;
 }

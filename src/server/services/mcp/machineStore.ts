@@ -41,6 +41,7 @@
 import config from '../configstore';
 import { LEGACY_MACHINE_IDENTIFIER, recordMachineScope } from './machineCapability';
 import logger from '../../lib/logger';
+import { isFillPatternSerial } from '../machine/channels/sacpMachineState';
 
 export const MACHINE_STORE_KEY = 'mcpMachines';
 export const MACHINE_STORE_VERSION = 1;
@@ -184,7 +185,11 @@ interface ConfigLike {
 export interface ConnectionStatusLike {
     connected?: boolean;
     machineIdentifier?: string | null;
-    /** WPC: SACP masterControlSerialNumber as a decimal string. Absent before WPC lands. */
+    /**
+     * WPC: SACP masterControlSerialNumber as a decimal string, or the product
+     * SN the firmware reported to M1005 when the SACP one is a fill pattern
+     * (firmware query, ConnectionManager.adoptFirmwareSerial). Absent before WPC lands.
+     */
     deviceSerial?: string | null;
     /** WPC: the SSTP-HTTP address the channel was opened with. Absent before WPC lands. */
     host?: string | null;
@@ -260,10 +265,15 @@ function removePath(entry: MachineEntry, storePath: StorePath): void {
     }
 }
 
-/** The device id a connection presents: SACP serial first, else the SSTP-HTTP host; none on text serial. Read defensively. */
+/**
+ * The device id a connection presents: SACP serial first, else the SSTP-HTTP
+ * host; none on text serial. Read defensively. A fill-pattern serial
+ * (isFillPatternSerial) is no serial - the channel already drops it, this
+ * holds for any other source.
+ */
 export function deviceIdFromStatus(status: ConnectionStatusLike | null): { deviceId: string | null; deviceSource: DeviceSource } {
     const serial = status && status.deviceSerial !== undefined && status.deviceSerial !== null ? String(status.deviceSerial).trim() : '';
-    if (serial) {
+    if (serial && !isFillPatternSerial(serial)) {
         return { deviceId: `sn:${serial}`, deviceSource: 'sacp-serial-number' };
     }
     const host = status && typeof status.host === 'string' ? status.host.trim() : '';
@@ -275,6 +285,11 @@ export function deviceIdFromStatus(status: ConnectionStatusLike | null): { devic
 
 function idType(deviceId: string): string {
     return deviceId.split(':')[0];
+}
+
+/** `sn:<fill pattern>` (isFillPatternSerial): an alias that names no particular machine. */
+export function isFillPatternDeviceId(deviceId: string): boolean {
+    return idType(deviceId) === 'sn' && isFillPatternSerial(deviceId.slice(3));
 }
 
 /** The model a store key belongs to: "Snapmaker 2.0 A350#sn:12" -> "Snapmaker 2.0 A350". */
@@ -381,7 +396,13 @@ export function createMachineStore(deps: MachineStoreDeps) {
             return { key: identifier, conflict: null };
         }
         const entry = data.machines[identifier];
-        const sameType = entry ? (entry.devices || []).filter((d) => idType(d.id) === idType(deviceId)).map((d) => d.id) : [];
+        // A recorded fill-pattern serial (`sn:1717986918` = 0x66666666, the
+        // Ray's before this rule) never identified a machine: a real serial
+        // presented later is that same entry gaining its first real id, not a
+        // second machine, so it is no conflict (recordSighting adds the alias).
+        const sameType = entry
+            ? (entry.devices || []).filter((d) => idType(d.id) === idType(deviceId) && !isFillPatternDeviceId(d.id)).map((d) => d.id)
+            : [];
         if (!sameType.length) {
             return { key: identifier, conflict: null };
         }

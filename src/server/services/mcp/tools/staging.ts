@@ -6,6 +6,7 @@ import { ResolvedTravel } from '../machineTravel';
 import { McpToolError } from '../registry';
 import { FrameResolutionContext, GcodeValidationReport, JobFrame, ValidationOptions, resolveJobFrame, validateGcode } from '../validator';
 import { getMachineSizeByIdentifier, getPositionSnapshot, planningTravel, zTravelTop } from './machine';
+import { currentLaserAcceleration } from './firmware';
 
 /**
  * Live context for resolveJobFrame(): the work-origin Z offset the position
@@ -73,6 +74,7 @@ export function connectedValidationOptions(phase: RulePhase, headType: string | 
         travel,
         headType,
         phase,
+        laserAcceleration: currentLaserAcceleration(),
     };
 }
 

@@ -201,7 +201,17 @@ class ConnectionManager {
     // (hostAddress). Null when the transport has none (text serial). Never the token.
     private deviceSerial: string | null = null;
 
+    // Where deviceSerial came from: the SACP MachineInfo, or the product SN the
+    // firmware reported to M1005 when the SACP one was a fill pattern (MCP
+    // firmware query, adoptFirmwareSerial). Cleared with the identity.
+    private deviceSerialSource: 'sacp-machine-info' | 'firmware-m1005' | null = null;
+
     private host: string | null = null;
+
+    // Called once a machine instance has prepared (a new connection is ready),
+    // with that connection's generation. The MCP's first-connect firmware read
+    // registers here; a listener's failure never reaches the connection.
+    private readyListeners: Array<(ready: { generation: string; machineIdentifier: string | null }) => void> = [];
 
     private scheduledTasksHandle;
 
@@ -302,6 +312,10 @@ class ConnectionManager {
                 getIdentifiedWithoutReady?: () => { machineIdentifier: string; deviceSerial: string | null } | null;
             }).getIdentifiedWithoutReady?.() || null
             : null;
+        let deviceSerialSource = this.deviceSerialSource;
+        if (unprepared) {
+            deviceSerialSource = unprepared.deviceSerial ? 'sacp-machine-info' : null;
+        }
         return {
             connected: !!this.channel,
             channelName: this.describeChannel(),
@@ -310,6 +324,7 @@ class ConnectionManager {
             machineIdentifier: unprepared ? unprepared.machineIdentifier : this.machineIdentifier,
             machineReady: !!this.machineInstance,
             deviceSerial: unprepared ? unprepared.deviceSerial : this.deviceSerial,
+            deviceSerialSource,
             host: this.host,
         };
     }
@@ -317,7 +332,37 @@ class ConnectionManager {
     private clearDeviceIdentity(): void {
         this.machineIdentifier = null;
         this.deviceSerial = null;
+        this.deviceSerialSource = null;
         this.host = null;
+    }
+
+    /** Register for "a new connection is ready" (after the machine instance prepared). Returns the unregister function. */
+    public onMachineReady(listener: (ready: { generation: string; machineIdentifier: string | null }) => void): () => void {
+        this.readyListeners.push(listener);
+        return () => {
+            this.readyListeners = this.readyListeners.filter((l) => l !== listener);
+        };
+    }
+
+    /**
+     * The firmware's own product SN (M1005, read by the MCP's firmware query)
+     * as this connection's deviceSerial - only while the connection is the one
+     * it was read on (`generation`) and the SACP serial was absent or a fill
+     * pattern (sacpDeviceSerial already made that null). A real SACP serial is
+     * never replaced. true when adopted.
+     */
+    public adoptFirmwareSerial(serial: string, generation: string): boolean {
+        const value = String(serial || '').trim();
+        if (!value || !this.channel || this.getConnectionGeneration() !== generation) {
+            return false;
+        }
+        if (this.deviceSerial && this.deviceSerialSource !== 'firmware-m1005') {
+            return false;
+        }
+        this.deviceSerial = value;
+        this.deviceSerialSource = 'firmware-m1005';
+        log.info(`deviceSerial from the firmware's M1005 product SN: ${value}`);
+        return true;
     }
 
     // TODO: Refactor this
@@ -406,6 +451,7 @@ class ConnectionManager {
         log.debug(`machineIdentifier = ${machineIdentifier}`);
         this.machineIdentifier = machineIdentifier || null;
         this.deviceSerial = typeof data?.deviceSerial === 'string' && data.deviceSerial ? data.deviceSerial : null;
+        this.deviceSerialSource = this.deviceSerial ? 'sacp-machine-info' : null;
         this.host = hostAddress(data?.host);
 
         // configure machine instance
@@ -446,6 +492,17 @@ class ConnectionManager {
             log.info(`instance = ${this.machineInstance.constructor.name}`);
             log.info('On preparing machine instance...');
             await this.machineInstance.onPrepare();
+        }
+
+        if (this.channel) {
+            const ready = { generation: this.getConnectionGeneration(), machineIdentifier: this.machineIdentifier };
+            for (const listener of this.readyListeners) {
+                try {
+                    listener(ready);
+                } catch (err) {
+                    log.warn(`machine-ready listener failed: ${(err as Error).message}`);
+                }
+            }
         }
     };
 

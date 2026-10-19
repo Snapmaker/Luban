@@ -9,6 +9,7 @@ import path from 'path';
 import vm from 'vm';
 import ts from 'typescript';
 import * as machineCapability from '../machineCapability';
+import * as sacpMachineState from '../../machine/channels/sacpMachineState';
 import * as machinePosition from '../machinePosition';
 import * as motionRules from '../motionRules';
 import * as operatorReviews from '../operatorReviews';
@@ -73,6 +74,7 @@ export function machineStoreFixture(initial: { [key: string]: unknown } = {}, en
         '../configstore': config,
         './machineCapability': machineCapability,
         '../../lib/logger': () => ({ info: (line: string) => logs.push(line) }),
+        '../machine/channels/sacpMachineState': sacpMachineState,
     }, env);
     module.setMachineStoreSources({ status: () => status, selectedMachine: () => null });
     return {
@@ -110,7 +112,7 @@ const DEFINITIONS: { [id: string]: machineCapability.MachineDefinitionLike } = {
 };
 
 /** tools/machine.ts on the real store: Z policy, travel fudge, set_machine_policy. Nothing else of it is exercised. */
-export function machineToolsFixture(initial: { [key: string]: unknown } = {}, env: Record<string, string> = {}) {
+export function machineToolsFixture(initial: { [key: string]: unknown } = {}, env: Record<string, string> = {}, overrides: Record<string, unknown> = {}) {
     const f = machineStoreFixture(initial, env);
     const capabilityFor = (id: string | null) => machineCapability.deriveMachineCapability(id ? DEFINITIONS[id] || null : null, id);
     const tools = load('tools/machine.ts', {
@@ -136,6 +138,7 @@ export function machineToolsFixture(initial: { [key: string]: unknown } = {}, en
         '../../../lib/logger': () => ({ info: () => undefined, warn: () => undefined, error: () => undefined, debug: () => undefined }),
         'fs-extra': { existsSync: () => false },
         path,
+        ...overrides,
     }, env);
     // tools/machine.ts hands the store its (stubbed) connection at load; point it back at this fixture's.
     f.module.setMachineStoreSources({ status: f.status, selectedMachine: () => null });
@@ -198,6 +201,7 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
             '../configstore': f.config,
             './machineCapability': machineCapability,
             '../../lib/logger': () => ({ info: () => undefined }),
+            '../machine/channels/sacpMachineState': sacpMachineState,
         });
         again.setMachineStoreSources({ status: () => ({ connected: true, machineIdentifier: A350 }), selectedMachine: () => null });
         again.machineStore.load();

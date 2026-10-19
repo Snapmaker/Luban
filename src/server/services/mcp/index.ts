@@ -34,6 +34,7 @@ import { registerMachineTools } from './tools/machine';
 import { registerProbeTools } from './tools/probe';
 import { registerProbingTools } from './tools/probing';
 import { registerStatusTools } from './tools/status';
+import { startFirmwareReadOnConnect } from './tools/firmware';
 import { registerTelemetryTools } from './tools/telemetry';
 import { registerVibrationTools } from './tools/vibration';
 import { spindleTelemetryService } from './spindleTelemetry';
@@ -292,6 +293,9 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
     registerProbingTools(registry, baseUrl);
     registerCamTools(registry, baseUrl);
     registerLaserTools(registry, baseUrl);
+    // Read a GRBL machine's configuration once per connection, in memory only
+    // (tools/firmware.ts): the validator's M4 rule and get_machine_profile use it.
+    startFirmwareReadOnConnect();
     // Refuse rather than translate (#265 WP4b): a CNC procedure the connected
     // machine's dialect row does not allow is refused, naming the machine,
     // before its handler runs (procedureGates.ts).
