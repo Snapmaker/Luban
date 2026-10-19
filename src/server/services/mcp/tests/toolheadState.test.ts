@@ -24,6 +24,8 @@ import {
     toolheadOnRefusal,
 } from '../toolheadState';
 import { planTraverseXy } from '../traversePlan';
+import { planGotoWorkOrigin } from '../directMovePlan';
+import { validateGcode } from '../validator';
 
 const RAY = dialectById('ray-grbl');
 const SM2 = dialectById('sm2-marlin');
@@ -126,6 +128,36 @@ export const tests: Array<[string, () => void]> = [
             assert.ok(!/\bM5\b/.test(step.gcode), step.gcode);
         }
         assert.equal(a350.steps[0].gcode, 'G90\nG53;\nG1 X120.000 Y130.000 F1500;\nG54;');
+    }],
+    ['goto_work_origin on the Ray leads with M5 too (it plans through traverse_xy\'s planner)', () => {
+        const plan = planGotoWorkOrigin({
+            currentMachine: { x: 10, y: 10, z: 0 },
+            originOffset: { x: -100, y: -100, z: 0 },
+            offsetSource: 'heartbeat',
+            positionWarnings: [],
+            travel: null,
+            traverseZ: 0,
+            feedRate: 1500,
+            obstacles: [],
+            machine: traverseInput(RAY, { x: 10, y: 10, z: 0 }, 0, []).machine,
+            reason: 'test',
+        });
+        assert.ok(plan.steps.length > 0);
+        assert.ok(plan.steps.every((s) => executable(s.gcode)[0] === 'M5'), plan.reviewText);
+    }],
+    ['the validator\'s verdict on a Ray traverse is the same with the M5 lead: one M5, no M3/M4, the same motion and refusals', () => {
+        const ray = planTraverseXy(traverseInput(RAY, { x: 10, y: 10, z: 0 }, 0, [{ x: 20, y: 30 }, { x: 40, y: 30 }]));
+        const withoutLead = ray.reviewText.replace(/^M5\n/gm, '');
+        assert.notEqual(withoutLead, ray.reviewText);
+        const options = { dialect: RAY, machineIdentifier: RAY_IDENTIFIER, hasZ: false, phase: 'staged' as const };
+        const a = validateGcode(ray.reviewText, options);
+        const b = validateGcode(withoutLead, options);
+        assert.equal(a.motionLineCount, b.motionLineCount);
+        assert.deepEqual(a.extents, b.extents);
+        assert.deepEqual(a.warnings, b.warnings);
+        assert.deepEqual(a.machine && a.machine.refusals, b.machine && b.machine.refusals);
+        assert.equal(a.spindle.onCommands, 0, 'M5 never counts as the laser on');
+        assert.equal(a.spindle.offCommands, ray.steps.length);
     }],
     ['the Ray\'s longest relative step with its M5 still fits one SACP string', () => {
         const step = relativeStep(RAY, { from: { x: 0, y: 0 }, to: { x: -999.999, y: -999.999 } }, 99999, { command: 'G1', hasZ: false });
