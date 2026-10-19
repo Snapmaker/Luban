@@ -346,7 +346,7 @@ export function createLandmarkReviewFlow(deps: LandmarkReviewDeps) {
             bodyHtml: `<p>${escapeHtml(conflict.note)}</p>
                 <p>The agent proposes: <strong>${sameMachine
         ? `${escapeHtml(conflict.deviceId)} IS the same machine as ${escapeHtml(conflict.recorded.join(', '))} - it becomes an alias and uses the stored travel, landmarks, tool setter and geometry`
-        : `${escapeHtml(conflict.deviceId)} is a DIFFERENT machine - it gets its own empty record set; nothing stored so far applies to it`}</strong>.</p>
+        : `${escapeHtml(conflict.deviceId)} is a DIFFERENT machine - it gets its own empty per-machine entry (travel, Z policy, tool setter, geometry start empty); landmarks and calibrations stay scoped by model, so the ones listed below still apply to it`}</strong>.</p>
                 <p>Either way the landmark review is asked again afterwards.</p>
                 ${landmarkTable(deps.store.listFor(machine.identifier), deps, null)}`,
             summary: { device_id: conflict.deviceId, recorded: conflict.recorded, same_machine: sameMachine },
