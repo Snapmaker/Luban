@@ -1,4 +1,5 @@
 import type { McpJob } from './jobs';
+import { directStepsLeft } from './jobEnding';
 import { OperatorReviewItem, operatorReviewKindLabel } from './operatorReviews';
 
 const NOTICE_PHASES = new Set(['start_unverified', 'submitted', 'approved', 'rejected', 'started', 'completed', 'stopped', 'failed', 'stop-requested']);
@@ -25,6 +26,8 @@ export function summarizeDashboardJob(job: McpJob) {
             recoveryAction: job.failureRecovery.recovery_action,
         } : null,
         lastEvent: job.events.length ? job.events[job.events.length - 1] : null,
+        // A direct batch between steps is stoppable though not active (#320): Stop withdraws its remaining steps.
+        betweenSteps: job.kind === 'direct' && job.state === 'started' && directStepsLeft(job) > 0,
     };
 }
 

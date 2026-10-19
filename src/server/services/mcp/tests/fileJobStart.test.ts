@@ -57,7 +57,9 @@ export function fixture(shape: ChannelShape = 'file+direct', machine: { dialect?
         startGcodeJob: async () => { starts++; return start(); },
         stopGcodeJob: async () => { stops++; return { ok: true }; },
     };
-    const executeGcode = async (gcode: string) => { executed.push(gcode); return { result: 0, text: 'ok' }; };
+    // Runs while a direct step's send is in flight (a stop pressed mid-step, #320).
+    let onExecute: () => Promise<void> = async () => undefined;
+    const executeGcode = async (gcode: string) => { executed.push(gcode); await onExecute(); return { result: 0, text: 'ok' }; };
     const channel = { 'file+direct': { ...fileApi, executeGcode }, 'direct-only': { executeGcode }, none: {} }[shape];
     const dependencies: Record<string, unknown> = {};
     const source = fs.readFileSync(path.join(__dirname, '../tools/gcode.ts'), 'utf8');
@@ -141,6 +143,7 @@ export function fixture(shape: ChannelShape = 'file+direct', machine: { dialect?
         setStart: (fn: typeof start) => { start = fn; },
         setUpload: (fn: typeof upload) => { upload = fn; },
         setOnSleep: (fn: () => undefined) => { onSleep = fn; },
+        setOnExecute: (fn: () => Promise<void>) => { onExecute = fn; },
         setReport: (status: string, name = 'drill.nc', timestamp?: number) => {
             now += 1000;
             report = { status, timestamp: timestamp ?? now, gcodePrintingInfo: { name, sent: 2, total: 5, progress: 0.4 } };
@@ -308,6 +311,7 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
     ['stopping a handed-over direct job on an executeGcode-only channel names the missing stop, not file submission', async () => {
         const f = fixture('direct-only'); const job = f.createDirectJob();
         job.state = 'started';
-        await assert.rejects(f.stop(job), /does not support stopping jobs/);
+        // #320: and says honestly that a running step cannot be stopped by firmware command over this transport.
+        await assert.rejects(f.stop(job), /cannot be stopped by firmware command over this transport/);
     }],
 ];

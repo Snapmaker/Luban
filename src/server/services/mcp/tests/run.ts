@@ -118,6 +118,7 @@ import { tests as toolheadStateTests } from './toolheadState.test';
 import { tests as stagingConfirmLinkTests } from './stagingConfirmLink.test';
 import { tests as motorPowerTests } from './motorPower.test';
 import { tests as startPositionTests } from './startPosition.test';
+import { tests as batchWithdrawTests } from './batchWithdraw.test';
 
 type TestCase = [string, () => void | Promise<void>];
 
@@ -229,6 +230,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['stagingConfirmLink', stagingConfirmLinkTests],
     ['motorPower', motorPowerTests],
     ['startPosition', startPositionTests],
+    ['batchWithdraw', batchWithdrawTests],
 ];
 
 async function main(): Promise<void> {

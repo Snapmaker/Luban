@@ -258,6 +258,12 @@ export interface McpJob {
     // steps and the series can be abandoned at any point.
     steps?: string[];
     nextStep?: number;
+    /**
+     * A direct batch whose remaining steps stop_gcode_job withdrew while a
+     * step was executing on a channel with no firmware stop (#320): the step
+     * finishes, then the job ends withdrawn instead of re-arming its token.
+     */
+    withdrawAfterStep?: { actor: 'agent' | 'operator'; at: number } | null;
     // Staged default for direct execution: whether start_gcode_job should
     // block until the move verifiably settles (call-time arg overrides).
     waitUntilMoved?: boolean;

@@ -29,7 +29,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:380px;overflow:auto;f
 <section><h2>Reviews waiting for you <span id="reviews-count" class="badge">0</span></h2><div id="reviews"></div>
 <p class="muted">Landmark, device and machine-policy decisions an agent staged. Open each review page to read it and approve or reject there; nothing is decided from this list.</p>
 <p class="muted">Recently decided reviews</p><ul id="review-history"></ul></section>
-<section><h2>Running <span id="running-count" class="badge">0</span></h2><div id="running"></div><p class="muted">Stop requests use the controller’s existing stop behavior. Procedures stop at the next step boundary and attempt their guarded retreat; file/direct jobs send a firmware stop.</p></section>
+<section><h2>Running <span id="running-count" class="badge">0</span></h2><div id="running"></div><p class="muted">Stop requests use the controller’s existing stop behavior. Procedures stop at the next step boundary and attempt their guarded retreat; file/direct jobs send a firmware stop. A direct batch between steps is withdrawn and nothing is sent; where the machine has no firmware stop (Ray over Wi-Fi, USB text serial) a running step finishes and the remaining steps are withdrawn.</p></section>
 <section><h2>Ready for approval <span id="ready-count" class="badge">0</span></h2><div id="ready"></div></section>
 <section><h2>Approved, waiting to run <span id="approved-count" class="badge">0</span></h2><div id="approved"></div></section>
 <section><div class="row"><h2>Recent history</h2><label>Show <select id="filter"><option value="all">All outcomes</option><option value="completed">Completed</option><option value="rejected">Rejected</option><option value="dismissed">Dismissed / withdrawn</option><option value="stopped">Stopped / cancelled</option><option value="start_failed">Failed</option></select></label></div><div id="history"></div>
@@ -151,7 +151,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:380px;overflow:auto;f
       card.meta.textContent=job.kind+' · '+job.id+' · '+new Date(job.createdAt).toLocaleString();
       card.summary.textContent=(job.ending?job.ending.reason:job.error||(job.lastEvent && (job.lastEvent.note||job.lastEvent.phase))||'')
         +(job.modalRecovery && job.modalRecovery.recoveryAction?' · G53/G91 may remain ('+(job.modalRecovery.skipReason||job.modalRecovery.status)+'): run '+job.modalRecovery.recoveryAction+' before jogging':'');
-      card.stop.hidden=job.id!==snapshot.activeId || group!=='running';
+      card.stop.hidden=(job.id!==snapshot.activeId && !job.betweenSteps) || group!=='running';
       card.dismiss.hidden=group!=='ready' && group!=='approved';
       card.review.textContent=group==='ready'?'Review / approval':group==='approved'?'View approval':'View plan';
       var position=el(group).children[counts[group]-1];

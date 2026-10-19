@@ -2,6 +2,7 @@ import type http from 'http';
 import type { JobManager } from './jobs';
 import { dashboardHtml, notificationWorker } from './jobDashboardPage';
 import type { DashboardReview } from './jobDashboardState';
+import { directStepsLeft } from './jobEnding';
 
 function reply(res: http.ServerResponse, status: number, body: unknown, type = 'application/json'): void {
     res.writeHead(status, {
@@ -88,7 +89,9 @@ export function handleJobDashboardRequest(
             return;
         }
         const canDismiss = job.state === 'awaiting_confirmation' || job.state === 'approved';
-        const canStop = manager.getActive() === job && (job.state === 'started' || job.state === 'starting' || job.state === 'start_unverified');
+        // A direct batch between steps is not the active job, yet Stop must withdraw it (#320).
+        const canStop = (manager.getActive() === job && (job.state === 'started' || job.state === 'starting' || job.state === 'start_unverified'))
+            || (job.kind === 'direct' && job.state === 'started' && directStepsLeft(job) > 0);
         if ((action[2] === 'dismiss' ? !canDismiss : !canStop) || stopping.has(job.id)) {
             reply(res, 409, { error: 'Job changed or a stop is already pending. Refresh and check its status.' });
             return;
