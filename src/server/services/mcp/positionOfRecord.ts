@@ -417,16 +417,63 @@ export interface FrameLatch {
     since: number;
     /** When a work-frame restore was last acknowledged; null until then. */
     restoredAt: number | null;
+    /** The machine it was raised on (#265 WP8); null = raised with no machine known, applies to every machine. */
+    machineIdentifier?: string | null;
 }
 
 /** A heartbeat must be received this long after the restore to count as sampled after it. */
 export const FRAME_LATCH_BEAT_MS = 1000;
 
-let frameLatch: FrameLatch | null = null;
+// Per machine (#265 WP8, plan 1.4): a latch belongs to the machine it was
+// raised on - G53 left selected on the A350 says nothing about the Original's
+// controller, and a single global latch locked the Original out of everything
+// but the gcode lease's 3-line home (which itself refused under the latch).
+// Each latch is stamped with the machine identifier the resolver names when it
+// is raised (tools/machine.ts injects the connected identifier, the same
+// pattern as setMachineStoreSources); getFrameLatch() returns only the latch
+// that applies to the connected machine, otherMachineFrameLatches() reports the
+// rest. A latch raised with no machine known (no resolver - the unit suites -
+// or nothing connected) is stamped null and applies to EVERY machine: the
+// unknown case stays as cautious as before.
+const frameLatches = new Map<string, FrameLatch>();
+const UNSCOPED = '';
+let latchMachineSource: (() => string | null) | null = null;
+
+/** Injected by tools/machine.ts: the connected machine identifier, null when none. null unsets (tests). */
+export function setFrameLatchMachineSource(source: (() => string | null) | null): void {
+    latchMachineSource = source;
+}
+
+function latchMachine(): string | null {
+    try {
+        return latchMachineSource ? latchMachineSource() : null;
+    } catch (err) {
+        return null;
+    }
+}
+
+/** The key of the latch that applies now: the connected machine's own, else an unscoped one; with no machine known, the newest. */
+function applyingKey(): string | null {
+    const machine = latchMachine();
+    if (machine !== null) {
+        if (frameLatches.has(machine)) {
+            return machine;
+        }
+        return frameLatches.has(UNSCOPED) ? UNSCOPED : null;
+    }
+    let newest: string | null = null;
+    for (const [key, latch] of frameLatches) {
+        if (newest === null || latch.since >= (frameLatches.get(newest) as FrameLatch).since) {
+            newest = key;
+        }
+    }
+    return newest;
+}
 
 // Listeners: tools/machine.ts persists the latch across Luban restarts; the
 // pendant releases its held crash guard when the latch clears. Every change
-// (raised, restore acknowledged, cleared) is reported.
+// (raised, restore acknowledged, cleared) is reported with the latch that
+// applies to the connected machine after it.
 type FrameLatchListener = (latch: FrameLatch | null) => void;
 const frameLatchListeners = new Set<FrameLatchListener>();
 
@@ -444,36 +491,59 @@ export function onFrameLatchChange(listener: FrameLatchListener | null): () => v
 }
 
 function notifyFrameLatch(): void {
+    const applying = getFrameLatch();
     for (const listener of [...frameLatchListeners]) {
         try {
-            listener(frameLatch ? { ...frameLatch } : null);
+            listener(applying);
         } catch (err) {
             // A listener failure never leaves the latch itself in doubt.
         }
     }
 }
 
-export function latchFrameUncertain(reason: string, now: number = Date.now()): void {
-    frameLatch = { reason, since: now, restoredAt: null };
+/** Raise the latch for `machineIdentifier` (default: the connected machine; null = every machine). */
+export function latchFrameUncertain(reason: string, now: number = Date.now(), machineIdentifier: string | null = latchMachine()): void {
+    frameLatches.set(machineIdentifier === null ? UNSCOPED : machineIdentifier, { reason, since: now, restoredAt: null, machineIdentifier });
     notifyFrameLatch();
 }
 
 export function noteFrameRestored(now: number = Date.now()): void {
-    if (frameLatch) {
-        frameLatch.restoredAt = now;
+    const key = applyingKey();
+    if (key !== null) {
+        (frameLatches.get(key) as FrameLatch).restoredAt = now;
         notifyFrameLatch();
     }
 }
 
+/** The latch that applies to the connected machine (its own, or one raised with no machine known); null when none. */
 export function getFrameLatch(): FrameLatch | null {
-    return frameLatch ? { ...frameLatch } : null;
+    const key = applyingKey();
+    return key === null ? null : { ...(frameLatches.get(key) as FrameLatch) };
 }
 
+/** Latches held for OTHER machines: ignored for this one, kept for theirs, and reported. */
+export function otherMachineFrameLatches(): FrameLatch[] {
+    const key = applyingKey();
+    return [...frameLatches.entries()].filter(([k]) => k !== key).map(([, latch]) => ({ ...latch }));
+}
+
+/** Every latch held, for persistence. */
+export function allFrameLatches(): FrameLatch[] {
+    return [...frameLatches.values()].map((latch) => ({ ...latch }));
+}
+
+/** Clears the latch that applies to the connected machine; another machine's latch stays until that machine clears it. */
 export function clearFrameLatch(): void {
-    if (frameLatch) {
-        frameLatch = null;
+    const key = applyingKey();
+    if (key !== null) {
+        frameLatches.delete(key);
         notifyFrameLatch();
     }
+}
+
+/** Tests: forget every latch without notifying. */
+export function resetFrameLatchesForTest(): void {
+    frameLatches.clear();
 }
 
 /**

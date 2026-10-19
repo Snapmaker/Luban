@@ -128,6 +128,9 @@ function machineToolsFixture(userDataDir: string) {
         '../frameRecovery': frameRecovery,
         '../registry': { McpToolError },
     });
+    // The latch is per machine (#265 WP8) and a restored pre-WP8 file is the
+    // real A350's (its full identifier); this fixture's connection names it 'A350'.
+    positionOfRecord.setFrameLatchMachineSource(() => machineCapability.LEGACY_MACHINE_IDENTIFIER);
     return { tools: module, lease, state };
 }
 
@@ -243,7 +246,7 @@ export const tests: Array<[string, () => Promise<void>]> = [
             // A raise rewrites the file whole: no temp file left behind, and it parses.
             positionOfRecord.latchFrameUncertain('fresh');
             assert.deepEqual(fs.readdirSync(dir), ['mcp-frame-latch.json']);
-            assert.equal(JSON.parse(fs.readFileSync(file, 'utf8')).reason, 'fresh');
+            assert.deepEqual(JSON.parse(fs.readFileSync(file, 'utf8')).latches.map((l: { reason: string }) => l.reason), ['fresh'], 'v2 file: every machine latch');
             positionOfRecord.clearFrameLatch();
             assert.equal(fs.existsSync(file), false);
             // A file that parses to something other than an object is unreadable too.

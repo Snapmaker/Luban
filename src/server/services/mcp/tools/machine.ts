@@ -62,6 +62,9 @@ import {
     getPositionOfRecord,
     latchFrameUncertain,
     onFrameLatchChange,
+    allFrameLatches,
+    otherMachineFrameLatches,
+    setFrameLatchMachineSource,
 } from '../positionOfRecord';
 import { describeFrameLatch, resyncHint } from '../frameRecovery';
 import { McpToolError, ToolRegistry } from '../registry';
@@ -661,25 +664,38 @@ function frameLatchPath(): string | null {
     try { return DataStorage.userDataDir ? path.join(DataStorage.userDataDir, FRAME_LATCH_FILE) : null; } catch (err) { return null; }
 }
 
-export function persistFrameLatch(latch: FrameLatch | null): void {
+/** The on-disk form since #265 WP8: every machine's latch, keyed by the machine it was raised on. */
+export interface PersistedFrameLatches {
+    version: 2;
+    latches: FrameLatch[];
+}
+
+/**
+ * Writes EVERY machine's latch (positionOfRecord.allFrameLatches), not just
+ * the one that applies now: an A350 latch must survive a session on the
+ * Original. The argument is the listener's (the applying latch) and is not
+ * needed - kept so the listener signature stays.
+ */
+export function persistFrameLatch(_applying: FrameLatch | null = null, latches: FrameLatch[] = allFrameLatches()): void {
     const file = frameLatchPath();
     if (!file) { return; }
     try {
-        if (latch) {
+        if (latches.length) {
             const temp = `${file}.tmp`;
-            fs.writeFileSync(temp, `${JSON.stringify(latch)}\n`);
+            const data: PersistedFrameLatches = { version: 2, latches };
+            fs.writeFileSync(temp, `${JSON.stringify(data)}\n`);
             fs.renameSync(temp, file);
         } else if (fs.existsSync(file)) {
             fs.removeSync(file);
         }
     } catch (err) {
         // The in-memory latch still refuses motion; only the carry-over across a restart is at risk.
-        log.warn(`Could not ${latch ? 'write' : 'remove'} the frame latch file ${file}: ${(err as Error).message}`);
+        log.warn(`Could not ${latches.length ? 'write' : 'remove'} the frame latch file ${file}: ${(err as Error).message}`);
     }
 }
 
-/** The on-disk latch: null when no file, a latch when readable, 'unreadable' when it exists but cannot be read or parsed. */
-export function readPersistedFrameLatch(): Partial<FrameLatch> | 'unreadable' | null {
+/** The on-disk latch file: null when no file, its content when readable, 'unreadable' when it exists but cannot be read or parsed. */
+export function readPersistedFrameLatch(): Partial<FrameLatch> | Partial<PersistedFrameLatches> | 'unreadable' | null {
     const file = frameLatchPath();
     if (!file) { return null; }
     let exists: boolean;
@@ -698,18 +714,53 @@ export function readPersistedFrameLatch(): Partial<FrameLatch> | 'unreadable' | 
     }
 }
 
+/**
+ * Pure: the latches a saved file stands for, each with the machine it binds.
+ * A pre-WP8 file is ONE untagged latch: it was raised on the A350 (the only
+ * machine the MCP drove before latches were per machine), so it migrates as
+ * the A350's. An unreadable file is ALSO attributed to the A350 rather than to
+ * every machine: only an sm2-transport machine (G53 written) can be left in
+ * the machine workspace, the A350 is the only one that has run with this MCP,
+ * and binding it to every machine would recreate the lockout of the Original
+ * and the Ray this fixes.
+ */
+export function persistedFrameLatches(saved: ReturnType<typeof readPersistedFrameLatch>): Array<{ machineIdentifier: string | null; reason: string }> {
+    const carried = (reason: unknown) => `Carried over from before Luban restarted: ${String(reason || 'a queued pendant run')} `
+        + 'Restore the work frame before any motion.';
+    if (saved === null) {
+        return [];
+    }
+    if (saved === 'unreadable') {
+        return [{
+            machineIdentifier: LEGACY_MACHINE_IDENTIFIER,
+            reason: `Carried over from before Luban restarted: an unreadable latch file (${FRAME_LATCH_FILE}) says the `
+                + `machine workspace may have been left selected (attributed to the ${LEGACY_MACHINE_IDENTIFIER}, the only machine that writes G53 here). `
+                + 'Restore the work frame before any motion.',
+        }];
+    }
+    const latches = Array.isArray((saved as Partial<PersistedFrameLatches>).latches)
+        ? (saved as PersistedFrameLatches).latches
+        : [saved as Partial<FrameLatch>];
+    return latches.filter((latch) => latch && typeof latch === 'object').map((latch) => ({
+        machineIdentifier: latch.machineIdentifier === undefined ? LEGACY_MACHINE_IDENTIFIER : latch.machineIdentifier,
+        reason: carried(latch.reason),
+    }));
+}
+
 export function restorePersistedFrameLatch(): void {
     const saved = readPersistedFrameLatch();
-    if (saved === null) { return; }
     if (saved === 'unreadable') {
-        log.warn(`The frame latch file ${frameLatchPath()} exists but could not be read: raising the latch.`);
-        latchFrameUncertain(`Carried over from before Luban restarted: an unreadable latch file (${FRAME_LATCH_FILE}) says the `
-            + 'machine workspace may have been left selected. Restore the work frame before any motion.');
-        return;
+        log.warn(`The frame latch file ${frameLatchPath()} exists but could not be read: raising the ${LEGACY_MACHINE_IDENTIFIER}'s latch.`);
     }
-    latchFrameUncertain(`Carried over from before Luban restarted: ${String(saved.reason || 'a queued pendant run')} `
-        + 'Restore the work frame before any motion.');
+    for (const latch of persistedFrameLatches(saved)) {
+        latchFrameUncertain(latch.reason, Date.now(), latch.machineIdentifier);
+    }
 }
+
+// The latch belongs to the machine it is raised on (positionOfRecord.ts):
+// stamp it with the connected identifier. Set before the restore below, which
+// names its machines itself.
+setFrameLatchMachineSource(() => connectedMachineIdentifier());
 
 // Persist every change; the lease's recovery hold needs no update because it
 // reads the latch itself (machine/gcodeLease.ts).
@@ -745,6 +796,8 @@ export function machinePositionDiagnostics() {
         lastAccepted: machinePosition.lastAccepted,
         /** Set while the controller may still be in the machine workspace after a queued pendant run. */
         frameUncertain: getFrameLatch(),
+        // #265 WP8: latches raised on other machines - ignored here, kept for their own machine.
+        frameUncertainOtherMachines: otherMachineFrameLatches(),
         declaredMachineFrameRun: declaredRun,
         gcodeLease: gcodeLease.status(),
         lastJudgement: last
