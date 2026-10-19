@@ -117,6 +117,7 @@ import { tests as rayFirmwareLimitsTests } from './rayFirmwareLimits.test';
 import { tests as toolheadStateTests } from './toolheadState.test';
 import { tests as stagingConfirmLinkTests } from './stagingConfirmLink.test';
 import { tests as motorPowerTests } from './motorPower.test';
+import { tests as startPositionTests } from './startPosition.test';
 
 type TestCase = [string, () => void | Promise<void>];
 
@@ -227,6 +228,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['toolheadState', toolheadStateTests],
     ['stagingConfirmLink', stagingConfirmLinkTests],
     ['motorPower', motorPowerTests],
+    ['startPosition', startPositionTests],
 ];
 
 async function main(): Promise<void> {
