@@ -33,9 +33,11 @@ import { STOCK_ARG_SCHEMA } from '../rotaryCallContext';
 import { gateDirectXy, planGotoWorkOrigin } from '../directMovePlan';
 import { homeSequence, machineFrameMove, relativeStep, workFrameMove, workFrameRestore, workFrameRestoreCommands } from '../gcodeForms';
 import { TraverseMachine } from '../traversePlan';
-import { connectedMachineIdentifier, connectedMachineTag, describeConnectedMachine } from '../connectedMachine';
+import { connectedDialect, connectedMachineIdentifier, connectedMachineTag, describeConnectedMachine } from '../connectedMachine';
+import { sacpGrblPayloadRefusal, withoutCommentLines } from '../sacpLineGuard';
 import {
-    currentFirmwareRecord, describeFirmwareRead, firmwareReadBlocker, firmwareView, parseFirmwareRecord, queryGrblPosition, readFirmwareConfiguration,
+    currentFirmwareRecord, describeFirmwareRead, firmwareReadBlocker, firmwareTextRoute, firmwareView, parseFirmwareRecord, queryGrblPosition,
+    readFirmwareConfiguration, sacpNoTextReport,
 } from './firmware';
 import { clearanceOptions } from '../clearanceContext';
 import { FrameReading, frameRestoreJobRefusal, verifyWorkFrame, workFrameVerificationNote } from '../frameRecovery';
@@ -98,7 +100,7 @@ export interface GcodeChannel {
 const SACP_NO_REPLY_TEXT = 'This channel speaks SACP: a G-code is acknowledged with a result code only (SACP documents the '
     + '0x01 0x02 ACK as result-only and the channel\'s executeGcode answers "ok"), and on a Marlin machine the MCP reads no '
     + 'reply text over SACP, so a bare "ok" is the transport working as designed, NOT a dead connection. (The Ray\'s GRBL '
-    + 'queries read the reply path instead: tools/firmware.ts.)';
+    + 'firmware returns none over SACP either, so its queries are not sent there: tools/firmware.ts.)';
 
 /** True while the connected channel speaks SACP (ConnectionManager.isSacpChannel; absent in test stubs). */
 function sacpTransport(): boolean {
@@ -172,7 +174,24 @@ function currentConnectionId(): string | null {
     }
 }
 
-export async function sendGcodeVisible(channel: GcodeChannel, tool: string, gcode: string, timing?: SendTiming): Promise<SentGcode> {
+/** sendGcodeVisible refused the G-code before anything left (so the caller can end a job as start_failed, not unverified). */
+export class GcodeNotSentError extends McpToolError {
+    public readonly notSent = true;
+}
+
+export async function sendGcodeVisible(channel: GcodeChannel, tool: string, payload: string, timing?: SendTiming): Promise<SentGcode> {
+    let gcode = payload;
+    // GRBL over SACP (the Ray): the firmware ACKs result 0 and then silently
+    // drops what it cannot take, so whole-line comments are dropped and a
+    // payload it would lose is refused here, unsent (sacpLineGuard.ts).
+    // Marlin and every non-SACP transport: unchanged.
+    if (connectedDialect().family === 'grbl' && sacpTransport()) {
+        gcode = withoutCommentLines(payload);
+        const refusal = sacpGrblPayloadRefusal(gcode);
+        if (refusal) {
+            throw new GcodeNotSentError(`${tool}: ${refusal} Nothing was sent. ${connectedMachineTag()}`);
+        }
+    }
     const sequence = bumpGcodeSequence();
     const sentAt = Date.now();
     const idleMs = lastReplyAt === null ? null : sentAt - lastReplyAt;
@@ -1641,6 +1660,21 @@ export function registerCameraTools(registry: ToolRegistry): void {
                 throw new McpToolError('queries must be an array of strings.');
             }
             if (dialect.family === 'grbl') {
+                // GRBL over SACP: decided before the idle check - nothing would be sent anyway.
+                if (!firmwareTextRoute().channel) {
+                    const status = connectionManager.getConnectionStatus() as { deviceSerial?: string | null; deviceSerialSource?: string | null };
+                    const report = sacpNoTextReport();
+                    return {
+                        connected_machine: describeConnectedMachine(),
+                        dialect: dialect.id,
+                        ...report,
+                        replies: [],
+                        firmware: firmwareView(),
+                        device_serial: { value: status.deviceSerial || null, source: status.deviceSerialSource || null },
+                        note: `Nothing was sent (${queries === undefined ? 'the full read' : (queries as string[]).join(' ')}). `
+                            + `${report.reason} The identity above is what SACP does carry. Read-only; nothing moved.`,
+                    };
+                }
                 const blocker = firmwareReadBlocker();
                 if (blocker) {
                     throw new McpToolError(`Not read: ${blocker}. Nothing was sent. ${connectedMachineTag()}`);

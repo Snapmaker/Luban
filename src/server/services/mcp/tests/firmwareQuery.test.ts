@@ -8,12 +8,15 @@ import * as firmwareQuery from '../firmwareQuery';
 import * as procedureLimits from '../procedureLimits';
 import * as machineCapability from '../machineCapability';
 import * as machineTravel from '../machineTravel';
+import * as dialectRules from '../dialectRules';
+import * as sacpLineGuard from '../sacpLineGuard';
 import {
     FIRMWARE_QUERY_ALLOW_LIST, configurationQueriesFor, firmwareQueryRefusal, firmwareValuesFrom, laserAccelerationFrom,
     m1005SerialCandidates, parseGrblBuildInfo, parseGrblOffsets, parseGrblParserState, parseGrblSettings, parseGrblStatus, parseM1005Serial,
     positionQueryFor,
 } from '../firmwareQuery';
 import { isFillPatternSerial, sacpDeviceSerial } from '../../machine/channels/sacpMachineState';
+import * as sacpMachineState from '../../machine/channels/sacpMachineState';
 import { assembleReply } from '../../machine/channels/sacpGcodeReply';
 import { validateGcode } from '../validator';
 import { resolveTravel } from '../machineTravel';
@@ -77,8 +80,15 @@ function inert(file: string, overrides: Record<string, unknown>) {
     return isolatedModule(file, { ...deps, ...overrides }, { clearTimeout, Date, JSON });
 }
 
-/** tools/firmware.ts with a scripted Ray channel over SACP. */
-function firmwareFixture(script: { [query: string]: string | null } = {}) {
+/** A Ray V1.7.4's 0x01 0x21 as the channel records it (an efuse SN unless `sn` says otherwise). */
+const RAY_MACHINE_INFO = { firmwareVersion: 'V1.7.4', productSn: 'RAY20AB1234567890123', productSnRaw: 'RAY20AB1234567890123', truncated: null, readAt: 0 };
+
+/**
+ * tools/firmware.ts with a scripted Ray channel. `sacp` true = the channel
+ * speaks SACP (the Ray on Wi-Fi): nothing may be sent; false = a channel that
+ * returns text (the seam's USB-GRBL case).
+ */
+function firmwareFixture(script: { [query: string]: string | null } = {}, options: { sacp?: boolean; levelResult?: number | null } = {}) {
     const sent: string[] = [];
     const adopted: Array<[string, string]> = [];
     const listeners: Array<(ready: { generation: string; machineIdentifier: string | null }) => void> = [];
@@ -98,6 +108,9 @@ function firmwareFixture(script: { [query: string]: string | null } = {}) {
         getCurrentChannel: () => channel,
         getLatestMachineState: () => (live.state ? { status: live.status, timestamp: Date.now() } : null),
         adoptFirmwareSerial: (sn: string, generation: string) => { adopted.push([sn, generation]); return true; },
+        isSacpChannel: () => options.sacp === true,
+        getMachineInfoRecord: () => (options.sacp ? RAY_MACHINE_INFO : null),
+        getLogLevelRequest: () => (options.sacp ? { requestedAt: 0, result: options.levelResult === undefined ? 5 : options.levelResult } : null),
         onMachineReady: (listener: (ready: { generation: string; machineIdentifier: string | null }) => void) => {
             listeners.push(listener);
             return () => undefined;
@@ -113,6 +126,7 @@ function firmwareFixture(script: { [query: string]: string | null } = {}) {
         '../firmwareQuery': firmwareQuery,
         '../procedureLimits': procedureLimits,
         '../registry': { McpToolError: Error },
+        '../dialectRules': dialectRules,
     });
     return { firmware, sent, adopted, live, listeners };
 }
@@ -122,11 +136,19 @@ const FULL_SCRIPT = { $$: SETTINGS_TEXT, '$#': OFFSETS_TEXT, $G: PARSER_TEXT, $I
 /**
  * The connect sequence end to end: the real ConnectionManager (inert
  * harness, captured timers) with a stub machine instance whose onPrepare
- * the test controls, a Ray-like channel answering the five queries, and the
- * real tools/firmware.ts registered on that manager. Both modules' info
- * lines are captured.
+ * the test controls, a Ray-like channel, and the real tools/firmware.ts
+ * registered on that manager. Both modules' info lines are captured.
+ * transport 'sacp' (default) = the Ray on Wi-Fi (SACP-UDP, nothing may be
+ * sent; 0x01 0x21 identity and Luban's log-level result recorded); 'text' = a
+ * channel whose executeGcode returns the firmware's text (the seam's case).
  */
-function connectSequence(prepare: () => Promise<void>, script: { [query: string]: string | null } = FULL_SCRIPT) {
+function connectSequence(prepare: () => Promise<void>, options: {
+    transport?: 'sacp' | 'text';
+    script?: { [query: string]: string | null };
+    machineInfo?: typeof RAY_MACHINE_INFO | null;
+    levelResult?: number | null;
+} = {}) {
+    const script = options.script || FULL_SCRIPT;
     const lines: string[] = [];
     const capture = () => ({ info: (m: string) => lines.push(m), warn: (m: string) => lines.push(`WARN ${m}`), debug: () => undefined, error: () => undefined });
     const sent: string[] = [];
@@ -134,14 +156,12 @@ function connectSequence(prepare: () => Promise<void>, script: { [query: string]
     const channel = Object.assign(new EventEmitter(), {
         getConnectionGeneration: () => live.generation,
         getLatestMachineState: () => ({ status: 'idle', timestamp: Date.now() }),
-        executeGcodeWithReply: async (line: string) => {
+        executeGcode: async (line: string) => {
             sent.push(line);
-            const text = line in script ? script[line] : null;
-            const replyLines = text ? [{ level: 2, text }] : [];
-            return assembleReply({
-                result: 0, ackData: null, ackReceived: true, listening: true, subscribed: false, lines: replyLines, timedOut: false, elapsedMs: 3,
-            });
+            return { result: 0, text: line in script ? script[line] || 'ok' : 'ok' };
         },
+        getMachineInfoRecord: () => (options.machineInfo === undefined ? RAY_MACHINE_INFO : options.machineInfo),
+        getLogLevelRequest: () => ({ requestedAt: 0, result: options.levelResult === undefined ? 5 : options.levelResult }),
     });
     class StubInstance {
         public setChannel(): void { /* the test's channel */ }
@@ -153,8 +173,12 @@ function connectSequence(prepare: () => Promise<void>, script: { [query: string]
     const timers = { pending: [] as Array<{ fn: () => void; ms: number }> };
     const cm = loadConnectionManager(channel, diagnostics(), {
         '../../lib/logger': capture,
+        './channels/sacpMachineState': sacpMachineState,
         './instances': { RayMachineInstance: StubInstance, SM2Instance: StubInstance, J1MachineInstance: StubInstance, ArtisanMachineInstance: StubInstance },
     }, timers);
+    if (options.transport === 'text') {
+        cm.protocol = 'text';
+    }
     cm.bindChannelEvents();
     const firmware = inert('tools/firmware.ts', {
         '../../../lib/logger': capture,
@@ -169,6 +193,7 @@ function connectSequence(prepare: () => Promise<void>, script: { [query: string]
         '../firmwareQuery': firmwareQuery,
         '../procedureLimits': procedureLimits,
         '../registry': { McpToolError: Error },
+        '../dialectRules': dialectRules,
     });
     /** Fire the captured ready-listener bound (ConnectionManager's prepare wait). */
     const fireReadyBound = () => {
@@ -188,7 +213,7 @@ async function until(done: () => boolean): Promise<void> {
 }
 
 /** The query tools of tools/camera.ts with every import inert and the dialect / firmware runtime stubbed. */
-function cameraTools(dialectId: 'ray-grbl' | 'sm2-marlin' | 'unknown') {
+function cameraTools(dialectId: 'ray-grbl' | 'sm2-marlin' | 'unknown', options: { sacp?: boolean } = {}) {
     const commands: string[] = [];
     const firmwareCalls: string[] = [];
     const camera = inert('tools/camera.ts', {
@@ -202,14 +227,22 @@ function cameraTools(dialectId: 'ray-grbl' | 'sm2-marlin' | 'unknown') {
         '../probeFeed': { probeFeedService: { motionBegin: () => undefined, motionEnd: () => undefined } },
         '../jobs': { jobManager: { getActive: () => null } },
         './machine': { motionDialect: () => dialectById(dialectId), getPositionSnapshot: () => null },
-        '../connectedMachine': { connectedMachineTag: () => `(machine: ${dialectId})`, describeConnectedMachine: () => ({ identifier: dialectId }) },
+        '../connectedMachine': {
+            connectedDialect: () => dialectById(dialectId),
+            connectedMachineTag: () => `(machine: ${dialectId})`,
+            describeConnectedMachine: () => ({ identifier: dialectId }),
+        },
         '../../machine/ConnectionManager': { connectionManager: {
             getCurrentChannel: () => ({ executeGcode: async (gcode: string) => { commands.push(gcode); return { result: 0, text: 'ok' }; } }),
             getLatestMachineState: () => null,
             getConnectionStatus: () => ({ connected: true, deviceSerial: null }),
+            isSacpChannel: () => options.sacp === true,
         } },
+        '../sacpLineGuard': sacpLineGuard,
         './firmware': {
             firmwareReadBlocker: () => null,
+            firmwareTextRoute: () => ({ channel: {}, via: 'channel' }),
+            sacpNoTextReport: () => ({ sent: false }),
             queryGrblPosition: async () => { firmwareCalls.push('?'); throw new Error('no GRBL status report - use get_position'); },
             readFirmwareConfiguration: async (input: { queries?: string[] }) => {
                 firmwareCalls.push(`config:${(input.queries || ['default']).join(',')}`);
@@ -223,7 +256,7 @@ function cameraTools(dialectId: 'ray-grbl' | 'sm2-marlin' | 'unknown') {
     });
     const tools: Map<string, Tool> = new Map();
     camera.registerCameraTools({ register: (tool: Tool) => tools.set(tool.name, tool) });
-    return { tools, commands, firmwareCalls };
+    return { tools, commands, firmwareCalls, camera };
 }
 
 export const tests: Array<[string, () => void | Promise<void>]> = [
@@ -431,44 +464,51 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
     }],
 
     // ---- The connect sequence: ConnectionManager Ready -> first-connect read (2026-10-19) ----
-    ['Ray Ready whose prepare never settles: the listeners are told after the bound and the read runs (one line)', async () => {
+    ['Ray over SACP, prepare never settles: told after the bound; nothing is sent; ONE line with version, SN and level result', async () => {
         const s = connectSequence(async () => new Promise(() => undefined));
         s.firmware.startFirmwareReadOnConnect();
         s.channel.emit('ready', { machineIdentifier: 'Ray' });
         await new Promise((resolve) => setTimeout(resolve, 20));
-        assert.deepEqual(s.sent, [], 'nothing before the bound: prepare may still finish');
+        assert.equal(s.firstConnectLines().length, 0, 'nothing before the bound: prepare may still finish');
         s.fireReadyBound();
         assert.ok(s.lines.some((l) => /machine ready \(Ray\): notifying 1 listener\(s\) \(prepare not settled after 15000 ms\)/.test(l)), s.lines.join('\n'));
         await until(() => s.firstConnectLines().length > 0);
-        assert.deepEqual(s.sent, ['$$', '$#', '$G', '$I', 'M1005']);
+        assert.deepEqual(s.sent, [], 'no $-query over SACP: the Ray answers it nowhere');
         assert.equal(s.firstConnectLines().length, 1, 'exactly one first-connect line');
-        assert.match(s.firstConnectLines()[0],
-            /first-connect firmware read on Ray \[machine prepare: not settled after 15000 ms\] \(ray-grbl\): \$\$ \$# \$G \$I M1005 answered/);
+        const line = s.firstConnectLines()[0];
+        assert.match(line, /^first-connect firmware read on Ray \[machine prepare: not settled after 15000 ms\] \(ray-grbl\): nothing sent/);
+        assert.match(line, /version V1\.7\.4, SN RAY20AB1234567890123 \(SACP 0x01 0x21\)/);
+        assert.match(line, /log-level request result 5 \(E_INVALID_CMD_ID: no log feed\)/);
+        assert.equal(s.cm.getConnectionStatus().deviceSerial, 'RAY20AB1234567890123', 'the efuse SN is the device id from Ready on');
+        assert.equal(s.cm.getConnectionStatus().deviceSerialSource, 'sacp-product-sn');
     }],
-    ['Ray Ready whose prepare throws: told at once with the reason, the read runs, and the rejection still reaches onChannelReady', async () => {
-        const s = connectSequence(async () => Promise.reject(new Error('module info lost')));
+    ['Ray over SACP with an unprogrammed efuse (20 x "6"): SN absent, no device id; prepare throws: told at once with the reason', async () => {
+        const blank = { ...RAY_MACHINE_INFO, productSn: null, productSnRaw: '66666666666666666666' };
+        const s = connectSequence(async () => Promise.reject(new Error('module info lost')), { machineInfo: blank, levelResult: null });
         s.firmware.startFirmwareReadOnConnect();
         await assert.rejects(s.cm.onChannelReady({ machineIdentifier: 'Ray' }), /module info lost/, 'prepare behaves exactly as before');
         assert.ok(s.lines.some((l) => /notifying 1 listener\(s\) \(prepare failed: module info lost\)/.test(l)));
         await until(() => s.firstConnectLines().length > 0);
-        assert.equal(s.sent.length, 5);
-        assert.match(s.firstConnectLines()[0], /\[machine prepare: failed: module info lost\] \(ray-grbl\)/);
+        assert.deepEqual(s.sent, []);
+        assert.match(s.firstConnectLines()[0], /\[machine prepare: failed: module info lost\] \(ray-grbl\): nothing sent.*SN absent.*unanswered or not sent/);
+        assert.equal(s.cm.getConnectionStatus().deviceSerial, null, 'a fill-pattern SN is no identity');
         s.fireReadyBound(); // the bound fires late: notifies nothing a second time
         assert.equal(s.lines.filter((l) => /notifying/.test(l)).length, 1);
     }],
-    ['prepare done: the Ray reads; the A350 sends nothing and says why; a changed connection is a logged skip', async () => {
-        const ray = connectSequence(async () => Promise.resolve());
-        ray.firmware.startFirmwareReadOnConnect();
-        await ray.cm.onChannelReady({ machineIdentifier: 'Ray' });
-        await until(() => ray.firstConnectLines().length > 0);
-        assert.match(ray.firstConnectLines()[0], /^first-connect firmware read on Ray \(ray-grbl\): /);
-        const a350 = connectSequence(async () => Promise.resolve());
+    ['a GRBL text transport (the seam\'s case) still reads the five queries; the A350 sends nothing; a changed connection is a logged skip', async () => {
+        const text = connectSequence(async () => Promise.resolve(), { transport: 'text' });
+        text.firmware.startFirmwareReadOnConnect();
+        await text.cm.onChannelReady({ machineIdentifier: 'Ray' });
+        await until(() => text.firstConnectLines().length > 0);
+        assert.deepEqual(text.sent, ['$$', '$#', '$G', '$I', 'M1005']);
+        assert.match(text.firstConnectLines()[0], /^first-connect firmware read on Ray \(ray-grbl\): \$\$ \$# \$G \$I M1005 answered via channel-text/);
+        const a350 = connectSequence(async () => Promise.resolve(), { machineInfo: null });
         a350.firmware.startFirmwareReadOnConnect();
         await a350.cm.onChannelReady({ machineIdentifier: 'A350' });
         await until(() => a350.firstConnectLines().length > 0);
         assert.deepEqual(a350.sent, [], 'A350: nothing sent, as before');
         assert.deepEqual(a350.firstConnectLines(), ['first-connect firmware read on A350: skipped, its dialect is sm2-marlin (only a GRBL configuration is read on connect)']);
-        const moved = connectSequence(async () => Promise.resolve());
+        const moved = connectSequence(async () => Promise.resolve(), { transport: 'text' });
         moved.firmware.startFirmwareReadOnConnect();
         moved.channel.getLatestMachineState = () => { moved.live.generation = 2; return { status: 'idle', timestamp: Date.now() }; };
         await moved.cm.onChannelReady({ machineIdentifier: 'Ray' });
@@ -476,15 +516,15 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.deepEqual(moved.sent, []);
         assert.match(moved.firstConnectLines()[0], /skipped, the connection changed while waiting/);
     }],
-    ['the MCP starting with a Ray already connected reads it now; a close before the bound notifies nobody', async () => {
+    ['the MCP starting with a Ray already connected reports it now; a close or reconnect before the bound notifies nobody', async () => {
         const s = connectSequence(async () => Promise.resolve());
         await s.cm.onChannelReady({ machineIdentifier: 'Ray' }); // connected before the MCP registered
         assert.equal(s.firstConnectLines().length, 0);
         s.firmware.startFirmwareReadOnConnect();
         await until(() => s.firstConnectLines().length > 1);
         assert.match(s.firstConnectLines()[0], /the MCP started with Ray already connected, reading it now/);
-        assert.match(s.firstConnectLines()[1], /\[machine prepare: before the MCP started\] \(ray-grbl\)/);
-        assert.equal(s.sent.length, 5);
+        assert.match(s.firstConnectLines()[1], /\[machine prepare: before the MCP started\] \(ray-grbl\): nothing sent/);
+        assert.deepEqual(s.sent, []);
         const closed = connectSequence(async () => new Promise(() => undefined));
         closed.firmware.startFirmwareReadOnConnect();
         closed.channel.emit('ready', { machineIdentifier: 'Ray' });
@@ -492,7 +532,7 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         closed.fireReadyBound();
         assert.ok(closed.lines.some((l) => /1 listener\(s\) not notified, the connection closed or changed/.test(l)));
         await new Promise((resolve) => setTimeout(resolve, 20));
-        assert.deepEqual(closed.sent, []);
+        assert.equal(closed.firstConnectLines().length, 0);
         // A reconnect on the same (singleton) channel within the bound: the stale timer notifies nobody.
         const again = connectSequence(async () => new Promise(() => undefined));
         again.firmware.startFirmwareReadOnConnect();
@@ -501,6 +541,60 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         again.fireReadyBound();
         assert.ok(again.lines.some((l) => /not notified, the connection closed or changed/.test(l)));
         assert.ok(!again.lines.some((l) => /notifying/.test(l)));
+    }],
+    ['GRBL over SACP: query_firmware_configuration and "?" send nothing and say why; firmware view carries the 0x01 0x21 identity', async () => {
+        const f = firmwareFixture(FULL_SCRIPT, { sacp: true });
+        assert.equal(f.firmware.firmwareTextRoute().channel, null);
+        await assert.rejects(f.firmware.readFirmwareConfiguration({ tool: 't', trigger: 'on-demand' }), /no reply text over SACP/);
+        await assert.rejects(f.firmware.queryGrblPosition('t'), /no reply text over SACP.*get_position/s);
+        assert.deepEqual(f.sent, [], 'not one byte of G-code');
+        const report = f.firmware.sacpNoTextReport();
+        assert.equal(report.sent, false);
+        assert.match(report.reason, /single result byte, sent before the line is even queued/);
+        assert.match(report.reason, /USB port while it is in GRBL text mode/);
+        assert.equal(report.evidence.lubanLogLevelRequest.result, 5);
+        assert.match(report.evidence.lubanLogLevelRequest.meaning, /E_INVALID_CMD_ID/);
+        assert.match(report.evidence.firmwareSource, /91a675fc10d6ac1454d3cfb8fa0581bf851b10eb/);
+        assert.equal(report.identity.version, 'V1.7.4');
+        assert.equal(report.identity.productSn, 'RAY20AB1234567890123');
+        assert.match(report.acceleration, /1000 mm\/s\^2/);
+        const view = f.firmware.firmwareView();
+        assert.equal(view.version, 'V1.7.4');
+        assert.equal(view.productSn, 'RAY20AB1234567890123');
+        assert.equal(view.identitySource, 'SACP 0x01 0x21 machine info, read at connect');
+        assert.ok(view.identityReadAt);
+        assert.deepEqual(view.queries, []);
+        assert.match(view.note, /no reply text over SACP/);
+        // The seam: a registered GRBL text transport makes the $-queries real again.
+        const usb: string[] = [];
+        f.firmware.setGrblTextTransport(() => ({ executeGcode: async (line: string) => { usb.push(line); return { result: 0, text: `${line} text\nok` }; } }));
+        const { replies } = await f.firmware.readFirmwareConfiguration({ tool: 't', trigger: 'on-demand', queries: ['$G'] });
+        assert.deepEqual(usb, ['$G']);
+        assert.equal(replies[0].source, 'channel-text');
+        f.firmware.setGrblTextTransport(null);
+    }],
+
+    // ---- The SACP send path for GRBL (sendGcodeVisible + sacpLineGuard.ts) ------------------
+    ['GRBL over SACP: comment lines are dropped, a payload the firmware would lose is refused unsent; Marlin is byte-identical', async () => {
+        const ray = cameraTools('ray-grbl', { sacp: true });
+        await ray.camera.sendGcodeVisible({ executeGcode: async (g: string) => { ray.commands.push(g); return { result: 0, text: 'ok' }; } },
+            't', '; mcp-settle machine X1.000 Y2.000\nG91\nG1 X1.000 Y2.000 F3000\nG90');
+        assert.deepEqual(ray.commands, ['G91\nG1 X1.000 Y2.000 F3000\nG90'], 'the settle comment never reaches the wire');
+        for (const bad of [`G1 X1 ;${'x'.repeat(80)}`, '$PS', 'G1 X1 ?', 'G90\u0018']) {
+            await assert.rejects(
+                ray.camera.sendGcodeVisible({ executeGcode: async (g: string) => { ray.commands.push(g); return { result: 0, text: 'ok' }; } }, 't', bad),
+                (err: Error & { notSent?: boolean }) => err.notSent === true && /Nothing was sent/.test(err.message),
+            );
+        }
+        assert.equal(ray.commands.length, 1, 'nothing more left');
+        const a350 = cameraTools('sm2-marlin', { sacp: true });
+        const marlin = `G90\nG53;\n; a comment ${'x'.repeat(90)}\nG1 X1 Y1 F3000 ?`;
+        await a350.camera.sendGcodeVisible({ executeGcode: async (g: string) => { a350.commands.push(g); return { result: 0, text: 'ok' }; } }, 't', marlin);
+        assert.deepEqual(a350.commands, [marlin], 'the A350 gets exactly what it got before');
+        const rayText = cameraTools('ray-grbl', { sacp: false });
+        const usb = `; c\nG1 X1 ;${'x'.repeat(90)}`;
+        await rayText.camera.sendGcodeVisible({ executeGcode: async (g: string) => { rayText.commands.push(g); return { result: 0, text: 'ok' }; } }, 't', usb);
+        assert.deepEqual(rayText.commands, [usb], 'a non-SACP transport is unchanged');
     }],
 
     // ---- Tool routing (tools/camera.ts) -------------------------------------------------

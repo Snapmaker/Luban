@@ -74,11 +74,10 @@ import { ChannelEvent } from './ChannelEvent';
 import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from '../../../../app/machines/snapmaker-2-toolheads';
 import { gcodeLease } from '../gcodeLease';
 import { connectionDiagnostics } from '../connectionDiagnostics';
-import { SacpMachineState, SacpMachineStateTracker, sacpDeviceSerial } from './sacpMachineState';
 import {
-    GcodeReply, LOG_FEEDBACK_INTERVAL_MS, LogFeedCallback, LogFeedOps, LubanLogFeed, ReplyEmitter, SACP_LOG_FEEDBACK, assembleReply,
-    readGcodeReply, sacpBusinessId, withLogFeed,
-} from './sacpGcodeReply';
+    SacpMachineInfoFields, SacpMachineState, SacpMachineStateTracker, parseSacpMachineInfo, sacpDeviceSerial,
+} from './sacpMachineState';
+import { GcodeReply, ReplyEmitter, assembleReply, readGcodeReply } from './sacpGcodeReply';
 
 const log = logger('machine:channels:SacpChannel');
 
@@ -297,6 +296,12 @@ class SacpChannelBase extends Channel implements
 
     /**
      * Generic execute G-code commands.
+     *
+     * Result 0 of SACP 0x01 0x02 does NOT mean the line ran: the Ray V1.7.4
+     * ACKs before it even queues the line, and then drops lines it cannot take
+     * (80+ bytes, a full input ring, G-code in Alarm) without a word
+     * (RayController 91a675f snapmaker.cpp:272-291). Confirm effects by state.
+     * Never resend on a lost ACK: the firmware does not dedupe 0x01 0x02.
      */
     public async executeGcode(gcode: string): Promise<ExecuteGcodeResult> {
         const refusal = gcodeLease.refusal(gcode);
@@ -329,38 +334,12 @@ class SacpChannelBase extends Channel implements
     // log, so two reads in flight could not tell their lines apart.
     private replyReadChain: Promise<unknown> = Promise.resolve();
 
-    // What Luban's own connect (startHeartbeatLegacy) did to the log feed on
-    // this connection; reset by each startHeartbeatLegacy. Read only by the
-    // MCP's reply reads (withLogFeed) to leave Luban's subscription alone.
-    private lubanLogFeed: LubanLogFeed = { callback: null, requestedAt: null, pending: false, levelResult: null };
-
-    // The log level the MCP's reply reads requested on this client (withLogFeed levelMemo): once per connection.
-    private readLevelMemo: { client: SacpClient | null; sent: boolean; result: number | null } = { client: null, sent: false, result: null };
-
-    /** The SDK calls withLogFeed drives, on this connection's client. */
-    private logFeedOps(client: SacpClient): LogFeedOps {
-        const event = sacpBusinessId(SACP_LOG_FEEDBACK);
-        const emitter = client as unknown as {
-            listeners(name: string): LogFeedCallback[];
-            removeListener(name: string, callback: LogFeedCallback): void;
-        };
-        return {
-            listeners: () => emitter.listeners(event),
-            removeListener: (callback) => emitter.removeListener(event, callback),
-            setLevel: async (level) => (await client.logFeedbackLevel(level)).response.result,
-            subscribe: async (callback) => (await client.subscribeLogFeedback({ interval: LOG_FEEDBACK_INTERVAL_MS }, callback as ResponseCallback)).code,
-            unsubscribe: async (callback) => (await client.unSubscribeLogFeedback(callback as ResponseCallback)).code,
-        };
-    }
-
     /**
      * ONE G-code line with the firmware's reply text (MCP firmware queries,
      * #265 follow-up). executeGcode answers `ok` and drops the payload, and
      * stays exactly as it is for Luban's UI; this reads the two places a SACP
      * reply can be (sacpGcodeReply.ts): bytes after the result in the 0x01
      * 0x02 ACK, and the 0x01 0xa1 log feedback received during the read.
-     * When Luban's own log subscription is not live (the Ray, 2026-10-19),
-     * the read subscribes for itself and undoes it after (withLogFeed).
      * Refuses multi-line input (executeGcode would send every line).
      */
     public async executeGcodeWithReply(gcode: string, options: { timeoutMs?: number; quietMs?: number } = {}): Promise<GcodeReply> {
@@ -379,22 +358,12 @@ class SacpChannelBase extends Channel implements
             return refusedReply('no SACP session');
         }
         const client = this.sacpClient;
-        if (this.readLevelMemo.client !== client) {
-            this.readLevelMemo = { client, sent: false, result: null };
-        }
-        const levelMemo = this.readLevelMemo;
-        const read = this.replyReadChain.then(async () => withLogFeed({
-            ops: this.logFeedOps(client),
-            luban: () => this.lubanLogFeed,
-            levelMemo,
-            stepTimeoutMs: options.timeoutMs,
-        }, async (subscribedBefore) => readGcodeReply({
+        const read = this.replyReadChain.then(async () => readGcodeReply({
             emitter: client as unknown as ReplyEmitter,
             send: async () => client.executeGcode(line),
             timeoutMs: options.timeoutMs,
             quietMs: options.quietMs,
-            subscribed: subscribedBefore,
-        })));
+        }));
         this.replyReadChain = read.catch(() => undefined);
         return read;
     }
@@ -463,9 +432,35 @@ class SacpChannelBase extends Channel implements
      * Get Machine info.
      */
     public async getMachineInfo(): Promise<MachineInfo> {
-        const { data: machineInfo } = await this.sacpClient.getMachineInfo();
+        const { data: machineInfo, packet } = await this.sacpClient.getMachineInfo();
+        // The same 0x01 0x21 reply, read past the SDK model: the firmware
+        // version and the Ray's efuse product SN (parseSacpMachineInfo). No extra request.
+        const payload = packet && Buffer.isBuffer(packet.payload) ? packet.payload : null;
+        const fields = parseSacpMachineInfo(payload ? payload.slice(1) : null);
+        this.machineInfoRecord = fields ? { ...fields, readAt: Date.now(), generation: this.connectionGeneration } : null;
 
         return machineInfo;
+    }
+
+    // The last 0x01 0x21 this connection read (getMachineInfo), with when.
+    private machineInfoRecord: (SacpMachineInfoFields & { readAt: number; generation: number }) | null = null;
+
+    /** The machine info read on THIS connection (version, product SN), or null; in memory only. */
+    public getMachineInfoRecord(): (SacpMachineInfoFields & { readAt: number }) | null {
+        const record = this.machineInfoRecord;
+        return record && record.generation === this.connectionGeneration ? record : null;
+    }
+
+    // What the controller answered Luban's own log-level request
+    // (startHeartbeatLegacy 0x01 0x10). The Ray V1.7.4 has no such command:
+    // E_INVALID_CMD_ID (5), so Luban never subscribes its log (RayController
+    // 91a675f sacp_hmi.cpp:1082-1096). Recorded, never acted on.
+    private logLevelRequest: { requestedAt: number; result: number | null; generation: number } | null = null;
+
+    /** Luban's log-level request on THIS connection and its result (null = unanswered so far); null when none was sent. */
+    public getLogLevelRequest(): { requestedAt: number; result: number | null } | null {
+        const request = this.logLevelRequest;
+        return request && request.generation === this.connectionGeneration ? { requestedAt: request.requestedAt, result: request.result } : null;
     }
 
     /** The Ready payload's `deviceSerial`: the controller's serial number, null when it reported none. */
@@ -961,13 +956,12 @@ class SacpChannelBase extends Channel implements
             enclosure: false
         };
 
-        // Bookkeeping only (lubanLogFeed): what this connect did to the log
-        // feed, so an MCP reply read knows whether the subscription is Luban's.
-        const logFeed: LubanLogFeed = { callback: null, requestedAt: Date.now(), pending: true, levelResult: null };
-        this.lubanLogFeed = logFeed;
+        // Passive record only (getLogLevelRequest): what the controller answered.
+        const levelRequest = { requestedAt: Date.now(), result: null as number | null, generation: this.connectionGeneration };
+        this.logLevelRequest = levelRequest;
         this.sacpClient.logFeedbackLevel(2).then(({ response }) => {
             log.info(`logLevel, ${response}`);
-            logFeed.levelResult = response.result;
+            levelRequest.result = response.result;
             if (response.result === 0) {
                 this.subscribeLogCallback = (data) => {
                     const result = readString(data.response.data, 1).result;
@@ -976,11 +970,7 @@ class SacpChannelBase extends Channel implements
                     }
                     // this.socket && this.socket.emit('serialport:read', { data: result });
                 };
-                logFeed.callback = this.subscribeLogCallback as unknown as LogFeedCallback;
-                this.sacpClient.subscribeLogFeedback({ interval: 60000 }, this.subscribeLogCallback)
-                    .then(() => { logFeed.pending = false; }, (err) => { logFeed.pending = false; throw err; });
-            } else {
-                logFeed.pending = false;
+                this.sacpClient.subscribeLogFeedback({ interval: 60000 }, this.subscribeLogCallback);
             }
         });
 

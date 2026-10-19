@@ -18,10 +18,21 @@
 // Marlin dialects (the A350) are untouched: no first-connect read, and
 // query_firmware_configuration / query_firmware_position keep M503 S / M114
 // exactly as before (tools/camera.ts).
+//
+// GRBL over SACP (the Ray on Wi-Fi, SACP-TCP or SACP-serial) gets NO reply
+// text, so nothing is sent there (firmwareTextRoute). RayController 91a675f
+// (V1.7.4): the 0x01 0x02 ACK is one result byte sent before the line is
+// queued (snapmaker.cpp:272-291); the line's output goes to the USB port, and
+// only in GRBL text mode (Serial.cpp:436-443); there is no log feed - 0x01
+// 0x10 answers E_INVALID_CMD_ID, a 0xa1 subscribe E_NO_RESRC (sacp_hmi.cpp:
+// 1082-1096, 1693-1707). What SACP does give is structural: the version and
+// the efuse product SN in 0x01 0x21 (machine info), read at connect by the
+// channel and shown here. A later USB-GRBL text transport plugs in at
+// setGrblTextTransport and makes the $-queries real.
 
 import logger from '../../../lib/logger';
 import { connectionManager } from '../../machine/ConnectionManager';
-import { GcodeReply, LogFeedReport } from '../../machine/channels/sacpGcodeReply';
+import { GcodeReply } from '../../machine/channels/sacpGcodeReply';
 import { mcpBroadcast } from '../index';
 import { jobManager } from '../jobs';
 import { connectedDialect, connectedMachineTag } from '../connectedMachine';
@@ -48,6 +59,7 @@ import {
 } from '../firmwareQuery';
 import { FIRMWARE_QUERY_TIMEOUT_MS, FIRMWARE_REPLY_QUIET_MS, FIRST_CONNECT_READ_WAIT_MS, clampTo } from '../procedureLimits';
 import { McpToolError } from '../registry';
+import { ASSUMED_LASER_ACCELERATION_MM_S2 } from '../dialectRules';
 
 const log = logger('service:mcp:firmware');
 
@@ -68,20 +80,7 @@ export interface QueryReply {
     elapsedMs: number;
     timedOut: boolean;
     /** SACP only: what the read saw, so "no text" can be told apart from "nothing pushes a log". */
-    sacp: {
-        ackDataBytes: number;
-        ackHex: string | null;
-        logListening: boolean;
-        /** Luban's own log subscription was live before the read. */
-        logSubscribed: boolean | null;
-        logLines: number;
-        /** The read subscribed the log feed for itself / set its level / put the subscription back (null: not managed). */
-        subscribedByRead: boolean | null;
-        levelSetByRead: boolean | null;
-        restored: boolean | null;
-        /** The whole log-feed bookkeeping: result codes and notes (sacpGcodeReply.ts withLogFeed). */
-        logFeed: LogFeedReport | null;
-    } | null;
+    sacp: { ackDataBytes: number; ackHex: string | null; logListening: boolean; logSubscribed: boolean | null; logLines: number } | null;
     error: string | null;
 }
 
@@ -115,6 +114,102 @@ function connectionGeneration(): string | null {
 export function currentFirmwareRecord(): FirmwareRecord | null {
     const generation = connectionGeneration();
     return record && generation !== null && record.generation === generation ? record : null;
+}
+
+const RAY_FIRMWARE_SOURCE = 'Snapmaker/RayController 91a675f (V1.7.4)';
+
+/** Why a GRBL machine over SACP is never sent a firmware query. */
+export const SACP_GRBL_NO_REPLY_TEXT = 'This GRBL firmware returns no reply text over SACP: the 0x01 0x02 ACK is a single '
+    + 'result byte, sent before the line is even queued, and $-query output goes only to the USB port while it is in GRBL '
+    + `text mode; there is no SACP log feed either (${RAY_FIRMWARE_SOURCE}: snapmaker.cpp:272-291, Serial.cpp:436-443, `
+    + 'sacp_hmi.cpp:1082-1096). Nothing was sent: $$ / $# / $G / $I / M1005 / ? would be acknowledged and answered nowhere.';
+
+/** The controller's answer to Luban's own SACP log-level request (0x01 0x10), with its meaning (RayController error.h). */
+export function logLevelEvidence(request: { requestedAt: number; result: number | null } | null) {
+    let meaning: string;
+    if (!request) {
+        meaning = 'Luban sent no log-level request on this connection (only its legacy heartbeat path sends one)';
+    } else if (request.result === null) {
+        meaning = 'unanswered so far';
+    } else if (request.result === 0) {
+        meaning = 'accepted: this controller has a log-level command';
+    } else if (request.result === 5) {
+        meaning = 'E_INVALID_CMD_ID: this firmware has no log-level command, so there is no SACP log feed (Luban never subscribes it)';
+    } else {
+        meaning = `refused with result ${request.result}`;
+    }
+    return { command: 'SACP 0x01 0x10 (Luban\'s startHeartbeatLegacy, level 2)', result: request ? request.result : null, meaning };
+}
+
+/** The 0x01 0x21 identity the channel read on this connection: version and product SN (null fields when not read). */
+export function machineInfoView() {
+    const manager = connectionManager as unknown as { getMachineInfoRecord?: () => {
+        firmwareVersion: string | null; productSn: string | null; productSnRaw: string | null; truncated: string | null; readAt: number;
+    } | null; };
+    const info = typeof manager.getMachineInfoRecord === 'function' ? manager.getMachineInfoRecord() : null;
+    if (!info) {
+        return null;
+    }
+    let productSnNote: string | null = null;
+    if (!info.productSn) {
+        productSnNote = info.productSnRaw !== null
+            ? `absent: the controller sent ${JSON.stringify(info.productSnRaw)}, a fill pattern (an unprogrammed efuse reads 20 x '6')`
+            : 'absent: this controller sent no product SN after the version';
+    }
+    return {
+        version: info.firmwareVersion,
+        productSn: info.productSn,
+        productSnNote,
+        source: 'SACP 0x01 0x21 machine info, read at connect',
+        readAt: new Date(info.readAt).toISOString(),
+        ...(info.truncated ? { truncated: info.truncated } : {}),
+    };
+}
+
+/** True while the connected channel speaks SACP (ConnectionManager.isSacpChannel; absent in test stubs). */
+function sacpTransport(): boolean {
+    const manager = connectionManager as unknown as { isSacpChannel?: () => boolean };
+    return typeof manager.isSacpChannel === 'function' && manager.isSacpChannel() === true;
+}
+
+// The seam for a GRBL text transport (USB-GRBL, not built): a channel whose
+// executeGcode returns the firmware's text. Null = none, so GRBL over SACP is not read.
+let grblTextTransport: (() => FirmwareChannel | null) | null = null;
+
+/** Register (or clear with null) the GRBL text transport a later USB-GRBL link provides. */
+export function setGrblTextTransport(provider: (() => FirmwareChannel | null) | null): void {
+    grblTextTransport = provider;
+}
+
+/**
+ * Where a firmware query for the connected machine gets its reply text:
+ * the channel, or - GRBL over SACP - nowhere (unless a GRBL text transport
+ * is registered), with the reason. Decided before anything is sent.
+ */
+export function firmwareTextRoute(): { channel: FirmwareChannel; via: 'channel' | 'grbl-text-transport' } | { channel: null; reason: string } {
+    const dialect = connectedDialect();
+    if (dialect.family === 'grbl' && sacpTransport()) {
+        const transport = grblTextTransport ? grblTextTransport() : null;
+        return transport ? { channel: transport, via: 'grbl-text-transport' } : { channel: null, reason: SACP_GRBL_NO_REPLY_TEXT };
+    }
+    const channel = connectionManager.getCurrentChannel() as unknown as FirmwareChannel | null;
+    return channel ? { channel, via: 'channel' } : { channel: null, reason: 'No machine connected.' };
+}
+
+/** The result of a firmware read that sent nothing because SACP carries no reply text: the reason, the evidence, the identity. */
+export function sacpNoTextReport() {
+    const manager = connectionManager as unknown as { getLogLevelRequest?: () => { requestedAt: number; result: number | null } | null };
+    return {
+        sent: false,
+        reason: SACP_GRBL_NO_REPLY_TEXT,
+        evidence: {
+            lubanLogLevelRequest: logLevelEvidence(typeof manager.getLogLevelRequest === 'function' ? manager.getLogLevelRequest() : null),
+            firmwareSource: `${RAY_FIRMWARE_SOURCE}, https://github.com/Snapmaker/RayController/tree/91a675fc10d6ac1454d3cfb8fa0581bf851b10eb`,
+        },
+        identity: machineInfoView(),
+        acceleration: `GRBL $120/$121 unread: the validator's M4 short-segment rule uses its stated ${ASSUMED_LASER_ACCELERATION_MM_S2} mm/s^2 `
+            + 'assumption.',
+    };
 }
 
 /** Test seam: replace or clear the in-memory record. */
@@ -176,8 +271,27 @@ export function currentLaserAcceleration(): { value: number; source: string; rea
  */
 export function firmwareView(options: { raw?: boolean } = {}) {
     const current = currentFirmwareRecord();
+    const identity = machineInfoView();
+    const identityFields = {
+        version: identity ? identity.version : null,
+        productSn: identity ? identity.productSn : null,
+        identitySource: identity ? identity.source : null,
+        identityReadAt: identity ? identity.readAt : null,
+        ...(identity && identity.productSnNote ? { productSnNote: identity.productSnNote } : {}),
+    };
     if (!current) {
-        return null;
+        return identity ? {
+            ...identityFields,
+            readAt: null,
+            trigger: null,
+            source: null,
+            replyRoute: null,
+            values: null,
+            laserAcceleration: null,
+            queries: [],
+            note: 'Identity from SACP 0x01 0x21 on THIS connection, in memory only. No configuration was read'
+                + `${firmwareTextRoute().channel ? '.' : `: ${SACP_GRBL_NO_REPLY_TEXT}`}`,
+        } : null;
     }
     const parsed = parseFirmwareRecord(current);
     const replies = Object.values(current.replies);
@@ -185,6 +299,7 @@ export function firmwareView(options: { raw?: boolean } = {}) {
     const readAt = replies.length ? Math.max(...replies.map((r) => r.readAt)) : null;
     const acceleration = currentLaserAcceleration();
     return {
+        ...identityFields,
         readAt: readAt !== null ? new Date(readAt).toISOString() : null,
         trigger: current.trigger,
         source: answered.length ? answered.map((r) => r.query).join(' ') : null,
@@ -206,18 +321,10 @@ function noTextNote(reply: QueryReply): string {
         return 'the channel returned no reply text';
     }
     const { sacp } = reply;
-    const ack = `SACP ACK result ${reply.result} with ${sacp.ackDataBytes} payload byte(s) after the result`
-        + `${sacp.ackHex ? ` (hex ${sacp.ackHex})` : ''}`;
-    const feed = sacp.logFeed;
-    if (feed && !feed.lubanSubscribed) {
-        const code = (value: number | null) => (value === null ? 'no answer' : `result ${value}`);
-        return `${ack}; log feed not subscribed by Luban, so the read subscribed it (${code(feed.subscribeResult)}`
-            + `${feed.levelSetByRead ? `, level 2 ${code(feed.levelResult)}` : ''}): ${sacp.logLines} line(s) during the read; `
-            + `${feed.restored ? 'unsubscribed after' : `NOT restored (unsubscribe ${code(feed.unsubscribeResult)})`}`;
-    }
-    return `${ack}; log feedback ${sacp.logSubscribed === false
-        ? 'is NOT subscribed on this connection'
-        : `${sacp.logLines} line(s) during the read${sacp.logSubscribed === null ? '' : ' (subscribed)'}`}`;
+    return `SACP ACK result ${reply.result} with ${sacp.ackDataBytes} payload byte(s) after the result`
+        + `${sacp.ackHex ? ` (hex ${sacp.ackHex})` : ''}; log feedback ${sacp.logSubscribed === false
+            ? 'is NOT subscribed on this connection'
+            : `${sacp.logLines} line(s) during the read${sacp.logSubscribed === null ? '' : ' (subscribed)'}`}`;
 }
 
 /**
@@ -254,10 +361,6 @@ export async function sendFirmwareQuery(channel: FirmwareChannel, tool: string, 
                 logListening: read.log.listening,
                 logSubscribed: read.log.subscribed,
                 logLines: read.log.lines.length,
-                subscribedByRead: read.feed ? read.feed.subscribedByRead : null,
-                levelSetByRead: read.feed ? read.feed.levelSetByRead : null,
-                restored: read.feed ? read.feed.restored : null,
-                logFeed: read.feed || null,
             },
             error: read.error || null,
         };
@@ -319,9 +422,13 @@ export async function readFirmwareConfiguration(input: {
     quietMs?: number;
 }): Promise<{ record: FirmwareRecord; replies: QueryReply[]; serialAdopted: boolean }> {
     const dialect = connectedDialect();
-    const channel = connectionManager.getCurrentChannel() as unknown as FirmwareChannel | null;
+    const route = firmwareTextRoute();
     const generation = connectionGeneration();
-    if (!channel || generation === null) {
+    if (!route.channel) {
+        throw new McpToolError(`${route.reason} ${connectedMachineTag()}`);
+    }
+    const channel = route.channel;
+    if (generation === null) {
         throw new McpToolError('No machine connected.');
     }
     const queries = input.queries && input.queries.length ? input.queries : configurationQueriesFor(dialect);
@@ -380,10 +487,13 @@ export function describeFirmwareRead(replies: QueryReply[]): string {
 /** The GRBL position query (`?`): never M114 on GRBL. Throws (naming the machine) when no status text comes back. */
 export async function queryGrblPosition(tool: string): Promise<{ reply: QueryReply; status: GrblStatusReport }> {
     const dialect = connectedDialect();
-    const channel = connectionManager.getCurrentChannel() as unknown as FirmwareChannel | null;
-    if (!channel) {
-        throw new McpToolError('No machine connected, or the channel does not support direct commands.');
+    const route = firmwareTextRoute();
+    if (!route.channel) {
+        // GRBL over SACP: "?" is a realtime byte the firmware answers to nobody (CLIENT_INPUT).
+        throw new McpToolError(`${dialect.label} has no M114 (its status query is GRBL "?"). ${route.reason} Use get_position (the SACP `
+            + `coordinate subscription, the same source as the Luban UI). ${connectedMachineTag()}`);
     }
+    const channel = route.channel;
     // Known not to return text on this connection: do not send `?` at all.
     const current = currentFirmwareRecord();
     const seen = current ? Object.values(current.replies) : [];
@@ -423,6 +533,21 @@ async function firstConnectRead(ready: MachineReady): Promise<void> {
     const dialect = connectedDialect();
     if (dialect.family !== 'grbl') {
         log.info(`${name}: skipped, its dialect is ${dialect.id} (only a GRBL configuration is read on connect)`);
+        return;
+    }
+    const route = firmwareTextRoute();
+    if (!route.channel) {
+        if (connectionGeneration() !== ready.generation) {
+            log.info(`${name}: skipped, the connection changed (generation ${ready.generation} -> ${connectionGeneration()})`);
+            return;
+        }
+        const report = sacpNoTextReport();
+        const identity = report.identity;
+        const level = report.evidence.lubanLogLevelRequest;
+        log.info(`${name} (${dialect.id}): nothing sent - no reply text over SACP on this firmware; `
+            + `version ${identity && identity.version ? identity.version : 'unknown'}, SN ${identity && identity.productSn ? identity.productSn : 'absent'}`
+            + ` (SACP 0x01 0x21); Luban's log-level request ${level.result === null ? 'unanswered or not sent' : `result ${level.result}`}`
+            + `${level.result === 5 ? ' (E_INVALID_CMD_ID: no log feed)' : ''}`);
         return;
     }
     const deadline = Date.now() + FIRST_CONNECT_READ_WAIT_MS;
