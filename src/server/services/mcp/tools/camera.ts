@@ -1626,8 +1626,10 @@ export function registerCameraTools(registry: ToolRegistry): void {
             + 'allow-listed query at a time. Per dialect: on the Ray (GRBL) it sends $$ (settings), $# (offsets), $G (parser '
             + 'state), $I (build info) and M1005 (machine info incl. product SN) and returns each raw reply plus a parsed view '
             + '($$ by number with names: $110/$111 max rate, $120/$121 acceleration, $130/$131 max travel, $30/$31 S range, '
-            + '$32 laser mode; $# G54..G59/G28/G30/G92/TLO/PRB; $G modal state). Over SACP the reply is read from the ACK '
-            + 'payload and the controller log feedback, and the result says which carried it (or that neither did). '
+            + '$32 laser mode; $# G54..G59/G28/G30/G92/TLO/PRB; $G modal state) over a channel that returns GRBL text. Over '
+            + 'SACP (the Ray on Wi-Fi) the firmware returns no reply text, so NOTHING is sent: the result says why, with '
+            + 'Luban\'s recorded log-level result as evidence, the per-query SACP coverage (#315), and the version and product SN '
+            + 'the SACP machine info carries. '
             + 'The values are kept in memory for this connection only (also read once at connect) and feed '
             + 'get_machine_profile.firmware and the validator\'s M4 rule. On a Marlin machine (A350) it sends M503 S as before '
             + '(refused over SACP, where Marlin reply text never arrives). Nothing else can be sent: $X, $H, $RST, $N=value '
@@ -1740,7 +1742,7 @@ export function registerCameraTools(registry: ToolRegistry): void {
                 throw new McpToolError(`No position query is known for this machine (dialect "unknown"), so nothing was sent. ${connectedMachineTag()}`);
             }
             if (dialect.family === 'grbl') {
-                // GRBL has no M114 (gcodeDialect.ts status 'grbl-?'): its report is "?", read on the reply path.
+                // GRBL has no M114 (gcodeDialect.ts status 'grbl-?'): its report is "?" - refused unsent over SACP (no reply text).
                 const { reply, status } = await queryGrblPosition('query_firmware_position');
                 return {
                     raw: reply.text,
