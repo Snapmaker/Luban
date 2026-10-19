@@ -91,6 +91,14 @@ export interface CameraModel {
     solvedFrom: { surveyId: string | null; targets: string[]; poses: Vec3[] };
     verification: { at: number; pose: Vec3; residualPx: number; residualMm: number } | null;
     state: CameraModelState;
+    /**
+     * The machine the model was stored for (cameraModelStore.ts): the mounting
+     * is one machine's rig, so the model serves that machine only. Models
+     * stored before scoping are the A350's (machineCapability's legacy rule)
+     * with legacyScope true.
+     */
+    machineIdentifier?: string;
+    legacyScope?: boolean;
 }
 
 /** What the live session looks like, for judging a stored model against it. */

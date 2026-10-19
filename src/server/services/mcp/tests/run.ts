@@ -110,6 +110,7 @@ import { tests as policyLooseningTests } from './policyLoosening.test';
 import { tests as laserPlanTests } from './laserPlan.test';
 import { tests as usbPositionTests } from './usbPosition.test';
 import { tests as connectionLinkIdentityTests } from './connectionLinkIdentity.test';
+import { tests as cameraModelStoreTests } from './cameraModelStore.test';
 
 type TestCase = [string, () => void | Promise<void>];
 
@@ -213,6 +214,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['laserPlan', laserPlanTests],
     ['usbPosition', usbPositionTests],
     ['connectionLinkIdentity', connectionLinkIdentityTests],
+    ['cameraModelStore', cameraModelStoreTests],
 ];
 
 async function main(): Promise<void> {
