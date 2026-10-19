@@ -52,10 +52,14 @@ Every process ships as a webpack bundle: the renderer (`src/app`), the server
 (`webpack.config.server.production.js`, forked as `src/server-cli.js`) and the
 Electron main process (`webpack.config.main.production.js`, which emits
 `main.js` and `server-cli.js` into `dist/Luban/src`). Dependencies are compiled
-in; the few that cannot be (native addons, packages that load files out of
-their own directory, lazily required Electron glue) are listed as
+in; the few that cannot be (native addons, the engine packages that spawn a
+binary out of their own directory, lazily required Electron glue) are listed as
 `KEEP_EXTERNAL` in each config and mirrored in `build/pkgsync.js`, which is
-what the packaged app installs into `node_modules`.
+what the packaged app installs into `node_modules`. The server config also
+records how each formerly external package was brought into the bundle; two of
+them (formidable, opencv-wasm) are patched while webpack reads them, by
+`build/webpack-replace-loader.js`, which fails the build if the patched line
+is no longer there.
 
 ### Build release assets with GitHub Actions
 

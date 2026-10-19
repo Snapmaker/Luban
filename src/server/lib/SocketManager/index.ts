@@ -31,7 +31,11 @@ class SocketServer extends EventEmitter {
 
         this.server = server;
         this.io = new Server(this.server, {
-            serveClient: true,
+            // The renderer bundles socket.io-client itself and nothing requests
+            // /socket.io/socket.io.js, so the server does not serve the client
+            // library (which socket.io would stream out of its own package
+            // directory, a directory it has none of inside the server bundle).
+            serveClient: false,
             allowEIO3: true,
             pingTimeout: 180000, // 60s without pong to consider the connection closed
             path: '/socket.io',
