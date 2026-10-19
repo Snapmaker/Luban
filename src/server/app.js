@@ -155,14 +155,23 @@ const createApplication = () => {
     // Middleware
     // https://github.com/senchalabs/connect
     // https://github.com/valery-barysok/session-file-store
+    // Start with no stored sessions. DataStorage empties this folder at the
+    // same time (asynchronously, from its init), so a file listed here may be
+    // gone by the time it is inspected: that is the outcome wanted, not an
+    // error. Letting it throw took the whole application factory down, and
+    // the HTTP server then parked every request forever (see index.js).
     const sessionPath = DataStorage.sessionDir;
     if (fs.existsSync(sessionPath)) {
         const files = fs.readdirSync(sessionPath);
-        if (files.length > 0) {
-            for (let i = 0; i < files.length; i++) {
-                const filePath = `${sessionPath}/${files[i]}`;
+        for (let i = 0; i < files.length; i++) {
+            const filePath = `${sessionPath}/${files[i]}`;
+            try {
                 if (fs.statSync(filePath).isFile()) {
                     fs.unlinkSync(filePath);
+                }
+            } catch (err) {
+                if (err.code !== 'ENOENT') {
+                    throw err;
                 }
             }
         }

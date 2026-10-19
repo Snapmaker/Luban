@@ -410,9 +410,25 @@ const prepareAppEnvironment = (window) => {
                 p = p.substr('worker/'.length);
             }
 
-            const filePath = path.normalize(`${__dirname}/app/${p}`);
+            // The renderer addresses uploaded files as /data/... (DATA_PREFIX
+            // in src/app/constants), a path the server serves from the user
+            // data directory over HTTP. Relative to the luban:// origin the
+            // app is loaded from, that path lands here, so serve it from the
+            // same directory; without this a model load from a worker fails.
+            let root = path.join(__dirname, 'app');
+            if (p.indexOf('data/') === 0) {
+                root = userDataDir;
+                p = p.substr('data/'.length);
+                try {
+                    p = decodeURIComponent(p);
+                } catch (e) {
+                    // malformed escape: look the raw path up, it will not exist
+                }
+            }
 
-            if (!fs.existsSync(filePath)) {
+            const filePath = path.normalize(path.join(root, p));
+
+            if (!filePath.startsWith(path.normalize(root) + path.sep) || !fs.existsSync(filePath)) {
                 console.error('luban protocol: not found', filePath);
                 callback({ error: -6 }); // net::ERR_FILE_NOT_FOUND
                 return;

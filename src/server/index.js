@@ -114,8 +114,23 @@ const createServer = (options, callback) => {
         // the task workers: ~1s warm and far worse cold, which is what the splash
         // used to wait on. Nothing above needs them.
         setImmediate(() => {
-            // eslint-disable-next-line global-require
-            app = require('./app').default();
+            try {
+                // eslint-disable-next-line global-require
+                app = require('./app').default();
+            } catch (err) {
+                // Without an application every request would stay parked and
+                // the renderer would simply hang; answer them instead so the
+                // failure is visible, then let the exception surface.
+                log.error('Creating the application failed', err);
+                app = (req, res) => {
+                    res.writeHead(500, { 'Content-Type': 'text/plain' });
+                    res.end(`The server failed to start: ${err.message}`);
+                };
+                for (const [req, res] of parked.splice(0)) {
+                    app(req, res);
+                }
+                throw err;
+            }
             startupMark('server: application created');
 
             // Deferred to here because app.js installs the process-wide
