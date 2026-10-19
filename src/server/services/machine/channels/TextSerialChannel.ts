@@ -13,6 +13,13 @@ import { TextSerialMachineState, TextSerialMachineStateTracker } from './textSer
 const log = logger('machine:channels:TextSerialChannel');
 
 const DEFAULT_BAUDRATE = 115200;
+
+/** The events TextSerialChannel watches on lib/SerialConnection (an EventEmitter with an isOpen getter). */
+interface SerialPortEvents {
+    on(event: string, listener: (...args: unknown[]) => void): unknown;
+    removeListener(event: string, listener: (...args: unknown[]) => void): unknown;
+    readonly isOpen?: boolean;
+}
 class TextSerialChannel extends Channel implements
     LaserChannelInterface,
     CncChannelInterface {
@@ -29,6 +36,11 @@ class TextSerialChannel extends Channel implements
     private connectionGeneration = 0;
 
     private observedPort: unknown = null;
+
+    // The serial connection object (MarlinController.serialport) watched for
+    // an unplug: its 'close', or an 'error' that leaves it closed, is a lost
+    // link the channel reports as Disconnected (#265). Detached on a clean close.
+    private watchedPort: SerialPortEvents | null = null;
 
     // The M114 replies MarlinController already polls, kept per connection
     // generation (textSerialMachineState.ts). No query of its own.
@@ -72,6 +84,64 @@ class TextSerialChannel extends Channel implements
             headStatus: marlinState.headStatus,
             headPower: marlinState.headPower,
         });
+    }
+
+    private watchPort(controller: MarlinController): void {
+        const port = (controller as unknown as { serialport?: SerialPortEvents | null }).serialport || null;
+        if (port === this.watchedPort) {
+            return;
+        }
+        this.unwatchPort();
+        if (!port || typeof port.on !== 'function' || typeof port.removeListener !== 'function') {
+            return;
+        }
+        this.watchedPort = port;
+        port.on('close', this.onPortClose);
+        port.on('error', this.onPortError);
+    }
+
+    private unwatchPort(): void {
+        const port = this.watchedPort;
+        this.watchedPort = null;
+        if (port) {
+            port.removeListener('close', this.onPortClose);
+            port.removeListener('error', this.onPortError);
+        }
+    }
+
+    private onPortClose = () => {
+        this.portLost('serial port closed');
+    };
+
+    private onPortError = () => {
+        const port = this.watchedPort;
+        if (port && !port.isOpen) {
+            this.portLost('serial port error left the port closed');
+        }
+    };
+
+    /**
+     * The port went away under the channel (USB unplug, the controller's
+     * reboot): MarlinController has closed and destroyed itself on 'close',
+     * so drop it - a later connectionOpen builds a fresh one - and report the
+     * same Disconnected the other channels use, which clears the connection
+     * status and tells the UI ('connection:close').
+     */
+    private portLost(reason: string): void {
+        const controller = this.controller;
+        this.unwatchPort();
+        if (!controller) {
+            return;
+        }
+        log.warn(`Serial port "${this.port}" lost (${reason}), reporting disconnected.`);
+        this.controller = null;
+        this.connectionGeneration++;
+        this.machineState.clear();
+        if ((controller as unknown as { serialport?: unknown }).serialport) {
+            // An 'error' with no 'close': release the port the controller still holds.
+            controller.close();
+        }
+        this.emit(ChannelEvent.Disconnected);
     }
 
     public onDisconnection = (socket: SocketServer) => {
@@ -122,6 +192,7 @@ class TextSerialChannel extends Channel implements
             // Join the room, useless
             // socket.join(port);
 
+            this.watchPort(controller);
             this.emit(ChannelEvent.Connecting);
             this.emit(ChannelEvent.Connected);
 
@@ -145,6 +216,7 @@ class TextSerialChannel extends Channel implements
 
                     this.controller = controller;
                     this.connectionGeneration++;
+                    this.watchPort(controller);
 
                     this.emit(ChannelEvent.Connected);
 
@@ -159,6 +231,9 @@ class TextSerialChannel extends Channel implements
         if (!controller) {
             return false;
         }
+
+        // A clean close is not a lost link: stop watching before the port closes.
+        this.unwatchPort();
 
         if (controller.state.headType === HEAD_LASER) {
             controller.writeln('M5');

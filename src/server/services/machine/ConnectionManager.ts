@@ -292,14 +292,22 @@ class ConnectionManager {
      * Read-only snapshot of the connection, for status reporting (MCP).
      */
     public getConnectionStatus() {
+        // A Snapmaker 2.0 over SACP-TCP is identified by the channel but gets no
+        // Ready (SacpTcpChannel.getIdentifiedWithoutReady): report its model and
+        // serial number, with machineReady false since no instance prepared it.
+        const unprepared = this.channel && this.channel === sacpTcpChannel && !this.machineIdentifier
+            ? (this.channel as unknown as {
+                getIdentifiedWithoutReady?: () => { machineIdentifier: string; deviceSerial: string | null } | null;
+            }).getIdentifiedWithoutReady?.() || null
+            : null;
         return {
             connected: !!this.channel,
             channelName: this.describeChannel(),
             connectionType: this.channel ? this.connectionType : null,
             protocol: this.channel ? this.protocol : null,
-            machineIdentifier: this.machineIdentifier,
+            machineIdentifier: unprepared ? unprepared.machineIdentifier : this.machineIdentifier,
             machineReady: !!this.machineInstance,
-            deviceSerial: this.deviceSerial,
+            deviceSerial: unprepared ? unprepared.deviceSerial : this.deviceSerial,
             host: this.host,
         };
     }
@@ -559,6 +567,9 @@ class ConnectionManager {
             this.channel = null;
             this.channelAssignments += 1;
         }
+        // A new attempt never inherits the previous machine's identity (a SACP-TCP
+        // socket that dropped emitted no Disconnected to clear it).
+        this.clearDeviceIdentity();
 
         const { connectionType, protocol } = options;
 
