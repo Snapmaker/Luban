@@ -12,6 +12,8 @@ import { handleJobDashboardRequest } from '../jobDashboard';
 import { DASHBOARD_REVIEW_LIMIT, DashboardReview, JobDashboardFeed, dashboardReviews, summarizeDashboardJob } from '../jobDashboardState';
 import { OperatorReviewSpec, OperatorReviewStore } from '../operatorReviews';
 import { dashboardHtml, notificationWorker } from '../jobDashboardPage';
+import { dialectById } from '../gcodeDialect';
+import { toolheadStubs } from './fixtures/toolheadStubs';
 
 function job(id = 'abcdef', state: McpJob['state'] = 'awaiting_confirmation'): McpJob {
     return {
@@ -288,6 +290,7 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
             '../probeFeed': { probeFeedService: { assertNoOvertravel: () => undefined } },
             '../probing': { assertMachineReadyForProcedure: () => undefined, checkProcedureStop: () => undefined, getDirectChannel: () => channel },
             '../registry': { McpToolError: Error },
+            '../connectedMachine': toolheadStubs(() => state, dialectById('sm2-marlin')),
             '../workspace': workspace,
             './camera': { sendGcodeVisible: async () => { commands++; return { result: 0 }; } },
             './machine': { getPositionSnapshot: () => position, machinePositionDiagnostics: () => ({ resetAt }) },

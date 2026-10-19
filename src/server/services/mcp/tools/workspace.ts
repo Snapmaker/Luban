@@ -5,6 +5,7 @@ import { currentGcodeSequence } from '../positionOfRecord';
 import { probeFeedService } from '../probeFeed';
 import { assertMachineReadyForProcedure, checkProcedureStop, clearProcedureStop, getDirectChannel, sleep } from '../probing';
 import { McpToolError, ToolRegistry } from '../registry';
+import { assertToolheadNotOn } from '../connectedMachine';
 import { FileWorkspaceVerification, WORKSPACES, WorkspaceIo, planWorkspace, runWorkspace, verifyWorkspaceForFile } from '../workspace';
 import { GcodeChannel, sendGcodeVisible } from './camera';
 import { getPositionSnapshot, machinePositionDiagnostics } from './machine';
@@ -26,10 +27,10 @@ function workspaceRunnerIo(job: McpJob, label: string, channel: GcodeChannel, re
             // Permit that while stationary; runWorkspace requires coherent readback before G92.
             const state = connectionManager.getLatestMachineState();
             const position = getPositionSnapshot();
-            if (!state || Date.now() - state.timestamp > 10000 || position.machineStatus !== 'idle' || position.isHomed !== true
-                || Number(state.headPower) > 0 || state.headStatus === true || state.headStatus === 'on') {
+            if (!state || Date.now() - state.timestamp > 10000 || position.machineStatus !== 'idle' || position.isHomed !== true) {
                 throw new McpToolError('Workspace update requires fresh status, idle/homed machine and toolhead off.');
             }
+            assertToolheadNotOn('Workspace update requires fresh status, idle/homed machine and toolhead off.');
             if (currentGcodeSequence() !== expectedSequence) throw new McpToolError('Another controller command interrupted the workspace update.');
             if (getDirectChannel() !== channel || machinePositionDiagnostics().resetAt !== resetAt) throw new McpToolError('Machine connection changed; workspace approval is stale.');
         },

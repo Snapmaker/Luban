@@ -3,6 +3,8 @@ import { isolatedModule } from './jobDashboard.test';
 import * as datum from '../toolDatum';
 import * as limits from '../procedureLimits';
 import * as protrusion from '../toolProtrusion';
+import { dialectById } from '../gcodeDialect';
+import { toolheadStubs } from './fixtures/toolheadStubs';
 
 const legacy = { centerX: 0,
     centerY: 0,
@@ -58,7 +60,7 @@ function fixture(onMove?: () => void) {
         './landmarkClearance': { CLEARANCE_MARGIN_MM: 5 } });
     const registryTools = new Map<string, any>(); // eslint-disable-line @typescript-eslint/no-explicit-any
     const toolModule = isolatedModule('tools/toolsetter.ts', {
-        '../../machine/ConnectionManager': {},
+        '../connectedMachine': toolheadStubs(() => null, dialectById('sm2-marlin')),
         '../activeTool': active,
         '../jobs': { jobManager: { get: () => null } },
         '../toolDatum': datum,

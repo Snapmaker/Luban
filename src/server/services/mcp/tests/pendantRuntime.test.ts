@@ -13,6 +13,8 @@ import { pendantPage } from '../pendantPage';
 import { requiredToolheadZ } from '../landmarkClearance';
 import { GcodeLease } from '../../machine/gcodeLease';
 import * as pendantHold from '../pendantHold';
+import { dialectById } from '../gcodeDialect';
+import { toolheadStubs } from './fixtures/toolheadStubs';
 
 interface Queued { sentAt: number; replyAt: number; target: { x: number; y: number; z: number }; feed: number; run: number; gcode: string }
 
@@ -184,7 +186,8 @@ function fixture(a350 = false, options: { pipeline?: boolean; countCheck?: 'enfo
         serialport: { SerialPort: Port },
         '../machine/ConnectionManager': { connectionManager: { getConnectionStatus: () => ({ machineIdentifier: 'mock', connected: true, protocol: 'HTTP' }), getLatestMachineState: () => ({}) } },
         './clearanceContext': { clearanceOptions: () => ({ toolProtrusionMm: null, clearanceMarginMm: 5 }) },
-        './connectedMachine': { connectedMachineCapability: () => ({}) },
+        './connectedMachine': { connectedMachineCapability: () => ({}), ...toolheadStubs(() => ({}), dialectById('sm2-marlin')) },
+        './toolheadState': require('../toolheadState'),
         './procedureGates': { PENDANT_GATE: {}, gateRefusal: () => options.machineRefusal || null },
         './envelopeChecks': envelopeChecks,
         './jobs': { jobManager: { getActive: () => null } },

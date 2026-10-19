@@ -63,6 +63,7 @@ function loadConnectedMachine(connected: string | null) {
         './gcodeDialect': gcodeDialect,
         './machineCapability': machineCapability,
         './registry': { McpToolError },
+        './toolheadState': require('../toolheadState'),
     };
     const exports = {} as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
     vm.runInNewContext(compiled.outputText, {

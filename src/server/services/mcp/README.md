@@ -1139,7 +1139,10 @@ These are agent release requirements, not new runtime checks in `validate_gcode`
   log explicitly records heartbeat-confirmed starts and uncertain outcomes.
 - **Z policy**: no Z through XY tools, ever. `move_z` = per-move operator confirmation
   showing current Z, target, delta, feed. Every request needs a `reason`.
-- **Guards on every direct move**: machine idle, toolhead off (headStatus/headPower),
+- **Guards on every direct move**: machine idle, toolhead off (headStatus/headPower;
+  on the Ray, whose firmware never reports either, the state is UNKNOWN, never "off": every
+  MCP motion step there leads with `M5`, home sends `M5` alone before `$H`, and results carry
+  `toolhead` with an advisory MCP-sent-only laser record - `toolheadState.ts`, #315),
   homed-first (override `operator_confirmed_clearance` only on the operator's explicit
   word), travel cap, and a check against the toolhead's RESOLVED travel (`machineTravel.ts`:
   stated `travel_*` geometry, else the machine definition widened by positions the head

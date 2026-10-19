@@ -6,7 +6,7 @@ import logger from '../../lib/logger';
 import { gcodeLease } from '../machine/gcodeLease';
 import { connectionManager } from '../machine/ConnectionManager';
 import { clearanceOptions } from './clearanceContext';
-import { connectedMachineCapability } from './connectedMachine';
+import { connectedMachineCapability, connectedToolhead } from './connectedMachine';
 import { OBSTACLE_MARGIN_MM, POSITION_EPSILON_MM, isStraightZUp, segmentHitsBox2D } from './envelopeChecks';
 import { jobManager } from './jobs';
 import { landmarkStore } from './landmarks';
@@ -28,6 +28,7 @@ import { pendantPage } from './pendantPage';
 import { pendantPosition } from './pendantPosition';
 import { pendantSettings, updatePendantSettings } from './pendantSettings';
 import { getFeedOverride } from './failureRecovery';
+import { toolheadOnRefusal } from './toolheadState';
 import { currentGcodeSequence, getFrameLatch, getPositionOfRecord, getTrustedOffset, latchFrameUncertain, onFrameLatchChange } from './positionOfRecord';
 import { probeFeedService } from './probeFeed';
 import { PENDANT_GATE, gateRefusal } from './procedureGates';
@@ -792,10 +793,8 @@ export class PendantRuntime {
                 + 'moves: restart Luban without LUBAN_PENDANT_PIPELINE.');
         }
         if (p.isHomed !== true) { throw new Error('Continuous jog stopped: the machine does not report homed. Pendant disarmed.'); }
-        const state = connectionManager.getLatestMachineState() as { headStatus?: unknown; headPower?: unknown } | null;
-        if (Number(state?.headPower) > 0 || state?.headStatus === true || state?.headStatus === 'on') {
-            throw new Error('Continuous jog stopped: the toolhead appears to be on. Pendant disarmed.');
-        }
+        const toolheadOn = toolheadOnRefusal(connectedToolhead(), 'Continuous jog stopped: the toolhead appears to be on. Pendant disarmed.');
+        if (toolheadOn) { throw new Error(toolheadOn); }
         probeFeedService.assertNoOvertravel();
         if (['starting', 'started', 'start_unverified'].includes(jobManager.getActive()?.state || '')) { throw new Error('Continuous jog stopped: a machine job is active. Pendant disarmed.'); }
         // Position freshness is the newer of the heartbeat and the last prompt M114 that agreed

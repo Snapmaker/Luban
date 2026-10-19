@@ -21,6 +21,7 @@ import {
 import { ProbeChannel, probeFeedService, resolveSensorEnabled, sensorLabel } from './probeFeed';
 import { COARSE_FEED, DESCENT_GUARD_MM, DESCENT_SEGMENT_MM, MARCH_SEGMENT_MM, TRAVEL_FEED, clampTo, marchSegments } from './procedureLimits';
 import { McpToolError } from './registry';
+import { assertToolheadNotOn } from './connectedMachine';
 import { GcodeChannel, SentGcode, currentGcodeSequence, sendGcodeVisible } from './tools/camera';
 import { PositionSnapshot, assertFreshHeartbeat, getPositionSnapshot, safeTraverseZ } from './tools/machine';
 import { ProcedureAbort, checkProcedureStop } from './procedureAbort';
@@ -807,11 +808,7 @@ export function assertMachineReadyForProcedure(): void {
     if (position.isHomed !== true) {
         throw new McpToolError('Machine does not report homed; home first.');
     }
-    const state = connectionManager.getLatestMachineState() as { headStatus?: unknown; headPower?: unknown } | null;
-    const headPower = Number(state && state.headPower);
-    if ((Number.isFinite(headPower) && headPower > 0) || (state && (state.headStatus === true || state.headStatus === 'on'))) {
-        throw new McpToolError('Toolhead appears to be on; refusing to run the procedure.');
-    }
+    assertToolheadNotOn('Toolhead appears to be on; refusing to run the procedure.');
 }
 
 // Rotary B feed for program rotations (deg/min): 600 = 10 deg/s, a 180 deg

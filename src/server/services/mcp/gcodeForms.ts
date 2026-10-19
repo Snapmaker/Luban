@@ -144,6 +144,8 @@ export interface RelativeStepEnds {
 
 export interface RelativeStepOptions {
     command?: 'G0' | 'G1';
+    /** Lines written after the settle comment and before G91 (relativeStep's laser-off line). */
+    lead?: readonly string[];
     /** Write the settle comment (default true). The direct camera nudge verifies against its own target instead. */
     settle?: boolean;
     /** Append PLANNER_SYNC (relativeStep defaults it from the dialect). */
@@ -163,6 +165,7 @@ export function relativeStepText(ends: RelativeStepEnds, feed: number, options: 
     const zWord = hasZ ? ` Z${f3((to.z as number) - (from.z as number))}` : '';
     const lines = [
         ...(options.settle === false ? [] : [settleComment(hasZ ? to : { x: to.x, y: to.y })]),
+        ...(options.lead || []),
         'G91',
         `${options.command || 'G1'} X${f3(to.x - from.x)} Y${f3(to.y - from.y)}${zWord} F${feed}`,
         'G90',
@@ -172,14 +175,28 @@ export function relativeStepText(ends: RelativeStepEnds, feed: number, options: 
 }
 
 /**
+ * The laser-disable line(s) MCP motion leads with on this dialect: `M5` where
+ * the toolhead state cannot be read back (the Ray, gcodeDialect.ts
+ * ToolheadReadback), nothing elsewhere - the A350's and the Original's motion
+ * stays byte-identical.
+ */
+export function laserOffLead(dialect: GcodeDialect): string[] {
+    return dialect.toolhead.state === 'unknown' && dialect.toolhead.laserOff ? [dialect.toolhead.laserOff] : [];
+}
+
+/**
  * A relative step on a relative-steps dialect (Ray, Original): the delta from
  * the planned previous endpoint, the absolute machine endpoint in the settle
- * comment, G90 restored, and on a Marlin M114 machine the planner sync.
+ * comment, G90 restored, and on a Marlin M114 machine the planner sync. On a
+ * dialect whose toolhead state is unknown (the Ray) EVERY step leads with the
+ * laser-off line: each approved step is its own send, and a laser started
+ * from Luban's UI between two steps would otherwise ride the next one.
+ * `laserOff: false` is for a body that manages its own M3/M5 (laserPlan.ts).
  * Refuses an sm2 dialect (it has its own absolute form) and a Z step on a
  * machine the caller says has no Z.
  */
 export function relativeStep(dialect: GcodeDialect, ends: RelativeStepEnds, feed: number,
-    options: RelativeStepOptions & { hasZ?: boolean } = {}): string {
+    options: RelativeStepOptions & { hasZ?: boolean; laserOff?: boolean } = {}): string {
     if (gcodeFormOf(dialect) !== 'relative-steps') {
         throw new GcodeFormError(`the ${dialect.label} takes absolute steps in its declared frame, not relative steps`);
     }
@@ -189,6 +206,7 @@ export function relativeStep(dialect: GcodeDialect, ends: RelativeStepEnds, feed
     }
     return relativeStepText(ends, feed, {
         ...options,
+        lead: [...(options.laserOff === false ? [] : laserOffLead(dialect)), ...(options.lead || [])],
         plannerSync: options.plannerSync === undefined ? needsPlannerSync(dialect) : options.plannerSync,
     });
 }
@@ -237,5 +255,9 @@ export function homeSequence(dialect: GcodeDialect, input: HomeCommandInput): Ho
         throw new GcodeFormError(`the ${dialect.label} cannot be homed over this transport: its home is ${dialect.home.form}, and the `
             + 'Snapmaker 2.0 G53;G28;G54 sequence is never sent to it. Connect it over its own transport (SACP) to home it');
     }
-    return command;
+    // Where the toolhead state is unknown (the Ray) the laser-off line goes
+    // out as its OWN payload before the home: `$H` stays the exact string
+    // observed homing the Ray (2026-10-18), never a second line of a payload.
+    const lead = laserOffLead(dialect);
+    return lead.length && input.canExecuteGcode ? { ...command, laserOff: lead.join('\n') } : command;
 }

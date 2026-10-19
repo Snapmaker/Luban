@@ -27,6 +27,7 @@ import {
     summariseMachine,
 } from './machineCapability';
 import { McpToolError } from './registry';
+import { HeadReadings, McpLaserRecord, ToolheadAssessment, assessToolhead, getMcpLaserRecord, toolheadNote, toolheadOnRefusal } from './toolheadState';
 
 export const MACHINES = [
     SnapmakerOriginalMachine,
@@ -96,4 +97,62 @@ export function requireCapability(what: CapabilityKey, action: string): MachineC
         throw new McpToolError(refusal);
     }
     return capability;
+}
+
+/**
+ * The connection generation the MCP keys per-connection records on (the
+ * failed-call modal ledger, the laser record); null when disconnected.
+ * 'unversioned' for a channel without generations.
+ */
+export function connectedConnectionId(): string | null {
+    try {
+        if (!connectionManager.getConnectionStatus().connected) {
+            return null;
+        }
+        const generation = (connectionManager as { getConnectionGeneration?: () => string }).getConnectionGeneration;
+        return typeof generation === 'function' ? generation.call(connectionManager) : 'unversioned';
+    } catch (err) {
+        return null;
+    }
+}
+
+/**
+ * The toolhead as the CONNECTED machine reports it (toolheadState.ts): 'on',
+ * 'off', or 'unknown' on a machine whose firmware never reports it (the Ray).
+ * Every toolhead-on guard reads this one function. With no machine identifier
+ * (the test harness) or an unlisted one, the row reports, as before.
+ */
+export function connectedToolhead(): ToolheadAssessment {
+    const manager = connectionManager as unknown as { getLatestMachineState?: () => unknown };
+    const state = typeof manager.getLatestMachineState === 'function' ? manager.getLatestMachineState() as HeadReadings | null : null;
+    return assessToolhead(connectedDialect(), state);
+}
+
+/**
+ * Throw `message` (each guard keeps its own wording) as an McpToolError when
+ * the toolhead reads on; otherwise return the assessment, so a result can say
+ * the state was unknown rather than off.
+ */
+export function assertToolheadNotOn(message: string): ToolheadAssessment {
+    const assessment = connectedToolhead();
+    const refusal = toolheadOnRefusal(assessment, message);
+    if (refusal) {
+        throw new McpToolError(refusal);
+    }
+    return assessment;
+}
+
+/** The MCP's own laser-word record for the current connection (advisory, MCP-sent only). */
+export function connectedLaserRecord(): McpLaserRecord {
+    return getMcpLaserRecord(connectedConnectionId());
+}
+
+/**
+ * The `toolhead` block results, get_position and get_machine_profile carry on
+ * a machine whose toolhead state is unknown (the Ray); null elsewhere, so the
+ * A350's and the Original's results are unchanged. `laserOffSent` names the
+ * laser-off line this call sent.
+ */
+export function connectedToolheadNote(assessment: ToolheadAssessment = connectedToolhead(), laserOffSent: string | null = null) {
+    return toolheadNote(assessment, connectedLaserRecord(), laserOffSent);
 }

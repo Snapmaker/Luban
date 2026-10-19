@@ -114,6 +114,7 @@ import { tests as cameraModelStoreTests } from './cameraModelStore.test';
 import { tests as sacpGcodeReplyTests } from './sacpGcodeReply.test';
 import { tests as firmwareQueryTests } from './firmwareQuery.test';
 import { tests as rayFirmwareLimitsTests } from './rayFirmwareLimits.test';
+import { tests as toolheadStateTests } from './toolheadState.test';
 
 type TestCase = [string, () => void | Promise<void>];
 
@@ -221,6 +222,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['sacpGcodeReply', sacpGcodeReplyTests],
     ['firmwareQuery', firmwareQueryTests],
     ['rayFirmwareLimits', rayFirmwareLimitsTests],
+    ['toolheadState', toolheadStateTests],
 ];
 
 async function main(): Promise<void> {

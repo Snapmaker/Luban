@@ -40,7 +40,9 @@ import { ComputedHeightDecision, decideComputedHeightTraverse, decideSafeZRaise,
 import { TraversePlan, TraversePlanInput, parseSettleComment, planTraverseXy, traverseMachinePath } from '../traversePlan';
 import { machineFrameMove, needsPlannerSync, relativeStep, workFrameMove } from '../gcodeForms';
 import { machineStatusOf } from '../logicalFrame';
-import { connectedMachineCapability, connectedMachineTag, describeConnectedMachine } from '../connectedMachine';
+import { assertToolheadNotOn, connectedConnectionId, connectedDialect, connectedMachineCapability, connectedMachineTag, connectedToolhead,
+    connectedToolheadNote, describeConnectedMachine } from '../connectedMachine';
+import { laserOffSentIn, noteMcpFileJob } from '../toolheadState';
 import { JobFrame, TRANSPORT_REFUSAL, isPureTransport, resolveJobFrame, spindleRefusal, suggestGcode, validateGcode } from '../validator';
 import { GcodeChannel, GcodeNotSentError, sendGcodeVisible } from './camera';
 import { connectedStagingMachine, connectedValidationOptions, stagingFrameContext, validateStagedEnvelope } from './staging';
@@ -226,7 +228,12 @@ type DirectSettle = { position: PositionSnapshot | null; verified: boolean; warn
  * controller refusal ends the job as start_failed. A batch re-arms its token
  * for the remaining steps; the last step completes the job.
  */
-async function executeDirectStep(job: McpJob, channel: GcodeChannel, shouldWait: boolean): Promise<{ settle: DirectSettle; remainingSteps: number }> {
+async function executeDirectStep(job: McpJob, channel: GcodeChannel, shouldWait: boolean): Promise<{
+    settle: DirectSettle;
+    remainingSteps: number;
+    /** The laser-off line this step led with (the Ray's M5, gcodeForms.relativeStep), or null. */
+    laserOffSent: string | null;
+}> {
     job.state = 'starting';
     const issuedAt = Date.now();
     job.startedAt = job.startedAt || issuedAt;
@@ -245,6 +252,7 @@ async function executeDirectStep(job: McpJob, channel: GcodeChannel, shouldWait:
     jobManager.appendEvent(job, 'started', { note: batch ? `direct step ${stepIndex + 1}/${batch.length}` : 'direct move' });
     jobManager.setActive(job);
     let settle: DirectSettle;
+    let laserOffSent: string | null = null;
     try {
         let executed;
         try {
@@ -259,6 +267,10 @@ async function executeDirectStep(job: McpJob, channel: GcodeChannel, shouldWait:
                 jobManager.appendEvent(job, 'failed', { note: job.error, not_sent: true });
             }
             throw err;
+        }
+        laserOffSent = laserOffSentIn(connectedToolhead(), executable);
+        if (laserOffSent) {
+            jobManager.appendEvent(job, 'laser_off_sent', { note: `${laserOffSent} led the step: this machine never reports its laser state` });
         }
         if (executed.result !== 0) {
             job.state = 'start_failed';
@@ -295,14 +307,14 @@ async function executeDirectStep(job: McpJob, channel: GcodeChannel, shouldWait:
             // remaining steps.
             job.tokenUsed = false;
             job.state = 'started';
-            return { settle, remainingSteps: batch.length - job.nextStep };
+            return { settle, remainingSteps: batch.length - job.nextStep, laserOffSent };
         }
     }
     job.state = 'completed';
     job.endedAt = Date.now();
     job.ending = { kind: 'completed', reason: 'direct move(s) done and settled', at: job.endedAt };
     jobManager.appendEvent(job, 'completed', { note: 'direct move(s) done' });
-    return { settle, remainingSteps: 0 };
+    return { settle, remainingSteps: 0, laserOffSent };
 }
 
 /**
@@ -1483,9 +1495,13 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                     ? args.wait_until_moved !== false
                     : job.waitUntilMoved !== false;
                 const outcome = await executeDirectStep(job, channel as GcodeChannel, shouldWait);
+                // The Ray: head state unknown, and the M5 this step led with.
+                const stepToolheadNote = connectedToolheadNote(undefined, outcome.laserOffSent);
+                const stepToolhead = stepToolheadNote ? { toolhead: stepToolheadNote } : {};
                 if (outcome.remainingSteps > 0) {
                     return {
                         job: jobManager.describe(job),
+                        ...stepToolhead,
                         position: outcome.settle.position,
                         position_verified: outcome.settle.verified,
                         warning: outcome.settle.warning,
@@ -1496,6 +1512,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 }
                 return {
                     job: jobManager.describe(job),
+                    ...stepToolhead,
                     position: outcome.settle.position,
                     position_verified: outcome.settle.verified,
                     warning: outcome.settle.warning,
@@ -1562,6 +1579,10 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
                 started = await channel.startGcodeJob();
             } catch (err) {
                 started = { ok: false, text: (err as Error).message };
+            }
+            if (connectedDialect().toolhead.state === 'unknown' && started.notSent !== true) {
+                // The Ray: the file's own laser words run in the firmware, so the MCP's laser record can no longer vouch for them.
+                noteMcpFileJob(connectedConnectionId() || 'none', job.name);
             }
             poll();
             job.startAttempt.acknowledged = started.ok;
@@ -1722,11 +1743,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             if (position.isHomed !== true) {
                 throw new McpToolError('Machine does not report homed; home before any Z positioning.');
             }
-            const state = connectionManager.getLatestMachineState() as { headStatus?: unknown; headPower?: unknown } | null;
-            const headPower = Number(state && state.headPower);
-            if ((Number.isFinite(headPower) && headPower > 0) || (state && (state.headStatus === true || state.headStatus === 'on'))) {
-                throw new McpToolError('Toolhead appears to be on; refusing to move Z.');
-            }
+            assertToolheadNotOn('Toolhead appears to be on; refusing to move Z.');
 
             const currentZ = coordinateSystem === 'work' ? position.work.z : position.machine.z;
             if (currentZ === null) {
@@ -1992,11 +2009,7 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             if (position.isHomed !== true) {
                 throw new McpToolError(`Machine does not report homed; home before any XY transport ${connectedMachineTag()}.`);
             }
-            const state = connectionManager.getLatestMachineState() as { headStatus?: unknown; headPower?: unknown } | null;
-            const headPower = Number(state && state.headPower);
-            if ((Number.isFinite(headPower) && headPower > 0) || (state && (state.headStatus === true || state.headStatus === 'on'))) {
-                throw new McpToolError('Toolhead appears to be on; refusing to traverse.');
-            }
+            const toolhead = assertToolheadNotOn('Toolhead appears to be on; refusing to traverse.');
             const { x: mx, y: my, z: mz } = position.machine;
             if (mx === null || my === null) {
                 throw new McpToolError('Current machine position unknown; cannot plan the traverse.');
@@ -2076,8 +2089,11 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             const stepGcodes = isBatch ? plan.stepGcodes : undefined;
             const job = jobManager.submit(plan.reviewText, plan.name, 'cnc', validation, 'direct', stepGcodes);
             job.waitUntilMoved = args.wait_until_moved !== false;
+            // The Ray: head state unknown, and every step leads with M5 (gcodeForms.relativeStep).
+            const toolheadNote = connectedToolheadNote(toolhead);
             const summary = {
                 connected_machine: describeConnectedMachine(),
+                ...(toolheadNote ? { toolhead: toolheadNote } : {}),
                 current_machine: { x: mx, y: my, z: mz },
                 /** null on a machine with no Z axis: no traverse height exists there. */
                 traverse_z: machine.hasZ ? safeTraverseZ() : null,

@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 // MCP tool arguments are snake_case by convention.
-import { connectionManager } from '../../machine/ConnectionManager';
+import { assertToolheadNotOn } from '../connectedMachine';
 import { describeActiveTool, getActiveTool, invalidateActiveTool, setActiveTool } from '../activeTool';
 import { jobManager } from '../jobs';
 import { SetterDatum, parseSetterDatum } from '../toolDatum';
@@ -380,11 +380,7 @@ export function registerToolSetterTools(registry: ToolRegistry, getConfirmBaseUr
             if (position.isHomed !== true) {
                 throw new McpToolError('Machine does not report homed; home before the tool-change move.');
             }
-            const state = connectionManager.getLatestMachineState() as { headStatus?: unknown; headPower?: unknown } | null;
-            const headPower = Number(state && state.headPower);
-            if ((Number.isFinite(headPower) && headPower > 0) || (state && (state.headStatus === true || state.headStatus === 'on'))) {
-                throw new McpToolError('Toolhead appears to be on; refusing the tool-change move.');
-            }
+            assertToolheadNotOn('Toolhead appears to be on; refusing the tool-change move.');
 
             // Operator ruling 2026-10-17 (#241): with the head already at the
             // park Z - which is at or above the traverse height - on a
