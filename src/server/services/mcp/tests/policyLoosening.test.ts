@@ -52,6 +52,16 @@ const BOUNDS: Bound[] = [
         tighten: 40,
         read: (f) => body(f, A350) },
     { arg: 'landmark_confirm_ttl_hours', machine: A350, setup: [], loosen: 48, tighten: 12, read: (f) => f.tools.landmarkConfirmTtlHours().hours },
+    // The Original's stepper idle timeout (default 120 s, upstream Marlin): longer = the home trusted through a longer idle.
+    { arg: 'stepper_idle_timeout_s',
+        machine: ORIGINAL,
+        setup: [],
+        loosen: 300,
+        tighten: 60,
+        read: (f) => {
+            const timeout = f.tools.stepperIdleTimeout();
+            return timeout ? timeout.seconds : null;
+        } },
 ];
 
 function connected(machine: string, setup: Array<{ [key: string]: unknown }> = []) {

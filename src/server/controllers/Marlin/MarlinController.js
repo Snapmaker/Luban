@@ -497,6 +497,9 @@ class MarlinController extends EventEmitter {
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', { data: res.raw });
             }
+            // M1007's "Selected origin num" / "Selected == Current" lines, for
+            // the channel's machine state (TextSerialChannel); nothing is written.
+            this.emit('originSelectionReport', res);
         });
         this.controller.on('cnc:stop', (res) => {
             log.warn(`controller.on('cnc:stop'): source=${this.history.writeSource}, res=${JSON.stringify(res)}`);

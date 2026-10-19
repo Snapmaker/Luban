@@ -108,6 +108,7 @@ import { tests as appliedRecordsTests } from './appliedRecords.test';
 import { tests as computedHeightTests } from './computedHeight.test';
 import { tests as policyLooseningTests } from './policyLoosening.test';
 import { tests as laserPlanTests } from './laserPlan.test';
+import { tests as usbPositionTests } from './usbPosition.test';
 
 type TestCase = [string, () => void | Promise<void>];
 
@@ -209,6 +210,7 @@ const suites: Array<[string, TestCase[]]> = [
     ['computedHeight', computedHeightTests],
     ['policyLoosening', policyLooseningTests],
     ['laserPlan', laserPlanTests],
+    ['usbPosition', usbPositionTests],
 ];
 
 async function main(): Promise<void> {

@@ -31,7 +31,7 @@ import {
 } from '../machineTravel';
 import { LEGACY_MACHINE_IDENTIFIER, MachineSummary } from '../machineCapability';
 import { ConnectionStatusLike, baseIdentifier, machineStore, setMachineStoreSources } from '../machineStore';
-import { LANDMARK_CONFIRM_TTL_HOURS, TOOLHEAD_BODY_BELOW_REFERENCE_MM } from '../procedureLimits';
+import { LANDMARK_CONFIRM_TTL_HOURS, STEPPER_IDLE_TIMEOUT_S, TOOLHEAD_BODY_BELOW_REFERENCE_MM } from '../procedureLimits';
 import { COMPUTED_HEIGHT_TOGGLE, MotionRulesSection, computedHeightTraversePolicy, motionRulesOf, validateClearanceSettings } from '../motionRules';
 import {
     MACHINES,
@@ -47,7 +47,7 @@ import { currentLandmarkReviewGate } from '../safeZPolicy';
 import { TraverseMachine } from '../traversePlan';
 import { GcodeDialect, dialectById } from '../gcodeDialect';
 import { GcodeForm, gcodeFormOf, genericMotionRefusal } from '../gcodeForms';
-import { LogicalFrameTrust, judgeLogicalFrame, machineStatusOf, readLogicalFrameEvidence } from '../logicalFrame';
+import { LogicalFrameReport, LogicalFrameTrust, judgeLogicalFrame, machineStatusOf, readLogicalFrameEvidence } from '../logicalFrame';
 import { statedTravel } from '../rotaryGeometry';
 import {
     FrameLatch,
@@ -558,6 +558,32 @@ export function landmarkConfirmTtlHours(machineKey: string | null = machineStore
     return { hours: LANDMARK_CONFIRM_TTL_HOURS.default, source: 'default' };
 }
 
+/** Only the Original releases its steppers on idle (logicalFrame.ts header); the policy applies to it alone. */
+function releasesSteppersOnIdle(identifier: string | null): boolean {
+    return identifier !== null && machineCapabilityFor(identifier).dialect.id === 'original-marlin';
+}
+
+/**
+ * The stepper idle timeout of a machine (#265 follow-up; logicalFrame.ts),
+ * with its source: stated with set_machine_policy, else the upstream Marlin
+ * default (procedureLimits STEPPER_IDLE_TIMEOUT_S - not measured on the
+ * Original). Null on every machine that does not release its steppers on idle.
+ */
+export function stepperIdleTimeout(machineKey: string | null = machineStore.currentMachine().machineKey): { seconds: number; source: string } | null {
+    if (machineKey === null || !releasesSteppersOnIdle(baseIdentifier(machineKey))) {
+        return null;
+    }
+    const raw = Number(machineStore.getFor(machineKey, 'mcpStepperIdleTimeoutS'));
+    if (Number.isFinite(raw) && raw >= STEPPER_IDLE_TIMEOUT_S.min && raw <= STEPPER_IDLE_TIMEOUT_S.max) {
+        return { seconds: raw, source: 'set_machine_policy stepper_idle_timeout_s' };
+    }
+    return {
+        seconds: STEPPER_IDLE_TIMEOUT_S.default,
+        source: `the upstream Marlin firmware default (DEFAULT_STEPPER_DEACTIVE_TIME ${STEPPER_IDLE_TIMEOUT_S.default} s, Marlin 1.1.x `
+            + 'Configuration_adv.h) - NOT measured on the Original; state the measured value with set_machine_policy stepper_idle_timeout_s',
+    };
+}
+
 export interface PositionSnapshot {
     /** Which machine this position belongs to, and whether it has a Z axis - so an agent cannot miss that it is driving a Ray. */
     connectedMachine: MachineSummary;
@@ -609,8 +635,17 @@ export interface PositionSnapshot {
      * USB text serial only (null elsewhere): the newest report's M114 was
      * written after a planner sync that followed the last motion line, so the
      * head was at rest at it. false = it may be the planner's queued target.
+     * A Snapmaker 2.0 over USB: its Count agreed with the mapped position
+     * (logicalFrame.atRest) - the steppers are at the planner's target.
      */
     motionAtRest?: boolean | null;
+    /**
+     * The Original over USB only (null elsewhere): seconds until its steppers
+     * may be released on idle and the home is treated as lost (0 = lost, null
+     * = never: M84 S0, or no home yet). logicalFrame.stepperIdle has the timeout and its source.
+     */
+    // eslint-disable-next-line camelcase
+    stepper_idle_remaining_s?: number | null;
 }
 
 // The WiFi status poll runs every 2 s (3 s timeout); a report older than this
@@ -904,6 +939,18 @@ export function machineBounds(identifier: string | null) {
 }
 
 /**
+ * Text serial: the head is at rest at the newest report. A Snapmaker 2.0:
+ * its Count agreed with the mapped position (logicalFrame.atRest). The
+ * Original: the report's M114 followed a planner sync (reportAtRest).
+ */
+function logicalMotionAtRest(logicalFrame: LogicalFrameTrust, state: { [key: string]: unknown }): boolean {
+    if (logicalFrame.mapping === 'work-offset') {
+        return logicalFrame.atRest === true;
+    }
+    return state.reportAtRest === true;
+}
+
+/**
  * Position from the latest heartbeat, judged into the position of record.
  * Shared by get_position, the capture tools and every planner. Throws
  * McpToolError when unavailable.
@@ -941,10 +988,16 @@ export function getPositionSnapshot(): PositionSnapshot {
     const now = Date.now();
     const record = getPositionOfRecord(currentGcodeSequence());
     // USB text serial reports the LOGICAL position: it is the machine position
-    // only on a machine with no workspaces, homed on this connection with no
-    // shift written since (logicalFrame.ts). Otherwise the judge refuses it.
+    // on the Original homed on this connection with no shift written since and
+    // its steppers not idle past their timeout, and on a Snapmaker 2.0 through
+    // a fresh M1007 work offset its stepper Count agrees with
+    // (logicalFrame.ts). Otherwise the judge refuses it.
     const logicalFrame = (state as { positionFrame?: unknown }).positionFrame === 'logical'
-        ? judgeLogicalFrame(connectedDialect(), readLogicalFrameEvidence((state as { frameEvidence?: unknown }).frameEvidence))
+        ? judgeLogicalFrame(connectedDialect(), readLogicalFrameEvidence((state as { frameEvidence?: unknown }).frameEvidence), {
+            now,
+            report: { pos: state.pos as LogicalFrameReport['pos'], counts: (state as { counts?: unknown }).counts as LogicalFrameReport['counts'] },
+            stepperIdleTimeout: stepperIdleTimeout(),
+        })
         : null;
     const judgement = judgeBeatStateful(
         machinePosition,
@@ -957,6 +1010,7 @@ export function getPositionSnapshot(): PositionSnapshot {
             directGcodeQuiet: directGcodeQuiet(ZERO_OFFSET_QUIET_MS),
             declaredRun: declaredRun && state.timestamp >= declaredRun.fromMs ? declaredRun : null,
             logicalAsMachine: logicalFrame !== null && logicalFrame.trusted,
+            logicalOffset: logicalFrame && logicalFrame.trusted && logicalFrame.mapping === 'work-offset' ? logicalFrame.offset : null,
             logicalFrameReason: logicalFrame && !logicalFrame.trusted ? logicalFrame.reason : null,
         }
     );
@@ -1002,7 +1056,8 @@ export function getPositionSnapshot(): PositionSnapshot {
             + 'origin is the operator\'s.',
         warnings: [...judgement.reasons, ...frameWarnings],
         logicalFrame,
-        motionAtRest: logicalFrame ? (state as { reportAtRest?: unknown }).reportAtRest === true : null,
+        motionAtRest: logicalFrame ? logicalMotionAtRest(logicalFrame, state) : null,
+        stepper_idle_remaining_s: logicalFrame && logicalFrame.stepperIdle ? logicalFrame.stepperIdle.remainingS : null,
     };
 }
 
@@ -1120,7 +1175,8 @@ export function assertFreshHeartbeat(what: string, options: { homing?: boolean }
     }
     const snapshot = getPositionSnapshot();
     // Only where a home CAN make the logical frame the machine frame (the
-    // Original); an A350 or a Ray on plain-text USB stays refused.
+    // Original; a Snapmaker 2.0 through its M1007 offset); a Ray or an
+    // Artisan on plain-text USB stays refused.
     if (options.homing === true && snapshot.logicalFrame && snapshot.logicalFrame.mappable && !snapshot.logicalFrame.trusted) {
         // Homing is what ESTABLISHES a logical-frame position (the Original):
         // refusing it for lacking one would be circular. The beat is fresh;
@@ -1151,6 +1207,8 @@ export function describeMachinePolicy(machineKey: string | null) {
         },
         traverseWithoutApprovalAtSafeZ: traverseWithoutApprovalPolicy(machineKey),
         landmarkConfirmTtl: landmarkConfirmTtlHours(machineKey),
+        // Null on every machine that never releases its steppers on idle (all but the Original).
+        stepperIdleTimeout: stepperIdleTimeout(machineKey),
     };
 }
 
@@ -1175,7 +1233,8 @@ function policyNumber(name: string, raw: unknown, range: [number, number], why: 
 // is staged for the operator. The same holds for the per-machine bounds
 // set_machine_policy writes: lowering safe_traverse_z or motion_floor_z,
 // widening a travel fudge, a shallower toolhead body (the computed safe height
-// of R13 comes lower) or a longer landmark-confirmation validity. Such a
+// of R13 comes lower), a longer landmark-confirmation validity or a longer
+// stepper idle timeout (the Original's home is trusted for longer). Such a
 // change is staged on an operator review page (/confirm/r<id>, the WP5 store)
 // and applied on the operator's click, after the store re-checks the machine
 // and this module re-checks that the value is still the one the page showed.
@@ -1184,7 +1243,8 @@ function policyNumber(name: string, raw: unknown, range: [number, number], why: 
 // built-in 328 / 320 and every default count as stated values.
 
 const POLICY_ARGS = ['safe_traverse_z', 'motion_floor_z', 'traverse_without_approval_at_safe_z', 'travel_fudge_mm', 'travel_fudge_x_mm',
-    'travel_fudge_y_mm', 'landmark_confirm_ttl_hours', 'traverse_without_approval_at_computed_height', 'toolhead_body_below_reference_mm'];
+    'travel_fudge_y_mm', 'landmark_confirm_ttl_hours', 'traverse_without_approval_at_computed_height', 'toolhead_body_below_reference_mm',
+    'stepper_idle_timeout_s'];
 
 let policyReviews: OperatorReviewStore | null = null;
 let policyReviewBaseUrl: () => string = () => '';
@@ -1241,6 +1301,10 @@ function boundNow(key: string, name: string): number | null {
         case 'travel_fudge_x': return travelFudge().x;
         case 'travel_fudge_y': return travelFudge().y;
         case 'landmark_confirm_ttl_hours': return landmarkConfirmTtlHours(key).hours;
+        case 'stepper_idle_timeout_s': {
+            const timeout = stepperIdleTimeout(key);
+            return timeout ? timeout.seconds : null;
+        }
         case 'toolhead_body_below_reference_mm': {
             const body = motionRulesOf({ motionRules: machineStore.getFor(key, 'mcpMotionRules') }).toolheadBodyBelowReferenceMm;
             return body ? body.value : null;
@@ -1290,6 +1354,11 @@ function policyLoosenings(key: string, identifier: string, args: { [key: string]
         add('landmark_confirm_ttl_hours', ['landmark_confirm_ttl_hours'], 'higher-loosens',
             args.landmark_confirm_ttl_hours === null ? LANDMARK_CONFIRM_TTL_HOURS.default : stated('landmark_confirm_ttl_hours'),
             'a longer validity keeps an operator landmark confirmation in force longer');
+    }
+    if (given('stepper_idle_timeout_s')) {
+        add('stepper_idle_timeout_s', ['stepper_idle_timeout_s'], 'higher-loosens',
+            args.stepper_idle_timeout_s === null ? STEPPER_IDLE_TIMEOUT_S.default : stated('stepper_idle_timeout_s'),
+            'a longer timeout keeps trusting the Original\'s home through a longer idle, when its steppers may already be released');
     }
     if (given('toolhead_body_below_reference_mm')) {
         add('toolhead_body_below_reference_mm', ['toolhead_body_below_reference_mm'], 'lower-loosens', stated('toolhead_body_below_reference_mm'),
@@ -1553,6 +1622,23 @@ function machinePolicyCall(args: { [key: string]: unknown }, options: { dryRun?:
                 [LANDMARK_CONFIRM_TTL_HOURS.min, LANDMARK_CONFIRM_TTL_HOURS.max], 'hours an operator landmark review stays valid')]);
             writes.push(['mcpLandmarkConfirmTtlProvenance', { source, setAt: at }]);
             updated.push('landmark_confirm_ttl_hours');
+        }
+    }
+
+    if (given('stepper_idle_timeout_s')) {
+        if (!releasesSteppersOnIdle(identifier)) {
+            throw new McpToolError('stepper_idle_timeout_s does not apply: only the Snapmaker Original releases its steppers on idle '
+                + `(the Snapmaker 2.0 firmware sets DISABLE_INACTIVE_X/Y/Z false) ${connectedMachineTag()}.`);
+        }
+        if (args.stepper_idle_timeout_s === null) {
+            writes.push(['mcpStepperIdleTimeoutS', undefined]);
+            writes.push(['mcpStepperIdleTimeoutProvenance', undefined]);
+            cleared.push('stepper_idle_timeout_s');
+        } else {
+            writes.push(['mcpStepperIdleTimeoutS', policyNumber('stepper_idle_timeout_s', args.stepper_idle_timeout_s,
+                [STEPPER_IDLE_TIMEOUT_S.min, STEPPER_IDLE_TIMEOUT_S.max], 'seconds without motion before the firmware releases the steppers')]);
+            writes.push(['mcpStepperIdleTimeoutProvenance', { source, setAt: at }]);
+            updated.push('stepper_idle_timeout_s');
         }
     }
 
@@ -1941,7 +2027,7 @@ export function registerMachineTools(registry: ToolRegistry): void {
             + 'only the operator turns it on, in Settings > MCP > Motion rules. travel_fudge_* widen the model box at each end of '
             + 'each axis (default 25 mm). null clears a value. LOOSENING a stated bound (lower safe_traverse_z or motion_floor_z - the '
             + 'A350\'s 328 / 320 count as stated - a wider travel fudge, a shallower toolhead_body_below_reference_mm, a longer '
-            + 'landmark_confirm_ttl_hours) is NOT applied: it is staged on an operator review page (staged.confirm_url) and applies on '
+            + 'landmark_confirm_ttl_hours or stepper_idle_timeout_s) is NOT applied: it is staged on an operator review page (staged.confirm_url) and applies on '
             + 'the operator\'s click; tightening and a first statement apply at once. '
             + 'Each value records its source and time; get_machine_profile.policy reads them back.',
         inputSchema: {
@@ -1958,6 +2044,13 @@ export function registerMachineTools(registry: ToolRegistry): void {
                 landmark_confirm_ttl_hours: {
                     type: ['number', 'null'],
                     description: `How long an operator landmark review stays valid (default ${LANDMARK_CONFIRM_TTL_HOURS.default} h, or until disconnect).`,
+                },
+                stepper_idle_timeout_s: {
+                    type: ['number', 'null'],
+                    description: 'The Snapmaker Original only: seconds without motion after which its firmware releases the steppers and the '
+                        + `MCP treats the home as lost (${STEPPER_IDLE_TIMEOUT_S.min}-${STEPPER_IDLE_TIMEOUT_S.max}; default `
+                        + `${STEPPER_IDLE_TIMEOUT_S.default} = upstream Marlin's DEFAULT_STEPPER_DEACTIVE_TIME, not measured on the Original). `
+                        + 'M18/M84 S<n> written on the connection override it (S0 = never).',
                 },
                 reason: { type: 'string', description: 'Who stated it / how it was measured; stored as the values\' source.' },
             },

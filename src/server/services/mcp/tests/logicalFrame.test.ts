@@ -151,15 +151,19 @@ export const tests: Array<[string, () => void]> = [
         assert.equal((m.state() as { reportAtRest: boolean }).reportAtRest, false);
     }],
 
-    ['a machine WITH workspaces over USB text serial stays refused even after a clean G28 (the A350)', () => {
+    ['a machine WITH workspaces over USB text serial: a clean G28 alone never maps it (A350 waits for M1007; Artisan, Ray refused)', () => {
         const m = tracker();
         m.write('G28');
         m.write('M114');
         m.reply(0, 0, 0);
         const verdict = judgeLogicalFrame(SM2, readLogicalFrameEvidence(m.state()?.frameEvidence));
         assert.equal(verdict.trusted, false);
-        assert.match(verdict.reason, /selected work workspace over USB text serial/);
-        assert.equal(verdict.mappable, false, 'no home bypass for an A350 over USB');
+        assert.equal(verdict.mapping, 'work-offset', 'the A350 maps through its M1007 offset (usbPosition.test.ts)');
+        assert.match(verdict.reason, /first M1007 work-offset report/);
+        const artisan = judgeLogicalFrame(dialectById('artisan-marlin'), readLogicalFrameEvidence(m.state()?.frameEvidence));
+        assert.equal(artisan.trusted, false);
+        assert.match(artisan.reason, /selected work workspace over USB text serial/);
+        assert.equal(artisan.mappable, false, 'no home bypass for an Artisan over USB');
         assert.equal(judgeLogicalFrame(dialectById('ray-grbl'), null).mappable, false, 'nor a Ray over USB');
         assert.equal(judgeLogicalFrame(ORIGINAL, null).mappable, true);
     }],

@@ -150,12 +150,15 @@ const PLAIN_KEYS: Array<[string, StorePath]> = [
     ['mcpCameraDevice', ['camera', 'device']],
     ['mcpCameraLastGood', ['camera', 'lastGood']],
     ['mcpRotaryGravityCalibration', ['rotaryGravityCalibration']],
+    // The Original's stepper idle timeout (logicalFrame.ts; #265 follow-up).
+    ['mcpStepperIdleTimeoutS', ['stepperIdleTimeoutS']],
+    ['mcpStepperIdleTimeoutProvenance', ['stepperIdleTimeoutProvenance']],
 ];
 
 /** Keys that never existed before WP2: addressed through the store, never migrated. */
 const NEW_KEYS = new Set(['mcpRotaryChuckTopZ', 'mcpRotaryTailstockTopZ', 'mcpMachineTraverseWithoutApprovalAtSafeZ', 'mcpLandmarkConfirmTtlHours',
     'mcpZPolicyProvenance', 'mcpTravelFudgeProvenance', 'mcpLandmarkConfirmTtlProvenance', 'mcpLandmarksConfirmed',
-    'mcpMotionRules']);
+    'mcpMotionRules', 'mcpStepperIdleTimeoutS', 'mcpStepperIdleTimeoutProvenance']);
 
 export const PER_MACHINE_KEYS: { [key: string]: StorePath } = (() => {
     const table: { [key: string]: StorePath } = {};
