@@ -28,6 +28,18 @@ class SacpTcpChannel extends SacpChannelBase {
 
     private thickness = 0;
 
+    // The machine this session identified with getMachineInfo but sent no
+    // Ready for: the Snapmaker 2.0 (A150/A250/A350). Luban prepares no machine
+    // instance for them on this path (no heartbeat, no Marlin:state), so the
+    // identity is kept here for status reporting only (#265) and
+    // ConnectionManager reads it without a Ready. Null between sessions.
+    private identifiedWithoutReady: { machineIdentifier: string; deviceSerial: string | null } | null = null;
+
+    /** Read-only (ConnectionManager.getConnectionStatus): the identity above, or null. */
+    public getIdentifiedWithoutReady(): { machineIdentifier: string; deviceSerial: string | null } | null {
+        return this.identifiedWithoutReady;
+    }
+
     public constructor() {
         super();
 
@@ -39,6 +51,7 @@ class SacpTcpChannel extends SacpChannelBase {
         this.client.on('close', () => {
             log.info('TCP connection closed');
             this.bumpConnectionGeneration('TCP socket closed');
+            this.identifiedWithoutReady = null;
             const result = {
                 code: 200,
                 data: {},
@@ -50,6 +63,7 @@ class SacpTcpChannel extends SacpChannelBase {
         this.client.on('error', (err) => {
             log.error(`TCP connection error: ${err}`);
             this.bumpConnectionGeneration('TCP socket error');
+            this.identifiedWithoutReady = null;
         });
     }
 
@@ -62,6 +76,7 @@ class SacpTcpChannel extends SacpChannelBase {
     };
 
     public async connectionOpen(options?: { address: string; token?: string }): Promise<boolean> {
+        this.identifiedWithoutReady = null;
         this.emit(ChannelEvent.Connecting);
 
         return new Promise((resolve, reject) => {
@@ -122,6 +137,13 @@ class SacpTcpChannel extends SacpChannelBase {
                                     machineIdentifier,
                                     deviceSerial,
                                 });
+                            }
+                            // Any other model (the Snapmaker 2.0 A150/A250/A350) still gets no
+                            // Ready here: a Ready would start SM2Instance's heartbeat (with its
+                            // 10 s lost-heartbeat close) on a path Luban has never driven.
+                            if (machineIdentifier && machineIdentifier !== SnapmakerArtisanMachine.identifier
+                                && machineIdentifier !== SnapmakerJ1Machine.identifier) {
+                                this.identifiedWithoutReady = { machineIdentifier, deviceSerial };
                             }
 
                             // TODO: Refactor this to ArtisanInstance
@@ -215,6 +237,7 @@ class SacpTcpChannel extends SacpChannelBase {
 
         const force = options?.force || false;
         this.bumpConnectionGeneration(force ? 'TCP connection force-closed' : 'TCP connection closed');
+        this.identifiedWithoutReady = null;
 
         if (!force) {
             const { response } = await this.sacpClient.wifiConnectionClose();
