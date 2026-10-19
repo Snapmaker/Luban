@@ -2477,7 +2477,11 @@ export function registerGcodeTools(registry: ToolRegistry, getConfirmBaseUrl: ()
             + 'A job that never reached the machine (any kind, awaiting confirmation or approved but not '
             + 'started) is WITHDRAWN: it is marked stopped here and its confirm link dies, so an approval cannot '
             + 'start it later. A file/direct job already handed over is stopped on the machine (firmware '
-            + 'stop_print). Result: {ok, stopped, stopping, withdrawn, note, job}.',
+            + 'stop_print). A direct BATCH between steps (no step executing) is withdrawn on every machine: token cleared, '
+            + 'ending withdrawn, nothing sent. A step executing on a machine with no firmware stop (the Ray over Wi-Fi, USB text '
+            + 'serial) cannot be stopped by command: the remaining steps are withdrawn (stopping: true), the running step finishes, '
+            + 'and the job then ends withdrawn; a single running move there is refused with that reason. '
+            + 'Result: {ok, stopped, stopping, withdrawn, note, job}.',
         inputSchema: {
             type: 'object',
             properties: {
