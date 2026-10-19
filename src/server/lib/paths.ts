@@ -60,6 +60,20 @@ const nodeRequire: NodeRequire = typeof __non_webpack_require__ !== 'undefined'
 /* eslint-enable camelcase */
 
 /**
+ * A path a child process can be started from on this platform.
+ *
+ * On Windows, Node 16's `spawn` (libuv) cannot start an executable whose
+ * path is longer than MAX_PATH (260) unless the path is given in the `\\?\`
+ * namespace; `fs` already accepts either form. An install under a long user
+ * name, or in a deep folder, puts the unpacked engine binaries past that
+ * limit, and the failure is a bare ENOENT for a file that exists. Elsewhere
+ * this returns the path unchanged.
+ */
+export function spawnablePath(p: string): string {
+    return path.toNamespacedPath(p);
+}
+
+/**
  * Require a package from its unpacked copy when the app is inside an asar
  * archive, so that the package's own `__dirname` points at real files.
  *
@@ -67,12 +81,15 @@ const nodeRequire: NodeRequire = typeof __non_webpack_require__ !== 'undefined'
  * only patches `execFile`, not `spawn`, so a binary path derived from an
  * archive `__dirname` fails with ENOENT. Such packages must be listed in
  * asarUnpack (electron-builder.yml) and have no dependencies of their own.
+ *
+ * The package is loaded from its spawnable path, so the `__dirname` it builds
+ * its binary paths from carries the Windows long-path prefix and every spawn
+ * it makes, and every `getPath()` the server spawns itself, works wherever
+ * the app is installed.
  */
 export function requireUnpacked(name: string) {
     const resolved = nodeRequire.resolve(name);
     const unpacked = unpackedPath(resolved);
-    if (unpacked !== resolved && fs.existsSync(unpacked)) {
-        return nodeRequire(unpacked);
-    }
-    return nodeRequire(resolved);
+    const target = unpacked !== resolved && fs.existsSync(unpacked) ? unpacked : resolved;
+    return nodeRequire(spawnablePath(target));
 }
