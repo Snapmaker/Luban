@@ -4,6 +4,7 @@ import path from 'path';
 import program from 'commander';
 import isElectron from 'is-electron';
 import pkg from './package.json';
+import { formatTimeline as formatStartupTimeline, mark as startupMark } from './startup-timeline';
 
 const SERVER_DATA = 'serverData';
 // Defaults to 'production'
@@ -44,10 +45,24 @@ const launchServer = () => new Promise((resolve, reject) => {
         userDataDir: process.env.USER_DATA_DIR
     };
 
-    // Change working directory to 'server' before require('./server')
-    process.chdir(path.resolve(__dirname, 'server'));
+    startupMark('server: child entry');
 
-    require('./server').createServer({
+    // Tell the server where its files are (see src/server/lib/paths.ts). The
+    // working directory used to carry this, but inside the packaged asar
+    // archive there is no real directory to chdir into; it is kept as a
+    // best effort for the unpackaged (bin/cli) layout.
+    const serverDir = path.resolve(__dirname, 'server');
+    process.env.LUBAN_SERVER_DIR = serverDir;
+    try {
+        process.chdir(serverDir);
+    } catch (err) {
+        // ENOENT inside app.asar: everything resolves from LUBAN_SERVER_DIR.
+    }
+
+    const server = require('./server');
+    startupMark('server: bundle required');
+
+    server.createServer({
         port: options.port,
         host: options.host,
         backlog: options.backlog,
@@ -61,6 +76,9 @@ const launchServer = () => new Promise((resolve, reject) => {
             reject(err);
             return;
         }
+        startupMark('server: ready');
+        // eslint-disable-next-line no-console
+        console.log(`\n${formatStartupTimeline('Luban startup - server child')}`);
         process.send({ type: SERVER_DATA, ...data });
         resolve(data);
     });

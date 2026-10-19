@@ -1,0 +1,308 @@
+// Latest machine state of a SACP channel (#260), in the SAME shape the MCP
+// already reads from SstpHttpChannel.getLatestMachineState(): `status`,
+// `pos` (work coordinates), `originOffset`, `isHomed`, `timestamp`, plus the
+// toolhead fields the guards look at. The source is the heartbeat and
+// coordinate-system subscriptions that SacpChannelBase.startHeartbeatLegacy
+// already runs for the Luban UI (the `Marlin:state` payload) - until #260 the
+// values were emitted to the renderer and never kept, so on a Ray over
+// SACP-UDP ConnectionManager.getLatestMachineState() returned null forever
+// and every heartbeat-gated tool refused with "No heartbeat received yet".
+//
+// Frame convention: identical to SSTP and to the renderer's DisplayPanel,
+// machine = work - originOffset (machinePosition.ts derives exactly that).
+//
+// Pure module: no server imports, unit-tested in mcp/tests/sacpMachineState.test.ts.
+
+/** One axis of a SACP CoordinateInfo: `key` is the Direction enum, `value` mm. */
+export interface SacpAxisReading {
+    key: number;
+    value: number;
+}
+
+/** The fields of the SDK's CoordinateSystemInfo that the state is built from. */
+export interface SacpCoordinateReport {
+    /** 0 = homed, 1 = needs homing (the SDK's convention, inverted into isHomed). */
+    homed: number;
+    coordinates: SacpAxisReading[];
+    originOffset: SacpAxisReading[];
+}
+
+/** CoordinateInfo.Direction values, kept local so this module stays free of SDK imports. */
+export const SACP_AXIS_KEY = { x: 0, y: 1, z: 2, b: 4 } as const;
+
+export type Axis = keyof typeof SACP_AXIS_KEY;
+
+export interface SacpPosition {
+    x: number | null;
+    y: number | null;
+    z: number | null;
+    b: number | null;
+    isFourAxis: boolean;
+}
+
+export interface SacpOriginOffset {
+    x: number | null;
+    y: number | null;
+    z: number | null;
+    b: number | null;
+}
+
+export interface SacpMachineState {
+    [key: string]: unknown;
+    /** When the newest heartbeat OR coordinate report arrived (the MCP's beat clock). */
+    timestamp: number;
+    status?: string;
+    pos?: SacpPosition;
+    originOffset?: SacpOriginOffset;
+    isHomed?: boolean;
+    /** Axes the controller's coordinate report actually carried; a missing axis reads as 0 (see mapCoordinateReport). */
+    reportedAxes?: Axis[];
+    headType?: string;
+    /** Laser current power or CNC current spindle speed, so the toolhead-off guards read SACP like SSTP. */
+    headPower?: number;
+}
+
+function axisValue(list: SacpAxisReading[], axis: Axis): number | null {
+    const entry = list.find((item) => item && item.key === SACP_AXIS_KEY[axis]);
+    if (!entry) {
+        return null;
+    }
+    const n = Number(entry.value);
+    return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Map one coordinate-system report to pos / originOffset / isHomed.
+ *
+ * Axes are looked up by their Direction key, not by array position: the
+ * legacy UI mapping reads coordinates[2] as Z, which on a machine that
+ * reports X, Y, B would hand B's value to Z.
+ *
+ * A machine without an axis (the Ray has no Z) reports no entry for it. The
+ * position judge needs every one of x/y/z to accept a beat, so an axis the
+ * controller does not have reads as 0 in both pos and originOffset, and
+ * `reportedAxes` says which axes were real. An EMPTY offset list is a report
+ * with no offset at all and stays null, so the judge rejects it as
+ * no-offset-yet exactly as it does for the HTTP channel.
+ */
+export function mapCoordinateReport(report: SacpCoordinateReport, isFourAxis: boolean): {
+    pos: SacpPosition;
+    originOffset: SacpOriginOffset;
+    isHomed: boolean;
+    reportedAxes: Axis[];
+} {
+    const coordinates = Array.isArray(report.coordinates) ? report.coordinates : [];
+    const offsets = Array.isArray(report.originOffset) ? report.originOffset : [];
+    const reportedAxes = (Object.keys(SACP_AXIS_KEY) as Axis[]).filter((axis) => axisValue(coordinates, axis) !== null);
+    const linear: Axis[] = ['x', 'y', 'z'];
+    const pos: SacpPosition = { x: null, y: null, z: null, b: axisValue(coordinates, 'b'), isFourAxis };
+    const originOffset: SacpOriginOffset = { x: null, y: null, z: null, b: axisValue(offsets, 'b') };
+    for (const axis of linear) {
+        const present = reportedAxes.includes(axis);
+        const value = axisValue(coordinates, axis);
+        pos[axis] = present ? value : 0;
+        if (offsets.length === 0) {
+            originOffset[axis] = null;
+        } else {
+            const offset = axisValue(offsets, axis);
+            originOffset[axis] = offset === null ? 0 : offset;
+        }
+    }
+    return {
+        pos,
+        originOffset,
+        isHomed: !report.homed, // 0: homed, 1: need to home
+        reportedAxes,
+    };
+}
+
+/**
+ * True when a product SN string identifies no machine: empty (after NULs and
+ * spaces), any byte outside printable ASCII, or one character repeated - an
+ * unprogrammed Ray efuse reads as 20 x '6' (RayController 91a675f
+ * snapmaker.cpp:159-191).
+ */
+export function isFillPatternProductSn(sn: unknown): boolean {
+    if (typeof sn !== 'string') {
+        return true;
+    }
+    const trimmed = sn.replace(/\0+$/, '').trim();
+    return !trimmed || !/^[\x21-\x7e]+$/.test(trimmed) || /^(.)\1*$/.test(trimmed);
+}
+
+/**
+ * True when a SACP `masterControlSerialNumber` (a UInt32) is a FILL PATTERN
+ * rather than a serial: 0, 0xFFFFFFFF, or one byte repeated four times
+ * (0x66666666 = 1717986918 is what the Ray V1.7.4 reports - observed live
+ * 2026-10-19 - the same value as every other unprogrammed board would). Such a
+ * value identifies no machine, so it is treated as absent. Accepts the
+ * decimal string the Ready payload and the store's `sn:` aliases carry.
+ */
+export function isFillPatternSerial(serial: unknown): boolean {
+    let value: number;
+    if (typeof serial === 'number') {
+        value = serial;
+    } else if (typeof serial === 'string' && /^\d{1,10}$/.test(serial.trim())) {
+        value = Number(serial.trim());
+    } else if (typeof serial === 'string') {
+        // Not a UInt32: a product SN (0x01 0x21's efuse SN, M1005's SN).
+        return isFillPatternProductSn(serial);
+    } else {
+        return false;
+    }
+    if (!Number.isInteger(value) || value < 0 || value > 0xffffffff) {
+        return false;
+    }
+    const low = value % 256;
+    return value === low * 0x01010101;
+}
+
+/** SACP 0x01 0x21 (machine info) with the fields the SDK's MachineInfo model leaves unread. */
+export interface SacpMachineInfoFields {
+    model: number;
+    hardwareVersion: number;
+    /** The UInt32 serial (the Ray: always the 0x66666666 dummy). */
+    serialU32: number;
+    firmwareVersion: string | null;
+    /** The product SN after the version (the Ray: 20-character efuse SN); null when absent, truncated or a fill pattern. */
+    productSn: string | null;
+    /** The product SN as sent, for the report (null when the buffer ends before it). */
+    productSnRaw: string | null;
+    /** The buffer ended before a field it announced (a reason, null when whole). */
+    truncated: string | null;
+}
+
+/**
+ * Parse 0x01 0x21's data (the ACK payload after the result byte): model u8,
+ * hardware version u8, serial u32 LE, version (u16 LE length + bytes), then
+ * on the Ray a product SN (u16 LE length + bytes) - RayController 91a675f
+ * snapmaker.cpp:159-191. null when even the fixed 6 bytes are missing.
+ */
+export function parseSacpMachineInfo(data: Buffer | null | undefined): SacpMachineInfoFields | null {
+    if (!data || data.length < 6) {
+        return null;
+    }
+    const fields: SacpMachineInfoFields = {
+        model: data.readUInt8(0),
+        hardwareVersion: data.readUInt8(1),
+        serialU32: data.readUInt32LE(2),
+        firmwareVersion: null,
+        productSn: null,
+        productSnRaw: null,
+        truncated: null,
+    };
+    const text = (at: number, what: string): { value: string; next: number } | null => {
+        if (data.length < at + 2) {
+            if (data.length > at) {
+                fields.truncated = `${what}: length field cut short`;
+            }
+            return null;
+        }
+        const length = data.readUInt16LE(at);
+        if (data.length < at + 2 + length) {
+            fields.truncated = `${what}: ${length} byte(s) announced, ${data.length - at - 2} present`;
+            return null;
+        }
+        return { value: data.slice(at + 2, at + 2 + length).toString('latin1'), next: at + 2 + length };
+    };
+    const version = text(6, 'firmware version');
+    if (!version) {
+        return fields;
+    }
+    fields.firmwareVersion = version.value.replace(/\0+$/, '').trim() || null;
+    const sn = text(version.next, 'product SN');
+    if (sn) {
+        fields.productSnRaw = sn.value;
+        fields.productSn = isFillPatternProductSn(sn.value) ? null : sn.value.replace(/\0+$/, '').trim();
+    }
+    return fields;
+}
+
+/**
+ * Per-device identity for the Ready payload (#265 plan 1.3): the SACP
+ * MachineInfo `masterControlSerialNumber` as a string, null when the
+ * controller reported none (absent, not a number, or a fill pattern -
+ * isFillPatternSerial, which covers 0).
+ */
+export function sacpDeviceSerial(info: { masterControlSerialNumber?: unknown } | null | undefined): string | null {
+    const serial = info ? info.masterControlSerialNumber : undefined;
+    if (typeof serial === 'number') {
+        return Number.isFinite(serial) && !isFillPatternSerial(serial) ? String(serial) : null;
+    }
+    if (typeof serial === 'string') {
+        const trimmed = serial.trim();
+        return trimmed && !isFillPatternSerial(trimmed) ? trimmed : null;
+    }
+    return null;
+}
+
+/** Every heartbeat-payload field except the three the coordinate report owns. */
+export function pickHeartbeatExtras(stateData: { [key: string]: unknown }): { [key: string]: unknown } {
+    const extras: { [key: string]: unknown } = {};
+    for (const key of Object.keys(stateData || {})) {
+        if (key !== 'pos' && key !== 'originOffset' && key !== 'isHomed') {
+            extras[key] = stateData[key];
+        }
+    }
+    return extras;
+}
+
+/** headPower in the SSTP sense: laser current power for a laser head, current spindle speed for CNC. */
+export function deriveHeadPower(state: { headType?: unknown; laserPower?: unknown; cncCurrentSpindleSpeed?: unknown }): number | undefined {
+    let candidate: unknown;
+    if (state.headType === 'laser') {
+        candidate = state.laserPower;
+    } else if (state.headType === 'cnc') {
+        candidate = state.cncCurrentSpindleSpeed;
+    }
+    const n = Number(candidate);
+    return candidate === undefined || candidate === null || !Number.isFinite(n) ? undefined : n;
+}
+
+/**
+ * Keeps the newest state. Status and extras come from the heartbeat
+ * subscription, position from the coordinate subscription; each arrival
+ * stamps `timestamp`, so the MCP sees a beat per report (about 2 Hz with
+ * both subscriptions at 1 s). clear() on any session end makes the MCP read
+ * null again and forget the connection's offsets, like the HTTP channel.
+ */
+export class SacpMachineStateTracker {
+    private state: SacpMachineState | null = null;
+
+    private readonly now: () => number;
+
+    public constructor(now: () => number = Date.now) {
+        this.now = now;
+    }
+
+    public get(): SacpMachineState | null {
+        return this.state;
+    }
+
+    public noteHeartbeat(status: string, extras: { [key: string]: unknown } = {}): SacpMachineState {
+        const merged: SacpMachineState = { ...(this.state || { timestamp: 0 }), ...pickHeartbeatExtras(extras), status, timestamp: this.now() };
+        const headPower = deriveHeadPower(merged);
+        if (headPower !== undefined) {
+            merged.headPower = headPower;
+        }
+        this.state = merged;
+        return merged;
+    }
+
+    public noteCoordinates(report: SacpCoordinateReport, isFourAxis: boolean): SacpMachineState {
+        const mapped = mapCoordinateReport(report, isFourAxis);
+        this.state = { ...(this.state || {}), ...mapped, timestamp: this.now() };
+        return this.state;
+    }
+
+    /** The 0x01/0x36 homed notification: a fact about the existing state, not a new report. */
+    public noteHomed(isHomed: boolean): void {
+        if (this.state) {
+            this.state = { ...this.state, isHomed };
+        }
+    }
+
+    public clear(): void {
+        this.state = null;
+    }
+}

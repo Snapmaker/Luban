@@ -84,6 +84,29 @@ export default {
         },
         { type: 'separator' },
         {
+            id: 'crash-reporting',
+            label: 'key-App/Menu-Crash Reporting',
+            enabled: true,
+            click: (menuItem, browserWindow) => {
+                // Toggle in the main process store; it is read at startup, so
+                // this applies on next start.
+                if (isElectron()) {
+                    const { ipcRenderer } = window.require('electron');
+                    ipcRenderer.invoke('get-crash-reporting')
+                        .then((enabled) => {
+                            ipcRenderer.send('set-crash-reporting', !enabled);
+                            browserWindow.webContents.send('preferences.show', {
+                                activeTab: 'general'
+                            });
+                        });
+                } else {
+                    UniApi.Event.emit('appbar-menu:preferences.show', {
+                        activeTab: 'general'
+                    });
+                }
+            }
+        },
+        {
             id: 'open-config-folder',
             label: 'key-App/Menu-Open Config Folder',
             enabled: true,

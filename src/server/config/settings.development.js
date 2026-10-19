@@ -1,5 +1,5 @@
 import os from 'os';
-import path from 'path';
+import { APP_DIR } from '../lib/paths';
 
 const maxAge = 0;
 
@@ -14,7 +14,7 @@ export default {
                 '', // empty path
                 '/worker',
             ],
-            path: path.resolve(__dirname, '..', '..', 'app'),
+            path: APP_DIR,
             maxAge: maxAge
         }
     },

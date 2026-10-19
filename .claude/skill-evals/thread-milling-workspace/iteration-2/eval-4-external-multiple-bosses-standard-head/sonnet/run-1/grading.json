@@ -1,0 +1,86 @@
+{
+  "expectations": [
+    {
+      "text": "Specifies source_controller okuma, spindle_mode power_percent and spindle_power_percent 65 without asserting RPM mapping.",
+      "passed": true,
+      "evidence": "Steps 6 and 8: `convert_thread_milling_gcode {..., \"source_controller\": \"okuma\", ..., \"spindle_mode\": \"power_percent\", \"spindle_power_percent\": 65}`; Findings: 'This replaces the source RPM outright; it is not a calibration and feeds are retained unscaled.'"
+    },
+    {
+      "text": "Recognises the existing fitted-tool origin; does not require a needless tool change.",
+      "passed": true,
+      "evidence": "Findings: 'No tool-change flow (tool-change skill, apply_tool_length_offset) is needed for this job — the tool that established Z0 and the tool now fitted are the same, by the operator's own word.'"
+    },
+    {
+      "text": "Preserves per-boss datums and plans one job per boss, with initial-path/clearance verification and fresh position after each completion.",
+      "passed": false,
+      "evidence": "Two separate jobs and datums are preserved correctly (steps 6/8, 11, 16), and step 10 checks landmark clearance before staging job A, and step 15 re-reads get_position after job A completes ('Re-read get_position — re-read actual machine position after completion'). But after job B's completion (steps 18-19: start_gcode_job, then get_gcode_job_status to ending), the plan goes straight to step 20 ('Report both jobs' ending to the operator...') with no equivalent get_position call after job B — 'fresh position after each completion' is only done once, not for both jobs."
+    },
+    {
+      "text": "Does not concatenate at work Z20 or claim a completed job proves thread fit.",
+      "passed": true,
+      "evidence": "Findings: '...never a shared (0,0) export re-run after a traverse, and never concatenated into one file' and 'A completed job proves execution, not thread fit — the operator should check both bosses with a thread gauge afterward.'"
+    },
+    {
+      "text": "Uses head_type cnc and frame work in the later submit shape, with URL delivery before waiting.",
+      "passed": true,
+      "evidence": "Steps 11 and 16: `submit_gcode_job {..., \"head_type\": \"cnc\", \"frame\": \"work\"}` [APPROVAL], step 12/17 'deliver the confirm URL as the last line, alone' then `-- end turn --`, with start_gcode_job only at steps 13/18 in the following turn."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 1,
+    "total": 5,
+    "pass_rate": 0.8
+  },
+  "approval_tags_counted": {
+    "literal_tags_in_steps": 2,
+    "breakdown": "[APPROVAL] at step 11, [APPROVAL] at step 16",
+    "note": "A 3rd regex hit is the self-referential mention inside the plan's own 'Counts:' sentence ('literal [APPROVAL] tags=2'), not a step tag."
+  },
+  "stated_logical_approvals": "Plan states 'logical approvals=2 (one file job per boss, no tool change needed) x 1 = 2'. Consistent with the literal tag count of 2.",
+  "docs_consistency_check": {
+    "topic": "Machine-resolved Z extents for a program carrying an explicit G54",
+    "plan_claim": "Steps 12 and 17: 'Read the operator the confirm page's Frame row and machine-resolved Z extents; deliver the confirm URL as the last line, alone' — stated flatly, with no qualification.",
+    "docs_say": "src/server/services/mcp/docs/workspaces.md 'File review' states that the validator 'leaves machine extents unresolved for named-workspace files, mixed frames and origin rewrites', and every converted thread-milling program is a named-workspace file because the converter always emits a literal G54 (cnc-thread-milling/references/import.md: 'Output uses G21/G90/G54'; cnc-thread-milling/SKILL.md: 'The converter emits G54.'). cnc-motion-rules/SKILL.md echoes this: machine-resolved Z extents show only 'when resolvable', and files 'selecting named workspaces... have unresolved machine extents'.",
+    "verdict": "Inconsistent with docs/workspaces.md. The plan's finding about the Okuma controller mapping G15 H1 to G54 is correct, but the plan never connects that fact to the 'named-workspace file -> unresolved extents' rule; it assumes the confirm page will simply show machine-resolved Z extents for these files. Neither plan.md nor critique.md mentions this contradiction, unlike the opus run."
+  },
+  "leakage_check": "No near-verbatim assertion wording and no 'compliance with assertions' section found in plan.md or critique.md.",
+  "claims": [
+    {
+      "claim": "The source's first G00 X0 Y0 runs at whatever height the head is already at, before the first Z positioning block, and conversion adds no raise.",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Matches cnc-thread-milling/references/import.md's description of G43/H removal preserving inherited motion, and thread-milling.md's fixture note."
+    },
+    {
+      "claim": "A null/ambiguous connectedHead.toolHead should only trigger re-asking the operator if it disagrees with or stays ambiguous against their stated head.",
+      "type": "process",
+      "verified": true,
+      "evidence": "Consistent with cnc-thread-milling guidance that headType alone doesn't settle head identity and the operator's explicit 'standard CNC head is fitted' statement in the prompt is not contradicted by a withheld toolHead field."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [
+      "Critique flags that no reference gives a complete worked call example for spindle_mode: power_percent (only cnc_200w_rpm has one), so the power_percent call shape was assembled by combining the field table with the canonical call's shape."
+    ],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "Preserves per-boss datums and plans one job per boss, with initial-path/clearance verification and fresh position after each completion.",
+        "reason": "This assertion is doing real discriminating work here — it caught a genuine asymmetry (fresh position re-read only after job A, not job B) that would otherwise look like a fully symmetric two-job plan on a skim read. Worth keeping as-is."
+      },
+      {
+        "reason": "No assertion in this eval checks the machine-resolved-Z-extents-vs-explicit-G54 contradiction (docs/workspaces.md 'File review' vs cnc-thread-milling/SKILL.md's flat instruction to read machine-resolved Z extents). This run and the haiku run both missed it silently; only the opus run caught it. Consider adding an assertion so weaker models are checked against it directly rather than it surfacing only via a grader's manual doc cross-check."
+      }
+    ],
+    "overall": "4 of 5 assertions pass with solid evidence; the one failure is a real, specific gap (asymmetric position re-verification between the two jobs), not a nitpick."
+  },
+  "timing": {
+    "total_tokens": 147127,
+    "duration_ms": 285956,
+    "tool_uses": 22
+  }
+}

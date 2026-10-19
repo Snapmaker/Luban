@@ -1,0 +1,457 @@
+{
+  "tsconfig": "tsconfig.json",
+  "total": 1428,
+  "errors": {
+    "src/app/api/base.ts": {
+      "TS2339": 1
+    },
+    "src/app/api/index.ts": {
+      "TS2339": 27,
+      "TS2525": 4
+    },
+    "src/app/communication/socket-communication.ts": {
+      "TS2339": 6
+    },
+    "src/app/config/menu/index.ts": {
+      "TS2322": 7
+    },
+    "src/app/constants/colors.ts": {
+      "TS2363": 2
+    },
+    "src/app/core/CompoundOperation.ts": {
+      "TS2304": 1,
+      "TS2352": 1
+    },
+    "src/app/flux/cnc/index.ts": {
+      "TS2339": 1,
+      "TS2345": 2
+    },
+    "src/app/flux/editor/actions-process.ts": {
+      "TS2339": 1
+    },
+    "src/app/flux/editor/index.ts": {
+      "TS2339": 17,
+      "TS2345": 6,
+      "TS2554": 3,
+      "TS2794": 3
+    },
+    "src/app/flux/laser/index.ts": {
+      "TS2345": 2
+    },
+    "src/app/flux/printing/actions-mesh.ts": {
+      "TS2740": 1
+    },
+    "src/app/flux/printing/actions-scene.ts": {
+      "TS2339": 13,
+      "TS2345": 1,
+      "TS2362": 1,
+      "TS2363": 1
+    },
+    "src/app/flux/printing/index.ts": {
+      "TS2339": 31,
+      "TS2341": 1,
+      "TS2345": 14,
+      "TS2362": 1,
+      "TS2445": 1,
+      "TS2554": 10
+    },
+    "src/app/flux/project/index.ts": {
+      "TS2339": 18,
+      "TS2345": 5,
+      "TS2698": 1,
+      "TS2794": 1
+    },
+    "src/app/flux/workspace/MachineAgent.ts": {
+      "TS2339": 1,
+      "TS6133": 1
+    },
+    "src/app/flux/workspace/actions-gcode.ts": {
+      "TS2339": 4
+    },
+    "src/app/flux/workspace/index.ts": {
+      "TS2339": 3,
+      "TS2345": 2
+    },
+    "src/app/flux/workspace/state.ts": {
+      "TS2322": 1
+    },
+    "src/app/lib/manager/ClippingPoolManager.worker.ts": {
+      "TS2769": 1
+    },
+    "src/app/lib/manager/ProgressManager.ts": {
+      "TS2345": 2
+    },
+    "src/app/models/ClipperModel.ts": {
+      "TS2339": 3
+    },
+    "src/app/models/ModelGroup.ts": {
+      "TS2339": 6,
+      "TS2345": 3,
+      "TS6133": 1
+    },
+    "src/app/models/ModelGroup2D.ts": {
+      "TS2339": 1,
+      "TS6133": 2
+    },
+    "src/app/models/SvgModel.ts": {
+      "TS2339": 4,
+      "TS2345": 1,
+      "TS2740": 1
+    },
+    "src/app/models/ThreeBaseModel.ts": {
+      "TS2339": 4,
+      "TS2341": 1
+    },
+    "src/app/models/ThreeModel.ts": {
+      "TS2559": 1
+    },
+    "src/app/scene2d/Workpiece2d.ts": {
+      "TS2322": 5,
+      "TS2339": 7,
+      "TS6133": 1
+    },
+    "src/app/toolpaths/ToolPath.ts": {
+      "TS2339": 5
+    },
+    "src/app/toolpaths/ToolPathGroup.ts": {
+      "TS2339": 2,
+      "TS2345": 1,
+      "TS2554": 1,
+      "TS2794": 1,
+      "TS6133": 1
+    },
+    "src/app/ui/App.tsx": {
+      "TS2339": 14
+    },
+    "src/app/ui/SVGEditor/SVGCanvas.tsx": {
+      "TS2322": 4,
+      "TS2339": 354,
+      "TS2345": 1,
+      "TS2554": 8,
+      "TS2794": 4
+    },
+    "src/app/ui/SVGEditor/SVGEditor.tsx": {
+      "TS1345": 2,
+      "TS2322": 4,
+      "TS2339": 24,
+      "TS2551": 1,
+      "TS2554": 6,
+      "TS2769": 1
+    },
+    "src/app/ui/SVGEditor/SVGSelector.ts": {
+      "TS2322": 1
+    },
+    "src/app/ui/SVGEditor/SVGShapeLibrary/index.tsx": {
+      "TS2322": 2,
+      "TS2769": 1,
+      "TS6133": 1
+    },
+    "src/app/ui/SVGEditor/element-utils.ts": {
+      "TS2339": 9,
+      "TS2362": 1
+    },
+    "src/app/ui/SVGEditor/lib/ImageSvgCompose.ts": {
+      "TS2322": 1,
+      "TS2339": 9,
+      "TS2345": 1
+    },
+    "src/app/ui/SVGEditor/svg-content/DrawGroup/CursorGroup.ts": {
+      "TS2322": 3,
+      "TS2740": 2
+    },
+    "src/app/ui/SVGEditor/svg-content/DrawGroup/DrawGroup.ts": {
+      "TS2322": 4,
+      "TS2740": 1
+    },
+    "src/app/ui/SVGEditor/svg-content/DrawGroup/Line.ts": {
+      "TS2345": 1,
+      "TS2740": 1
+    },
+    "src/app/ui/SVGEditor/svg-content/DrawGroup/OperationGroup.ts": {
+      "TS2322": 2,
+      "TS2740": 2
+    },
+    "src/app/ui/components/EditComponent/EditComponent.tsx": {
+      "TS2322": 1
+    },
+    "src/app/ui/components/Modal/index.tsx": {
+      "TS2339": 1
+    },
+    "src/app/ui/components/SMCanvas/Canvas.tsx": {
+      "TS2339": 115,
+      "TS2740": 1
+    },
+    "src/app/ui/components/SMCanvas/ControlManager.ts": {
+      "TS2339": 7,
+      "TS2739": 1,
+      "TS6133": 3
+    },
+    "src/app/ui/components/Segmented/index.tsx": {
+      "TS6133": 1
+    },
+    "src/app/ui/components/SvgIcon/Icons/MainToolbarAbPosition.tsx": {
+      "TS2322": 1
+    },
+    "src/app/ui/components/SvgIcon/Icons/MaterialTestIcon.tsx": {
+      "TS2322": 1
+    },
+    "src/app/ui/pages/CncLaserShared/MainToolBar.tsx": {
+      "TS2322": 2,
+      "TS2339": 4,
+      "TS2345": 2,
+      "TS2554": 3
+    },
+    "src/app/ui/pages/HomePage/Avatar/index.tsx": {
+      "TS2307": 1,
+      "TS2339": 4
+    },
+    "src/app/ui/pages/HomePage/CaseLibrary.tsx": {
+      "TS6133": 1
+    },
+    "src/app/ui/pages/HomePage/StartProject.tsx": {
+      "TS2307": 4,
+      "TS2322": 1
+    },
+    "src/app/ui/pages/HomePage/index.tsx": {
+      "TS2322": 1,
+      "TS2339": 2
+    },
+    "src/app/ui/pages/Workspace.tsx": {
+      "TS2322": 2,
+      "TS2339": 1,
+      "TS2554": 1,
+      "TS2741": 1
+    },
+    "src/app/ui/pages/cnc-main/CNCMainPage.tsx": {
+      "TS2322": 1,
+      "TS2339": 7,
+      "TS2345": 2,
+      "TS2532": 1,
+      "TS2554": 2,
+      "TS2741": 2,
+      "TS2746": 1
+    },
+    "src/app/ui/pages/cnc-main/modals/JobSetupView.tsx": {
+      "TS2345": 1
+    },
+    "src/app/ui/pages/global-modals/settings-modal/Settings.tsx": {
+      "TS2339": 2
+    },
+    "src/app/ui/pages/laser-main/LaserMainPage.tsx": {
+      "TS2322": 1,
+      "TS2339": 7,
+      "TS2345": 1,
+      "TS2554": 1
+    },
+    "src/app/ui/pages/laser-main/modals/JobSetupView.tsx": {
+      "TS2345": 1
+    },
+    "src/app/ui/pages/laser-workspace-ray/MachineMonitor.tsx": {
+      "TS2345": 6
+    },
+    "src/app/ui/pages/laser-workspace-ray/RayLaserWorkspace.tsx": {
+      "TS2554": 1
+    },
+    "src/app/ui/pages/laser-workspace-ray/VisualizerOverlay.tsx": {
+      "TS2322": 1
+    },
+    "src/app/ui/pages/print-main/PrintMainPage.tsx": {
+      "TS2322": 3,
+      "TS2339": 6,
+      "TS2554": 3
+    },
+    "src/app/ui/utils/profileManager.tsx": {
+      "TS2339": 7
+    },
+    "src/app/ui/views/LaserPresentManager/LaserPresentManager.tsx": {
+      "TS2339": 4
+    },
+    "src/app/ui/views/MaterialTestConfigurations/MaterialTestConfigurations.tsx": {
+      "TS2322": 1,
+      "TS2339": 7,
+      "TS2741": 2
+    },
+    "src/app/ui/views/PresetModifier/DeletePresetModal.tsx": {
+      "TS2345": 1
+    },
+    "src/app/ui/views/PresetModifier/ParameterCheckItem.tsx": {
+      "TS2322": 1
+    },
+    "src/app/ui/views/PresetModifier/ParametersTableView.tsx": {
+      "TS2339": 2
+    },
+    "src/app/ui/views/PresetModifier/PresetAdjustmentView.tsx": {
+      "TS2322": 1,
+      "TS2339": 7
+    },
+    "src/app/ui/views/PresetModifier/ResetPresetModal.tsx": {
+      "TS2345": 1
+    },
+    "src/app/ui/views/PrintingObjectList/ObjectListItem.tsx": {
+      "TS2322": 1,
+      "TS2339": 5,
+      "TS2741": 1
+    },
+    "src/app/ui/views/PrintingObjectList/ObjectSvgIcon.tsx": {
+      "TS2339": 3
+    },
+    "src/app/ui/views/ToolPathConfigurations/ToolPathConfigurations.tsx": {
+      "TS2322": 1,
+      "TS2339": 12,
+      "TS2554": 1,
+      "TS2741": 2
+    },
+    "src/app/ui/views/model-operation-overlay/ABPositionOverlay.tsx": {
+      "TS2322": 2
+    },
+    "src/app/ui/views/model-operation-overlay/ModelScaleOverlay.tsx": {
+      "TS2322": 1
+    },
+    "src/app/ui/widgets/CNCVisualizer/Visualizer.tsx": {
+      "TS2322": 4,
+      "TS2339": 50,
+      "TS2341": 1,
+      "TS2345": 1,
+      "TS2415": 1,
+      "TS2540": 2,
+      "TS2554": 11,
+      "TS2740": 1,
+      "TS2741": 2,
+      "TS2769": 1
+    },
+    "src/app/ui/widgets/CncLaserOutput/Output.tsx": {
+      "TS2322": 3,
+      "TS2532": 1
+    },
+    "src/app/ui/widgets/CncLaserShared/PrintablePlate/GridLine.ts": {
+      "TS2322": 2
+    },
+    "src/app/ui/widgets/CncLaserShared/PrintablePlate/PrintablePlate.ts": {
+      "TS2305": 1,
+      "TS2339": 3,
+      "TS2345": 2
+    },
+    "src/app/ui/widgets/Connection/SerialConnection.tsx": {
+      "TS2339": 3
+    },
+    "src/app/ui/widgets/Connection/modals/MismatchModal.tsx": {
+      "TS2345": 1
+    },
+    "src/app/ui/widgets/Connection/modals/MismatchNozzleModal.tsx": {
+      "TS2345": 1
+    },
+    "src/app/ui/widgets/ConnectionControl/ABPositionButtonGroup.tsx": {
+      "TS6133": 1
+    },
+    "src/app/ui/widgets/ConnectionControl/Control.tsx": {
+      "TS2322": 2,
+      "TS2362": 4,
+      "TS2741": 1
+    },
+    "src/app/ui/widgets/ConnectionFileTransfer/FileTransferView.tsx": {
+      "TS2322": 1,
+      "TS2339": 10
+    },
+    "src/app/ui/widgets/ConnectionFileTransfer/GCodeListItem.tsx": {
+      "TS2339": 20,
+      "TS2345": 1
+    },
+    "src/app/ui/widgets/ConnectionFileTransfer/GCodeParams.tsx": {
+      "TS6133": 1
+    },
+    "src/app/ui/widgets/ConnectionFileTransfer/LaserStartModal.tsx": {
+      "TS2339": 2,
+      "TS2345": 4,
+      "TS2741": 1
+    },
+    "src/app/ui/widgets/ConnectionFileTransfer/PreviewToRunJobModal.tsx": {
+      "TS2345": 2,
+      "TS6133": 1
+    },
+    "src/app/ui/widgets/ConnectionFileTransfer/modals/GCodeFilePreviewModal.tsx": {
+      "TS2322": 2,
+      "TS2554": 1
+    },
+    "src/app/ui/widgets/JobStatusWidget/JobStatusView.tsx": {
+      "TS2322": 1,
+      "TS2339": 3
+    },
+    "src/app/ui/widgets/JobStatusWidget/index.tsx": {
+      "TS2339": 1
+    },
+    "src/app/ui/widgets/LaserCameraAidBackground/SelectCaptureMode.tsx": {
+      "TS2307": 2
+    },
+    "src/app/ui/widgets/LaserVisualizer/Visualizer.tsx": {
+      "TS2322": 3,
+      "TS2339": 97,
+      "TS2341": 2,
+      "TS2540": 2,
+      "TS2554": 2,
+      "TS2741": 2,
+      "TS2769": 1
+    },
+    "src/app/ui/widgets/LaserVisualizer/index.tsx": {
+      "TS2339": 2
+    },
+    "src/app/ui/widgets/MotorPowerHoldControl/MotorPowerHoldControl.tsx": {
+      "TS2322": 1,
+      "TS2345": 1,
+      "TS6133": 1
+    },
+    "src/app/ui/widgets/PrintingConfigurationWidget/ConfigurationView.tsx": {
+      "TS2322": 4,
+      "TS2339": 4,
+      "TS2345": 1,
+      "TS2741": 1
+    },
+    "src/app/ui/widgets/PrintingOutput/Output.tsx": {
+      "TS2322": 2,
+      "TS2339": 9
+    },
+    "src/app/ui/widgets/PrintingVisualizer/SceneView.tsx": {
+      "TS2305": 1,
+      "TS2322": 2,
+      "TS2339": 116
+    },
+    "src/app/ui/widgets/PrintingVisualizer/components/SceneContextMenu.tsx": {
+      "TS2339": 3
+    },
+    "src/app/ui/widgets/RaySetOriginWidget/ControlPanel.tsx": {
+      "TS2322": 1
+    },
+    "src/app/ui/widgets/RaySetOriginWidget/SetOriginView.tsx": {
+      "TS2740": 1
+    },
+    "src/app/ui/widgets/RayUploadWidget/UploadView.tsx": {
+      "TS2322": 1,
+      "TS2345": 1
+    },
+    "src/app/ui/widgets/WorkspaceVisualizer/PrintablePlate/GridLine.ts": {
+      "TS2322": 2
+    },
+    "src/app/ui/widgets/WorkspaceVisualizer/PrintablePlate/PrintablePlate.ts": {
+      "TS2339": 5,
+      "TS2345": 3,
+      "TS6133": 1
+    },
+    "src/app/workers/GcodeToBufferGeometry/GcodeToBufferGeometryWorkspace.ts": {
+      "TS2339": 1
+    },
+    "src/app/workers/arrangeModels.ts": {
+      "TS2339": 5
+    },
+    "src/app/workers/scaleToFitWithRotate.ts": {
+      "TS2339": 4
+    },
+    "src/app/workers/toolpathRenderer.ts": {
+      "TS2339": 1
+    },
+    "src/server/services/index.ts": {
+      "TS2345": 1
+    },
+    "src/server/services/socket/index.ts": {
+      "TS1208": 1
+    }
+  }
+}

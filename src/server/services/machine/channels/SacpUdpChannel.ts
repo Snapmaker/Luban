@@ -6,6 +6,7 @@ import SacpClient from '../sacp/SacpClient';
 import { ChannelEvent } from './ChannelEvent';
 import SacpChannelBase from './SacpChannel';
 import { ExecuteGcodeResult } from './Channel';
+import { gcodeLease } from '../gcodeLease';
 
 const log = logger('machine:channels:SacpUdpChannel');
 
@@ -30,6 +31,7 @@ class SacpUdpChannel extends SacpChannelBase {
         });
         this.socketClient.on('close', () => {
             log.info('UDP connection closed');
+            this.bumpConnectionGeneration('UDP socket closed');
             const result = {
                 code: 200,
                 data: {},
@@ -40,11 +42,13 @@ class SacpUdpChannel extends SacpChannelBase {
         });
         this.socketClient.on('error', (err) => {
             log.error(`UDP connection error: ${err}`);
+            this.bumpConnectionGeneration('UDP socket error');
         });
     }
 
     public async test(host: string, port: number): Promise<boolean> {
         const sacpResponse = (async () => {
+            this.bumpConnectionGeneration('UDP probe session created');
             this.sacpClient = new SacpClient('udp', {
                 socket: this.socketClient,
                 host,
@@ -66,6 +70,7 @@ class SacpUdpChannel extends SacpChannelBase {
 
         this.emit(ChannelEvent.Connecting);
 
+        this.bumpConnectionGeneration('UDP session created');
         this.sacpClient = new SacpClient('udp', {
             socket: this.socketClient,
             host: options.address,
@@ -85,6 +90,7 @@ class SacpUdpChannel extends SacpChannelBase {
         // Machine detected
         this.emit(ChannelEvent.Ready, {
             machineIdentifier,
+            deviceSerial: this.deviceSerialOf(machineInfo),
         });
 
         return true;
@@ -93,6 +99,7 @@ class SacpUdpChannel extends SacpChannelBase {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public async connectionClose(options?: { force: boolean }): Promise<boolean> {
         // UDP is stateless, not need to close
+        this.bumpConnectionGeneration('UDP connection closed');
         this.sacpClient?.dispose();
 
         return true;
@@ -118,8 +125,16 @@ class SacpUdpChannel extends SacpChannelBase {
 
     /**
      * Generic execute G-code commands.
+     *
+     * Result 0 of SACP 0x01 0x02 does NOT mean the line ran: the Ray V1.7.4
+     * ACKs before it even queues the line, and then drops lines it cannot take
+     * (80+ bytes, a full input ring, G-code in Alarm) without a word
+     * (RayController 91a675f snapmaker.cpp:272-291). Confirm effects by state.
+     * Never resend on a lost ACK: the firmware does not dedupe 0x01 0x02.
      */
     public async executeGcode(gcode: string): Promise<ExecuteGcodeResult> {
+        const refusal = gcodeLease.refusal(gcode);
+        if (refusal) { return { result: -1, text: refusal }; }
         const result = await this.sacpClient.executeGcode(gcode);
 
         // if any gcode line fails, then fails
@@ -135,10 +150,11 @@ class SacpUdpChannel extends SacpChannelBase {
         };
     }
 
-    public goHome = async () => {
-        await this.sacpClient.requestHome().then(({ response }) => {
-            this.socket && this.socket.emit('serialport:read', { data: response.result === 0 ? 'OK' : 'WARNING' });
-        });
+    /** The channel's own home (SACP 0x01/0x35); true when the controller accepted it. */
+    public goHome = async (): Promise<boolean> => {
+        const { response } = await this.sacpClient.requestHome();
+        this.socket && this.socket.emit('serialport:read', { data: response.result === 0 ? 'OK' : 'WARNING' });
+        return response.result === 0;
     }
 }
 

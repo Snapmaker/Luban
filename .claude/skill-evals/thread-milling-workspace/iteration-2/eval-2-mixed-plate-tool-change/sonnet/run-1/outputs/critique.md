@@ -1,0 +1,16 @@
+# Critique
+
+## What helped
+
+- `cnc-thread-milling/references/setup.md` and `docs/thread-milling.md` both walk through **the exact same trap** this prompt sets: a cutter with a "1.38 mm neck and three axial rows" whose cutting OD is unknown, contrasted against the M2.5 fixture's `CUTTER DIAM=1.38`. Having that worked out in the docs made it unambiguous that the fixture's number must not be borrowed for the real cutter, and that "cutting OD is unknown" (the operator's own words) is not solvable by inference from neck diameter.
+- `docs/thread-milling.md`'s worked example of `M4x0.7xD4x50L` ("D4 is shank diameter and 50L overall length") maps directly onto the prompt's M4 cutter designation, so it was clear cutting OD is likewise missing for both M4 options rather than assumable as "4 mm."
+- `setup.md`'s "Six holes and two flow-A tool changes normally mean 6 + 4 + 4 = 14 approvals" is almost a literal answer key for this scenario's approval count (4 M2.5 + 2 M4 holes, 2 tool changes), which let me sanity-check the plan's count rather than deriving it from scratch.
+- `cnc-motion-rules` §0 law 7 ("ask once... before staging anything") and the tool-change skill's instruction to batch both tools' protrusions and the flow choice into the same message made it straightforward to consolidate everything into one question list instead of guessing an order for interruptions.
+
+## What was missing, unclear, or contradictory
+
+- No skill states what an agent should do when the operator has not yet supplied **any** Machining Doctor export for the actual holes — only a diagnostic fixture that is explicitly off-limits as a recipe. I had to infer that generating the six real exports is entirely the operator's action (outside the MCP tool surface) and add it as an explicit question/action item, since nothing in `cnc-thread-milling` says the agent can synthesize generator output itself.
+- The trade-off text for choosing single-row vs triple-row ("single-form generally reduces simultaneous engagement... multi-form reduces turns but engages more forms") gives no decision rule when neither cutter's effective length or cutting OD is known, as here. I treated this as unresolvable without more data rather than guessing a default.
+- "Usable reach" is defined once in `setup.md`'s table ("tip/active form to the larger shank or obstruction") but the operator's own phrase ("7.5 mm tip-to-shank reach... including its three rows") doesn't obviously map onto that definition one-for-one — I had to guess they mean the same thing and ask for confirmation rather than treat it as settled.
+- No document gives a rule of thumb or minimum figure for how much axial clearance/overrun a through-hole thread-mill needs below the plate; `setup.md` only warns that "6 mm drilled" and "5 mm plate" don't by themselves prove clearance. I left this as an open verification item instead of inventing a margin.
+- Thread length for the M4 holes is never stated as a distinct number anywhere in the prompt (only inferable from "pre-drilled through, plate is 5 mm thick," same as the M2.5 holes) — I flagged the 5 mm assumption for confirmation rather than asserting it as a firm requirement, since a wrong assumption here changes rows×pitch and reach math for both cutter families.

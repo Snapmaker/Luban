@@ -1,0 +1,25 @@
+{
+  "stock_W_mm": 64.1,
+  "stock_H_mm": 36.4,
+  "cutter_diam_mm": 6.0,
+  "y_band_start": 254.0,
+  "y_band_end": 258.0,
+  "variant_A_four_tabs": {
+    "tab_side_mm": 8.0,
+    "retained_area_mm2": 248.27433388230813,
+    "per_tab_area_mm2": 62.06858347057703,
+    "n_connections": 4,
+    "components_check": 4,
+    "bridges_body_to_tenon": true
+  },
+  "variant_B_two_brackets": {
+    "leg_mm": 16.0,
+    "thickness_mm": 8.0,
+    "retained_area_mm2": 376.27433388230816,
+    "per_bracket_area_mm2": 188.13716694115408,
+    "n_connections": 2,
+    "components_check": 2,
+    "bridges_body_to_tenon": true
+  },
+  "stock_area_mm2": 2333.24
+}

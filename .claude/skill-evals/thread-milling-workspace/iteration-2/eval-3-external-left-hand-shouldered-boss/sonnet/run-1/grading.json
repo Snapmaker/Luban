@@ -1,0 +1,83 @@
+{
+  "eval_id": 3,
+  "eval_name": "external-left-hand-shouldered-boss",
+  "config": "sonnet",
+  "expectations": [
+    {
+      "text": "Selects external, LH, conventional without reversing an internal program by hand.",
+      "passed": true,
+      "evidence": "Findings: 'Only the qualitative spec is known: external M8x1, left-hand, conventional milling, 6 mm thread length...'; 'The M2.5 fixture in the repo is unrelated regression evidence for a different (internal, RH) thread and must not be reused as a stand-in for this cutter's geometry or this thread's programmed diameters.' No hand-mirroring/reversal is proposed anywhere."
+    },
+    {
+      "text": "Requires cutting OD and axial configuration independently of shank marking and flute count.",
+      "passed": true,
+      "evidence": "Findings: 'in vendor thread-mill designations \"D4\" is typically the shank diameter and \"50L\" the overall length... \"triple flute\" is a circumferential-edge count, independent of the number of axial thread forms'; Q1 asks cutting/thread-form OD and Q2 asks 'effective cutting length / number of axial thread forms... Triple-flute alone does not establish any of these' as a separate item."
+    },
+    {
+      "text": "Reviews the entire exterior orbit, neck/shank/holder and shoulder/runout, including nearby clamps.",
+      "passed": true,
+      "evidence": "Q4: 'checked as an obstacle for the cutter, neck, shank and holder through the whole orbit, lead-in/out and withdrawal — not just at the deepest pass'; Step 11 review re-confirms 'the deepest cutting point clears the measured shoulder height... the whole route including the first XY move... clears the motion floor, any landmarks and the clamp's stated extent'; Readiness item 6 restates 'tool orbit, entry, every radial pass, deepest cut point, shoulder and clamp clearance'."
+    },
+    {
+      "text": "Does not reuse an internal (major minus cutter)/2 orbit formula as an external recipe.",
+      "passed": true,
+      "evidence": "Findings: 'The M2.5 fixture... must not be reused as a stand-in for this cutter's geometry or this thread's programmed diameters.' No orbit-radius formula (internal or external) is invented anywhere in the plan; all radii are deferred to the operator-confirmed generator export."
+    },
+    {
+      "text": "Keeps all unknown generator fields pending and issues no motion or staging.",
+      "passed": true,
+      "evidence": "Steps 1-5 are read-only (get_connection_status/get_position/get_stored_state/get_machine_profile/get_tool_setter_config); step 6 is the single batched 9-question message [WAIT]; 'Counts: logical approvals = ... ' section confirms no approval is staged in this turn; the tool-change and submission steps are all explicitly gated behind '(After the answers land.)' / 'Only if the operator then explicitly requests execution'."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  },
+  "approval_tags_counted": 6,
+  "stated_logical_approvals": "Plan states 'logical approvals = 1 tool change x 4 + 1 feature job = 5 (+1 more, a probe_program datum measurement, only if Q8's answer says the boss WCS is not yet established)' and separately 'literal [APPROVAL] tags in Steps = 5'. Actual literal count of [APPROVAL]-tagged steps in the Steps section is 6 (lines with run_tool_setter x2, goto_tool_change_position, apply_tool_length_offset, the conditional probe_program, and submit_gcode_job) — the plan's own literal-tag figure (5) undercounts by 1 against its own text; its logical-approval figure (5, +1 conditional) matches the 6 literal tags once the conditional one is included.",
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": 15,
+    "errors_encountered": 0,
+    "output_chars": 16378,
+    "transcript_chars": null
+  },
+  "timing": {
+    "total_tokens": 142579,
+    "tool_uses": 22,
+    "duration_ms": 290363
+  },
+  "claims": [
+    {
+      "claim": "tool_length_applied cannot be honestly declared until the tool-change flow (step 8) has actually run and been verified.",
+      "type": "quality",
+      "verified": true,
+      "evidence": "Readiness: 'tool_length_applied: true requires the tool-change flow (step 8) to have actually run and been verified against a reliable position — right now the fitted tool is the touch probe, not the thread mill.' Correct per tool-change skill's flow-A sequencing."
+    },
+    {
+      "claim": "A preflight recheck immediately before submission is a second legitimate 'ask once' batch, distinct from the setup question batch.",
+      "type": "process",
+      "verified": false,
+      "evidence": "Critique itself flags this as a guess: 'nothing states explicitly that a second batched question is permitted this way... I guessed that the preflight recheck is a legitimate second \"ask once\" round.' Plausible but not confirmed against the skill text; correctly self-flagged as unverified rather than presented as fact."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [
+      "Whether triple-flute designs conventionally correspond to a single axial row — explicitly left unresolved and asked rather than assumed.",
+      "Which mechanism (set_landmark vs a probe_program keep-out) is correct for representing an unmeasured clamp."
+    ],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "reason": "Sonnet's own stated 'literal [APPROVAL] tags = 5' does not match the 6 tags actually present in its Steps section (the conditional probe_program tag at step 9 is text-present but excluded from its own count). This is a self-consistency defect the eval's assertions don't check for eval 3, worth a generic cross-eval assertion: 'the plan's stated literal tag count matches the tags actually present.'"
+      }
+    ],
+    "overall": "All 5 assertions pass with concrete, specific evidence. Sonnet's depth on shoulder/plunge-column geometry is noticeably shallower than opus's (no tooth-to-tip or plunge-column collision reasoning), but the assertions as written do not require that level of detail, so this does not affect the grade."
+  }
+}

@@ -3,14 +3,11 @@ import bodyParser from 'body-parser';
 import compress from 'compression';
 import multiparty from 'connect-multiparty';
 import connectRestreamer from 'connect-restreamer';
-import engines from 'consolidate';
 import cookieParser from 'cookie-parser';
-import errorhandler from 'errorhandler';
 import express from 'express';
 import expressJwt from 'express-jwt';
 import session from 'express-session';
 import * as fs from 'fs-extra';
-import 'hogan.js'; // required by consolidate
 import i18next from 'i18next';
 import i18nextHttpMiddleware from 'i18next-http-middleware';
 import i18nextBackend from 'i18next-node-fs-backend';
@@ -26,7 +23,9 @@ import sessionFileStore from 'session-file-store';
 import settings from './config/settings';
 import { ERR_FORBIDDEN, ERR_UNAUTHORIZED, IP_WHITELIST } from './constants';
 import DataStorage from './DataStorage';
+import hoganEngine from './lib/hoganEngine';
 import logger from './lib/logger';
+import { APP_DIR, SERVER_DIR } from './lib/paths';
 import urljoin from './lib/urljoin';
 import { registerApis } from './services';
 import config from './services/configstore';
@@ -54,6 +53,9 @@ const verifyToken = (token) => {
 };
 const DEFAULT_FILE = 'index.html';
 
+// Origins allowed to call this server cross-origin: the app loaded off disk.
+const LUBAN_ORIGIN = /^luban:\/\//;
+
 const createApplication = () => {
     const app = express();
 
@@ -61,7 +63,13 @@ const createApplication = () => {
     if (process.env.NODE_ENV === 'development') {
         // Error handler - https://github.com/expressjs/errorhandler
         // Development error handler, providing stack traces and error message responses
-        // for requests accepting text, html, or json.
+        // for requests accepting text, html, or json. Required here rather than
+        // imported at the top: errorhandler reads its stylesheet and template out of
+        // its own package directory when it loads, which it has none of inside the
+        // production server bundle, and this branch is compiled out of that bundle
+        // (NODE_ENV is a build-time constant there), so the package stays out of it.
+        // eslint-disable-next-line global-require
+        const errorhandler = require('errorhandler');
         app.use(errorhandler());
 
         // a custom "verbose errors" setting which can be used in the templates via settings['verbose errors']
@@ -78,6 +86,8 @@ const createApplication = () => {
     app.disable('strict routing'); // Enable strict routing, by default "/foo" and "/foo/" are treated the same by the router
     app.disable('x-powered-by'); // Enables the X-Powered-By: Express HTTP header, enabled by default
 
+    // Template engines by the name settings.view.engines refers to them by.
+    const engines = { hogan: hoganEngine };
     for (let i = 0; i < settings.view.engines.length; ++i) {
         const extension = settings.view.engines[i].extension;
         const template = settings.view.engines[i].template;
@@ -85,11 +95,37 @@ const createApplication = () => {
     }
     app.set('view engine', settings.view.defaultExtension); // The default engine extension to use when omitted
     app.set('views', [
-        path.resolve(__dirname, '../app'),
-        path.resolve(__dirname, 'views')
+        APP_DIR,
+        path.join(SERVER_DIR, 'views')
     ]); // The view directory path
 
     log.debug('app.settings: %j', app.settings);
+
+    // The renderer is served off disk over luban:// so that it need not wait for
+    // this server to start, which makes every call to it cross-origin. Only that
+    // scheme is allowed; it can only be produced by our own protocol handler.
+    app.use((req, res, next) => {
+        const origin = req.get('Origin');
+
+        if (origin && LUBAN_ORIGIN.test(origin)) {
+            res.setHeader('Access-Control-Allow-Origin', origin);
+            res.setHeader('Access-Control-Allow-Credentials', 'true');
+            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+            res.setHeader(
+                'Access-Control-Allow-Headers',
+                'Authorization, Content-Type, Cache-Control, X-Requested-With'
+            );
+
+            // superagent sets Authorization and Cache-Control, so these are
+            // preflighted rather than simple requests.
+            if (req.method === 'OPTIONS') {
+                res.status(204).end();
+                return;
+            }
+        }
+
+        next();
+    });
 
     // Check if client's IP address is in the whitelist
     app.use((req, res, next) => {
@@ -119,14 +155,23 @@ const createApplication = () => {
     // Middleware
     // https://github.com/senchalabs/connect
     // https://github.com/valery-barysok/session-file-store
+    // Start with no stored sessions. DataStorage empties this folder at the
+    // same time (asynchronously, from its init), so a file listed here may be
+    // gone by the time it is inspected: that is the outcome wanted, not an
+    // error. Letting it throw took the whole application factory down, and
+    // the HTTP server then parked every request forever (see index.js).
     const sessionPath = DataStorage.sessionDir;
     if (fs.existsSync(sessionPath)) {
         const files = fs.readdirSync(sessionPath);
-        if (files.length > 0) {
-            for (let i = 0; i < files.length; i++) {
-                const filePath = `${sessionPath}/${files[i]}`;
+        for (let i = 0; i < files.length; i++) {
+            const filePath = `${sessionPath}/${files[i]}`;
+            try {
                 if (fs.statSync(filePath).isFile()) {
                     fs.unlinkSync(filePath);
+                }
+            } catch (err) {
+                if (err.code !== 'ENOENT') {
+                    throw err;
                 }
             }
         }

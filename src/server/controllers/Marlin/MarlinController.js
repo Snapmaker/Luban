@@ -421,6 +421,8 @@ class MarlinController extends EventEmitter {
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', { data: res.raw });
             }
+            // For the channel's machine state (TextSerialChannel); nothing is written.
+            this.emit('originOffsetReport', res);
         });
         this.controller.on('headStatus', (res) => {
             // log.silly(`controller.on('originOffset'): source=${this.history.writeSource},
@@ -461,6 +463,9 @@ class MarlinController extends EventEmitter {
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', { data: res.raw });
             }
+            // The M114 reply was just parsed: TextSerialChannel stamps its
+            // machine state with THIS moment (not the query timer's tick).
+            this.emit('positionReport', res);
         });
         this.controller.on('temperature', (res) => {
             if (!this.seriesSize) {
@@ -492,6 +497,9 @@ class MarlinController extends EventEmitter {
             if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', { data: res.raw });
             }
+            // M1007's "Selected origin num" / "Selected == Current" lines, for
+            // the channel's machine state (TextSerialChannel); nothing is written.
+            this.emit('originSelectionReport', res);
         });
         this.controller.on('cnc:stop', (res) => {
             log.warn(`controller.on('cnc:stop'): source=${this.history.writeSource}, res=${JSON.stringify(res)}`);
@@ -503,7 +511,7 @@ class MarlinController extends EventEmitter {
                 this.writeln('M1010 S2');
             }, 1000);
         });
-        this.controller.on('cnc:highpower', (res) => {
+        this.controller.on('cnc:highpower', () => {
             // log.info(`controller.on('cnc:highpower'): source=${this.history.writeSource}, res=${JSON.stringify(res)}`);
         });
         this.controller.on('laser10w:state', (res) => {
@@ -1329,6 +1337,9 @@ class MarlinController extends EventEmitter {
         context.emit && this.emitAll('serialport:write', { data, context });
 
         this.serialport.write(data, context);
+        // The only serial write: TextSerialChannel notes every line (homes,
+        // G92 shifts, syncs, M114 queries) for the MCP's frame evidence.
+        this.emit('lineWritten', data);
     }
 }
 

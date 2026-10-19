@@ -1,0 +1,143 @@
+================================================================================
+NECK-CUT REASSESSMENT EVIDENCE ANALYSIS
+================================================================================
+
+COORDINATE FRAME CONSTANTS
+--------------------------------------------------------------------------------
+Probe effective length:        70.95 mm
+Probe tip exposed:             21 mm
+Probe tip radius:              1.25 mm
+
+B0 MEASUREMENTS (X = 195)
+--------------------------------------------------------------------------------
+Outside faces at Y245:         X 137.85 to 201.95 (width 64.1 mm)
+Side silhouette at Y245:       36.4 mm
+
+Top rim contact:
+  Toolhead Z:                  201.3 mm
+  Physical Z (tip):            130.35000000000002 mm
+
+Existing groove floor (Y254-259):
+  Toolhead Z:                  192.2 mm
+  Physical Z:                  121.24999999999999 mm
+  Depth below rim:             9.100000000000037 mm
+
+B180 MEASUREMENTS (X = 198)
+--------------------------------------------------------------------------------
+Top rim contact (Y245-253):
+  Toolhead Z:                  204.5 mm
+  Physical Z:                  133.55 mm
+
+Groove floor (Y254-258):
+  Toolhead Z:                  198.3 mm
+  Physical Z:                  127.35000000000001 mm
+  Depth below rim:             6.200000000000003 mm
+
+SIDE OPENING (B90/B270)
+--------------------------------------------------------------------------------
+Physical opening at Y256:      21.3 mm
+
+RAISED SURFACE / CHUCK TRANSITION (B0, X195, Y270-278)
+--------------------------------------------------------------------------------
+Low point (Y270.5):
+  Toolhead Z:                  206.4 mm
+  Physical Z:                  135.45 mm
+
+High plateau (Y272-278):
+  Toolhead Z:                  214.3 mm
+  Physical Z:                  143.35000000000002 mm
+
+Step location: between Y270.5 and Y271.0
+Step height: ~7.9 mm
+
+PROPOSED WORK ORIGIN (NOT YET SET ON CONTROLLER)
+--------------------------------------------------------------------------------
+Machine position:              X230.0 Y245.0
+Probe toolhead Z:              231.3 mm
+Physical probe tip Z:          160.35 mm
+Clearance above B0 rim:        29.99999999999997 mm
+
+LIVE G54 OFFSET (27 SEPTEMBER - OLD, NOT THE PROPOSED WCS)
+--------------------------------------------------------------------------------
+Machine G54 origin:            X169.953 Y133.632 toolhead Z208.5
+Physical tip Z:                137.55 mm
+
+CUTTING TOOL SPECIFICATION (6mm ENDMILL)
+--------------------------------------------------------------------------------
+Diameter:                      6.0 mm
+Cutting edge length:           25.0 mm
+Overall length:                75.0 mm
+Est. protrusion in collet:     55.0 mm
+Collet diameter:               UNKNOWN - needs measurement
+
+ROTARY AXIS (ESTIMATES - NOT SAFE TOOLHEAD TARGETS)
+--------------------------------------------------------------------------------
+Machine X:                     170.1 mm (estimate, tied to 2026-09-05, 71.3mm probe)
+Physical Z:                    112.4 mm (estimate)
+
+ENCLOSURE CAD NOMINAL DIMENSIONS
+--------------------------------------------------------------------------------
+Outside cross-section:         64.0 × 36.0 mm
+Y extent:                      119.0 mm (0-119 in CAD coords)
+Status:                        NOT YET REGISTERED to machine coordinates
+
+FIXTURE / CHUCK CONSTRAINTS
+--------------------------------------------------------------------------------
+Jaw front approx. Y:           269.0 (uncertain, not remeasured)
+Tool-jaw clearance margin:     5 mm (stated as established)
+
+================================================================================
+DERIVED CALCULATIONS
+================================================================================
+
+STOCKMATERIAL THICKNESS
+--------------------------------------------------------------------------------
+B0 apparent section (Y254-259):
+  Rim to floor depth:          9.1 mm
+
+B180 apparent section (Y254-258):
+  Rim to floor depth:          6.2 mm
+  Difference from B0:          2.9 mm
+  Interpretation: Different groove depths at B0 vs B180 suggest
+                  a hollow enclosure with varying wall thickness
+
+SIDE OPENING vs TOP RIM
+--------------------------------------------------------------------------------
+B0 top rim to side opening Y:  6 mm (Y256 - Y250)
+Opening depth at Y256:         21.3 mm
+B0 rim width (X):              64.1 mm
+Implied side wall thickness:   21.4 mm each side
+
+PROBE REACH CONSTRAINTS
+--------------------------------------------------------------------------------
+Stylus exposed:                21 mm
+Tip radius:                    1.25 mm
+Safe descent margin:           2 mm
+Maximum depth below rim:       17.8 mm
+
+B0 groove depth (9.1 mm) vs probe reach (17.8 mm)
+  Status: WITHIN REACH (margin 8.6 mm)
+
+================================================================================
+MEASUREMENT EVIDENCE LEDGER
+================================================================================
+
+| Feature | Value | Frame | Source | Status |
+|---------|-------|-------|--------|--------|
+| B0 outside X faces (Y245) | 137.85 / 201.95 mm | machine X | probed rim | measured |
+| B0 side silhouette (Y245) | 36.4 mm | physical cross-section | profile probe | measured |
+| B0 rim height (X195, Y250) | 130.35 mm physical Z | physical Z surface | probe job 7685888d887d | measured |
+| B0 groove floor (Y254-259) | 121.25 mm physical Z | physical Z surface | probe job 7685888d887d | measured |
+| B0 groove depth | 9.1 mm | physical depth | derived from measurements | inferred |
+| B180 rim height (X198, Y250) | 133.55 mm physical Z | physical Z surface | probe job f8f12d4a4b3e | measured |
+| B180 groove floor (Y254-258) | 127.35 mm physical Z | physical Z surface | probe job f8f12d4a4b3e | measured |
+| B180 groove depth | 6.2 mm | physical depth | derived from measurements | inferred |
+| Side opening (Y256) | 21.3 mm | physical width | probe job from README | measured |
+| Raised surface base (Y270.5) | 135.45 mm physical Z | physical Z surface | probe job cc6e2592ccd6 | measured |
+| Raised surface plateau (Y272-278) | 143.35 mm physical Z | physical Z surface | probe job cc6e2592ccd6 | measured |
+| Proposed WCS origin | X230, Y245, Z160.35 physical | machine frame / physical | job 4a426e131af8 | proposed not set |
+| Rotary axis X estimate | 170.1 mm machine X | machine frame | stored geometry 2026-09-05 | nominal CAD |
+| Rotary axis Z estimate | 112.4 mm physical Z | physical Z surface | stored geometry | nominal CAD |
+| Enclosure nominal X | 64 mm | CAD frame | reference_enclosure_20260922.FCStd | nominal CAD |
+| Enclosure nominal Z | 36 mm | CAD frame | reference_enclosure_20260922.FCStd | nominal CAD |
+

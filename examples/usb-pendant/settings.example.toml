@@ -1,0 +1,8 @@
+# USB control needs no Wi-Fi credentials. Preserve your existing settings.toml.
+JOYSTICK_X_CENTER = "32768"
+JOYSTICK_Y_CENTER = "32768"
+JOYSTICK_TWIST_CENTER = "32768"
+JOYSTICK_X_INVERT = "1"
+JOYSTICK_Y_INVERT = "0"
+JOYSTICK_TWIST_INVERT = "0"
+JOYSTICK_DEADZONE = "0.12"

@@ -320,8 +320,13 @@ const gcodeToArraybufferGeometryCallback = (data) => {
                 break;
             }
             case 'err': {
+                log.error('Failed to render G-code', value);
                 dispatch(
-                    baseActions.updateState({
+                    baseActions.updateState(isPreview ? {
+                        previewRenderState: 'failed',
+                        previewStage: WORKSPACE_STAGE.LOAD_GCODE_FAILED,
+                        previewRenderError: value?.message || String(value),
+                    } : {
                         renderState: 'idle',
                         stage: WORKSPACE_STAGE.LOAD_GCODE_FAILED,
                         progress: 1,
@@ -344,6 +349,7 @@ const renderPreviewGcodeFile = (gcodeFile) => {
             baseActions.updateState({
                 previewStage: WORKSPACE_STAGE.LOADING_GCODE,
                 previewRenderState: 'rendering',
+                previewRenderError: '',
                 progress: 0,
             })
         );

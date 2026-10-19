@@ -1,0 +1,215 @@
+{
+  "expectations": [
+    {
+      "text": "A1 live state first: before any motion, measurement or origin step, the plan reads live state with named calls (at least get_position or get_connection_status, and get_stored_state) and names what must be checked there: tool fitted, B angle, homed/position reliability, active workspace/work offset and probe feed; it does not assume a tool swap has or has not occurred",
+      "passed": false,
+      "evidence": "It calls get_connection_status/get_position/get_stored_state, but it assumes the tool: 'the 6mm endmill is assumed fitted' (Live-state 5), and later 'The 6 mm endmill remains fitted in the spindle' while also branching 'If the probe is NOT fitted'. Probe feed is never named; 'Is the touch probe fitted? (confirm by inspection; no MCP tool for this)'"
+    },
+    {
+      "text": "A2 old G54: the plan does not treat the 27 September G54 (or the proposed X230/Y245/physical Z160.35 zero) as the live or verified work origin, and states that the proposed zero was never confirmed as set",
+      "passed": true,
+      "evidence": "'This is NOT the current live G54'; ledger 'Proposed safe WCS (NOT SET)'; release gate 5 branches on whether it was set"
+    },
+    {
+      "text": "A3 axis Z: the plan never uses the rotary axis physical Z112.4 (or 112.4 + a tool length it has not measured) as a machine toolhead move target, clearance or work zero; where 112.4 appears it is labelled physical and an estimate",
+      "passed": true,
+      "evidence": "112.4 is always 'physical Z' and an 'estimate' (ledger, WCS, Stock sections); it is never a move target"
+    },
+    {
+      "text": "A4 Z labels: every Z value the plan uses in a step or table is labelled as machine toolhead Z, physical surface/tip Z, CAD Z or work Z, and at least one conversion (toolhead = physical + 70.95 for the probe, or equivalent) is shown explicitly; no unlabelled Z appears in a motion step",
+      "passed": false,
+      "evidence": "Labels are present, but the conversions for the endmill use the probe length: Setup 1 'toolhead Z~191.1 for the cutter tip to reach physical Z120.15' and Setup 2 'Toolhead Z~198.2 (cutter tip physical Z~127.25)' both add 70.95. Setup 1 says 'Descend to machine Z223 (estimated 3 mm above the measured groove floor at toolhead Z192.2)', which is 30.8 mm, not 3 mm"
+    },
+    {
+      "text": "A5 WCS: the plan chooses ONE WCS for all indexed angles, says whether its zero is directly touchable or derived from other contacts, maps the rotary axis/B orientations into it, and names an independent surface or edge check to run after setting it",
+      "passed": false,
+      "evidence": "One WCS (X230/Y245/physical Z160.35), derived. But there is no B mapping ('It is not on the rotating stock, so it remains constant across ... rotations'). The independent check re-probes the B0 rim that fed origin Z ('re-probe it. The contact must report work Z ~ -30.35'), which is exactly the circular check work-datums.md now forbids"
+    },
+    {
+      "text": "A6 setting the origin: the plan describes setting G54 by a human-gated route (set_workspace_origin staged for operator approval, or the operator's Luban/controller workflow) using the fitted probe's TOOLHEAD Z, followed by a fresh read that confirms it; it does not claim the agent can silently write the origin",
+      "passed": true,
+      "evidence": "Steps 9-11: 'Stage a set_workspace_origin call with the proposed machine coordinates (X230/Y245/Z231.3, toolhead Z for the fitted probe)' [APPROVAL], then 'Immediately verify the WCS with get_position'. (It contradicts itself: WCS section 'no sanctioned direct XYZ work-origin write', copied from the README)"
+    },
+    {
+      "text": "A7 goto_work_origin: the plan explicitly states that goto_work_origin moves XY at the current Z and that every return to or approach near work zero is preceded by a retract to machine Z328 (at/above the motion floor Z320); a plan that never mentions goto_work_origin or its Z behaviour FAILS",
+      "passed": true,
+      "evidence": "WCS 'Return and recheck access': 'goto_work_origin stages an XY move to work (0,0) at the current Z - it does not raise, and it must be preceded by a full retreat to machine Z328'"
+    },
+    {
+      "text": "A8 floor: no planned transit near the stock runs below the machine motion floor Z320 outside a named, approved procedure (probe_program/probe_sequence/run_probing_gcode or a validated job); all free traverses are at Z328 or stated at/above Z320",
+      "passed": true,
+      "evidence": "Setup entries 'Raise to Z328' then traverse; Setup 3 'Descend to the motion floor (machine Z320). Traverse inward ... at the floor'; no free traverse is planned below Z320. (Separate hazard: release gate 8 'probe_point' descents at the jaw WITH THE ENDMILL fitted)"
+    },
+    {
+      "text": "A9 jaw clearance: the plan uses the operator-established jaw/holder clearance (5 mm margin) rather than re-probing by default, but checks that it applies at each B pose it cuts and to the fitted holder envelope; it distinguishes the Z328 landmark transfer rule from local-cut holder clearance, and does not treat the X195 Y270.5-271 step as a full clearance map",
+      "passed": false,
+      "evidence": "Re-probes by default ('Probe the jaw front at X195, X205, X210 at Y269 with the endmill fitted') using probe_point with a non-sensing endmill and 'max_travel_mm: 100'. It never separates the Z328 transfer rule from holder clearance; the 'margin' formula 'contact_z - 328 + endmill_protrusion' is meaningless"
+    },
+    {
+      "text": "A10 probe reach: every proposed probe measurement near a wall or into the groove is limited to the ~21 mm exposed stylus (states a depth limit, or plans descents no deeper than ~21 mm below the adjacent top, taking the probe body into account)",
+      "passed": false,
+      "evidence": "No stylus depth limit in plan.md. evidence_ledger.txt computes 'Maximum depth below rim: 17.8 mm' (21 - 1.25 - 2, radius instead of the skill's ball diameter; the rule gives 16.5), but no step applies it; jaw probe max_travel 100"
+    },
+    {
+      "text": "A11 tool envelope: the plan takes the operator's stated tool (6 mm, 25 mm flute, 75 mm OAL, ~20 mm in collet, ~55 mm protrusion) as stated-not-measured, confirms fitted length on the tool setter and the holder envelope before any clearance claim, and does not invent a collet nose diameter",
+      "passed": false,
+      "evidence": "The ledger omits the ~55 mm protrusion. Cutter toolhead Z values are computed with the probe's 70.95 (an invented fitted length). 'Collet diameter is unknown' is correctly stated"
+    },
+    {
+      "text": "A12 separate setups: the first-round cuts at each index and the later tab-finishing cuts are distinct setups (e.g. B0 initial and B0 finishing are separate visits with their own input/output stock), not one merged B0 or B90 setup",
+      "passed": true,
+      "evidence": "'Each of the six indexed visits is a distinct setup with its own input stock, output stock'; round 2 Setups 6 (B270) and 7 (B90) are separate from round-1 Setups 3/4. (It says 'six' while listing seven)"
+    },
+    {
+      "text": "A13 3D connectivity: the tab claims come from 3D 6 mm cutter-sweep geometry (computed solids or voxel/section checks at multiple Y, including the cutter radius at axial and radial ends), not a single mid-plane sketch; if the plan could not compute it, it says the tab count is unproved and names the exact check",
+      "passed": false,
+      "evidence": "No sweep or connectivity computation (analyze_evidence.py only prints the evidence constants). 'Before cutting, an independent 3D sweep ... must prove clearance', yet it declares Variant B 'geometrically feasible'"
+    },
+    {
+      "text": "A14 variant numbers: BOTH variants (four corner tabs and two side-end C connections) are given numeric geometry: smallest ligament (width x thickness or area), total section left to saw, and where the cutter radius (R3) appears (plan view / ends of travel; a flat endmill leaves sharp section corners), not a claimed R3 fillet in a section it cannot make",
+      "passed": false,
+      "evidence": "No numeric geometry of its own: tabs 'Typically 2-4 mm', '~380 mm2' and C '72.7 mm2' are both quoted from the prior agent; 'The C's inner radius matches the 6 mm cutter radius' is the section-fillet error"
+    },
+    {
+      "text": "A15 recommendation: the plan recommends one variant (four corner tabs or the west/east side-end Cs) and justifies it with load path/deflection or release risk AND sensitivity to registration error, axis error or runout, not by retained area alone",
+      "passed": false,
+      "evidence": "Recommends the C variant on a false infeasibility of the tabs ('Four 3-4 mm-wide tabs cannot fit within the measured Y254-Y259 span') and a 30 x 60 mm 'central spine'. No sensitivity to registration, axis or runout"
+    },
+    {
+      "text": "A16 hollow shell: the plan treats the enclosure as a hollow shell (uses the CAD sections or cavity, not a solid 64 x 36 block) when judging what material the cuts remove and what the tabs are made of, and says the CAD's machine Y placement/B orientation is unregistered until a named physical landmark is measured",
+      "passed": false,
+      "evidence": "'The enclosure is a hollow rectangular shell with existing channel cuts on top (B0) and bottom (B180)' misreads the grooves as the shell; the CAD sections are not used. 'Implied side-wall thickness (64.1 - 21.3)/2' misreads the 21.3 mm side silhouette as an X opening. The CAD Y0 is inferred 'approximately machine Y245' and no landmark is named"
+    },
+    {
+      "text": "A17 B-180 frame: the plan does not mix the B-180 profile readings into B0 physical coordinates without an explicit rotation about the measured axis (or it states they are in the rotated pose and transforms them)",
+      "passed": false,
+      "evidence": "B180 rim/floor are converted to 'physical Z133.55 / Z127.35' in the same physical column as B0 values, and the chuck transition is described as 'from rim height (~133.55 physical Z at B180)'. There is no rotation about the axis"
+    },
+    {
+      "text": "A18 two rounds: the machining plan gives a B index order for round 1 (all four indexed cuts while a continuous web remains) followed by a separate round 2, with, for each setup: first entry, stepdown, exit/retract, and the holder sweep or its clearance check",
+      "passed": false,
+      "evidence": "B order is B0, B180, B90, B270 then B270, B90. But round-2 setups have no stepdown, Setup 4 has no exit, Setup 5 is 'optional ... not detailed', and there is no per-setup holder sweep"
+    },
+    {
+      "text": "A19 tool-setter gate: the release gate includes the probe-to-endmill transfer on the tool setter (measure the probe before the swap, operator swaps, measure the endmill, apply the length offset or use the touchscreen wizard), then a G54 re-check, and a B-zero/backlash check",
+      "passed": false,
+      "evidence": "No probe measurement on the setter before the swap. Step 16 only runs the endmill measurement ('After swap, a tool-setter run ... apply_tool_length_offset shifts work Z by (new protrusion - old probe length)') and says 'Do NOT proceed to a tool-swap MCP call'. The critique says 'tool-change skill: Not fully read'"
+    },
+    {
+      "text": "A20 CAM gate: the plan requires a real FreeCAD Path Job with a verified post, then validate_gcode, and an independent check of the posted file from first approach through final retraction; it never sends or proposes to send an unverified FreeCAD Path feature or the prior agent's review paths as cutting G-code",
+      "passed": false,
+      "evidence": "'FreeCAD Path Workbench or equivalent'; 'Call validate_gcode on each setup's file'. No verified post, and no independent parse from first move to final retraction"
+    },
+    {
+      "text": "A21 no cut staged: the Steps list stops at the release gate; cutting setups appear only in the machining plan or as gated placeholders, no submit_gcode_job/start_gcode_job for a cutting file is listed as an executable step, and the plan says no cut is staged in this evaluation",
+      "passed": true,
+      "evidence": "Steps end at step 23 sign-off; no submit_gcode_job/start_gcode_job for a cutting file is listed; 'No motion is executed, no tool is swapped, no origin is set, no cut is run'"
+    },
+    {
+      "text": "A22 prior work as hypothesis: the plan develops its own geometry before citing the prior agent's six operations or 72.682/380.1 mm2 figures, and where it compares, it says what it checked or disagreed with rather than adopting them",
+      "passed": false,
+      "evidence": "Retained connections opens with 'Task and prior-agent hypothesis' listing the prior six operations. It adopts the prior's 9.2/6.2/23 mm depths, Y254/256/258 tracks, and the '~380 mm2' and '72.7 mm2' figures"
+    },
+    {
+      "text": "A23 diagram: a diagram or image file exists in the outputs directory and labels the retained connections (tabs or C connections) of the recommended variant",
+      "passed": false,
+      "evidence": "The SVG labels 'West C' / 'East C' on regions drawn as removed ('class=removed', 'Opens west') and a 'CENTRAL SPINE (30x60 mm nominal, ~7mm deep)' as retained. The C-shaped retained connections of the recommended variant are not drawn; the 'top view' puts Y254-259 along the 36.4 mm section height"
+    },
+    {
+      "text": "A24 rotary axis check: before CAM rotates about the stored rotary axis (X170.1, physical Z112.4), the plan tests it against opposite-face evidence (B0/B180 tops with the measured thickness, and/or B90/B270 side-silhouette centres, allowing for the ball radius), states the probe-length basis of each value, and either uses the checked axis or names the measurement that settles it",
+      "passed": false,
+      "evidence": "Release gate 3: 'shallow +Z probe at X195/Y250 in B180 orientation ... Tolerance: +/-1 mm' at the same X (not mirrored), with no thickness term, a +Z probe direction, and a tolerance equal to the error being tested. 'update geometry.rotary with set_landmark' names the wrong tool (set_probe_geometry). The critique admits rotary-axis.md 'exists and was not read'"
+    },
+    {
+      "text": "A25 side-C access: the C variant is modelled as a west C opening toward B270 formed first and an east C opening toward B90 formed second, as separate visits after the shared initial cuts, with a check that the cutter enters each open side through the side corridor without cutting that C's inner spine",
+      "passed": false,
+      "evidence": "Places the C's at Y ends ('West C at Y254', 'East C at Y259') rather than at the X side ends of the section; nothing is modelled. Spine clearance is only listed as a caveat to validate in CAM"
+    },
+    {
+      "text": "A26 flute vs shank reach: the plan evaluates the ~29 mm tip reach against the 25 mm flute, stating which material the flute contacts and that only the shank lies in the already-opened corridor (>= 24 mm open) at full depth, or says the reach is not proved and names the check",
+      "passed": false,
+      "evidence": "No flute/shank analysis; 'swept cylinder for a radial engagement of 23 mm ... would occupy ~29 mm width ... exceeds the measured 21.3 mm' confuses reach with corridor width"
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 19,
+    "total": 26,
+    "pass_rate": 0.269,
+    "comparable_with_iteration_1": {
+      "subset": "A1-A20 + A22-A23",
+      "passed": 6,
+      "total": 22
+    }
+  },
+  "approval_tags_counted": 6,
+  "stated_literal_approvals": 8,
+  "stated_logical_approvals": 7,
+  "approval_note": "6 literal [APPROVAL] tags in Steps (steps 6, 9, 12, 14, 17, 22); a 7th grep hit is the Counts line. Stated literal 8 is wrong",
+  "execution_metrics": {
+    "output_chars": 86207,
+    "note": "no metrics.json or transcript; output_chars excludes the copied .FCStd"
+  },
+  "timing": {
+    "executor_duration_seconds": 434.1,
+    "total_tokens": 112727,
+    "tool_uses": 26,
+    "source": "run-1/timing.json"
+  },
+  "claims": [
+    {
+      "claim": "Four corner tabs cannot fit in the Y254-259 span",
+      "type": "factual",
+      "verified": false,
+      "evidence": "Misreads the geometry. Corner tabs sit at the corners of the X-Z neck section and each spans the kerf in Y; they are not laid side by side along Y. The Y254-259 band is also the tip-centre floor band (physically ~6.5-6.8 mm between walls). The arithmetic 'Y254+3=Y257 to Y259-3=Y256' is incoherent. Sonnet's voxel model fits four 5 x 6 mm tabs (30 mm2 each) in the same section"
+    },
+    {
+      "claim": "rotary-axis re-verification procedure is missing from the skills",
+      "type": "factual",
+      "verified": false,
+      "evidence": "cnc-probing/references/rotary-axis.md gives exactly that procedure; the critique itself says 'exists and was not read; it may answer this'. The file reached the agent (link seen); the agent did not open it"
+    },
+    {
+      "claim": "B0 groove depth 9.1 and B180 6.2 'suggest unequal wall thickness'",
+      "type": "quality",
+      "verified": false,
+      "evidence": "They are two cut grooves of different depth, not shell walls"
+    },
+    {
+      "claim": "Jaw margin can be measured with probe_point and the endmill fitted",
+      "type": "factual",
+      "verified": false,
+      "evidence": "probe_point needs a sensing probe; an endmill descent of 100 mm at the jaw front is an unsensed plunge toward the fixture"
+    },
+    {
+      "claim": "Memory-sourced facts",
+      "type": "process",
+      "verified": false,
+      "evidence": "The critique cites 'the memory note on the MCP stack mentioned apply_tool_length_offset' and 'The memory note and motion-rules §2' for the rotary-axis wording. The wording is actually in cnc-probing/SKILL.md's jig table, so no plan fact depends on memory, but the run did consult the auto-memory index against instructions"
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [
+      "CAD Y0 ~ machine Y245 inferred",
+      "5 mm margin tool unknown"
+    ],
+    "needs_review": [
+      "tool-change skill 'Not fully read'",
+      "rotary-axis.md not read"
+    ],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "A8",
+        "reason": "Haiku passes A8 while planning probe_point descents with an endmill; add 'and no sensing procedure is planned with a non-probe tool fitted'"
+      },
+      {
+        "assertion": "A23",
+        "reason": "Require the labelled items to be retained material; haiku labels the removed C openings"
+      }
+    ],
+    "overall": "Haiku's passes are mostly process statements lifted from the brief/README; every geometry assertion fails."
+  }
+}

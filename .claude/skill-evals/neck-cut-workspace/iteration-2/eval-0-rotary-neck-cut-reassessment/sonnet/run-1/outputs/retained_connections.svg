@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" font-family="monospace" font-size="13">
+<style>
+  .lbl{fill:#111;font-size:13px}
+  .small{fill:#333;font-size:11px}
+  .dim{stroke:#666;stroke-width:1;fill:none}
+  .dimtxt{fill:#444;font-size:10px}
+  .stock{fill:#e8d9b8;stroke:#3a2f1a;stroke-width:1.5}
+  .cut{fill:#ffffff;stroke:#3a2f1a;stroke-width:1}
+  .spine{fill:#c98b3a;stroke:#3a2f1a;stroke-width:1.5}
+  .leg{fill:#c98b3a;stroke:#3a2f1a;stroke-width:1.5}
+  .axis{stroke:#888;stroke-width:1;stroke-dasharray:4,3}
+</style>
+<rect width="900" height="620" fill="#fafaf7"/>
+<text x="20" y="26" class="lbl" font-size="16" font-weight="bold">Recommended variant: two C-shaped connections (west/B270, east/B90) — X-Z section at Y=256</text>
+<text x="20" y="46" class="small">Local PHYSICAL frame (not machine frame; not yet a registered WCS). x=0 at measured stock centreline (machine X≈169.9). z=0 at B0 physical top; z=36.35 at B180 physical bottom.</text>
+<text x="20" y="62" class="small">Computed by neck_geometry_check.py this session: 3D swept-cutter (r=3.0mm nominal, 6mm endmill) subtraction + scipy connected-component check across Y251-261, not a mid-plane sketch.</text>
+
+<!-- coordinate mapping: local x in [-32.05,32.05] -> screen [80,820]; local z in [0,36.35] -> screen [120,520] -->
+<!-- scale: 740/64.1 = 11.545 px/mm (x), 400/36.35 = 11.004 px/mm (z); use 11.0 both, centre -->
+
+<g transform="translate(450,320)">
+  <!-- outer original stock envelope, faint -->
+  <rect x="-370" y="-200" width="740" height="400" class="stock" opacity="0.35"/>
+  <text x="-365" y="-208" class="dimtxt">outside envelope 64.1 x 36.4 mm (measured @ Y245, physical faces)</text>
+
+  <!-- existing top groove (already cut, measured) -->
+  <rect x="-370" y="-200" width="740" height="100.6" class="cut"/>
+  <text x="0" y="-150" text-anchor="middle" class="small">existing B0 top groove (measured, 9.1-9.2mm deep)</text>
+
+  <!-- existing bottom groove -->
+  <rect x="-370" y="132.4" width="740" height="67.6" class="cut"/>
+  <text x="0" y="168" text-anchor="middle" class="small">existing B180 bottom groove (measured, 6.1-6.2mm deep)</text>
+
+  <!-- round-1 side cuts (west/east), full remaining depth -->
+  <rect x="-370" y="-99.4" width="127.8" height="231.8" class="cut"/>
+  <rect x="242.2" y="-99.4" width="127.8" height="231.8" class="cut"/>
+  <text x="-330" y="-30" class="small" transform="rotate(-90 -330 -30)">round-1 side cut (B90/B270), depth 22.05mm each face</text>
+
+  <!-- remaining central bar after round-1: x in [-110.55,110.55] approx (10.05mm*11) z in [-99.4,132.4] -->
+  <!-- gap (centre separation), full remaining depth, B0/B180 straight plunge -->
+  <rect x="-22" y="-99.4" width="44" height="231.8" class="cut"/>
+  <text x="0" y="0" text-anchor="middle" class="small">gap</text>
+  <text x="0" y="14" text-anchor="middle" class="dimtxt">(centre-separating cut,</text>
+  <text x="0" y="26" text-anchor="middle" class="dimtxt">B0/B180, my addition —</text>
+  <text x="0" y="38" text-anchor="middle" class="dimtxt">see critique.md)</text>
+
+  <!-- west C: bite (side approach from -X / B270) -->
+  <rect x="-110.55" y="-33" width="22" height="66" class="cut"/>
+  <!-- west C leg top -->
+  <rect x="-110.55" y="-99.4" width="88.55" height="66.4" class="leg"/>
+  <!-- west C leg bottom -->
+  <rect x="-110.55" y="66" width="88.55" height="66.4" class="leg"/>
+  <!-- west C spine -->
+  <rect x="-88.55" y="-33" width="66.55" height="66" class="spine"/>
+
+  <!-- east C mirror -->
+  <rect x="88.55" y="-33" width="22" height="66" class="cut"/>
+  <rect x="22" y="-99.4" width="88.55" height="66.4" class="leg"/>
+  <rect x="22" y="66" width="88.55" height="66.4" class="leg"/>
+  <rect x="22" y="-33" width="66.55" height="66" class="spine"/>
+
+  <!-- labels -->
+  <text x="-155" y="-70" class="small" font-weight="bold">WEST C</text>
+  <text x="-155" y="-55" class="dimtxt">opens toward B270</text>
+  <text x="-155" y="-42" class="dimtxt">(formed first)</text>
+  <text x="-100" y="4" class="small" fill="#fff">spine</text>
+  <text x="-152" y="4" class="small">bite</text>
+  <text x="-108" y="-70+66" class="dimtxt"></text>
+  <text x="-150" y="-70" class="dimtxt"></text>
+
+  <text x="120" y="-70" class="small" font-weight="bold">EAST C</text>
+  <text x="120" y="-55" class="dimtxt">opens toward B90</text>
+  <text x="120" y="-42" class="dimtxt">(formed second)</text>
+  <text x="130" y="4" class="small" fill="#fff">spine</text>
+  <text x="95" y="4" class="small">bite</text>
+
+  <!-- B0/B180 axis markers -->
+  <line x1="-370" y1="-200" x2="370" y2="-200" class="axis"/>
+  <text x="375" y="-196" class="dimtxt">B0 top (physical z=0)</text>
+  <line x1="-370" y1="200" x2="370" y2="200" class="axis"/>
+  <text x="375" y="204" class="dimtxt">B180 bottom (physical z=36.35)</text>
+  <line x1="-370" y1="-220" x2="-370" y2="220" class="axis"/>
+  <text x="-395" y="-225" class="dimtxt" text-anchor="middle">west face</text>
+  <text x="-395" y="240" class="dimtxt" text-anchor="middle">(B270 approach)</text>
+  <line x1="370" y1="-220" x2="370" y2="220" class="axis"/>
+  <text x="395" y="-225" class="dimtxt" text-anchor="middle">east face</text>
+  <text x="395" y="240" class="dimtxt" text-anchor="middle">(B90 approach)</text>
+</g>
+
+<text x="20" y="560" class="lbl" font-weight="bold">Computed (this session, r=3.0mm nominal):</text>
+<text x="20" y="578" class="small">two-C total retained cross-section ≈ 174 mm² (2 pieces, ~87 mm² each) · four-corner-tabs alternative ≈ 120 mm² (4 pieces, ~30 mm² each)</text>
+<text x="20" y="594" class="small">Both variants remain ONE connected 3D solid from Y248 to Y264 (6-connectivity) under nominal, +0.15mm runout, and +-0.5mm Y-registration shift.</text>
+<text x="20" y="610" class="small">Depth reached from each outer face: round-1 side cut 22.05mm; C-bite extends to 24.05mm — both well inside the ~29mm reach caution in the evidence. NOT yet CAM-released; see plan.md Release gate.</text>
+</svg>

@@ -31,11 +31,22 @@ class SocketServer extends EventEmitter {
 
         this.server = server;
         this.io = new Server(this.server, {
-            serveClient: true,
+            // The renderer bundles socket.io-client itself and nothing requests
+            // /socket.io/socket.io.js, so the server does not serve the client
+            // library (which socket.io would stream out of its own package
+            // directory, a directory it has none of inside the server bundle).
+            serveClient: false,
             allowEIO3: true,
             pingTimeout: 180000, // 60s without pong to consider the connection closed
             path: '/socket.io',
-            maxHttpBufferSize: 1e8
+            maxHttpBufferSize: 1e8,
+            // The renderer may be served from luban:// rather than from this
+            // server, which makes the handshake cross-origin. socket.io v4
+            // rejects that by default.
+            cors: {
+                origin: (origin, callback) => callback(null, !origin || /^luban:\/\//.test(origin)),
+                credentials: true,
+            }
         });
 
         // JWT (JSON Web Tokens) support
@@ -73,6 +84,13 @@ class SocketServer extends EventEmitter {
         this.server = null;
         // this.events = [];
     }
+
+    /**
+     * Emit to every connected client (server-initiated notifications).
+     */
+    public broadcast = (eventName: string, options?: object) => {
+        this.io && this.io.emit(eventName, options);
+    };
 
     // established a new socket connection
     public onConnection = (socket) => {

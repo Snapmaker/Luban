@@ -12,6 +12,7 @@ import { machineStore } from '../../store/local-storage';
 import { ConnectResult, MachineAgent } from './MachineAgent';
 import baseActions from './actions-base';
 import { ConnectionType } from './state';
+import { beginConnectionAttempt } from './connectionDiagnostics';
 
 
 
@@ -79,6 +80,81 @@ const setServerToken = (token) => (dispatch) => {
     machineStore.set('server.token', token);
 };
 
+/**
+ * Saved machine record, one per known machine.
+ *
+ * Tokens remain valid until the machine is powered off, so keep one
+ * per machine instead of only the last connected one.
+ */
+interface SavedMachineRecord {
+    name: string;
+    address: string;
+    token: string;
+    lastConnectedAt: number;
+}
+
+const getSavedMachines = (): SavedMachineRecord[] => {
+    const machines = machineStore.get('server.machines');
+    if (Array.isArray(machines)) {
+        return machines;
+    }
+
+    // Migrate legacy single-machine keys (server.address / server.name / server.token)
+    const address = machineStore.get('server.address');
+    const token = machineStore.get('server.token');
+    if (address && token) {
+        const migrated: SavedMachineRecord[] = [{
+            name: machineStore.get('server.name') || '',
+            address,
+            token,
+            lastConnectedAt: 0,
+        }];
+        machineStore.replace('server.machines', migrated);
+        return migrated;
+    }
+
+    return [];
+};
+
+/**
+ * Find saved token for the agent.
+ *
+ * Match by address first; fall back to name in case the address got re-allocated.
+ * On multiple matches, prefer the most recently connected record.
+ */
+const findSavedToken = (agent: MachineAgent): string => {
+    const machines = getSavedMachines();
+
+    const byAddress = machines.filter(m => m.address === agent.address);
+    const byName = machines.filter(m => m.name === agent.name);
+    const candidates = byAddress.length > 0 ? byAddress : byName;
+
+    if (candidates.length === 0) {
+        return '';
+    }
+
+    return candidates.reduce((a, b) => (a.lastConnectedAt >= b.lastConnectedAt ? a : b)).token;
+};
+
+/**
+ * Upsert machine record on successful connect, keyed by address.
+ *
+ * Records with the same name but a different address are kept — the machine
+ * may come back on its old address; stale ones lose on lastConnectedAt.
+ */
+const saveMachineToken = (agent: MachineAgent) => {
+    const machines = getSavedMachines().filter(m => m.address !== agent.address);
+
+    machines.push({
+        name: agent.name,
+        address: agent.address,
+        token: agent.getToken(),
+        lastConnectedAt: Date.now(),
+    });
+
+    machineStore.replace('server.machines', machines);
+};
+
 const setManualIP = (manualIp) => (dispatch) => {
     dispatch(baseActions.updateState({ manualIp }));
 
@@ -130,24 +206,19 @@ const resetMachineState = (connectionType = ConnectionType.WiFi) => {
 /**
  * Connect to machine.
  */
-const connect = (agent: MachineAgent) => {
+const connect = (agent: MachineAgent, allowPairing: boolean = false) => {
     return async (dispatch, getState) => {
         // Update selected agent
+        const attempt = beginConnectionAttempt(controller.connected);
         const oldAgent: MachineAgent = getState().workspace.server;
         if (!isEqual(agent, oldAgent)) {
             dispatch(setSelectedAgent(agent));
         }
 
         // Re-use saved token if possible
-        const savedServerName = getState().workspace.savedServerName;
-        const savedServerAddress = getState().workspace.savedServerAddress;
-        const savedServerToken = getState().workspace.savedServerToken;
-
-        if (agent.address === savedServerAddress) {
-            agent.setToken(savedServerToken);
-        } else if (agent.name === savedServerName) {
-            // In case server address is re-allocated, check for saved server name
-            agent.setToken(savedServerToken);
+        const savedToken = findSavedToken(agent);
+        if (savedToken) {
+            agent.setToken(savedToken);
         }
 
         // update connection status
@@ -155,7 +226,7 @@ const connect = (agent: MachineAgent) => {
             connectionStatus: CONNECTION_STATUS_CONNECTING,
         }));
 
-        const { code, msg }: ConnectResult = await agent.connect();
+        const { code, msg }: ConnectResult = await agent.connect(allowPairing, attempt);
 
         const connectionStatus = getState().workspace.connectionStatus;
         if (connectionStatus !== CONNECTION_STATUS_CONNECTING) {
@@ -171,6 +242,10 @@ const connect = (agent: MachineAgent) => {
                     isOpen: true,
                 }));
 
+                // per-machine token registry
+                saveMachineToken(agent);
+
+                // legacy last-connected keys, kept for external readers and UI auto-select
                 dispatch(setServerName(agent.name));
                 dispatch(setServerAddress(agent.address));
                 dispatch(setServerToken(agent.getToken()));

@@ -1,0 +1,87 @@
+{
+  "expectations": [
+    {
+      "text": "Specifies source_controller okuma, spindle_mode power_percent and spindle_power_percent 65 without asserting RPM mapping.",
+      "passed": false,
+      "evidence": "The `convert_thread_milling_gcode` calls (step 2/8) and the Findings section correctly use okuma/power_percent/65 and say the converter 'replaces spindle speed with the stated percentage'. But step 4's confirm-page read-out (repeated verbatim at step 11) adds: 'Spindle state: S command present (work speed mapped to 65% for standard head)' — this both invents an emitted 'S command' (power_percent mode replaces the source RPM/S value rather than retaining an S word — only cnc_200w_rpm mode keeps source S) and describes the 65% setting as being 'mapped' to a work speed, which is exactly the RPM-mapping the docs forbid ('it does not infer a motor calibration or rescale feeds' — thread-milling.md)."
+    },
+    {
+      "text": "Recognises the existing fitted-tool origin; does not require a needless tool change.",
+      "passed": true,
+      "evidence": "Findings: 'Cutter confirmed for both features: Verified geometry and the same fitted tool handle both external threads — no tool change flow required.'"
+    },
+    {
+      "text": "Preserves per-boss datums and plans one job per boss, with initial-path/clearance verification and fresh position after each completion.",
+      "passed": true,
+      "evidence": "Two separate converts/submits keyed to work (20,15) and (70,15) (steps 2, 4, 8, 11); step 10 explicitly checks 'do they already satisfy motion floor Z320 and landmarks?' before the second job; step 7 re-reads get_position after job 1 and step 14 re-reads get_position after job 2 ('Final position and readiness check ... call get_position: confirm final Z and XY')."
+    },
+    {
+      "text": "Does not concatenate at work Z20 or claim a completed job proves thread fit.",
+      "passed": true,
+      "evidence": "Findings: 'Both must be submitted separately; concatenation or hand-joining is not supported and would lose the defined datum relationships.' Step 14 asks the operator to 'inspect both threads with an appropriate M×0.7 thread gauge ... verify thread fit and profile' rather than treating job completion as proof of fit."
+    },
+    {
+      "text": "Uses head_type cnc and frame work in the later submit shape, with URL delivery before waiting.",
+      "passed": true,
+      "evidence": "Steps 4 and 11: `submit_gcode_job {..., \"head_type\": \"cnc\", \"frame\": \"work\"}` with '[APPROVAL]', 'Deliver the confirm URL as the LAST LINE, in one sentence, then END THE TURN', with start_gcode_job only at steps 5/12 in the next turn."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 1,
+    "total": 5,
+    "pass_rate": 0.8
+  },
+  "approval_tags_counted": {
+    "literal_tags_in_steps": 2,
+    "breakdown": "[APPROVAL] at step 4 ('Stage the first thread-milling job'), [APPROVAL] at step 11 ('Stage the second thread-milling job')",
+    "note": "A 3rd regex hit is the self-referential mention inside the plan's own Counts section ('Literal [APPROVAL] tags: 2'), not a step tag."
+  },
+  "stated_logical_approvals": "Plan states 'Logical approvals (decision points): 2 (one for each job, step 4 and step 11; step 10 traverse is conditional and may add 1 more if landmarks require it = 2 or 3)'. Consistent with the literal tag count of 2.",
+  "docs_consistency_check": {
+    "topic": "Machine-resolved Z extents for a program carrying an explicit G54",
+    "plan_claim": "Step 4/11: 'Machine-resolved Z extents (if available): compare against actual stock depth and clearance' (step 3) and 'Frame row: should read WORK (declared by argument) with the live G54 offset ... Machine-resolved Z extents: confirm against stored position, motion floor Z320, park Z328' (step 4) — the '(if available)' hedge in step 3 is dropped by step 4, which treats the extents as simply readable.",
+    "docs_say": "src/server/services/mcp/docs/workspaces.md 'File review': the validator 'leaves machine extents unresolved for named-workspace files, mixed frames and origin rewrites'. Every converted thread-milling program is a named-workspace file: cnc-thread-milling/references/import.md says the output 'uses G21/G90/G54', and cnc-thread-milling/SKILL.md states plainly 'The converter emits G54.' cnc-motion-rules/SKILL.md's own confirm-page description says extents show 'when resolvable' and that named-workspace files 'have unresolved machine extents'.",
+    "verdict": "Inconsistent with docs/workspaces.md by step 4, despite the '(if available)' hedge earlier in step 3. The plan does not flag that a G54-carrying converted file is exactly the 'named-workspace file' case the docs say leaves extents unresolved, nor does the critique mention this tension anywhere in its four 'missing/unclear' bullets."
+  },
+  "leakage_check": "No near-verbatim assertion wording and no 'compliance with assertions' section found in plan.md or critique.md.",
+  "claims": [
+    {
+      "claim": "A null connectedHead.toolHead plus headType cnc does not settle standard vs 200W head identity.",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Consistent with cnc-thread-milling guidance; the plan correctly treats the operator's explicit statement as controlling since the field is merely withheld, not contradictory."
+    },
+    {
+      "claim": "'Spindle state: S command present (work speed mapped to 65% for standard head)' will appear on the confirm page.",
+      "type": "process",
+      "verified": false,
+      "evidence": "Not supported by TOOLS.md/thread-milling.md/import.md, which describe power_percent mode as replacing source RPM with an explicit percentage — none of the read docs describe an emitted 'S command' for power_percent mode, and describing the percentage as a 'work speed' mapping is the calibration/RPM inference the docs explicitly disclaim."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [
+      "Critique notes the plan trusts the operator's stated 'Okuma' dialect without a way to detect dialect mismatch from the text itself, and would re-ask only on a conversion refusal.",
+      "Critique flags that the interaction between multiple per-boss datums and a shared corner WCS required combining three separate documents (TOOLS.md, import.md, setup.md) with no single worked example."
+    ],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "Specifies source_controller okuma, spindle_mode power_percent and spindle_power_percent 65 without asserting RPM mapping.",
+        "reason": "This assertion is discriminating in practice: the core convert_thread_milling_gcode call arguments were right for all three runs, but only a close read of the confirm-page narration in haiku's plan (an invented 'S command' and a 'work speed mapped to 65%' phrase) turns up the RPM-mapping violation the assertion is meant to catch. Worth keeping, but graders should read the full confirm-page description text, not just the tool-call arguments, when checking it."
+      },
+      {
+        "reason": "No assertion in this eval checks the machine-resolved-Z-extents-vs-explicit-G54 contradiction (docs/workspaces.md 'File review' vs cnc-thread-milling/SKILL.md's flat instruction to read machine-resolved Z extents). Both sonnet and haiku missed it silently; only opus caught it. Consider adding an explicit assertion so this doesn't rely on a grader's manual cross-check."
+      }
+    ],
+    "overall": "4 of 5 assertions pass; the one failure is a specific, quotable fabrication (an invented S-command/work-speed mapping) in the confirm-page narration, not a nitpick."
+  },
+  "timing": {
+    "total_tokens": 78027,
+    "duration_ms": 163492,
+    "tool_uses": 17
+  }
+}

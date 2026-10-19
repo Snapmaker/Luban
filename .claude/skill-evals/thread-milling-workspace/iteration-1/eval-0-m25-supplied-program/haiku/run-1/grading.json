@@ -1,0 +1,122 @@
+{
+  "expectations": [
+    {
+      "text": "Identifies that the program's CUTTER DIAM=1.38 equals the neck diameter the operator gave, and that the tool-centre path radius depends on the cutting (thread-form) OD, which is not known",
+      "passed": false,
+      "evidence": "Findings only say \"The cutter has a 1.38 mm neck and 7.5 mm total length\" and compute neck-vs-hole clearance (critique.md: \"neck clearance = 2.05 - 1.38 = 0.67 mm radial\"); nowhere does the plan connect the file's CUTTER DIAM=1.38 to the tool-centre-path radius, or note that the actual cutting/thread-form OD is a different, unmeasured number."
+    },
+    {
+      "text": "Does not invent or assume a thread-form OD for the cutter; asks the operator to measure it (calipers/datasheet) or otherwise treats it as a blocking unknown",
+      "passed": false,
+      "evidence": "No question asks for a measured tooth/thread-form OD; Q3 only asks \"Is that correct?\" about which cutter is fitted, not its cutting diameter, and the plan converts using the file's 1.38 mm figure unchanged."
+    },
+    {
+      "text": "Identifies that the program's L=2.25 [MULTI TOOTH] does not match a 'triple row' cutter (about 3 x 0.45 = 1.35 mm) and that the 2.25 mm axial repositioning would leave uncut bands / an incomplete thread",
+      "passed": false,
+      "evidence": "No mention anywhere of L=2.25, tooth-row count, or uncut-band risk; Findings instead describe the three passes as simply \"three identical passes of the thread-milling helix\" with no length-consistency check."
+    },
+    {
+      "text": "Recommends regenerating the program in Machining Doctor with the measured OD and real cutting length rather than hand-editing the G-code",
+      "passed": false,
+      "evidence": "The plan's only regeneration path is Q1 Option A, which is offered solely to fix the (mistakenly perceived) spindle-speed problem, not the cutter geometry; Option B proposes the agent itself adjusting the expected RPM value rather than the operator regenerating anything."
+    },
+    {
+      "text": "Uses convert_thread_milling_gcode with real argument names: gcode, source_controller fanuc (or default), tool_center_path true, tool_length_applied true, spindle_mode",
+      "passed": true,
+      "evidence": "Step 5: `convert_thread_milling_gcode {\"gcode\": ..., \"source_controller\": \"fanuc\", \"tool_center_path\": true, \"tool_length_applied\": true, \"spindle_mode\": \"cnc_200w_rpm\", \"chord_tolerance_mm\": 0.002}` -- argument names and types are correct."
+    },
+    {
+      "text": "Chooses spindle_mode from the actual head (reads get_machine_profile/get_stored_state or asks); notes S17991 is only kept in cnc_200w_rpm mode (8000-18000) and that power_percent does NOT rescale feeds",
+      "passed": false,
+      "evidence": "Findings: \"S17991 RPM... exceeds the 200W CNC's maximum of 18000 RPM. The tool ... will REJECT this program\" -- factually wrong: 17991 < 18000, well inside the documented 8000-18000 cnc_200w_rpm window. The plan also never reads get_machine_profile to confirm which head is fitted before choosing cnc_200w_rpm outright (critique.md admits the 200W assumption came from memory, not a tool call), and Option B invents a rescale/clamp behavior (\"I adjust the expected upper bound to 18000\") that the docs explicitly say the tool does not do."
+    },
+    {
+      "text": "Only declares tool_length_applied true once work Z has been referenced with the thread mill itself fitted (tool change flow / tool setter + apply_tool_length_offset, or the operator setting Z with this cutter)",
+      "passed": false,
+      "evidence": "Findings: \"Probe stays in spindle: The touch probe is currently fitted. It will remain so for all motion planning (no tool change required for thread milling).\" The plan declares tool_length_applied:true and stages the cutting job while assuming the touch probe (not a thread mill) is fitted, with no tool-change flow anywhere in the plan -- a critical safety miss, not merely a documentation gap."
+    },
+    {
+      "text": "Treats the work origin (X0 Y0 at the hole centre, Z0 at the stock top) as the operator's, never writing it except via apply_tool_length_offset; asks how/whether the hole centre is set",
+      "passed": false,
+      "evidence": "Q2 asks whether the origin is set, but Step 3 then proposes the agent itself finding/setting it: \"call a touch-probe find at the hole location (a single probe_point downward...), then set_landmark or the operator re-zeros work Z\" -- set_landmark is for obstacle landmarks, not the work origin, and no sanctioned write (apply_tool_length_offset) is used; the step also invents a traverse_xy to an undefined hole_x/hole_y."
+    },
+    {
+      "text": "Notes that the program's first move (G00 X0 Y0 before G43 Z20) runs at whatever Z the head is at, so the head must be at or above the motion floor / park height before the job starts",
+      "passed": false,
+      "evidence": "No mention anywhere in plan.md of the program's initial rapid running at the head's current Z or of a park-height precondition before the job starts."
+    },
+    {
+      "text": "Submits with submit_gcode_job using frame 'work' and head_type 'cnc', after reviewing changes/warnings/validation (or validate_gcode)",
+      "passed": false,
+      "evidence": "Step 7: `submit_gcode_job {gcode: <converted program text>, name: \"M2.5-thread-milling\", frame: \"work\"}` -- head_type is omitted entirely, though changes/warnings/validation are reviewed in steps 4-6."
+    },
+    {
+      "text": "Staging turn ends with the confirm URL as the last line; start_gcode_job with wait_for_approval_ms comes after, in the background",
+      "passed": true,
+      "evidence": "Step 7: \"deliver the confirm URL as the last line of your message, alone\" -- end turn; Step 8: `start_gcode_job {job_id, wait_for_approval_ms: 110000}`."
+    },
+    {
+      "text": "Asks all open questions in ONE batch and stages nothing that depends on an answer before the answer arrives",
+      "passed": true,
+      "evidence": "Step 1 asks all four questions together and ends turn; Steps 2a/2b/3/4/5 explicitly wait for the operator's reply before proceeding."
+    },
+    {
+      "text": "Does not plan any Z motion (move_z / direct) the operator did not ask for; every quoted height carries frame (machine/work)",
+      "passed": true,
+      "evidence": "No move_z step is planned; quoted heights carry frame qualifiers (e.g. 'machine Z ≥ 320', 'work Z-5.056')."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 9,
+    "total": 13,
+    "pass_rate": 0.308
+  },
+  "approval_tags_counted": {
+    "literal_APPROVAL_tags": 1,
+    "literal_WAIT_tags": 0,
+    "plan_self_reported": "Counts: Approvals: 3, Operator waits: 4, Questions: 4",
+    "consistent": false,
+    "note": "Only one step (the conditional origin-setting traverse_xy) carries a literal [APPROVAL] tag and none carry a literal [WAIT] tag, even though the submit_gcode_job/start_gcode_job/get_gcode_job_status sequence (steps 7-9) clearly stages/waits in prose. The plan's self-reported Counts line (3 approvals / 4 waits) does not match the literal tags actually present in the document."
+  },
+  "claims": [
+    {
+      "claim": "S17991 exceeds the 200 W CNC head's maximum of 18000 RPM and the converter will reject it",
+      "type": "factual",
+      "verified": false,
+      "evidence": "17991 < 18000, so it is inside the documented 8000-18000 cnc_200w_rpm range (thread-milling.md: \"rejects values outside the firmware's 8000-18000 range\"); this is the single largest factual error in the run and drives an entire unnecessary operator question and a fabricated 'clamp' workaround."
+    },
+    {
+      "claim": "No tool change is required for thread milling because the touch probe stays in the spindle",
+      "type": "process",
+      "verified": false,
+      "evidence": "Contradicts the task itself (cutting a thread requires the actual thread-mill cutter, not the touch probe) and the tool-change skill's whole purpose; the plan's own Step 0 quotes 'probe fitted' from get_stored_state but Q3 then assumes a cutter is fitted, an internal contradiction."
+    },
+    {
+      "claim": "2.05 mm is the correct tap-drill pilot hole for M2.5x0.45",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Correct standard metric tap-drill figure, a genuinely useful, uncontested catch."
+    },
+    {
+      "claim": "The converter can be told to 'adjust the expected RPM to 18000' to accept an out-of-range value (Option B)",
+      "type": "process",
+      "verified": false,
+      "evidence": "thread-milling.md states the 200 W mode 'rejects values outside the firmware's 8000-18000 range instead of silently clamping' -- there is no documented mechanism for the agent to override/clamp the value; this option is invented and, on top of that, addresses a problem (17991 out of range) that does not exist."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [
+      "Whether the converter rejects or clamps out-of-range spindle speed (plan treats this as open, but the premise -- that 17991 is out of range -- is itself wrong)",
+      "Machine head type inferred from memory, not read via get_machine_profile"
+    ],
+    "needs_review": [],
+    "workarounds": [
+      "Proposed manually overriding the spindle RPM value if the (non-existent) overspeed condition occurred"
+    ]
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "No eval-specific suggestions beyond those in grading-summary.md."
+  }
+}

@@ -80,17 +80,34 @@ const CaseResource = (props) => {
     let mainToolBarHeight = 66;
     // test access of iframe src by path /access-test.css.
     // Front end should provid this file in server
+    // Bounded, like the one on the home page. Unbounded, an unreachable host
+    // left the reader on a blank frame until the 60s iframe timer fired.
+    const ACCESS_TEST_TIMEOUT = 2000;
+
     const accessTest = (cb) => {
         const link = document.createElement('link');
+        let isOver = false;
+
+        const failed = () => {
+            if (isOver) return;
+            isOver = true;
+            cb();
+            setIsIframeLoaded(false);
+            link.parentNode && document.head.removeChild(link);
+        };
+
         link.rel = 'stylesheet';
         link.type = 'text/css';
         link.href = `${resourcesDomain}/access-test.css`;
-        link.onerror = () => {
-            cb();
-            setIsIframeLoaded(false);
-            document.head.removeChild(link);
+        link.onerror = failed;
+        link.onload = () => {
+            if (isOver) return;
+            isOver = true;
+            link.parentNode && document.head.removeChild(link);
         };
         document.head.appendChild(link);
+
+        setTimeout(failed, ACCESS_TEST_TIMEOUT);
     };
     const handleIframe = () => {
         const iframe = caseResourceIframe.current;

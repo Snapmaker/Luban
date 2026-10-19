@@ -90,6 +90,8 @@ const createLogger = (filename: string): winston.Logger => {
                 }),
                 new winston.transports.File({
                     filename: `${logDir}/${filename}.log`,
+                    // Preserve connection evidence across restarts with bounded rotation.
+                    ...(filename === 'connection-diagnostics' ? { maxsize: 5 * 1024 * 1024, maxFiles: 3, tailable: true } : {}),
                     format: combine(
                         timestamp(),
                         printf(log => `${log.timestamp} - ${log.level} ${log.message}`)
@@ -108,7 +110,7 @@ function getLogger(filename: string): winston.Logger {
         return loggers[filename];
     }
 
-    cleanLogFile(filename);
+    if (filename !== 'connection-diagnostics') { cleanLogFile(filename); }
 
     const logger = createLogger(filename);
     loggers[filename] = logger;

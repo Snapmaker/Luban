@@ -1,0 +1,9 @@
+Fixture-aware cutter-swept review model, 2026-09-27
+Coordinates: physical tip relative to PROPOSED air-side work zero X230 Y245 physical Z160.35; not yet controller G54 / no post.
+Cutter diameter 6 mm; Y tracks 254, 256, 258; axial cutter extent Y251..261.
+Jaw front historical Y269; minimum cutter-to-plane gap 8 mm.
+Collet nose diameter UNKNOWN: 20 mm illustrative nose at Y258 reaches Y268 (1 mm gap); 28 mm reaches Y272 (overlap).
+Max radial tip depth: side 23 mm; B0 finish 22.3 mm; B180 finish 19.3 mm.
+Stage1 central mid-section remaining area: 380.100 mm2; stage2: 72.682 mm2.
+Stage1 and stage2 volume in Y253..259 cut band: 2280.600 and 441.438 mm3.
+Current sample: B0 raised surface begins between Y270.5 and 271 at X195; full jaw radius/material identity unknown. Collet dimensions, installed stickout, enclosure CAD registration and indexed zero/backlash remain unresolved; B sign agrees with the side-probe shifts.

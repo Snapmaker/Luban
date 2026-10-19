@@ -1,0 +1,121 @@
+{
+  "expectations": [
+    {
+      "text": "Identifies that the program's CUTTER DIAM=1.38 equals the neck diameter the operator gave, and that the tool-centre path radius depends on the cutting (thread-form) OD, which is not known",
+      "passed": true,
+      "evidence": "\"The helix centre radius is 0.575 mm, and 2 x 0.575 + 1.38 = 2.53. So the path assumes a cutting OD of 1.38 mm. The operator's cutter has a 1.38 mm neck, and a neck is not the cutting OD.\""
+    },
+    {
+      "text": "Does not invent or assume a thread-form OD for the cutter; asks the operator to measure it (calipers/datasheet) or otherwise treats it as a blocking unknown",
+      "passed": true,
+      "evidence": "Q1: \"What is the cutting OD across the thread crests, from the vendor drawing or measured with a micrometer? It is not the 1.38 neck.\"; \"The real cutting OD is unknown, so I won't guess a typical value.\""
+    },
+    {
+      "text": "Flags L=2.25 against three axial rows at 0.45 pitch (about 1.35 mm coverage); requires verified effective length/generator convention and warns of unthreaded bands without claiming an unmeasured exact band size.",
+      "passed": true,
+      "evidence": "\"Three thread rows at 0.45 mm pitch cover about 1.35 mm per turn. Steps of 2.25 mm would leave unthreaded bands of about 0.9 mm.\" (hedged with \"about\"; Q1 asks for the real effective cutting length)"
+    },
+    {
+      "text": "Recommends regenerating the program in Machining Doctor with the measured OD and real cutting length rather than hand-editing the G-code",
+      "passed": true,
+      "evidence": "Q5: \"Please regenerate in Machining Doctor with: Cutter Diameter = the crest OD ... multi-tooth shorter than thread, with Efective Length = the real effective length ...\""
+    },
+    {
+      "text": "Uses convert_thread_milling_gcode with real argument names: gcode, source_controller fanuc (or default), tool_center_path true, tool_length_applied true, spindle_mode",
+      "passed": true,
+      "evidence": "Step 25: `convert_thread_milling_gcode {\"gcode\": \"<complete regenerated export>\", \"source_controller\": \"fanuc\", \"tool_center_path\": true, \"tool_length_applied\": true, \"spindle_mode\": \"cnc_200w_rpm\"}`"
+    },
+    {
+      "text": "Chooses spindle_mode from the actual head (reads get_machine_profile/get_stored_state or asks) rather than assuming; notes S17991 is only kept in cnc_200w_rpm mode (8000-18000) and that power_percent does NOT rescale feeds",
+      "passed": true,
+      "evidence": "\"S17991 is valid only on the 200 W head (8000–18000). The standard head needs power_percent with an explicit percentage. It would also need feeds regenerated for that head's speed: the converter never rescales feeds, and the F491/F981 values were computed for about 18000 RPM on a 1.38 mm tool.\""
+    },
+    {
+      "text": "Only declares tool_length_applied true once work Z has been referenced with the thread mill itself fitted (tool change flow / tool setter + apply_tool_length_offset, or the operator setting Z with this cutter)",
+      "passed": true,
+      "evidence": "Readiness: \"tool_length_applied: false ... It becomes true once work Z0 has been measured with the probe (steps 10–15) and moved to the thread mill through the flow A setter pair (steps 16–24)\"; declaration only made at step 25, after step 23's apply_tool_length_offset."
+    },
+    {
+      "text": "Treats the work origin (X0 Y0 at the hole centre, Z0 at the stock top) as the operator's, establishing measured XYZ only via human-gated set_workspace_origin and transferring tool length via apply_tool_length_offset; asks how/whether the hole centre is set",
+      "passed": true,
+      "evidence": "Q4: \"Was it drilled on this machine, in this setup, and has nothing moved since? ... How was the current work origin set...\"; Step 12 uses `set_workspace_origin {\"workspace\": \"G54\", \"origin_machine\": {...}, ...}`; Step 23 uses `apply_tool_length_offset`."
+    },
+    {
+      "text": "Notes that the program's first move (G00 X0 Y0 before G43 Z20) runs at whatever Z the head is at, so the head must be at or above the motion floor / park height before the job starts",
+      "passed": true,
+      "evidence": "\"The first block is G00 X0 Y0, at whatever height the head is at, before any Z move ... The segment from the setter to the hole must still be checked against the rotary landmark's stored requiredToolheadZ ... Work Z20 is not park height.\""
+    },
+    {
+      "text": "Submits with submit_gcode_job using frame 'work' and head_type 'cnc', after reviewing changes/warnings/validation (or validate_gcode)",
+      "passed": true,
+      "evidence": "Steps 26-27 review changes/warnings/validation and call `validate_gcode`; Step 28: `submit_gcode_job {..., \"head_type\": \"cnc\", \"frame\": \"work\"}`"
+    },
+    {
+      "text": "Staging turn ends with the confirm URL as the last line; start_gcode_job with wait_for_approval_ms comes after, in the background",
+      "passed": true,
+      "evidence": "Line after step 28: \"-- end turn --  (confirm_url is the last line)\" followed by a separate step 29: \"Call start_gcode_job {\\\"job_id\\\": \\\"<id>\\\", \\\"wait_for_approval_ms\\\": 110000} in the background.\""
+    },
+    {
+      "text": "Asks all open questions in ONE batch and stages nothing that depends on an answer before the answer arrives",
+      "passed": true,
+      "evidence": "Single \"Questions for the operator (one message)\" list (7 questions) sent at step 8 [WAIT], with \"-- end turn --\" before step 9 onward which reads the answers."
+    },
+    {
+      "text": "Does not plan any Z motion (move_z / direct) the operator did not ask for; every quoted height carries frame (machine/work)",
+      "passed": true,
+      "evidence": "No move_z call anywhere; all motion goes through probe_program/tool-change/submit_gcode_job. Heights are consistently labelled, e.g. \"machine X-19 Y342 Z328\", \"work Z-5.056\", \"work Z20\"."
+    }
+  ],
+  "summary": {
+    "passed": 13,
+    "failed": 0,
+    "total": 13,
+    "pass_rate": 1.0
+  },
+  "approval_tags_counted": {
+    "literal_APPROVAL_tags": 8,
+    "literal_WAIT_tags": 3,
+    "note": "Counted from plan.md body only, excluding the plan's own 'Counts:' summary line which also contains the literal strings."
+  },
+  "stated_logical_approvals": "Plan's Counts line: \"logical approvals = 1 Z probe + 1 origin set + 1 Z recheck + 4 tool change (flow A) + 1 job = 8, plus 1 conditional traverse_xy = 9. The branch where the existing G54 is verified skips 3, giving 5. Literal [APPROVAL] tags = 8. Operator waits = 3. Questions = 7.\" Literal tag count (8 APPROVAL, 3 WAIT) matches the plan's own self-report exactly.",
+  "execution_metrics": {
+    "total_tokens": 124710,
+    "duration_ms": 273934,
+    "tool_uses": 15
+  },
+  "timing": {
+    "executor_duration_seconds": 273.934
+  },
+  "claims": [
+    {
+      "claim": "The touch probe cannot reliably measure the 2.05 mm hole's XY (probe tip too large / travel restriction)",
+      "type": "quality",
+      "verified": true,
+      "evidence": "Correct, ungraded good catch: \"A 2.05 mm bore is almost certainly too small for the probe ball plus travel ... I won't propose putting the stylus in the hole.\" Consistent with setup.md's \"do not insert a probe into a bore that cannot accommodate its ball and required travel.\""
+    },
+    {
+      "claim": "The converted file's confirm page may show unresolved machine-Z-extents because the converter always emits an explicit G54",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Correctly identified and hedged in step 28 (\"or say they're unresolved because of the explicit G54\") and in critique.md; matches the real contradiction between cnc-motion-rules/cnc-thread-milling's \"read the machine-resolved Z extents\" language and workspaces.md's \"File review\" section (see grading-summary.md)."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "Identifies that the program's CUTTER DIAM=1.38 equals the neck diameter the operator gave...",
+        "reason": "Possible leakage: cnc-thread-milling/references/setup.md's 'The supplied M2.5 fixture is regression evidence' section names this exact fixture and gives the exact arithmetic (2 x 0.575 + 1.38 = 2.53) that the assertion is checking for. Any config that reads the mandatory reference material (as instructed) will find the answer nearly verbatim rather than deriving it independently; this weakens the assertion's power to discriminate reasoning ability. See grading-summary.md."
+      },
+      {
+        "assertion": "Flags L=2.25 against three axial rows at 0.45 pitch (about 1.35 mm coverage)...",
+        "reason": "Same leakage source as above: setup.md spells out '0.056 + 0.45 + 0.056 + 1.688 = 2.25 mm ... exceeds the approximately 1.35 mm coverage suggested by three rows at 0.45 mm pitch' almost word-for-word."
+      }
+    ],
+    "overall": "Opus passes all 13 assertions with direct, load-bearing evidence, but at least 3 of the 13 (cutter-diam/neck mismatch, L=2.25 axial mismatch, first-move-at-current-Z) are answered nearly verbatim by cnc-thread-milling/references/setup.md's fixture-specific section, which the run instructions require reading. These assertions mainly test whether the reference material was read and heeded, not independent reasoning; the model differentiation between opus/sonnet/haiku on these particular items likely reflects instruction-following/attention rather than domain reasoning. Consider assertions built around a cutter description NOT already spelled out in setup.md for a cleaner ability signal."
+  }
+}

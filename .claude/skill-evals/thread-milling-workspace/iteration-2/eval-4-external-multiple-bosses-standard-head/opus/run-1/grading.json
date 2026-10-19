@@ -1,0 +1,80 @@
+{
+  "expectations": [
+    {
+      "text": "Specifies source_controller okuma, spindle_mode power_percent and spindle_power_percent 65 without asserting RPM mapping.",
+      "passed": true,
+      "evidence": "Steps 8-9: `convert_thread_milling_gcode {..., \"source_controller\": \"okuma\", ..., \"spindle_mode\": \"power_percent\", \"spindle_power_percent\": 65, ...}` twice; Findings: 'The converter replaces source S with M3 P65, sourceSpindleRpm. The operator says the feeds were generated for the verified speed at 65%, and that is the correct precondition' — no claim that 65% maps to a specific RPM."
+    },
+    {
+      "text": "Recognises the existing fitted-tool origin; does not require a needless tool change.",
+      "passed": true,
+      "evidence": "Findings: 'It means no tool change, no run_tool_setter, no apply_tool_length_offset, and no setter-history reuse claim. The operator's statement is the tool history, and step 5 asks for it to be confirmed explicitly.'"
+    },
+    {
+      "text": "Preserves per-boss datums and plans one job per boss, with initial-path/clearance verification and fresh position after each completion.",
+      "passed": true,
+      "evidence": "Two separate convert/submit calls keyed to work (20,15) and (70,15) (steps 8-9, 14, 18); step 17 checks 'the segment from boss 1 to boss 2' against floor/requiredToolheadZ using a fresh get_position before job 2 is allowed to start; step 20 re-reads get_position after job B too."
+    },
+    {
+      "text": "Does not concatenate at work Z20 or claim a completed job proves thread fit.",
+      "passed": true,
+      "evidence": "Findings: 'One program per boss, as generated ... They are never concatenated, and converted files are never joined. Source work Z20 is not proof of safe travel between features.' and 'Completion shows the job ran, not that the thread fits. The operator checks each boss with a thread gauge or ring gauge.'"
+    },
+    {
+      "text": "Uses head_type cnc and frame work in the later submit shape, with URL delivery before waiting.",
+      "passed": true,
+      "evidence": "Steps 14 and 18: `submit_gcode_job {..., \"head_type\": \"cnc\", \"frame\": \"work\"}` [APPROVAL] '... then the confirm_url as the last line' followed by `-- end turn --`, with start_gcode_job only at steps 15/19 in a later turn."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  },
+  "approval_tags_counted": {
+    "literal_tags_in_steps": 3,
+    "breakdown": "[APPROVAL] at step 14, [APPROVAL, conditional] at step 17, [APPROVAL] at step 18",
+    "note": "A 4th regex hit is the self-referential mention inside the plan's own 'Counts:' sentence ('literal [APPROVAL] tags=3'), not a step tag."
+  },
+  "stated_logical_approvals": "Plan states 'logical approvals=2 jobs x 1 + 0 tool changes = 2 (3 if the conditional between-job move_z raise is needed; the unlisted select_workspace branch would add 1 more)'. Literal tag count (3, one conditional) is internally consistent with the stated logical count.",
+  "docs_consistency_check": {
+    "topic": "Machine-resolved Z extents for a program carrying an explicit G54",
+    "plan_claim": "Step 14: 'Read the operator the Frame row and the machine-resolved Z extents, or state that they are unresolved because of the explicit G54 and give the reviewed work-frame extents.'",
+    "docs_say": "src/server/services/mcp/docs/workspaces.md 'File review': 'The validator recognises G54-G59.3 but leaves machine extents unresolved for named-workspace files, mixed frames and origin rewrites... An unchanged file with no workspace selectors, declared frame: \"work\", can still resolve against the reliable current offset.' cnc-motion-rules/SKILL.md line 181-184 repeats this: '...the confirm page shows Frame: WORK (declared by argument) plus the machine-resolved Z extents when resolvable... Files selecting named workspaces, mixing frames or rewriting an origin have unresolved machine extents.' cnc-thread-milling/references/import.md confirms every converted program ends with an explicit literal G54 ('Output uses G21/G90/G54'), and cnc-thread-milling/SKILL.md line 95 states 'The converter emits G54.' So every thread-milling conversion output is a named-workspace file, and per workspaces.md its machine extents are UNRESOLVED, even though frame: \"work\" is declared correctly and cnc-thread-milling/SKILL.md's own staging instruction (line 106) tells the agent to simply 'read the confirm page's frame and machine-resolved Z extents' as if always available.",
+    "verdict": "Consistent. Opus is the only run of the three that noticed and resolved this internal contradiction (also raised explicitly in its critique.md under 'Machine-resolved Z extents vs an explicit G54'), correctly concluding the extents will most likely read as unresolved and planning to substitute the reviewed work-frame extents instead of assuming the confirm page always resolves them."
+  },
+  "leakage_check": "No near-verbatim assertion wording and no 'compliance with assertions' section found in plan.md or critique.md.",
+  "claims": [
+    {
+      "claim": "The converted program's first move runs at whatever Z the head is at before the program's own Z move, so conversion adds no raise.",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Matches cnc-thread-milling/references/import.md: 'G43/H removal preserves inherited motion, including initial Z positioning' and thread-milling.md's note on the fixture's initial G0 Z20."
+    },
+    {
+      "claim": "Okuma G15 H1 maps only to G54, so the corner datum must live in G54.",
+      "type": "factual",
+      "verified": true,
+      "evidence": "import.md: 'Okuma: standalone G15 H1 maps to G54; G56/H length lookup is removed under the fitted-tool declaration.'"
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "reason": "No assertion in this eval checks the machine-resolved-Z-extents-vs-explicit-G54 contradiction (docs/workspaces.md vs cnc-thread-milling/SKILL.md line 106), yet it is a real, model-discriminating gap: opus caught and handled it, sonnet and haiku both silently assumed the confirm page would show resolved extents. Worth adding an assertion like 'Does not assume the confirm page's machine-resolved Z extents will be available for a converted (G54-carrying) file; states they are likely unresolved and reviews the work-frame extents instead.'"
+      }
+    ],
+    "overall": "All 5 explicit assertions pass with solid, non-superficial evidence. The plan is the most careful of the three about re-verifying live state between the two boss jobs and about the G54/extents contradiction noted above."
+  },
+  "timing": {
+    "total_tokens": 114553,
+    "duration_ms": 236648,
+    "tool_uses": 18
+  }
+}

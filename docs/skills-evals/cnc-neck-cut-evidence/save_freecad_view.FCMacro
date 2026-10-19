@@ -1,0 +1,34 @@
+"""Run in FreeCAD GUI to save the cross-section view and screenshot."""
+import FreeCAD as App
+import FreeCADGui as Gui
+from PySide import QtWidgets
+
+path='/home/pi/dev/Luban/cnc/neck_cut_plan/neck_cut_proposal.FCStd'
+doc=App.openDocument(path)
+visible={'Stage1SectionDisplay','Stage2SectionDisplay','Stage1Outline','Stage2Outline'}
+colors={
+    'Stage1SectionDisplay':(0.55,0.68,0.78),
+    'Stage2SectionDisplay':(0.91,0.52,0.20),
+}
+for obj in doc.Objects:
+    vp=obj.ViewObject
+    vp.Visibility=(hasattr(obj,'Group') or obj.Name in visible)
+    if obj.Name in colors:
+        vp.ShapeColor=colors[obj.Name]
+        vp.LineColor=(0.13,0.20,0.26)
+        vp.DisplayMode='Flat Lines'
+    if obj.Name in {'Stage1Outline','Stage2Outline'}:
+        vp.LineColor=(0.47,0.54,0.58)
+        vp.LineWidth=2.0
+view=Gui.activeDocument().activeView()
+view.viewFront()
+for _ in range(4): QtWidgets.QApplication.processEvents()
+view.fitAll()
+for _ in range(4): QtWidgets.QApplication.processEvents()
+doc.recompute()
+doc.save()
+view.saveImage('/home/pi/dev/Luban/cnc/neck_cut_plan/freecad_opening_view.png',1200,800,'White')
+with open('/home/pi/dev/Luban/cnc/neck_cut_plan/freecad_opening_view_camera.txt','w') as f:
+    f.write(view.getCamera())
+import os
+os._exit(0)

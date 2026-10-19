@@ -7,10 +7,19 @@ import Channel, { CncChannelInterface, ExecuteGcodeResult, LaserChannelInterface
 import { ChannelEvent } from './ChannelEvent';
 import { L20WLaserToolModule, L40WLaserToolModule } from '../../../../app/machines/snapmaker-2-toolheads';
 import { HEAD_LASER } from '../../../constants';
+import { gcodeLease } from '../gcodeLease';
+import { TextSerialMachineState, TextSerialMachineStateTracker } from './textSerialMachineState';
 
 const log = logger('machine:channels:TextSerialChannel');
 
 const DEFAULT_BAUDRATE = 115200;
+
+/** The events TextSerialChannel watches on lib/SerialConnection (an EventEmitter with an isOpen getter). */
+interface SerialPortEvents {
+    on(event: string, listener: (...args: unknown[]) => void): unknown;
+    removeListener(event: string, listener: (...args: unknown[]) => void): unknown;
+    readonly isOpen?: boolean;
+}
 class TextSerialChannel extends Channel implements
     LaserChannelInterface,
     CncChannelInterface {
@@ -20,8 +29,119 @@ class TextSerialChannel extends Channel implements
 
     private controller: MarlinController = null;
 
+    // Bumped at every port open/close this channel performs. MarlinController
+    // also closes the port on its own (serial 'close'), and every reopen
+    // creates a new serial connection object, so a change in that object is
+    // counted as well when the generation is read.
+    private connectionGeneration = 0;
+
+    private observedPort: unknown = null;
+
+    // The serial connection object (MarlinController.serialport) watched for
+    // an unplug: its 'close', or an 'error' that leaves it closed, is a lost
+    // link the channel reports as Disconnected (#265). Detached on a clean close.
+    private watchedPort: SerialPortEvents | null = null;
+
+    // The M114 replies MarlinController already polls, kept per connection
+    // generation (textSerialMachineState.ts). No query of its own.
+    private readonly machineState = new TextSerialMachineStateTracker();
+
+    /** Read-only: lets callers tell a reconnected session from the one they started on. */
+    public getConnectionGeneration(): number {
+        const port = (this.controller as unknown as { serialport?: unknown } | null)?.serialport ?? null;
+        if (port !== this.observedPort) {
+            this.observedPort = port;
+            this.connectionGeneration++;
+        }
+        return this.connectionGeneration;
+    }
+
     public getController(): MarlinController {
         return this.controller;
+    }
+
+    /**
+     * The newest M114 position reply of this connection, in the LOGICAL frame
+     * (positionFrame 'logical', no originOffset: see textSerialMachineState.ts),
+     * stamped with the time it was parsed. Null before the first reply, after
+     * close, and once the port has dropped or been reopened under the channel.
+     */
+    public getLatestMachineState(): TextSerialMachineState | null {
+        const controller = this.controller as unknown as {
+            isOpen?: () => boolean;
+            controller?: { state?: { [key: string]: unknown } } | null;
+            workflow?: { state?: unknown } | null;
+        } | null;
+        if (!controller || typeof controller.isOpen !== 'function' || !controller.isOpen()) {
+            this.machineState.clear();
+            return null;
+        }
+        const marlinState = controller.controller?.state || {};
+        return this.machineState.get(this.getConnectionGeneration(), {
+            workflowState: controller.workflow?.state,
+            isHomed: marlinState.isHomed,
+            headType: marlinState.headType,
+            headStatus: marlinState.headStatus,
+            headPower: marlinState.headPower,
+        });
+    }
+
+    private watchPort(controller: MarlinController): void {
+        const port = (controller as unknown as { serialport?: SerialPortEvents | null }).serialport || null;
+        if (port === this.watchedPort) {
+            return;
+        }
+        this.unwatchPort();
+        if (!port || typeof port.on !== 'function' || typeof port.removeListener !== 'function') {
+            return;
+        }
+        this.watchedPort = port;
+        port.on('close', this.onPortClose);
+        port.on('error', this.onPortError);
+    }
+
+    private unwatchPort(): void {
+        const port = this.watchedPort;
+        this.watchedPort = null;
+        if (port) {
+            port.removeListener('close', this.onPortClose);
+            port.removeListener('error', this.onPortError);
+        }
+    }
+
+    private onPortClose = () => {
+        this.portLost('serial port closed');
+    };
+
+    private onPortError = () => {
+        const port = this.watchedPort;
+        if (port && !port.isOpen) {
+            this.portLost('serial port error left the port closed');
+        }
+    };
+
+    /**
+     * The port went away under the channel (USB unplug, the controller's
+     * reboot): MarlinController has closed and destroyed itself on 'close',
+     * so drop it - a later connectionOpen builds a fresh one - and report the
+     * same Disconnected the other channels use, which clears the connection
+     * status and tells the UI ('connection:close').
+     */
+    private portLost(reason: string): void {
+        const controller = this.controller;
+        this.unwatchPort();
+        if (!controller) {
+            return;
+        }
+        log.warn(`Serial port "${this.port}" lost (${reason}), reporting disconnected.`);
+        this.controller = null;
+        this.connectionGeneration++;
+        this.machineState.clear();
+        if ((controller as unknown as { serialport?: unknown }).serialport) {
+            // An 'error' with no 'close': release the port the controller still holds.
+            controller.close();
+        }
+        this.emit(ChannelEvent.Disconnected);
     }
 
     public onDisconnection = (socket: SocketServer) => {
@@ -37,6 +157,7 @@ class TextSerialChannel extends Channel implements
 
         this.port = port;
         this.dataSource = PROTOCOL_TEXT;
+        this.machineState.clear();
 
         let controller = this.controller;
         if (!controller) {
@@ -50,6 +171,21 @@ class TextSerialChannel extends Channel implements
             controller.on('Ready', (data) => {
                 this.emit(ChannelEvent.Ready, data);
             });
+            controller.on('positionReport', (payload) => {
+                this.machineState.notePosition(payload, this.getConnectionGeneration());
+            });
+            controller.on('originOffsetReport', (payload) => {
+                this.machineState.noteOriginOffset(payload, this.getConnectionGeneration());
+            });
+            controller.on('originSelectionReport', (payload) => {
+                this.machineState.noteOriginSelection(payload, this.getConnectionGeneration());
+            });
+            // Every line written to the port, whoever wrote it: the write-path
+            // evidence of homes, position shifts and planner syncs
+            // (textSerialMachineState.ts, WP4a).
+            controller.on('lineWritten', (data) => {
+                this.machineState.noteLineWritten(String(data), this.getConnectionGeneration());
+            });
         }
 
         controller.addConnection(this.socket);
@@ -59,6 +195,7 @@ class TextSerialChannel extends Channel implements
             // Join the room, useless
             // socket.join(port);
 
+            this.watchPort(controller);
             this.emit(ChannelEvent.Connecting);
             this.emit(ChannelEvent.Connected);
 
@@ -81,6 +218,8 @@ class TextSerialChannel extends Channel implements
                     }
 
                     this.controller = controller;
+                    this.connectionGeneration++;
+                    this.watchPort(controller);
 
                     this.emit(ChannelEvent.Connected);
 
@@ -96,9 +235,15 @@ class TextSerialChannel extends Channel implements
             return false;
         }
 
+        // A clean close is not a lost link: stop watching before the port closes.
+        this.unwatchPort();
+
         if (controller.state.headType === HEAD_LASER) {
             controller.writeln('M5');
         }
+
+        this.connectionGeneration++;
+        this.machineState.clear();
 
         return new Promise((resolve) => {
             controller.close();
@@ -114,6 +259,8 @@ class TextSerialChannel extends Channel implements
     }
 
     public async executeGcode(gcode: string): Promise<ExecuteGcodeResult> {
+        const refusal = gcodeLease.refusal(gcode);
+        if (refusal) { return { result: -1, text: refusal }; }
         const gcodeLines = gcode.split('\n');
 
         const controller = this.controller;

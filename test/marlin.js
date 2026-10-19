@@ -20,7 +20,8 @@ test('MarlinLineParserResultPosition', (t) => {
             x: '1.529',
             y: '-5.440',
             z: '0.00',
-            e: '0.00'
+            e: '0.00',
+            isFourAxis: false
         });
         t.end();
     });

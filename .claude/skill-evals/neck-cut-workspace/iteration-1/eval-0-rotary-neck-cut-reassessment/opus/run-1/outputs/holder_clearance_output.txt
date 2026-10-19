@@ -1,0 +1,21 @@
+setup                 B    tip Zw tipZ phys  P_min(nut)  P+Ln (jaw)   in-slot
+S1 R1-B0 band         0     -0.55    113.23       25.82       33.02      8.02
+S2 R1-B180 band     180      5.55    119.33       20.02     UNKNOWN      8.02
+S3 R1-B90 notch      90     29.62    143.40        8.30     UNKNOWN      3.00
+S4 R1-B270 notch    270     28.48    142.26        9.10     UNKNOWN      3.00
+S5 R2-B270 spine    270     21.98    135.76       15.60     UNKNOWN      9.50
+S6 R2-B90 spine      90     23.12    136.90       14.80     UNKNOWN      9.50
+S7 R2-B0 web          0     -6.05    107.73       31.32       38.52     13.52
+
+Collet-nut rule: fitted protrusion P (tip to nut face) >= 31.3 mm (driven by S7, tenon top + 3 mm).
+Flute rule: the deepest tool length inside a tool-width slot is 13.5 mm (S7); cutting edge > 25 mm covers it.
+Jaw rule (B0, X195 line only): P + L_nut >= 38.5 mm if the nose/body footprint reaches Y>=270.5 at X195.
+Chuck body / other jaws / other B: UNKNOWN -> plan M4 go/no-go marches; requirement for spindle bottom at S7:
+   if the chuck/jaw envelope radius about the axis is 40 mm: P + L_nut(+nose) >= 49.0 mm
+   if the chuck/jaw envelope radius about the axis is 45 mm: P + L_nut(+nose) >= 54.0 mm
+   if the chuck/jaw envelope radius about the axis is 50 mm: P + L_nut(+nose) >= 59.0 mm
+   if the chuck/jaw envelope radius about the axis is 55 mm: P + L_nut(+nose) >= 64.0 mm
+   if the chuck/jaw envelope radius about the axis is 60 mm: P + L_nut(+nose) >= 69.0 mm
+Groove-wall clearance of the 6 mm cutter at track Y256.30 (kerf Y253.30-259.30):
+   B0 groove (X195)               enclosure side 1.15 mm, tenon side 0.95 mm   (walls 252.15 / 260.25, INFERRED from ball-model edges; M2 measures)
+   B-180 groove (X198 at B-180)   enclosure side 0.48 mm, tenon side 0.30 mm   (walls 252.82 / 259.6, INFERRED from ball-model edges; M2 measures)

@@ -5,7 +5,7 @@ import { includes } from 'lodash';
 
 import i18n from '../../../lib/i18n';
 import RepeatButton from '../../components/RepeatButton';
-import { DISTANCE_MAX, DISTANCE_MIN, DISTANCE_STEP } from './constants';
+import { ANGLE_OPTIONS, DISTANCE_MAX, DISTANCE_MIN, DISTANCE_STEP, getDistanceOptions } from './constants';
 
 const JogDistance = (props) => {
     const { state, actions, workPosition } = props;
@@ -14,13 +14,12 @@ const JogDistance = (props) => {
     let distance = String(selectedDistance); // force convert to string
     let angle = String(selectedAngle);
 
-    const distanceOptions = [!workPosition.isFourAxis ? '10' : '5', '1', '0.1', '0.05'];
+    const distanceOptions = getDistanceOptions(workPosition.isFourAxis);
     if (!includes(distanceOptions, distance)) {
         distance = '';
     }
 
-    const angleOptions = ['5', '1', '0.2'];
-    if (!includes(angleOptions, angle)) {
+    if (!includes(ANGLE_OPTIONS, angle)) {
         angle = '';
     }
 
@@ -31,7 +30,7 @@ const JogDistance = (props) => {
                 <Space direction="vertical" size={8}>
                     <Radio.Group
                         size="small"
-                        defaultValue={distance}
+                        value={distance}
                         onChange={(e) => actions.selectDistance(e.target.value)}
                     >
                         {
@@ -88,12 +87,12 @@ const JogDistance = (props) => {
                     <Space direction="vertical" size={8}>
                         <Radio.Group
                             size="small"
-                            defaultValue={angle}
+                            value={angle}
                             onChange={(e) => actions.selectAngle(e.target.value)}
                         >
-                            <Radio.Button key="5" value="5" disabled={!canClick}>5</Radio.Button>
-                            <Radio.Button key="1" value="1" disabled={!canClick}>1</Radio.Button>
-                            <Radio.Button key="0.2" value="0.2" disabled={!canClick}>0.2</Radio.Button>
+                            {ANGLE_OPTIONS.map(option => (
+                                <Radio.Button key={option} value={option} disabled={!canClick}>{option}</Radio.Button>
+                            ))}
                             {/* empty value for custom */}
                             <Radio.Button key="custom" value="" disabled={!canClick}><i className="fa fa-adjust" /></Radio.Button>
                         </Radio.Group>

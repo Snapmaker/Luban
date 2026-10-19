@@ -1,0 +1,29 @@
+W (B0 X width, physical) = 64.10   T (B90/B270 widths, tip-corrected) = 36.40 / 36.30 -> 36.35
+Derived axis X = 169.325  (mid of B90/B270 thickness centres 170.95 / 167.70)
+Derived axis Z: toolhead-contact equivalent 184.725 ; physical 113.775 (with L=70.95)
+Thickness-centre offset from axis: from B0/B180 tops 1.600 ; from B90/B270 centres 1.625  (independent agreement check)
+Width-centre offset at B0 f = 0.575
+Stored axis (170.1, 112.4) differs by dX +0.78, dZ -1.38
+--- model with DERIVED axis X169.32 Zphys113.78 ---
+  B90 faces Y245     predicted (152.75, 189.10)  measured (152.75, 189.15)  residual (+0.00, +0.05)
+  B270 faces Y245    predicted (149.55, 185.90)  measured (149.55, 185.85)  residual (+0.00, -0.05)
+  B180 top (phys)    predicted 133.55  measured 133.55  residual +0.00
+  B90 top (phys)     predicted 146.40000000000003  (not measured in the evidence; M1 measures it)
+  B270 top (phys)    predicted 145.25  (not measured in the evidence; M1 measures it)
+  B90 faces Y256     predicted (161.85, 182.90)  measured (161.75, 183.05)  residual (-0.10, +0.15)
+  B270 faces Y256    predicted (155.75, 176.80)  measured (155.55, 176.85)  residual (-0.20, +0.05)
+--- model with STORED axis X170.10 Zphys112.40 ---
+  B90 faces Y245     predicted (152.15, 188.50)  measured (152.75, 189.15)  residual (+0.60, +0.65)
+  B270 faces Y245    predicted (151.70, 188.05)  measured (149.55, 185.85)  residual (-2.15, -2.20)
+  B180 top (phys)    predicted 130.80  measured 133.55  residual +2.75
+  B90 top (phys)     predicted 144.25  (not measured in the evidence; M1 measures it)
+  B270 top (phys)    predicted 144.65  (not measured in the evidence; M1 measures it)
+  B90 faces Y256     predicted (161.25, 185.05)  measured (161.75, 183.05)  residual (+0.50, -2.00)
+  B270 faces Y256    predicted (155.15, 178.95)  measured (155.55, 176.85)  residual (+0.40, -2.10)
+B0 groove floor physical (direct) 121.25 ; B-180 floor in B0 frame 100.20 -> neck height 21.05
+Cut displacement in stock (u,v) if CAM rotates about the STORED axis: B180 (-1.55, +2.75)  B90 (-2.15, +0.60)  B270 (+0.60, +2.15)
+Old G54 X 169.953 -> CAD X+-32 faces at 137.953 / 201.953 vs measured 137.85 / 201.95
+Old G54 Y 133.632 + CAD length 119 = 252.632 vs measured enclosure-side groove wall 252.15 (B0 X195, at depth)
+Old G54 Z 208.5 is a TOOLHEAD Z for an unknown tool; with the probe the B0 rim reads work Z -7.2
+PROPOSED G54 (probe fitted): origin_machine x=169.32 y=252.15 z=184.73 (toolhead Z of the probe with its tip at axis height)
+Predicted probe readings in that G54 (work = machine - origin):  B0 rim X195/Y250 Z +16.575 ; B0 +X face +32.62 ; B90 top Z +32.62 ; B270 top Z +31.47

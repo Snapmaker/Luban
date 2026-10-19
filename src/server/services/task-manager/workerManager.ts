@@ -1,5 +1,7 @@
+import path from 'path';
 import workerpool, { WorkerPool } from 'workerpool';
 import DataStorage from '../../DataStorage';
+import { SERVER_DIR, SERVER_DIR_ENV } from '../../lib/paths';
 
 // Avoid TSC precompiling, at the same time, webpack can collect dependencies
 if (process.env.NODE_ENV === 'production') {
@@ -34,9 +36,14 @@ class WorkerManager {
             const config: workerpool.WorkerPoolOptions = {
                 workerType: 'process',
                 forkOpts: {
+                    // This replaces the worker's environment rather than
+                    // extending it: pass the server directory on, so the
+                    // worker resolves files emitted beside the bundles
+                    // (opencv.wasm) from the same place the server does.
                     env: {
                         Tmpdir: DataStorage.tmpDir,
                         fontDir: DataStorage.fontDir,
+                        [SERVER_DIR_ENV]: SERVER_DIR,
                     }
                 }
             };
@@ -46,7 +53,9 @@ class WorkerManager {
             // } else {
             config.minWorkers = 1;
             // }
-            this.pool = workerpool.pool('./Pool.worker.js', config);
+            // The worker is emitted beside the server bundle (worker-loader);
+            // an absolute path keeps the fork independent of the working directory.
+            this.pool = workerpool.pool(path.join(SERVER_DIR, 'Pool.worker.js'), config);
         }
         return this.pool;
     }
@@ -65,8 +74,19 @@ Object.entries(WorkerMethods).forEach(([, method]) => {
                 }
             }
         });
+        let cancelled = false;
+        if (method === WorkerMethods.heartBeat) {
+            // Polling should remain alive until explicitly cancelled. Observe rejection as well as
+            // resolution: a crashed worker otherwise leaves a connected flag and an old position.
+            handle.then(() => {
+                if (!cancelled) { onmessage?.({ status: 'worker-exit', reason: 'worker_completed' }); }
+            }, () => {
+                if (!cancelled) { onmessage?.({ status: 'worker-exit', reason: 'worker_rejected' }); }
+            });
+        }
         return {
             terminate: () => {
+                cancelled = true;
                 handle.cancel();
             }
         };

@@ -1,0 +1,501 @@
+{
+  "date": "2026-09-27",
+  "coordinate_frame": "machine",
+  "probe_effective_length_mm": 70.95,
+  "probe_tip_exposed_approx_mm": 21,
+  "job_ids": {
+    "b180": "f8f12d4a4b3e",
+    "b0": "7685888d887d",
+    "jaw": "cc6e2592ccd6",
+    "tops": "e185e35d0536"
+  },
+  "b180": {
+    "x_mm": 198,
+    "angle_deg": -180,
+    "ending": {
+      "kind": "completed",
+      "reason": "procedure finished",
+      "at": 1790519418788,
+      "measured": 3
+    },
+    "profiles": {
+      "toward_enclosure": [
+        {
+          "y_mm": 250,
+          "toolhead_z_mm": 204.5,
+          "status": "contact"
+        },
+        {
+          "y_mm": 249.5,
+          "toolhead_z_mm": 204.5,
+          "status": "contact"
+        },
+        {
+          "y_mm": 249,
+          "toolhead_z_mm": 204.5,
+          "status": "contact"
+        },
+        {
+          "y_mm": 248.5,
+          "toolhead_z_mm": 204.5,
+          "status": "contact"
+        },
+        {
+          "y_mm": 248,
+          "toolhead_z_mm": 204.5,
+          "status": "contact"
+        },
+        {
+          "y_mm": 247.5,
+          "toolhead_z_mm": 204.5,
+          "status": "contact"
+        },
+        {
+          "y_mm": 247,
+          "toolhead_z_mm": 204.5,
+          "status": "contact"
+        },
+        {
+          "y_mm": 246.5,
+          "toolhead_z_mm": 204.5,
+          "status": "contact"
+        },
+        {
+          "y_mm": 246,
+          "toolhead_z_mm": 204.5,
+          "status": "contact"
+        },
+        {
+          "y_mm": 245.5,
+          "toolhead_z_mm": 204.5,
+          "status": "contact"
+        },
+        {
+          "y_mm": 245,
+          "toolhead_z_mm": 204.5,
+          "status": "contact"
+        }
+      ],
+      "toward_chuck": [
+        {
+          "y_mm": 250,
+          "toolhead_z_mm": 204.4,
+          "status": "contact"
+        },
+        {
+          "y_mm": 250.5,
+          "toolhead_z_mm": 204.4,
+          "status": "contact"
+        },
+        {
+          "y_mm": 251,
+          "toolhead_z_mm": 204.4,
+          "status": "contact"
+        },
+        {
+          "y_mm": 251.5,
+          "toolhead_z_mm": 204.4,
+          "status": "contact"
+        },
+        {
+          "y_mm": 252,
+          "toolhead_z_mm": 204.4,
+          "status": "contact"
+        },
+        {
+          "y_mm": 252.5,
+          "toolhead_z_mm": 204.4,
+          "status": "contact"
+        },
+        {
+          "y_mm": 253,
+          "toolhead_z_mm": 204.4,
+          "status": "contact"
+        },
+        {
+          "y_mm": 253.5,
+          "toolhead_z_mm": 204.2,
+          "status": "contact"
+        },
+        {
+          "y_mm": 254,
+          "toolhead_z_mm": 198.3,
+          "status": "contact"
+        },
+        {
+          "y_mm": 254.5,
+          "toolhead_z_mm": 198.3,
+          "status": "contact"
+        },
+        {
+          "y_mm": 255,
+          "toolhead_z_mm": 198.3,
+          "status": "contact"
+        },
+        {
+          "y_mm": 255.5,
+          "toolhead_z_mm": 198.3,
+          "status": "contact"
+        },
+        {
+          "y_mm": 256,
+          "toolhead_z_mm": 198.3,
+          "status": "contact"
+        },
+        {
+          "y_mm": 256.5,
+          "toolhead_z_mm": 198.3,
+          "status": "contact"
+        },
+        {
+          "y_mm": 257,
+          "toolhead_z_mm": 198.3,
+          "status": "contact"
+        },
+        {
+          "y_mm": 257.5,
+          "toolhead_z_mm": 198.3,
+          "status": "contact"
+        },
+        {
+          "y_mm": 258,
+          "toolhead_z_mm": 198.3,
+          "status": "contact"
+        },
+        {
+          "y_mm": 258.5,
+          "toolhead_z_mm": 199,
+          "status": "contact"
+        },
+        {
+          "y_mm": 259,
+          "toolhead_z_mm": 204.6,
+          "status": "contact"
+        },
+        {
+          "y_mm": 259.5,
+          "toolhead_z_mm": 207.5,
+          "status": "contact"
+        },
+        {
+          "y_mm": 260,
+          "toolhead_z_mm": 207.4,
+          "status": "contact"
+        },
+        {
+          "y_mm": 260.5,
+          "toolhead_z_mm": 207.4,
+          "status": "contact"
+        },
+        {
+          "y_mm": 261,
+          "toolhead_z_mm": 207.3,
+          "status": "contact"
+        },
+        {
+          "y_mm": 261.5,
+          "toolhead_z_mm": 207.3,
+          "status": "contact"
+        },
+        {
+          "y_mm": 262,
+          "toolhead_z_mm": 207.3,
+          "status": "contact"
+        },
+        {
+          "y_mm": 262.5,
+          "toolhead_z_mm": 207.3,
+          "status": "contact"
+        },
+        {
+          "y_mm": 263,
+          "toolhead_z_mm": 207.2,
+          "status": "contact"
+        }
+      ]
+    }
+  },
+  "b0": {
+    "x_mm": 195,
+    "angle_deg": 0,
+    "ending": {
+      "reason": "Program \"b0_shallow_neck_profile\" stopped at op \"profile\" (4/4): Surface path scan aborted at station 20: Stepped traverse \"s20\": probe still triggered after backing off 1 mm at (195, 259, 200.2). 19 station(s) measured before the abort are on the job record. 3 earlier op(s) completed; their results are on the job record under result.ops. Machine raised to the traverse height.",
+      "at": 1790520162285,
+      "measured": 3,
+      "kind": "operation-failure"
+    },
+    "profile": [
+      {
+        "y_mm": 250,
+        "toolhead_z_mm": 201.3,
+        "status": "contact"
+      },
+      {
+        "y_mm": 250.5,
+        "toolhead_z_mm": 201.3,
+        "status": "contact"
+      },
+      {
+        "y_mm": 251,
+        "toolhead_z_mm": 201.3,
+        "status": "contact"
+      },
+      {
+        "y_mm": 251.5,
+        "toolhead_z_mm": 201.3,
+        "status": "contact"
+      },
+      {
+        "y_mm": 252,
+        "toolhead_z_mm": 201.3,
+        "status": "contact"
+      },
+      {
+        "y_mm": 252.5,
+        "toolhead_z_mm": 201.3,
+        "status": "contact"
+      },
+      {
+        "y_mm": 253,
+        "toolhead_z_mm": 201.1,
+        "status": "contact"
+      },
+      {
+        "y_mm": 253.5,
+        "toolhead_z_mm": 198.4,
+        "status": "contact"
+      },
+      {
+        "y_mm": 254,
+        "toolhead_z_mm": 192.2,
+        "status": "contact"
+      },
+      {
+        "y_mm": 254.5,
+        "toolhead_z_mm": 192.2,
+        "status": "contact"
+      },
+      {
+        "y_mm": 255,
+        "toolhead_z_mm": 192.2,
+        "status": "contact"
+      },
+      {
+        "y_mm": 255.5,
+        "toolhead_z_mm": 192.2,
+        "status": "contact"
+      },
+      {
+        "y_mm": 256,
+        "toolhead_z_mm": 192.2,
+        "status": "contact"
+      },
+      {
+        "y_mm": 256.5,
+        "toolhead_z_mm": 192.2,
+        "status": "contact"
+      },
+      {
+        "y_mm": 257,
+        "toolhead_z_mm": 192.2,
+        "status": "contact"
+      },
+      {
+        "y_mm": 257.5,
+        "toolhead_z_mm": 192.2,
+        "status": "contact"
+      },
+      {
+        "y_mm": 258,
+        "toolhead_z_mm": 192.2,
+        "status": "contact"
+      },
+      {
+        "y_mm": 258.5,
+        "toolhead_z_mm": 192.2,
+        "status": "contact"
+      },
+      {
+        "y_mm": 259,
+        "toolhead_z_mm": 192.2,
+        "status": "contact"
+      }
+    ],
+    "failure": "Surface path scan aborted at station 20: Stepped traverse \"s20\": probe still triggered after backing off 1 mm at (195, 259, 200.2). 19 station(s) measured before the abort are on the job record."
+  },
+  "raised_boundary": {
+    "x_mm": 195,
+    "angle_deg": 0,
+    "ending": {
+      "kind": "completed",
+      "reason": "procedure finished",
+      "at": 1790522174320,
+      "measured": 17
+    },
+    "profile": [
+      {
+        "y_mm": 278,
+        "toolhead_z_mm": 214.2,
+        "status": "contact"
+      },
+      {
+        "y_mm": 277.5,
+        "toolhead_z_mm": 214.2,
+        "status": "contact"
+      },
+      {
+        "y_mm": 277,
+        "toolhead_z_mm": 214.2,
+        "status": "contact"
+      },
+      {
+        "y_mm": 276.5,
+        "toolhead_z_mm": 214.2,
+        "status": "contact"
+      },
+      {
+        "y_mm": 276,
+        "toolhead_z_mm": 214.2,
+        "status": "contact"
+      },
+      {
+        "y_mm": 275.5,
+        "toolhead_z_mm": 214.3,
+        "status": "contact"
+      },
+      {
+        "y_mm": 275,
+        "toolhead_z_mm": 214.3,
+        "status": "contact"
+      },
+      {
+        "y_mm": 274.5,
+        "toolhead_z_mm": 214.3,
+        "status": "contact"
+      },
+      {
+        "y_mm": 274,
+        "toolhead_z_mm": 214.3,
+        "status": "contact"
+      },
+      {
+        "y_mm": 273.5,
+        "toolhead_z_mm": 214.3,
+        "status": "contact"
+      },
+      {
+        "y_mm": 273,
+        "toolhead_z_mm": 214.3,
+        "status": "contact"
+      },
+      {
+        "y_mm": 272.5,
+        "toolhead_z_mm": 214.3,
+        "status": "contact"
+      },
+      {
+        "y_mm": 272,
+        "toolhead_z_mm": 214.3,
+        "status": "contact"
+      },
+      {
+        "y_mm": 271.5,
+        "toolhead_z_mm": 214,
+        "status": "contact"
+      },
+      {
+        "y_mm": 271,
+        "toolhead_z_mm": 213.5,
+        "status": "contact"
+      },
+      {
+        "y_mm": 270.5,
+        "toolhead_z_mm": 206.4,
+        "status": "contact"
+      },
+      {
+        "y_mm": 270,
+        "toolhead_z_mm": 206.5,
+        "status": "contact"
+      }
+    ]
+  },
+  "chuck_side_top_points": [
+    {
+      "y_mm": 263,
+      "contact": {
+        "x": 195,
+        "y": 263,
+        "z": 207
+      }
+    },
+    {
+      "y_mm": 270,
+      "contact": {
+        "x": 195,
+        "y": 270,
+        "z": 206.5
+      }
+    },
+    {
+      "y_mm": 278,
+      "contact": {
+        "x": 195,
+        "y": 278,
+        "z": 214.2
+      }
+    }
+  ],
+  "outboard_checks": [
+    {
+      "job_id": "fb79eaf09ebb",
+      "b_deg": 0,
+      "x_mm": 205,
+      "y_mm": 263,
+      "direction": "-Z",
+      "result": "no_contact_to_toolhead_z_208"
+    },
+    {
+      "job_id": "99156aca920d",
+      "b_deg": 0,
+      "x_mm": 205,
+      "y_mm": 263,
+      "direction": "-Z",
+      "result": "contact",
+      "toolhead_z_mm": 206.7
+    },
+    {
+      "job_id": "c68ffa508837",
+      "b_deg": 0,
+      "x_mm": 205,
+      "toolhead_z_mm": 208,
+      "direction": "+Y",
+      "from_y_mm": 263,
+      "to_y_mm": 290,
+      "result": "no_contact"
+    },
+    {
+      "job_id": "6f844b2af53c",
+      "b_deg": 0,
+      "x_mm": 210,
+      "y_mm": 263,
+      "direction": "-Z",
+      "result": "no_contact_to_toolhead_z_200"
+    },
+    {
+      "job_id": "6429cd27c354",
+      "b_deg": 0,
+      "x_mm": 210,
+      "toolhead_z_mm": 200,
+      "direction": "+Y",
+      "from_y_mm": 263,
+      "to_y_mm": 290,
+      "result": "no_contact"
+    }
+  ],
+  "camera_job_ids": [
+    "6d98cc4dffd9",
+    "7685888d887d",
+    "c85b0be6f030"
+  ]
+}

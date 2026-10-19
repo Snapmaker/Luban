@@ -7,6 +7,7 @@ import log from '../../lib/log';
 import { dispatch } from '../../store';
 import baseActions from './actions-base';
 import { ConnectionType } from './state';
+import { beginConnectionAttempt, recordConnectionAttempt } from './connectionDiagnostics';
 
 interface CreateOptions {
     name: string;
@@ -85,7 +86,8 @@ export class MachineAgent extends EventEmitter {
         this.token = token;
     }
 
-    public async connect(): Promise<ConnectResult> {
+    public async connect(allowPairing: boolean = false, attempt = beginConnectionAttempt(controller.connected)): Promise<ConnectResult> {
+        recordConnectionAttempt(attempt, 'connection_emit');
         if (this.isNetworkedMachine) {
             log.info(`Connecting to machine ${this.address}...`);
             log.info(`- protocol = ${this.protocol}`);
@@ -97,14 +99,20 @@ export class MachineAgent extends EventEmitter {
         return new Promise((resolve) => {
             controller
                 .emitEvent(SocketEvent.ConnectionOpen, {
+                    ...attempt,
                     connectionType: this.isNetworkedMachine ? ConnectionType.WiFi : ConnectionType.Serial,
                     host: this.host,
                     address: this.address,
                     token: this.token,
+                    allowPairing,
                     port: this.port,
                     baudRate: this.baudRate,
                     protocol: this.protocol,
                     addByUser: this.addByUser,
+                }, (receipt: { attemptId: string; instanceId: string; build: string }) => {
+                    if (receipt?.attemptId === attempt.attemptId) {
+                        recordConnectionAttempt(attempt, 'server_received', undefined, receipt);
+                    }
                 })
                 .once(SocketEvent.ConnectionOpen, ({ msg, data, code }) => {
                     if (msg) {

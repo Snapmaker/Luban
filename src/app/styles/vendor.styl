@@ -58,6 +58,59 @@
     display: none;
 }
 
+// Health notices contain diagnostics and actions, unlike the one-line status toasts.
+.Toastify__toast-container.mcp-health-notifications {
+    top: 16px;
+    left: 50%;
+    width: calc(100vw - 32px);
+    max-width: 560px;
+    height: auto;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    transform: translateX(-50%);
+}
+
+.mcp-health-notifications {
+    .Toastify__toast {
+        height: auto;
+        max-height: none;
+        border-radius: 8px;
+        text-align: left;
+        padding: 16px;
+    }
+    .Toastify__toast-body {
+        min-width: 0;
+        padding: 0;
+    }
+    .Toastify__toast-body > div:last-child {
+        min-width: 0;
+        width: 100%;
+    }
+    .Toastify__close-button {
+        display: block;
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+        margin-left: 8px;
+    }
+    .mcp-health-notice {
+        overflow-wrap: anywhere;
+    }
+    .mcp-health-notice-message {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        min-height: 48px;
+        max-height: calc(100vh - 220px);
+        overflow-y: auto;
+        margin: 8px 0 12px;
+    }
+    .mcp-health-notice-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+}
+
 // react-toggle
 @import url("~react-toggle/style.css");
 

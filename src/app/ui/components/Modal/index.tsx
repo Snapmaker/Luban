@@ -38,6 +38,11 @@ declare type ModalProps = AntdModalProps & {
     size?: 'sm' | 'md';
 
     onClose?: (e: React.MouseEvent<HTMLElement>) => void;
+
+    // Props of the pre-antd modal that callers (ModalSmall, the workspace
+    // server dialogs) still pass; they reach AntdModal through ...rest.
+    disableOverlay?: boolean;
+    showCloseButton?: boolean;
 };
 
 type ModalType = React.FC<ModalProps> & {

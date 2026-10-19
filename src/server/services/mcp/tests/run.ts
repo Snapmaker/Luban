@@ -1,0 +1,259 @@
+import { tests as fileJobStartTests } from './fileJobStart.test';
+/* eslint-disable no-console */
+/**
+ * Unit tests for the MCP server's PURE modules - the ones with no server
+ * imports (validator, envelopeChecks, positionOfRecord, machinePosition, ...).
+ *
+ *     npm run test:mcp
+ *
+ * runs this file under ts-node --transpile-only (see package.json). Each
+ * *.test.ts exports `tests`: an array of [name, fn] pairs using node's
+ * assert. No framework on purpose: the repo's only other runner is tape over
+ * legacy JS, and these modules must stay importable without the Luban
+ * server (config/settings.base is ESM-only and breaks ts-node).
+ */
+import { tests as connectionDiagnosticsTests } from './connectionDiagnostics.test';
+import { tests as pendantSettingsTests } from './pendantSettings.test';
+import { tests as pendantPageTests } from './pendantPage.test';
+import { tests as pendantPositionTests } from './pendantPosition.test';
+import { tests as pendantTests } from './pendant.test';
+import { tests as pendantRuntimeTests } from './pendantRuntime.test';
+import { tests as pendantHoldTests } from './pendantHold.test';
+import { tests as connectionLeaseTests } from './connectionLease.test';
+import { tests as sstpConnectionTests } from './sstpConnection.test';
+import { tests as bootstrapPlanTests } from './bootstrapPlan.test';
+import { tests as camLinksTests } from './camLinks.test';
+import { tests as caTrustTests } from './caTrust.test';
+import { tests as cameraGeometryTests } from './cameraGeometry.test';
+import { tests as cameraProgramSchemaTests } from './cameraProgramSchema.test';
+import { tests as cameraArtifactsTests } from './cameraArtifacts.test';
+import { tests as cameraProgramTests } from './cameraProgram.test';
+import { tests as activeToolTests } from './activeTool.test';
+import { tests as approachHoldTests } from './approachHold.test';
+import { tests as cameraModelTests } from './cameraModel.test';
+import { tests as cameraSelectionTests } from './cameraSelection.test';
+import { tests as cornerFitTests } from './cornerFit.test';
+import { tests as directMovePlanTests } from './directMovePlan.test';
+import { tests as enclosureTests } from './enclosure.test';
+import { tests as envelopeChecksTests } from './envelopeChecks.test';
+import { tests as gpioFeedTests } from './gpioFeed.test';
+import { tests as gcodeIntakeTests } from './gcodeIntake.test';
+import { tests as frameRecoveryTests } from './frameRecovery.test';
+import { tests as failureRecoveryTests } from './failureRecovery.test';
+import { tests as inspectionReportTests } from './inspectionReport.test';
+import { tests as jobDashboardTests } from './jobDashboard.test';
+import { tests as jobModalRecoveryTests } from './jobModalRecovery.test';
+import { tests as jobEndingTests } from './jobEnding.test';
+import { tests as landmarkClearanceTests } from './landmarkClearance.test';
+import { tests as machinePositionTests } from './machinePosition.test';
+import { tests as machineTravelTests } from './machineTravel.test';
+import { tests as machineCapabilityTests } from './machineCapability.test';
+import { tests as marchCoreTests } from './marchCore.test';
+import { tests as mcpHealthTests } from './mcpHealth.test';
+import { tests as mcpListenersTests } from './mcpListeners.test';
+import { tests as mjpegFanoutTests } from './mjpegFanout.test';
+import { tests as moveZPlanTests } from './moveZPlan.test';
+import { tests as perimeterAnalysisTests } from './perimeterAnalysis.test';
+import { tests as perimeterTraceTests } from './perimeterTrace.test';
+import { tests as probeInspectionTests } from './probeInspection.test';
+import { tests as surfaceConfirmationTests } from './surfaceConfirmation.test';
+import { tests as probeFeedHealthTests } from './probeFeedHealth.test';
+import { tests as procedureLimitsTests } from './procedureLimits.test';
+import { tests as programEnvelopeTests } from './programEnvelope.test';
+import { tests as programOpsTests } from './programOps.test';
+import { tests as rotaryMotionTests } from './rotaryMotion.test';
+import { tests as rotaryAxisLineTests } from './rotaryAxisLine.test';
+import { tests as safeZPolicyTests } from './safeZPolicy.test';
+import { tests as sequenceLinksTests } from './sequenceLinks.test';
+import { tests as stylusReachTests } from './stylusReach.test';
+import { tests as surveyMosaicTests } from './surveyMosaic.test';
+import { tests as surveyPlanTests } from './surveyPlan.test';
+import { tests as toolDatumTests } from './toolDatum.test';
+import { tests as toolProtrusionTests } from './toolProtrusion.test';
+import { tests as traversePlanTests } from './traversePlan.test';
+import { tests as threadMillingTests } from './threadMilling.test';
+import { tests as workspaceTests } from './workspace.test';
+import { tests as validatorTests } from './validator.test';
+import { tests as wallClearanceTests } from './wallClearance.test';
+import { tests as wallFollowTests } from './wallFollow.test';
+import { tests as audioSelectionTests } from './audioSelection.test';
+import { tests as executionModelTests } from './executionModel.test';
+import { tests as spindleProgramTests } from './spindleProgram.test';
+import { tests as spindleTrackerTests } from './spindleTracker.test';
+import { tests as telemetryConfigTests } from './telemetryConfig.test';
+import { tests as telemetryRingTests } from './telemetryRing.test';
+import { tests as rotaryGravityTests } from './rotaryGravity.test';
+import { tests as vibrationAnalysisTests } from './vibrationAnalysis.test';
+import { tests as vibrationConfigTests } from './vibrationConfig.test';
+import { tests as vibrationProtocolTests } from './vibrationProtocol.test';
+import { tests as vibrationReportTests } from './vibrationReport.test';
+import { tests as vibrationStreamTests } from './vibrationStream.test';
+import { tests as connectionGenerationTests } from './connectionGeneration.test';
+import { tests as sacpMachineStateTests } from './sacpMachineState.test';
+import { tests as sacpConnectionTests } from './sacpConnection.test';
+import { tests as gcodeDialectTests } from './gcodeDialect.test';
+import { tests as machineStoreTests } from './machineStore.test';
+import { tests as textSerialStateTests } from './textSerialState.test';
+import { tests as rotaryClearanceTests } from './rotaryClearance.test';
+import { tests as dialectRulesTests } from './dialectRules.test';
+import { tests as gcodeHeaderTests } from './gcodeHeader.test';
+import { tests as jobMachineBindingTests } from './jobMachineBinding.test';
+import { tests as procedureGatesTests } from './procedureGates.test';
+import { tests as gcodeFormsTests } from './gcodeForms.test';
+import { tests as logicalFrameTests } from './logicalFrame.test';
+import { tests as landmarkReviewTests } from './landmarkReview.test';
+import { tests as motionRulesTests } from './motionRules.test';
+import { tests as frameLatchPerMachineTests } from './frameLatchPerMachine.test';
+import { tests as appliedRecordsTests } from './appliedRecords.test';
+import { tests as computedHeightTests } from './computedHeight.test';
+import { tests as policyLooseningTests } from './policyLoosening.test';
+import { tests as laserPlanTests } from './laserPlan.test';
+import { tests as usbPositionTests } from './usbPosition.test';
+import { tests as connectionLinkIdentityTests } from './connectionLinkIdentity.test';
+import { tests as cameraModelStoreTests } from './cameraModelStore.test';
+import { tests as sacpGcodeReplyTests } from './sacpGcodeReply.test';
+import { tests as firmwareQueryTests } from './firmwareQuery.test';
+import { tests as rayFirmwareLimitsTests } from './rayFirmwareLimits.test';
+import { tests as toolheadStateTests } from './toolheadState.test';
+import { tests as stagingConfirmLinkTests } from './stagingConfirmLink.test';
+import { tests as motorPowerTests } from './motorPower.test';
+import { tests as startPositionTests } from './startPosition.test';
+import { tests as batchWithdrawTests } from './batchWithdraw.test';
+import { tests as motorPowerSwitchTests } from './motorPowerSwitch.test';
+
+type TestCase = [string, () => void | Promise<void>];
+
+const suites: Array<[string, TestCase[]]> = [
+    ['connectionGeneration', connectionGenerationTests],
+    ['sacpMachineState', sacpMachineStateTests],
+    ['sacpConnection', sacpConnectionTests],
+    ['pendant', pendantTests],
+    ['pendantPosition', pendantPositionTests],
+    ['pendantPage', pendantPageTests],
+    ['pendantSettings', pendantSettingsTests],
+    ['pendantHold', pendantHoldTests],
+    ['pendantRuntime', pendantRuntimeTests],
+    ['connectionLease', connectionLeaseTests],
+    ['sstpConnection', sstpConnectionTests],
+    ['connectionDiagnostics', connectionDiagnosticsTests],
+    ['validator', validatorTests],
+    ['gcodeIntake', gcodeIntakeTests],
+    ['workspace', workspaceTests],
+    ['threadMilling', threadMillingTests],
+    ['machinePosition', machinePositionTests],
+    ['machineTravel', machineTravelTests],
+    ['machineCapability', machineCapabilityTests],
+    ['envelopeChecks', envelopeChecksTests],
+    ['cameraModel', cameraModelTests],
+    ['cameraGeometry', cameraGeometryTests],
+    ['cameraProgramSchema', cameraProgramSchemaTests],
+    ['cameraArtifacts', cameraArtifactsTests],
+    ['cameraProgram', cameraProgramTests],
+    ['activeTool', activeToolTests],
+    ['approachHold', approachHoldTests],
+    ['cameraSelection', cameraSelectionTests],
+    ['bootstrapPlan', bootstrapPlanTests],
+    ['frameRecovery', frameRecoveryTests],
+    ['failureRecovery', failureRecoveryTests],
+    ['jobModalRecovery', jobModalRecoveryTests],
+    ['probeFeedHealth', probeFeedHealthTests],
+    ['gpioFeed', gpioFeedTests],
+    ['probeInspection', probeInspectionTests],
+    ['enclosure', enclosureTests],
+    ['surfaceConfirmation', surfaceConfirmationTests],
+    ['procedureLimits', procedureLimitsTests],
+    ['programOps', programOpsTests],
+    ['programEnvelope', programEnvelopeTests],
+    ['rotaryMotion', rotaryMotionTests],
+    ['rotaryAxisLine', rotaryAxisLineTests],
+    ['safeZPolicy', safeZPolicyTests],
+    ['sequenceLinks', sequenceLinksTests],
+    ['stylusReach', stylusReachTests],
+    ['surveyMosaic', surveyMosaicTests],
+    ['surveyPlan', surveyPlanTests],
+    ['toolProtrusion', toolProtrusionTests],
+    ['toolDatum', toolDatumTests],
+    ['traversePlan', traversePlanTests],
+    ['directMovePlan', directMovePlanTests],
+    ['moveZPlan', moveZPlanTests],
+    ['fileJobStart', fileJobStartTests],
+    ['jobEnding', jobEndingTests],
+    ['jobDashboard', jobDashboardTests],
+    ['landmarkClearance', landmarkClearanceTests],
+    ['mjpegFanout', mjpegFanoutTests],
+    ['mcpListeners', mcpListenersTests],
+    ['caTrust', caTrustTests],
+    ['mcpHealth', mcpHealthTests],
+    ['marchCore', marchCoreTests],
+    ['camLinks', camLinksTests],
+    ['wallClearance', wallClearanceTests],
+    ['inspectionReport', inspectionReportTests],
+    ['wallFollow', wallFollowTests],
+    ['cornerFit', cornerFitTests],
+    ['perimeterAnalysis', perimeterAnalysisTests],
+    ['perimeterTrace', perimeterTraceTests],
+    ['telemetryRing', telemetryRingTests],
+    ['vibrationAnalysis', vibrationAnalysisTests],
+    ['vibrationReport', vibrationReportTests],
+    ['vibrationConfig', vibrationConfigTests],
+    ['vibrationProtocol', vibrationProtocolTests],
+    ['vibrationStream', vibrationStreamTests],
+    ['rotaryGravity', rotaryGravityTests],
+    ['telemetryConfig', telemetryConfigTests],
+    ['spindleProgram', spindleProgramTests],
+    ['spindleTracker', spindleTrackerTests],
+    ['audioSelection', audioSelectionTests],
+    ['executionModel', executionModelTests],
+    ['gcodeDialect', gcodeDialectTests],
+    ['machineStore', machineStoreTests],
+    ['textSerialState', textSerialStateTests],
+    ['rotaryClearance', rotaryClearanceTests],
+    ['dialectRules', dialectRulesTests],
+    ['gcodeHeader', gcodeHeaderTests],
+    ['jobMachineBinding', jobMachineBindingTests],
+    ['procedureGates', procedureGatesTests],
+    ['gcodeForms', gcodeFormsTests],
+    ['logicalFrame', logicalFrameTests],
+    ['landmarkReview', landmarkReviewTests],
+    ['motionRules', motionRulesTests],
+    ['frameLatchPerMachine', frameLatchPerMachineTests],
+    ['appliedRecords', appliedRecordsTests],
+    ['computedHeight', computedHeightTests],
+    ['policyLoosening', policyLooseningTests],
+    ['laserPlan', laserPlanTests],
+    ['usbPosition', usbPositionTests],
+    ['connectionLinkIdentity', connectionLinkIdentityTests],
+    ['cameraModelStore', cameraModelStoreTests],
+    ['sacpGcodeReply', sacpGcodeReplyTests],
+    ['firmwareQuery', firmwareQueryTests],
+    ['rayFirmwareLimits', rayFirmwareLimitsTests],
+    ['toolheadState', toolheadStateTests],
+    ['stagingConfirmLink', stagingConfirmLinkTests],
+    ['motorPower', motorPowerTests],
+    ['startPosition', startPositionTests],
+    ['batchWithdraw', batchWithdrawTests],
+    ['motorPowerSwitch', motorPowerSwitchTests],
+];
+
+async function main(): Promise<void> {
+    let passed = 0;
+    let failed = 0;
+    for (const [suite, cases] of suites) {
+        for (const [name, fn] of cases) {
+            try {
+                // eslint-disable-next-line no-await-in-loop
+                await fn();
+                passed += 1;
+                console.log(`  ok    ${suite} :: ${name}`);
+            } catch (err) {
+                failed += 1;
+                console.log(`  FAIL  ${suite} :: ${name}`);
+                console.log(`        ${(err as Error).message.split('\n').join('\n        ')}`);
+            }
+        }
+    }
+    console.log(`\n${passed} passed, ${failed} failed`);
+    process.exit(failed ? 1 : 0);
+}
+
+main();

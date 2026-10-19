@@ -1,0 +1,30 @@
+R1: kerf components=1 (all span kerf: True) mid-kerf pieces=1 area=434.7 mm2 conn.vol=2724 mm3 pieces/section min..max=1..1
+C2: kerf components=2 (all span kerf: True) mid-kerf pieces=2 area=174.2 mm2 conn.vol=1223 mm3 pieces/section min..max=2..2
+T4: kerf components=4 (all span kerf: True) mid-kerf pieces=4 area=96.0 mm2 conn.vol=728 mm3 pieces/section min..max=4..4
+T4naive: kerf components=2 (all span kerf: True) mid-kerf pieces=4 area=96.0 mm2 conn.vol=763 mm3 pieces/section min..max=2..4
+{"T4": {"u_at_v=+8.5": [6.0, 6.0], "u_at_v=-8.5": [6.0, 6.0], "v_at_u=+29": [4.0, 4.0], "v_at_u=-29": [4.0, 4.0]}, "C2": {"u_at_v=0 (spine)": [3.0, 3.0], "u_at_v=+8.5": [6.0, 6.0], "v_at_u=+30.5 (outer)": [4.0, 4.0], "v_at_u=+27.5 (spine)": [21.04]}}
+{"T4": {"u_at_v=+8.5 near kerf edge": [8.06, 8.06], "v_at_u=+29 near kerf edge": [6.06, 6.06]}, "C2": {"u_at_v=0 near kerf edge": [5.06, 5.06]}}
+{"variant": "T4", "case": "nominal", "kerf_components": 4, "mid_pieces": 4, "mid_area_total": 96.0, "mid_piece_bbox_du_dv_area": [[6.0, 4.0, 24.0], [6.0, 4.0, 24.0], [6.0, 4.0, 24.0], [6.0, 4.0, 24.0]], "corner_v_chords": [4.0, 4.0, 4.0, 4.0], "corner_u_chords": [6.0, 6.0, 6.0, 6.0]}
+{"variant": "T4", "case": "stored axis used by CAM (170.1/112.4)", "kerf_components": 4, "mid_pieces": 4, "mid_area_total": 93.63, "mid_piece_bbox_du_dv_area": [[4.46, 6.15, 27.43], [6.0, 1.85, 11.1], [7.54, 4.61, 34.76], [6.0, 3.39, 20.34]], "corner_v_chords": [3.39, 4.61, 1.85, 6.15], "corner_u_chords": [6.0, 4.46, 7.54]}
+{"variant": "T4", "case": "axis +0.15/+0.15", "kerf_components": 4, "mid_pieces": 4, "mid_area_total": 95.91, "mid_piece_bbox_du_dv_area": [[5.7, 4.0, 22.8], [6.0, 4.0, 24.0], [6.3, 3.7, 23.31], [6.0, 4.3, 25.8]], "corner_v_chords": [3.7, 4.3, 4.0, 4.0], "corner_u_chords": [6.0, 6.0, 5.7, 6.3]}
+{"variant": "T4", "case": "axis -0.15/+0.15", "kerf_components": 4, "mid_pieces": 4, "mid_area_total": 95.91, "mid_piece_bbox_du_dv_area": [[6.3, 3.7, 23.31], [6.0, 4.3, 25.8], [6.0, 4.0, 24.0], [5.7, 4.0, 22.8]], "corner_v_chords": [4.0, 4.0, 3.7, 4.3], "corner_u_chords": [6.0, 6.0, 5.7, 6.3]}
+{"variant": "T4", "case": "runout: r_eff 3.10", "kerf_components": 4, "mid_pieces": 4, "mid_area_total": 92.04, "mid_piece_bbox_du_dv_area": [[5.9, 3.9, 23.01], [5.9, 3.9, 23.01], [5.9, 3.9, 23.01], [5.9, 3.9, 23.01]], "corner_v_chords": [3.9, 3.9, 3.9, 3.9], "corner_u_chords": [5.9, 5.9, 5.9, 5.9]}
+{"variant": "T4", "case": "runout: r_eff 3.25", "kerf_components": 4, "mid_pieces": 4, "mid_area_total": 86.24, "mid_piece_bbox_du_dv_area": [[5.75, 3.75, 21.56], [5.75, 3.75, 21.56], [5.75, 3.75, 21.56], [5.75, 3.75, 21.56]], "corner_v_chords": [3.75, 3.75, 3.75, 3.75], "corner_u_chords": [5.75, 5.75, 5.75, 5.75]}
+{"variant": "T4", "case": "track Y +0.5", "kerf_components": 4, "mid_pieces": 4, "mid_area_total": 97.68, "mid_piece_bbox_du_dv_area": [[6.04, 4.04, 24.42], [6.04, 4.04, 24.42], [6.04, 4.04, 24.42], [6.04, 4.04, 24.42]], "corner_v_chords": [4.04, 4.04, 4.04, 4.04], "corner_u_chords": [6.04, 6.04, 6.04, 6.04]}
+{"variant": "C2", "case": "nominal", "kerf_components": 2, "mid_pieces": 2, "mid_area_total": 174.24, "mid_piece_bbox_du_dv_area": [[6.0, 21.04, 87.12], [6.0, 21.04, 87.12]], "spine_chords_v0": [3.0, 3.0]}
+{"variant": "C2", "case": "stored axis used by CAM (170.1/112.4)", "kerf_components": 2, "mid_pieces": 2, "mid_area_total": 133.22, "mid_piece_bbox_du_dv_area": [[6.0, 21.04, 62.56], [7.54, 21.04, 70.66]], "spine_chords_v0": [0.85, 0.85]}
+{"variant": "C2", "case": "axis +0.15/+0.15", "kerf_components": 2, "mid_pieces": 2, "mid_area_total": 178.1, "mid_piece_bbox_du_dv_area": [[6.0, 21.04, 88.72], [6.3, 21.04, 89.38]], "spine_chords_v0": [3.0, 3.3]}
+{"variant": "C2", "case": "axis -0.15/+0.15", "kerf_components": 2, "mid_pieces": 2, "mid_area_total": 178.1, "mid_piece_bbox_du_dv_area": [[6.3, 21.04, 89.38], [6.0, 21.04, 88.72]], "spine_chords_v0": [3.0, 3.3]}
+{"variant": "C2", "case": "runout: r_eff 3.10", "kerf_components": 2, "mid_pieces": 2, "mid_area_total": 168.84, "mid_piece_bbox_du_dv_area": [[5.9, 21.04, 84.42], [5.9, 21.04, 84.42]], "spine_chords_v0": [2.9, 2.9]}
+{"variant": "C2", "case": "runout: r_eff 3.25", "kerf_components": 2, "mid_pieces": 2, "mid_area_total": 160.72, "mid_piece_bbox_du_dv_area": [[5.75, 21.04, 80.36], [5.75, 21.04, 80.36]], "spine_chords_v0": [2.75, 2.75]}
+{"variant": "C2", "case": "track Y +0.5", "kerf_components": 2, "mid_pieces": 2, "mid_area_total": 176.5, "mid_piece_bbox_du_dv_area": [[6.04, 21.04, 88.25], [6.04, 21.04, 88.25]], "spine_chords_v0": [3.04, 3.04]}
+{"T4": [{"u": [-32.0, -26.0], "v": [6.5, 10.5], "area": 24.0, "backed_H1_at_CAD_Y114": 0.67, "backed_H2": 0.99}, {"u": [-32.0, -26.0], "v": [-10.5, -6.5], "area": 24.0, "backed_H1_at_CAD_Y114": 0.99, "backed_H2": 0.99}, {"u": [26.0, 32.0], "v": [6.5, 10.5], "area": 24.0, "backed_H1_at_CAD_Y114": 0.67, "backed_H2": 0.99}, {"u": [26.0, 32.0], "v": [-10.5, -6.5], "area": 24.0, "backed_H1_at_CAD_Y114": 0.99, "backed_H2": 0.99}], "C2": [{"u": [-32.0, -26.0], "v": [-10.5, 10.5], "area": 87.1, "backed_H1_at_CAD_Y114": 0.62, "backed_H2": 1.0}, {"u": [26.0, 32.0], "v": [-10.5, 10.5], "area": 87.1, "backed_H1_at_CAD_Y114": 0.62, "backed_H2": 1.0}]}
+1 R1_B0_band B 0 levels 6 step 1.337 face 7.47 start 7.47 final -0.55
+2 R1_B180_band B 180 levels 6 step 1.337 face 13.57 start 13.57 final 5.55
+3 R1_B90_notch B 90 levels 2 step 1.5 face 32.62 start 32.62 final 29.62
+4 R1_B270_notch B 270 levels 2 step 1.5 face 31.48 start 31.48 final 28.48
+5 R2_B270_spine B 270 levels 5 step 1.3 face 31.48 start 28.48 final 21.98
+6 R2_B90_spine B 90 levels 5 step 1.3 face 32.62 start 29.62 final 23.12
+7 R2_B0_web B 0 levels 4 step 1.375 face 7.47 start -0.55 final -6.05
+Importing project files......
+done

@@ -14,16 +14,22 @@ const prompt = '> ';
 let verticalScrollbar = null;
 let term = null;
 let fitAddon = null;
+// The unsent command draft. Module-level (like `term` above) so it survives
+// the widget remounting on page switches. It must NOT live in terminalHistory:
+// that is a circular buffer of console lines, and once full, each push rotates
+// the reserved slot away and the input box starts mirroring console history -
+// ANSI colour codes and all.
+let inputDraft = '';
 
-const TerminalWrapper = forwardRef(({ inputValue: inputValueProp, terminalHistory, onData, consoleHistory, isDefault }, ref) => {
-    const [inputValue, setInputValue] = useState(inputValueProp);
+const TerminalWrapper = forwardRef(({ terminalHistory, onData, consoleHistory, isDefault }, ref) => {
+    const [inputValue, setInputValue] = useState(inputDraft);
     const [inputHeight, setInputHeight] = useState(20);
     const terminalContainer = useRef();
     const input = useRef();
     const actions = {
         changeInputValue: (event) => {
             setInputValue(event.target.value);
-            terminalHistory.set(0, event.target.value);
+            inputDraft = event.target.value;
         }
     };
 
@@ -131,21 +137,22 @@ const TerminalWrapper = forwardRef(({ inputValue: inputValueProp, terminalHistor
             onData(event.target.value);
             // Reset the index to the last position of the location array
             consoleHistory.push(event.target.value);
-            event.target.value = '';
-            setInputValue(event.target.value);
-            terminalHistory.set(0, event.target.value);
+            setInputValue('');
+            inputDraft = '';
         }
 
         // Arrow Up
         if (event.keyCode === 38) {
-            event.target.value = consoleHistory.back() || '';
-            terminalHistory.set(0, event.target.value);
+            const value = consoleHistory.back() || '';
+            setInputValue(value);
+            inputDraft = value;
         }
 
         // Arrow Down
         if (event.keyCode === 40) {
-            event.target.value = consoleHistory.forward() || '';
-            terminalHistory.set(0, event.target.value);
+            const value = consoleHistory.forward() || '';
+            setInputValue(value);
+            inputDraft = value;
         }
     }
 
@@ -183,7 +190,6 @@ const TerminalWrapper = forwardRef(({ inputValue: inputValueProp, terminalHistor
             term.clear();
             if (isHistory) {
                 terminalHistory.clear();
-                terminalHistory.push('');
             }
         }
     }
@@ -216,8 +222,6 @@ const TerminalWrapper = forwardRef(({ inputValue: inputValueProp, terminalHistor
         write
     }));
 
-    const command = terminalHistory.getLength() > 0 ? terminalHistory.get(0) : inputValue;
-
     return (
         <div
             className={isDefault ? styles['terminal-content-absolute'] : styles['terminal-content']}
@@ -239,7 +243,7 @@ const TerminalWrapper = forwardRef(({ inputValue: inputValueProp, terminalHistor
                 }}
                 type="text"
                 placeholder="Send Command"
-                value={command}
+                value={inputValue}
                 onChange={actions.changeInputValue}
                 onKeyDown={(event) => {
                     setTerminalInput(event);
@@ -253,7 +257,6 @@ TerminalWrapper.propTypes = {
     onData: PropTypes.func,
     isDefault: PropTypes.bool,
     terminalHistory: PropTypes.object.isRequired,
-    consoleHistory: PropTypes.object.isRequired,
-    inputValue: PropTypes.string.isRequired
+    consoleHistory: PropTypes.object.isRequired
 };
 export default TerminalWrapper;

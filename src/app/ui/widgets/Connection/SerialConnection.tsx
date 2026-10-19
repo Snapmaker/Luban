@@ -34,6 +34,7 @@ import { Button } from '../../components/Buttons';
 import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 import MachineModuleStatusBadge from './components/MachineModuleStatusBadge';
+import ProbeFeedStatusBadges from './components/ProbeFeedStatusBadges';
 import MismatchModal from './modals/MismatchModal';
 import styles from './styles.styl';
 
@@ -413,6 +414,8 @@ const SerialConnection: React.FC = () => {
                                 </div>
                             )
                         }
+                        {/* MCP probe sensor feed pills (touch probe / tool setter / overtravel) */}
+                        <ProbeFeedStatusBadges />
                     </div>
                 )
             }

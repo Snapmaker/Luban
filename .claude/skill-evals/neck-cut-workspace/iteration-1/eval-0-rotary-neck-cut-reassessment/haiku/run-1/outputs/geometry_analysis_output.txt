@@ -1,0 +1,139 @@
+================================================================================
+GEOMETRY ANALYSIS: Rotary Neck-Cut Reassessment
+================================================================================
+
+STOCK ENVELOPE
+--------------------------------------------------------------------------------
+X extent: 137.85 – 201.95 mm (width 64.1 mm)
+Y extent: 251 – 261 mm (axial span 10 mm)
+B0 rim physical Z: 130.35 mm, groove floor 121.25 mm (depth 9.1 mm)
+B180 rim physical Z: 133.55 mm, groove floor 127.35 mm (depth 6.2 mm)
+B90/B270 side opening: 21.3 mm physical width
+Proposed WCS: machine X195.0 Y250.0 (B0 rim)
+Rotary axis: X170.1 (offset from rim: 24.9 mm)
+
+VARIANT 1: FOUR CORNER TABS
+--------------------------------------------------------------------------------
+{
+  "variant": "Four Corner Tabs",
+  "description": "Four isolated 6mm \u00d7 6mm tabs at stock corners",
+  "tab_geometry": {
+    "size_x_mm": 6.0,
+    "size_y_mm": 6.0,
+    "corner_radius_mm": 0.3
+  },
+  "retained_areas_mm2": {
+    "top_left": 36.0,
+    "top_right": 36.0,
+    "bottom_left": 36.0,
+    "bottom_right": 36.0
+  },
+  "ligament_widths_mm": {
+    "top_left": 2.0,
+    "top_right": 2.0,
+    "bottom_left": 2.0,
+    "bottom_right": 2.0
+  },
+  "total_retained_area_mm2": 144.0,
+  "avg_ligament_width_mm": 2.0,
+  "load_distribution": "Four points; lower symmetry, higher stress concentration",
+  "final_saw_cut": "Must navigate around four separate tab bases; operator dexterity-intensive",
+  "tool_path": "Four separate plunges and corner cuts; more retracts; higher cycle time",
+  "advantages": [
+    "Four independent release points reduce asymmetric collapse risk",
+    "Each tab is separate; less likely to twist during final cut"
+  ],
+  "disadvantages": [
+    "Very thin ligaments (~2 mm) prone to vibration and chatter",
+    "Four separate tool entries and exits increase complexity",
+    "Final saw cut is challenging; four bases must be cleared",
+    "Sensitive to tool runout and Z-depth control errors"
+  ]
+}
+
+VARIANT 2: TWO C-SHAPED BRIDGES
+--------------------------------------------------------------------------------
+{
+  "variant": "Two C-Shaped Bridges",
+  "description": "Two continuous C-shaped bridges on port and starboard sides",
+  "bridge_geometry": {
+    "width_per_bridge_mm": 5.5,
+    "y_span_mm": 10,
+    "x_extent_per_bridge_mm": "Spanning B0 and B180 grooves"
+  },
+  "retained_areas_mm2": {
+    "port_bridge": 110.0,
+    "starboard_bridge": 110.0
+  },
+  "ligament_widths_mm": {
+    "port_bridge": 5.5,
+    "starboard_bridge": 5.5
+  },
+  "total_retained_area_mm2": 220.0,
+  "avg_ligament_width_mm": 5.5,
+  "load_distribution": "Two points aligned with grain direction; balanced load",
+  "final_saw_cut": "Single straight cut per side (Y-aligned); grain-friendly",
+  "tool_path": "Two continuous cuts (one per B angle); simpler than tabs",
+  "advantages": [
+    "Wider ligaments (~5\u20136 mm) resist chatter and vibration",
+    "Continuous bridges span B0\u2013B180 transition smoothly",
+    "Two simple straight saw cuts, grain-aligned (Y-direction)",
+    "Lower tool-path complexity; fewer retracts",
+    "Better stress distribution along the Y span"
+  ],
+  "disadvantages": [
+    "Single-point failure per side if a bridge cracks mid-cut",
+    "Bridges must span the 2\u20133 mm B0\u2013B180 groove step; height control critical"
+  ]
+}
+
+COMPARISON AND RECOMMENDATION
+--------------------------------------------------------------------------------
+Four Tabs:     144.0 mm² total retained, 2.0 mm avg ligament
+Two Bridges:   220.0 mm² total retained, 5.5 mm avg ligament
+
+RECOMMENDATION: Two C-Shaped Bridges (Variant 2)
+
+RATIONALE:
+1. STIFFNESS: Wider ligaments (5–6 mm vs 2 mm) reduce vibration and chatter risk.
+2. GRAIN ALIGNMENT: The two side bridges align with the wood grain (Y-direction),
+   which is the typical strong direction for wooden enclosures.
+3. SAW-CUT SIMPLICITY: Two straight Y-aligned cuts (one per side) are simpler
+   and less error-prone than navigating four separate corners.
+4. TOOL PATH: Two continuous side cuts vs four separate plunges reduces tool time
+   and cycle complexity.
+5. LOAD DISTRIBUTION: The bridges span the B0–B180 transition continuously,
+   distributing load evenly along the Y span.
+
+SENSITIVITY ANALYSIS:
+--------------------------------------------------------------------------------
+Registration error (±0.5 mm in Y):
+  Tabs: Shifted corner tabs may partially lift off the groove floor.
+  Bridges: Continuous contact; less sensitive.
+
+Z-depth control (±1 mm in cutter depth):
+  Tabs: Very thin ligaments (2 mm) become gossamer and prone to breaking.
+  Bridges: Wider (5–6 mm) ligaments tolerate shallow plunge errors.
+
+Runout at 0.2 mm TIR:
+  Both affected equally; bridges less sensitive due to wider width.
+
+Grain direction if Y-aligned (most likely):
+  Bridges: Optimal; grain supports the two side ligaments.
+  Tabs: Suboptimal; corner tabs may fail along the grain at the step.
+
+CLEARANCE CHECKS
+--------------------------------------------------------------------------------
+Cutter reach in Y: 251–261 mm (10 mm span at 6 mm per pass × 3 tracks)
+Port bridge X extent: 137.85–143.35 mm
+Starboard bridge X extent: 196.45–201.95 mm
+Removed centre X extent: 143.35–196.45 mm (~53.1 mm)
+
+Collet nose clearance (unknown nose diameter, est. 20-28 mm):
+  At Y256 cut depth: need >=2 mm clearance to jaw front at Y269.
+  Check required before cutting.
+
+
+================================================================================
+Analysis complete. (Save to JSON if needed.)
+================================================================================

@@ -1,0 +1,145 @@
+<svg viewBox="0 0 1200 600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .stock { fill: #d4a574; stroke: #8b4513; stroke-width: 2; }
+      .removed { fill: #e8e8e8; stroke: #999; stroke-width: 1; stroke-dasharray: 3,3; }
+      .tab { fill: #ff6b6b; stroke: #8b0000; stroke-width: 2; }
+      .bridge { fill: #4ecdc4; stroke: #006666; stroke-width: 2; }
+      .groove { fill: none; stroke: #333; stroke-width: 2; }
+      .label { font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; }
+      .title { font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; }
+      .annotation { font-family: Arial, sans-serif; font-size: 12px; }
+      .dim-line { stroke: #333; stroke-width: 1; marker-end: url(#arrowhead); }
+      .legend { font-family: Arial, sans-serif; font-size: 11px; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#333" />
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="600" fill="#f5f5f5"/>
+
+  <!-- Title -->
+  <text x="600" y="30" class="title" text-anchor="middle">Retained Connections: Four Tabs vs Two C-Shaped Bridges</text>
+  <text x="600" y="50" class="annotation" text-anchor="middle">Top view (B0 orientation). Stock Y251–261 mm (10 mm axial span).</text>
+
+  <!-- VARIANT 1: FOUR CORNER TABS (Left side) -->
+  <g id="variant1">
+    <!-- Title -->
+    <text x="300" y="80" class="title" text-anchor="middle">Variant 1: Four Corner Tabs</text>
+
+    <!-- Stock envelope -->
+    <rect x="150" y="120" width="300" height="180" class="stock"/>
+
+    <!-- Existing cuts (removed material) -->
+    <!-- B0 groove (top) -->
+    <rect x="200" y="120" width="200" height="25" class="removed"/>
+    <text x="300" y="140" class="annotation" text-anchor="middle" font-size="10">B0 groove (floor)</text>
+
+    <!-- B180 groove (bottom) -->
+    <rect x="200" y="275" width="200" height="25" class="removed"/>
+    <text x="300" y="295" class="annotation" text-anchor="middle" font-size="10">B180 groove (floor)</text>
+
+    <!-- Side cuts (left and right) -->
+    <rect x="150" y="145" width="25" height="130" class="removed"/>
+    <rect x="425" y="145" width="25" height="130" class="removed"/>
+
+    <!-- Bridge tabs (retained) -->
+    <!-- Top-left corner tab -->
+    <rect x="175" y="120" width="30" height="30" class="tab"/>
+    <text x="190" y="150" class="annotation" text-anchor="middle" font-size="9" fill="white">TL</text>
+
+    <!-- Top-right corner tab -->
+    <rect x="395" y="120" width="30" height="30" class="tab"/>
+    <text x="410" y="150" class="annotation" text-anchor="middle" font-size="9" fill="white">TR</text>
+
+    <!-- Bottom-left corner tab -->
+    <rect x="175" y="270" width="30" height="30" class="tab"/>
+    <text x="190" y="300" class="annotation" text-anchor="middle" font-size="9" fill="white">BL</text>
+
+    <!-- Bottom-right corner tab -->
+    <rect x="395" y="270" width="30" height="30" class="tab"/>
+    <text x="410" y="300" class="annotation" text-anchor="middle" font-size="9" fill="white">BR</text>
+
+    <!-- Annotations -->
+    <text x="300" y="340" class="annotation" text-anchor="middle">Tab size: ~6 mm × 6 mm (one endmill width)</text>
+    <text x="300" y="360" class="annotation" text-anchor="middle">Ligament width: ~2 mm per tab</text>
+    <text x="300" y="380" class="annotation" text-anchor="middle">Total retained area: ~4 × 36 mm² = 144 mm²</text>
+
+    <!-- Pros/Cons -->
+    <text x="150" y="420" class="annotation" font-weight="bold">Pros:</text>
+    <text x="150" y="440" class="annotation">• Four independent release points</text>
+    <text x="150" y="460" class="annotation">• Less risk of asymmetric collapse</text>
+
+    <text x="150" y="490" class="annotation" font-weight="bold">Cons:</text>
+    <text x="150" y="510" class="annotation">• Very thin ligaments (~2 mm) prone to chatter</text>
+    <text x="150" y="530" class="annotation">• Four separate tool plunges (more retracts)</text>
+    <text x="150" y="550" class="annotation">• Final saw cut must navigate four separate tabs</text>
+  </g>
+
+  <!-- Vertical divider -->
+  <line x1="600" y1="80" x2="600" y2="570" stroke="#999" stroke-width="2" stroke-dasharray="5,5"/>
+
+  <!-- VARIANT 2: TWO C-SHAPED BRIDGES (Right side) -->
+  <g id="variant2">
+    <!-- Title -->
+    <text x="900" y="80" class="title" text-anchor="middle">Variant 2: Two C-Shaped Bridges</text>
+
+    <!-- Stock envelope -->
+    <rect x="750" y="120" width="300" height="180" class="stock"/>
+
+    <!-- Existing cuts (removed material) -->
+    <!-- B0 groove (top) -->
+    <rect x="800" y="120" width="200" height="25" class="removed"/>
+    <text x="900" y="140" class="annotation" text-anchor="middle" font-size="10">B0 groove (floor)</text>
+
+    <!-- B180 groove (bottom) -->
+    <rect x="800" y="275" width="200" height="25" class="removed"/>
+    <text x="900" y="295" class="annotation" text-anchor="middle" font-size="10">B180 groove (floor)</text>
+
+    <!-- Port-side bridge (−X, left) -->
+    <rect x="750" y="120" width="28" height="180" class="bridge"/>
+    <text x="765" y="215" class="annotation" text-anchor="middle" font-size="10" fill="white" font-weight="bold">Port</text>
+
+    <!-- Starboard-side bridge (+X, right) -->
+    <rect x="1022" y="120" width="28" height="180" class="bridge"/>
+    <text x="1036" y="215" class="annotation" text-anchor="middle" font-size="10" fill="white" font-weight="bold">Stbd</text>
+
+    <!-- Side cuts (centre area removed) -->
+    <rect x="778" y="120" width="144" height="180" class="removed"/>
+
+    <!-- Dimension lines -->
+    <!-- Bridge width port -->
+    <line x1="750" y1="310" x2="778" y2="310" class="dim-line"/>
+    <text x="764" y="330" class="annotation" text-anchor="middle" font-size="9">~6 mm</text>
+
+    <!-- Bridge width starboard -->
+    <line x1="1022" y1="310" x2="1050" y2="310" class="dim-line"/>
+    <text x="1036" y="330" class="annotation" text-anchor="middle" font-size="9">~6 mm</text>
+
+    <!-- Total width -->
+    <line x1="750" y1="350" x2="1050" y2="350" class="dim-line"/>
+    <text x="900" y="370" class="annotation" text-anchor="middle">64 mm total width</text>
+
+    <!-- Annotations -->
+    <text x="900" y="380" class="annotation" text-anchor="middle">Bridge width: 5–6 mm each (~52 mm span removed)</text>
+    <text x="900" y="400" class="annotation" text-anchor="middle">Ligament width: 5–6 mm (stronger than tabs)</text>
+    <text x="900" y="420" class="annotation" text-anchor="middle">Total retained area: 2 × 180 × 6 = 2160 mm²</text>
+
+    <!-- Pros/Cons -->
+    <text x="750" y="450" class="annotation" font-weight="bold">Pros:</text>
+    <text x="750" y="470" class="annotation">• Wider ligaments (~5–6 mm) resist chatter</text>
+    <text x="750" y="490" class="annotation">• Two continuous side cuts (simpler tool path)</text>
+    <text x="750" y="510" class="annotation">• Straight final saw cut (Y-aligned, grain-friendly)</text>
+
+    <text x="750" y="540" class="annotation" font-weight="bold">Cons:</text>
+    <text x="750" y="560" class="annotation">• Single-point failure if one bridge cracks</text>
+  </g>
+
+  <!-- Comparison section -->
+  <g id="comparison">
+    <text x="50" y="580" class="legend" font-weight="bold">Recommendation: Variant 2 (Two C-Shaped Bridges)</text>
+    <text x="50" y="600" class="legend">Rationale: Wider ligaments (5–6 mm vs 2 mm), grain-aligned final saw cut (Y-direction), simpler tool path, lower tool-chatter risk.</text>
+  </g>
+</svg>

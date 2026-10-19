@@ -1,0 +1,23 @@
+# Critique: thread-milling dry run (M2.5, supplied program)
+
+## Helped
+
+- **thread-milling.md, Usage and declarations.** The exact meaning of `tool_center_path` and `tool_length_applied` is spelled out (D1 is a register; G43/H removed but its Z20 move kept). So is the spindle_mode split ("no RPM mapping or feed rescaling"), and "submit with `head_type: \"cnc\"`, `frame: \"work\"`". Without these the argument set would have been guesswork.
+- **thread-milling.md, "Cutter flutes / axial forms: do not infer one from the other."** This is what made me ask for the crest count instead of reading "triple flute" as 3 rows.
+- **thread-milling.md, fixture paragraph.** It gave the fixture's 1.38 mm cutter, 2.25 mm cutting length, Z+0.006 finish and Z20 retract, so I could check the file against the doc.
+- **thread-milling.md, Usage.** "They exclude the unknown initial position" and "does not invent clearance" pointed at the first `G0 X0 Y0` at the current Z.
+- **cnc-motion-rules §7 and §8, and tool-change flow A/B.** They gave the shape of the job (validate, submit work frame, read Frame + machine Z extents, URL last, background start) and of the tool change (4 approvals, what to ask in one message).
+- **cnc-motion-rules §8, `accept_probe_contact`.** Canonical calls show it for measuring the probe on the setter.
+
+## Missing, unclear or contradictory for this task
+
+- **No skill routes to the converter.** `docs/TOOLS.md` ("54 tools") does not list `convert_thread_milling_gcode` at all. cnc-motion-rules §7 "Running a program someone else generated" does not mention that Machining Doctor/Fanuc output needs converting first. The only pointers are README "Thread-milling import" and thread-milling.md. An agent that loads only the motion-rules skill (as its description invites for "run this file") would submit the Fanuc file raw.
+- **The biggest risk here is not in the docs.** Nothing tells the agent to check the header's `CUTTER DIAM` and `L` against the fitted cutter. A tool-centre path has the diameter built in, so a wrong diameter means a wrong thread and a broken tool. Nor does anything say that vendor names quote neck diameter and reach, while the generator wants the tooth diameter and the cutting length. I derived both checks from the arc geometry (2 x 0.575 + 1.38 = 2.53).
+- **Head type: how to read it is guessed.** thread-milling.md says "for the standard CNC head choose power_percent". TOOLS.md describes `get_machine_profile` as "kinematics, work envelope, toolhead module offsets", not head type, and README line 5 says the rig is 200 W. I assumed `get_machine_profile` reports standard vs 200 W.
+- **`power_percent` with 18,000 rpm feeds.** The doc states there is no feed rescaling but gives no warning that this overloads a small cutter on a slower head, and no advice to regenerate with the generator's max-RPM field. I added that. The ~12,000 rpm standard-head figure is from general knowledge, not the docs.
+- **`tool_length_applied` vs tool change.** thread-milling.md does not say the declaration is only true after the cutter is fitted and the origin carried to it, and does not link to the `tool-change` skill. The stand-in has the probe fitted, and the doc's workflow goes straight from convert to submit.
+- **The file job's first XY leg.** The docs don't say whether `submit_gcode_job` checks a file job's rapids against landmarks (README "Keep-out at plan time" covers procedures and `survey_bed` only). They also don't say a converted program must start at the park height. I assumed it isn't checked and made the start state (Z328 after `run_tool_setter`) and a `requiredToolheadZ` at or below 328 re-read part of the plan.
+- **Small-hole centring.** Nothing covers finding the centre of a hole smaller than the probe tip. README gives "tip ≈ 2.5" without saying whether that is a diameter or a radius. I fell back on the operator's statement that work XY is the hole.
+- **tool-change flow A with the probe as the old tool.** The skill doesn't say `accept_probe_contact: true` is needed, or whether a setter reading taken through a spring-loaded probe equals the probe tip that set Z0 (pre-travel bias). I carried it over from motion-rules §8 and turned the validity question into Q4.
+- **Crash guard after removing the probe.** The docs don't say what the probe channel reads with the probe unplugged, or whether a spurious trigger during a file job crash-stops it. I asked the operator to confirm the pill.
+- **`submit_gcode_job` `head_type`.** Its allowed values aren't documented in TOOLS.md, and the docs don't say whether the converter output contains its own `G54` (the frame is declared either way by passing `frame: "work"`).

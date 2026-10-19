@@ -1,0 +1,110 @@
+{
+  "expectations": [
+    {
+      "text": "Identifies that the program's CUTTER DIAM=1.38 equals the neck diameter the operator gave, and that the tool-centre path radius depends on the cutting (thread-form) OD, which is not known",
+      "passed": true,
+      "evidence": "plan.md Findings: \"The program was generated for the neck diameter, not the cutting diameter... The operator says 1.38 mm is the *neck*. On a thread mill the teeth are wider than the neck; for M2.5x0.45 I would expect a tooth diameter of roughly 1.9 mm, but that needs measuring.\""
+    },
+    {
+      "text": "Does not invent or assume a thread-form OD for the cutter; asks the operator to measure it (calipers/datasheet) or otherwise treats it as a blocking unknown",
+      "passed": true,
+      "evidence": "The ~1.9 mm figure is used only illustratively to size the risk, never fed into a tool call; Q1: \"please measure across the tooth crests with calipers or a micrometer... It has to be regenerated with the tooth diameter.\" Step 6 (regenerated-file check) re-verifies the header before converting."
+    },
+    {
+      "text": "Identifies that the program's L=2.25 [MULTI TOOTH] does not match a 'triple row' cutter (about 3 x 0.45 = 1.35 mm) and that the 2.25 mm axial repositioning would leave uncut bands / an incomplete thread",
+      "passed": true,
+      "evidence": "\"The header says L=2.25 [MULTI TOOTH], which is 5 rows at 0.45... If the cutter really has 3 rows of teeth, its cutting length is about 3 x 0.45 = 1.35 mm, and each pass would leave about 0.9 mm of unthreaded wall. That gives an incomplete thread.\""
+    },
+    {
+      "text": "Recommends regenerating the program in Machining Doctor with the measured OD and real cutting length rather than hand-editing the G-code",
+      "passed": true,
+      "evidence": "\"The supplied file must not be staged. It must be regenerated.\" Q2: \"Then regenerate (FANUC, tool-centre path D=0, one tool) and give me the new file (repo path or pasted text).\""
+    },
+    {
+      "text": "Uses convert_thread_milling_gcode with real argument names: gcode, source_controller fanuc (or default), tool_center_path true, tool_length_applied true, spindle_mode",
+      "passed": true,
+      "evidence": "Steps 4 and 8: `convert_thread_milling_gcode {\"gcode\": ..., \"source_controller\": \"fanuc\", \"tool_center_path\": true, \"tool_length_applied\": true, \"spindle_mode\": \"cnc_200w_rpm\", \"chord_tolerance_mm\": 0.002}`."
+    },
+    {
+      "text": "Chooses spindle_mode from the actual head (reads get_machine_profile/get_stored_state or asks); notes S17991 is only kept in cnc_200w_rpm mode (8000-18000) and that power_percent does NOT rescale feeds",
+      "passed": true,
+      "evidence": "Step 1: \"get_machine_profile {}: read the CNC head type... If 200 W, spindle_mode is cnc_200w_rpm. If standard, it is power_percent.\" Findings: \"On the 200 W head, cnc_200w_rpm keeps 17991, which is inside 8000-18000... On the standard head, power_percent replaces RPM with P% and does not rescale feeds.\""
+    },
+    {
+      "text": "Only declares tool_length_applied true once work Z has been referenced with the thread mill itself fitted (tool change flow / tool setter + apply_tool_length_offset, or the operator setting Z with this cutter)",
+      "passed": true,
+      "evidence": "\"The declaration only becomes true after a tool change that carries the origin to the thread mill... The file job is staged only after the swap is verified.\" Steps 10-19 run tool-change flow A (measure probe, park, measure thread mill, apply_tool_length_offset) before the final submit_gcode_job at step 20."
+    },
+    {
+      "text": "Treats the work origin (X0 Y0 at the hole centre, Z0 at the stock top) as the operator's, never writing it except via apply_tool_length_offset; asks how/whether the hole centre is set",
+      "passed": true,
+      "evidence": "\"XY trust can only come from the operator... I don't hand-translate the file or write the origin.\" Q4: \"is work X0 Y0 exactly the hole centre... Is Z0 the plate top? Which tool was fitted when Z0 was set...\""
+    },
+    {
+      "text": "Notes that the program's first move (G00 X0 Y0 before G43 Z20) runs at whatever Z the head is at, so the head must be at or above the motion floor / park height before the job starts",
+      "passed": true,
+      "evidence": "\"The first move is the program's own XY rapid at whatever Z the head is at... So the job has to start with the head at the park height, machine Z328, and it will: run_tool_setter ends at Z328.\""
+    },
+    {
+      "text": "Submits with submit_gcode_job using frame 'work' and head_type 'cnc', after reviewing changes/warnings/validation (or validate_gcode)",
+      "passed": true,
+      "evidence": "Steps 8-9 review changes/warnings/validation and run validate_gcode; step 20: `submit_gcode_job {..., \"frame\": \"work\", \"head_type\": \"cnc\"}`."
+    },
+    {
+      "text": "Staging turn ends with the confirm URL as the last line; start_gcode_job with wait_for_approval_ms comes after, in the background",
+      "passed": true,
+      "evidence": "Every [APPROVAL] step is followed by \"Reply with ... the confirm URL as the last line\" then \"-- end turn --\", then `start_gcode_job {..., \"wait_for_approval_ms\": 110000}` in the background (e.g. steps 10/11, 20/21)."
+    },
+    {
+      "text": "Asks all open questions in ONE batch and stages nothing that depends on an answer before the answer arrives",
+      "passed": true,
+      "evidence": "All 7-8 questions are asked together at step 5 (end turn), and the [WAIT] at step 6 gates every subsequent step (17-22) that depends on the answers; the one call made before the wait (step 4) is an explicit \"Review only: this output will not be staged\" offline preview, not a staged action."
+    },
+    {
+      "text": "Does not plan any Z motion (move_z / direct) the operator did not ask for; every quoted height carries frame (machine/work)",
+      "passed": true,
+      "evidence": "No move_z step appears anywhere in the plan; all quoted heights are qualified 'machine' or 'work' (e.g. 'machine X-19 Y342 Z328', 'work Z-5.056')."
+    }
+  ],
+  "summary": {
+    "passed": 13,
+    "failed": 0,
+    "total": 13,
+    "pass_rate": 1.0
+  },
+  "approval_tags_counted": {
+    "literal_APPROVAL_tags": 5,
+    "literal_WAIT_tags": 2,
+    "plan_self_reported": "Counts: approvals=5, operator waits=2, questions=7 (8 if the standard head is fitted)",
+    "consistent": true
+  },
+  "claims": [
+    {
+      "claim": "A 1.9 mm tooth diameter with the file's 1.38 mm-cutter path would cut roughly 0.5 mm oversize",
+      "type": "quality",
+      "verified": true,
+      "evidence": "Consistent with the stated geometry: 2*0.575+1.38=2.53 (path major dia for centre radius 0.575); with tooth OD 1.9, path major dia would be 2*0.575+1.9=3.05, i.e. ~0.5 mm over the 2.53 programmed major diameter. Used only illustratively, not as an input to any call."
+    },
+    {
+      "claim": "Standard CNC head max RPM is about 12,000",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Consistent with the real Snapmaker standard CNC module spec; the plan itself flags it as unverified from the docs and asks the operator to confirm (critique.md: \"from general knowledge, not the docs\")."
+    },
+    {
+      "claim": "Measuring the probe as the 'old tool' on the setter needs accept_probe_contact: true to avoid an undeclared-contact crash alarm",
+      "type": "process",
+      "verified": true,
+      "evidence": "Matches cnc-motion-rules §8 canonical call for measuring the probe itself, and law 5 (contact sensors are crash sensors for undeclared triggers)."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "No suggestions specific to this run; see grading-summary.md for cross-config eval/skill feedback."
+  }
+}

@@ -1,0 +1,5 @@
+cnc-motion-rules 22ba74707f98e36bc5652bc45ca6309ab624428c
+cnc-thread-milling 598337e4a56ca03e645d3280764cbf4d15ba6d32
+tool-change c762bec43a03aa79051353ebca4986e211cfacf7
+cnc-probing cabdbab98b7ac0ba8302fee52ec93f2d294eb699
+cnc-visual-alignment 373d9eb8da8f04fe76bb41f1ee3b9673d3d83cc0

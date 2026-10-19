@@ -1,0 +1,114 @@
+<svg viewBox="0 0 900 730" xmlns="http://www.w3.org/2000/svg" font-family="Verdana, sans-serif">
+  <style>
+    .stock { fill: #f2e6d0; stroke: #8a6d3b; stroke-width: 2; }
+    .cut { fill: #ffffff; }
+    .keep { fill: #c98a3a; stroke: #6b4a1f; stroke-width: 1.5; }
+    .dim { stroke: #444; stroke-width: 1; marker-end: url(#arrow); marker-start: url(#arrow); }
+    .dimtext { font-size: 13px; fill: #222; }
+    .label { font-size: 14px; fill: #111; }
+    .title { font-size: 20px; fill: #111; font-weight: bold; }
+    .sub { font-size: 13px; fill: #444; }
+    .axisText { font-size: 12px; fill: #555; }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#444"/>
+    </marker>
+  </defs>
+
+  <text x="20" y="28" class="title">Recommended: two diagonal C-brackets (Variant B)</text>
+  <text x="20" y="48" class="sub">Cross-section perpendicular to the Y rotary axis, working Y-band 254.0-258.0 mm (machine),
+    B0=top / B180=bottom / B90=west / B270=east. Prismatic within this band (see neck_cross_section.py).</text>
+
+  <!-- Cross section drawing: origin at (150,140), scale 9 px/mm, stock 64.1x36.4mm -->
+  <g transform="translate(150,140)">
+    <!-- full stock outline (dashed, "removed" region) -->
+    <rect x="0" y="0" width="576.9" height="327.6" class="stock" />
+
+    <!-- Cut (removed) region shown white/hatched to distrast from kept brackets -->
+    <rect x="4" y="4" width="568.9" height="319.6" class="cut" opacity="0.0"/>
+
+    <!-- NW bracket: leg along top (v in [H-8,H], u in [0,16]) + leg along west (u in [0,8], v in [H-16,H]) -->
+    <!-- scale 9 px/mm; H=36.4 -> 327.6px; leg 16mm->144px; thickness 8mm->72px -->
+    <path class="keep" d="
+      M 0,0
+      L 144,0
+      L 144,72
+      L 72,72
+      L 72,144
+      L 0,144
+      Z" />
+
+    <!-- SE bracket: mirror at bottom-east corner -->
+    <path class="keep" d="
+      M 576.9,327.6
+      L 432.9,327.6
+      L 432.9,255.6
+      L 504.9,255.6
+      L 504.9,183.6
+      L 576.9,183.6
+      Z" />
+
+    <!-- corner fillet indicators (small arcs at the concave pocket corners) -->
+    <path d="M 144,72 A 27,27 0 0 1 117,99" fill="none" stroke="#6b4a1f" stroke-width="1" stroke-dasharray="3,2"/>
+    <path d="M 72,144 A 27,27 0 0 1 45,117" fill="none" stroke="#6b4a1f" stroke-width="1" stroke-dasharray="3,2"/>
+    <path d="M 432.9,255.6 A 27,27 0 0 1 459.9,228.6" fill="none" stroke="#6b4a1f" stroke-width="1" stroke-dasharray="3,2"/>
+    <path d="M 504.9,183.6 A 27,27 0 0 1 531.9,210.6" fill="none" stroke="#6b4a1f" stroke-width="1" stroke-dasharray="3,2"/>
+
+    <!-- stock outline on top for clarity -->
+    <rect x="0" y="0" width="576.9" height="327.6" fill="none" stroke="#8a6d3b" stroke-width="2.5" />
+
+    <!-- Face labels -->
+    <text x="288" y="-10" text-anchor="middle" class="label">B0 face (top) — existing groove floor mZ192.2, rim mZ201.3</text>
+    <text x="288" y="345" text-anchor="middle" class="label">B180 face (bottom) — existing groove floor mZ198.3, rim mZ204.4-204.5</text>
+    <text x="-10" y="163" text-anchor="end" class="label" transform="rotate(-90 -10,163)">B90 face (west)</text>
+    <text x="586" y="163" text-anchor="start" class="label" transform="rotate(90 586,163)">B270 face (east)</text>
+
+    <!-- bracket labels -->
+    <text x="20" y="40" class="label" fill="#3a2a10">NW bracket</text>
+    <text x="20" y="58" class="dimtext" fill="#3a2a10">188.1 mm^2</text>
+    <text x="480" y="300" class="label" fill="#3a2a10" text-anchor="end">SE bracket</text>
+    <text x="480" y="316" class="dimtext" fill="#3a2a10" text-anchor="end">188.1 mm^2</text>
+
+    <!-- cut region label -->
+    <text x="288" y="163" text-anchor="middle" class="label" fill="#555">removed (both rounds)</text>
+    <text x="288" y="181" text-anchor="middle" class="sub" fill="#777">2085 mm^2 removed cross-section (89.4% of stock)</text>
+
+    <!-- overall width dimension -->
+    <line x1="0" y1="-40" x2="576.9" y2="-40" class="dim"/>
+    <text x="288" y="-45" text-anchor="middle" class="dimtext">64.1 mm (measured, B0 outside stock @ Y245)</text>
+
+    <!-- overall height dimension -->
+    <line x1="-40" y1="0" x2="-40" y2="327.6" class="dim"/>
+    <text x="-48" y="163" text-anchor="middle" class="dimtext" transform="rotate(-90 -48,163)">36.4 mm (measured, side silhouette)</text>
+
+    <!-- leg dimension callouts for NW -->
+    <line x1="0" y1="90" x2="144" y2="90" class="dim" stroke-dasharray="2,2"/>
+    <text x="72" y="106" text-anchor="middle" class="dimtext" fill="#3a2a10">leg 16 mm</text>
+    <line x1="90" y1="0" x2="90" y2="144" class="dim" stroke-dasharray="2,2"/>
+    <text x="98" y="76" class="dimtext" fill="#3a2a10">leg 16 mm</text>
+    <line x1="0" y1="36" x2="72" y2="36" class="dim" stroke-dasharray="2,2"/>
+    <text x="36" y="30" text-anchor="middle" class="dimtext" fill="#3a2a10">t=8mm</text>
+
+    <!-- cutter radius note -->
+    <text x="200" y="120" class="sub" fill="#6b4a1f">3 mm cutter-radius fillet at every</text>
+    <text x="200" y="136" class="sub" fill="#6b4a1f">concave (pocket-side) inner corner</text>
+  </g>
+
+  <!-- Comparison inset: four corner tabs -->
+  <text x="20" y="560" class="label" font-weight="bold">For comparison — Variant A, four corner tabs (not recommended):</text>
+  <g transform="translate(20,580) scale(0.28)">
+    <rect x="0" y="0" width="576.9" height="327.6" class="stock"/>
+    <rect x="0" y="255.6" width="72" height="72" class="keep"/>
+    <rect x="504.9" y="255.6" width="72" height="72" class="keep"/>
+    <rect x="0" y="0" width="72" height="72" class="keep"/>
+    <rect x="504.9" y="0" width="72" height="72" class="keep"/>
+    <rect x="0" y="0" width="576.9" height="327.6" fill="none" stroke="#8a6d3b" stroke-width="2.5"/>
+  </g>
+  <text x="190" y="592" class="sub">4 x 62.1 mm^2 posts, 248.3 mm^2 total</text>
+  <text x="190" y="610" class="sub">more redundant (4 connections), each thinner</text>
+  <text x="190" y="628" class="sub">and more registration/runout-sensitive</text>
+
+  <text x="20" y="700" class="sub">Full numeric results: neck_cross_section_results.json / neck_cross_section.py (this run's own model,</text>
+  <text x="20" y="714" class="sub">checked against the prior agent's fixture_section_checks.txt only after being built independently).</text>
+</svg>

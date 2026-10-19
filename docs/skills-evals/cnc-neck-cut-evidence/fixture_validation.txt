@@ -1,0 +1,11 @@
+Stage1Stock solids=1 volume=92464.120
+Stage2Stock solids=1 volume=89479.949
+Stage1Section solids=1 volume=38.010
+Stage2Section solids=2 volume=7.268
+01 B0Cleanup round=InitialSetups commands=60 trace_edges=15 cutter/jaw=0.000 mm3
+02 B180Cleanup round=InitialSetups commands=36 trace_edges=9 cutter/jaw=0.000 mm3
+03 B90Side round=InitialSetups commands=144 trace_edges=36 cutter/jaw=0.000 mm3
+04 B270Side round=InitialSetups commands=144 trace_edges=36 cutter/jaw=0.000 mm3
+05 B0Finish round=FinishingSetups commands=84 trace_edges=21 cutter/jaw=0.000 mm3
+06 B180Finish round=FinishingSetups commands=84 trace_edges=21 cutter/jaw=0.000 mm3
+Proposed air-side WCS origin at machine X230 Y245 physical tip Z160.35: local (0,0,0); all Path bounds within 100 mm

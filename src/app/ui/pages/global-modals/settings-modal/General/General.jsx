@@ -1,6 +1,7 @@
 import classNames from 'classnames';
+import isElectron from 'is-electron';
 import get from 'lodash/get';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import FacebookLoading from 'react-facebook-loading';
@@ -130,6 +131,27 @@ function General({ state: generalState, actions }) {
         return cleanup;
     }, [handlers]);
 
+    // Crash reporting lives in the main process store: it is read once at
+    // startup, so a change here applies on next start.
+    const [crashReporting, setCrashReporting] = useState(false);
+
+    useEffect(() => {
+        if (!isElectron()) {
+            return;
+        }
+        const { ipcRenderer } = window.require('electron');
+        ipcRenderer.invoke('get-crash-reporting')
+            .then(enabled => setCrashReporting(!!enabled))
+            .catch(() => setCrashReporting(false));
+    }, []);
+
+    const updateCrashReporting = (enabled) => {
+        setCrashReporting(enabled);
+        if (isElectron()) {
+            window.require('electron').ipcRenderer.send('set-crash-reporting', enabled);
+        }
+    };
+
     const lang = get(generalState, 'lang', 'en');
 
     if (generalState.api.loading) {
@@ -212,6 +234,17 @@ function General({ state: generalState, actions }) {
                             </span>
                         </div>
                     </div>
+                    {isElectron() && (
+                        <SubMenuitemWrapper title={i18n._('key-App/Settings/General-Crash Reporting')}>
+                            <Checkbox
+                                checked={crashReporting}
+                                onChange={(event) => { updateCrashReporting(event.target.checked); }}
+                            />
+                            <span className="margin-left-4">
+                                {i18n._('key-App/Settings/General-Send crash reports')}
+                            </span>
+                        </SubMenuitemWrapper>
+                    )}
                     <SubMenuitemWrapper title={i18n._('key-App/Settings/General-Workspace Setting')}>
                         <Checkbox
                             checked={shouldHideConsole}

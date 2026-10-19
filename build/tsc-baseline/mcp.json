@@ -1,0 +1,6 @@
+{
+  "tsconfig": "src/server/services/mcp/tests/tsconfig.json",
+  "only": "src/server/services/mcp/",
+  "total": 0,
+  "errors": {}
+}

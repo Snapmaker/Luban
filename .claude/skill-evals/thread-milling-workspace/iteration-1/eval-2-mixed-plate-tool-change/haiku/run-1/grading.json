@@ -1,0 +1,101 @@
+{
+  "expectations": [
+    {
+      "text": "Recognises the program generator centres the thread at the XY datum, so multiple holes need either per-hole programs generated with each hole's XYZ datum or several programs; does not propose moving the work origin per hole by hand",
+      "passed": false,
+      "evidence": "Offers 'Option A: manually move the head to each hole centre at the traverse height..., then re-zero work Z at each hole top with goto_work_origin and descend to work Z0, running the same program each time' as a live alternative to regenerating per-hole programs. This is exactly the forbidden per-hole hand-repositioning pattern, and it is also technically broken: the fixture is a G90 ABSOLUTE program whose own G00 X0 Y0 line would return the head to the true work origin (the plate corner), not stay at whatever hole the operator just traversed to — traversing first and then running the same absolute program would not cut the hole the operator moved to."
+    },
+    {
+      "text": "Uses the tool-change skill flow (measure old on the tool setter, park, swap, measure new, apply_tool_length_offset) for probe -> M2.5 cutter and M2.5 -> M4 cutter, since the origin was set with the touch probe",
+      "passed": false,
+      "evidence": "The plan contains exactly ONE tool-change sequence (step 12, 'M2.5 → M4'). It never performs a probe -> M2.5 tool change at all, despite the prompt stating 'Work origin is already set at the plate's front-left corner top with the touch probe in' — steps 7-11 submit the M2.5 thread-milling program directly with no swap out of the touch probe first."
+    },
+    {
+      "text": "Does not declare tool_length_applied true for a cutter until the length offset for THAT cutter has been applied",
+      "passed": false,
+      "evidence": "Step 3 calls convert_thread_milling_gcode with tool_length_applied: true for the M2.5 program before any tool change has happened at all (see assertion 2) — no length offset for the M2.5 cutter is ever applied in this plan, yet the declaration is made and the program is later submitted and run."
+    },
+    {
+      "text": "Gives a reasoned choice between the single-row and triple-row M4 cutter (e.g. triple = fewer turns/repeated turn-and-reposition, faster; single = lower radial load/deflection on the small neck, one continuous helix) and states the generator setting that follows (single tooth vs multi-tooth with its real cutting length)",
+      "passed": false,
+      "evidence": "Question 2 only offers a one-line, technically unsupported guess ('Single-row typically allows faster traverse between threads; triple-row matches the M2.5 cutter's style') and defers the decision entirely to the operator rather than reasoning from radial load, reach or cutting-length considerations; 'faster traverse between threads' is not a real mechanical consequence of tooth-row count."
+    },
+    {
+      "text": "Flags the unknown cutting OD (and cutting length for multi-row) of the cutters and that the M2.5 cutter's 1.38 mm is the neck; asks for measurements rather than inventing them",
+      "passed": false,
+      "evidence": "Findings state 'M4x0.7xD4x50L cutters (your two options) match the cutter diameter and length' — treating D4 (shank) as if it settles the cutter's cutting diameter, the opposite of the correct reading. The M2.5 cutter's own cutting OD is never questioned; the fixture's 1.38 mm is mentioned only once as 'multi-tooth cutter (1.38 mm neck)' in the findings and never connects to a required measurement or a blocking unknown before conversion."
+    },
+    {
+      "text": "Checks thread depth vs reach: 5 mm through-plate vs 7.5 mm M2.5 neck OK; M4 reach unknown",
+      "passed": false,
+      "evidence": "No occurrence of 'reach' anywhere in the plan; no comparison of any cutter's neck/reach length against the 5 mm plate thickness."
+    },
+    {
+      "text": "Considers that a through hole lets the cutter exit below the plate (bed/spoilboard clearance under the plate) or states the thread length choice accordingly",
+      "passed": false,
+      "evidence": "No mention of spoilboard, bed clearance, or what is beneath the plate anywhere in the plan."
+    },
+    {
+      "text": "Submits each program with submit_gcode_job frame 'work' and head_type 'cnc' after convert_thread_milling_gcode; each staging turn ends on the confirm URL; starts in background",
+      "passed": false,
+      "evidence": "Every submit_gcode_job call in the plan (e.g. step 9: 'submit_gcode_job {gcode: ..., name: \"M2.5_hole_1.nc\", frame: \"work\"}') omits head_type entirely — grep of the whole plan.md for 'head_type' returns zero matches."
+    },
+    {
+      "text": "Asks all open questions in ONE batch up front; total approval count is near the minimum (tool changes + one job per cutter) and states it",
+      "passed": false,
+      "evidence": "The plan's own tally states 'Approvals: 36', roughly 2.8x opus's 13 for the same six holes, driven by unneeded per-hole traverse_xy + move_z pairs (Option A) around every hole in addition to the submit itself. The plan's own text acknowledges Option B would give '~20' instead, still well above the achievable minimum, and never settles on it."
+    },
+    {
+      "text": "No unrequested Z motion; all XY transport at/above the motion floor; heights qualified by frame",
+      "passed": false,
+      "evidence": "Steps 8/14/74/114/126 stage move_z {z: 0, coordinate_system: \"work\"} to 'descend to hole top' before every M2.5/M4 hole — Z motion the operator never asked for, introduced only because Option A's repositioning scheme (itself invalid, see assertion 1) requires it, and with no motion-floor or landmark check stated for these direct moves."
+    }
+  ],
+  "summary": {
+    "passed": 0,
+    "failed": 10,
+    "total": 10,
+    "pass_rate": 0.0
+  },
+  "approval_tags_counted": {
+    "literal_APPROVAL_tags_in_plan_md": 19,
+    "literal_WAIT_tags_in_plan_md": 3,
+    "plans_own_Counts_line": "Approvals: 36 (two reads + five validates + four tool changes including apply offset + two M2.5 holes + tool change stack + two M4 holes + final raise; if Option B eliminates traverses and descents, ~20)",
+    "agreement": "Large, uncorrected internal inconsistency: literal in-text tags (19, since per-hole repeats for holes 2-4/hole 2 are described once in prose rather than each individually tagged) vs. the plan's own final count (36). Neither figure is close to the realistic minimum (~13, per opus), and the plan never resolves which of its own numbers (19, ~24 by manual re-count, 36, or ~20 for Option B) is correct."
+  },
+  "timing": {
+    "executor_duration_seconds": 179.256,
+    "total_tokens": 77528,
+    "tool_uses": 16
+  },
+  "claims": [
+    {
+      "claim": "Traversing to a hole's XY and then descending to work Z0 makes the M2.5 fixture program (an unmodified G90 absolute Fanuc export) cut at that hole",
+      "type": "process",
+      "verified": false,
+      "evidence": "The fixture's first cutting move is 'G00 X0 Y0' in absolute mode (G90) referenced to the CURRENT work origin (the plate corner), not to wherever the head was just traversed. Submitting this program unchanged after a manual traverse would send the head back to the true work zero, not keep it at the hole — the plan's own step 8 half-recognizes the confusion ('this moves XY to work (0,0) which is hole 1 after traverse' is not correct: work (0,0) is always the plate corner) but does not resolve it."
+    },
+    {
+      "claim": "M4x0.7xD4x50L gives the cutter's diameter and length",
+      "type": "factual",
+      "verified": false,
+      "evidence": "D4 is documented elsewhere in the snapshot (and confirmed by the M2.5 fixture's own header, CUTTER DIAM=1.38 vs the name's D4) as the SHANK diameter, not the thread-form cutting diameter; this plan treats D4 as if it were the cutting diameter."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": ["Whether the operator has M4 Machining Doctor programs at all", "Repositioning method (Option A vs B)", "Head type / spindle mode"],
+    "needs_review": ["Missing probe->M2.5 tool change entirely", "Option A's technical validity against a G90 absolute program", "head_type argument missing from every submit_gcode_job call"],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "reason": "This run's most serious defect (never swapping the touch probe out for a cutter before running the M2.5 program) is exactly what assertion 2 checks, and it caught it — but it's severe enough, and different enough in kind from a mere missed measurement-skip, that it may be worth its own explicit assertion ('the plan performs at least one tool change before any thread-milling program is submitted') so a future grader does not have to infer it from the flow-following assertion alone."
+      },
+      {
+        "reason": "No assertion directly targets whether a plan proposing to reuse one absolute-coordinate program at multiple physical locations understands that G90 absolute motion is referenced to the CURRENT work origin, not to a preceding manual traverse. This is a fundamental G-code literacy gap this run exposed that assertion 1 only catches indirectly."
+      }
+    ],
+    "overall": "Every assertion for this eval failed, consistent with a plan that misses the initial tool change entirely, proposes a G-code-illiterate repositioning scheme, drops the head_type argument, and cannot even give a stable approval count for its own steps."
+  }
+}

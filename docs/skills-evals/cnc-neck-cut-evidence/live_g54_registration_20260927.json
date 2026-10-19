@@ -1,0 +1,32 @@
+{
+  "captured_date": "2026-09-27",
+  "source": "Luban MCP get_position heartbeat in work-frame, probe fitted at B0",
+  "machine_position_mm": {
+    "x": 100.0,
+    "y": 256.0,
+    "toolhead_z": 328.0
+  },
+  "work_position_mm": {
+    "x": -69.953,
+    "y": 122.368,
+    "toolhead_z": 119.5
+  },
+  "g54_origin_machine_mm": {
+    "x": 169.953,
+    "y": 133.632,
+    "toolhead_z": 208.5
+  },
+  "probe_effective_length_mm": 70.95,
+  "g54_origin_physical_tip_mm": {
+    "x": 169.953,
+    "y": 133.632,
+    "z": 137.55
+  },
+  "evidence": {
+    "b0_rim_x195_y250_work_z": -7.2,
+    "b0_floor_x195_y256_work_z": -16.3,
+    "b180_rim_x198_y250_work_z": -4.0,
+    "b180_floor_x198_y256_work_z": -10.2
+  },
+  "validity": "Snapshot of current G54 with measured probe. Recheck X/Y offset before posting and perform a fresh probe-to-endmill tool-setter pair and Z offset before using physical-tip paths. Fixture clearance and cutting program remain unverified."
+}

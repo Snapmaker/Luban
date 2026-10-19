@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 400 550" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .background { fill: #f5f5f5; }
+      .stock { fill: #d4a574; stroke: #333; stroke-width: 2; }
+      .removed { fill: none; stroke: #ff6b6b; stroke-width: 2; stroke-dasharray: 5,5; }
+      .spine { fill: #8b7355; stroke: #333; stroke-width: 1; }
+      .annotation { font-family: sans-serif; font-size: 12px; fill: #333; }
+      .title { font-family: sans-serif; font-size: 18px; font-weight: bold; fill: #000; }
+      .label { font-family: sans-serif; font-size: 11px; fill: #333; font-weight: bold; }
+      .dimension { font-family: monospace; font-size: 10px; fill: #666; }
+      .arrow { stroke: #333; stroke-width: 1.5; fill: none; marker-end: url(#arrowhead); }
+      .center-line { stroke: #ccc; stroke-width: 1; stroke-dasharray: 2,2; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#333" />
+    </marker>
+  </defs>
+
+  <!-- Page background -->
+  <rect class="background" width="400" height="550"/>
+
+  <!-- Title -->
+  <text class="title" x="20" y="30">Retained Connections: Two C-Shaped Variant</text>
+  <text class="annotation" x="20" y="48">(Top view, machine coordinates, B0 orientation)</text>
+
+  <!-- Stock outline (64.1 × 36.4 mm, scaled 2x for visibility) -->
+  <g id="stock-group">
+    <!-- Outer boundary of stock (scaled) -->
+    <rect class="stock" x="68" y="120" width="128.2" height="72.8"/>
+
+    <!-- Existing top and bottom grooves (dashed) -->
+    <rect class="removed" x="68" y="130" width="128.2" height="52.8"/>
+
+    <!-- Stock extent labels (Y axis) -->
+    <line class="center-line" x1="20" y1="120" x2="60" y2="120"/>
+    <text class="dimension" x="25" y="118">Y254</text>
+
+    <line class="center-line" x1="20" y1="192.8" x2="60" y2="192.8"/>
+    <text class="dimension" x="20" y="190">Y256</text>
+
+    <line class="center-line" x1="20" y1="264" x2="60" y2="264"/>
+    <text class="dimension" x="25" y="262">Y259</text>
+
+    <!-- X axis extent -->
+    <line class="center-line" x1="68" y1="200" x2="68" y2="240"/>
+    <text class="dimension" x="48" y="222">X138</text>
+
+    <line class="center-line" x1="196.2" y1="200" x2="196.2" y2="240"/>
+    <text class="dimension" x="175" y="222">X202</text>
+
+    <!-- Center X axis for reference -->
+    <line class="center-line" x1="132" y1="110" x2="132" y2="280"/>
+    <text class="dimension" x="125" y="105">X170</text>
+
+    <!-- Central spine (retained material) -->
+    <g id="spine">
+      <rect class="spine" x="100" y="140" width="64" height="60" opacity="0.7"/>
+      <text class="label" x="118" y="175" text-anchor="middle">CENTRAL SPINE</text>
+      <text class="dimension" x="118" y="188" text-anchor="middle">(30×60 mm nominal,</text>
+      <text class="dimension" x="118" y="199" text-anchor="middle">~7mm deep)</text>
+    </g>
+  </g>
+
+  <!-- West C-shaped opening (B270 finish) -->
+  <g id="west-c">
+    <!-- Opening outline (quarter circle + straight edges) -->
+    <path class="removed" d="M 68 140 L 68 200 Q 84 200 84 140 Z" fill="none" stroke="red" stroke-width="2.5"/>
+
+    <!-- Label -->
+    <text class="label" x="75" y="170" text-anchor="middle">West C</text>
+    <text class="dimension" x="75" y="183" text-anchor="middle">(B270 finish)</text>
+    <text class="dimension" x="75" y="195" text-anchor="middle">Opens west</text>
+  </g>
+
+  <!-- East C-shaped opening (B90 finish) -->
+  <g id="east-c">
+    <!-- Opening outline (quarter circle + straight edges) -->
+    <path class="removed" d="M 196.2 140 L 196.2 200 Q 180 200 180 140 Z" fill="none" stroke="red" stroke-width="2.5"/>
+
+    <!-- Label -->
+    <text class="label" x="188" y="170" text-anchor="middle">East C</text>
+    <text class="dimension" x="188" y="183" text-anchor="middle">(B90 finish)</text>
+    <text class="dimension" x="188" y="195" text-anchor="middle">Opens east</text>
+  </g>
+
+  <!-- Dimension annotations -->
+  <g id="dimensions">
+    <!-- Stock width (X) -->
+    <path class="arrow" d="M 68 95 L 196.2 95"/>
+    <text class="dimension" x="125" y="90" text-anchor="middle">64.1 mm</text>
+
+    <!-- Stock extent Y -->
+    <path class="arrow" d="M 210 120 L 210 192.8"/>
+    <text class="dimension" x="220" y="160" text-anchor="start">~37 mm</text>
+
+    <!-- Spine width -->
+    <path class="arrow" d="M 100 220 L 164 220"/>
+    <text class="dimension" x="132" y="235" text-anchor="middle">~30 mm spine</text>
+  </g>
+
+  <!-- Legend / Notes -->
+  <g id="legend" transform="translate(20, 300)">
+    <rect fill="white" stroke="#ccc" stroke-width="1" x="0" y="0" width="360" height="220" rx="5"/>
+
+    <text class="title" x="10" y="20">Retained Connection Details</text>
+
+    <text class="label" x="10" y="45">West C-shaped Opening:</text>
+    <text class="annotation" x="20" y="60">• Located at entry end (Y254), opens toward B270 (west side)</text>
+    <text class="annotation" x="20" y="75">• Inner profile: quarter-cylinder from 6mm cutter radius</text>
+    <text class="annotation" x="20" y="90">• Depth: ~22-23 mm from side rim</text>
+    <text class="annotation" x="20" y="105">• Access: From widened side corridor after B90 initial cut</text>
+
+    <text class="label" x="10" y="130">East C-shaped Opening:</text>
+    <text class="annotation" x="20" y="145">• Located at exit end (Y259), opens toward B90 (east side)</text>
+    <text class="annotation" x="20" y="160">• Inner profile: quarter-cylinder from 6mm cutter radius</text>
+    <text class="annotation" x="20" y="175">• Depth: ~19-23 mm from side rim</text>
+    <text class="annotation" x="20" y="190">• Access: From widened side corridor after B270 initial cut</text>
+
+    <text class="label" x="10" y="215">Central Spine:</text>
+    <text class="annotation" x="20" y="230">• Retained load-bearing web between the two C openings</text>
+    <text class="annotation" x="20" y="245">• Dimensions: ~30mm wide (X), ~60mm long (Y), ~7mm deep (Z)</text>
+    <text class="annotation" x="20" y="260">• Residual material: ~240 mm² with the C openings removed</text>
+    <text class="annotation" x="20" y="275">• Manual saw cut completes separation</text>
+  </g>
+
+  <!-- Finish notes -->
+  <g id="notes" transform="translate(20, 530)">
+    <text class="dimension" x="0" y="0" font-weight="bold">Note: This diagram shows the nominal retained-connection geometry</text>
+    <text class="dimension" x="0" y="12">for a two-C-shaped variant. Actual cut profiles depend on 6mm endmill</text>
+    <text class="dimension" x="0" y="24">radius, measured stock geometry, and CAM-generated toolpaths.</text>
+  </g>
+</svg>

@@ -1,0 +1,110 @@
+{
+  "expectations": [
+    {
+      "text": "Interprets D4 as the 4 mm shank diameter and 50L as overall length, and does NOT use 4 mm (or the neck diameter) as the cutter diameter",
+      "passed": true,
+      "evidence": "Q2: 'The \"D4\" marking usually means the body diameter; the thread form itself is what cuts, and generators need the real geometry.' Q3: 'The \"50L\" is the overall length.'"
+    },
+    {
+      "text": "Requires the thread-form (cutting) OD of the single-tooth cutter to be measured or taken from a datasheet before generating",
+      "passed": true,
+      "evidence": "Q2: 'What is the actual cutting diameter of this cutter (in mm)?' -- asked as its own distinct value, not merged with neck or shank."
+    },
+    {
+      "text": "Flags that the neck/reach length is unknown for the M4 cutter and that 8 mm thread depth needs a reach of more than 8 mm (a 7.5 mm neck like the M2.5 would be too short)",
+      "passed": false,
+      "evidence": "Q3 only asks 'The 1.38 mm M2.5 cutter had 7.5 mm of cutting length; is the M4 similar?' -- raises the comparison but never states the consequence (that a similar ~7.5 mm reach would be too short for an 8 mm thread depth)."
+    },
+    {
+      "text": "Specifies Single tooth in the generator, and explains that the path is a continuous helix of about 8/0.7 = ~11-12 turns",
+      "passed": false,
+      "evidence": "Step 3 lists 'Cutter form: Single tooth (already confirmed)' but plan.md never mentions a helix or a turn count anywhere."
+    },
+    {
+      "text": "States that flute count (3) does not tell you the number of axial tooth rows (single-tooth cutter with 3 flutes is fine) - or otherwise enters flutes and rows separately",
+      "passed": false,
+      "evidence": "'The M2.5 reference used a triple-tooth (multi-flute) 1.38 mm cutter' -- conflates 'triple-tooth' (axial row count) with 'multi-flute' as if the same attribute; the independence of flutes vs. rows is never stated anywhere in plan.md or critique.md."
+    },
+    {
+      "text": "Specifies zero cutter compensation / tool-centre path (D=0) so that tool_center_path can be declared, and a controller the converter accepts (e.g. Fanuc)",
+      "passed": true,
+      "evidence": "'Tool center path: Yes (D=0 compensation)' and 'Controller: Fanuc (matches the M2.5 fixture and the converter default)'"
+    },
+    {
+      "text": "Chooses RPM/feed consistent with the actual spindle head (reads profile or asks); does not rely on power_percent to fix a feed chosen for a different RPM",
+      "passed": false,
+      "evidence": "Step 3: 'Spindle: RPM (preserve the source RPM; the converter will map it to the right spindle mode based on head type)' -- factually wrong: the converter does not auto-map or infer spindle_mode from head type; the caller must choose spindle_mode explicitly, and thread-milling.md states power_percent 'does not rescale feeds', which this plan never mentions."
+    },
+    {
+      "text": "Uses convert_thread_milling_gcode then submit_gcode_job with frame 'work' and head_type 'cnc'; confirm URL last line of the staging turn; start_gcode_job after",
+      "passed": false,
+      "evidence": "Step 6's submit_gcode_job call only has {\"gcode\":..., \"name\":..., \"frame\": \"work\"} -- head_type is omitted entirely from the tool call."
+    },
+    {
+      "text": "Plans referencing work Z with the thread mill fitted (tool change via tool-change skill or operator) before declaring tool_length_applied",
+      "passed": true,
+      "evidence": "Step 2 (tool change, 'if needed') is placed before step 5 (convert_thread_milling_gcode, which carries tool_length_applied: true) -- the only one of the three configs whose step order fits the tool change entirely ahead of the declaration."
+    },
+    {
+      "text": "Asks all open questions in ONE batch; does not stage before answers",
+      "passed": true,
+      "evidence": "Step 1: 'Pause for answers ... [WAIT for answers to all six questions above] -- end turn --'; no approval-bearing call appears before this."
+    },
+    {
+      "text": "Keeps all heights qualified by frame; plans no unrequested Z motion; XY moves happen at or above the motion floor",
+      "passed": true,
+      "evidence": "submit_gcode_job carries 'frame: \"work\"'; step 6 explicitly reads 'Frame (WORK, declared by argument) and machine-resolved Z extents'; no unqualified Z or unrequested Z motion appears."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 5,
+    "total": 11,
+    "pass_rate": 0.5455
+  },
+  "approval_tags_counted": {
+    "literal_bracket_APPROVAL_count_in_plan_md": 2,
+    "plan_self_reported_Counts_line": "No 'Counts:' line present -- haiku used a '## Counts' section with prose bullets instead of the requested single-line format ('Approvals: 1 (the milling job submit) + 4 if tool change needed = 1 or 5 total').",
+    "note": "The literal '[APPROVAL]' tag count (2: one generic tag covering the whole 4-step tool-change block, one for the submit) undercounts the actual approvals described in prose (up to 5) because haiku tagged the tool-change block once instead of once per approval, unlike opus and sonnet which tag every individual approval line. This is a format deviation worth flagging, not a 2-vs-5 contradiction."
+  },
+  "execution_metrics": {
+    "total_tokens": 67854,
+    "duration_ms": 124502,
+    "tool_uses": 10
+  },
+  "claims": [
+    {
+      "claim": "'the converter will map it to the right spindle mode based on head type'",
+      "type": "factual",
+      "verified": false,
+      "evidence": "Contradicted by thread-milling.md, which requires the caller to pass spindle_mode explicitly ('power_percent' | 'cnc_200w_rpm') and states power_percent 'does not infer a motor calibration or rescale feeds' -- there is no auto-mapping behavior in the documented tool."
+    },
+    {
+      "claim": "'triple-tooth (multi-flute) 1.38 mm cutter'",
+      "type": "factual",
+      "verified": false,
+      "evidence": "Conflates two independent attributes (axial tooth-row count and flute count) that thread-milling.md explicitly separates: 'Cutter flutes / axial forms | Do not infer one from the other.'"
+    },
+    {
+      "claim": "Step 3's Machining Doctor field list states 'Handedness: Right-hand (RH)' and 'Climb/conventional: Climb (recommended for aluminum)' as settled choices",
+      "type": "process",
+      "verified": false,
+      "evidence": "Contradicts the plan's own Q5, which asks the operator 'are you planning right-hand thread ... and climb milling?' -- the plan answers its own open question with an assumed default instead of waiting, an internal inconsistency."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [
+      "critique.md ¶1 (M4 cutter cutting length): 'the M4 might also have ~7-8mm of cutting edge, but this is a guess' -- flagged as a guess in the critique, but the plan never turns this into the reach-vs-8mm-depth warning that assertion 3 was looking for."
+    ],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "reason": "Haiku's step 3 pre-answers its own Q5 (RH/climb) with assumed defaults ('Climb ... recommended for aluminum') while the question is still open -- no current assertion catches a plan that asks a question and then silently assumes the answer elsewhere in the same document. Worth an assertion or a grading note for 'does not answer its own open questions with defaults'."
+      }
+    ],
+    "overall": "Haiku passes the structural/staging assertions but has more factual/conceptual errors than the other two configs: an incorrect claim about automatic spindle-mode mapping, a flutes/rows conflation, and a self-contradicted RH/climb default. Its format also deviates from the requested plan.md template ('## Counts' instead of a 'Counts:' line)."
+  }
+}

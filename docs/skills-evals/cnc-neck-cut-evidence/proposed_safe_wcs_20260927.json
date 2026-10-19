@@ -1,0 +1,47 @@
+{
+  "status": "PROPOSED_NOT_SET_ON_CONTROLLER",
+  "date": "2026-09-27",
+  "source_job": "4a426e131af8",
+  "b_deg": 0,
+  "probe_effective_length_mm": 70.95,
+  "probe_tip_radius_mm": 1.25,
+  "contacts_machine_mm": {
+    "rim_top": {
+      "x": 195.0,
+      "y": 250.0,
+      "toolhead_z": 201.3,
+      "physical_z": 130.35
+    },
+    "outer_x_tip_centre": {
+      "x": 203.1,
+      "y": 245.0,
+      "toolhead_z": 197.3
+    },
+    "channel_wall_tip_centre": {
+      "x": 195.0,
+      "y": 253.4,
+      "toolhead_z": 197.3
+    }
+  },
+  "estimated_surfaces_machine_mm": {
+    "outer_x_face": 201.85,
+    "channel_enclosure_wall_y": 252.15
+  },
+  "free_column_evidence": {
+    "x": 230.0,
+    "y": 245.0,
+    "no_contact_down_to_toolhead_z": 197.3,
+    "physical_tip_z": 126.35
+  },
+  "proposed_work_zero": {
+    "machine_x": 230.0,
+    "machine_y": 245.0,
+    "physical_tip_z": 160.35,
+    "probe_toolhead_machine_z": 231.3,
+    "rim_clearance_mm": 30.0
+  },
+  "work_origin_setting": "Move probe to machine X230 Y245 toolhead Z231.30 through the staged safe moves; operator uses controller/Luban Set Work Origin at that held pose. Verify work X0 Y0 Z0 by fresh heartbeat before any cutter path. MCP has no sanctioned direct XYZ work-origin write.",
+  "goto_condition": "Use goto_work_origin only after a machine-Z328 retract and verify the live G54 offset; the destination X230 Y245 is outside the measured stock. A work origin alone cannot make an arbitrary low-Z traverse safe.",
+  "tool_change_condition": "Measure probe before physical swap, measure installed endmill after swap, apply the measured length offset or complete touchscreen wizard; then reverify work frame and clearances.",
+  "cut_release": "This file registers review-path coordinates only. Holder and jaw clearance, stock model, B direction and first-entry moves remain to be validated."
+}

@@ -10,7 +10,7 @@ import {
 import { EventEmitter } from 'events';
 
 import SocketServer from '../../../lib/SocketManager';
-import { MotorPowerMode } from '../sacp/SacpClient';
+import { MotorPowerMode } from '../../../../app/constants';
 
 interface ConnectionOpenOptions {
     address?: string;
@@ -60,8 +60,20 @@ export default class Channel extends EventEmitter {
         return Promise.resolve();
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public async stopHeartbeat(id?: string): Promise<void> {
-        return Promise.resolve(id);
+        return Promise.resolve();
+    }
+
+    /**
+     * Last machine status report (position, offsets, homed, workflow status)
+     * with the time it arrived, or null when this channel has none: before
+     * the first report, after close, or on a channel that keeps no state.
+     * The MCP's position of record reads this (SstpHttpChannel from its status
+     * poll, the SACP channels from their heartbeat/coordinate subscriptions).
+     */
+    public getLatestMachineState(): { [key: string]: unknown; timestamp: number } | null {
+        return null;
     }
 
     /**

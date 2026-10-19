@@ -1,0 +1,79 @@
+{
+  "expectations": [
+    {
+      "text": "Uses per-feature work-coordinate generator datums and one job per hole for this workflow; explains why traversing then replaying the X0 Y0 export does not relocate it and avoids origin writes or naive concatenation.",
+      "passed": true,
+      "evidence": "\"Every hole needs its own export with its XY centre as the generator datum... That makes 6 programs. They are not concatenated and not joined over work Z20... Reusing the fixture unchanged would thread air at the plate corner.\""
+    },
+    {
+      "text": "Uses the tool-change skill flow (measure old on the tool setter, park, swap, measure new, apply_tool_length_offset) for probe -> M2.5 cutter and M2.5 -> M4 cutter, since the origin was set with the touch probe",
+      "passed": true,
+      "evidence": "Steps 5-10 (run_tool_setter old probe, goto_tool_change_position, wait, run_tool_setter new M2.5, apply_tool_length_offset) and steps 17-22 repeat the same flow for M2.5->M4, with a sanctioned reuse branch gated on get_tool_setter_config."
+    },
+    {
+      "text": "Does not declare tool_length_applied true for a cutter until the length offset for THAT cutter has been applied",
+      "passed": true,
+      "evidence": "Readiness: \"tool_length_applied: true becomes true only after the flow-A chain completes and is verified for the fitted cutter. That is steps 5-10 for M2.5, and 17-22 for M4.\""
+    },
+    {
+      "text": "Gives a reasoned choice between the single-row and triple-row M4 cutter (e.g. triple = fewer turns/repeated turn-and-reposition, faster; single = lower radial load/deflection on the small neck, one continuous helix) and states the generator setting that follows (single tooth vs multi-tooth with its real cutting length)",
+      "passed": true,
+      "evidence": "\"Single-row: a continuous helix, 5/0.7 = about 7.1 turns, the least simultaneous engagement. That suits the A350's low rigidity... Triple-row: covers about 3x0.7=2.1mm per turn, so it needs about 3 axial repositionings... No force ratio is promised.\" Question 10 states the generator setting: \"M4: 'single tooth', unless you choose otherwise\"."
+    },
+    {
+      "text": "Flags the unknown cutting OD (and cutting length for multi-row) of the cutters and that the M2.5 cutter's 1.38 mm is the neck; asks for measurements rather than inventing them",
+      "passed": true,
+      "evidence": "\"1.38 mm is the stated neck of the operator's cutter, not its cutting OD... The M2.5 cutting OD is unknown, so no M2.5 program can be generated until it is measured\"; \"reach, cutting OD or effective length, all three are unknown for both [M4] cutters\"."
+    },
+    {
+      "text": "Checks actual deepest travel, tooth-to-tip geometry and neck/shank reach against the 5 mm plate; does not take nominal plate thickness alone as clearance proof; M4 reach remains unknown.",
+      "passed": true,
+      "evidence": "\"7.5 mm tip-to-shank reach against a 5 mm plate leaves about 2.4 mm above the plate top at a deepest tip of about work Z-5.06... Check this against the actual exported deepest Z, not the nominal.\"; \"reach below the shank must exceed 5 mm plus overrun\" (M4 reach unknown)."
+    },
+    {
+      "text": "Considers that a through hole lets the cutter exit below the plate (bed/spoilboard clearance under the plate) or states the thread length choice accordingly",
+      "passed": true,
+      "evidence": "\"The deepest point is work Z-5.056. On a 5 mm through plate the tip and the lowest tooth go below the plate bottom.\" Question 4 asks what is under each hole and how far the tip may go below the plate."
+    },
+    {
+      "text": "Submits each program with submit_gcode_job frame 'work' and head_type 'cnc' after convert_thread_milling_gcode; each staging turn ends on the confirm URL; starts in background",
+      "passed": true,
+      "evidence": "Step 13: `submit_gcode_job {..., \"head_type\": \"cnc\", \"frame\": \"work\"}`... Link, end turn, `start_gcode_job` -- pattern repeated for every hole (13,14,15,16,24)."
+    },
+    {
+      "text": "Batches missing inputs, groups jobs by cutter, and counts approvals per feature plus actual tool-change stages, with repeats/branches explicit; conversion, reads and polls are not approvals.",
+      "passed": true,
+      "evidence": "Single question batch (11 items); M2.5 holes then M4 holes grouped by cutter; Counts line: \"logical approvals = flow A with reuse: swap 1 x4 + swap 2 x3 + 6 jobs = 13; re-measure branch: 4+4+6=14; optional bore check +2; each conditional Z raise +1.\" Literal tag count (17) matches an exact step list and separates conditional steps."
+    },
+    {
+      "text": "No unrequested Z motion; all XY transport at/above the motion floor; heights qualified by frame",
+      "passed": true,
+      "evidence": "Step 25 gates any move_z on an explicit operator ask (\"may I raise Z first?\") rather than issuing it unrequested; every height is stated as machine/work frame throughout."
+    },
+    {
+      "text": "Measures the outgoing touch probe with accept_probe_contact true; never fabricates old_trigger_z from setter surface plus stored effectiveLength.",
+      "passed": true,
+      "evidence": "Step 5: `run_tool_setter {\"bit_length_mm\": 70, \"accept_probe_contact\": true, ...}`; \"The old trigger can never be reconstructed as setter surface + 71.3.\""
+    },
+    {
+      "text": "Unknown origin-tool history blocks an offset transfer; a stored origin alone is not evidence of which tool set it.",
+      "passed": true,
+      "evidence": "Step 17: reuse for swap 2 is gated on `get_tool_setter_config` showing `measurements.last` is genuinely the step-8 M2.5 reading from this connection and all four jobs completed clean -- not assumed from the stored origin alone."
+    }
+  ],
+  "summary": {"passed": 12, "failed": 0, "total": 12, "pass_rate": 1.0},
+  "approval_tags_counted": 17,
+  "stated_logical_approvals": "13 (reuse branch) / 14 (re-measure branch); literal tags 17 including 2 optional bore-check approvals and up to 1 conditional Z-raise per hole",
+  "execution_metrics": {"total_tool_calls": 15, "total_tokens": 129493, "duration_ms": 315542},
+  "timing": {"executor_duration_seconds": 315.5},
+  "claims": [
+    {"claim": "S17991 is only legal in cnc_200w_rpm mode", "type": "factual", "verified": true, "evidence": "Matches evals.json domain facts (200 W head RPM mode accepts 8000-18000)."},
+    {"claim": "A 4 mm shank cannot enter an M2.5/M4 bore, so reach below the shank must exceed hole depth", "type": "factual", "verified": true, "evidence": "Consistent with D4=shank designation and stated bore sizes; correctly separates shank from cutting geometry."}
+  ],
+  "eval_feedback": {
+    "suggestions": [
+      {"reason": "Assertion 1's 'explains why traversing then replaying the X0 Y0 export does not relocate it' is satisfied here by a single sentence ('Reusing the fixture unchanged would thread air at the plate corner') rather than a full mechanism explanation. A plan that always used per-hole datums from the start (never entertaining the reposition-and-replay idea) could pass this clause on a technicality without ever demonstrating it understood the specific failure mode iteration-1's haiku fell into. Consider splitting into two assertions: one for the practice (per-hole datums, no concatenation) and one specifically requiring the plan to name the reposition-and-replay trap by name."}
+    ],
+    "overall": "Assertions discriminated well here; opus's plan gives genuine, well-reasoned coverage of every checked item with internally consistent approval counts."
+  }
+}

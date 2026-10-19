@@ -1,0 +1,92 @@
+{
+  "expectations": [
+    {
+      "text": "Interprets D4 as the 4 mm shank diameter and 50L as overall length, and does NOT use 4 mm (or the neck diameter) as the cutter diameter",
+      "passed": true,
+      "evidence": "'D4 is the 4 mm shank and 50L is the overall length. Neither is the cutting OD, neck diameter, reach, effective length or protrusion.' Cutter Diameter is later required as 'the measured cutting-crest OD (not the neck, not the 4 mm shank)'."
+    },
+    {
+      "text": "Requires the thread-form (cutting) OD of the single-tooth cutter to be measured or taken from a datasheet before generating",
+      "passed": true,
+      "evidence": "'Nothing supplied gives it: the M4 dimensions and flute count are not supplied, so they must be measured or taken from the tool drawing. I will not invent a typical OD...' and Q1 asks for 'cutting-crest OD (this goes into Cutter Diameter)'."
+    },
+    {
+      "text": "Flags that the neck/reach length is unknown for the M4 cutter and that 8 mm thread depth needs a reach of more than 8 mm (a 7.5 mm neck like the M2.5 would be too short)",
+      "passed": true,
+      "evidence": "'Reach blocks the job as stated. If the M4 cutter really has the M2.5 cutter's 7.5 mm tip-to-shank reach, it cannot cut an 8 mm thread (setup.md: \"A 7.5 mm reach cannot provide an 8 mm thread\").'"
+    },
+    {
+      "text": "Specifies Single tooth in the generator, and explains that the path is a continuous helix of about 8/0.7 = ~11-12 turns",
+      "passed": true,
+      "evidence": "'Single-form cutter (one axial tooth row) means Tooth Configuration = single tooth. Nominal helix is thread length / pitch = 8 / 0.7 ≈ 11.43 turns.'"
+    },
+    {
+      "text": "Treats flute count and axial rows independently; does not invent three flutes for the M4 cutter.",
+      "passed": true,
+      "evidence": "'Flute count is a separate number (circumferential edges, used for feed per tooth), and the tooth-row count says nothing about it.' Q1 asks flute count separately; no flute count is ever asserted."
+    },
+    {
+      "text": "Specifies zero cutter compensation / tool-centre path (D=0) so that tool_center_path can be declared, and a controller the converter accepts (e.g. Fanuc)",
+      "passed": true,
+      "evidence": "Field list: 'cutter compensation D=0 / toolpath for tool centre... controller Fanuc'; step 12 calls convert with tool_center_path:true, source_controller:'fanuc'."
+    },
+    {
+      "text": "Chooses RPM/feed consistent with the actual spindle head (reads profile or asks); does not rely on power_percent to fix a feed chosen for a different RPM",
+      "passed": true,
+      "evidence": "Q6 asks head identity and, if standard, 'what power % do you want and what spindle RPM does it give (so the generator feeds match)?' — feeds are tied to the confirmed head's real RPM, not patched after the fact."
+    },
+    {
+      "text": "Uses convert_thread_milling_gcode then submit_gcode_job with frame 'work' and head_type 'cnc'; confirm URL last line of the staging turn; start_gcode_job after",
+      "passed": true,
+      "evidence": "Step 16: `submit_gcode_job {..., \"head_type\": \"cnc\", \"frame\": \"work\"}` [APPROVAL] ... 'Put the confirm URL on the last line. -- end turn --'; step 17 runs `start_gcode_job` afterward."
+    },
+    {
+      "text": "Does not call conversion with tool_length_applied true while the probe is fitted; names completed tool reference as a precondition and does not treat the declaration as future intent.",
+      "passed": true,
+      "evidence": "Step 12 (convert) is sequenced after steps 9-11 (measure new tool, apply offset, verify). Readiness: 'tool_length_applied: true cannot be declared now... First, work Z0 must be proven... Then the M4 single-form cutter must be fitted and the reference transferred by a measured tool change... completed and verified.'"
+    },
+    {
+      "text": "Asks all open questions in ONE batch; does not stage before answers",
+      "passed": true,
+      "evidence": "Q1-Q9 asked together in step 2's single message, then '-- end turn --'; step 3 is '[WAIT]' for the answers before any staged call."
+    },
+    {
+      "text": "Keeps all heights qualified by frame; plans no unrequested Z motion; XY moves happen at or above the motion floor",
+      "passed": true,
+      "evidence": "Step 14: 'Check the whole segment from there to the hole's machine XY, at 328 (>= floor 320), against each landmark's requiredToolheadZ.' Branch B's only move_z is explicitly 'operator OK'd in Q8', not unrequested."
+    },
+    {
+      "text": "Separately gates any submission on the actual fitted cutter, verified origin history, fresh machine preflight and execution authority; a planning request alone stages nothing.",
+      "passed": true,
+      "evidence": "Readiness/Submission: 'A fresh position is verified, idle and at Z328, with the first-move segment clear of each landmark's requiredToolheadZ... The operator has asked for execution and confirmed clamps, door and lubrication.' Nothing is staged in this turn (only reads + a question batch)."
+    }
+  ],
+  "summary": { "passed": 12, "failed": 0, "total": 12, "pass_rate": 1.0 },
+  "approval_tags_counted": 11,
+  "stated_logical_approvals": "Branch A 5 (probe measure 1 + park 1 + cutter measure 1 + offset 1 + file job 1); Branch R 7 (+ probe_program 1 + set_workspace_origin 1), 8 if a probe_circle is needed; Branch B 4 (2 wizard setter runs + move_z 1 + file job 1)",
+  "approval_tag_note": "Grep of literal '[APPROVAL]' occurrences = 11 (a 12th match is the word appearing inside the plan's own 'Counts:' prose sentence, not a step tag). Matches the plan's own count exactly.",
+  "execution_metrics": { "timing_json": { "total_tokens": 121200, "duration_ms": 306136, "tool_uses": 15 } },
+  "claims": [
+    {
+      "claim": "The M2.5 fixture's CUTTER DIAM=1.38 is the neck, not the cutting OD, and its L=2.25 multi-tooth step exceeds three rows' true 1.35 mm coverage",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Matches domain facts given to the grader (centre-path radius 0.575, 1.38 mm cutter) and setup.md's regression section verbatim; opus applies this as a 'trap not to repeat' rather than restating it as new information for this eval."
+    },
+    {
+      "claim": "goto_tool_change_position stages two start_gcode_job calls (Z up, then XY) under one [APPROVAL]",
+      "type": "process",
+      "verified": true,
+      "evidence": "Matches tool-change/SKILL.md step 2 exactly ('One approval, two start_gcode_job calls: Z rises to the park height first, then X/Y'), though this reading conflicts with TOOLS.md's 'two approved steps' phrasing — see grading-summary for the doc-contradiction note."
+    }
+  ],
+  "user_notes_summary": { "uncertainties": [], "needs_review": [], "workarounds": [] },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "reason": "Assertion 3 is close to a direct quote of setup.md ('A 7.5 mm reach cannot provide an 8 mm thread'). All three configs that raised the point could satisfy it by quoting the doc sentence; it doesn't strongly discriminate a config that merely copies the line from one that actually reasons about tip-to-tooth/holder clearance beyond it (opus is the only config that goes further, deriving the shank-vs-3.3mm-bore consequence)."
+      }
+    ],
+    "overall": "No assertion in this set is trivially satisfied by a wrong or vacuous plan; opus's plan is the strongest of the three iteration-2 runs and the strongest opus run across both iterations (12/12 vs iteration 1's 9/11)."
+  }
+}

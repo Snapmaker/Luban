@@ -1,0 +1,109 @@
+{
+  "expectations": [
+    {
+      "text": "Interprets D4 as the 4 mm shank diameter and 50L as overall length, and does NOT use 4 mm (or the neck diameter) as the cutter diameter",
+      "passed": true,
+      "evidence": "'A 7.5 mm reach can't cut 8 mm, because the D4 shank would reach the block top first' and 'Cutter diameter = the TOOTH diameter (Q1), never the neck.' (findings bullet 4 / step 2)"
+    },
+    {
+      "text": "Requires the thread-form (cutting) OD of the single-tooth cutter to be measured or taken from a datasheet before generating",
+      "passed": true,
+      "evidence": "Q1: 'Single-form cutter dimensions: tooth (cutting) diameter, neck diameter, reach ... and the number of flutes.' -- asked, never assumed."
+    },
+    {
+      "text": "Flags that the neck/reach length is unknown for the M4 cutter and that 8 mm thread depth needs a reach of more than 8 mm (a 7.5 mm neck like the M2.5 would be too short)",
+      "passed": true,
+      "evidence": "'A 7.5 mm reach can't cut 8 mm ... The single-form cutter's reach isn't stated. It needs about ≥ 8 mm + the tooth-to-tip distance + ~1 mm.'"
+    },
+    {
+      "text": "Specifies Single tooth in the generator, and explains that the path is a continuous helix of about 8/0.7 = ~11-12 turns",
+      "passed": false,
+      "evidence": "Specifies 'Cutter: solid carbide, Single tooth' but never computes or mentions the ~11-12 turn continuous helix anywhere in plan.md."
+    },
+    {
+      "text": "States that flute count (3) does not tell you the number of axial tooth rows (single-tooth cutter with 3 flutes is fine) - or otherwise enters flutes and rows separately",
+      "passed": true,
+      "evidence": "'Flutes and thread forms are independent. \"Single thread (one tooth row)\" is the axial form ... It says nothing about the flute count ... (thread-milling.md: \"Do not infer one from the other\"). I have to ask.'"
+    },
+    {
+      "text": "Specifies zero cutter compensation / tool-centre path (D=0) so that tool_center_path can be declared, and a controller the converter accepts (e.g. Fanuc)",
+      "passed": true,
+      "evidence": "'Controller: Fanuc. Cutter compensation: D=0, toolpath for tool centre (nonzero compensation is rejected).'"
+    },
+    {
+      "text": "Chooses RPM/feed consistent with the actual spindle head (reads profile or asks); does not rely on power_percent to fix a feed chosen for a different RPM",
+      "passed": true,
+      "evidence": "Step 1 calls get_machine_profile; findings: 'The converter replaces the RPM but doesn't rescale feeds, so the generator's RPM has to be the speed the head really runs at.' Q6 asks for the actual RPM at the chosen percent on a standard head."
+    },
+    {
+      "text": "Uses convert_thread_milling_gcode then submit_gcode_job with frame 'work' and head_type 'cnc'; confirm URL last line of the staging turn; start_gcode_job after",
+      "passed": true,
+      "evidence": "Step 12: 'submit_gcode_job {..., \"frame\": \"work\", \"head_type\": \"cnc\"}' [APPROVAL] ... 'One sentence plus the confirm URL last.' -- end turn -- ; step 13 calls start_gcode_job afterward."
+    },
+    {
+      "text": "Plans referencing work Z with the thread mill fitted (tool change via tool-change skill or operator) before declaring tool_length_applied",
+      "passed": false,
+      "evidence": "Step 4 calls convert_thread_milling_gcode with 'tool_length_applied: true' BEFORE the tool-change flow (steps 5-11) has run; plan itself admits 'tool_length_applied: true is an intent: it becomes true at step 11' -- the declaration is made in the tool call while the probe, not the mill, is still fitted."
+    },
+    {
+      "text": "Asks all open questions in ONE batch; does not stage before answers",
+      "passed": true,
+      "evidence": "Step 1 is read-only only (get_machine_profile/get_tool_setter_config/get_probe_feed_status); step 2 asks Q1-Q6 together and ends the turn; no [APPROVAL] appears before step 3's [WAIT]."
+    },
+    {
+      "text": "Keeps all heights qualified by frame; plans no unrequested Z motion; XY moves happen at or above the motion floor",
+      "passed": true,
+      "evidence": "'limits floor Z320 / park Z328' quoted in step 2; step 13: 'Retracting to Z328 is a move_z that waits for the operator's word.' No bare Z anywhere."
+    }
+  ],
+  "summary": {
+    "passed": 9,
+    "failed": 2,
+    "total": 11,
+    "pass_rate": 0.818
+  },
+  "approval_tags_counted": {
+    "literal_bracket_APPROVAL_count_in_plan_md": 8,
+    "plan_self_reported_Counts_line": "Counts: approvals=6, operator waits=2, questions=6",
+    "note": "Plan's own 'Counts: approvals=6' matches the main path only; the literal file has 8 '[APPROVAL]' tags because branch 3a (hole-centre probing, only if XY wasn't measured on this origin) adds 2 more that the plan explicitly says are 'not counted below'. Both numbers are real and consistent with the plan's own caveat, not a discrepancy to penalize."
+  },
+  "execution_metrics": {
+    "total_tokens": 111558,
+    "duration_ms": 322179,
+    "tool_uses": 16
+  },
+  "claims": [
+    {
+      "claim": "The M2.5 fixture's CUTTER DIAM=1.38 is the neck diameter, not the (unknown) tooth/thread-form OD, and using it as cutter diameter over-cuts the major diameter if the real tooth is larger",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Consistent with the domain facts given (centre-path radius 0.575 = (2.53-1.38)/2, generated with a 1.38 mm cutter-diameter FIELD value that the operator described as the neck)."
+    },
+    {
+      "claim": "The M2.5 fixture's L=2.25 axial step does not match a 'triple row' (~1.35 mm) cutter and would leave unthreaded bands",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Matches the domain fact: each turn-and-reposition block advances Z by 0.056+0.45+0.056+1.688 = 2.25 mm, i.e. 5 pitches, not 3."
+    },
+    {
+      "claim": "An M4 single-form mill 'usually has a tooth diameter of about 3.0-3.15 mm'",
+      "type": "factual",
+      "verified": false,
+      "evidence": "Not sourced from any operator statement or provided doc; presented as a rough estimate purely to motivate a question (Q1), never fed into the generator or converter call -- does not trigger the invented-value FAIL rule, but is an unverified figure worth flagging."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "Plans referencing work Z with the thread mill fitted ... before declaring tool_length_applied",
+        "reason": "This assertion is ambiguous about whether an OFFLINE convert_thread_milling_gcode call (which moves nothing and is explicitly non-destructive) counts as 'declaring' if it precedes the physical tool change, provided the actual submit_gcode_job waits until afterward. Opus's plan is internally consistent and safety-correct (nothing is submitted before the tool is fitted and measured) but fails a literal reading of the assertion. Consider splitting this into two assertions: one for the API-call declaration order, one for the submission order -- they test different things and a plan can legitimately satisfy only the latter."
+      }
+    ],
+    "overall": "Assertions are mostly discriminating. Assertion 4 (turns count) is good and correctly caught a real gap in all three configs. Assertion 9 is worth tightening per the note above."
+  }
+}

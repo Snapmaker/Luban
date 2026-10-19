@@ -1,6 +1,7 @@
 import request from 'superagent';
 import sendMessage from '../utils/sendMessage';
 import logger from '../../../lib/logger';
+import { httpEvidence } from '../../machine/connectionDiagnosticState';
 
 const log = logger('service:worker:heartBeat');
 
@@ -12,11 +13,12 @@ const screenTimeout = 8 * 1000;
 let timeoutHandle = null;
 let intervalHandle = null;
 
-const stopBeat = (msg?: string, flag?: number) => {
+const stopBeat = (_msg?: string, flag?: number) => {
     log.debug(`offline flag=${flag}`);
     clearInterval(intervalHandle);
     intervalHandle = null;
-    sendMessage({ status: 'offline', msg });
+    const reason = { 1: 'stop_requested', 2: 'status_timeout', 3: 'repeated_status_errors' }[flag] || 'unknown';
+    sendMessage({ status: 'offline', reason });
 };
 
 let logCounter = 0;
@@ -31,13 +33,16 @@ const heartBeat = async (param: IParam) => {
 
         function beat() {
             const now = new Date().getTime();
+            sendMessage({ status: 'poll-start' });
             const api = `${host}/api/v1/status?token=${token}&${now}`;
             request
                 .get(api)
                 .timeout(3000)
                 .end((err: Error, res) => {
                     if (err) {
-                        log.warn(`beat err=${err?.message}`);
+                        const evidence = httpEvidence(err, res);
+                        log.warn(`beat failed status=${evidence.httpStatus || 'none'} code=${evidence.errorCode || 'unknown'}`);
+                        sendMessage({ status: 'poll-error', ...evidence, durationMs: Date.now() - now });
                         if (err.message.includes('Timeout')) {
                             if (!timeoutHandle) {
                                 timeoutHandle = setTimeout(() => {
@@ -58,7 +63,7 @@ const heartBeat = async (param: IParam) => {
                         errorCount = 0;
                         sendMessage({
                             status: 'online',
-                            err,
+                            durationMs: Date.now() - now,
                             res: {
                                 text: res.text,
                                 body: res.body,

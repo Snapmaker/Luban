@@ -1,0 +1,1247 @@
+import { Input, Radio, Select, Switch } from 'antd';
+import React, { useState, useEffect } from 'react';
+
+import api from '../../../../../api';
+import i18n from '../../../../../lib/i18n';
+import UniApi from '../../../../../lib/uni-api';
+import { McpHealthPanel } from '../../../../components/McpHealth';
+import SvgIcon from '../../../../components/SvgIcon';
+import styles from '../form.styl';
+
+interface McpMqttSettings {
+    values: {
+        host: string;
+        port: string;
+        user: string;
+        clientId: string;
+        feedToolsetter: string;
+        feedOvertravel: string;
+        feedProbe: string;
+        inverted: string;
+    };
+    passSet: boolean;
+    envOverrides: string[];
+    configured: boolean;
+    missing: string[];
+    defaultClientId: string;
+}
+
+interface McpGpioSettings {
+    values: {
+        python: string;
+        pinToolsetter: string;
+        pinOvertravel: string;
+        pinProbe: string;
+        inverted: string;
+        pollMs: string;
+        blinkaEnv: string;
+    };
+    envOverrides: string[];
+    configured: boolean;
+    missing: string[];
+    defaultPython: string;
+    defaultBlinkaEnv: string;
+}
+
+interface McpTransportSettings {
+    /** Stored choice: '' = auto, 'mqtt' or 'gpio'. */
+    stored: string;
+    envOverride: boolean;
+    active: 'mqtt' | 'gpio';
+}
+
+interface McpSensorSettings {
+    toolSetter: boolean;
+    probe: boolean;
+    envOverrides: string[];
+}
+
+interface McpCameraStreamStatus {
+    enabled: boolean;
+    source: 'env' | 'config' | 'default';
+    fps: number;
+    storedFps: number | null;
+    maxClients: number;
+    pageUrl: string | null;
+    streamUrl: string | null;
+    running: boolean;
+    clients: number;
+    device: string | null;
+    lastError: string | null;
+}
+
+interface McpStatus {
+    running: boolean;
+    port: number | null;
+    toolCount: number;
+    settings: {
+        enabled: boolean;
+        port: number;
+        source: 'env' | 'config';
+        allowLan: boolean;
+        allowLanSource: 'env' | 'config' | 'default';
+    };
+    lanUrls: string[];
+    jobsUrl?: string;
+    https?: {
+        certFile: string;
+        keyFile: string;
+        envOverrides: string[];
+        running: boolean;
+        port: number | null;
+        error: string | null;
+        jobsUrl: string | null;
+        lanUrls: string[];
+        configured?: boolean;
+        // Browser trust (#218): the stored CA path, whether env overrides
+        // it, what /ca.crt would serve, and the plain-HTTP trust page.
+        caFile?: string;
+        caEnvOverride?: boolean;
+        ca?: { file: string | null; source: string | null; ok: boolean; error: string | null; subject: string | null; fingerprint256: string | null };
+        trustUrl?: string;
+        caUrl?: string;
+    };
+    transport: McpTransportSettings;
+    sensors: McpSensorSettings;
+    mqtt: McpMqttSettings;
+    gpio: McpGpioSettings;
+    buffers?: {
+        jobEventLimit: number;
+        jobEventLimitRange: [number, number];
+        jobEventLimitSource: 'env' | 'config' | 'default';
+        diagnosticsRecentLimit: number;
+        diagnosticsRecentLimitRange: [number, number];
+        diagnosticsRecentLimitSource: 'env' | 'config' | 'default';
+    };
+    approval?: {
+        handoff: 'agent' | 'code';
+        source: 'env' | 'config' | 'default';
+        traverseWithoutApprovalAtSafeZ?: boolean;
+        traverseWithoutApprovalSource?: 'env' | 'config' | 'default';
+    };
+    jobIntake?: {
+        inboxDir: string | null;
+        inboxProblem: string | null;
+        extraInboxDir: string;
+        extraInboxSource: 'env' | 'config' | 'default';
+        extraInboxProblem: string | null;
+        extraInboxEnv: string;
+        maxProgramBytes: number;
+        openUploads: number;
+    };
+    cameraStream?: McpCameraStreamStatus;
+    vibration?: {
+        enabled: boolean;
+        transport: 'blinka' | 'serial';
+        python: string;
+        blinkaEnv: string;
+        serialPort: string;
+        sensorsJson: string;
+        jobCapture: boolean;
+        resolvedPython: string;
+        problems: string[];
+        sources: { [field: string]: 'env' | 'config' | 'default' };
+        envNames: { [field: string]: string };
+        live: {
+            state: string;
+            'last_error': string | null;
+            sensors: Array<{ id: string; location: string; state: string; 'rate_hz': number | null; error: string | null }>;
+        };
+        error?: string;
+    };
+    spindleTelemetry?: {
+        enabled: boolean;
+        statusPollMs: number;
+        statusPollRange: [number, number];
+        audioEnabled: boolean;
+        audioDevice: string | null;
+        sources: { [field: string]: 'env' | 'config' | 'default' };
+        envNames: { [field: string]: string };
+        devices: Array<{ entry: string; description: string; backend: string; builtIn: boolean; usb: boolean }>;
+        resolves: boolean;
+        resolution: string;
+        guidance: string;
+        error?: string;
+    };
+    motionRules?: McpMotionRules;
+}
+
+interface McpZPolicyValue {
+    value: number | null;
+    source: string;
+    setAt: number | null;
+}
+
+// GET /api/mcp motionRules (server tools/machine.ts describeMotionRules).
+interface McpMotionRuleMachine {
+    machineKey: string;
+    identifier: string;
+    current: 'connected' | 'selected' | null;
+    dialect: { id: string; label: string; transportForm: string } | null;
+    hasZ: boolean;
+    zPolicy: { applies: boolean; safeTraverseZ: McpZPolicyValue; motionFloorZ: McpZPolicyValue; missing: string[] };
+    travelFudge: { xMm: number; yMm: number; source: { x: string; y: string } };
+    traverseWithoutApproval: {
+        on: boolean;
+        effective: boolean;
+        eligible: boolean;
+        reason: string | null;
+        source: string;
+        setAt: number | null;
+        gatedBy: string | null;
+    };
+    // R13: moving without approval at a computed safe height below top Z (traverse_xy acts on it, #265 WP10).
+    computedHeight?: {
+        on: boolean;
+        source: string;
+        setAt: number | null;
+        eligible: boolean;
+        reason: string | null;
+        allowed: boolean;
+        idealMm: number;
+        minMm: number;
+        clearanceSource: { ideal: string; min: string };
+        requirements: Array<{ id: string; met: boolean | null; detail: string }>;
+        bedContactToolheadZ: number | null;
+        note: string;
+    };
+    // #326: operator-only, default off; no MCP tool can change them.
+    approvalFree?: { moves: McpApprovalFreeSetting; motorMode: McpApprovalFreeSetting };
+}
+
+// #326: an operator-only approval-free setting (tools/machine.ts approvalFreeSettingsFor).
+interface McpApprovalFreeSetting {
+    toggle: string;
+    on: boolean;
+    source: string;
+    setAt: number | null;
+    applies: boolean;
+    reason: string | null;
+}
+
+interface McpMotionRules {
+    host?: { enabled: boolean; source: 'env' | 'config' | 'default' };
+    toggle?: string;
+    machines?: McpMotionRuleMachine[];
+    error?: string;
+}
+
+function describeZValue(value: McpZPolicyValue): string {
+    if (value.source === 'not-applicable') {
+        return '-';
+    }
+    if (value.value === null) {
+        return i18n._('key-App/Settings/McpServer-not stated');
+    }
+    return `Z${value.value} (${value.source})`;
+}
+
+/** A requirement's mark: met, not met, or not judgeable yet (which counts as not met). */
+function needMark(met: boolean | null): string {
+    if (met === null) {
+        return '?';
+    }
+    return met ? '✓' : '✗';
+}
+
+const MQTT_FIELDS: Array<{ name: keyof McpMqttSettings['values']; labelKey: string; placeholder?: string; channel?: string }> = [
+    { name: 'host', labelKey: 'key-App/Settings/McpServer-MQTT host', placeholder: 'io.adafruit.com' },
+    { name: 'port', labelKey: 'key-App/Settings/McpServer-MQTT port', placeholder: '8883 (TLS)' },
+    { name: 'user', labelKey: 'key-App/Settings/McpServer-MQTT username' },
+    { name: 'clientId', labelKey: 'key-App/Settings/McpServer-MQTT client id' },
+    { name: 'feedToolsetter', labelKey: 'key-App/Settings/McpServer-Tool setter feed', channel: 'toolsetter' },
+    { name: 'feedOvertravel', labelKey: 'key-App/Settings/McpServer-Overtravel feed', channel: 'overtravel' },
+    { name: 'feedProbe', labelKey: 'key-App/Settings/McpServer-CNC probe feed', channel: 'probe' },
+];
+
+// Pin fields carry the pull as a suffix ("D2:up"); polarity is the separate
+// inverted switch, exactly like the MQTT channels.
+const GPIO_PIN_FIELDS: Array<{ name: keyof McpGpioSettings['values']; labelKey: string; placeholder: string; channel: string }> = [
+    { name: 'pinToolsetter', labelKey: 'key-App/Settings/McpServer-Tool setter pin', placeholder: 'D2:up', channel: 'toolsetter' },
+    { name: 'pinOvertravel', labelKey: 'key-App/Settings/McpServer-Overtravel pin', placeholder: 'D3:up', channel: 'overtravel' },
+    { name: 'pinProbe', labelKey: 'key-App/Settings/McpServer-CNC probe pin', placeholder: 'A0:down', channel: 'probe' },
+];
+
+const CHANNELS = ['toolsetter', 'overtravel', 'probe'];
+
+const LABEL_STYLE = { width: 160, flexShrink: 0 };
+
+function parseInvertedFlags(names: string): { [channel: string]: boolean } {
+    const list = String(names || '').split(',').map((n) => n.trim().toLowerCase());
+    const flags: { [channel: string]: boolean } = {};
+    CHANNELS.forEach((channel) => {
+        flags[channel] = list.includes(channel);
+    });
+    return flags;
+}
+
+/**
+ * MCP server settings: enabled + port, persisted in the server configstore.
+ * Changes apply at the next application start; the label reports what this
+ * run is actually doing. The probe feed section configures the external
+ * tool-setter / overtravel / touch-probe sensor transport - MQTT (Adafruit
+ * IO) or direct GPIO through Adafruit Blinka / U2IF - with the transport
+ * choice itself. Environment variables (LUBAN_MCP_PROBE_TRANSPORT,
+ * LUBAN_MCP_MQTT_*, LUBAN_MCP_GPIO_*) override these fields; the pane
+ * flags which ones are currently overridden.
+ */
+const McpServer: React.FC = () => {
+    const [status, setStatus] = useState<McpStatus | null>(null);
+    const [enabled, setEnabled] = useState(false);
+    const [port, setPort] = useState('');
+    const [allowLan, setAllowLan] = useState(false);
+    const [httpsCert, setHttpsCert] = useState('');
+    const [httpsKey, setHttpsKey] = useState('');
+    // Public CA certificate served at /ca.crt for browser trust (#218); '' =
+    // find it with `mkcert -CAROOT`.
+    const [httpsCa, setHttpsCa] = useState('');
+    const [toolSetterEnabled, setToolSetterEnabled] = useState(true);
+    const [probeEnabled, setProbeEnabled] = useState(true);
+    const [transport, setTransport] = useState('');
+    const [mqtt, setMqtt] = useState<{ [field: string]: string }>({});
+    const [inverted, setInverted] = useState<{ [channel: string]: boolean }>({});
+    const [mqttPass, setMqttPass] = useState('');
+    const [mqttPassTouched, setMqttPassTouched] = useState(false);
+    const [gpio, setGpio] = useState<{ [field: string]: string }>({});
+    const [gpioInverted, setGpioInverted] = useState<{ [channel: string]: boolean }>({});
+    // Diagnostic buffer sizes; '' = server default. Stored values only (an
+    // env override disables the field).
+    const [jobEventLimit, setJobEventLimit] = useState('');
+    const [diagnosticsRecentLimit, setDiagnosticsRecentLimit] = useState('');
+    // Job approval hand-off: true = a waiting agent starts on the operator's click.
+    const [approvalHandoffAgent, setApprovalHandoffAgent] = useState(true);
+    // Approval-free XY transport with the head already at the traverse height (#241). Default on.
+    const [traverseAtSafeZ, setTraverseAtSafeZ] = useState(true);
+    // Per-machine Motion rules toggles apply on the click (POST /api/mcp/motion-rules), not on Save.
+    const [motionRuleBusy, setMotionRuleBusy] = useState<string | null>(null);
+    const [motionRuleError, setMotionRuleError] = useState('');
+    // Extra allow-listed directory for submit_gcode_job {gcode_path} (#237).
+    const [jobInboxDir, setJobInboxDir] = useState('');
+    // Live MJPEG camera view served by the MCP server (/camera). Applies at
+    // once on save: off disconnects every viewer. '' fps = server default.
+    const [cameraStreamEnabled, setCameraStreamEnabled] = useState(false);
+    const [cameraStreamFps, setCameraStreamFps] = useState('');
+    // Spindle telemetry (opt-in, read at the next file-job start). The
+    // microphone is chosen here by name from the host's capture sources;
+    // the server never picks one.
+    const [spindleTelemetry, setSpindleTelemetry] = useState(false);
+    const [spindleStatusPollMs, setSpindleStatusPollMs] = useState('');
+    const [spindleAudio, setSpindleAudio] = useState(false);
+    const [spindleAudioDevice, setSpindleAudioDevice] = useState('');
+    // Accelerometers (opt-in, read-only): their own bridge, never the probe
+    // feed's. Saved settings restart the feed at once.
+    const [vibrationEnabled, setVibrationEnabled] = useState(false);
+    const [vibrationTransport, setVibrationTransport] = useState<'blinka' | 'serial'>('blinka');
+    const [vibrationPython, setVibrationPython] = useState('');
+    const [vibrationBlinkaEnv, setVibrationBlinkaEnv] = useState('');
+    const [vibrationSerialPort, setVibrationSerialPort] = useState('');
+    const [vibrationSensors, setVibrationSensors] = useState('');
+    const [vibrationJobs, setVibrationJobs] = useState(false);
+
+    useEffect(() => {
+        api.getMcpStatus()
+            .then((res) => {
+                const body = (res as { body: McpStatus }).body;
+                setStatus(body);
+                setEnabled(body.settings.enabled);
+                setPort(String(body.settings.port));
+                setAllowLan(!!body.settings.allowLan);
+                setHttpsCert(body.https?.certFile || '');
+                setHttpsKey(body.https?.keyFile || '');
+                setHttpsCa(body.https?.caFile || '');
+                if (body.sensors) {
+                    setToolSetterEnabled(body.sensors.toolSetter !== false);
+                    setProbeEnabled(body.sensors.probe !== false);
+                }
+                setTransport(body.transport ? body.transport.stored : '');
+                if (body.buffers) {
+                    setJobEventLimit(body.buffers.jobEventLimitSource === 'config' ? String(body.buffers.jobEventLimit) : '');
+                    setDiagnosticsRecentLimit(body.buffers.diagnosticsRecentLimitSource === 'config' ? String(body.buffers.diagnosticsRecentLimit) : '');
+                }
+                if (body.approval) {
+                    setApprovalHandoffAgent(body.approval.handoff !== 'code');
+                    setTraverseAtSafeZ(body.approval.traverseWithoutApprovalAtSafeZ !== false);
+                }
+                if (body.jobIntake) {
+                    setJobInboxDir(body.jobIntake.extraInboxSource === 'config' ? body.jobIntake.extraInboxDir : '');
+                }
+                if (body.cameraStream) {
+                    setCameraStreamEnabled(!!body.cameraStream.enabled);
+                    setCameraStreamFps(body.cameraStream.storedFps === undefined || body.cameraStream.storedFps === null
+                        ? '' : String(body.cameraStream.storedFps));
+                }
+                if (body.spindleTelemetry && !body.spindleTelemetry.error) {
+                    setSpindleTelemetry(!!body.spindleTelemetry.enabled);
+                    setSpindleStatusPollMs(body.spindleTelemetry.statusPollMs ? String(body.spindleTelemetry.statusPollMs) : '');
+                    setSpindleAudio(!!body.spindleTelemetry.audioEnabled);
+                    setSpindleAudioDevice(body.spindleTelemetry.audioDevice || '');
+                }
+                if (body.vibration && !body.vibration.error) {
+                    setVibrationEnabled(!!body.vibration.enabled);
+                    setVibrationTransport(body.vibration.transport === 'serial' ? 'serial' : 'blinka');
+                    setVibrationPython(body.vibration.python || '');
+                    setVibrationBlinkaEnv(body.vibration.blinkaEnv || '');
+                    setVibrationSerialPort(body.vibration.serialPort || '');
+                    setVibrationSensors(body.vibration.sensorsJson || '');
+                    setVibrationJobs(!!body.vibration.jobCapture);
+                }
+                const { inverted: mqttInvertedNames, ...mqttValues } = body.mqtt.values;
+                setMqtt({ ...mqttValues });
+                setInverted(parseInvertedFlags(mqttInvertedNames));
+
+                if (body.gpio) {
+                    const { inverted: gpioInvertedNames, ...gpioValues } = body.gpio.values;
+                    setGpio({ ...gpioValues });
+                    setGpioInverted(parseInvertedFlags(gpioInvertedNames));
+                }
+            })
+            .catch(() => setStatus(null));
+    }, []);
+
+    const telemetryEnv = (field: string) => !!(status && status.spindleTelemetry && status.spindleTelemetry.sources
+        && status.spindleTelemetry.sources[field] === 'env');
+    const telemetryEnvNote = (field: string) => (telemetryEnv(field) && status && status.spindleTelemetry
+        ? ` — ${i18n._('key-App/Settings/McpServer-Overridden by environment variable')} ${status.spindleTelemetry.envNames[field]}` : '');
+
+    const vibrationEnv = (field: string) => !!(status && status.vibration && status.vibration.sources
+        && status.vibration.sources[field] === 'env');
+
+    const onSave = async () => {
+        const value = Number(port);
+        if (!Number.isInteger(value) || value < 1 || value > 65535) {
+            return;
+        }
+        const mqttUpdate: { [field: string]: string } = { ...mqtt };
+        mqttUpdate.inverted = CHANNELS.filter((channel) => inverted[channel]).join(',');
+        if (mqttPassTouched) {
+            mqttUpdate.pass = mqttPass;
+        }
+        const gpioUpdate: { [field: string]: string } = { ...gpio };
+        gpioUpdate.inverted = CHANNELS.filter((channel) => gpioInverted[channel]).join(',');
+        await api.setMcpSettings({
+            enabled,
+            port: value,
+            allowLan,
+            https: {
+                ...(status?.https?.envOverrides.includes('certFile') ? {} : { certFile: httpsCert }),
+                ...(status?.https?.envOverrides.includes('keyFile') ? {} : { keyFile: httpsKey }),
+                ...(status?.https?.caEnvOverride ? {} : { caFile: httpsCa }),
+            },
+            sensors: { toolSetter: toolSetterEnabled, probe: probeEnabled },
+            transport,
+            mqtt: mqttUpdate,
+            gpio: gpioUpdate,
+            buffers: { jobEventLimit, diagnosticsRecentLimit },
+            approvalHandoff: approvalHandoffAgent ? 'agent' : 'code',
+            ...(status?.approval?.traverseWithoutApprovalSource === 'env' ? {} : { traverseWithoutApprovalAtSafeZ: traverseAtSafeZ }),
+            ...(status?.jobIntake?.extraInboxSource === 'env' ? {} : { jobInboxDir }),
+            cameraStream: { enabled: cameraStreamEnabled, fps: cameraStreamFps },
+            spindleTelemetry: {
+                ...(telemetryEnv('enabled') ? {} : { enabled: spindleTelemetry }),
+                ...(telemetryEnv('statusPollMs') ? {} : { statusPollMs: spindleStatusPollMs }),
+                ...(telemetryEnv('audioEnabled') ? {} : { audioEnabled: spindleAudio }),
+                ...(telemetryEnv('audioDevice') ? {} : { audioDevice: spindleAudioDevice }),
+            },
+            vibration: {
+                ...(vibrationEnv('enabled') ? {} : { enabled: vibrationEnabled }),
+                ...(vibrationEnv('transport') ? {} : { transport: vibrationTransport }),
+                ...(vibrationEnv('python') ? {} : { python: vibrationPython }),
+                ...(vibrationEnv('blinkaEnv') ? {} : { blinkaEnv: vibrationBlinkaEnv }),
+                ...(vibrationEnv('serialPort') ? {} : { serialPort: vibrationSerialPort }),
+                ...(vibrationEnv('sensors') ? {} : { sensorsJson: vibrationSensors }),
+                ...(vibrationEnv('jobCapture') ? {} : { jobCapture: vibrationJobs }),
+            },
+        });
+        // The stream toggle applies immediately; refresh the live URL / state.
+        api.getMcpStatus()
+            .then((res) => setStatus((res as { body: McpStatus }).body))
+            .catch(() => undefined);
+    };
+
+    useEffect(() => {
+        UniApi.Event.on('appbar-menu:settings.save', onSave);
+        return () => {
+            UniApi.Event.off('appbar-menu:settings.save', onSave);
+        };
+    }, [onSave]);
+
+    const handleChangePort = (e) => {
+        const value = e.target.value;
+        if (/^\d*$/.test(value)) {
+            setPort(value);
+        }
+    };
+
+    // The operator's click is the only way the toggle turns ON off the A350;
+    // the server re-checks eligibility and refuses with the reason.
+    const onMotionRule = async (machineKey: string, change: { [field: string]: boolean | string }) => {
+        setMotionRuleBusy(machineKey);
+        setMotionRuleError('');
+        try {
+            const res = await api.setMcpMotionRule({ machineKey, ...change });
+            const rules = (res as { body: { motionRules?: McpMotionRules } }).body.motionRules;
+            setStatus((prev) => (prev && rules ? { ...prev, motionRules: rules } : prev));
+        } catch (err) {
+            const body = (err as { body?: { msg?: string; motionRules?: McpMotionRules } } | undefined)?.body;
+            setMotionRuleError(body?.msg || i18n._('key-App/Settings/McpServer-Could not change the motion rule'));
+            if (body?.motionRules) {
+                setStatus((prev) => (prev ? { ...prev, motionRules: body.motionRules } : prev));
+            }
+        } finally {
+            setMotionRuleBusy(null);
+        }
+    };
+
+    const motionRules = status?.motionRules;
+    const hostSwitchEnv = status?.approval?.traverseWithoutApprovalSource === 'env';
+
+    let statusLine = i18n._('key-App/Settings/McpServer-Status unknown');
+    if (status) {
+        statusLine = status.running
+            ? `${i18n._('key-App/Settings/McpServer-Running this session at')} ${status.port ? `http://127.0.0.1:${status.port}/mcp` : `https://127.0.0.1:${status.https?.port}/mcp`} (${status.toolCount} tools)`
+            : i18n._('key-App/Settings/McpServer-Not running this session');
+        if (status.settings.source === 'env') {
+            statusLine += ` — ${i18n._('key-App/Settings/McpServer-Overridden by LUBAN_MCP_PORT')}`;
+        }
+    }
+
+    let transportLine = '';
+    if (status && status.transport) {
+        transportLine = `${i18n._('key-App/Settings/McpServer-Active this session:')} ${status.transport.active.toUpperCase()}`;
+        if (status.transport.envOverride) {
+            transportLine += ` — ${i18n._('key-App/Settings/McpServer-Overridden by LUBAN_MCP_PROBE_TRANSPORT')}`;
+        }
+    }
+
+    const mqttEnvOverrides = status ? status.mqtt.envOverrides : [];
+    const gpioEnvOverrides = status && status.gpio ? status.gpio.envOverrides : [];
+
+    const renderInvertedSwitch = (checked: boolean, onChange: (checked: boolean) => void) => (
+        <>
+            <Switch
+                className="margin-left-8"
+                size="small"
+                checked={checked}
+                onChange={onChange}
+                disabled={!enabled}
+            />
+            <span
+                className="margin-left-4"
+                style={{ whiteSpace: 'nowrap' }}
+                title={i18n._('key-App/Settings/McpServer-Normally-open sensor: idles at 1, reads 0 on contact')}
+            >
+                {i18n._('key-App/Settings/McpServer-Inverted')}
+            </span>
+        </>
+    );
+
+    return (
+        <div className={styles['form-container']}>
+            <McpHealthPanel />
+            <div className="border-bottom-normal padding-bottom-4">
+                <SvgIcon
+                    name="TitleSetting"
+                    type={['static']}
+                />
+                <span className="margin-left-4">{i18n._('key-App/Settings/McpServer-MCP Server')}</span>
+            </div>
+            <div className="margin-top-16">
+                <div className="margin-bottom-8">{statusLine}</div>
+                <div className="sm-flex align-center margin-bottom-8">
+                    <Switch checked={enabled} onChange={(checked) => setEnabled(checked)} />
+                    <span className="margin-left-8">{i18n._('key-App/Settings/McpServer-Enable MCP server (applies after restart)')}</span>
+                </div>
+                <div className={styles['set-port-box']}>
+                    <Input
+                        value={port}
+                        onChange={handleChangePort}
+                        disabled={!enabled}
+                        className={styles['port-input']}
+                    />
+                    <div className={styles['port-tips']}>
+                        {i18n._('key-App/Settings/McpServer-Local agents connect at')} http://127.0.0.1:&lt;port&gt;/mcp. {allowLan
+                            ? i18n._('key-App/Settings/McpServer-LAN access is ON: hosts on this machine\'s own subnets are accepted too.')
+                            : i18n._('key-App/Settings/McpServer-Loopback only; never reachable from the network')}
+                    </div>
+                </div>
+                <div className="sm-flex align-center margin-bottom-8 margin-top-8">
+                    <Switch
+                        checked={allowLan}
+                        onChange={(checked) => setAllowLan(checked)}
+                        disabled={!enabled || !!(status && status.settings && status.settings.allowLanSource === 'env')}
+                    />
+                    <span className="margin-left-8">{i18n._('key-App/Settings/McpServer-Allow access from the local network (same subnet only; applies after restart)')}</span>
+                </div>
+                {allowLan && (
+                    <div className="margin-bottom-8" style={{ color: '#FF4D4F' }}>
+                        {i18n._('key-App/Settings/McpServer-WARNING: there is no authentication. Anyone on your local network can then command the machine. Only enable on a trusted network, and never leave the machine unattended.')}
+                        {status && status.lanUrls && status.lanUrls.length > 0 && (
+                            <div style={{ color: 'inherit' }}>{i18n._('key-App/Settings/McpServer-LAN URLs:')} {status.lanUrls.join(', ')}</div>
+                        )}
+                        {status && status.settings && status.settings.allowLanSource === 'env' && (
+                            <div>{i18n._('key-App/Settings/McpServer-Overridden by LUBAN_MCP_ALLOW_LAN')}</div>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            <div className="border-bottom-normal padding-bottom-4 margin-top-16">
+                <span>HTTPS and browser notifications</span>
+            </div>
+            <div className="margin-top-8">
+                <p>
+                    HTTPS listens on the MCP port + 1 (default 40890), alongside HTTP.
+                    Set both mkcert PEM file paths on the server, save, then restart Luban.
+                </p>
+                <label htmlFor="mcp-https-cert" className="sm-flex align-center margin-top-8">
+                    <span style={LABEL_STYLE}>Certificate file</span>
+                    <Input
+                        id="mcp-https-cert"
+                        value={httpsCert}
+                        onChange={(e) => setHttpsCert(e.target.value)}
+                        disabled={!enabled || status?.https?.envOverrides.includes('certFile')}
+                        placeholder="/path/to/mcp-cert.pem"
+                    />
+                </label>
+                <label htmlFor="mcp-https-key" className="sm-flex align-center margin-top-8">
+                    <span style={LABEL_STYLE}>Private key file</span>
+                    <Input
+                        id="mcp-https-key"
+                        value={httpsKey}
+                        onChange={(e) => setHttpsKey(e.target.value)}
+                        disabled={!enabled || status?.https?.envOverrides.includes('keyFile')}
+                        placeholder="/path/to/mcp-key.pem"
+                    />
+                </label>
+                <p className={styles['port-tips']}>Trust the mkcert CA on each browser/phone and include the server’s LAN IP in the certificate. Clear both paths to turn HTTPS off after restart. Environment overrides: LUBAN_MCP_HTTPS_CERT / LUBAN_MCP_HTTPS_KEY.</p>
+                <label htmlFor="mcp-https-ca" className="sm-flex align-center margin-top-8">
+                    <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-CA certificate file (optional)')}</span>
+                    <Input
+                        id="mcp-https-ca"
+                        value={httpsCa}
+                        onChange={(e) => setHttpsCa(e.target.value)}
+                        disabled={!enabled || !!status?.https?.caEnvOverride}
+                        placeholder="/path/to/rootCA.pem"
+                    />
+                </label>
+                <p className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-The public mkcert root certificate (rootCA.pem) other devices download to trust this server. Leave blank to find it with mkcert -CAROOT. Never the key file: a private key is refused and never served.')}
+                    {status?.https?.caEnvOverride && ` ${i18n._('key-App/Settings/McpServer-Overridden by LUBAN_MCP_HTTPS_CA')}`}
+                </p>
+                {status?.https?.ca && (
+                    <div style={status.https.ca.ok ? {} : { color: '#FF4D4F' }}>
+                        {i18n._('key-App/Settings/McpServer-CA certificate:')}
+                        {' '}
+                        {status.https.ca.ok
+                            ? `${status.https.ca.file} (${status.https.ca.source === 'mkcert' ? 'mkcert -CAROOT' : status.https.ca.source}) · ${status.https.ca.subject}`
+                            : status.https.ca.error}
+                    </div>
+                )}
+                <div>{status?.https?.running ? `HTTPS running on port ${status.https.port}` : 'HTTPS is not running this session.'}</div>
+                {status?.https?.error && <div style={{ color: '#FF4D4F' }}>{status.https.error}</div>}
+                {status?.running && status.jobsUrl && (
+                    <p><a href={status.jobsUrl} target="_blank" rel="noopener noreferrer">Open job dashboard</a></p>
+                )}
+                {status?.running && status.https?.configured && status.https.trustUrl && (
+                    <p>
+                        <a href={status.https.trustUrl} target="_blank" rel="noopener noreferrer">
+                            {i18n._('key-App/Settings/McpServer-Trust the HTTPS certificate in a browser (CA download and per-device steps, plain HTTP)')}
+                        </a>
+                    </p>
+                )}
+                {status?.https?.lanUrls.map((url) => <div key={url}>{url}</div>)}
+            </div>
+
+            <div className="border-bottom-normal padding-bottom-4 margin-top-16">
+                <span>{i18n._('key-App/Settings/McpServer-Job approval')}</span>
+            </div>
+            <div className="margin-top-8">
+                <div className="sm-flex align-center">
+                    <Switch
+                        checked={approvalHandoffAgent}
+                        onChange={(checked) => setApprovalHandoffAgent(checked)}
+                        disabled={!enabled || !!(status && status.approval && status.approval.source === 'env')}
+                    />
+                    <span className="margin-left-8">{i18n._('key-App/Settings/McpServer-Hand approval to the waiting agent (your click on the confirm page starts the job; no code to copy)')}</span>
+                </div>
+                <div className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-Off: the confirm page shows a one-time code you must relay to the agent yourself. Either way only your click in the browser authorises motion.')}
+                    {status && status.approval && status.approval.source === 'env' ? ` — ${i18n._('key-App/Settings/McpServer-Overridden by environment variable')} LUBAN_MCP_APPROVAL_HANDOFF` : ''}
+                </div>
+            </div>
+
+            <div className="border-bottom-normal padding-bottom-4 margin-top-16">
+                <span>{i18n._('key-App/Settings/McpServer-Motion rules')}</span>
+            </div>
+            <div className="margin-top-8">
+                <div className="sm-flex align-center">
+                    <Switch
+                        checked={traverseAtSafeZ}
+                        onChange={(checked) => setTraverseAtSafeZ(checked)}
+                        disabled={!enabled || hostSwitchEnv}
+                    />
+                    <span className="margin-left-8">{i18n._('key-App/Settings/McpServer-Run XY transport without a confirm page when the head is already at the traverse height')}</span>
+                </div>
+                <div className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-Master switch for every machine (applies on Save). Off: every move on every machine stages a confirm page. On: each machine below still needs its own toggle on.')}
+                    {hostSwitchEnv ? ` — ${i18n._('key-App/Settings/McpServer-Overridden by environment variable')} LUBAN_MCP_TRAVERSE_WITHOUT_APPROVAL_AT_SAFE_Z` : ''}
+                </div>
+                <div className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-Move at safe top Z without approval: traverse_xy, the XY step of goto_tool_change_position and an up-only move_z run on the agent\'s call, without your click, only when the head is already at or above that machine\'s safe traverse Z on a verified, homed position, after the usual landmark and travel checks. The job still appears on the dashboard, marked as approved by policy. Everything else always stages a confirm page for your click: any move that descends or starts below the safe traverse Z, programs, probing and jobs. Once the landmark review lands, the machine\'s landmarks must also have been confirmed recently.')}
+                </div>
+                <div className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-The A350 has this on by default. An A150, A250 or Artisan stays off until you turn it on here after a hardware session, and only once its safe traverse Z and motion floor are stated (set_machine_policy). An agent can turn it off, but never on off the A350, and never back on after you turned it off here. Relative-step machines (Ray, Original, J1) always stage every move, unless you turn on Allow moves without an approval page below. Heights and the travel fudge are read-only here. Toggles apply at once.')}
+                </div>
+                {motionRules?.error && <div className={styles['port-tips']}>{motionRules.error}</div>}
+                {motionRuleError && <div className={styles['port-tips']}>{motionRuleError}</div>}
+                {(motionRules?.machines || []).length === 0 && !motionRules?.error && (
+                    <div className={styles['port-tips']}>
+                        {i18n._('key-App/Settings/McpServer-No machine known yet: connect or select one.')}
+                    </div>
+                )}
+                {(motionRules?.machines || []).map((machine) => {
+                    const rule = machine.traverseWithoutApproval;
+                    const computed = machine.computedHeight;
+                    return (
+                        <div key={machine.machineKey} className="margin-top-8">
+                            <div className="sm-flex align-center">
+                                <Switch
+                                    checked={rule.on}
+                                    loading={motionRuleBusy === machine.machineKey}
+                                    onChange={(checked) => { onMotionRule(machine.machineKey, { traverseWithoutApprovalAtSafeZ: checked }); }}
+                                    disabled={!enabled || motionRuleBusy !== null || (!rule.on && !rule.eligible)}
+                                />
+                                <span className="margin-left-8">
+                                    <b>{machine.machineKey}</b>
+                                    {machine.current ? ` (${machine.current})` : ''}
+                                    {' — '}
+                                    {i18n._('key-App/Settings/McpServer-Move at safe top Z without approval')}
+                                </span>
+                            </div>
+                            <div className={styles['port-tips']}>
+                                {`${machine.dialect ? machine.dialect.label : '-'} · `}
+                                {machine.hasZ ? i18n._('key-App/Settings/McpServer-has Z') : i18n._('key-App/Settings/McpServer-no Z axis')}
+                                {machine.zPolicy.applies && (
+                                    ` · ${i18n._('key-App/Settings/McpServer-safe traverse')} ${describeZValue(machine.zPolicy.safeTraverseZ)}`
+                                    + ` · ${i18n._('key-App/Settings/McpServer-motion floor')} ${describeZValue(machine.zPolicy.motionFloorZ)}`
+                                )}
+                                {` · ${i18n._('key-App/Settings/McpServer-travel fudge')} X${machine.travelFudge.xMm}/Y${machine.travelFudge.yMm} mm`}
+                            </div>
+                            <div className={styles['port-tips']}>
+                                {rule.effective
+                                    ? i18n._('key-App/Settings/McpServer-Moves at safe top Z run without your click.')
+                                    : `${i18n._('key-App/Settings/McpServer-Every move is staged for your click')}: ${rule.reason || rule.gatedBy || i18n._('key-App/Settings/McpServer-the master switch is off')}`}
+                                {rule.setAt ? ` (${rule.source}, ${new Date(rule.setAt).toLocaleString()})` : ''}
+                            </div>
+                            {computed && (
+                                <div className="margin-top-8 margin-left-16">
+                                    <div className="sm-flex align-center">
+                                        <Switch
+                                            checked={computed.on}
+                                            loading={motionRuleBusy === machine.machineKey}
+                                            onChange={(checked) => { onMotionRule(machine.machineKey, { computedHeightTraverse: checked }); }}
+                                            disabled={!enabled || motionRuleBusy !== null || (!computed.on && !computed.eligible)}
+                                        />
+                                        <span className="margin-left-8">
+                                            {i18n._('key-App/Settings/McpServer-Move without approval at a computed safe height (below top Z)')}
+                                        </span>
+                                    </div>
+                                    <label htmlFor={`mcp-clearance-ideal-${machine.machineKey}`} className="sm-flex align-center margin-top-8">
+                                        <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Ideal clearance (mm)')}</span>
+                                        <Input
+                                            id={`mcp-clearance-ideal-${machine.machineKey}`}
+                                            key={`ideal-${machine.machineKey}-${computed.idealMm}`}
+                                            defaultValue={computed.clearanceSource.ideal === 'default' ? '' : String(computed.idealMm)}
+                                            placeholder={String(computed.idealMm)}
+                                            disabled={!enabled || motionRuleBusy !== null}
+                                            onBlur={(e) => {
+                                                const value = e.target.value.trim();
+                                                const stored = computed.clearanceSource.ideal === 'default' ? '' : String(computed.idealMm);
+                                                if (value !== stored) {
+                                                    onMotionRule(machine.machineKey, { clearanceIdealMm: value });
+                                                }
+                                            }}
+                                        />
+                                    </label>
+                                    <label htmlFor={`mcp-clearance-min-${machine.machineKey}`} className="sm-flex align-center margin-top-8">
+                                        <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Minimum clearance (mm)')}</span>
+                                        <Input
+                                            id={`mcp-clearance-min-${machine.machineKey}`}
+                                            key={`min-${machine.machineKey}-${computed.minMm}`}
+                                            defaultValue={computed.clearanceSource.min === 'default' ? '' : String(computed.minMm)}
+                                            placeholder={String(computed.minMm)}
+                                            disabled={!enabled || motionRuleBusy !== null}
+                                            onBlur={(e) => {
+                                                const value = e.target.value.trim();
+                                                const stored = computed.clearanceSource.min === 'default' ? '' : String(computed.minMm);
+                                                if (value !== stored) {
+                                                    onMotionRule(machine.machineKey, { clearanceMinMm: value });
+                                                }
+                                            }}
+                                        />
+                                    </label>
+                                    <div className={styles['port-tips']}>
+                                        {i18n._('key-App/Settings/McpServer-Head-room above the highest known obstacle or bed contact that the computed height aims for (ideal) and never goes below (minimum). Empty = default. Applies when you leave the field.')}
+                                    </div>
+                                    <div className={styles['port-tips']}>
+                                        {computed.allowed
+                                            ? i18n._('key-App/Settings/McpServer-Every requirement is met.')
+                                            : i18n._('key-App/Settings/McpServer-Needs:')}
+                                        {computed.requirements.map((need) => (
+                                            <div key={need.id}>
+                                                {needMark(need.met)}
+                                                {' '}
+                                                {need.detail}
+                                            </div>
+                                        ))}
+                                        <div>{computed.note}</div>
+                                    </div>
+                                </div>
+                            )}
+                            {machine.approvalFree && (
+                                <div className="margin-top-8 margin-left-16">
+                                    <div className="sm-flex align-center">
+                                        <Switch
+                                            checked={machine.approvalFree.moves.on}
+                                            loading={motionRuleBusy === machine.machineKey}
+                                            onChange={(checked) => { onMotionRule(machine.machineKey, { movesWithoutApprovalPage: checked }); }}
+                                            disabled={!enabled || motionRuleBusy !== null || !machine.approvalFree.moves.applies}
+                                        />
+                                        <span className="margin-left-8">
+                                            {i18n._('key-App/Settings/McpServer-Allow moves without an approval page')}
+                                        </span>
+                                    </div>
+                                    {machine.approvalFree.motorMode.applies && (
+                                        <div className="sm-flex align-center margin-top-8">
+                                            <Switch
+                                                checked={machine.approvalFree.motorMode.on}
+                                                loading={motionRuleBusy === machine.machineKey}
+                                                onChange={(checked) => { onMotionRule(machine.machineKey, { motorModeWithoutApprovalPage: checked }); }}
+                                                disabled={!enabled || motionRuleBusy !== null}
+                                            />
+                                            <span className="margin-left-8">
+                                                {i18n._('key-App/Settings/McpServer-Allow motor-mode changes without an approval page')}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <div className={styles['port-tips']}>
+                                        {i18n._('key-App/Settings/McpServer-Off by default. When on, the agent can run a move (or, on the Ray, switch the motor-power mode with set_motor_power) on its own call, without your click on a confirm page, but only when it quotes your explicit instruction from the current session. The quote is recorded on the job. Every other check still applies: motor power, the start position, toolhead, travel, landmarks, idle and homed. Only you can change these here; no MCP tool can.')}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+
+            <div className="border-bottom-normal padding-bottom-4 margin-top-16">
+                <span>{i18n._('key-App/Settings/McpServer-Job files')}</span>
+            </div>
+            <div className="margin-top-8">
+                <div className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-Large G-code programs reach submit_gcode_job as a file path (gcode_path) read from an allow-listed directory, or as a chunked upload. The built-in inbox is always allowed:')}
+                    {' '}
+                    <code>{status?.jobIntake?.inboxDir || '-'}</code>
+                    {status?.jobIntake?.inboxProblem ? ` — ${status.jobIntake.inboxProblem}` : ''}
+                </div>
+                <label htmlFor="mcp-job-inbox-dir" className="sm-flex align-center margin-top-8">
+                    <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Extra inbox directory')}</span>
+                    <Input
+                        id="mcp-job-inbox-dir"
+                        value={jobInboxDir}
+                        onChange={(e) => setJobInboxDir(e.target.value)}
+                        disabled={!enabled || status?.jobIntake?.extraInboxSource === 'env'}
+                        placeholder="/absolute/path/shared/with/the/agent"
+                    />
+                </label>
+                <div className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-One absolute directory the agent can also write files into (a shared folder, a CAM export folder). Applies on save. Paths outside the allowed directories, ".." segments and symlinks pointing out of them are refused. Leave empty to allow only the built-in inbox.')}
+                    {status?.jobIntake?.extraInboxSource === 'env' ? ` — ${i18n._('key-App/Settings/McpServer-Overridden by environment variable')} ${status.jobIntake.extraInboxEnv}` : ''}
+                    {status?.jobIntake?.extraInboxProblem ? ` — ${i18n._('key-App/Settings/McpServer-Not usable:')} ${status.jobIntake.extraInboxProblem}` : ''}
+                </div>
+            </div>
+
+            <div className="border-bottom-normal padding-bottom-4 margin-top-16">
+                <span>{i18n._('key-App/Settings/McpServer-Camera')}</span>
+            </div>
+            <div className="margin-top-8">
+                <div className="sm-flex align-center">
+                    <Switch
+                        checked={cameraStreamEnabled}
+                        onChange={(checked) => setCameraStreamEnabled(checked)}
+                        disabled={!enabled || !!(status && status.cameraStream && status.cameraStream.source === 'env')}
+                    />
+                    <span className="margin-left-8">{i18n._('key-App/Settings/McpServer-Live camera stream in the browser (MJPEG at /camera on the MCP port; applies on save)')}</span>
+                </div>
+                {cameraStreamEnabled && status && status.cameraStream && status.cameraStream.pageUrl && (
+                    <div className="margin-top-8">
+                        {i18n._('key-App/Settings/McpServer-Watch at:')}{' '}
+                        <a href={status.cameraStream.pageUrl} target="_blank" rel="noopener noreferrer">{status.cameraStream.pageUrl}</a>
+                        {status.running
+                            ? ` — ${status.cameraStream.running
+                                ? `${i18n._('key-App/Settings/McpServer-streaming to')} ${status.cameraStream.clients} ${i18n._('key-App/Settings/McpServer-viewer(s)')}`
+                                : i18n._('key-App/Settings/McpServer-idle until a browser opens it')}`
+                            : ` — ${i18n._('key-App/Settings/McpServer-Not running this session')}`}
+                        {status.cameraStream.lastError ? ` — ${status.cameraStream.lastError}` : ''}
+                    </div>
+                )}
+                <div className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-One capture loop owns the camera while someone watches; agent captures (capture_frame, move_and_capture, visual servo) are served from the same frames, so both work at once. Off: /camera answers 404 and viewers are disconnected. Default: on once a camera is configured.')}
+                    {status && status.cameraStream && status.cameraStream.source === 'env' ? ` — ${i18n._('key-App/Settings/McpServer-Overridden by environment variable')} LUBAN_MCP_CAMERA_STREAM_ENABLED` : ''}
+                </div>
+                <div className="sm-flex align-center margin-top-8">
+                    <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Stream frame rate (fps)')}</span>
+                    <Input
+                        value={cameraStreamFps}
+                        onChange={(e) => {
+                            if (/^\d*$/.test(e.target.value)) {
+                                setCameraStreamFps(e.target.value);
+                            }
+                        }}
+                        disabled={!enabled || !cameraStreamEnabled}
+                        className={styles['port-input']}
+                        placeholder={status && status.cameraStream ? String(status.cameraStream.fps) : '5'}
+                    />
+                    <span className="margin-left-8">1-15; {i18n._('key-App/Settings/McpServer-applies when the stream next starts')}</span>
+                </div>
+            </div>
+
+            <div className="border-bottom-normal padding-bottom-4 margin-top-16">
+                <span>{i18n._('key-App/Settings/McpServer-Spindle telemetry')}</span>
+            </div>
+            <div className="margin-top-8">
+                <div className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-Opt-in. Records the spindle RPM the controller reports during file jobs and, with a microphone, tracks RPM at 20 frames/s to flag sag, blips, chatter and runout per commanded speed. Observes only: it never pauses or stops a job. Applies at the next file job; with telemetry on the job event log default rises to 200000.')}
+                </div>
+                <div className="sm-flex align-center margin-top-8">
+                    <Switch checked={spindleTelemetry} onChange={(checked) => setSpindleTelemetry(checked)} disabled={!enabled || telemetryEnv('enabled')} />
+                    <span className="margin-left-8">{i18n._('key-App/Settings/McpServer-Record status RPM during file jobs')}{telemetryEnvNote('enabled')}</span>
+                </div>
+                <div className="sm-flex align-center margin-top-8">
+                    <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Extra status poll (ms)')}</span>
+                    <Input
+                        value={spindleStatusPollMs}
+                        onChange={(e) => {
+                            if (/^\d*$/.test(e.target.value)) {
+                                setSpindleStatusPollMs(e.target.value);
+                            }
+                        }}
+                        disabled={!enabled || !spindleTelemetry || telemetryEnv('statusPollMs')}
+                        className={styles['port-input']}
+                        placeholder={i18n._('key-App/Settings/McpServer-off')}
+                    />
+                    <span className="margin-left-8">
+                        {status && status.spindleTelemetry && status.spindleTelemetry.statusPollRange ? `${status.spindleTelemetry.statusPollRange[0]}-${status.spindleTelemetry.statusPollRange[1]}; ` : ''}
+                        {i18n._('key-App/Settings/McpServer-empty = the 2 s heartbeat only. Each poll is one /api/v1/status round trip (~25 ms, ~400 bytes) during file jobs only.')}
+                        {telemetryEnvNote('statusPollMs')}
+                    </span>
+                </div>
+                <div className="sm-flex align-center margin-top-8">
+                    <Switch checked={spindleAudio} onChange={(checked) => setSpindleAudio(checked)} disabled={!enabled || !spindleTelemetry || telemetryEnv('audioEnabled')} />
+                    <span className="margin-left-8">{i18n._('key-App/Settings/McpServer-Record a microphone (RPM tracking, chatter, runout; FLAC under the app data dir)')}{telemetryEnvNote('audioEnabled')}</span>
+                </div>
+                <div className="sm-flex align-center margin-top-8">
+                    <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Capture device')}</span>
+                    <Select
+                        style={{ minWidth: 360 }}
+                        value={spindleAudioDevice || undefined}
+                        onChange={(value) => setSpindleAudioDevice(value ? String(value) : '')}
+                        allowClear
+                        showSearch
+                        disabled={!enabled || telemetryEnv('audioDevice')}
+                        placeholder={i18n._('key-App/Settings/McpServer-Choose a microphone by name - nothing is picked for you')}
+                        options={(status && status.spindleTelemetry ? status.spindleTelemetry.devices : []).map((device) => ({
+                            value: device.entry,
+                            label: `${device.description} — ${device.entry}${device.builtIn ? ` (${i18n._('key-App/Settings/McpServer-built-in')})` : ''}${device.usb ? ' (USB)' : ''}`,
+                        }))}
+                    />
+                    <span className="margin-left-8">{telemetryEnvNote('audioDevice')}</span>
+                </div>
+                <div className={styles['port-tips']}>
+                    {status && status.spindleTelemetry ? status.spindleTelemetry.guidance : ''}
+                    {status && status.spindleTelemetry && status.spindleTelemetry.audioDevice ? ` ${i18n._('key-App/Settings/McpServer-Configured device')}: ${status.spindleTelemetry.resolution}.` : ''}
+                </div>
+            </div>
+
+            <div className="border-bottom-normal padding-bottom-4 margin-top-16">
+                <span>{i18n._('key-App/Settings/McpServer-Accelerometers')}</span>
+            </div>
+            <div className="margin-top-8">
+                <div className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-Opt-in, read-only. I2C accelerometers on the toolhead, tailstock, rotary chuck or axes, for vibration, spindle RPM, chatter, tilt and the rotary chuck\'s absolute angle. They need their OWN bridge (MCP2221A, FT232H, a Pi header) or a CircuitPython board running vibration_monitor.py over serial - never the probe feed\'s U2IF board. Saving restarts the feed.')}
+                </div>
+                <div className="sm-flex align-center margin-top-8">
+                    <Switch checked={vibrationEnabled} onChange={(checked) => setVibrationEnabled(checked)} disabled={!enabled || vibrationEnv('enabled')} />
+                    <span className="margin-left-8">{i18n._('key-App/Settings/McpServer-Read the accelerometers')}</span>
+                </div>
+                <div className="sm-flex align-center margin-top-8">
+                    <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Accelerometer transport')}</span>
+                    <Radio.Group
+                        value={vibrationTransport}
+                        onChange={(e) => setVibrationTransport(e.target.value === 'serial' ? 'serial' : 'blinka')}
+                        disabled={!enabled || vibrationEnv('transport')}
+                    >
+                        <Radio value="blinka">{i18n._('key-App/Settings/McpServer-Blinka bridge on this computer')}</Radio>
+                        <Radio value="serial">{i18n._('key-App/Settings/McpServer-CircuitPython board over serial')}</Radio>
+                    </Radio.Group>
+                </div>
+                {vibrationTransport === 'blinka' ? (
+                    <>
+                        <div className="sm-flex align-center margin-top-8">
+                            <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Blinka environment')}</span>
+                            <Input
+                                value={vibrationBlinkaEnv}
+                                onChange={(e) => setVibrationBlinkaEnv(e.target.value)}
+                                disabled={!enabled || vibrationEnv('blinkaEnv')}
+                                style={{ width: 360 }}
+                                placeholder="BLINKA_MCP2221=1"
+                            />
+                        </div>
+                        <div className="sm-flex align-center margin-top-8">
+                            <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Python')}</span>
+                            <Input
+                                value={vibrationPython}
+                                onChange={(e) => setVibrationPython(e.target.value)}
+                                disabled={!enabled || vibrationEnv('python')}
+                                style={{ width: 360 }}
+                                placeholder={status && status.vibration ? status.vibration.resolvedPython : 'python3'}
+                            />
+                        </div>
+                    </>
+                ) : (
+                    <div className="sm-flex align-center margin-top-8">
+                        <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Serial port')}</span>
+                        <Input
+                            value={vibrationSerialPort}
+                            onChange={(e) => setVibrationSerialPort(e.target.value)}
+                            disabled={!enabled || vibrationEnv('serialPort')}
+                            style={{ width: 360 }}
+                            placeholder="/dev/ttyACM1 or COM7 - several boards: comma-separated"
+                        />
+                    </div>
+                )}
+                <div className="margin-top-8">
+                    <span>{i18n._('key-App/Settings/McpServer-Sensors (JSON)')}</span>
+                    <Input.TextArea
+                        value={vibrationSensors}
+                        onChange={(e) => setVibrationSensors(e.target.value)}
+                        disabled={!enabled || vibrationEnv('sensors')}
+                        autoSize={{ minRows: 3, maxRows: 12 }}
+                        style={{ fontFamily: 'monospace', marginTop: 4 }}
+                        placeholder='[{"id": "head", "location": "toolhead", "chip": "lsm6dsox", "odr_hz": 1666, "orientation": "x:+x,y:+y,z:+z"}]'
+                    />
+                </div>
+                <div className="sm-flex align-center margin-top-8">
+                    <Switch checked={vibrationJobs} onChange={(checked) => setVibrationJobs(checked)} disabled={!enabled || !vibrationEnabled || vibrationEnv('jobCapture')} />
+                    <span className="margin-left-8">{i18n._('key-App/Settings/McpServer-Record the accelerometers during every file job')}</span>
+                </div>
+                <div className={styles['port-tips']}>
+                    {status && status.vibration && status.vibration.live ? `${i18n._('key-App/Settings/McpServer-Feed')}: ${status.vibration.live.state}` : ''}
+                    {status && status.vibration && status.vibration.live && status.vibration.live.sensors.length
+                        ? ` — ${status.vibration.live.sensors.map((sensor) => `${sensor.id} (${sensor.location}) ${sensor.state}${sensor.rate_hz ? ` ${sensor.rate_hz} Hz` : ''}${sensor.error ? `: ${sensor.error}` : ''}`).join('; ')}`
+                        : ''}
+                    {status && status.vibration && status.vibration.enabled && status.vibration.problems.length ? ` — ${status.vibration.problems.join('; ')}` : ''}
+                    {status && status.vibration && status.vibration.live && status.vibration.live.last_error ? ` — ${status.vibration.live.last_error}` : ''}
+                </div>
+            </div>
+
+            <div className="border-bottom-normal padding-bottom-4 margin-top-16">
+                <span>{i18n._('key-App/Settings/McpServer-Diagnostic buffers')}</span>
+            </div>
+            <div className="margin-top-8">
+                <div className={styles['port-tips']}>
+                    {i18n._('key-App/Settings/McpServer-Long procedures (surface scans, bed surveys) write several events per step; raise the job event limit so the whole record survives. Applies immediately; empty = default (2000, or 200000 with spindle telemetry on).')}
+                </div>
+                <div className="sm-flex align-center margin-top-8">
+                    <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Job event log (events kept per job)')}</span>
+                    <Input
+                        value={jobEventLimit}
+                        onChange={(e) => {
+                            if (/^\d*$/.test(e.target.value)) {
+                                setJobEventLimit(e.target.value);
+                            }
+                        }}
+                        disabled={!enabled || !!(status && status.buffers && status.buffers.jobEventLimitSource === 'env')}
+                        className={styles['port-input']}
+                        placeholder={status && status.buffers ? String(status.buffers.jobEventLimit) : '2000'}
+                    />
+                    <span className="margin-left-8">
+                        {status && status.buffers ? `${status.buffers.jobEventLimitRange[0]}-${status.buffers.jobEventLimitRange[1]}` : ''}
+                        {status && status.buffers && status.buffers.jobEventLimitSource === 'env' ? ` — ${i18n._('key-App/Settings/McpServer-Overridden by environment variable')} LUBAN_MCP_JOB_EVENT_LIMIT` : ''}
+                    </span>
+                </div>
+                <div className="sm-flex align-center margin-top-8">
+                    <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Recent timing records (per diagnostics list)')}</span>
+                    <Input
+                        value={diagnosticsRecentLimit}
+                        onChange={(e) => {
+                            if (/^\d*$/.test(e.target.value)) {
+                                setDiagnosticsRecentLimit(e.target.value);
+                            }
+                        }}
+                        disabled={!enabled || !!(status && status.buffers && status.buffers.diagnosticsRecentLimitSource === 'env')}
+                        className={styles['port-input']}
+                        placeholder={status && status.buffers ? String(status.buffers.diagnosticsRecentLimit) : '40'}
+                    />
+                    <span className="margin-left-8">
+                        {status && status.buffers ? `${status.buffers.diagnosticsRecentLimitRange[0]}-${status.buffers.diagnosticsRecentLimitRange[1]}` : ''}
+                        {status && status.buffers && status.buffers.diagnosticsRecentLimitSource === 'env' ? ` — ${i18n._('key-App/Settings/McpServer-Overridden by environment variable')} LUBAN_MCP_DIAGNOSTICS_RECENT_LIMIT` : ''}
+                    </span>
+                </div>
+            </div>
+
+            <div className="border-bottom-normal padding-bottom-4 margin-top-16">
+                <span>{i18n._('key-App/Settings/McpServer-Probe sensor feed')}</span>
+            </div>
+            <div className="margin-top-8">
+                <div className="margin-bottom-8">
+                    {i18n._('key-App/Settings/McpServer-External tool setter, overtravel and touch probe sensors report over this feed. Applies at the next feed connection.')}
+                </div>
+                <div className="sm-flex align-center margin-bottom-8">
+                    <Switch checked={toolSetterEnabled} onChange={(checked) => setToolSetterEnabled(checked)} disabled={!enabled} />
+                    <span className="margin-left-8">{i18n._('key-App/Settings/McpServer-Tool setter (contact + overtravel sensors)')}</span>
+                    <Switch className="margin-left-16" checked={probeEnabled} onChange={(checked) => setProbeEnabled(checked)} disabled={!enabled} />
+                    <span className="margin-left-8">{i18n._('key-App/Settings/McpServer-Touch probe')}</span>
+                </div>
+                <div className="margin-bottom-8">
+                    {i18n._('key-App/Settings/McpServer-A disabled sensor is never bound: no pill, no readings, and procedures that need it refuse. If the USB sensor bridge is unplugged the feed just reports "not detected" and keeps retrying quietly - disable the sensors here when you know it will be absent.')}
+                </div>
+                <div className="sm-flex align-center margin-bottom-8">
+                    <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Transport')}</span>
+                    <Radio.Group
+                        value={transport}
+                        onChange={(e) => setTransport(e.target.value)}
+                        disabled={!enabled || !!(status && status.transport && status.transport.envOverride)}
+                    >
+                        <Radio.Button value="">{i18n._('key-App/Settings/McpServer-Auto')}</Radio.Button>
+                        <Radio.Button value="mqtt">MQTT</Radio.Button>
+                        <Radio.Button value="gpio">GPIO</Radio.Button>
+                    </Radio.Group>
+                </div>
+                {transportLine && <div className="margin-bottom-8">{transportLine}</div>}
+                <div className="margin-bottom-8">
+                    {i18n._('key-App/Settings/McpServer-Auto picks MQTT unless only the GPIO side is configured.')}
+                </div>
+            </div>
+
+            <div className="border-bottom-normal padding-bottom-4 margin-top-16">
+                <span>{i18n._('key-App/Settings/McpServer-MQTT (Adafruit IO)')}</span>
+            </div>
+            <div className="margin-top-8">
+                <div className="margin-bottom-8">
+                    {i18n._('key-App/Settings/McpServer-Feed fields accept an Adafruit IO feed key or a full topic path.')}
+                </div>
+                {mqttEnvOverrides.length > 0 && (
+                    <div className="margin-bottom-8">
+                        {i18n._('key-App/Settings/McpServer-Overridden by environment variables:')} {mqttEnvOverrides.join(', ')}
+                    </div>
+                )}
+                {MQTT_FIELDS.map((field) => {
+                    let placeholder = field.placeholder || '';
+                    if (field.name === 'clientId' && status) {
+                        placeholder = status.mqtt.defaultClientId;
+                    }
+                    return (
+                        <div className="sm-flex align-center margin-bottom-8" key={field.name}>
+                            <span style={LABEL_STYLE}>{i18n._(field.labelKey)}</span>
+                            <Input
+                                value={mqtt[field.name] || ''}
+                                placeholder={placeholder}
+                                onChange={(e) => setMqtt({ ...mqtt, [field.name]: e.target.value })}
+                                disabled={!enabled}
+                            />
+                            {field.channel && renderInvertedSwitch(
+                                !!inverted[field.channel],
+                                (checked) => setInverted({ ...inverted, [field.channel]: checked })
+                            )}
+                        </div>
+                    );
+                })}
+                <div className="sm-flex align-center margin-bottom-8">
+                    <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-MQTT password / key')}</span>
+                    <Input.Password
+                        value={mqttPass}
+                        placeholder={status && status.mqtt.passSet
+                            ? i18n._('key-App/Settings/McpServer-(saved - leave blank to keep)')
+                            : ''}
+                        onChange={(e) => {
+                            setMqttPass(e.target.value);
+                            setMqttPassTouched(true);
+                        }}
+                        disabled={!enabled}
+                    />
+                </div>
+            </div>
+
+            <div className="border-bottom-normal padding-bottom-4 margin-top-16">
+                <span>{i18n._('key-App/Settings/McpServer-GPIO (Adafruit Blinka / U2IF)')}</span>
+            </div>
+            <div className="margin-top-8">
+                <div className="margin-bottom-8">
+                    {i18n._('key-App/Settings/McpServer-Sensors wired to pins of a Blinka board - by default a U2IF USB bridge (Pico / KB2040). Pin = Blinka pin name with an optional :up / :down / :float pull suffix. Python = an interpreter with adafruit-blinka installed (the venv from requirements.txt).')}
+                </div>
+                {gpioEnvOverrides.length > 0 && (
+                    <div className="margin-bottom-8">
+                        {i18n._('key-App/Settings/McpServer-Overridden by environment variables:')} {gpioEnvOverrides.join(', ')}
+                    </div>
+                )}
+                {status && status.gpio && !status.gpio.configured && (
+                    <div className="margin-bottom-8">
+                        {i18n._('key-App/Settings/McpServer-Not configured - missing:')} {status.gpio.missing.join('; ')}
+                    </div>
+                )}
+                {GPIO_PIN_FIELDS.map((field) => (
+                    <div className="sm-flex align-center margin-bottom-8" key={field.name}>
+                        <span style={LABEL_STYLE}>{i18n._(field.labelKey)}</span>
+                        <Input
+                            value={gpio[field.name] || ''}
+                            placeholder={field.placeholder}
+                            onChange={(e) => setGpio({ ...gpio, [field.name]: e.target.value })}
+                            disabled={!enabled}
+                        />
+                        {renderInvertedSwitch(
+                            !!gpioInverted[field.channel],
+                            (checked) => setGpioInverted({ ...gpioInverted, [field.channel]: checked })
+                        )}
+                    </div>
+                ))}
+                <div className="sm-flex align-center margin-bottom-8">
+                    <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Python interpreter')}</span>
+                    <Input
+                        value={gpio.python || ''}
+                        placeholder={status && status.gpio ? status.gpio.defaultPython : 'python3'}
+                        onChange={(e) => setGpio({ ...gpio, python: e.target.value })}
+                        disabled={!enabled}
+                    />
+                </div>
+                <div className="sm-flex align-center margin-bottom-8">
+                    <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Poll interval (ms)')}</span>
+                    <Input
+                        value={gpio.pollMs || ''}
+                        placeholder="10"
+                        onChange={(e) => {
+                            if (/^\d*$/.test(e.target.value)) {
+                                setGpio({ ...gpio, pollMs: e.target.value });
+                            }
+                        }}
+                        disabled={!enabled}
+                    />
+                </div>
+                <div className="sm-flex align-center margin-bottom-8">
+                    <span style={LABEL_STYLE}>{i18n._('key-App/Settings/McpServer-Blinka environment')}</span>
+                    <Input
+                        value={gpio.blinkaEnv || ''}
+                        placeholder={status && status.gpio ? status.gpio.defaultBlinkaEnv : 'BLINKA_U2IF=1'}
+                        onChange={(e) => setGpio({ ...gpio, blinkaEnv: e.target.value })}
+                        disabled={!enabled}
+                    />
+                </div>
+                <div className="margin-bottom-8">
+                    {i18n._('key-App/Settings/McpServer-NAME=VALUE pairs handed to the monitor so Blinka picks the board: BLINKA_U2IF=1 (default: Pico / KB2040 U2IF bridge), BLINKA_MCP2221=1, BLINKA_FT232H=1, BLINKA_FORCEBOARD=... - or "native" for on-board GPIO such as a Raspberry Pi header.')}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default McpServer;

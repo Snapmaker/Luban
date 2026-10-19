@@ -53,15 +53,67 @@ import SacpChannelBase from './channels/SacpChannel';
 import { L2WLaserToolModule } from '../../../app/machines/snapmaker-2-toolheads';
 import { octo } from './adaptor/Octo';
 
+import { connectionDiagnostics, diagnosticId } from './connectionDiagnostics';
+import { safeIdentifier, safeTarget } from './connectionDiagnosticState';
+import { gcodeLease } from './gcodeLease';
+import { isFillPatternSerial } from './channels/sacpMachineState';
+import { noteFrameRestored } from '../mcp/positionOfRecord';
+import { JudgeConnectionContext, setJudgeConnectionContextProvider } from '../mcp/machinePosition';
+import type { EnclosureRawReport, SerialEnclosureReport } from '../mcp/enclosure';
+
 const log = logger('lib:ConnectionManager');
+
+/**
+ * How long the machine-ready listeners wait for a machine instance's
+ * onPrepare before being told anyway. A Ray prepares in about 1 s (connect
+ * 14:25:05, subscriptions 14:25:06 on 2026-10-19); prepare awaits SACP
+ * requests that have no SDK timeout, so without a bound a lost reply meant
+ * the listeners were never called.
+ */
+const READY_LISTENER_PREPARE_WAIT_MS = 15000;
+
+/** Where a connection's deviceSerial came from (ConnectionManager.adoptFirmwareSerial). */
+export type DeviceSerialSource = 'sacp-machine-info' | 'sacp-product-sn' | 'firmware-m1005';
+
+/** What a machine-ready listener gets: the connection's generation, and how the instance's prepare ended. */
+export interface MachineReadyEvent {
+    generation: string;
+    machineIdentifier: string | null;
+    /** 'done', 'failed: <reason>', 'not settled after N ms', or 'none: no machine instance'. */
+    prepare: string;
+}
 
 const ensureRange = (value, min, max) => {
     return Math.max(min, Math.min(max, value));
 };
 
+/**
+ * The machine address out of the SSTP-HTTP base URL a channel reports
+ * ('http://192.168.1.20:8080' -> '192.168.1.20'): no scheme, credentials,
+ * port or path, so the status carries the address the plan's `host:<address>`
+ * device id is built from, and never a secret. Null when there is none.
+ */
+export function hostAddress(host: unknown): string | null {
+    if (typeof host !== 'string') {
+        return null;
+    }
+    let rest = host.trim().replace(/^[a-z][a-z0-9+.-]*:\/\//i, '');
+    rest = rest.replace(/^[^@/]*@/, '');
+    rest = rest.split(/[/?#]/)[0];
+    const bracketed = rest.match(/^\[([^\]]+)\]/);
+    const address = bracketed ? bracketed[1] : rest.replace(/:\d*$/, '');
+    return address || null;
+}
+
 interface ConnectionOpenOptions {
+    attemptId?: string;
+    clientAt?: number;
+    clientConnected?: boolean;
     connectionType: ConnectionType;
     address: string;
+    host?: string;
+    token?: string;
+    allowPairing?: boolean;
     port?: string;
     baudRate?: number;
     protocol?: NetworkProtocol | SerialPortProtocol;
@@ -97,6 +149,53 @@ interface SetAirPurifierStrengthOptions {
 }
 
 /**
+ * Methods the concrete channels (text serial, SSTP HTTP, SACP) expose beyond
+ * the Channel base class. ConnectionManager calls them after branching on the
+ * protocol, so they are optional here rather than on Channel itself.
+ */
+type ChannelExtensionMethod =
+    | 'abortLaserMaterialThickness'
+    | 'command'
+    | 'coordinateMove'
+    | 'getActiveExtruder'
+    | 'getCalibrationPhoto'
+    | 'getCameraCalibration'
+    | 'getGcodeFile'
+    | 'getLaserMaterialThickness'
+    | 'getPhoto'
+    | 'goHome'
+    | 'laseAutoSetMaterialHeight'
+    | 'laserSetWorkHeight'
+    | 'loadFilament'
+    | 'pauseGcode'
+    | 'resumeGcode'
+    | 'setAbsoluteWorkOrigin'
+    | 'setDoorDetection'
+    | 'setEnclosureFan'
+    | 'setEnclosureLight'
+    | 'setFilterSwitch'
+    | 'setFilterWorkSpeed'
+    | 'setMatrix'
+    | 'setWorkOrigin'
+    | 'startGcode'
+    | 'stopGcode'
+    | 'switchExtruder'
+    | 'takePhoto'
+    | 'unloadFilament'
+    | 'updateActiveExtruder'
+    | 'updateBedTemperature'
+    | 'updateLaserPower'
+    | 'updateNozzleOffset'
+    | 'updateNozzleTemperature'
+    | 'updateWorkSpeed'
+    | 'updateWorkSpeedFactor'
+    | 'updateZOffset'
+    | 'uploadGcodeFile';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ConnectedChannel = Channel & { [method in ChannelExtensionMethod]?: (...args: any[]) => any };
+
+/**
  * A singleton to manage devices connection.
  */
 class ConnectionManager {
@@ -110,10 +209,32 @@ class ConnectionManager {
     private protocol: NetworkProtocol | SerialPortProtocol = NetworkProtocol.Unknown;
 
     // channel used to communicate with machine
-    private channel: Channel = null;
+    private channel: ConnectedChannel = null;
 
     // connected machine instance to handle life cycle
     private machineInstance: MachineInstance = null;
+
+    // identifier of the connected machine, kept for status reporting
+    private machineIdentifier: string | null = null;
+
+    // Per-device identity from the channel's Ready payload (#265): the SACP
+    // controller serial number, and the address of the SSTP-HTTP machine
+    // (hostAddress). Null when the transport has none (text serial). Never the token.
+    private deviceSerial: string | null = null;
+
+    // Where deviceSerial came from: the SACP MachineInfo UInt32, the product SN
+    // after the version in that same 0x01 0x21 reply (the Ray's efuse SN), or
+    // the product SN the firmware reported to M1005 - the last two only when
+    // the UInt32 was a fill pattern (adoptFirmwareSerial). Cleared with the identity.
+    private deviceSerialSource: DeviceSerialSource | null = null;
+
+    private host: string | null = null;
+
+    // Called once per Ready, when the machine instance has prepared - or has
+    // failed to, or has not settled within READY_LISTENER_PREPARE_WAIT_MS -
+    // with that connection's generation. The MCP's first-connect firmware read
+    // registers here; a listener's failure never reaches the connection.
+    private readyListeners: Array<(ready: MachineReadyEvent) => void> = [];
 
     private scheduledTasksHandle;
 
@@ -124,14 +245,174 @@ class ConnectionManager {
         return this.protocol;
     }
 
+    /**
+     * Stable channel name for reporting. constructor.name is useless in
+     * production builds (webpack minifies class names to single letters).
+     */
+    private describeChannel(): string | null {
+        switch (this.channel) {
+            case null: return null;
+            case sstpHttpChannel: return 'sstp-http';
+            case sacpTcpChannel: return 'sacp-tcp';
+            case sacpUdpChannel: return 'sacp-udp';
+            case sacpSerialChannel: return 'sacp-serial';
+            case textSerialChannel: return 'text-serial';
+            default: return 'unknown';
+        }
+    }
+
+    /**
+     * The active channel, or null when disconnected. Read-only use (MCP).
+     */
+    // Bumped on every channel (re)assignment, including a reconnect to the same
+    // singleton channel object: object identity proves nothing here.
+    private channelAssignments = 0;
+
+    /**
+     * Read-only connection identity for the MCP failure hook (#221): the
+     * assignment count plus the channel's own reconnect generation (SSTP over
+     * HTTP, the SACP TCP/UDP/serial channels and the text serial channel all
+     * keep one). Two equal values mean the same connection.
+     */
+    public getConnectionGeneration(): string {
+        const inner = this.channel as unknown as { getConnectionGeneration?: () => number } | null;
+        const own = inner && typeof inner.getConnectionGeneration === 'function' ? inner.getConnectionGeneration() : 0;
+        return `${this.channelAssignments}.${own}`;
+    }
+
+    public getCurrentChannel(): Channel | null {
+        return this.channel;
+    }
+
+    /**
+     * Last heartbeat state from the active channel, or null when the channel
+     * does not report one (no heartbeat yet, or a channel that keeps none).
+     * SSTP over HTTP fills it from its status poll; the SACP channels (TCP,
+     * UDP, serial - the Ray, Artisan and J1) from their heartbeat and
+     * coordinate-system subscriptions (#260); text serial from the M114
+     * replies MarlinController polls, in the LOGICAL frame (#265).
+     */
+    public getLatestMachineState(): { [key: string]: unknown; timestamp: number } | null {
+        const channel = this.channel as unknown as {
+            getLatestMachineState?: () => { [key: string]: unknown; timestamp: number } | null;
+        };
+        if (channel && typeof channel.getLatestMachineState === 'function') {
+            return channel.getLatestMachineState();
+        }
+        return null;
+    }
+
+    /** The connection session and position frame the position judge keys its learnt state on (machinePosition.ts). */
+    public getJudgeConnectionContext(): JudgeConnectionContext {
+        if (!this.channel) {
+            return { session: null, positionFrame: null };
+        }
+        const state = this.getLatestMachineState();
+        const frame = state ? state.positionFrame : null;
+        return {
+            session: this.getConnectionGeneration(),
+            positionFrame: typeof frame === 'string' ? frame : null,
+        };
+    }
+
+    /** True while the active channel speaks SACP (TCP, UDP or serial). Read-only (MCP). */
+    public isSacpChannel(): boolean {
+        return !!this.channel
+            && includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol);
+    }
+
+    /**
+     * Read-only snapshot of the connection, for status reporting (MCP).
+     */
+    public getConnectionStatus() {
+        // A Snapmaker 2.0 over SACP-TCP is identified by the channel but gets no
+        // Ready (SacpTcpChannel.getIdentifiedWithoutReady): report its model and
+        // serial number, with machineReady false since no instance prepared it.
+        // That identity is per TCP session (reset on open, socket close/error and
+        // close), so it wins over a Ready identity a dropped earlier session left.
+        const unprepared = this.channel && this.channel === sacpTcpChannel
+            ? (this.channel as unknown as {
+                getIdentifiedWithoutReady?: () => { machineIdentifier: string; deviceSerial: string | null } | null;
+            }).getIdentifiedWithoutReady?.() || null
+            : null;
+        let deviceSerialSource = this.deviceSerialSource;
+        if (unprepared) {
+            deviceSerialSource = unprepared.deviceSerial ? 'sacp-machine-info' : null;
+        }
+        return {
+            connected: !!this.channel,
+            channelName: this.describeChannel(),
+            connectionType: this.channel ? this.connectionType : null,
+            protocol: this.channel ? this.protocol : null,
+            machineIdentifier: unprepared ? unprepared.machineIdentifier : this.machineIdentifier,
+            machineReady: !!this.machineInstance,
+            deviceSerial: unprepared ? unprepared.deviceSerial : this.deviceSerial,
+            deviceSerialSource,
+            host: this.host,
+        };
+    }
+
+    private clearDeviceIdentity(): void {
+        this.machineIdentifier = null;
+        this.deviceSerial = null;
+        this.deviceSerialSource = null;
+        this.host = null;
+    }
+
+    /** Register for "a new connection is ready" (after the machine instance prepared). Returns the unregister function. */
+    public onMachineReady(listener: (ready: MachineReadyEvent) => void): () => void {
+        this.readyListeners.push(listener);
+        return () => {
+            this.readyListeners = this.readyListeners.filter((l) => l !== listener);
+        };
+    }
+
+    /**
+     * The firmware's own product SN as this connection's deviceSerial - the
+     * 0x01 0x21 efuse SN at Ready ('sacp-product-sn'), or M1005's
+     * ('firmware-m1005') - only while the connection is the one it was read on
+     * (`generation`), the SACP UInt32 serial was absent or a fill pattern
+     * (sacpDeviceSerial already made that null), and the SN itself is no fill
+     * pattern (20 x '6' on an unprogrammed efuse). A real SACP UInt32 serial is
+     * never replaced. true when adopted.
+     */
+    public adoptFirmwareSerial(serial: string, generation: string, source: 'sacp-product-sn' | 'firmware-m1005' = 'firmware-m1005'): boolean {
+        const value = String(serial || '').trim();
+        if (!value || isFillPatternSerial(value) || !this.channel || this.getConnectionGeneration() !== generation) {
+            return false;
+        }
+        if (this.deviceSerial && this.deviceSerialSource === 'sacp-machine-info') {
+            return false;
+        }
+        this.deviceSerial = value;
+        this.deviceSerialSource = source;
+        log.info(`deviceSerial from the firmware's product SN (${source}): ${value}`);
+        return true;
+    }
+
+    /** The 0x01 0x21 machine info the SACP channel read on this connection (version, product SN), or null. */
+    public getMachineInfoRecord(): { firmwareVersion: string | null; productSn: string | null; productSnRaw: string | null;
+        truncated: string | null; readAt: number; } | null {
+        const channel = this.channel as unknown as { getMachineInfoRecord?: () => ReturnType<ConnectionManager['getMachineInfoRecord']> } | null;
+        return channel && typeof channel.getMachineInfoRecord === 'function' ? channel.getMachineInfoRecord() : null;
+    }
+
+    /** What the controller answered Luban's own log-level request on this connection (SACP 0x01 0x10), or null. */
+    public getLogLevelRequest(): { requestedAt: number; result: number | null } | null {
+        const channel = this.channel as unknown as { getLogLevelRequest?: () => { requestedAt: number; result: number | null } | null } | null;
+        return channel && typeof channel.getLogLevelRequest === 'function' ? channel.getLogLevelRequest() : null;
+    }
+
     // TODO: Refactor this
     public onConnection = (socket: SocketServer) => {
+        connectionDiagnostics.record('renderer_connected');
         sstpHttpChannel.onConnection();
         this.scheduledTasksHandle = new ScheduledTasks(socket);
     };
 
     // TODO: Refactor this
     public onDisconnection = (socket: SocketServer) => {
+        connectionDiagnostics.record('renderer_disconnected');
         sstpHttpChannel.onDisconnection();
         textSerialChannel.onDisconnection(socket);
         this.scheduledTasksHandle.cancelTasks();
@@ -166,6 +447,7 @@ class ConnectionManager {
      */
     private onChannelConnecting = (options: ConnectionConnectingOptions) => {
         log.info('channel: Connecting');
+        connectionDiagnostics.record('channel_connecting', { reason: options?.requireAuth ? 'authentication_wait' : 'opening' });
 
         this.socket && this.socket.emit(SocketEvent.ConnectionConnecting, {
             requireAuth: options?.requireAuth || false,
@@ -180,6 +462,7 @@ class ConnectionManager {
      */
     private onChannelConnected = () => {
         log.info('channel: Connected');
+        connectionDiagnostics.record('channel_connected');
 
         this.socket && this.socket.emit(SocketEvent.ConnectionOpen, {
             code: 200,
@@ -197,12 +480,25 @@ class ConnectionManager {
      * 2. Start heart beat (or subscribe to heart beat)
      * 3. Subscribe to machine events
      */
-    private onChannelReady = async (data: { machineIdentifier?: string }) => {
+    private onChannelReady = async (data: { machineIdentifier?: string; deviceSerial?: unknown; host?: unknown }) => {
         log.info('channel: Ready');
+        connectionDiagnostics.record('channel_ready');
 
         const machineIdentifier = data?.machineIdentifier;
 
         log.debug(`machineIdentifier = ${machineIdentifier}`);
+        this.machineIdentifier = machineIdentifier || null;
+        this.deviceSerial = typeof data?.deviceSerial === 'string' && data.deviceSerial ? data.deviceSerial : null;
+        this.deviceSerialSource = this.deviceSerial ? 'sacp-machine-info' : null;
+        this.host = hostAddress(data?.host);
+        // The Ray's UInt32 serial is a dummy (0x66666666): its identity is the
+        // efuse product SN in the same 0x01 0x21 reply. Adopted here, before
+        // the instance and the ready listeners, so the store keys on it from the start.
+        // Ray only: RayController is the firmware whose 0x01 0x21 layout is known (#315).
+        const machineInfo = this.machineIdentifier === SnapmakerRayMachine.identifier ? this.getMachineInfoRecord() : null;
+        if (!this.deviceSerial && machineInfo && machineInfo.productSn) {
+            this.adoptFirmwareSerial(machineInfo.productSn, this.getConnectionGeneration(), 'sacp-product-sn');
+        }
 
         // configure machine instance
         this.machineInstance = null;
@@ -241,9 +537,66 @@ class ConnectionManager {
         if (this.machineInstance) {
             log.info(`instance = ${this.machineInstance.constructor.name}`);
             log.info('On preparing machine instance...');
-            await this.machineInstance.onPrepare();
+            // The listeners no longer wait on prepare alone: it awaits SACP
+            // requests the SDK never times out, and a prepare that hung or threw
+            // left them uncalled with nothing logged (the Ray, 2026-10-19).
+            // Prepare itself is awaited (and throws) exactly as before.
+            const prepare = this.machineInstance.onPrepare();
+            this.notifyMachineReady(prepare);
+            await prepare;
+        } else {
+            this.notifyMachineReady(null);
         }
     };
+
+    /**
+     * Tell the machine-ready listeners about this Ready once `prepare`
+     * settles, or after READY_LISTENER_PREPARE_WAIT_MS if it has not - once,
+     * with one info line either way. Not when the channel closed or changed
+     * (another channel, machine or connection generation: a reconnect within
+     * the bound has its own Ready).
+     */
+    private notifyMachineReady(prepare: Promise<void> | null): void {
+        const channel = this.channel;
+        const machineIdentifier = this.machineIdentifier;
+        const generation = this.getConnectionGeneration();
+        let notified = false;
+        let timer: ReturnType<typeof setTimeout> | null = null;
+        const notify = (outcome: string) => {
+            if (notified) {
+                return;
+            }
+            notified = true;
+            if (timer) {
+                clearTimeout(timer);
+                timer = null;
+            }
+            if (!this.channel || this.channel !== channel || this.machineIdentifier !== machineIdentifier
+                || this.getConnectionGeneration() !== generation) {
+                log.info(`machine ready (${machineIdentifier}): ${this.readyListeners.length} listener(s) not notified, `
+                    + `the connection closed or changed (prepare ${outcome})`);
+                return;
+            }
+            const ready: MachineReadyEvent = { generation, machineIdentifier, prepare: outcome };
+            log.info(`machine ready (${machineIdentifier}): notifying ${this.readyListeners.length} listener(s) (prepare ${outcome})`);
+            for (const listener of this.readyListeners) {
+                try {
+                    listener(ready);
+                } catch (err) {
+                    log.warn(`machine-ready listener failed: ${(err as Error).message}`);
+                }
+            }
+        };
+        if (!prepare) {
+            notify('none: no machine instance');
+            return;
+        }
+        prepare.then(
+            () => notify('done'),
+            (err) => notify(`failed: ${err && err.message ? err.message : String(err)}`),
+        );
+        timer = setTimeout(() => notify(`not settled after ${READY_LISTENER_PREPARE_WAIT_MS} ms`), READY_LISTENER_PREPARE_WAIT_MS);
+    }
 
     private onChannelErrorReport = async (data: { level: number; owner: number; errorCode: number }) => {
         const { level, owner, errorCode } = data;
@@ -257,11 +610,63 @@ class ConnectionManager {
         }
     }
 
+    /** Restore a retained HTTP session, never authenticate or choose a new machine. */
+    public async recoverMachineConnection(): Promise<void> {
+        connectionDiagnostics.capture('before_existing_session_recovery', diagnosticId());
+        connectionDiagnostics.record('recovery_requested');
+        if (this.channel && this.channel !== sstpHttpChannel) {
+            connectionDiagnostics.record('recovery_failed', { reason: 'different_transport' });
+            const why = this.isSacpChannel()
+                ? ' The active channel speaks SACP, whose heartbeat is a controller subscription rather than a poll '
+                    + 'the server can restart: if get_position reports no fresh beat, reconnect the machine through Luban.'
+                : ` The active channel is ${this.describeChannel()}, which has no retained session to verify.`;
+            throw new Error(`Recovery is supported only for the existing HTTP machine session.${why}`);
+        }
+        const previousChannel = this.channel;
+        try {
+            await sstpHttpChannel.verifyExistingSession();
+        } catch (error) {
+            connectionDiagnostics.record('recovery_failed', { reason: 'session_verification_failed' });
+            throw error;
+        }
+        if (this.channel !== previousChannel) {
+            connectionDiagnostics.record('recovery_failed', { reason: 'session_changed' });
+            throw new Error('Connection changed during recovery; nothing was restarted.');
+        }
+        this.unbindChannelEvents();
+        this.channel = sstpHttpChannel;
+        this.channelAssignments += 1;
+        this.connectionType = ConnectionType.WiFi;
+        this.protocol = NetworkProtocol.HTTP;
+        this.bindChannelEvents();
+        sstpHttpChannel.resumeVerifiedSession();
+        connectionDiagnostics.record('recovery_session_verified');
+        octo.onStart();
+    }
+
+    private onChannelDisconnected = () => {
+        connectionDiagnostics.record('channel_disconnected');
+        // A transport loss must invalidate the server state even with no UI
+        // listening. Clear synchronously so reconnect cannot inherit it.
+        const instance = this.machineInstance;
+        this.unbindChannelEvents();
+        this.channel = null;
+        this.channelAssignments += 1;
+        this.clearDeviceIdentity();
+        this.machineInstance = null;
+        octo.onStop();
+        if (instance) {
+            instance.onClosed().catch(err => log.warn(`Disconnect cleanup failed: ${err.message}`));
+        }
+        this.socket && this.socket.emit('connection:close', { code: 200, data: {}, msg: '', text: '' });
+    };
+
     private bindChannelEvents(): void {
         if (!this.channel) {
             return;
         }
 
+        this.channel.on(ChannelEvent.Disconnected, this.onChannelDisconnected);
         this.channel.on(ChannelEvent.Connecting, this.onChannelConnecting);
         this.channel.on(ChannelEvent.Connected, this.onChannelConnected);
         this.channel.on(ChannelEvent.Ready, this.onChannelReady);
@@ -273,6 +678,7 @@ class ConnectionManager {
             return;
         }
 
+        this.channel.off(ChannelEvent.Disconnected, this.onChannelDisconnected);
         this.channel.off(ChannelEvent.Connecting, this.onChannelConnecting);
         this.channel.off(ChannelEvent.Connected, this.onChannelConnected);
         this.channel.off(ChannelEvent.Ready, this.onChannelReady);
@@ -282,11 +688,35 @@ class ConnectionManager {
     /**
      * Connection open.
      */
-    public connectionOpen = async (socket: SocketServer, options: ConnectionOpenOptions) => {
+    public connectionOpen = async (socket: SocketServer, options: ConnectionOpenOptions,
+        acknowledge?: (receipt: { attemptId: string; instanceId: string; build: string }) => void) => {
+        const attemptId = safeIdentifier(options.attemptId) || diagnosticId();
+        options = { ...options, attemptId };
+        connectionDiagnostics.beginAttempt(attemptId, {
+            target: safeTarget(options.host || options.address),
+            protocol: safeIdentifier(options.protocol),
+            clientAt: Number.isFinite(options.clientAt) ? options.clientAt : undefined,
+            clientConnected: options.clientConnected === true,
+            tokenPresent: Boolean(options.token?.trim()),
+            allowPairing: options.allowPairing === true,
+        });
+        if (typeof acknowledge === 'function') {
+            acknowledge({ attemptId, instanceId: connectionDiagnostics.identity.instanceId, build: connectionDiagnostics.identity.build });
+        }
+        if (options.connectionType === ConnectionType.WiFi && options.protocol === NetworkProtocol.HTTP
+            && !options.token?.trim() && options.allowPairing !== true) {
+            connectionDiagnostics.record('connection_refused', { attemptId, reason: 'no_saved_token' });
+            socket.emit(SocketEvent.ConnectionOpen, {
+                code: 401,
+                msg: 'No saved machine token. Automatic pairing is disabled; use the Connect button in Luban explicitly.',
+            });
+            return;
+        }
         // Cancel subscriptions
         if (this.channel) {
             this.unbindChannelEvents();
             this.channel = null;
+            this.channelAssignments += 1;
         }
 
         const { connectionType, protocol } = options;
@@ -305,12 +735,16 @@ class ConnectionManager {
 
             if (this.protocol === NetworkProtocol.SacpOverTCP) {
                 this.channel = sacpTcpChannel;
+                this.channelAssignments += 1;
             } else if (this.protocol === NetworkProtocol.SacpOverUDP) {
                 this.channel = sacpUdpChannel;
+                this.channelAssignments += 1;
             } else if (this.protocol === NetworkProtocol.HTTP) {
                 this.channel = sstpHttpChannel;
+                this.channelAssignments += 1;
             } else {
                 this.channel = sstpHttpChannel;
+                this.channelAssignments += 1;
             }
         } else {
             const { port, baudRate } = options;
@@ -319,12 +753,15 @@ class ConnectionManager {
 
             if (this.protocol === SerialPortProtocol.SacpOverSerialPort) {
                 this.channel = sacpSerialChannel;
+                this.channelAssignments += 1;
             } else {
                 this.channel = textSerialChannel;
+                this.channelAssignments += 1;
             }
         }
 
         log.info(`Detected protocol: ${this.protocol}`);
+        connectionDiagnostics.record('protocol_detected', { attemptId, protocol: this.protocol });
 
         if (this.protocol === NetworkProtocol.Unknown) {
             this.socket && this.socket.emit(SocketEvent.ConnectionOpen, {
@@ -345,7 +782,21 @@ class ConnectionManager {
         this.channel.setSocket(socket);
 
         log.info(`ConnectionOpen: type = ${connectionType}, channel = ${this.channel.constructor.name}.`);
-        await this.channel.connectionOpen(options);
+        const openedChannel = this.channel;
+        let connected: boolean;
+        try {
+            connected = await openedChannel.connectionOpen(options);
+        } catch (error) {
+            connectionDiagnostics.record('connection_failed', { attemptId, reason: 'channel_open_threw' });
+            throw error;
+        }
+        connectionDiagnostics.record('connection_open_result', { attemptId, reason: connected ? 'opened' : 'refused' });
+        if (!connected) {
+            if (this.channel === openedChannel) {
+                this.onChannelDisconnected();
+            }
+            return;
+        }
         octo.onStart();
     };
 
@@ -353,6 +804,8 @@ class ConnectionManager {
      * Connection close.
      */
     public connectionClose = async (socket: SocketServer, options: ConnectionCloseOptions) => {
+        connectionDiagnostics.capture('before_connection_close', diagnosticId());
+        connectionDiagnostics.record('connection_close_requested', { reason: options?.force ? 'force' : 'normal' });
         octo.onStop();
 
         if (!this.channel) {
@@ -398,6 +851,8 @@ class ConnectionManager {
         // destroy channel
         this.unbindChannelEvents();
         this.channel = null;
+        this.channelAssignments += 1;
+        this.clearDeviceIdentity();
 
         // destroy machine instance
         if (this.machineInstance) {
@@ -412,16 +867,19 @@ class ConnectionManager {
      *
      * Seperate multiple lines with '\n'.
      */
-    public executeGcode = async (socket: SocketServer, options: ExecuteGCodeOptions) => {
+    public executeGcode = async (socket: SocketServer, options: ExecuteGCodeOptions, callback?: (response: object) => void) => {
         const { gcode } = options;
         log.info(`executeGcode: ${gcode}`);
 
         const { result, text } = await this.channel.executeGcode(gcode);
+        const response = { err: result === 0 ? null : -1, gcode, reply: text };
         if (result === 0) {
-            socket.emit('connection:executeGcode', { err: null, gcode, reply: text });
+            socket.emit('connection:executeGcode', response);
         } else {
-            socket.emit('connection:executeGcode', { err: -1, gcode });
+            log.warn(`Controller rejected G-code: ${text || 'No error detail returned.'}`);
+            socket.emit('connection:executeGcode', response);
         }
+        callback?.(response);
     };
 
     /**
@@ -643,10 +1101,22 @@ class ConnectionManager {
      */
     public startGcodeAction = async (socket: SocketServer, options) => {
         log.info('gcode action begin');
+        const leaseRefusal = gcodeLease.refusal('start job');
+        if (leaseRefusal) {
+            log.warn(leaseRefusal);
+            options?.eventName && socket && socket.emit(options.eventName, { err: true, msg: leaseRefusal });
+            return;
+        }
         this.channel.startGcode(options);
     };
 
     public startGcode = async (socket: SocketServer, options) => {
+        const leaseRefusal = gcodeLease.refusal('start job');
+        if (leaseRefusal) {
+            log.warn(leaseRefusal);
+            socket && socket.emit(options?.eventName || 'connection:startGcode', { err: true, msg: leaseRefusal });
+            return;
+        }
         const {
             headType, isRotate, toolHead, isLaserPrintAutoMode, materialThickness, laserFocalLength, renderName, eventName, materialThicknessSource
         } = options;
@@ -736,7 +1206,7 @@ class ConnectionManager {
             Promise.all(promises)
                 .then(() => {
                     this.channel.uploadGcodeFile(gcodeFilePath, headType, renderName, (msg) => {
-                        log.info('uploadGcodeFile result:' + msg);
+                        log.info(`uploadGcodeFile result:${msg}`);
                         if (msg) {
                             socket.emit(SocketEvent.StartGCode, { err: 'failed', text: msg || 'Failed to upload file' });
                             // FIXME: Add abort message
@@ -824,6 +1294,12 @@ G1 Z${pos.z}
     };
 
     public resumeGcode = async (socket: SocketServer, options, callback) => {
+        const leaseRefusal = gcodeLease.refusal('resume job');
+        if (leaseRefusal) {
+            log.warn(leaseRefusal);
+            callback && callback({ msg: leaseRefusal, code: 409 });
+            return;
+        }
         if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             const success = await this.channel.resumeGcode(callback);
             if (success) {
@@ -1156,6 +1632,57 @@ M3`;
     };
 
     /**
+     * Enclosure report for the MCP tools (#142): the same channel reads the
+     * Workspace enclosure widget relies on, returned instead of emitted.
+     * null when nothing is connected or the channel cannot report one.
+     */
+    public readEnclosureReport = async (): Promise<EnclosureRawReport | null> => {
+        if (!this.channel) {
+            return null;
+        }
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const info = await (this.channel as EnclosureChannelInterface).getEnclosreInfo();
+            return { source: 'sacp', info: info || null };
+        }
+        if (this.protocol === NetworkProtocol.HTTP) {
+            const result = await sstpHttpChannel.readEnclosureStatus();
+            return { source: 'sstp-http', code: result.code, msg: result.msg, data: result.data || null };
+        }
+        if (this.channel === textSerialChannel) {
+            // Marlin.js keeps the "Enclosure ..." settings lines on its controller object.
+            const controller = textSerialChannel.getController() as unknown as { controller?: { settings?: SerialEnclosureReport['settings'] } } | null;
+            return { source: 'text-serial', settings: (controller && controller.controller && controller.controller.settings) || null };
+        }
+        return null;
+    };
+
+    /**
+     * Set the enclosure LED strip or exhaust fan for the MCP tools: the same
+     * call per channel as setEnclosureLight / setEnclosureFan above, with the
+     * outcome returned. The caller has already confirmed an enclosure is
+     * reported.
+     */
+    public setEnclosureLevel = async (part: 'light' | 'fan', value: number): Promise<{ ok: boolean; detail: string }> => {
+        if (!this.channel) {
+            return { ok: false, detail: 'Not connected to a machine.' };
+        }
+        if (includes([NetworkProtocol.SacpOverTCP, NetworkProtocol.SacpOverUDP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
+            const channel = this.channel as EnclosureChannelInterface;
+            const success = part === 'light' ? await channel.setEnclosureLight(value) : await channel.setEnclosureFan(value);
+            return { ok: success, detail: success ? 'SACP accepted the request.' : 'SACP refused the request.' };
+        }
+        if (this.protocol === NetworkProtocol.HTTP) {
+            const result = await sstpHttpChannel.postEnclosure(part === 'light' ? 'led' : 'fan', value);
+            const ok = result.code === 200;
+            return { ok, detail: ok ? 'HTTP 200 from /api/v1/enclosure.' : `HTTP ${result.code} from /api/v1/enclosure${result.msg ? `: ${result.msg}` : ''}.` };
+        }
+        // Text serial: the M1010 the widget path sends (S3 = light, S4 = fan).
+        const { result, text } = await this.channel.executeGcode(`M1010 S${part === 'light' ? 3 : 4} P${value};`);
+        const ok = result === 0;
+        return { ok, detail: ok ? 'M1010 acknowledged.' : `M1010 failed${text ? `: ${text}` : ''}.` };
+    };
+
+    /**
      * Get air purifier info.
      */
     public getAirPurifierInfo = async (socket: SocketServer) => {
@@ -1285,27 +1812,47 @@ M3`;
     //
 
     public goHome = async (socket, options, callback) => {
+        const leaseRefusal = gcodeLease.refusal('home');
+        if (leaseRefusal) {
+            log.warn(leaseRefusal);
+            return;
+        }
         const { headType } = options;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort, NetworkProtocol.SacpOverUDP], this.protocol)) {
             this.channel.goHome(headType);
             socket && socket.emit('move:status', { isHoming: true });
         } else {
-            await this.executeGcode(socket, { gcode: 'G53' });
-            await this.executeGcode(socket, { gcode: 'G28' });
+            // The three lines go out as separate requests; runAsHomeSequence lets
+            // them pass a frame-recovery hold as the whole G53/G28/G54 sequence
+            // (a bare G53 or G28 alone is refused there).
+            await gcodeLease.runAsHomeSequence(async () => {
+                await this.executeGcode(socket, { gcode: 'G53' });
+                await this.executeGcode(socket, { gcode: 'G28' });
 
-            callback && callback();
+                callback && callback();
 
-            // ?
-            if (this.connectionType === ConnectionType.WiFi) {
-                socket && socket.emit('move:status', { isHoming: true });
-            }
-            if (headType === HEAD_LASER || headType === HEAD_CNC) {
-                await this.executeGcode(socket, { gcode: 'G54' });
-            }
+                // ?
+                if (this.connectionType === ConnectionType.WiFi) {
+                    socket && socket.emit('move:status', { isHoming: true });
+                }
+                if (headType === HEAD_LASER || headType === HEAD_CNC) {
+                    // An accepted G54 after G28 is a work-frame restore: the
+                    // frame-uncertainty latch records it, and a verified position
+                    // after it clears the latch (tools/machine.ts).
+                    await this.executeGcode(socket, { gcode: 'G54' }, (response) => {
+                        if ((response as { err?: number | null }).err === null) { noteFrameRestored(); }
+                    });
+                }
+            });
         }
     };
 
     public coordinateMove = async (socket, options, callback) => {
+        const leaseRefusal = gcodeLease.refusal('coordinate move');
+        if (leaseRefusal) {
+            log.warn(leaseRefusal);
+            return;
+        }
         const { moveOrders, gcode, jogSpeed, headType } = options;
         // const { moveOrders, gcode, context, cmd, jogSpeed, headType } = options;
 
@@ -1322,6 +1869,11 @@ M3`;
     };
 
     public setWorkOrigin = async (socket, options, callback) => {
+        const leaseRefusal = gcodeLease.refusal('set work origin');
+        if (leaseRefusal) {
+            log.warn(leaseRefusal);
+            return;
+        }
         const { xPosition, yPosition, zPosition, bPosition } = options;
         if (includes([NetworkProtocol.SacpOverTCP, SerialPortProtocol.SacpOverSerialPort], this.protocol)) {
             this.channel.setWorkOrigin({ xPosition, yPosition, zPosition, bPosition });
@@ -1511,6 +2063,13 @@ M3`;
 }
 
 const connectionManager = new ConnectionManager();
+
+// The position judge forgets a session's offsets when the session changes and
+// never maps a logical-frame beat (machinePosition.ts JudgeConnectionContext).
+// Guarded: unit-test harnesses load this module with that import stubbed.
+if (typeof setJudgeConnectionContextProvider === 'function') {
+    setJudgeConnectionContextProvider(() => connectionManager.getJudgeConnectionContext());
+}
 
 export function isUsingSACP(protocol: NetworkProtocol | SerialPortProtocol = null): boolean {
     if (!protocol) {

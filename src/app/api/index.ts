@@ -127,6 +127,15 @@ const setState = defaultAPIFactory((options) => {
 
 const unsetState = defaultAPIFactory(({ key }) => request.delete('/api/state').query({ key }));
 
+//
+// MCP server
+//
+const getMcpStatus = defaultAPIFactory(() => request.get('/api/mcp'));
+const getMcpHealth = defaultAPIFactory(() => request.get('/api/mcp/health').timeout({ response: 5000, deadline: 8000 }));
+const setMcpSettings = defaultAPIFactory((options) => request.post('/api/mcp').send(options));
+const clearMcpAlarm = defaultAPIFactory((options) => request.post('/api/mcp/clear-alarm').send(options || {}));
+const setMcpMotionRule = defaultAPIFactory((options) => request.post('/api/mcp/motion-rules').send(options));
+
 /**
  * Load G-code
  *
@@ -352,6 +361,13 @@ export default {
     getState,
     setState,
     unsetState,
+
+    // MCP server
+    getMcpStatus,
+    setMcpSettings,
+    getMcpHealth,
+    clearMcpAlarm,
+    setMcpMotionRule,
 
     // G-code
     loadGCode,

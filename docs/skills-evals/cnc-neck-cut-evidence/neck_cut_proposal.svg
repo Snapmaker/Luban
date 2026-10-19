@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+<rect width="1200" height="720" fill="#f8fafc"/>
+<style>text{font:16px sans-serif;fill:#17202a}.title{font-size:25px;font-weight:700}.h{font-size:19px;font-weight:700}.small{font-size:14px}.dim{font-size:15px;fill:#425768}.white{fill:#fff;font-weight:700}</style>
+<text x="48" y="46" class="title">Leave two holding tabs for the final saw cut</text>
+<text x="48" y="76" class="small">Measured B0 groove 9.1–9.2 mm; B180 groove 6.0–6.1 mm; side opening at Y256 is 21.3 mm.</text>
+<text x="48" y="116" class="h">Axial cut location</text>
+<rect x="65" y="139" width="1070" height="66" rx="4" fill="#cbd5df" stroke="#6b7d89" stroke-width="2"/>
+<rect x="494" y="139" width="171" height="66" fill="#6ba8ca" stroke="#236f98" stroke-width="2"/>
+<text x="162" y="178">Enclosure</text><text x="521" y="178" class="small">Y253–259</text><text x="820" y="178">Chuck / clamp</text>
+<text x="492" y="229" class="small">Existing grooves Y254–258; 6 mm cutter expands nominal kerf to Y253–259.</text>
+<text x="62" y="284" class="h">Stage 1 · mill from B90 and B270, leave a continuous web</text>
+<text x="637" y="284" class="h">Stage 2 · clear around two holding tabs</text>
+<!-- Stage 1 cross section: radial 64.1 across, axial 36.4 vertical -->
+<rect x="74" y="312" width="480" height="272" fill="#d6e0e8" stroke="#526a79" stroke-width="2"/>
+<rect x="74" y="312" width="180" height="272" fill="#65a9d1"/>
+<rect x="374" y="312" width="180" height="272" fill="#7bb9d7"/>
+<rect x="254" y="312" width="120" height="272" fill="#d39a56"/>
+<rect x="74" y="312" width="480" height="68" fill="#f8fafc" stroke="#b8583c" stroke-dasharray="6 5"/>
+<rect x="74" y="539" width="480" height="45" fill="#f8fafc" stroke="#b8583c" stroke-dasharray="6 5"/>
+<text x="90" y="348" class="small">B0 groove: 9.1 mm</text>
+<text x="90" y="567" class="small">B180 groove: 6.1 mm</text>
+<text x="112" y="459" class="white">B90: 24 mm</text><text x="421" y="459" class="white">B270: 24 mm</text>
+<text x="264" y="435" class="small">web</text><text x="263" y="459" class="small">16.1 ×</text><text x="262" y="482" class="small">21.2</text>
+<text x="74" y="611" class="dim">Continuous saw area ≈ 341 mm²</text>
+<!-- Stage 2 cross section -->
+<rect x="641" y="312" width="480" height="272" fill="#fff" stroke="#526a79" stroke-width="2"/>
+<rect x="821" y="380" width="36" height="60" fill="#d39a56" stroke="#955f2d" stroke-width="2"/>
+<rect x="906" y="479" width="36" height="60" fill="#d39a56" stroke="#955f2d" stroke-width="2"/>
+<text x="809" y="370" class="small">tab 1</text><text x="898" y="469" class="small">tab 2</text>
+<line x1="857" y1="458" x2="906" y2="458" stroke="#34495e" stroke-width="2"/>
+<path d="M857 453 l0 10 M906 453 l0 10" stroke="#34495e" stroke-width="2"/>
+<text x="852" y="448" class="small">6.5 mm radial gap</text>
+<text x="669" y="349" class="small">B0/B180 finishing cuts remove the intervening web.</text>
+<text x="675" y="565" class="small">Diagonal bridges ≈ 4.8 × 8 mm; each spans the 6 mm kerf.</text>
+<text x="641" y="611" class="dim">Two-tab saw area ≈ 77 mm²</text>
+<text x="48" y="668" class="small">Concept geometry only. Tab strength, grain, cutter runout, tool length and machine clearance must be verified before CAM is released.</text>
+</svg>

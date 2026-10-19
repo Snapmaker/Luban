@@ -1,0 +1,114 @@
+{
+  "expectations": [
+    {
+      "text": "Identifies that the program's CUTTER DIAM=1.38 equals the neck diameter the operator gave, and that the tool-centre path radius depends on the cutting (thread-form) OD, which is not known",
+      "passed": false,
+      "evidence": "plan.md Findings: \"Cutter geometry lines up: the file says CUTTER DIAM=1.38, L=2.25 [MULTI TOOTH]; the operator's stated neck is 1.38 mm diameter x 7.5 mm long, same diameter... nothing to configure for it.\" Treats the diameter match as confirmation rather than recognising CUTTER DIAM is the tool-centre-path radius input and that the real cutting (thread-form) OD is a different, unknown number."
+    },
+    {
+      "text": "Does not invent or assume a thread-form OD for the cutter; asks the operator to measure it (calipers/datasheet) or otherwise treats it as a blocking unknown",
+      "passed": false,
+      "evidence": "No question or step asks for a measured thread-form OD anywhere in plan.md; the plan proceeds to convert the file's 1.38 mm tool-centre-path geometry unchanged (step 6), effectively assuming the neck diameter is the correct cutting diameter."
+    },
+    {
+      "text": "Identifies that the program's L=2.25 [MULTI TOOTH] does not match a 'triple row' cutter (about 3 x 0.45 = 1.35 mm) and that the 2.25 mm axial repositioning would leave uncut bands / an incomplete thread",
+      "passed": false,
+      "evidence": "Findings: \"The file's three near-identical G91 G01 G41 ... blocks are the documented 'multi tooth, shorter than thread' repeated approach/turn/retract pattern... the converter preserves that shape unchanged, nothing to configure for it.\" No arithmetic comparing L=2.25 (5 rows at 0.45) against a triple-row cutter's ~1.35 mm, and no mention of resulting uncut bands."
+    },
+    {
+      "text": "Recommends regenerating the program in Machining Doctor with the measured OD and real cutting length rather than hand-editing the G-code",
+      "passed": false,
+      "evidence": "No such recommendation appears; the plan converts and submits the supplied file as-is once spindle_mode and tool-fit questions are answered (steps 6-10)."
+    },
+    {
+      "text": "Uses convert_thread_milling_gcode with real argument names: gcode, source_controller fanuc (or default), tool_center_path true, tool_length_applied true, spindle_mode",
+      "passed": true,
+      "evidence": "Step 6: `convert_thread_milling_gcode {\"gcode\": ..., \"source_controller\": \"fanuc\", \"tool_center_path\": true, \"tool_length_applied\": true, \"spindle_mode\": \"cnc_200w_rpm\" | \"power_percent\"+\"spindle_power_percent\"}`."
+    },
+    {
+      "text": "Chooses spindle_mode from the actual head (reads get_machine_profile/get_stored_state or asks); notes S17991 is only kept in cnc_200w_rpm mode (8000-18000) and that power_percent does NOT rescale feeds",
+      "passed": true,
+      "evidence": "Step 4: `get_machine_profile {}` read before staging anything. Findings: \"The file's S17991 sits inside the 200 W head's 8000-18000 RPM window, so IF the fitted head is the 200 W one, spindle_mode: 'cnc_200w_rpm' reproduces the source RPM exactly... If it's the standard head... the doc is explicit that there is no RPM-to-percent mapping.\""
+    },
+    {
+      "text": "Only declares tool_length_applied true once work Z has been referenced with the thread mill itself fitted (tool change flow / tool setter + apply_tool_length_offset, or the operator setting Z with this cutter)",
+      "passed": true,
+      "evidence": "Q1 asks whether the thread mill is already fitted and the origin zeroed with it; step 9 inserts the full tool-change flow A (measure/park/swap/measure/apply_tool_length_offset) before the final submit_gcode_job at step 10 whenever the answer says a swap is needed, so the submitted job is only sent once true. (Note: step 6's offline convert call itself always passes tool_length_applied:true even in the swap-needed branch, before the swap in step 9 -- harmless since convert is offline, but a looser sequencing than ideal.)"
+    },
+    {
+      "text": "Treats the work origin (X0 Y0 at the hole centre, Z0 at the stock top) as the operator's, never writing it except via apply_tool_length_offset; asks how/whether the hole centre is set",
+      "passed": false,
+      "evidence": "Q1 only asks about the Z-origin/tool-fit question (\"was today's work origin zeroed with this same tool\"); no question anywhere asks whether work X0 Y0 is actually at the hole centre. The plan never verifies the XY reference at all."
+    },
+    {
+      "text": "Notes that the program's first move (G00 X0 Y0 before G43 Z20) runs at whatever Z the head is at, so the head must be at or above the motion floor / park height before the job starts",
+      "passed": false,
+      "evidence": "No mention anywhere in plan.md of the program's initial G00 X0 Y0 running at the head's current (unknown) Z, or of needing the head at/above the motion floor or park height before the job is submitted/started."
+    },
+    {
+      "text": "Submits with submit_gcode_job using frame 'work' and head_type 'cnc', after reviewing changes/warnings/validation (or validate_gcode)",
+      "passed": true,
+      "evidence": "Steps 7-8 review changes/warnings/validation and call validate_gcode; step 10: `submit_gcode_job {..., \"frame\": \"work\", \"head_type\": \"cnc\"}`."
+    },
+    {
+      "text": "Staging turn ends with the confirm URL as the last line; start_gcode_job with wait_for_approval_ms comes after, in the background",
+      "passed": true,
+      "evidence": "Step 11: \"deliver the confirm_url as the last line, alone... -- end turn --\"; step 12: `start_gcode_job {..., \"wait_for_approval_ms\": 110000}` in the background."
+    },
+    {
+      "text": "Asks all open questions in ONE batch and stages nothing that depends on an answer before the answer arrives",
+      "passed": true,
+      "evidence": "Step 5 asks all four questions together, end turn; step 6 onward is explicitly gated by \"[WAIT for the operator's reply]\" before any answer-dependent action."
+    },
+    {
+      "text": "Does not plan any Z motion (move_z / direct) the operator did not ask for; every quoted height carries frame (machine/work)",
+      "passed": true,
+      "evidence": "No move_z step appears; heights are consistently qualified (e.g. 'machine (X-19, Y342, Z328)', 'work Z-5.056')."
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 6,
+    "total": 13,
+    "pass_rate": 0.538
+  },
+  "approval_tags_counted": {
+    "literal_APPROVAL_tags": 5,
+    "literal_WAIT_tags": 6,
+    "plan_self_reported": "Counts (no-tool-change branch): approvals=1, operator waits=1, questions=4. If tool-change branch: approvals=5, operator waits=5, questions=4",
+    "consistent": false,
+    "note": "The plan's own Counts line never states 5/6 (the literal tag count across the whole document, since both branches are written inline in one file); it reports only the two branch-specific totals (1/1 and 5/5), and even the 5/5 figure undercounts the literal 6 [WAIT] tags actually present."
+  },
+  "claims": [
+    {
+      "claim": "The drilled 2.05 mm hole is the ordinary tap-drill size for M2.5x0.45",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Correct: standard metric tap-drill charts give ~2.05 mm for M2.5x0.45 (major dia 2.5 minus pitch)."
+    },
+    {
+      "claim": "convert_thread_milling_gcode is absent from TOOLS.md's 54-tool reference",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Confirmed independently: grepping TOOLS.md for 'thread' or 'convert_thread' returns no matches."
+    },
+    {
+      "claim": "Cutter geometry (file's CUTTER DIAM=1.38 vs operator's stated 1.38 mm neck) 'lines up' and needs nothing further",
+      "type": "quality",
+      "verified": false,
+      "evidence": "This is the central miss of the plan: CUTTER DIAM in a D=0 tool-centre-path program IS the cutting-tool diameter used to compute the path radius, not a value that should equal the neck. A thread mill's tooth OD is necessarily larger than its neck, so this file was almost certainly generated with the wrong (neck) diameter, which the plan does not catch."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [
+      "get_machine_profile's return shape for head type is unknown (name/field guessed)",
+      "Whether the file's leading '%' and trailing disclaimer comment must be passed through verbatim"
+    ],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "No eval-specific suggestions beyond those in grading-summary.md."
+  }
+}

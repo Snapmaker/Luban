@@ -1,0 +1,51 @@
+"""Geometric verification of the saved fixture-aware review document."""
+import os
+import FreeCAD as App
+
+base='/home/pi/dev/Luban/cnc/neck_cut_plan/'
+doc=App.openDocument(base+'neck_cut_fixture_plan.FCStd')
+lines=[]
+for name in ('Stage1Stock','Stage2Stock','Stage1Section','Stage2Section'):
+    o=doc.getObject(name)
+    assert o and not o.Shape.isNull() and o.Shape.isValid(), name
+    lines.append('%s solids=%d volume=%.3f'%(name,len(o.Shape.Solids),o.Shape.Volume))
+assert len(doc.Stage1Stock.Shape.Solids)==1
+assert len(doc.Stage2Stock.Shape.Solids)==1, 'Stock must stay attached until sawing'
+assert len(doc.Stage2Section.Shape.Solids)==2, 'Two holding bridges at Y256'
+expected=[('B0Cleanup','InitialSetups'),('B180Cleanup','InitialSetups'),
+          ('B90Side','InitialSetups'),('B270Side','InitialSetups'),
+          ('B0Finish','FinishingSetups'),('B180Finish','FinishingSetups')]
+for order,(short,round_name) in enumerate(expected,1):
+    setup=doc.getObject('Setup'+short)
+    parent=doc.getObject(round_name)
+    op=doc.getObject('TipPath'+short)
+    tr=doc.getObject('CutTrace'+short)
+    before=doc.getObject('StockBefore'+short)
+    after=doc.getObject('StockAfter'+short)
+    sweep=doc.getObject('Removal'+short)
+    jaw=doc.getObject('Jaw'+short)
+    assert setup in parent.Group and op in setup.Group and tr in setup.Group, short
+    assert setup.OperationOrder==order and op.Sequence==order
+    assert op.ViewObject.StartIndex==1, short
+    assert before and after and sweep and jaw
+    assert len(op.Path.Commands)>0 and not tr.Shape.isNull()
+    assert len(before.Shape.Solids)==1 and len(after.Shape.Solids)==1
+    volume=sweep.Shape.common(jaw.Shape).Volume
+    assert volume<0.001
+    lines.append('%02d %s round=%s commands=%d trace_edges=%d cutter/jaw=%.3f mm3'%(
+        order,short,round_name,len(op.Path.Commands),len(tr.Shape.Edges),volume))
+    if order>1:
+        prev=doc.getObject('StockAfter'+expected[order-2][0]).Shape
+        # The same material is displayed under different B rotations, so
+        # compare volume here and test rotated geometry within each setup.
+        assert abs(prev.Volume-before.Shape.Volume)<0.01, short
+assert abs(doc.getObject('StockAfterB270Side').Shape.Volume-doc.Stage1Stock.Shape.Volume)<0.01
+assert abs(doc.getObject('StockAfterB180Finish').Shape.Volume-doc.Stage2Stock.Shape.Volume)<0.01
+wcs=doc.getObject('WCSOrigin').Shape.BoundBox.Center
+assert wcs.Length<0.01, wcs
+for short,_ in expected:
+    b=doc.getObject('TipPath'+short).Path.BoundBox
+    assert max(abs(b.XMin),abs(b.XMax),abs(b.YMin),abs(b.YMax),abs(b.ZMin),abs(b.ZMax))<100, (short,b)
+lines.append('Proposed air-side WCS origin at machine X230 Y245 physical tip Z160.35: local (0,0,0); all Path bounds within 100 mm')
+with open(base+'fixture_validation.txt','w') as f:f.write('\n'.join(lines)+'\n')
+os._exit(0)

@@ -125,6 +125,12 @@ const Workspace: React.FC<WorkspaceProps> = ({ isPopup, onClose, style, classNam
 
     const [isDraggingWidget, setIsDraggingWidget] = useState(false);
     const [connected, setConnected] = useState(controller.connected);
+    // The backend finishes starting well after the renderer mounts on a cold
+    // boot; until the socket has connected once, the gap is startup, not a
+    // crash, and the socket retries by itself. Only claim the server stopped
+    // if we had a connection and lost it, or startup grace runs out.
+    const everConnectedRef = useRef(controller.connected);
+    const [startupGraceExpired, setStartupGraceExpired] = useState(false);
     const [leftItems, setLeftItems] = useState([
         {
             title: i18n._('key-Workspace/Page-Back'),
@@ -143,6 +149,9 @@ const Workspace: React.FC<WorkspaceProps> = ({ isPopup, onClose, style, classNam
 
     const controllerEvents = {
         'connect': () => {
+            if (controller.connected) {
+                everConnectedRef.current = true;
+            }
             setConnected(controller.connected);
         },
         'disconnect': () => {
@@ -241,7 +250,12 @@ const Workspace: React.FC<WorkspaceProps> = ({ isPopup, onClose, style, classNam
             pathname: '/workspace'
         });
 
+        const graceTimer = setTimeout(() => {
+            setStartupGraceExpired(true);
+        }, 30000);
+
         return () => {
+            clearTimeout(graceTimer);
             removeControllerEvents();
         };
     }, []);
@@ -249,6 +263,25 @@ const Workspace: React.FC<WorkspaceProps> = ({ isPopup, onClose, style, classNam
     function renderModalView(_connected) {
         if (_connected) {
             return null;
+        } else if (!everConnectedRef.current && !startupGraceExpired) {
+            // Cold-boot startup gap: the socket retries on its own and this
+            // modal dismisses itself on the first successful connection.
+            return (
+                <Modal
+                    disableOverlay
+                    showCloseButton={false}
+                >
+                    <Modal.Body>
+                        <div className="sm-flex">
+                            <i className="fa fa-spinner fa-pulse fa-4x" />
+                            <div className="margin-left-24">
+                                <h5>{i18n._('key-Workspace/Page-Connecting to the server...')}</h5>
+                                <p>{i18n._('key-Workspace/Page-The server is still starting up. This page will connect automatically.')}</p>
+                            </div>
+                        </div>
+                    </Modal.Body>
+                </Modal>
+            );
         } else {
             return (
                 <Modal

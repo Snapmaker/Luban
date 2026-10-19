@@ -63,15 +63,6 @@ const JogPad: React.FC<JogViewProps> = (props) => {
                             onClick={() => relativeMove({ Z: 1 })}
                         />
                     )}
-                    {
-                        enableBAxis && (
-                            <JogButton
-                                text="B+"
-                                disabled={disabled}
-                                onClick={() => relativeMove({ B: 1 })}
-                            />
-                        )
-                    }
                 </Space>
             </Row>
             <Row className="margin-bottom-8">
@@ -98,15 +89,6 @@ const JogPad: React.FC<JogViewProps> = (props) => {
                             onClick={() => absoluteMove({ Z: 0 })}
                         />
                     )}
-                    {
-                        enableBAxis && (
-                            <JogButton
-                                text="B"
-                                disabled={disabled}
-                                onClick={() => absoluteMove({ B: 0 })}
-                            />
-                        )
-                    }
                 </Space>
             </Row>
             <Row className="margin-bottom-8">
@@ -134,17 +116,30 @@ const JogPad: React.FC<JogViewProps> = (props) => {
                             onClick={() => relativeMove({ Z: -1 })}
                         />
                     )}
-                    {
-                        enableBAxis && (
-                            <JogButton
-                                text="B-"
-                                disabled={disabled}
-                                onClick={() => relativeMove({ B: -1 })}
-                            />
-                        )
-                    }
                 </Space>
             </Row>
+
+            {enableBAxis && (
+                <Row className={styles['rotary-jog-row']}>
+                    <Space direction="horizontal" size={8}>
+                        <JogButton
+                            text="B-"
+                            disabled={disabled}
+                            onClick={() => relativeMove({ B: -1 })}
+                        />
+                        <JogButton
+                            text="B"
+                            disabled={disabled}
+                            onClick={() => absoluteMove({ B: 0 })}
+                        />
+                        <JogButton
+                            text="B+"
+                            disabled={disabled}
+                            onClick={() => relativeMove({ B: 1 })}
+                        />
+                    </Space>
+                </Row>
+            )}
 
             {enableShortcut && !disabled && <JogPadShortcut {...props} />}
         </div>

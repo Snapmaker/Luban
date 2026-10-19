@@ -1,0 +1,102 @@
+{
+  "expectations": [
+    {
+      "text": "Recognises the program generator centres the thread at the XY datum, so multiple holes need either per-hole programs generated with each hole's XYZ datum or several programs; does not propose moving the work origin per hole by hand",
+      "passed": true,
+      "evidence": "\"That leaves one generator run per hole, using the generator's XYZ datum, which thread-milling.md says is covered and preserved: 4 x M2.5 + 2 x M4 = 6 programs, one file job each.\" No goto_work_origin or per-hole re-zero is ever proposed."
+    },
+    {
+      "text": "Uses the tool-change skill flow (measure old on the tool setter, park, swap, measure new, apply_tool_length_offset) for probe -> M2.5 cutter and M2.5 -> M4 cutter, since the origin was set with the touch probe",
+      "passed": true,
+      "evidence": "Step 9: \"run_tool_setter {bit_length_mm: 70, accept_probe_contact: true...}\" measures the outgoing probe for change 1; steps 11-17 park/swap/measure-new/apply; change 2 (steps 26-32) follows the same shape and only skips the old-tool re-measurement via the skill's own documented condition (\"measurements.last is the M2.5 cutter measured before cutting in step 15\"), checked live via get_tool_setter_config in step 3."
+    },
+    {
+      "text": "Does not declare tool_length_applied true for a cutter until the length offset for THAT cutter has been applied",
+      "passed": true,
+      "evidence": "\"The converter's tool_length_applied: true claim is only true after the offset... Submitting is gated on the offset step.\" Step 7 converts offline (harmless); step 18 (first M2.5 submit) comes only after step 16's apply_tool_length_offset; step 33 (first M4 submit) only after step 31's offset."
+    },
+    {
+      "text": "Gives a reasoned choice between the single-row and triple-row M4 cutter (e.g. triple = fewer turns/repeated turn-and-reposition, faster; single = lower radial load/deflection on the small neck, one continuous helix) and states the generator setting that follows (single tooth vs multi-tooth with its real cutting length)",
+      "passed": true,
+      "evidence": "\"M4 cutter choice: single-row, provided it reaches. Only one tooth is engaged, so there is about 1/3 of the radial load... The gate is reach: ... If the single-row neck is shorter than that and the triple-row neck isn't, use the triple-row with L = 3 x 0.7 = 2.1.\""
+    },
+    {
+      "text": "Flags the unknown cutting OD (and cutting length for multi-row) of the cutters and that the M2.5 cutter's 1.38 mm is the neck; asks for measurements rather than inventing them",
+      "passed": true,
+      "evidence": "\"The operator's cutter is '1.38mm neck 7.5mm long including triple row threads'. So 1.38 is the NECK diameter, not the tooth diameter.\" Question 2/3 ask for measured tooth OD and neck length by caliper for both M2.5 and M4 cutters; nothing is invented."
+    },
+    {
+      "text": "Checks thread depth vs reach: 5 mm through-plate vs 7.5 mm M2.5 neck OK; M4 reach unknown",
+      "passed": true,
+      "evidence": "\"The M2.5 cutter reaches. At the bottom pass the tip is at work Z-5.056, so the 7.5 mm neck ends at +2.44 above the plate top.\" M4: \"the neck must be at least about 6 mm... If the single-row neck is shorter than that... use the triple-row\", and Q3 asks for the M4 neck length explicitly."
+    },
+    {
+      "text": "Considers that a through hole lets the cutter exit below the plate (bed/spoilboard clearance under the plate) or states the thread length choice accordingly",
+      "passed": true,
+      "evidence": "\"The tip goes below the plate. The bottom cut is at work Z-5.056 in a 5.000 plate, so the tip goes at least 0.056 mm below the bottom face... What is under the holes (spoilboard, bed, a gap) is a question.\" Q5 asks it directly."
+    },
+    {
+      "text": "Submits each program with submit_gcode_job frame 'work' and head_type 'cnc' after convert_thread_milling_gcode; each staging turn ends on the confirm URL; starts in background",
+      "passed": true,
+      "evidence": "Step 18: \"submit_gcode_job {\"gcode\": ..., \"frame\": \"work\", \"head_type\": \"cnc\"}\" [APPROVAL]... Reply with the URL. -- end turn --\", followed by start_gcode_job with wait_for_approval_ms; same pattern at step 33."
+    },
+    {
+      "text": "Asks all open questions in ONE batch up front; total approval count is near the minimum (tool changes + one job per cutter) and states it",
+      "passed": true,
+      "evidence": "All 7 questions are asked once in turn 1 ('Questions for the operator (one message)'). Counts line: \"approvals=13 (12 if... skipped; 11 if...)\", matching 2 tool changes (7-8 approvals with the sanctioned skip) + 6 per-hole submits = 13, the realistic minimum once per-hole programs (assertion 1) are required."
+    },
+    {
+      "text": "No unrequested Z motion; all XY transport at/above the motion floor; heights qualified by frame",
+      "passed": true,
+      "evidence": "Checklist in step 6 states Height at Z328 park and Obstacles (rotary requiredToolheadZ); no move_z or traverse_xy is staged outside the tool-change and submit flow; every quoted Z is 'machine' or 'work' with a frame word attached."
+    }
+  ],
+  "summary": {
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "pass_rate": 1.0
+  },
+  "approval_tags_counted": {
+    "literal_APPROVAL_tags_in_plan_md": 13,
+    "literal_WAIT_tags_in_plan_md": 3,
+    "plans_own_Counts_line": "approvals=13 (12 if a same-session probe measurement lets step 9 be skipped; 11 if the operator accepts swapping over the setter instead of the park), operator waits=3, questions=7",
+    "agreement": "Literal tag count (13) matches the plan's own stated approvals=13 baseline exactly. Consistent and trustworthy."
+  },
+  "timing": {
+    "executor_duration_seconds": 489.78,
+    "total_tokens": 133940,
+    "tool_uses": 15
+  },
+  "claims": [
+    {
+      "claim": "Probe pretravel is not cancelled by the tool-length-offset delta, so the whole thread ends up offset deeper by the probe's own pretravel distance",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Consistent with cnc-motion-rules' distinction between contact Z and the setter's own trigger travel; no MCP tool measures this pretravel, so the plan correctly reports it as an unresolved residual rather than correcting it."
+    },
+    {
+      "claim": "A 2.05 mm drilled hole leaves only ~0.07 mm radial clearance for a ~1.9 mm cutter, so a position error from a different setup could break the cutter on the plunge",
+      "type": "quality",
+      "verified": true,
+      "evidence": "Arithmetically consistent with the operator's stated hole size and the plan's own estimated tooth OD; the plan correctly asks whether the holes were drilled from this same origin (Q4) rather than assuming."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": ["Real M2.5 tooth OD (~1.9mm) is illustrative only, pending caliper measurement", "Whether get_machine_profile actually reports head type is assumed"],
+    "needs_review": ["Whether the rotary landmark's requiredToolheadZ truly clears at Z328 for the tool-setter-to-park transit"],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "Asks all open questions in ONE batch up front; total approval count is near the minimum (tool changes + one job per cutter) and states it",
+        "reason": "The assertion's own parenthetical ('one job per cutter') is inconsistent with assertion 1, which correctly requires one job PER HOLE (6 jobs, not 2) once the generator's fixed-datum limitation is recognised. A plan that took 'one job per cutter' literally would be unable to satisfy assertion 1. The eval should say 'one job per hole' to avoid contradicting its own first assertion."
+      },
+      {
+        "reason": "No assertion checks the probe-pretravel finding (work Z0 was set by the probe's own contact, and apply_tool_length_offset cancels only the setter-side travel, not the probe's own pretravel) — this is a genuinely subtle, correct, and important catch that would otherwise leave every subsequent thread offset by an unaccounted probe pretravel distance, and no assertion rewards or penalizes noticing it."
+      }
+    ],
+    "overall": "This model's plan is strong and the assertions mostly discriminate well; the main gap is the 'one job per cutter' wording collision with assertion 1, and the missed opportunity to credit the probe-pretravel finding."
+  }
+}

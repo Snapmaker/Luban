@@ -293,6 +293,16 @@ class AppLayout extends React.PureComponent {
             });
         },
         renderCaseResource: () => {
+            // CaseResource was mounted unconditionally and merely hidden with
+            // display-none, so every launch loaded an iframe from
+            // resources.snapmaker.com and ran its access probe even for users
+            // who never open the Library. Mount it on first open, then keep it
+            // so reopening stays instant.
+            if (!this.props.showCaseResource && !this.caseResourceOpened) {
+                return null;
+            }
+            this.caseResourceOpened = true;
+
             const onClose = () => { this.props.updateShowCaseReource(false); };
             const onCallBack = () => { };
             return (

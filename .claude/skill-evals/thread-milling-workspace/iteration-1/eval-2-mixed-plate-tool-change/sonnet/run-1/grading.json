@@ -1,0 +1,108 @@
+{
+  "expectations": [
+    {
+      "text": "Recognises the program generator centres the thread at the XY datum, so multiple holes need either per-hole programs generated with each hole's XYZ datum or several programs; does not propose moving the work origin per hole by hand",
+      "passed": true,
+      "evidence": "\"To cut all six holes I need one Machining Doctor export per hole, each generated with that hole's work-coordinate XYZ datum — 4 for M2.5, 2 for M4.\" No goto_work_origin or manual re-zero per hole is proposed."
+    },
+    {
+      "text": "Uses the tool-change skill flow (measure old on the tool setter, park, swap, measure new, apply_tool_length_offset) for probe -> M2.5 cutter and M2.5 -> M4 cutter, since the origin was set with the touch probe",
+      "passed": false,
+      "evidence": "For change 1 (probe -> M2.5) the plan never runs run_tool_setter on the outgoing probe at all: \"its trigger height is 100.5 (setter surface) + 71.3 = 171.8, so apply_tool_length_offset can take that as an explicit old_trigger_z, skipping one whole approval\" (step 13: `apply_tool_length_offset {old_trigger_z: 171.8, ...}`). It never calls get_tool_setter_config to check the skill's actual skip condition ('last stored measurement is from this same tool, this session') — it substitutes an arithmetic reconstruction from a historical stored figure for a live measurement, which is not the flow's measure-old step."
+    },
+    {
+      "text": "Does not declare tool_length_applied true for a cutter until the length offset for THAT cutter has been applied",
+      "passed": true,
+      "evidence": "Step 18 (convert) precedes step 20 (submit) which is sequenced after the tool-change-1 offset (step 13); step 35/37 likewise follow the tool-change-2 offset (step 30). The ordering is respected even though the offset input itself is compromised (see assertion 2)."
+    },
+    {
+      "text": "Gives a reasoned choice between the single-row and triple-row M4 cutter (e.g. triple = fewer turns/repeated turn-and-reposition, faster; single = lower radial load/deflection on the small neck, one continuous helix) and states the generator setting that follows (single tooth vs multi-tooth with its real cutting length)",
+      "passed": true,
+      "evidence": "\"I lean toward the single-row one: Machining Doctor's single-tooth path only needs pitch/major-diameter/thread-length and helixes continuously, while the triple-row (multi-tooth) path forces a 'cutter row length longer/shorter than the 5 mm thread' choice — and neither candidate's row length is known from the name alone.\" States 'single tooth' as the generator setting."
+    },
+    {
+      "text": "Flags the unknown cutting OD (and cutting length for multi-row) of the cutters and that the M2.5 cutter's 1.38 mm is the neck; asks for measurements rather than inventing them",
+      "passed": false,
+      "evidence": "The plan never uses the word 'neck' anywhere and never questions the M2.5 cutter's own cutting OD. Worse, question 5 instructs the operator to regenerate all four M2.5 exports with 'same specs as the fixture... 1.38 mm cutter' — reusing the fixture's neck-diameter figure as the cutter (cutting) diameter input to the generator, the exact error the domain notes warn about, without flagging it. This is an invented/miscarried value used without flagging it."
+    },
+    {
+      "text": "Checks thread depth vs reach: 5 mm through-plate vs 7.5 mm M2.5 neck OK; M4 reach unknown",
+      "passed": false,
+      "evidence": "No occurrence of 'reach' or 'neck' anywhere in the plan; the M2.5 cutter's reach vs the 5 mm plate is never checked, and the M4 reach question is absent from the questions list."
+    },
+    {
+      "text": "Considers that a through hole lets the cutter exit below the plate (bed/spoilboard clearance under the plate) or states the thread length choice accordingly",
+      "passed": false,
+      "evidence": "No mention of spoilboard, bed clearance, or what is under the plate anywhere in the plan or its 6 questions."
+    },
+    {
+      "text": "Submits each program with submit_gcode_job frame 'work' and head_type 'cnc' after convert_thread_milling_gcode; each staging turn ends on the confirm URL; starts in background",
+      "passed": true,
+      "evidence": "Step 20: \"submit_gcode_job {gcode: ..., frame: 'work', head_type: 'cnc'}\" [APPROVAL] — read the operator the confirm page's Frame row and machine-resolved Z extents.\" followed by 'deliver URL, end turn' and a background start_gcode_job; same for step 37."
+    },
+    {
+      "text": "Asks all open questions in ONE batch up front; total approval count is near the minimum (tool changes + one job per cutter) and states it",
+      "passed": true,
+      "evidence": "6 questions asked once in step 5 before any staging. Counts line: \"approvals=12 baseline... plus up to 6 conditional... questions=6\" — states the count, though the '12 baseline' figure is only reachable via the unsanctioned skip identified under assertion 2 (the true minimum, matching a correctly-measured change 1, is 13, same as the other configs)."
+    },
+    {
+      "text": "No unrequested Z motion; all XY transport at/above the motion floor; heights qualified by frame",
+      "passed": true,
+      "evidence": "move_z to 328 is only inserted conditionally ('only if it is actually needed, rather than budgeting one for every hole') after a get_position check; no XY transport is staged outside the tool-change flow and the per-hole submits."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 4,
+    "total": 10,
+    "pass_rate": 0.6
+  },
+  "approval_tags_counted": {
+    "literal_APPROVAL_tags_in_plan_md": 10,
+    "literal_WAIT_tags_in_plan_md": 9,
+    "plans_own_Counts_line": "approvals=12 baseline (3 tool-change-1 + 4 M2.5 submits + 3 tool-change-2 + 2 M4 submits) plus up to 6 conditional move_z insurance approvals, operator waits=2, questions=6",
+    "agreement": "Literal tag count (10) undercounts the plan's own stated total (12+) because per-hole repeat steps (holes 2-4 M2.5, hole 2 M4) are described in prose ('repeat 4 times' / 'repeat twice') rather than individually tagged. The stated baseline of 12 is itself built on an unsanctioned measurement skip (assertion 2); a plan that measured the outgoing probe properly would need 13, matching opus/haiku's true minimum."
+  },
+  "timing": {
+    "executor_duration_seconds": 450.635,
+    "total_tokens": 128060,
+    "tool_uses": 14
+  },
+  "claims": [
+    {
+      "claim": "The outgoing touch probe's trigger height can be computed as setter surface (Z100.5) + stored probe effectiveLength (71.3) = 171.8, and used directly as apply_tool_length_offset's old_trigger_z",
+      "type": "process",
+      "verified": false,
+      "evidence": "Not sanctioned. tool-change SKILL.md's skip condition requires 'the last stored measurement... is from this same tool, this session' (checked via get_tool_setter_config), which this plan never checks. cnc-motion-rules §4 requires apply_tool_length_offset to have 'a measurement pair from this connection'. cnc-motion-rules §2 explicitly names 71.1/71.2/71.3 as 'historical' figures, not calibration to be trusted for a Z-critical origin write. This is a hand-computed trigger Z substituting for a live measurement — the exact anti-pattern the grading task asked to check for."
+    },
+    {
+      "claim": "The M2.5 regeneration should reuse '1.38 mm cutter' from the existing fixture as the input to Machining Doctor for all four new M2.5 exports",
+      "type": "factual",
+      "verified": false,
+      "evidence": "1.38 mm is documented (via the operator's own cutter description in the parallel eval and the fixture's own arithmetic, radius 0.575 = (2.53-1.38)/2) as the cutter's NECK diameter, not its thread-form/cutting OD. Reusing it as the generator's cutter-diameter input reproduces the exact undersized-tool-centre-path error the fixture already exhibits, undetected by this plan."
+    },
+    {
+      "claim": "get_machine_profile confirms head type before spindle_mode is fixed",
+      "type": "process",
+      "verified": false,
+      "evidence": "The plan calls get_machine_profile live in step 4, but every convert_thread_milling_gcode call (steps 18, 35) hardcodes spindle_mode: 'cnc_200w_rpm' with no branch for a standard-head result; the plan's own Findings section justifies this from 'README.md line 5... hardware-verified with the 200 W CNC toolhead', i.e. asserting the head type from documentation rather than truly conditioning the steps on the live read."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": ["Whether the generator's XYZ datum is in the same frame as the machine's work origin", "Whether S17991 being just under the 18000 RPM ceiling is deliberate"],
+    "needs_review": ["The computed old_trigger_z=171.8 shortcut for tool change 1 (not a real measurement)", "spindle_mode hardcoded to cnc_200w_rpm from README rather than branched on the live get_machine_profile result"],
+    "workarounds": ["Skipped run_tool_setter for the outgoing probe by computing its trigger height algebraically"]
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "Does not declare tool_length_applied true for a cutter until the length offset for THAT cutter has been applied",
+        "reason": "This assertion passes on ordering alone even when the offset itself was produced by a fabricated old_trigger_z rather than a real measurement. Consider adding a companion assertion that the tool-change flow's old-tool measurement is either an actual run_tool_setter call or an explicitly-checked same-session/same-tool skip (via get_tool_setter_config), not an algebraic reconstruction from stored geometry constants."
+      },
+      {
+        "reason": "An important, uncaught defect: the plan instructs the operator to regenerate the M2.5 programs using '1.38 mm cutter' (the neck diameter) as the Machining Doctor cutter-diameter input, reproducing the exact tool-centre-path error the fixture already demonstrates. No assertion in this eval checks whether a NEW M2.5 generation request correctly asks for the measured cutting OD rather than reusing the fixture's stated value."
+      }
+    ],
+    "overall": "Assertions 2, 5, 6 and 7 correctly caught real, serious problems in this plan (an unsanctioned computed tool-setter reading, and no engineering check on reach/neck/spoilboard at all). One gap: assertion 3 would pass even though the offset it gates is itself unsound; that dependency should be made explicit."
+  }
+}

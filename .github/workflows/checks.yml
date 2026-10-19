@@ -1,0 +1,146 @@
+name: Checks
+
+# Lint, type check and test. Each job runs in parallel with the others, and
+# the build workflows call this as a job with no `needs` link to their build
+# jobs, so a failing check is reported without holding back the packages.
+
+on:
+    pull_request:
+    workflow_dispatch:
+    workflow_call:
+        inputs:
+            ref:
+                description: 'Git ref to check out (defaults to the triggering ref)'
+                type: string
+                required: false
+                default: ''
+
+concurrency:
+    group: checks-${{ github.event_name }}-${{ inputs.ref || github.ref }}
+    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+    contents: read
+
+jobs:
+    lint:
+        name: Lint
+        runs-on: ubuntu-latest
+        steps:
+            -   uses: actions/checkout@v4
+                with:
+                    ref: ${{ inputs.ref }}
+                    token: ${{ secrets.SACP_TOKEN || github.token }}
+                    submodules: 'true'
+
+            -   uses: actions/setup-node@v7
+                with:
+                    node-version: 22
+                    cache: npm
+
+            # Lint and type checks need no native modules or Electron binary.
+            -   run: npm install --ignore-scripts
+
+            -   run: npm run lint
+
+    typecheck-server:
+        name: Type check (server)
+        runs-on: ubuntu-latest
+        steps:
+            -   uses: actions/checkout@v4
+                with:
+                    ref: ${{ inputs.ref }}
+                    token: ${{ secrets.SACP_TOKEN || github.token }}
+                    submodules: 'true'
+
+            -   uses: actions/setup-node@v7
+                with:
+                    node-version: 22
+                    cache: npm
+
+            -   run: npm install --ignore-scripts
+
+            # tsconfig-server.json is clean; any error fails the job.
+            -   run: npm run typecheck:server
+
+    typecheck-app:
+        name: Type check (app, no new errors)
+        runs-on: ubuntu-latest
+        steps:
+            -   uses: actions/checkout@v4
+                with:
+                    ref: ${{ inputs.ref }}
+                    token: ${{ secrets.SACP_TOKEN || github.token }}
+                    submodules: 'true'
+
+            -   uses: actions/setup-node@v7
+                with:
+                    node-version: 22
+                    cache: npm
+
+            -   run: npm install --ignore-scripts
+
+            # tsconfig.json carries upstream errors; build/tsc-baseline/app.json
+            # records them and this fails when a file gains or loses any.
+            -   run: npm run typecheck:app
+
+    typecheck-mcp:
+        name: Type check (MCP, strict)
+        runs-on: ubuntu-latest
+        steps:
+            -   uses: actions/checkout@v4
+                with:
+                    ref: ${{ inputs.ref }}
+                    token: ${{ secrets.SACP_TOKEN || github.token }}
+                    submodules: 'true'
+
+            -   uses: actions/setup-node@v7
+                with:
+                    node-version: 22
+                    cache: npm
+
+            -   run: npm install --ignore-scripts
+
+            # The MCP code's own strict tsconfig. It also compiles the legacy
+            # server modules the MCP imports; only errors in
+            # src/server/services/mcp/ count, and there must be none.
+            -   run: npm run typecheck:mcp
+
+    test:
+        name: Tests
+        runs-on: ubuntu-latest
+        steps:
+            -   uses: actions/checkout@v4
+                with:
+                    ref: ${{ inputs.ref }}
+                    token: ${{ secrets.SACP_TOKEN || github.token }}
+                    submodules: 'true'
+
+            -   name: Install system dependencies
+                run: |
+                    sudo apt-get update
+                    sudo apt-get install -y python3 make g++ build-essential fontconfig libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
+
+            -   uses: actions/setup-python@v6
+                with:
+                    python-version: 3.11
+
+            -   uses: actions/setup-node@v7
+                with:
+                    node-version: 22
+                    cache: npm
+
+            # Full install, as the packages build does, so tests see the same
+            # dependency tree a developer checkout has.
+            -   run: npm install --unsafe-perm
+
+            -   name: Tape suite
+                run: npm test
+
+            -   name: MCP suite
+                if: success() || failure()
+                run: npm run test:mcp
+
+            -   name: Vibration monitor (Python, simulated sensors)
+                if: success() || failure()
+                run: python -m unittest discover -s src/server/services/mcp/tests -p 'test_vibration_monitor.py' -v

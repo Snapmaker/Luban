@@ -1,5 +1,6 @@
 import path from 'path';
 import pkg from '../../package.json';
+import { SERVER_DIR } from '../lib/paths';
 
 // RCFile
 const RCFILE = '.snapmaker-luban.json';
@@ -187,10 +188,10 @@ export default {
 
         backend: {
             // path where resources get loaded from
-            loadPath: path.resolve(__dirname, '..', 'i18n', '{{lng}}', '{{ns}}.json'),
+            loadPath: path.join(SERVER_DIR, 'i18n', '{{lng}}', '{{ns}}.json'),
 
             // path to post missing resources
-            addPath: path.resolve(__dirname, '..', 'i18n', '{{lng}}', '{{ns}}.savedMissing.json'),
+            addPath: path.join(SERVER_DIR, 'i18n', '{{lng}}', '{{ns}}.savedMissing.json'),
 
             // jsonIndent to use when storing json files
             jsonIndent: 4

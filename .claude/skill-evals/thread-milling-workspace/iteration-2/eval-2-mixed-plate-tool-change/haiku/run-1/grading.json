@@ -1,0 +1,79 @@
+{
+  "expectations": [
+    {
+      "text": "Uses per-feature work-coordinate generator datums and one job per hole for this workflow; explains why traversing then replaying the X0 Y0 export does not relocate it and avoids origin writes or naive concatenation.",
+      "passed": true,
+      "evidence": "Each hole gets its own convert/validate/submit with its own work datum (\"Hole M2.5-2 at (60,10): Convert, validate, submit (work datum at X60 Y10)\", etc. through all 6 holes) -- unlike iteration-1's haiku run on this eval, no reposition-and-replay scheme appears. The mechanism (why replaying a fixed-datum program elsewhere would not relocate it) is never stated in words, only avoided in practice."
+    },
+    {
+      "text": "Uses the tool-change skill flow (measure old on the tool setter, park, swap, measure new, apply_tool_length_offset) for probe -> M2.5 cutter and M2.5 -> M4 cutter, since the origin was set with the touch probe",
+      "passed": true,
+      "evidence": "Steps 4-9 (run_tool_setter probe with accept_probe_contact:true, goto_tool_change_position, wait, run_tool_setter M2.5, apply_tool_length_offset) and steps 21-25 repeat the full flow for M2.5->M4."
+    },
+    {
+      "text": "Does not declare tool_length_applied true for a cutter until the length offset for THAT cutter has been applied",
+      "passed": true,
+      "evidence": "Step 10's conversion (with \"tool length applied\") for hole M2.5-1 occurs after step 8's apply_tool_length_offset; step 27's M4 conversion occurs after step 25's apply_tool_length_offset."
+    },
+    {
+      "text": "Gives a reasoned choice between the single-row and triple-row M4 cutter (e.g. triple = fewer turns/repeated turn-and-reposition, faster; single = lower radial load/deflection on the small neck, one continuous helix) and states the generator setting that follows (single tooth vs multi-tooth with its real cutting length)",
+      "passed": false,
+      "evidence": "\"if the triple-row M4 cutter effective cutting length is 4.5 mm or longer, use triple-row... if shorter, use single-row\" -- 4.5 mm is an invented numeric threshold with no basis in the docs or fixture (the plan's own critique.md admits \"4.5 mm is not justified by the docs -- it is a guess\"). This is exactly the fabricated-threshold failure mode the grading brief calls out, not a qualitative reasoned tradeoff."
+    },
+    {
+      "text": "Flags the unknown cutting OD (and cutting length for multi-row) of the cutters and that the M2.5 cutter's 1.38 mm is the neck; asks for measurements rather than inventing them",
+      "passed": false,
+      "evidence": "Step 10's real M2.5 conversion call plugs in \"effective length from fixture 2.25mm [do not substitute]\" as the cutting length for the actual M2.5x0.45 cutter, reusing the fixture's number as a recipe value (which the prompt explicitly forbids) instead of asking for or flagging it as unmeasured; the findings also state cutting OD must be verified \"to ensure compliance with a 2.53+ mm major diameter thread\", treating the fixture-derived 2.53 mm as an established target rather than an unconfirmed assumption."
+    },
+    {
+      "text": "Checks actual deepest travel, tooth-to-tip geometry and neck/shank reach against the 5 mm plate; does not take nominal plate thickness alone as clearance proof; M4 reach remains unknown.",
+      "passed": false,
+      "evidence": "The 7.5 mm reach and 1.38 mm neck are only restated from the prompt in the Findings bullet; no comparison against the 5 mm plate's deepest Z, tooth-to-tip offset, or overrun is ever computed, and M4 reach is never flagged as unknown anywhere in the plan."
+    },
+    {
+      "text": "Considers that a through hole lets the cutter exit below the plate (bed/spoilboard clearance under the plate) or states the thread length choice accordingly",
+      "passed": false,
+      "evidence": "Only a generic boilerplate line in Readiness (\"through-hole clearance below plate is the operator's responsibility to confirm before clicking\") with no engagement with the specific geometry (deepest Z, tooth-to-tip offset, what's under the plate) that opus and sonnet both worked through."
+    },
+    {
+      "text": "Submits each program with submit_gcode_job frame 'work' and head_type 'cnc' after convert_thread_milling_gcode; each staging turn ends on the confirm URL; starts in background",
+      "passed": true,
+      "evidence": "Step 12: `submit_gcode_job` with `frame: \"work\"`, `head_type: \"cnc\"` [APPROVAL], followed by \"-- end turn --\" then step 13 `start_gcode_job` in the background; same shape repeated for every hole."
+    },
+    {
+      "text": "Batches missing inputs, groups jobs by cutter, and counts approvals per feature plus actual tool-change stages, with repeats/branches explicit; conversion, reads and polls are not approvals.",
+      "passed": false,
+      "evidence": "Questions are batched and jobs are grouped by cutter, but the Counts arithmetic is internally wrong (\"Total literal [APPROVAL] tags: 2+4+4+4+2+1 = 17 staged approvals\") when an actual grep of the document finds only 15 tags -- the tool-setter+park bucket (counted as \"2\") is double-counted inside the \"M2.5 swap: 4\" bucket that already includes those same two steps. The total also silently includes an unsanctioned extra approval (see next assertion)."
+    },
+    {
+      "text": "No unrequested Z motion; all XY transport at/above the motion floor; heights qualified by frame",
+      "passed": false,
+      "evidence": "Step 31: \"`move_z` to machine Z328 (park height) [APPROVAL] [WAIT for result]\" at the end of the job -- the operator never asked to return to park; this is unrequested Z motion staged as if it were required."
+    },
+    {
+      "text": "Measures the outgoing touch probe with accept_probe_contact true; never fabricates old_trigger_z from setter surface plus stored effectiveLength.",
+      "passed": true,
+      "evidence": "Step 4: \"`run_tool_setter` with `bit_length_mm` = stated touch probe protrusion, `accept_probe_contact: true`\" -- a live measurement; no manual old_trigger_z arithmetic from the stored 71.3 appears anywhere."
+    },
+    {
+      "text": "Unknown origin-tool history blocks an offset transfer; a stored origin alone is not evidence of which tool set it.",
+      "passed": true,
+      "evidence": "Both tool changes always call a fresh run_tool_setter for the outgoing tool (steps 4 and 21) rather than assuming reuse from stored state, so the plan never trusts a stored origin/measurement as evidence on its own."
+    }
+  ],
+  "summary": {"passed": 6, "failed": 6, "total": 12, "pass_rate": 0.5},
+  "approval_tags_counted": 15,
+  "stated_logical_approvals": "plan states \"Total: 17 approvals + 4 operator interaction waits\" -- both the arithmetic (double-counts the tool-setter+park steps) and the total are wrong; an actual grep of plan.md finds 15 [APPROVAL] tags, one of which (step 31's park move_z) is an unrequested extra not sanctioned by the realistic minimum of 13-14",
+  "execution_metrics": {"total_tool_calls": 12, "total_tokens": 64136, "duration_ms": 165208},
+  "timing": {"executor_duration_seconds": 165.2},
+  "claims": [
+    {"claim": "haiku avoids iteration-1's reposition-and-replay failure mode on this eval", "type": "process", "verified": true, "evidence": "Every hole is converted and submitted with its own work-frame datum; no traverse-then-rerun-the-same-export scheme appears (contrast iteration-1 grading-summary.md's description of haiku's invalid \"Option A\")."},
+    {"claim": "The M2.5 cutter's real cutting length is unknown and must be measured", "type": "quality", "verified": false, "evidence": "Contradicted by step 10, which uses the fixture's 2.25 mm effective length directly in the real M2.5 conversion call rather than treating it as unmeasured."}
+  ],
+  "eval_feedback": {
+    "suggestions": [
+      {"reason": "haiku's failure this iteration is a different flavor of the same underlying problem iteration-1 caught (using fixture-derived numbers as a cutting recipe) -- worth confirming assertion 5's wording clearly covers 'reused a fixture constant as a real value' and not only 'stated a wrong number from scratch', since haiku's step 10 language ('effective length from fixture 2.25mm [do not substitute]') is easy to skim past as a caveat rather than recognize as the actual violation."}
+    ],
+    "overall": "Assertions 4-7, 9 and 10 all caught real, distinct failures in this run; none look like false positives."
+  }
+}

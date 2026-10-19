@@ -1,0 +1,20 @@
+import FreeCAD as App
+import Part
+path='/home/pi/dev/Luban/cnc/neck_cut_plan/neck_cut_proposal.FCStd'
+doc=App.openDocument(path)
+root=doc.getObject('ReadMe')
+assert root.Status.startswith('Concept CAM')
+assert abs(root.B0ChannelDepth.Value-9.1)<1e-6
+assert abs(root.B180ChannelDepth.Value-6.1)<1e-6
+assert abs(root.TargetDepthPerSide.Value-24)<1e-6
+for name in ('B90DraftPath','B270DraftPath'):
+    op=doc.getObject(name)
+    assert op and len(op.Path.Commands)==60
+assert not any(o.Name.endswith('Job') for o in doc.Objects)
+slab=Part.makeBox(36.4,0.01,64.1,App.Vector(150,255.995,-64.1))
+stage1=doc.getObject('RemainingEnvelope').Shape.common(slab).Volume/0.01
+final=doc.getObject('TabbedFinishEnvelope').Shape.common(slab).Volume/0.01
+assert abs(stage1-(16.1*21.2))<0.01,stage1
+assert abs(final-2*4.8*8)<0.01,final
+assert doc.getObject('TabbedFinishEnvelope').Shape.isValid()
+print('VERIFIED',path,'objects',len(doc.Objects),'paths',120,'stage1_area',round(stage1,2),'tab_area',round(final,2))

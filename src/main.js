@@ -7,44 +7,163 @@ import 'core-js';
 import { enable as electronEnable, initialize as electronRemoteMainInitialize } from '@electron/remote/main';
 import { app, BrowserWindow, dialog, ipcMain, Menu, powerSaveBlocker, protocol, screen, session, shell } from 'electron';
 import Store from 'electron-store';
-import { autoUpdater } from 'electron-updater';
 import fs from 'fs';
 import { debounce, isNull, isUndefined } from 'lodash';
 import log from 'loglevel';
-import fetch from 'node-fetch';
 import path from 'path';
 import url from 'url';
 
 import DataStorage from './DataStorage';
 import MenuBuilder, { addRecentFile, cleanAllRecentFiles } from './electron-app/Menu';
 import { configureWindow } from './electron-app/window';
+import getWindowBounds from './electron-app/window-bounds';
 import pkg from './package.json';
+import { ENV_KEY as STARTUP_EPOCH_KEY, epoch as startupEpoch, formatTimeline as formatStartupTimeline, mark as startupMark } from './startup-timeline';
 
-import * as Sentry from "@sentry/electron/main";
+const CRASH_REPORTING_KEY = 'enableCrashReporting';
 
-Sentry.init({
-  dsn: "https://cd2af28a126afbc7a8257a75b3b5d0ab@o4508125599563776.ingest.us.sentry.io/4508125605068800",
-  release: pkg.version,
-//   integrations: [new Sentry.Integrations.BrowserTracing()],
-  tracesSampleRate: 1.0,
-  debug: true,
-  beforeSend(event) {
-    log.info('Sentry event::: ', event);
-    // Log the error to the console
-    if (event.exception) {
-      console.error('Captured exception:', event.exception.values[0]);
+/*
+ * Crash reporting is opt-in and off by default.
+ *
+ * Sentry used to init at module scope, before the window existed: 21
+ * integrations, the Electron crashReporter, four OpenTelemetry globals and a
+ * read of its offline envelope store, all on the path to first paint, and all
+ * of it useless to someone offline or behind a VPN. It is now required only
+ * when the user has asked for it.
+ */
+const initCrashReporting = (store) => {
+    if (!store.get(CRASH_REPORTING_KEY, false)) {
+        log.info('Crash reporting disabled');
+        return;
     }
-    return event;
-  }
-});
+
+    try {
+        // eslint-disable-next-line global-require
+        const Sentry = require('@sentry/electron/main');
+
+        Sentry.init({
+            dsn: 'https://cd2af28a126afbc7a8257a75b3b5d0ab@o4508125599563776.ingest.us.sentry.io/4508125605068800',
+            release: pkg.version,
+            tracesSampleRate: 1.0,
+            beforeSend(event) {
+                if (event.exception) {
+                    log.error('Captured exception:', event.exception.values[0]);
+                }
+                return event;
+            }
+        });
+        log.info('Crash reporting enabled');
+    } catch (err) {
+        log.warn('Crash reporting failed to initialise', err);
+    }
+};
 
 log.setLevel(log.levels.INFO);
 
-const config = new Store();
+// One clock for main, the forked server and the renderer.
+process.env[STARTUP_EPOCH_KEY] = String(startupEpoch);
+
+/*
+ * A force-killed session can leave the userData PATH occupied by a small
+ * Chromium HSTS/TransportSecurity state FILE (~200 bytes of {"sts":[...]})
+ * instead of the directory - observed live 2026-08-31: the network service
+ * flushes it to the userData root when it dies while the directory is gone.
+ * electron-store then throws EEXIST on mkdir, crashing boot (and blocking
+ * quit, whose winBounds save also mkdirs). Guard: rename the stray file
+ * aside and log; callable again before any late store write.
+ */
+const ensureUserDataDir = (label) => {
+    const dir = app.getPath('userData');
+    try {
+        const stat = fs.statSync(dir);
+        if (stat.isDirectory()) {
+            return;
+        }
+        const strayPath = `${dir}.stray-${Date.now()}`;
+        fs.renameSync(dir, strayPath);
+        log.warn(`[userData ${label}] path was a ${stat.size}-byte FILE, not a directory - moved to ${strayPath}`);
+    } catch (err) {
+        if (err.code !== 'ENOENT') {
+            log.warn(`[userData ${label}] guard failed: ${err.message}`);
+            return;
+        }
+        log.warn(`[userData ${label}] directory missing`);
+    }
+    try {
+        fs.mkdirSync(dir, { recursive: true });
+        log.warn(`[userData ${label}] directory (re)created`);
+    } catch (err) {
+        log.warn(`[userData ${label}] mkdir failed: ${err.message}`);
+    }
+};
+
+ensureUserDataDir('boot');
 const userDataDir = app.getPath('userData');
+
+// electron-store is compiled into this bundle (webpack.config.main.production.js),
+// so hand conf everything it would otherwise infer from the calling file: given
+// no `cwd` it names the project by walking up from `module.parent` with pkg-up,
+// and a bundle has no parent file to walk from. Both options equal what
+// electron-store derives on its own (cwd = app.getPath('userData'), name from
+// the app's package.json), so the file stays `<userData>/config.json` and the
+// settings already there (winBounds, enableCrashReporting, projectFile...) are
+// still found.
+const config = new Store({
+    cwd: userDataDir,
+    projectName: pkg.name,
+});
+
+initCrashReporting(config);
 global.luban = {
     userDataDir
 };
+
+const childProcess = require('child_process');
+
+// Diagnostic watch (pre-fix forensics, cheap enough to keep): log STATE
+// TRANSITIONS of the userData entry itself (directory <-> file <-> missing;
+// writes inside the directory fire 'change' events on the entry, so raw
+// events are too noisy to log). On a flip to FILE - the stray-HSTS
+// signature - also capture the content head and which electron processes
+// exist at that instant, to attribute the writer. Race unreproduced as of
+// 2026-08-31 despite bare/populated/fresh-profile speed-run attempts; the
+// two live-caught occurrences were ~10s after the GitHub update-check
+// response (Chromium's delayed HSTS persist window).
+try {
+    let watchedState = 'directory';
+    fs.watch(path.dirname(userDataDir), (eventType, filename) => {
+        if (filename !== path.basename(userDataDir)) {
+            return;
+        }
+        let state = 'MISSING';
+        let isFile = false;
+        try {
+            const stat = fs.statSync(userDataDir);
+            isFile = !stat.isDirectory();
+            state = isFile ? `FILE (${stat.size} bytes)` : 'directory';
+        } catch (err) {
+            // keep MISSING
+        }
+        if (state === watchedState) {
+            return;
+        }
+        watchedState = state;
+        log.warn(`[userData watch] ${new Date().toISOString()} ${eventType}: path is now ${state}`);
+        if (isFile) {
+            try {
+                const head = fs.readFileSync(userDataDir, 'utf8').slice(0, 120);
+                log.warn(`[userData watch] stray content head: ${head}`);
+            } catch (err) {
+                log.warn(`[userData watch] could not read stray file: ${err.message}`);
+            }
+            childProcess.exec('tasklist /FI "IMAGENAME eq electron.exe" /FO CSV', (err, stdout) => {
+                log.warn(`[userData watch] electron processes at flip:\n${err ? err.message : stdout}`);
+            });
+        }
+    });
+} catch (err) {
+    log.warn(`[userData watch] could not watch: ${err.message}`);
+}
 let serverData = null;
 let mainWindow = null;
 let loadUrl = '';
@@ -54,22 +173,30 @@ const loadingMenu = [{
     label: '',
 }];
 
-const childProcess = require('child_process');
-
 const SERVER_DATA = 'serverData';
 const UPLOAD_WINDOWS = 'uploadWindows';
 
 const { CLIENT_PORT, SERVER_PORT } = pkg.config;
 
+// The app is served off disk through the luban:// handler, so the window no
+// longer has to wait for the server to be listening before it can load.
+const APP_URL = 'luban://127.0.0.1/';
+
+// The renderer asks for this as soon as it boots, which can be before the server
+// is listening. Answering null is fine - 'server-origin' follows when it is up.
+ipcMain.handle('get-server-origin', () => loadUrl || null);
+
+// Crash reporting is read once at startup, so a change applies on next start.
+ipcMain.handle('get-crash-reporting', () => config.get(CRASH_REPORTING_KEY, false));
+ipcMain.on('set-crash-reporting', (event, enabled) => {
+    config.set(CRASH_REPORTING_KEY, !!enabled);
+    log.info(`Crash reporting ${enabled ? 'enabled' : 'disabled'}, applies on next start`);
+});
+
 
 function getBrowserWindowOptions() {
     const defaultOptions = {
-        width: 1440,
-        height: 900,
-        minHeight: 708,
-        minWidth: 1024,
         show: false,
-        useContentSize: true,
         title: `${pkg.name} ${pkg.version}`,
         webPreferences: {
             nodeIntegration: true,
@@ -85,51 +212,8 @@ function getBrowserWindowOptions() {
     // { x, y, width, height }
     const lastOptions = config.get('winBounds');
 
-    // Get display that most closely intersects the provided bounds.
-    let windowOptions = {};
-    if (lastOptions) {
-        const display = screen.getDisplayMatching(lastOptions);
-
-        if (display.id === lastOptions.id) {
-            // use last time options when using the same display
-            windowOptions = {
-                ...windowOptions,
-                ...lastOptions
-            };
-        } else {
-            // or center the window when using other display
-            const workArea = display.workArea;
-
-            // calculate window size
-            const width = Math.max(Math.min(lastOptions.width, workArea.width), 360);
-            const height = Math.max(Math.min(lastOptions.height, workArea.height), 240);
-            const x = workArea.x + (workArea.width - width) / 2;
-            const y = workArea.y + (workArea.height - height) / 2;
-
-            windowOptions = {
-                id: display.id,
-                x,
-                y,
-                width,
-                height
-            };
-        }
-    } else {
-        const display = screen.getPrimaryDisplay();
-        // const { x, y, width, height } = display.workArea;
-        const { x, y, width } = display.workArea;
-        const nx = x + (width - 1440) / 2;
-        windowOptions = {
-            id: display.id,
-            // x,
-            // y,
-            x: nx,
-            y,
-            center: true
-            // width,
-            // height
-        };
-    }
+    const display = lastOptions ? screen.getDisplayMatching(lastOptions) : screen.getPrimaryDisplay();
+    const windowOptions = getWindowBounds(display, lastOptions);
 
     return Object.assign({}, defaultOptions, windowOptions);
 }
@@ -139,6 +223,19 @@ function sendUpdateMessage(text) {
 }
 
 // handle update issue
+// Required on first use. Nothing checks for updates until the renderer asks,
+// and offline it is dead weight loaded before the window.
+let autoUpdaterInstance = null;
+const getAutoUpdater = () => {
+    if (!autoUpdaterInstance) {
+        // eslint-disable-next-line global-require
+        autoUpdaterInstance = require('electron-updater').autoUpdater;
+    }
+    return autoUpdaterInstance;
+};
+
+let autoUpdaterWired = false;
+
 function updateHandle() {
     const message = {
         error: 'key-settings_message-error',
@@ -146,95 +243,110 @@ function updateHandle() {
         updateAva: 'key-settings_message-updateAva',
         updateNotAva: 'key-settings_message-update_not_ava'
     };
-    // Official document: https://www.electron.build/auto-update.html
-    autoUpdater.autoDownload = false;
-    // Whether to automatically install a downloaded update on app quit. Applicable only on Windows and Linux.
-    autoUpdater.autoInstallOnAppQuit = false;
-
-    autoUpdater.on('error', (err) => {
-        sendUpdateMessage(message.error, err);
-    });
-    // Emitted when checking if an update has started.
-    autoUpdater.on('checking-for-update', () => {
-        sendUpdateMessage(message.checking);
-    });
-
-    // Emitted when there is an available update. The update is downloaded automatically if autoDownload is true.
-    autoUpdater.on('update-available', async (downloadInfo) => {
-        // {
-        //   version: string;
-        //   files: Array<{ url: string; sha512: string; size: number; }>;
-        //   path: string;
-        //   sha512: string;
-        //   releaseDate: string;
-        //   releaseNotes: string;
-        // }
-        log.debug('event: update-available');
-
-        sendUpdateMessage(message.updateAva);
-
-        // Get chinese version of release note for zh-CN locale
-        if (app.getLocale() === 'zh-CN') {
-            if (!downloadInfo.releaseNotes && process.platform !== 'linux') {
-                // for aliyuncs
-                const changelogUrl = `https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.com/download/luban/Snapmaker-Luban-${downloadInfo.version}.changelog.md`;
-                const result = await fetch(changelogUrl,
-                    {
-                        mode: 'cors',
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'text/markdown'
-                        }
-                    })
-                    .then((response) => {
-                        response.headers['access-control-allow-origin'] = { value: '*' };
-                        return response.text();
-                    });
-
-                downloadInfo.releaseChangeLog = result;
-                downloadInfo.releaseName = `v${downloadInfo.version}`;
-            }
+    // Wired on first use so requiring electron-updater stays off the startup path.
+    const wireAutoUpdater = () => {
+        const updater = getAutoUpdater();
+        if (autoUpdaterWired) {
+            return updater;
         }
+        autoUpdaterWired = true;
 
-        mainWindow.webContents.send('update-available', { ...downloadInfo, prevVersion: app.getVersion() });
-    });
-    // Emitted when there is no available update.
-    autoUpdater.on('update-not-available', () => {
-        sendUpdateMessage(message.updateNotAva);
-    });
-    autoUpdater.on('download-progress', (progressObj) => {
-        mainWindow.setProgressBar(progressObj.percent / 100);
-    });
-    // downloadInfo — for generic and github providers
-    autoUpdater.on('update-downloaded', debounce((downloadInfo) => {
-        ipcMain.on('replaceAppNow', () => {
-            // some code here to handle event
-            try {
-                autoUpdater.quitAndInstall();
-            } catch (err) {
-                log.error('quitAndInstall get err', err);
-            }
+        // Official document: https://www.electron.build/auto-update.html
+        updater.autoDownload = false;
+        // Whether to automatically install a downloaded update on app quit. Applicable only on Windows and Linux.
+        updater.autoInstallOnAppQuit = false;
+
+        updater.on('error', (err) => {
+            sendUpdateMessage(message.error, err);
         });
-        mainWindow.webContents.send('is-replacing-app-now', downloadInfo);
-    }), 300);
+        // Emitted when checking if an update has started.
+        updater.on('checking-for-update', () => {
+            sendUpdateMessage(message.checking);
+        });
+
+        // Emitted when there is an available update. The update is downloaded automatically if autoDownload is true.
+        updater.on('update-available', async (downloadInfo) => {
+            // {
+            //   version: string;
+            //   files: Array<{ url: string; sha512: string; size: number; }>;
+            //   path: string;
+            //   sha512: string;
+            //   releaseDate: string;
+            //   releaseNotes: string;
+            // }
+            log.debug('event: update-available');
+
+            sendUpdateMessage(message.updateAva);
+
+            // Get chinese version of release note for zh-CN locale
+            if (app.getLocale() === 'zh-CN') {
+                if (!downloadInfo.releaseNotes && process.platform !== 'linux') {
+                    // for aliyuncs
+                    const changelogUrl = `https://snapmaker.oss-cn-beijing.aliyuncs.com/snapmaker.com/download/luban/Snapmaker-Luban-${downloadInfo.version}.changelog.md`;
+                    // eslint-disable-next-line global-require
+                    const fetch = require('node-fetch');
+                    const result = await fetch(changelogUrl,
+                        {
+                            mode: 'cors',
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'text/markdown'
+                            }
+                        })
+                        .then((response) => {
+                            response.headers['access-control-allow-origin'] = { value: '*' };
+                            return response.text();
+                        });
+
+                    downloadInfo.releaseChangeLog = result;
+                    downloadInfo.releaseName = `v${downloadInfo.version}`;
+                }
+            }
+
+            mainWindow.webContents.send('update-available', { ...downloadInfo, prevVersion: app.getVersion() });
+        });
+        // Emitted when there is no available update.
+        updater.on('update-not-available', () => {
+            sendUpdateMessage(message.updateNotAva);
+        });
+        updater.on('download-progress', (progressObj) => {
+            mainWindow.setProgressBar(progressObj.percent / 100);
+        });
+        // downloadInfo — for generic and github providers
+        updater.on('update-downloaded', debounce((downloadInfo) => {
+            ipcMain.on('replaceAppNow', () => {
+                // some code here to handle event
+                try {
+                    updater.quitAndInstall();
+                } catch (err) {
+                    log.error('quitAndInstall get err', err);
+                }
+            });
+            mainWindow.webContents.send('is-replacing-app-now', downloadInfo);
+        }), 300);
+
+        return updater;
+    };
+
     // Emitted when the user agrees to download
     ipcMain.on('startingDownloadUpdate', () => {
         mainWindow.webContents.send('download-has-started');
-        autoUpdater.downloadUpdate();
+        wireAutoUpdater().downloadUpdate();
     });
     // Emitted when is ready to check for update
     ipcMain.on('checkForUpdate', async (event, autoUpdateProviderOptions) => {
+        const updater = wireAutoUpdater();
+
         // Set feed URL
         if (autoUpdateProviderOptions.provider === 'generic') {
             log.info(`Check for updates, feed URL: ${autoUpdateProviderOptions.url}`);
-            autoUpdater.setFeedURL(autoUpdateProviderOptions);
         } else {
             log.info(`Check for updates, provider: ${autoUpdateProviderOptions.provider}`);
-            autoUpdater.setFeedURL(autoUpdateProviderOptions);
         }
+        updater.setFeedURL(autoUpdateProviderOptions);
 
         try {
-            await autoUpdater.checkForUpdates();
+            await updater.checkForUpdates();
         } catch (e) {
             log.warn('Check for update failed', e);
         }
@@ -246,7 +358,9 @@ function updateHandle() {
         shell.openPath(savedPath);
     });
     ipcMain.on('open-engine-test-path', (event, enginePath) => {
-        shell.openPath(enginePath);
+        // The renderer derives this from app.getAppPath(), which is the asar
+        // archive in a packaged build; the folder itself is unpacked beside it.
+        shell.openPath(enginePath.replace(/\.asar([\\/])/, '.asar.unpacked$1'));
     });
 }
 
@@ -272,23 +386,54 @@ if (process.platform === 'win32') {
     }
 }
 
-const startToBegin = (data) => {
-    serverData = data;
-    const { address, port } = data;
-    configureWindow(mainWindow);
+// Everything the window needs before it can load the app off disk. Runs once,
+// before the first navigation, and no longer waits on the server.
+let appEnvironmentReady = false;
+const prepareAppEnvironment = (window) => {
+    electronEnable(window.webContents);
 
-    updateHandle();
-
-    loadUrl = `http://${address}:${port}`;
+    if (appEnvironmentReady) {
+        return Promise.resolve();
+    }
+    appEnvironmentReady = true;
 
     // register file protocol
     protocol.registerFileProtocol(
         'luban',
         (request, callback) => {
-            console.log('file protocol URL:', request.url);
             const { pathname } = url.parse(request.url);
-            const p = pathname === '/' ? 'index.html' : pathname.substr(1);
-            const filePath = path.normalize(`${__dirname}/app/${p}`);
+            let p = pathname === '/' ? 'index.html' : pathname.substr(1);
+
+            // The server mounts the app directory at both / and /worker, so a
+            // worker URL carries a prefix that is not part of the path on disk.
+            if (p.indexOf('worker/') === 0) {
+                p = p.substr('worker/'.length);
+            }
+
+            // The renderer addresses uploaded files as /data/... (DATA_PREFIX
+            // in src/app/constants), a path the server serves from the user
+            // data directory over HTTP. Relative to the luban:// origin the
+            // app is loaded from, that path lands here, so serve it from the
+            // same directory; without this a model load from a worker fails.
+            let root = path.join(__dirname, 'app');
+            if (p.indexOf('data/') === 0) {
+                root = userDataDir;
+                p = p.substr('data/'.length);
+                try {
+                    p = decodeURIComponent(p);
+                } catch (e) {
+                    // malformed escape: look the raw path up, it will not exist
+                }
+            }
+
+            const filePath = path.normalize(path.join(root, p));
+
+            if (!filePath.startsWith(path.normalize(root) + path.sep) || !fs.existsSync(filePath)) {
+                console.error('luban protocol: not found', filePath);
+                callback({ error: -6 }); // net::ERR_FILE_NOT_FOUND
+                return;
+            }
+
             callback(fs.createReadStream(filePath));
         },
         (error) => {
@@ -326,15 +471,31 @@ const startToBegin = (data) => {
     // Ignore proxy settings
     // https://electronjs.org/docs/api/session#sessetproxyconfig-callback
 
+
+
     electronRemoteMainInitialize();
 
-    const webContentsSession = mainWindow.webContents.session;
-    electronEnable(mainWindow.webContents);
+    // Ignore proxy settings
+    // https://electronjs.org/docs/api/session#sessetproxyconfig-callback
+    return window.webContents.session.setProxy({ proxyRules: 'direct://' });
+};
 
-    webContentsSession.setProxy({ proxyRules: 'direct://' })
-        .then(() => mainWindow.loadURL(loadUrl).catch(err => {
-            console.log('err', err.message);
-        }));
+const startToBegin = (data) => {
+    serverData = data;
+    const { address, port } = data;
+    configureWindow(mainWindow);
+
+    updateHandle();
+
+    loadUrl = `http://${address}:${port}`;
+
+    // Tell the renderer where the backend is. Sent now for a page that is already
+    // up, and again on load for one that is not.
+    mainWindow.webContents.send('server-origin', loadUrl);
+    mainWindow.webContents.on('did-finish-load', () => {
+        mainWindow.webContents.send('server-origin', loadUrl);
+    });
+
 
     try {
         // TODO: move to server
@@ -346,14 +507,16 @@ const startToBegin = (data) => {
 
 let serverProcess;
 const showMainWindow = async () => {
+    startupMark('main: app ready');
     const windowOptions = getBrowserWindowOptions();
     const window = new BrowserWindow(windowOptions);
+    startupMark('main: window created');
     mainWindow = window;
     // Monitor policy links, do not allow redirection
-    window.webContents.on('did-attach-webview', (e, webContent)=>  {
-        webContent.on('will-navigate', (e, url) => {
-            if (url.includes('policy')) {
-                e.preventDefault();
+    window.webContents.on('did-attach-webview', (_attachEvent, webContent) => {
+        webContent.on('will-navigate', (navigateEvent, navigateUrl) => {
+            if (navigateUrl.includes('policy')) {
+                navigateEvent.preventDefault();
             }
         });
     });
@@ -367,6 +530,7 @@ const showMainWindow = async () => {
     // only start server once
     if (!serverData) {
         if (process.env.NODE_ENV === 'development') {
+            process.env.LUBAN_SERVER_DIR = path.resolve(__dirname, 'server');
             process.chdir(path.resolve(__dirname, 'server'));
             // Use require instead of import to avoid being precompiled in production mode
             const { createServer } = require('./server');
@@ -377,6 +541,7 @@ const showMainWindow = async () => {
                 startToBegin({ ...data, port: CLIENT_PORT });
             });
         } else {
+            startupMark('main: server fork requested');
             serverProcess = childProcess.fork(
                 path.resolve(__dirname, 'server-cli.js'),
                 [],
@@ -390,17 +555,24 @@ const showMainWindow = async () => {
             );
             serverProcess.on('message', (data) => {
                 if (data.type === SERVER_DATA) {
+                    startupMark('main: server ready');
                     startToBegin(data);
                 } else if (data.type === UPLOAD_WINDOWS) {
-                    window.loadURL(loadUrl).catch(err => {
+                    window.loadURL(APP_URL).catch(err => {
                         console.log('err', err.message);
                     });
                 }
             });
         }
         // window.webContents.openDevTools();
-        window.loadURL(path.resolve(__dirname, 'app', 'loading.html'))
-            .then(() => window.setTitle(`Snapmaker Luban ${pkg.version}`))
+        startupMark('main: app load requested');
+        prepareAppEnvironment(window)
+            .then(() => window.loadURL(APP_URL))
+            .then(() => {
+                window.setTitle(`Snapmaker Luban ${pkg.version}`);
+                startupMark('main: app page loaded');
+                log.info(`\n${formatStartupTimeline('Luban startup - main process')}`);
+            })
             .catch(err => {
                 console.log('err', err.message);
             });
@@ -432,7 +604,14 @@ const showMainWindow = async () => {
             ...bounds
         };
 
-        config.set('winBounds', options);
+        // A failed save must never block quit (EEXIST here when the stray
+        // HSTS file has reoccupied the userData path mid-session).
+        try {
+            ensureUserDataDir('quit');
+            config.set('winBounds', options);
+        } catch (err) {
+            log.warn(`Skipping winBounds save on close: ${err.message}`);
+        }
         window.webContents.send('save-and-close');
 
         mainWindow = null;
@@ -741,7 +920,17 @@ app.on('second-instance', (event, commandLine) => {
         }
     }
 });
-protocol.registerSchemesAsPrivileged([{ scheme: 'luban', privileges: { standard: true, corsEnabled: true } }]);
+protocol.registerSchemesAsPrivileged([{
+    scheme: 'luban',
+    privileges: {
+        standard: true,
+        corsEnabled: true,
+        // i18next and the worker pool fetch over this scheme now that the app is
+        // loaded from it. Not marked secure: the API still lives on plain http.
+        supportFetchAPI: true,
+        stream: true,
+    }
+}]);
 
 /**
  * when ready

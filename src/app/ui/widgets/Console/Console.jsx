@@ -21,6 +21,10 @@ import Terminal from './Terminal';
 
 let pubsubTokens = [];
 let unlisten = null;
+// Print the help/greeting only on the first ever mount - not again after the
+// operator clears the console and switches pages (history is legitimately
+// empty then).
+let hasGreeted = false;
 function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderStamp }) {
     const {
         connectionType,
@@ -45,6 +49,17 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
     const history = useHistory();
     const dispatch = useDispatch();
     const terminalRef = useRef();
+    // Verbose mode: also show machine heartbeat state and MCP tool activity
+    const verboseRef = useRef(false);
+    const lastVerboseLineRef = useRef('');
+    const lastPositionLineRef = useRef('');
+    // Verbose lines are timestamped so the operator can measure real
+    // latencies (e.g. a commanded move vs the heartbeat reporting it).
+    const stamp = () => {
+        const now = new Date();
+        const ms = String(now.getMilliseconds()).padStart(3, '0');
+        return `${now.toTimeString().slice(0, 8)}.${ms} `;
+    };
     const prevProps = usePrevious({
         isConnected, port, server, clearRenderStamp, consoleLogs, minimized, isDefault
     });
@@ -69,12 +84,130 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
             const terminal = terminalRef.current;
             terminal && terminal.writeln(data);
         },
-        [SocketEvent.ExecuteGCode]: ({ err, reply }) => {
+        [SocketEvent.ExecuteGCode]: ({ err, gcode, reply }) => {
+            // In verbose mode echo what was sent - the WiFi path has no
+            // serialport:write equivalent, so without this only the bare
+            // replies ("ok") appear with no hint of the commands behind them.
+            if (verboseRef.current && gcode) {
+                const terminal = terminalRef.current;
+                if (terminal) {
+                    String(gcode).split(/\r?\n/).forEach((line) => {
+                        line = line.trim();
+                        line && terminal.writeln(color.blackBright(`${stamp()}> ${line}`));
+                    });
+                    if (err) {
+                        terminal.writeln(color.red(`${stamp()}error (${err}) executing the above`));
+                    }
+                }
+            }
             if (!err) {
                 if (reply) {
                     const newLogs = [reply];
                     dispatch(workspaceActions.addConsoleLogs(newLogs));
                 }
+            }
+        },
+        // Raw heartbeat report, printed only in verbose mode and only on change
+        // (the status poll runs every 2 s; repeating identical lines is noise).
+        // This prints the controller's OWN words - the reported position and
+        // offset - and never derives a machine position from them: a beat
+        // inside a move's G53 window carries either frame, and the old
+        // `work - offset` here printed Z 555 / Z 656 artefacts as positions.
+        // The judged machine position arrives separately as mcp:position.
+        'Marlin:state': (options) => {
+            if (!verboseRef.current) {
+                return;
+            }
+            const state = (options && options.state) || {};
+            const pos = state.pos || {};
+            const off = state.originOffset || {};
+            const fmt = (v) => (Number.isFinite(Number(v)) ? Number(v).toFixed(2) : '?');
+            const b = pos.isFourAxis ? ` B${fmt(pos.b)}` : '';
+            const line = `report pos(${fmt(pos.x)}, ${fmt(pos.y)}, ${fmt(pos.z)})${b}`
+                + ` offset(${fmt(off.x)}, ${fmt(off.y)}, ${fmt(off.z)})`
+                + ` ${state.status || ''}`;
+            if (line === lastVerboseLineRef.current) {
+                return;
+            }
+            lastVerboseLineRef.current = line;
+            const terminal = terminalRef.current;
+            terminal && terminal.writeln(color.blackBright(stamp() + line));
+        },
+        // The machine POSITION OF RECORD as the MCP server judged it - the one
+        // machine value every motion guard uses, with its reliability. A
+        // rejected beat prints the held position and says so instead of a
+        // number outside the travel.
+        'mcp:position': (options) => {
+            if (!verboseRef.current) {
+                return;
+            }
+            const { machine, reliability, b, rejectedReason } = options || {};
+            const m = machine || {};
+            const fmt = (v) => (Number.isFinite(Number(v)) ? Number(v).toFixed(2) : '?');
+            const bText = Number.isFinite(Number(b)) ? ` B${fmt(b)}` : '';
+            const held = reliability === 'awaiting-resync' ? 'held ' : '';
+            const line = `machine(${held}${fmt(m.x)}, ${fmt(m.y)}, ${fmt(m.z)})${bText} [${reliability || '?'}`
+                + `${rejectedReason ? `: ${rejectedReason}` : ''}]`;
+            if (line === lastPositionLineRef.current) {
+                return;
+            }
+            lastPositionLineRef.current = line;
+            const terminal = terminalRef.current;
+            if (!terminal) {
+                return;
+            }
+            const paint = reliability === 'verified' || reliability === 'heartbeat' || reliability === 'cached-offset'
+                ? color.blackBright : color.yellow;
+            terminal.writeln(paint(stamp() + line));
+        },
+        // Exact gcode sent by MCP tools on the direct path, and the
+        // controller's reply - shows which coordinate frame each move ran in.
+        'mcp:gcode': (options) => {
+            if (!verboseRef.current) {
+                return;
+            }
+            const terminal = terminalRef.current;
+            if (!terminal) {
+                return;
+            }
+            const { tool, gcode, response } = options || {};
+            if (gcode) {
+                String(gcode).split(/;?\r?\n/).forEach((line) => {
+                    line = line.trim();
+                    line && terminal.writeln(color.magenta(`${stamp()}[mcp:${tool}] > ${line}`));
+                });
+            }
+            if (response) {
+                // Controller replies (e.g. M114 reports) are multi-line; one
+                // writeln with embedded newlines renders misaligned in xterm.
+                String(response).slice(0, 400).split(/\r?\n/).forEach((line) => {
+                    line = line.trim();
+                    line && terminal.writeln(color.magenta(`${stamp()}[mcp:${tool}] < ${line}`));
+                });
+            }
+        },
+        // MCP tool activity mirrored from the server (verbose mode)
+        'mcp:activity': (options) => {
+            if (!verboseRef.current) {
+                return;
+            }
+            const { tool, ok, durationMs, error, phase, ...rest } = options || {};
+            const terminal = terminalRef.current;
+            if (!terminal) {
+                return;
+            }
+            if (phase !== undefined) {
+                // Event-style activity (probe feed readings, procedure phase
+                // announcements) - not a tool call, so no ok/duration.
+                const detail = Object.entries(rest)
+                    .map(([key, value]) => `${key}=${typeof value === 'object' ? JSON.stringify(value) : value}`)
+                    .join(' ');
+                const line = `${stamp()}[mcp] ${tool} ${phase}${detail ? ` ${detail}` : ''}`;
+                terminal.writeln(phase === 'OVERTRAVEL_ALARM' || phase === 'CRASH_ALARM' ? color.red(line) : color.cyan(line));
+            } else if (ok) {
+                terminal.writeln(color.cyan(`${stamp()}[mcp] ${tool} ok ${durationMs}ms`));
+            } else {
+                terminal.writeln(color.red(`${stamp()}[mcp] ${tool} failed ${durationMs}ms: ${String(error || '').slice(0, 160)}`));
             }
         }
     };
@@ -199,6 +332,15 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
             terminal && terminal.clear();
         },
 
+        toggleVerbose: () => {
+            verboseRef.current = !verboseRef.current;
+            lastVerboseLineRef.current = '';
+            const terminal = terminalRef.current;
+            terminal && terminal.writeln(color.yellow(verboseRef.current
+                ? 'Verbose on: showing machine state changes and MCP activity'
+                : 'Verbose off'));
+        },
+
         printConsoleLogs: (_consoleLogs) => {
             for (let consoleLog of _consoleLogs) {
                 if (consoleLog.endsWith('\n')) {
@@ -253,6 +395,12 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
         widgetActions.setTitle(i18n._('key-Workspace/Console-Console'));
         widgetActions.setControlButtons([
             {
+                title: 'Verbose',
+                name: 'Information',
+                onClick: actions.toggleVerbose,
+                type: ['static']
+            },
+            {
                 title: 'Eliminate',
                 name: 'Eliminate',
                 onClick: actions.clearAll,
@@ -269,13 +417,15 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
         });
 
         if (terminalHistory.getLength() === 0) {
-            terminalHistory.push('');
-            actions.getHelp();
-            actions.greetings();
+            if (!hasGreeted) {
+                hasGreeted = true;
+                actions.getHelp();
+                actions.greetings();
+            }
         } else {
             const terminal = terminalRef.current;
             const data = [];
-            for (let i = 1; i < terminalHistory.getLength(); i++) {
+            for (let i = 0; i < terminalHistory.getLength(); i++) {
                 data.push(`\r${terminalHistory.get(i)}\r\n`);
             }
             terminal.write(data.join(''));
@@ -352,15 +502,13 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
             if (terminal) {
                 terminal.clear(false);
                 const data = [];
-                for (let i = 1; i < terminalHistory.getLength(); i++) {
+                for (let i = 0; i < terminalHistory.getLength(); i++) {
                     data.push(`\r${terminalHistory.get(i)}\r\n`);
                 }
                 terminal.write(data.join(''));
             }
         }
     }, [isDefault]);
-
-    const inputValue = terminalHistory.getLength() > 0 ? terminalHistory.get(0) : '';
 
     return (
         <div>
@@ -371,7 +519,6 @@ function Console({ widgetId, widgetActions, minimized, isDefault, clearRenderSta
                 shouldRenderFitaddon={shouldRenderFitaddon}
                 terminalHistory={terminalHistory}
                 consoleHistory={consoleHistory}
-                inputValue={inputValue}
             />
         </div>
 

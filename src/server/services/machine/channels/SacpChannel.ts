@@ -30,6 +30,7 @@ import {
     HEAD_PRINTING,
     HEADT_BED_FOR_SM2,
     LOAD_FIMAMENT,
+    MotorPowerMode,
     UNLOAD_FILAMENT,
     WORKFLOW_STATUS_MAP
 } from '../../../../app/constants';
@@ -54,7 +55,7 @@ import {
     SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2,
 } from '../../../constants';
 import logger from '../../../lib/logger';
-import SacpClient, { CoordinateType, MotorPowerMode } from '../sacp/SacpClient';
+import SacpClient, { CoordinateType } from '../sacp/SacpClient';
 import { MarlinStateData } from '../types';
 import Channel, {
     AirPurifierChannelInterface,
@@ -71,6 +72,12 @@ import Channel, {
 } from './Channel';
 import { ChannelEvent } from './ChannelEvent';
 import { L20WLaserToolModule, L2WLaserToolModule, L40WLaserToolModule } from '../../../../app/machines/snapmaker-2-toolheads';
+import { gcodeLease } from '../gcodeLease';
+import { connectionDiagnostics } from '../connectionDiagnostics';
+import {
+    SacpMachineInfoFields, SacpMachineState, SacpMachineStateTracker, parseSacpMachineInfo, sacpDeviceSerial,
+} from './sacpMachineState';
+import { GcodeReply, ReplyEmitter, assembleReply, readGcodeReply } from './sacpGcodeReply';
 
 const log = logger('machine:channels:SacpChannel');
 
@@ -87,6 +94,60 @@ class SacpChannelBase extends Channel implements
     private heartbeatTimerLegacy = [];
     private heartbeatTimer;
     private shuttingDown: boolean = false;
+
+    // Bumped wherever the underlying socket / serial port / UDP session is
+    // (re)established or torn down, including internal reconnects that never
+    // reassign ConnectionManager's channel (same singleton object). Equal
+    // values mean the same transport session; a spurious bump only makes the
+    // MCP failure hook (#221) skip cleanup, never act on a replaced session.
+    private connectionGeneration = 0;
+
+    /** Read-only: lets callers tell a reconnected session from the one they started on. */
+    public getConnectionGeneration(): number {
+        return this.connectionGeneration;
+    }
+
+    /** Subclasses call this at every transport open, close, error and session replacement. */
+    protected bumpConnectionGeneration(reason: string): void {
+        this.connectionGeneration++;
+        // A new or torn-down session has no state; the MCP must read null and
+        // forget this connection's offsets (tools/machine.ts noteMachineDisconnected).
+        this.machineState.clear();
+        log.debug(`connection generation ${this.connectionGeneration}: ${reason}`);
+    }
+
+    // Latest heartbeat/coordinate state for the MCP (#260): filled by the
+    // subscriptions below, cleared on stop, loss and every generation bump.
+    private machineState = new SacpMachineStateTracker();
+
+    // Labels the connection-diagnostics heartbeat worker, like SstpHttpChannel's heartbeatGeneration.
+    private heartbeatWorkerGeneration = 0;
+
+    /**
+     * Last machine state, or null before the first heartbeat / after close.
+     * Same shape as SstpHttpChannel's: status, pos (work), originOffset,
+     * isHomed, timestamp; machine = work - originOffset.
+     */
+    public getLatestMachineState(): SacpMachineState | null {
+        return this.machineState.get();
+    }
+
+    /** Diagnostics: a heartbeat subscription is live, like an HTTP heartbeat worker. */
+    private noteHeartbeatSubscribed(): void {
+        this.heartbeatWorkerGeneration += 1;
+        connectionDiagnostics.startWorker(this.heartbeatWorkerGeneration);
+    }
+
+    /** Diagnostics: one heartbeat arrived (the SACP equivalent of an accepted status poll). */
+    private noteHeartbeatReceived(): void {
+        connectionDiagnostics.poll({ protocol: 'SACP' }, true);
+    }
+
+    /** Diagnostics and state on a stopped or lost heartbeat. */
+    private noteHeartbeatEnded(reason: string): void {
+        this.machineState.clear();
+        connectionDiagnostics.stopWorker(reason);
+    }
 
     public sacpClient: SacpClient;
 
@@ -172,6 +233,8 @@ class SacpChannelBase extends Channel implements
 
             this.heartbeatTimer = setTimeout(async () => {
                 log.info('Lost heartbeat, close connection.');
+                this.noteHeartbeatEnded('heartbeat_lost');
+                this.bumpConnectionGeneration('heartbeat lost');
 
                 await this.connectionClose({ force: true });
 
@@ -194,6 +257,11 @@ class SacpChannelBase extends Channel implements
             this.machineStatus = status;
             log.debug(`machine status = ${statusKey}, ${this.machineStatus}`);
 
+            // Status only: this pre-1.6.8 path subscribes no coordinates, so the
+            // MCP sees the workflow status and an honest "position unknown".
+            this.machineState.noteHeartbeat(this.machineStatus);
+            this.noteHeartbeatReceived();
+
             this.socket && this.socket.emit('Marlin:state', {
                 state: {
                     status: this.machineStatus,
@@ -202,6 +270,7 @@ class SacpChannelBase extends Channel implements
         };
 
         const res = await this.sacpClient.subscribeHeartbeat({ interval: 2000 }, subscribeHeartbeatCallback);
+        this.noteHeartbeatSubscribed();
         this.subscribePurifierInfo();
         log.info(`Subscribe heartbeat, result = ${res.code}`);
     }
@@ -218,6 +287,7 @@ class SacpChannelBase extends Channel implements
             clearTimeout(this.heartbeatTimerLegacy[id]);
             this.heartbeatTimerLegacy[id] = null;
         }
+        this.noteHeartbeatEnded('heartbeat_stop');
 
         // Cancel subscription of heartbeat
         const res = await this.sacpClient.unsubscribeHeartbeat(null);
@@ -226,8 +296,16 @@ class SacpChannelBase extends Channel implements
 
     /**
      * Generic execute G-code commands.
+     *
+     * Result 0 of SACP 0x01 0x02 does NOT mean the line ran: the Ray V1.7.4
+     * ACKs before it even queues the line, and then drops lines it cannot take
+     * (80+ bytes, a full input ring, G-code in Alarm) without a word
+     * (RayController 91a675f snapmaker.cpp:272-291). Confirm effects by state.
+     * Never resend on a lost ACK: the firmware does not dedupe 0x01 0x02.
      */
     public async executeGcode(gcode: string): Promise<ExecuteGcodeResult> {
+        const refusal = gcodeLease.refusal(gcode);
+        if (refusal) { return { result: -1, text: refusal }; }
         const gcodeLines = gcode.split('\n');
 
         const promises = [];
@@ -252,22 +330,42 @@ class SacpChannelBase extends Channel implements
         };
     }
 
-    /**
-     * Get 3DP print module info.
-     *
-     * TODO: standardize use of extruder in APIs
-     */
-    private getPrintToolHeadModule(): ModuleInfo | null {
-        for (const key of Object.keys(this.moduleInfos)) {
-            const module = this.moduleInfos[key];
-            if (module && module instanceof ModuleInfo) {
-                if (includes(PRINTING_HEAD_MODULE_IDS, module.moduleId)) {
-                    return module;
-                }
-            }
-        }
+    // Reply reads one at a time: the log feedback is the controller's whole
+    // log, so two reads in flight could not tell their lines apart.
+    private replyReadChain: Promise<unknown> = Promise.resolve();
 
-        return null;
+    /**
+     * ONE G-code line with the firmware's reply text (MCP firmware queries,
+     * #265 follow-up). executeGcode answers `ok` and drops the payload, and
+     * stays exactly as it is for Luban's UI; this reads the two places a SACP
+     * reply can be (sacpGcodeReply.ts): bytes after the result in the 0x01
+     * 0x02 ACK, and the 0x01 0xa1 log feedback received during the read.
+     * Refuses multi-line input (executeGcode would send every line).
+     */
+    public async executeGcodeWithReply(gcode: string, options: { timeoutMs?: number; quietMs?: number } = {}): Promise<GcodeReply> {
+        const line = String(gcode || '').trim();
+        const refusedReply = (error: string): GcodeReply => assembleReply({
+            result: -1, ackData: null, ackReceived: false, listening: false, lines: [], timedOut: false, elapsedMs: 0, error,
+        });
+        if (!line || /[\r\n]/.test(line)) {
+            return refusedReply('executeGcodeWithReply takes exactly one line');
+        }
+        const refusal = gcodeLease.refusal(line);
+        if (refusal) {
+            return refusedReply(refusal);
+        }
+        if (!this.sacpClient) {
+            return refusedReply('no SACP session');
+        }
+        const client = this.sacpClient;
+        const read = this.replyReadChain.then(async () => readGcodeReply({
+            emitter: client as unknown as ReplyEmitter,
+            send: async () => client.executeGcode(line),
+            timeoutMs: options.timeoutMs,
+            quietMs: options.quietMs,
+        }));
+        this.replyReadChain = read.catch(() => undefined);
+        return read;
     }
 
     /**
@@ -334,9 +432,40 @@ class SacpChannelBase extends Channel implements
      * Get Machine info.
      */
     public async getMachineInfo(): Promise<MachineInfo> {
-        const { data: machineInfo } = await this.sacpClient.getMachineInfo();
+        const { data: machineInfo, packet } = await this.sacpClient.getMachineInfo();
+        // The same 0x01 0x21 reply, read past the SDK model: the firmware
+        // version and the Ray's efuse product SN (parseSacpMachineInfo). No extra request.
+        const payload = packet && Buffer.isBuffer(packet.payload) ? packet.payload : null;
+        const fields = parseSacpMachineInfo(payload ? payload.slice(1) : null);
+        this.machineInfoRecord = fields ? { ...fields, readAt: Date.now(), generation: this.connectionGeneration } : null;
 
         return machineInfo;
+    }
+
+    // The last 0x01 0x21 this connection read (getMachineInfo), with when.
+    private machineInfoRecord: (SacpMachineInfoFields & { readAt: number; generation: number }) | null = null;
+
+    /** The machine info read on THIS connection (version, product SN), or null; in memory only. */
+    public getMachineInfoRecord(): (SacpMachineInfoFields & { readAt: number }) | null {
+        const record = this.machineInfoRecord;
+        return record && record.generation === this.connectionGeneration ? record : null;
+    }
+
+    // What the controller answered Luban's own log-level request
+    // (startHeartbeatLegacy 0x01 0x10). The Ray V1.7.4 has no such command:
+    // E_INVALID_CMD_ID (5), so Luban never subscribes its log (RayController
+    // 91a675f sacp_hmi.cpp:1082-1096). Recorded, never acted on.
+    private logLevelRequest: { requestedAt: number; result: number | null; generation: number } | null = null;
+
+    /** Luban's log-level request on THIS connection and its result (null = unanswered so far); null when none was sent. */
+    public getLogLevelRequest(): { requestedAt: number; result: number | null } | null {
+        const request = this.logLevelRequest;
+        return request && request.generation === this.connectionGeneration ? { requestedAt: request.requestedAt, result: request.result } : null;
+    }
+
+    /** The Ready payload's `deviceSerial`: the controller's serial number, null when it reported none. */
+    protected deviceSerialOf(machineInfo: { masterControlSerialNumber?: unknown } | null | undefined): string | null {
+        return sacpDeviceSerial(machineInfo);
     }
 
 
@@ -710,7 +839,7 @@ class SacpChannelBase extends Channel implements
     }
 
     public async setFilterWorkSpeed(options) {
-        const moduleInfo = this.moduleInfos && this.moduleInfos[AIR_PURIFIER];
+        const moduleInfo = this.moduleInfos && this.moduleInfos[AIR_PURIFIER] as ModuleInfo;
         this.sacpClient.setPurifierSpeed(moduleInfo.key, options.value).then(({ response }) => {
             log.info(`Update Purifier speed, ${response.result}, ${options.value}`);
         });
@@ -827,8 +956,12 @@ class SacpChannelBase extends Channel implements
             enclosure: false
         };
 
+        // Passive record only (getLogLevelRequest): what the controller answered.
+        const levelRequest = { requestedAt: Date.now(), result: null as number | null, generation: this.connectionGeneration };
+        this.logLevelRequest = levelRequest;
         this.sacpClient.logFeedbackLevel(2).then(({ response }) => {
             log.info(`logLevel, ${response}`);
+            levelRequest.result = response.result;
             if (response.result === 0) {
                 this.subscribeLogCallback = (data) => {
                     const result = readString(data.response.data, 1).result;
@@ -848,9 +981,10 @@ class SacpChannelBase extends Channel implements
                 ...stateData,
                 isHomed: !isHomed
             };
+            this.machineState.noteHomed(!isHomed);
             this.sacpClient.ack(0x01, 0x36, packet, new Response(0).toBuffer()).then(() => {
                 if (stateData.headType !== HEAD_PRINTING) {
-                    this.sacpClient.getCurrentCoordinateInfo().then(({ response }) => {
+                    this.sacpClient.getCurrentCoordinateInfo().then(() => {
                         this.sacpClient.updateCoordinate(CoordinateType.WORKSPACE).then(({ response }) => {
                             log.info(`updateCoordinateType, ${response.result}`);
                         });
@@ -874,12 +1008,20 @@ class SacpChannelBase extends Channel implements
             }
 
             this.heartbeatTimerLegacy[id] = setTimeout(() => {
+                this.noteHeartbeatEnded('heartbeat_lost');
+                this.bumpConnectionGeneration(`legacy heartbeat lost (${id})`);
                 client && client.destroy();
                 log.info(`SACP close ${id}, ${this.heartbeatTimerLegacy[id]}`,);
                 this.heartbeatTimerLegacy[id] && this.socket && this.socket.emit('connection:close');
             }, 10000);
 
             this.machineStatus = WORKFLOW_STATUS_MAP[statusKey];
+
+            // The MCP's copy of this beat (#260): the same payload the renderer
+            // gets below, kept with a timestamp. pos/originOffset/isHomed are
+            // owned by the coordinate subscription (noteCoordinates).
+            this.machineState.noteHeartbeat(this.machineStatus, { ...stateData, moduleStatusList });
+            this.noteHeartbeatReceived();
 
             // TODO: Refactor this
             this.socket && this.socket.emit('Marlin:state', {
@@ -896,6 +1038,7 @@ class SacpChannelBase extends Channel implements
 
         // Subscribe heart beat
         this.shuttingDown = false;
+        this.noteHeartbeatSubscribed();
         this.sacpClient.subscribeHeartbeat({ interval: 1000 }, this.subscribeHeartCallback).then((res) => {
             log.info(`subscribe heartbeat success: ${res.code}`);
         });
@@ -1038,12 +1181,15 @@ class SacpChannelBase extends Channel implements
             // log.info(`revice coordinate: ${data.response}`);
             const response = data.response;
             const coordinateInfos = new CoordinateSystemInfo().fromBuffer(response.data);
+            // The MCP's position source (#260): axes by key, missing axes
+            // (a Ray has no Z) read as 0 - see sacpMachineState.ts.
+            this.machineState.noteCoordinates(coordinateInfos, moduleStatusList.rotaryModule);
             const currentCoordinate = coordinateInfos.coordinates;
             const originCoordinate = coordinateInfos.originOffset;
             const pos = {
-                x: currentCoordinate[0].value,
-                y: currentCoordinate[1].value,
-                z: currentCoordinate[2].value,
+                x: currentCoordinate[0]?.value,
+                y: currentCoordinate[1]?.value,
+                z: currentCoordinate[2]?.value,
                 b: currentCoordinate[4]?.value,
                 isFourAxis: moduleStatusList.rotaryModule
             };
@@ -1273,15 +1419,17 @@ class SacpChannelBase extends Channel implements
         return this.sacpClient.getCurrentCoordinateInfo();
     };
 
-    public goHome = async (headType?: string) => {
+    /** The channel's own home (SACP 0x01/0x35); true when the controller accepted it. */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public goHome = async (headType?: string): Promise<boolean> => {
         log.info('onClick gohome');
         await this.sacpClient.updateCoordinate(CoordinateType.MACHINE).then(res => {
             log.info(`Update Coordinate: ${res}`);
         });
-        await this.sacpClient.requestHome().then(({ response }) => {
-            log.info(`Go-Home, ${response}`);
-            this.socket && this.socket.emit('serialport:read', { data: response.result === 0 ? 'OK' : 'WARNING' });
-        });
+        const { response } = await this.sacpClient.requestHome();
+        log.info(`Go-Home, ${response}`);
+        this.socket && this.socket.emit('serialport:read', { data: response.result === 0 ? 'OK' : 'WARNING' });
+        return response.result === 0;
     };
 
     public coordinateMove = async ({ moveOrders, jogSpeed, headType, beforeGcodeStart = false }) => {
@@ -1463,7 +1611,7 @@ class SacpChannelBase extends Channel implements
             this.moduleInfos[A400_HEADT_BED_FOR_SM2]
             || this.moduleInfos[HEADT_BED_FOR_SM2]
             || this.moduleInfos[SNAPMAKER_J1_HEATED_BED]
-        ); //
+        ) as ModuleInfo; //
         if (!heatBedModule) {
             log.error('Can not find heated bed module. Command ignored.');
             return;
@@ -1478,7 +1626,7 @@ class SacpChannelBase extends Channel implements
         const toolHead = this.moduleInfos
             && (this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_SM2]
                 || this.moduleInfos[DUAL_EXTRUDER_TOOLHEAD_FOR_ARTISAN]
-                 || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]);
+                 || this.moduleInfos[SINGLE_EXTRUDER_TOOLHEAD_FOR_SM2]) as ModuleInfo;
         // || this.moduleInfos[HEADT_BED_FOR_SM2]); //
         if (!toolHead) {
             log.error(`non-eixst toolHead 3dp, moduleInfos:${this.moduleInfos}`,);
@@ -1505,7 +1653,7 @@ class SacpChannelBase extends Channel implements
     // }
 
     public async updateWorkSpeed(toolhead, workSpeed, extruderIndex = 0) {
-        const headModule = this.moduleInfos && (this.moduleInfos[toolhead]); //
+        const headModule = this.moduleInfos && (this.moduleInfos[toolhead] as ModuleInfo); //
         if (!headModule) {
             log.error(`non-eixst toolhead[${toolhead}], moduleInfos:${JSON.stringify(this.moduleInfos)}`,);
             return;
@@ -1567,7 +1715,7 @@ class SacpChannelBase extends Channel implements
     //
     public async laserSetWorkHeight(options) {
         const { toolHead, materialThickness, isRotate } = options;
-        const headModule = this.moduleInfos && (this.moduleInfos[toolHead]); //
+        const headModule = this.moduleInfos && (this.moduleInfos[toolHead] as ModuleInfo); //
         if (!headModule) {
             log.error(`non-eixst toolhead[${toolHead}], moduleInfos:${JSON.stringify(this.moduleInfos)}`,);
             return;
@@ -1606,6 +1754,15 @@ class SacpChannelBase extends Channel implements
 
     public async setMotorPowerMode(setMotorPowerHoldMode: MotorPowerMode) {
         return this.sacpClient.setMotorPowerHoldMode(setMotorPowerHoldMode);
+    }
+
+    /**
+     * Read-only: the current motor-power mode byte (0x01 0x48 with
+     * GETCURRENTMODE, which changes nothing). The MCP reads the Ray's mode
+     * through this so it never holds a function that can set it (tyeth/Luban#321).
+     */
+    public async getMotorPowerMode(): Promise<number> {
+        return this.sacpClient.setMotorPowerHoldMode(MotorPowerMode.GETCURRENTMODE);
     }
 }
 

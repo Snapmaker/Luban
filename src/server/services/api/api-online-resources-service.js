@@ -10,6 +10,13 @@ if (process.env.NODE_ENV === 'production') {
 
 const log = logger('api:commands');
 
+// Offline, or behind a VPN with no route to api.snapmaker.com, an unbounded
+// request leaves the renderer's XHR open until the socket gives up. Fail fast
+// and answer instead: the caller can render an offline state, but only if it
+// is told.
+const RESPONSE_TIMEOUT = 5000;
+const DEADLINE_TIMEOUT = 10000;
+
 const agent = superagentUse(superagent);
 const addPrefix = (prefix) => {
     return function (request) {
@@ -22,9 +29,28 @@ const addPrefix = (prefix) => {
 };
 agent.use(addPrefix(domain));
 
+const withTimeout = (request) => request.timeout({
+    response: RESPONSE_TIMEOUT,
+    deadline: DEADLINE_TIMEOUT,
+});
+
+// Every one of these used to log and return, leaving the response open.
+const failed = (res, what, err) => {
+    log.error(`${what} failed:`, err && err.message ? err.message : JSON.stringify(err));
+
+    if (res.headersSent) {
+        return;
+    }
+
+    res.status(503).send({
+        error: what,
+        offline: true,
+        message: 'Snapmaker online resources are unreachable.',
+    });
+};
 
 export function getCaseList(req, res) {
-    agent.get('/api/resource/sample/list/client')
+    withTimeout(agent.get('/api/resource/sample/list/client'))
         .query({
             page: 1,
             pageSize: 10,
@@ -36,14 +62,12 @@ export function getCaseList(req, res) {
             res.status(200).send({
                 ...result.body
             });
-        }).catch((err) => {
-            log.error('get case list err:', JSON.stringify(err));
-        });
+        }).catch((err) => failed(res, 'get case list', err));
 }
 
 
 export function getSvgShapeList(req, res) {
-    agent.get('/api/resource/svg-shape-library/client/list')
+    withTimeout(agent.get('/api/resource/svg-shape-library/client/list'))
         .query({
             page: 1,
             pageSize: 10,
@@ -53,14 +77,12 @@ export function getSvgShapeList(req, res) {
             res.status(200).send({
                 ...result.body
             });
-        }).catch((err) => {
-            log.error(`get svg shape libray list  with query: ${JSON.stringify(req.query)}, err:`, JSON.stringify(err));
-        });
+        }).catch((err) => failed(res, 'get svg shape library list', err));
 }
 
 
 export function getSvgShapeLabelList(req, res) {
-    agent.get('/api/resource/svg-shape-library/client/label/list')
+    withTimeout(agent.get('/api/resource/svg-shape-library/client/label/list'))
         .query({
             page: 1,
             pageSize: 10,
@@ -70,41 +92,32 @@ export function getSvgShapeLabelList(req, res) {
             res.status(200).send({
                 ...result.body
             });
-        }).catch((err) => {
-            log.error(`get svg shape libray list  with query: ${JSON.stringify(req.query)}, err:`, JSON.stringify(err));
-        });
+        }).catch((err) => failed(res, 'get svg shape label list', err));
 }
 
 
 export function getInformationFlowData(req, res) {
     const { lang } = req.query;
-    agent.get(`/v1/luban-information-flow?lang=${lang}`)
+    withTimeout(agent.get(`/v1/luban-information-flow?lang=${lang}`))
         .then((result) => {
             res.status(200).send({
                 ...result.body
             });
-        }).catch((err) => {
-            log.error('get information flow err:', JSON.stringify(err));
-        });
+        }).catch((err) => failed(res, 'get information flow', err));
 }
-
-const addAuthorization = (token) => {
-    return function (request) {
-        request.set('Authorization', `Bearer ${token}`);
-        return request;
-    };
-};
 
 export function getUserInfoData(req, res) {
     const userDomain = 'https://account.snapmaker.com';
     const { token } = req.query;
-    agent.use(addAuthorization(token));
-    agent.get(`${userDomain}/api/common/accounts/current`)
+
+    // Set per request. This used to agent.use() a new Authorization plugin on
+    // every call, which accumulated on the shared agent and leaked whichever
+    // token was set last into unrelated requests.
+    withTimeout(agent.get(`${userDomain}/api/common/accounts/current`))
+        .set('Authorization', `Bearer ${token}`)
         .then((result) => {
             res.status(200).send({
                 ...result.body
             });
-        }).catch((err) => {
-            log.error('get information flow err:', JSON.stringify(err));
-        });
+        }).catch((err) => failed(res, 'get user info', err));
 }

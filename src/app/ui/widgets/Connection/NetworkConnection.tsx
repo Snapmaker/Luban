@@ -42,6 +42,7 @@ import Select from '../../components/Select';
 import SvgIcon from '../../components/SvgIcon';
 import useThrottle from '../../utils/useThrottle';
 import MachineModuleStatusBadge from './components/MachineModuleStatusBadge';
+import ProbeFeedStatusBadges from './components/ProbeFeedStatusBadges';
 import LaserLockModal from './modals/LaserLockModal';
 import MismatchModal from './modals/MismatchModal';
 import MismatchNozzleModal from './modals/MismatchNozzleModal';
@@ -338,7 +339,7 @@ const NetworkConnection: React.FC = () => {
         // connect to agent
         try {
             const { code, msg } = await dispatch(
-                connectActions.connect(selectedAgent)
+                connectActions.connect(selectedAgent, true)
             ) as unknown as { code: number | string; msg: string; };
 
             if (msg) {
@@ -709,6 +710,8 @@ const NetworkConnection: React.FC = () => {
                                 </div>
                             )
                         }
+                        {/* MCP probe sensor feed pills (touch probe / tool setter / overtravel) */}
+                        <ProbeFeedStatusBadges />
                     </div>
                 )
             }

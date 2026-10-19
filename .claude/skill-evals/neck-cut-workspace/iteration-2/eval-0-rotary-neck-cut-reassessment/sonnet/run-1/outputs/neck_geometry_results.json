@@ -1,0 +1,39 @@
+{
+  "grid_resolution_mm": 0.2,
+  "frame": "LOCAL PHYSICAL (x=machine_X-169.90, y=machine_Y, z=depth from B0 top); NOT machine frame, not yet a registered WCS",
+  "tabs": {
+    "meta": {
+      "cb": 9.999999999999996,
+      "tab_w": 5.0,
+      "tab_h": 6.0
+    },
+    "nominal": {
+      "n_components_3d": 1,
+      "spans_full": true,
+      "min_cross_section_mm2": 120.00000000000003,
+      "min_cross_section_y": 253.59999999999968,
+      "max_slice_components": 4,
+      "mid_band_y256_mm2": 120.00000000000003,
+      "mid_band_y256_pieces": 4
+    }
+  },
+  "cshape": {
+    "meta": {
+      "cb": 9.999999999999996,
+      "gap_half": 2.0,
+      "spine_w": 6.0,
+      "leg_h": 9.0,
+      "west_reach_from_face": 24.049999999999997,
+      "east_reach_from_face": 24.049999999999997
+    },
+    "nominal": {
+      "n_components_3d": 1,
+      "spans_full": true,
+      "min_cross_section_mm2": 174.00000000000003,
+      "min_cross_section_y": 253.59999999999968,
+      "max_slice_components": 2,
+      "mid_band_y256_mm2": 174.00000000000003,
+      "mid_band_y256_pieces": 2
+    }
+  }
+}

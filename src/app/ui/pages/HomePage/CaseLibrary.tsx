@@ -236,6 +236,15 @@ const CaseLibrary = (props) => {
                         </Spin>
                     </div>
                 )}
+            {/*
+              * Offline or behind a VPN the online case library simply is not
+              * there. Say so inline, above the local examples - not in a dialog.
+              */}
+            {!showCaseResource && canAccessWeb === AccessResourceWebState.BLOCKED && (
+                <div className={classNames(styles['case-list-empty'], 'margin-bottom-8')}>
+                    {i18n._('key-HomePage/CaseLibrary-Offline')}
+                </div>
+            )}
             {!showCaseResource && <QuickStart history={props.history} noTitle />}
             {showQuickStartModal && renderQuickStartModal()}
         </>

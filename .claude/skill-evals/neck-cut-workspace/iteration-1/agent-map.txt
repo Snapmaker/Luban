@@ -1,0 +1,4 @@
+a3ae4bf7bfccfcc5c eval-0-rotary-neck-cut-reassessment opus
+ab9f044b579505869 eval-0-rotary-neck-cut-reassessment sonnet
+a86a3568afee6831d eval-0-rotary-neck-cut-reassessment haiku
+a186ca2c8ec42b9eb eval-0-rotary-neck-cut-reassessment sonnet-noskill

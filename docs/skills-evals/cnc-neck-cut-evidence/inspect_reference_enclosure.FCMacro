@@ -1,0 +1,41 @@
+"""Read-only dimensional inventory of the supplied enclosure reference."""
+
+import os
+import FreeCAD as App
+
+base = '/home/pi/dev/Luban/cnc/neck_cut_plan/'
+doc = App.openDocument(base + 'reference_enclosure_20260922.FCStd')
+names = (
+    'Part__Feature', 'Part__Feature001', 'Part__Feature002',
+    'Part__Feature008', 'Part__Feature009',
+    'Back_plate_to_mess_with__6_', 'Back_plate_to_mess_with__6_001',
+    'Enclosure002_after_recess', 'CAM_T8c_WorkModel',
+    'Stock_T8c_ExistingEnclosure', 'Stock001',
+)
+out = []
+for name in names:
+    obj = doc.getObject(name)
+    if obj is None or not hasattr(obj, 'Shape') or obj.Shape.isNull():
+        out.append('%s: absent or null' % name)
+        continue
+    bb = obj.Shape.BoundBox
+    p = obj.Placement.Base
+    out.append('%s | %s | valid=%s solids=%d volume=%.3f | bbox=(%.3f,%.3f) (%.3f,%.3f) (%.3f,%.3f) | placement=(%.3f,%.3f,%.3f)' % (
+        name, obj.Label, obj.Shape.isValid(), len(obj.Shape.Solids), obj.Shape.Volume,
+        bb.XMin, bb.XMax, bb.YMin, bb.YMax, bb.ZMin, bb.ZMax,
+        p.x, p.y, p.z))
+import Part
+body = doc.getObject('Stock_T8c_ExistingEnclosure').Shape
+for y in range(1, 119, 3):
+    slab = Part.makeBox(200, 0.1, 200, App.Vector(-100, y, -100))
+    section = body.common(slab)
+    if section.isNull() or section.Volume < 1e-6:
+        out.append('section y=%d: empty' % y)
+    else:
+        bb = section.BoundBox
+        out.append('section y=%d: area=%.2f bbox x=%.2f..%.2f z=%.2f..%.2f solids=%d' % (
+            y, section.Volume / 0.1, bb.XMin, bb.XMax, bb.ZMin, bb.ZMax,
+            len(section.Solids)))
+with open(base + 'reference_enclosure_inventory.txt', 'w') as f:
+    f.write('\n'.join(out) + '\n')
+os._exit(0)

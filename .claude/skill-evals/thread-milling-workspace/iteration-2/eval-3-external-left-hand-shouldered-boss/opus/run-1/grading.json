@@ -1,0 +1,90 @@
+{
+  "eval_id": 3,
+  "eval_name": "external-left-hand-shouldered-boss",
+  "config": "opus",
+  "expectations": [
+    {
+      "text": "Selects external, LH, conventional without reversing an internal program by hand.",
+      "passed": true,
+      "evidence": "plan.md line 71: 'Header: EXTERNAL, LH, CONVENTIONAL, M8x1, programmed major, `CUTTER COMPENSATION D=0 - TOOLPATH FOR TOOL CENTER`...'; Findings: 'External-thread review applies, not an internal one'; nowhere does the plan propose mirroring/reversing the M2.5 internal fixture."
+    },
+    {
+      "text": "Requires cutting OD and axial configuration independently of shank marking and flute count.",
+      "passed": true,
+      "evidence": "Findings: 'In the evaluated designation D4 is the 4 mm shank and 50L is overall length... Neither is: the cutting/thread-form OD... \"Triple flute\" is 3 circumferential edges (feeds). It says nothing about single vs multiple axial forms'; Question 1 asks cutting/thread-form OD and 'Single form or multi-form? If multi, how many axial rows and what effective cutting length?' as separate items from flute count."
+    },
+    {
+      "text": "Reviews the entire exterior orbit, neck/shank/holder and shoulder/runout, including nearby clamps.",
+      "passed": true,
+      "evidence": "Findings gives a 3-part collision analysis (tool tip below lowest pass / tooth-to-tip, plunge column vs shoulder OD, deepest pass vs signed Z) plus 'Clearance is needed around the whole orbit (orbit radius + cutter radius + lead-in/out) and for the collet nut at the deepest Z'; Step 9/24 re-checks 'Plunge radius against the shoulder OD', 'Deepest Z + tooth-to-tip against the shoulder face', and 'Clamp distance against orbit radius + cutter radius + collet nut' during the post-conversion review, not only at intake."
+    },
+    {
+      "text": "Does not reuse an internal (major minus cutter)/2 orbit formula as an external recipe.",
+      "passed": true,
+      "evidence": "Findings: 'The M2.5 internal fixture (thread-milling-m2_5-fanuc.nc) is regression evidence only. None of its cutter, radii or Z values carries over to this job.' The plan's own collision check for the plunge column ('shoulder's outer radius exceeds (plunge centre radius − cutter radius)') is a distinct external-orbit formula, not the internal (major-cutter)/2 centre-path radius."
+    },
+    {
+      "text": "Keeps all unknown generator fields pending and issues no motion or staging.",
+      "passed": true,
+      "evidence": "Steps 1-6 are read-only state calls (get_connection_status/get_position/get_stored_state/get_machine_profile/get_tool_setter_config/get_probe_feed_status); step 7 is the single batched question message [WAIT]; 'Counts: logical approvals = this turn 0 (read-only).' No probe_program, tool-setter, or submit_gcode_job call appears before the operator's answers."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  },
+  "approval_tags_counted": 7,
+  "stated_logical_approvals": "Flow A existing datum valid: 4 tool change + 1 job = 5. Flow A with datum measurement and re-registration: 7. Flow B: 3, or 5 with the datum branch. (Plan's own summary: 'Literal [APPROVAL] tags = 7.')",
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": 28,
+    "errors_encountered": 0,
+    "output_chars": 22088,
+    "transcript_chars": null
+  },
+  "timing": {
+    "total_tokens": 128732,
+    "tool_uses": 16,
+    "duration_ms": 246225
+  },
+  "claims": [
+    {
+      "claim": "Stored probe effectiveLength 71.3 is calibration, not a same-session tool-setter reading, and must not be used to fabricate old_trigger_z.",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Matches RUN_INSTRUCTIONS.md fixture note verbatim: 'geometry: stored probe effectiveLength 71.3 — this is calibration, not a same-session tool-setter reading.'"
+    },
+    {
+      "claim": "The rotary landmark's requiredToolheadZ and the first G0 XY move (before the first Z block) must be checked against landmarks and the clamp.",
+      "type": "process",
+      "verified": true,
+      "evidence": "Consistent with the eval-0 assertion's domain fact about the M2.5 program's first move and with the fixture's landmark note; correctly generalised to this job without inventing numbers."
+    },
+    {
+      "claim": "Nominal turns for a single-form cutter would be 6/1.0 = 6 turns.",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Arithmetic is correct for a 6 mm thread length at 1 mm pitch, offered only as an illustrative floor, consistent with 'before generator lead-in/out and whole-turn rounding.'"
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "Does not reuse an internal (major minus cutter)/2 orbit formula as an external recipe.",
+        "reason": "A plan that never mentions any orbit-radius formula at all (defers everything to the generator) would also pass this assertion by omission. Consider rewording to require a plan to positively state how the external orbit radius/collision envelope differs from the internal case, so silence cannot pass."
+      },
+      {
+        "reason": "None of the 5 assertions checks whether the plan actually reasons about the shoulder as a hard collision surface (tooth-to-tip distance, plunge-column geometry) versus just naming 'shoulder clearance' as a topic to ask about. Opus did the former; a plan that only added 'ask about the shoulder' to its question list would pass assertion 3 just as well. Consider an assertion that requires an explicit geometric argument (not just a question) for why full thread-to-shoulder engagement is not possible without an undercut."
+      }
+    ],
+    "overall": "All 5 assertions pass with substantive, specific evidence (not just topic-naming) for this run. The assertion set itself is on the shallow side for eval 3 relative to opus's actual output depth — see suggestions above."
+  }
+}

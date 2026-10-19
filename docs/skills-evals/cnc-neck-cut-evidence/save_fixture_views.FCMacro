@@ -1,0 +1,64 @@
+"""Save reviewable GUI state, JPEG source images, and residual-section checks."""
+import os
+import FreeCAD as App
+import FreeCADGui as Gui
+import Part
+from PySide import QtWidgets
+
+base='/home/pi/dev/Luban/cnc/neck_cut_plan/'
+doc=App.openDocument(base+'neck_cut_fixture_plan.FCStd')
+view=Gui.activeDocument().activeView()
+
+def show(names):
+    names=set(names)
+    for obj in doc.Objects:
+        vp=obj.ViewObject
+        vp.Visibility=hasattr(obj,'Group') or obj.Name in names
+    for _ in range(10): QtWidgets.QApplication.processEvents()
+
+def frame(names,view_method,png):
+    show(names)
+    getattr(view,view_method)()
+    for _ in range(10): QtWidgets.QApplication.processEvents()
+    view.fitAll()
+    for _ in range(10): QtWidgets.QApplication.processEvents()
+    view.saveImage(base+png,1400,900,'White')
+
+operations=('B0Cleanup','B180Cleanup','B90Side','B270Side','B0Finish','B180Finish')
+for name in ('JawExclusionProxy',)+tuple('Jaw'+op for op in operations):
+    doc.getObject(name).ViewObject.Transparency=85
+for name in ('Stage2Stock',)+tuple('StockBefore'+op for op in operations)+tuple('StockAfter'+op for op in operations):
+    doc.getObject(name).ViewObject.Transparency=82
+for name in tuple('Removal'+op for op in operations):
+    doc.getObject(name).ViewObject.Transparency=48
+
+frame(['Stage2Stock','JawExclusionProxy','RotaryAxis','WCSOrigin','WCSAxisX','WCSAxisY','WCSAxisZ'],'viewAxonometric','fixture_overview.png')
+frame(['Stage2Section'],'viewFront','fixture_tabs_section.png')
+frame(['StockBeforeB0Cleanup','RemovalB0Cleanup','JawB0Cleanup'],'viewAxonometric','fixture_round1_b0_sweep.png')
+frame(['StockBeforeB0Cleanup','JawB0Cleanup','CutTraceB0Cleanup'],'viewAxonometric','fixture_round1_b0_path.png')
+frame(['StockBeforeB90Side','RemovalB90Side','JawB90Side'],'viewAxonometric','fixture_b90_sweep.png')
+frame(['StockBeforeB90Side','JawB90Side','CutTraceB90Side'],'viewAxonometric','fixture_b90_path.png')
+frame(['StockBeforeB90Side','JawB90Side','TipPathB90Side','WCSOrigin','WCSAxisX','WCSAxisY','WCSAxisZ'],'viewAxonometric','fixture_native_b90_path.png')
+frame(['StockBeforeB0Finish','RemovalB0Finish','JawB0Finish'],'viewAxonometric','fixture_b0_sweep.png')
+frame(['StockBeforeB0Finish','JawB0Finish','CutTraceB0Finish'],'viewAxonometric','fixture_b0_finish.png')
+frame(['StockBeforeB0Finish','JawB0Finish','TipPathB0Finish','WCSOrigin','WCSAxisX','WCSAxisY','WCSAxisZ'],'viewAxonometric','fixture_native_b0_finish.png')
+frame(['StockBeforeB180Finish','JawB180Finish','CutTraceB180Finish'],'viewAxonometric','fixture_round2_b180_path.png')
+
+# Save the useful complete assembly as the default opening view.
+show(['Stage2Stock','JawExclusionProxy','RotaryAxis','WCSOrigin','WCSAxisX','WCSAxisY','WCSAxisZ'])
+view.viewAxonometric()
+for _ in range(10): QtWidgets.QApplication.processEvents()
+view.fitAll()
+for _ in range(10): QtWidgets.QApplication.processEvents()
+doc.recompute()
+doc.save()
+
+# The cross-section count is a useful guard against a false 'two tabs' claim.
+with open(base+'fixture_section_checks.txt','w') as f:
+    for y in (253.1,253.5,254.0,256.0,258.0,258.5,258.9):
+        slab=Part.makeBox(64.1,0.1,36.4,App.Vector(-32.25,y-256.05,-18.45))
+        inner=Part.makeBox(18.1,0.1,21.0,App.Vector(-9.25,y-256.05,-12.25))
+        cut=doc.getObject('Stage2Stock').Shape.common(inner)
+        areas=sorted([round(s.Volume/0.1,3) for s in cut.Solids],reverse=True)
+        f.write('Y %.1f: components %d, residual areas %s mm2\n'%(y,len(cut.Solids),areas))
+os._exit(0)

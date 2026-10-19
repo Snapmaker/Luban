@@ -1,0 +1,112 @@
+{
+  "expectations": [
+    {
+      "text": "Identifies that the program's CUTTER DIAM=1.38 equals the neck diameter the operator gave, and that the tool-centre path radius depends on the cutting (thread-form) OD, which is not known",
+      "passed": false,
+      "evidence": "Findings say only \"1.38 is neck diameter, not cutting OD\" without ever deriving that the toolpath's own radius was built on that 1.38 mm value, nor stating the real cutting OD as unknown; Q2 never asks for a cutting-OD measurement at all (it says \"The fixture uses neck diameter 1.38 mm for clearance\", which misdescribes what the file actually uses 1.38 for)."
+    },
+    {
+      "text": "Does not invent or assume a thread-form OD for the cutter; asks the operator to measure it (calipers/datasheet) or otherwise treats it as a blocking unknown",
+      "passed": false,
+      "evidence": "No question anywhere asks for the cutting/thread-form OD; Step 2 converts the file immediately without ever raising OD as an unknown or blocker."
+    },
+    {
+      "text": "Flags L=2.25 against three axial rows at 0.45 pitch (about 1.35 mm coverage); requires verified effective length/generator convention and warns of unthreaded bands without claiming an unmeasured exact band size.",
+      "passed": false,
+      "evidence": "\"2.25 mm is effective cutting length / axial coverage, suggesting three rows at ~0.75 mm spacing\" — this treats 2.25 mm as internally consistent (2.25/3=0.75) rather than comparing it against the stated 0.45 mm pitch (≈1.35 mm expected coverage); no unthreaded-band warning appears anywhere."
+    },
+    {
+      "text": "Recommends regenerating the program in Machining Doctor with the measured OD and real cutting length rather than hand-editing the G-code",
+      "passed": false,
+      "evidence": "\"Machining Doctor\" is never mentioned as a regeneration path anywhere in plan.md; the plan proceeds straight to convert_thread_milling_gcode on the supplied fixture."
+    },
+    {
+      "text": "Uses convert_thread_milling_gcode with real argument names: gcode, source_controller fanuc (or default), tool_center_path true, tool_length_applied true, spindle_mode",
+      "passed": true,
+      "evidence": "Step 2: `convert_thread_milling_gcode {\"gcode\": ..., \"source_controller\": \"fanuc\", \"tool_center_path\": true, \"tool_length_applied\": true, \"spindle_mode\": \"cnc_200w_rpm\" OR \"power_percent\", ...}` — argument names are correct, independent of the timing problem graded separately below."
+    },
+    {
+      "text": "Chooses spindle_mode from the actual head (reads get_machine_profile/get_stored_state or asks) rather than assuming; notes S17991 is only kept in cnc_200w_rpm mode (8000-18000) and that power_percent does NOT rescale feeds",
+      "passed": false,
+      "evidence": "\"Source RPM 17991 is within 200 W head range 8000–18000 RPM; confirmation required whether 200 W or standard head is fitted\" — notes the range but never states that power_percent does not rescale feeds (zero matches for 'rescal' in plan.md or critique.md)."
+    },
+    {
+      "text": "Only declares tool_length_applied true once work Z has been referenced with the thread mill itself fitted (tool change flow / tool setter + apply_tool_length_offset, or the operator setting Z with this cutter)",
+      "passed": false,
+      "evidence": "Step 2 (unconditional, listed directly after step 1, with no wait for operator answers) declares `\"tool_length_applied\": true` while the fitted tool is still unknown (Q5 asks \"Is the touch probe currently in the spindle, or has the thread mill cutter already been inserted?\" but the answer is never gated before step 2 runs) — a more severe version of the same problem noted in sonnet's plan."
+    },
+    {
+      "text": "Treats the work origin (X0 Y0 at the hole centre, Z0 at the stock top) as the operator's, establishing measured XYZ only via human-gated set_workspace_origin and transferring tool length via apply_tool_length_offset; asks how/whether the hole centre is set",
+      "passed": false,
+      "evidence": "Q4 asks only about Z0 tool history (\"Was the work origin Z0 established with the touch probe ... or with the thread mill cutter itself?\"); no question or step ever addresses whether X0/Y0 is at the hole centre, and set_workspace_origin is never called or mentioned anywhere in the plan."
+    },
+    {
+      "text": "Notes that the program's first move (G00 X0 Y0 before G43 Z20) runs at whatever Z the head is at, so the head must be at or above the motion floor / park height before the job starts",
+      "passed": false,
+      "evidence": "Findings note \"initial XY move G00 X0 Y0 at actual starting height (not raised)\" and separately \"motion floor Z320 and park Z328\" as facts, but never connects them into a check or conclusion (\"head must be at/above floor before job starts\"); `get_stored_state` reads landmarks (steps 1 and 5) but the returned data is never used to verify the approach segment, and no landmark/clamp check step appears anywhere."
+    },
+    {
+      "text": "Submits with submit_gcode_job using frame 'work' and head_type 'cnc', after reviewing changes/warnings/validation (or validate_gcode)",
+      "passed": true,
+      "evidence": "Step 6: `submit_gcode_job {..., \"head_type\": \"cnc\", \"frame\": \"work\"}` after step 2 (conversion review) and step 3 (`validate_gcode`)."
+    },
+    {
+      "text": "Staging turn ends with the confirm URL as the last line; start_gcode_job with wait_for_approval_ms comes after, in the background",
+      "passed": true,
+      "evidence": "Step 6: \"Deliver confirm URL as the LAST LINE of message; END THE TURN\", followed by a separate step 7: \"[After confirm URL delivered and turn ended] Background approval wait: start_gcode_job {...}\" — correctly ordered."
+    },
+    {
+      "text": "Asks all open questions in ONE batch and stages nothing that depends on an answer before the answer arrives",
+      "passed": false,
+      "evidence": "The 5 questions are listed in one batch, but there is no step in the numbered \"Steps\" section that actually sends them or waits for a reply before step 2 — step 2 (offline conversion with both declarations true) runs immediately after step 1 with no '-- end turn --'/[WAIT] boundary in between, despite depending on Q1/Q4/Q5."
+    },
+    {
+      "text": "Does not plan any Z motion (move_z / direct) the operator did not ask for; every quoted height carries frame (machine/work)",
+      "passed": true,
+      "evidence": "No move_z call anywhere; motion goes through run_tool_setter/goto_tool_change_position/apply_tool_length_offset/submit_gcode_job. Quoted heights (\"work Z−5.056\", \"machine heights Z320/Z328\", \"work Z20\") are frame-qualified."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 9,
+    "total": 13,
+    "pass_rate": 0.31
+  },
+  "approval_tags_counted": {
+    "literal_APPROVAL_tags": 5,
+    "literal_WAIT_tags": 4,
+    "note": "Counted from plan.md body only, excluding the self-report table row that also contains the literal string '[APPROVAL]'."
+  },
+  "stated_logical_approvals": "Plan's Counts table: \"Logical approvals (operator clicks): 1 + 4 (if tool change) OR 1 (if cutter fitted) ... min 1 (program submit), max 5\"; \"Literal [APPROVAL] tags: 1 submit + 4 tool-change (if needed) + 1 wait\" (= 5, matches the literal count); \"Operator waits: 2\" does NOT match the literal count of 4 [WAIT] tags actually present (all four inside the conditional tool-change branch) — haiku undercounts its own waits by half.",
+  "execution_metrics": {
+    "total_tokens": 72860,
+    "duration_ms": 159751,
+    "tool_uses": 14
+  },
+  "timing": {
+    "executor_duration_seconds": 159.751
+  },
+  "claims": [
+    {
+      "claim": "2.05 mm is the standard pilot hole size for M2.5x0.45",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Correct, unasserted domain fact consistent with the operator's own stated hole size; a genuine positive signal in an otherwise weak run."
+    },
+    {
+      "claim": "The conversion in step 2 is safe to run offline before operator answers because it is 'review-only until staging'",
+      "type": "quality",
+      "verified": false,
+      "evidence": "The call itself asserts tool_length_applied: true and tool_center_path: true as literal arguments — these are declarations, not neutral review actions; making them before the fitted tool and cutting OD are confirmed is exactly what cnc-thread-milling SKILL.md prohibits (\"do not assert a declaration merely to obtain a preview\")."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "No new eval-quality suggestions beyond those already logged against opus/sonnet's grading.json (possible leakage from setup.md's fixture-specific section). Haiku's misses here are not borderline calls — they are direct, confirmed contradictions of explicit skill-doc text (declaring tool_length_applied true while the fitted tool is unconfirmed; never asking for cutting OD at all)."
+  }
+}

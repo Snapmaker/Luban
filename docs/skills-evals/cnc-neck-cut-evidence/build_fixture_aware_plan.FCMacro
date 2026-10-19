@@ -1,0 +1,314 @@
+"""Fixture-aware cutter-swept model with a probe-verified, proposed safe WCS."""
+import os
+import math
+import json
+import FreeCAD as App
+import Part
+import Path
+
+OUT = '/home/pi/dev/Luban/cnc/neck_cut_plan/neck_cut_fixture_plan.FCStd'
+REPORT = '/home/pi/dev/Luban/cnc/neck_cut_plan/fixture_model_checks.txt'
+V = App.Vector
+doc = App.newDocument('NeckCutFixturePlan')
+doc.Label = 'Neck cut | four indexed setups and fixture clearance'
+
+# B0 model: X is the measured 64.1 mm opposed width, Z is the 36.4 mm
+# side-silhouette width. The top is a measured probe contact less 70.95 mm.
+# The lower face is inferred from the side width, not a direct B0 contact.
+AXIS = V(170.1, 0, 112.4)
+# Proposed work zero is outside the stock, with its Z plane 30 mm above the
+# measured B0 rim. It is NOT the live G54 until the operator sets it.
+with open('/home/pi/dev/Luban/cnc/neck_cut_plan/proposed_safe_wcs_20260927.json') as registration_file:
+    registration=json.load(registration_file)
+zero=registration['proposed_work_zero']
+MODEL_ORIGIN_MACHINE = V(zero['machine_x'],zero['machine_y'],zero['physical_tip_z'])
+MODEL_SHIFT = -MODEL_ORIGIN_MACHINE
+X0, X1 = 137.85, 201.95
+Z1, Z0 = 130.35, 93.95
+W = X1-X0
+T = Z1-Z0
+Y0, Y1 = 230.0, 278.0  # review extent only; neither far end measured
+YC = 256.0
+R = 3.0
+Y_TRACKS = (254.0, 256.0, 258.0)
+JAW_Y = 269.0  # historical observation, not re-probed for this clamping
+
+def group(name, label, parent=None):
+    obj = doc.addObject('App::DocumentObjectGroup', name)
+    obj.Label = label
+    if parent: parent.addObject(obj)
+    return obj
+
+def prop(obj, key, value, kind='App::PropertyString'):
+    obj.addProperty(kind, key, 'Evidence and limits')
+    setattr(obj, key, value)
+
+def solid(name, label, shape, parent, note, color=None):
+    obj = doc.addObject('Part::Feature', name)
+    obj.Label = label
+    shown=shape.copy()
+    shown.translate(MODEL_SHIFT)
+    obj.Shape = shown
+    prop(obj, 'Meaning', note)
+    parent.addObject(obj)
+    if color is not None:
+        obj.ViewObject.ShapeColor = color
+    return obj
+
+def union(parts):
+    result = parts[0]
+    for part in parts[1:]: result = result.fuse(part)
+    return result.removeSplitter()
+
+def b_rotate(shape, angle):
+    result = shape.copy()
+    result.rotate(V(AXIS.x, 0, AXIS.z), V(0,1,0), -angle)
+    return result
+
+def point(u, v, b, y=YC):
+    # u = distance below B0 face; v = distance from west B0 X face.
+    p = V(X0+v, y, Z1-u)
+    return App.Rotation(V(0,1,0), -b).multVec(p-V(AXIS.x,0,AXIS.z))+V(AXIS.x,0,AXIS.z)
+
+def box_uv(u0,u1,v0,v1,y0,y1):
+    return Part.makeBox(v1-v0,y1-y0,u1-u0,V(X0+v0,y0,Z1-u1))
+
+def sweep_u(u0,u1,v0,v1,yc):
+    """6 mm cutter whose axis is U, with centerline along V."""
+    h=u1-u0
+    items=[box_uv(u0,u1,v0,v1,yc-R,yc+R)]
+    for v in (v0,v1):
+        items.append(Part.makeCylinder(R,h,V(X0+v,yc,Z1-u1),V(0,0,1)))
+    return union(items)
+
+def sweep_v(v0,v1,u0,u1,yc):
+    """6 mm cutter whose axis is V, with centerline along U."""
+    h=v1-v0
+    items=[box_uv(u0,u1,v0,v1,yc-R,yc+R)]
+    for u in (u0,u1):
+        items.append(Part.makeCylinder(R,h,V(X0+v0,yc,Z1-u),V(1,0,0)))
+    return union(items)
+
+def sweep_all(kind, a0,a1,b0,b1):
+    return union([(sweep_u if kind=='u' else sweep_v)(a0,a1,b0,b1,y)
+                  for y in Y_TRACKS])
+
+def path_feature(name,label,angle,passes,parent,note):
+    # Path coordinates are the physical CUTTER TIP in the review scene. They
+    # are NOT a controller toolhead Z and must not be posted to the machine.
+    lines=[]
+    for u0,v0,u1,v1 in passes:
+        p0=point(u0,v0,angle)+MODEL_SHIFT
+        p1=point(u1,v1,angle)+MODEL_SHIFT
+        top_z=max(point(0,0,angle).z,point(T,W,angle).z)+MODEL_SHIFT.z
+        safe_z=top_z+8
+        for y_machine in Y_TRACKS:
+            y=y_machine+MODEL_SHIFT.y
+            lines += [f'G0 X{p0.x:.3f} Y{y:.3f} Z{safe_z:.3f}',
+                      f'G1 Z{p0.z:.3f} F100',
+                      f'G1 X{p1.x:.3f} Y{y:.3f} Z{p1.z:.3f} F250',
+                      f'G0 Z{safe_z:.3f}']
+    obj=doc.addObject('Path::Feature',name)
+    obj.Label=label
+    obj.Path=Path.Path([Path.Command(line) for line in lines])
+    first=point(passes[0][0],passes[0][1],angle)+MODEL_SHIFT
+    obj.ViewObject.StartPosition=V(first.x,Y_TRACKS[0]+MODEL_SHIFT.y,max(point(0,0,angle).z,point(T,W,angle).z)+MODEL_SHIFT.z+8)
+    obj.ViewObject.StartIndex=1 # Hide only FreeCAD's implicit origin-to-first-entry preview.
+    obj.ViewObject.NormalColor=(0.08,0.29,0.88,1.0)
+    obj.ViewObject.LineWidth=2
+    prop(obj,'Status','REVIEW ONLY: physical cutter-tip Z, not controller toolhead Z; fixture and stock envelopes partly inferred; no Job/post.')
+    prop(obj,'Purpose',note)
+    prop(obj,'ToolDiameter',6.0,'App::PropertyLength')
+    prop(obj,'IndexAngle',float(angle),'App::PropertyAngle')
+    prop(obj,'ModelWCS','Physical cutter-tip positions relative to PROPOSED air-side work zero at machine X230 Y245, tip physical Z160.35. Controller G54 must be set and verified there before posting. No Job/post or verified fixture clearance.')
+    parent.addObject(obj)
+    traces=[]
+    for u0,v0,u1,v1 in passes:
+        for y in Y_TRACKS:
+            traces.append(Part.makeLine(point(u0,v0,angle,y),point(u1,v1,angle,y)))
+    trace=solid('CutTrace'+name.removeprefix('TipPath'),'CUT TRACE '+label,Part.makeCompound(traces),parent,
+                'Feed portions only, shown without FreeCAD Path\'s default origin-to-first-point preview line.',(0.08,0.29,0.88))
+    trace.ViewObject.LineColor=(0.08,0.29,0.88)
+    trace.ViewObject.LineWidth=3.0
+    trace.ViewObject.DisplayMode='Wireframe'
+    return obj
+
+root=group('ReadFirst','READ FIRST | proposed safe WCS, no machine program')
+prop(root,'Frame','PROPOSED work zero at air-side machine X230 Y245, probe tip physical Z160.35 (toolhead Z231.30 with the 70.95 mm probe). Free column verified to toolhead Z197.3. NOT the live G54 until operator sets and verifies it. Rotary axis physical Z112.4 is separate and is NOT a toolhead move. B90/B270 side-probe shifts support the model rotation sign; indexed zero/backlash still require a before-cut check. No released Job/post.')
+for k,v in [('WCSOriginMachineX',MODEL_ORIGIN_MACHINE.x),('WCSOriginMachineY',MODEL_ORIGIN_MACHINE.y),('WCSOriginPhysicalZ',MODEL_ORIGIN_MACHINE.z)]:
+    prop(root,k,v,'App::PropertyLength')
+prop(root,'Measured','B0 outer X 137.85..201.95 at Y245; 36.4 side width at Y245; B0 top physical Z130.35; B0 groove 9.1 mm; B180 groove 6.1 mm; Y256 side opening 21.3 mm.')
+prop(root,'Inferred','Lower Z93.95 from width; stock proxy Y230..278; jaw review box and its Z/X extent; enclosure pocket and clamps are NOT measured solids.')
+prop(root,'Required','Verify current chuck front Y and jaw radial height, collet nose diameter, installed tool stickout, enclosure shoulder/cavity before a release CAM Job.')
+for key,val in [('EndmillDiameter',6),('NominalAxialCenter',256),('SideDepth',23),('B0GrooveCleanup',9.2),('B180GrooveCleanup',6.2),('JawLeadingYHistorical',269)]:
+    prop(root,key,val,'App::PropertyLength')
+
+src=group('EvidenceGeometry','Evidence and stock construction',root)
+stock=box_uv(0,T,0,W,Y0,Y1)
+base=solid('StockEnvelope','Stock envelope | X64.1 by Z36.4, Y230..278 inferred',stock,src,'X width measured at Y245. Z width taken from side silhouette. Y ends are display limits, not measured.',(0.70,0.62,0.45))
+prop(base,'B0XContacts','137.85 and 201.95 physical faces after probe-radius correction, Y245.')
+prop(base,'B0TopPhysicalZ','130.35 = toolhead contact Z201.30 - effective probe length70.95, at X145/170/195 Y240..252.')
+prop(base,'BottomZSource','93.95 inferred by subtracting the 36.4 mm side width; direct B180 rim data give a conflicting opposite-face estimate at another point.')
+
+existing_top=box_uv(0,9.1,0,W,254,258)
+existing_bottom=box_uv(T-6.1,T,0,W,254,258)
+existing=stock.cut(union([existing_top,existing_bottom])).removeSplitter()
+solid('ExistingGroovedStock','Existing channels | nominal measured depths',existing,src,'Groove depths measured; Y254..258 is an approximate existing channel extent, based on B180 floor contacts. B0 channel width is not directly mapped.',(0.67,0.62,0.52))
+
+# Restore both existing channels over three adjacent Y tracks. This is essential:
+# the probed channel was only about Y254..258, and a single 6 mm center pass
+# leaves curved, continuous skins near the axial sides.
+groove_top=sweep_all('u',0,9.2,-3,W+3)
+groove_bottom=sweep_all('u',T-6.2,T,-3,W+3)
+side90=sweep_all('v',W-23,W,6.1,33.3)
+side270=sweep_all('v',0,23,6.1,33.3)
+stage1=stock.cut(union([groove_top,groove_bottom,side90,side270])).removeSplitter()
+
+# V23..41.1 is the intermediate band. The middle is 8.5 mm wide,
+# permitting a 6 mm cutter without relying on a 0.25 mm side clearance.
+# End-point overlaps absorb the curved tool footprint at the Y edges.
+b0_middle=sweep_all('u',0,18.45,30.6,44.1)
+b0_upper=sweep_all('u',0,22.3,39.0,44.1)
+b180_middle=sweep_all('u',T-18.45,T,20.0,33.5)
+b180_lower=sweep_all('u',17.1,T,20.0,25.3)
+stage2=stage1.cut(union([b0_middle,b0_upper,b180_middle,b180_lower])).removeSplitter()
+
+stages=group('MachinedResults','Cutter-swept result | select one stage',root)
+solid('Stage1Stock','STAGE 1 | continuous web after side cuts',stage1,stages,'Boolean result of three Y tracks at B0/B180 groove cleanup and B90/B270 23 mm side cuts.',(0.62,0.74,0.77))
+solid('Stage2Stock','STAGE 2 | residual bridges after four finish passes',stage2,stages,'Boolean result of the actual 6 mm round cutter swept over three Y tracks. Check thin edge skins and tabs in section.',(0.85,0.56,0.29))
+slab=box_uv(0,T,0,W,255.95,256.05)
+sec1=solid('Stage1Section','Y256 section | stage 1',stage1.common(slab),stages,'Mid-kerf cross section; not a complete 3D proof of the connection.',(0.56,0.72,0.81))
+sec2=solid('Stage2Section','Y256 section | stage 2',stage2.common(slab),stages,'Mid-kerf cross section through the two final bridges.',(0.97,0.58,0.28))
+
+wcs=group('ReviewWCS','PROPOSED WCS | air-side physical-tip zero',root)
+origin=MODEL_ORIGIN_MACHINE
+solid('WCSOrigin','PROPOSED WCS ORIGIN | free-air point',Part.makeSphere(1.4,origin),wcs,
+      'Air-side datum machine X230 Y245 physical-tip Z160.35, probe toolhead Z231.30. Free column probed; controller G54 not yet set.',(0.12,0.12,0.12))
+for axis_name,delta,color in [('X',V(12,0,0),(0.88,0.16,0.16)),
+                              ('Y',V(0,12,0),(0.16,0.68,0.22)),
+                              ('Z',V(0,0,12),(0.15,0.31,0.90))]:
+    o=solid('WCSAxis'+axis_name,'CAD +'+axis_name+' | 12 mm',Part.makeLine(origin,origin+delta),wcs,
+            'Positive CAD '+axis_name+' direction from the neck-axis origin.',color)
+    o.ViewObject.LineColor=color
+    o.ViewObject.LineWidth=3.0
+
+fixture=group('FixtureClearance','Fixture and unknown geometry | B0 scene',root)
+axis_line=Part.makeCylinder(1.0,80,V(AXIS.x,230,AXIS.z),V(0,1,0))
+solid('RotaryAxis','Rotary axis | X170.1 physical Z112.4',axis_line,fixture,'Stored axis calibration, machine frame.',(0.18,0.36,0.73))
+jaw=Part.makeBox(80,41,85,V(130,JAW_Y,75))
+jo=solid('JawExclusionProxy','CHUCK JAW EXCLUSION | Y269+ historical, X/Z assumed',jaw,fixture,'Conservative display box: only leading Y about269 comes from older stock survey; current jaw face and radial extent MUST be checked.',(0.86,0.27,0.25))
+prop(jo,'MeasurementStatus','Unmeasured for this clamping; NOT a verified collision boundary.')
+front=Part.makeBox(90,0.4,90,V(125,JAW_Y-0.2,72))
+solid('JawFrontPlane','Jaw leading plane | historical Y269',front,fixture,'Historical limit only. A toolpath clearance decision requires a current fixture measurement.',(0.97,0.30,0.20))
+enclosure=Part.makeBox(W,23,T,V(X0,230,Z0))
+solid('EnclosureShoulder','ENCLOSURE shoulder envelope | Y230..253',enclosure,fixture,'Measured section size at Y245; true cavity, radius and shoulder transition are unknown, so this is a bounding volume.',(0.61,0.68,0.62))
+clamp=Part.makeBox(W,10,T,V(X0,259,Z0))
+solid('ClampedStockProxy','CLAMPED tenon envelope | Y259..269',clamp,fixture,'Conservative continuation of measured section. Actual tenon and jaw contacts are not measured.',(0.47,0.55,0.64))
+
+# Fresh evidence, kept separate from the stock booleans. The B-180 line is
+# stored in its observed machine pose and is hidden by default: overlaying it
+# on the B0 stock would incorrectly imply a verified rotary registration.
+with open('/home/pi/dev/Luban/cnc/neck_cut_plan/probe_measurements_20260927.json') as survey_file:
+    survey=json.load(survey_file)
+profiles=group('MeasuredProfiles20260927','MEASURED 27 Sep | indexed probe profiles (toggle lines)',root)
+prop(profiles,'SourceJobs','B0 7685888d887d; B-180 f8f12d4a4b3e; raised fixture cc6e2592ccd6. Full contacts in probe_measurements_20260927.json.')
+prop(profiles,'ProbeLengthMm',70.95,'App::PropertyLength')
+prop(profiles,'ContactRule','Every saved profile Z is TOOLHEAD machine contact Z; plotted physical surface Z = contact Z - 70.95 mm. Exposed tip approximately 21 mm.')
+prop(profiles,'ImportantLimit','B0 path stopped before Y259.5 on a steep wall. Raised area at X195 starts between Y270.5 and 271.0, but full jaw shape and material identification remain unverified.')
+def evidence_curve(name,label,rows,x,b,explanation,color):
+    shape=Part.makePolygon([V(x,p['y_mm'],p['toolhead_z_mm']-70.95) for p in rows])
+    item=solid(name,label,shape,profiles,explanation,color)
+    item.ViewObject.LineColor=color
+    item.ViewObject.LineWidth=3
+    prop(item,'IndexAngle',float(b),'App::PropertyAngle')
+    prop(item,'MachineX',float(x),'App::PropertyLength')
+    return item
+b180_rows=list(reversed(survey['b180']['profiles']['toward_enclosure']))[:-1]+survey['b180']['profiles']['toward_chuck']
+evidence_curve('MeasuredB0Rim','B0 | X195 rim, groove, Y250..259',survey['b0']['profile'],195,0,
+               '19 valid top contacts; final stepped link at Y259.5 aborted. Raw physical B0 pose.',(0.08,0.36,0.76))
+evidence_curve('MeasuredB180Rim','B-180 | X198 rim, groove, Y245..263 (as observed)',b180_rows,198,-180,
+               'Raw B-180 physical pose. Hidden by default; do not read as B0 stock without rotary registration.',(0.75,0.49,0.10))
+evidence_curve('MeasuredRaisedBoundary','B0 | X195 raised fixture, Y270..278',survey['raised_boundary']['profile'],195,0,
+               'Surface rises between Y270.5 and 271.0 on X195. Material identity and full jaw X/Z envelope unproven.',(0.75,0.22,0.19))
+prop(root,'Survey20260927','Groove floor B0 Z192.2 toolhead Y254..259 at X195; B-180 Z198.3 Y254..258 at X198. Raised surface near jaw begins Y270.5..271 at X195. See MeasuredProfiles20260927 and JPEG.')
+prop(root,'CurrentReleaseHold','Model stock is still a proxy. B0 at X195/Y263 is 5.7 mm above the Y250 rim; the planned cutter sweep reaches Y261. Update stock and verify endmill holder/jaw clearance before generating machine CAM.')
+
+# Each indexed visit is a separate review setup. Its input stock is the output
+# from the preceding visit, so the later B0/B180 finishing paths cannot be
+# mistaken for passes in the initial channel-cleanup setups.
+def levels(depth):
+    return [float(i) for i in range(2,int(depth),2)]+[float(depth)]
+
+after_b0_cleanup=existing.cut(groove_top).removeSplitter()
+after_b180_cleanup=after_b0_cleanup.cut(groove_bottom).removeSplitter()
+after_b90=after_b180_cleanup.cut(side90).removeSplitter()
+after_b270=after_b90.cut(side270).removeSplitter()
+after_b0_finish=after_b270.cut(union([b0_middle,b0_upper])).removeSplitter()
+after_b180_finish=after_b0_finish.cut(union([b180_middle,b180_lower])).removeSplitter()
+
+initial=group('InitialSetups','ROUND 1 | initial channel and side setups',root)
+finish=group('FinishingSetups','ROUND 2 | holding-tab finishing setups',root)
+prop(root,'Workflow','Round 1: B0 cleanup, B180 cleanup, B90 side, B270 side. Round 2: B0 finish, B180 finish. Each visit has its own input and output stock.')
+
+specs=[
+ (initial,1,0,'B0Cleanup','B0 top-channel cleanup',
+  [(d,-3,d,W+3) for d in levels(9.2)],existing,after_b0_cleanup,groove_top),
+ (initial,2,180,'B180Cleanup','B180 bottom-channel cleanup',
+  [(T-d,-3,T-d,W+3) for d in levels(6.2)],after_b0_cleanup,after_b180_cleanup,groove_bottom),
+ (initial,3,90,'B90Side','B90 first side cut',
+  [(6.1,W-d,33.3,W-d) for d in levels(23)],after_b180_cleanup,after_b90,side90),
+ (initial,4,270,'B270Side','B270 opposing side cut',
+  [(6.1,d,33.3,d) for d in levels(23)],after_b90,after_b270,side270),
+ (finish,5,0,'B0Finish','B0 first tab-finishing cut',
+  [(d,44.1,d,30.6) for d in levels(18.45) if d>9.2] +
+  [(d,44.1,d,39.0) for d in levels(22.3) if d>18.45],
+  after_b270,after_b0_finish,union([b0_middle,b0_upper])),
+ (finish,6,180,'B180Finish','B180 final tab-finishing cut',
+  [(T-d,20.0,T-d,33.5) for d in levels(18.45) if d>6.2] +
+  [(T-d,20.0,T-d,25.3) for d in levels(19.3) if d>18.45],
+  after_b0_finish,after_b180_finish,union([b180_middle,b180_lower])),
+]
+for parent,order,angle,name,title,passes,before,after,sweep in specs:
+    grp=group('Setup'+name,'%02d | B%d | %s'%(order,angle,title),parent)
+    prop(grp,'OperationOrder',order,'App::PropertyInteger')
+    prop(grp,'IndexAngle',float(angle),'App::PropertyAngle')
+    prop(grp,'StockBefore','Output of operation %d'%(order-1) if order>1 else 'Approximate existing grooved stock')
+    prop(grp,'StockAfter','Input to operation %d'%(order+1) if order<6 else 'Final two-bridge result')
+    solid('StockBefore'+name,'INPUT stock | before operation %d'%order,b_rotate(before,angle),grp,
+          'Stock state when this indexed visit begins. Existing channels are approximated where not fully probed.',(0.72,0.64,0.51))
+    solid('StockAfter'+name,'OUTPUT stock | after operation %d'%order,b_rotate(after,angle),grp,
+          'Cutter-swept result passed to the next indexed visit.',(0.57,0.75,0.70))
+    solid('Removal'+name,'6 mm cutter sweep | operation %d'%order,b_rotate(sweep,angle),grp,
+          'Three Y tracks and the final-depth swept volume for this operation only.',(0.86,0.54,0.20))
+    op=path_feature('TipPath'+name,'TIP PATH %02d | B%d | %s'%(order,angle,title),angle,passes,grp,
+                    'Three Y tracks: 254,256,258. Cutter-tip coordinates only; illustrative feeds; no Job/post.')
+    prop(op,'Sequence',order,'App::PropertyInteger')
+    solid('Jaw'+name,'Jaw exclusion | operation %d'%order,jaw,grp,
+          'Fixture stays fixed while stock indexes; Y269 is historical and X/Z are unmeasured proxy bounds.',(0.88,0.29,0.28))
+
+# Inspect the actual mid-plane residual within the original central band.
+inner=box_uv(9.2,T-6.2,23,W-23,255.95,256.05)
+stage1_area=stage1.common(inner).Volume/0.1
+stage2_area=stage2.common(inner).Volume/0.1
+outer=box_uv(0,T,0,W,253,259)
+v1=stage1.common(outer).Volume
+v2=stage2.common(outer).Volume
+doc.recompute()
+for obj in doc.Objects:
+    if hasattr(obj,'ViewObject'):
+        obj.ViewObject.Visibility=hasattr(obj,'Group')
+for name in ('Stage2Section','RotaryAxis','JawFrontPlane'):
+    doc.getObject(name).ViewObject.Visibility=True
+doc.saveAs(OUT)
+with open(REPORT,'w') as f:
+    f.write('Fixture-aware cutter-swept review model, 2026-09-27\n')
+    f.write('Coordinates: physical tip relative to PROPOSED air-side work zero X230 Y245 physical Z160.35; not yet controller G54 / no post.\n')
+    f.write('Cutter diameter 6 mm; Y tracks 254, 256, 258; axial cutter extent Y251..261.\n')
+    f.write('Jaw front historical Y269; minimum cutter-to-plane gap 8 mm.\n')
+    f.write('Collet nose diameter UNKNOWN: 20 mm illustrative nose at Y258 reaches Y268 (1 mm gap); 28 mm reaches Y272 (overlap).\n')
+    f.write('Max radial tip depth: side 23 mm; B0 finish 22.3 mm; B180 finish 19.3 mm.\n')
+    f.write('Stage1 central mid-section remaining area: %.3f mm2; stage2: %.3f mm2.\n'%(stage1_area,stage2_area))
+    f.write('Stage1 and stage2 volume in Y253..259 cut band: %.3f and %.3f mm3.\n'%(v1,v2))
+    f.write('Current sample: B0 raised surface begins between Y270.5 and 271 at X195; full jaw radius/material identity unknown. Collet dimensions, installed stickout, enclosure CAD registration and indexed zero/backlash remain unresolved; B sign agrees with the side-probe shifts.\n')
+print('CREATED',OUT,'objects',len(doc.Objects),'middle-section area',stage1_area,stage2_area)
+os._exit(0)

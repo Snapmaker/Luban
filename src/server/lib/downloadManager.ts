@@ -1,34 +1,52 @@
 import fetch from 'node-fetch';
 import fs from 'fs';
+import logger from './logger';
+
+const log = logger('lib:downloadManager');
+
+// These downloads are optional extras - a CJK font, the camera calibration maps.
+// Offline they used to reject with no catch and no timeout, leaving a floating
+// rejection for the process-wide handler to pick up.
+const DOWNLOAD_TIMEOUT = 15000;
 
 class DownloadManager {
-    public async download(url: string, savePath: string): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            fetch(url, {
+    public async download(url: string, savePath: string): Promise<boolean> {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), DOWNLOAD_TIMEOUT);
+
+        try {
+            const res = await fetch(url, {
                 headers: { 'Content-Type': 'application/octet-stream' },
-            })
-                .then(res => res.buffer())
-                .then(_ => {
-                    fs.writeFile(savePath, _, 'binary', (err) => {
-                        if (err) {
-                            reject();
-                        } else {
-                            resolve();
-                        }
-                    });
-                });
-        });
+                signal: controller.signal,
+            });
+
+            if (!res.ok) {
+                log.warn(`Download failed (${res.status}): ${url}`);
+                return false;
+            }
+
+            const buffer = await res.buffer();
+            await fs.promises.writeFile(savePath, buffer, 'binary');
+            return true;
+        } catch (err) {
+            log.warn(`Download failed: ${url} (${err && err.message ? err.message : err})`);
+            return false;
+        } finally {
+            clearTimeout(timer);
+        }
     }
 
     /**
      * Download if file on target path not exists.
+     *
+     * Resolves either way - callers treat these as best-effort.
      */
-    public async downloadIfNotExist(url: string, savePath: string): Promise<void> {
+    public async downloadIfNotExist(url: string, savePath: string): Promise<boolean> {
         if (fs.existsSync(savePath)) {
-            return;
+            return true;
         }
 
-        await this.download(url, savePath);
+        return this.download(url, savePath);
     }
 }
 

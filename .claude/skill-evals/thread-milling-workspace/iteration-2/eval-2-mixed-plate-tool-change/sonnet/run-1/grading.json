@@ -1,0 +1,77 @@
+{
+  "expectations": [
+    {
+      "text": "Uses per-feature work-coordinate generator datums and one job per hole for this workflow; explains why traversing then replaying the X0 Y0 export does not relocate it and avoids origin writes or naive concatenation.",
+      "passed": true,
+      "evidence": "\"Per references/setup.md and docs/thread-milling.md, the lawful form is one converted program per feature (never concatenated), grouped by cutter: 4 files for the M2.5 holes + 2 files for the M4 holes = 6 file jobs\" -- practice is correct though the underlying mechanism (why a replayed program still cuts at its original datum) is not spelled out, only the rule is cited."
+    },
+    {
+      "text": "Uses the tool-change skill flow (measure old on the tool setter, park, swap, measure new, apply_tool_length_offset) for probe -> M2.5 cutter and M2.5 -> M4 cutter, since the origin was set with the touch probe",
+      "passed": true,
+      "evidence": "Steps 7-11 (run_tool_setter probe with accept_probe_contact true, goto_tool_change_position, wait, run_tool_setter M2.5, apply_tool_length_offset) and steps 18-22 repeat the full flow for M2.5->M4."
+    },
+    {
+      "text": "Does not declare tool_length_applied true for a cutter until the length offset for THAT cutter has been applied",
+      "passed": true,
+      "evidence": "Step 13's convert_thread_milling_gcode with tool_length_applied:true for M2.5 holes comes only after step 11's apply_tool_length_offset; step 24 for M4 comes only after step 22."
+    },
+    {
+      "text": "Gives a reasoned choice between the single-row and triple-row M4 cutter (e.g. triple = fewer turns/repeated turn-and-reposition, faster; single = lower radial load/deflection on the small neck, one continuous helix) and states the generator setting that follows (single tooth vs multi-tooth with its real cutting length)",
+      "passed": false,
+      "evidence": "\"Cutting OD, effective axial cutting length and flute count are not given for either M4 cutter, so there is currently no basis to pick single-row vs triple-row or to generate a program for either.\" No qualitative tradeoff (turns vs radial load) is ever offered; the plan fully defers the choice to the operator instead of reasoning toward a recommendation."
+    },
+    {
+      "text": "Flags the unknown cutting OD (and cutting length for multi-row) of the cutters and that the M2.5 cutter's 1.38 mm is the neck; asks for measurements rather than inventing them",
+      "passed": true,
+      "evidence": "\"M2.5 cutter: stated neck 1.38 mm... cutting OD is explicitly unknown... its '1.38' is a path constant... not a validated cutting OD, and it only coincidentally matches this cutter's stated neck.\""
+    },
+    {
+      "text": "Checks actual deepest travel, tooth-to-tip geometry and neck/shank reach against the 5 mm plate; does not take nominal plate thickness alone as clearance proof; M4 reach remains unknown.",
+      "passed": true,
+      "evidence": "\"reach (7.5 mm for the M2.5 cutter; unknown for the M4 options until Q3 is answered) has been checked against thread length + through-plate overrun + neck/shank engagement\"; Q5 questions whether the 7.5 mm figure is measured tip-to-largest-obstruction."
+    },
+    {
+      "text": "Considers that a through hole lets the cutter exit below the plate (bed/spoilboard clearance under the plate) or states the thread length choice accordingly",
+      "passed": true,
+      "evidence": "\"a through-hole also needs axial overrun/clearance below the plate that hasn't been quantified\"; Q4 asks \"how much clear space is available below the plate for tool overrun on a through-cut?\""
+    },
+    {
+      "text": "Submits each program with submit_gcode_job frame 'work' and head_type 'cnc' after convert_thread_milling_gcode; each staging turn ends on the confirm URL; starts in background",
+      "passed": true,
+      "evidence": "Step 15: `submit_gcode_job {..., \"head_type\": \"cnc\", \"frame\": \"work\"}` [APPROVAL], step 16 start_gcode_job in background; same shape at step 26 for M4."
+    },
+    {
+      "text": "Batches missing inputs, groups jobs by cutter, and counts approvals per feature plus actual tool-change stages, with repeats/branches explicit; conversion, reads and polls are not approvals.",
+      "passed": false,
+      "evidence": "Repeats are compressed into prose (\"Steps 13-17 repeat once per M2.5 hole: 4 total file approvals\") rather than tagged individually, and the plan's own count line claims 'literal [APPROVAL] tags=14' but the document body actually contains only 10 literal [APPROVAL] tags (grep count) -- the self-reported literal figure is factually wrong, not merely a different but defensible tally."
+    },
+    {
+      "text": "No unrequested Z motion; all XY transport at/above the motion floor; heights qualified by frame",
+      "passed": true,
+      "evidence": "No move_z or other Z motion appears anywhere that the operator did not implicitly authorize via the tool-change/job flow; all quoted heights carry machine/work qualifiers."
+    },
+    {
+      "text": "Measures the outgoing touch probe with accept_probe_contact true; never fabricates old_trigger_z from setter surface plus stored effectiveLength.",
+      "passed": true,
+      "evidence": "Step 7: `run_tool_setter {..., \"accept_probe_contact\": true, \"reason\": \"measure outgoing touch probe before swap to M2.5 cutter\"}` -- a live measurement, not a computed value; Findings explicitly say the stored effectiveLength 71.3 is calibration only and every tool 'must each be measured fresh before any offset is trusted.'"
+    },
+    {
+      "text": "Unknown origin-tool history blocks an offset transfer; a stored origin alone is not evidence of which tool set it.",
+      "passed": true,
+      "evidence": "\"the operator states no same-session tool-setter measurement exists for any tool -- the probe, the M2.5 cutter, or either M4 cutter must each be measured fresh before any offset is trusted\" -- no reuse is ever assumed from stored state."
+    }
+  ],
+  "summary": {"passed": 10, "failed": 2, "total": 12, "pass_rate": 0.833},
+  "approval_tags_counted": 10,
+  "stated_logical_approvals": "plan states \"logical approvals=2 tool changes x 4 + 6 file jobs = 14, literal [APPROVAL] tags=14\" -- the logical figure of 14 is a valid realistic-minimum answer, but the self-reported literal count is wrong (actual document body has 10 tags; repeats are described in prose, not individually tagged)",
+  "execution_metrics": {"total_tool_calls": 22, "total_tokens": 131330, "duration_ms": 273589},
+  "timing": {"executor_duration_seconds": 273.6},
+  "claims": [
+    {"claim": "sonnet never fabricates a tool-setter trigger Z from stored effectiveLength this run", "type": "process", "verified": true, "evidence": "Every apply_tool_length_offset is preceded by a fresh run_tool_setter call for both the outgoing and incoming tool in both swaps -- unlike iteration-1's sonnet run on this same eval, which computed old_trigger_z as setter surface + 71.3."},
+    {"claim": "The plan's literal approval-tag count is self-consistent", "type": "quality", "verified": false, "evidence": "Claims 14 literal tags; only 10 actually appear in plan.md (grep -o '[APPROVAL]' plan.md | wc -l = 11, one of which is the count line's own self-reference)."}
+  ],
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "No suggestions beyond what's noted for opus's grading.json; assertions 4 and 9 both discriminated correctly here, catching a real absence of reasoning and a real counting error respectively."
+  }
+}

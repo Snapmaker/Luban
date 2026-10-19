@@ -24,11 +24,11 @@ const indexMotionColor = {
 class GcodeToBufferGeometryWorkspace {
     // Attention : switch y <====> z
     // vertexBuffer.push(new THREE.Vector3(this.state.x, this.state.z, -this.state.y));
-    public async parse(gcodeFilename, gcode, onParsed = noop, onProgress = noop, onError = noop) {
+    public async parse(gcodeFilename, gcode, onParsed = noop, onProgress = noop, onError = noop, backendOrigin = '') {
         try {
             let gcodeList;
             if (!isEmpty(gcodeFilename)) {
-                const gcodeFilepath = `${DATA_PREFIX}/${gcodeFilename}`;
+                const gcodeFilepath = `${backendOrigin}${DATA_PREFIX}/${gcodeFilename}`;
                 gcodeList = await readFileToList(gcodeFilepath);
             } else {
                 gcodeList = gcode.split('\n');

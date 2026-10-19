@@ -1,0 +1,104 @@
+{
+  "expectations": [
+    {
+      "text": "Interprets D4 as the 4 mm shank diameter and 50L as overall length, and does NOT use 4 mm (or the neck diameter) as the cutter diameter",
+      "passed": false,
+      "evidence": "Correctly calls D4 'far thinner than its D4 shank' but then asks Q1 for the 'actual cutting/neck diameter' -- treating the cutting (thread-form) diameter and the neck diameter as one interchangeable quantity, which is the exact conflation the eval domain facts warn against (they are two different physical dimensions)."
+    },
+    {
+      "text": "Requires the thread-form (cutting) OD of the single-tooth cutter to be measured or taken from a datasheet before generating",
+      "passed": false,
+      "evidence": "Q1 asks for 'the single-tooth M4 cutter's actual cutting/neck diameter' as a single combined value rather than clearly asking for the thread-form (cutting) OD as its own distinct measurement."
+    },
+    {
+      "text": "Identifies that the neck/reach length is unknown for the M4 cutter and that 8 mm thread depth needs a reach of more than 8 mm (a 7.5 mm neck like the M2.5 would be too short)",
+      "passed": false,
+      "evidence": "No mention anywhere in plan.md of the M2.5's 7.5 mm neck/reach being potentially too short for an 8 mm thread depth; Q1 asks for 'thread-form cutting length' but never raises the reach-vs-depth risk."
+    },
+    {
+      "text": "Specifies Single tooth in the generator, and explains that the path is a continuous helix of about 8/0.7 = ~11-12 turns",
+      "passed": false,
+      "evidence": "'single-tooth output is a repeated continuous helix the full 8 mm depth' -- correctly identifies the helix shape but never computes or states the ~11-12 turn count."
+    },
+    {
+      "text": "States that flute count (3) does not tell you the number of axial tooth rows (single-tooth cutter with 3 flutes is fine) - or otherwise enters flutes and rows separately",
+      "passed": true,
+      "evidence": "'Flute count and tooth-row count are independent per the doc (\"a three-flute cutter can still have a single axial thread form\"), so \"triple flute\" in the operator's M2.5 description isn't evidence about tooth rows either way for the M4 pair.'"
+    },
+    {
+      "text": "Specifies zero cutter compensation / tool-centre path (D=0) so that tool_center_path can be declared, and a controller the converter accepts (e.g. Fanuc)",
+      "passed": true,
+      "evidence": "'Cutter compensation: tool-centre / zero-compensation (not left/right radius comp) -- required for tool_center_path: true' and 'Controller: Fanuc (converter default...)'"
+    },
+    {
+      "text": "Chooses RPM/feed consistent with the actual spindle head (reads profile or asks); does not rely on power_percent to fix a feed chosen for a different RPM",
+      "passed": false,
+      "evidence": "Reads get_machine_profile and asks for spindle_power_percent conditionally, but never discusses that a feed baked in for one RPM is wrong if power_percent yields a different actual RPM -- Q3 only asks about material/feed choice, not RPM-feed consistency."
+    },
+    {
+      "text": "Uses convert_thread_milling_gcode then submit_gcode_job with frame 'work' and head_type 'cnc'; confirm URL last line of the staging turn; start_gcode_job after",
+      "passed": true,
+      "evidence": "Step 7: 'submit_gcode_job {..., frame: \"work\", head_type: \"cnc\"}' [APPROVAL]; step 8: 'Deliver the confirm URL as the last line ... -- end turn --'; step 9: start_gcode_job afterward."
+    },
+    {
+      "text": "Plans referencing work Z with the thread mill fitted (tool change via tool-change skill or operator) before declaring tool_length_applied",
+      "passed": false,
+      "evidence": "Step 5 calls convert_thread_milling_gcode with tool_length_applied: true BEFORE step 6 (the tool-change sequence to fit the M4 cutter) runs."
+    },
+    {
+      "text": "Asks all open questions in ONE batch; does not stage before answers",
+      "passed": true,
+      "evidence": "Step 2: 'Ask the operator the five questions above in one message ... [WAIT] -- end turn --'; step 1 (get_machine_profile) is the only prior call and is read-only."
+    },
+    {
+      "text": "Keeps all heights qualified by frame; plans no unrequested Z motion; XY moves happen at or above the motion floor",
+      "passed": true,
+      "evidence": "No bare/unqualified Z figures found; submit_gcode_job carries frame: 'work'; no Z motion beyond the tool-change skill's own steps and the file job is planned."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 6,
+    "total": 11,
+    "pass_rate": 0.4545
+  },
+  "approval_tags_counted": {
+    "literal_bracket_APPROVAL_count_in_plan_md": 5,
+    "plan_self_reported_Counts_line": "Counts: approvals=5, operator waits=3, questions=5 (appears twice, lines 59 and 126)",
+    "note": "Literal count matches the self-reported count."
+  },
+  "execution_metrics": {
+    "total_tokens": 120051,
+    "duration_ms": 326816,
+    "tool_uses": 18
+  },
+  "claims": [
+    {
+      "claim": "\"Cutting/neck diameter\" is treated as a single quantity to ask the operator for",
+      "type": "factual",
+      "verified": false,
+      "evidence": "The eval's own domain facts (and the parallel eval 0 assertions) establish these as two distinct dimensions -- the neck is what has to clear the hole while repositioning, the thread-form (cutting) OD is the value the tool-centre path radius is actually computed from. Conflating them risks the operator supplying the wrong number to Machining Doctor's 'cutter diameter' field, reproducing the same mistake found in the operator's own M2.5 program."
+    },
+    {
+      "claim": "get_machine_profile 'genuinely wasn't answerable from the stand-in, exactly as flagged in the run instructions'",
+      "type": "process",
+      "verified": true,
+      "evidence": "RUN_INSTRUCTIONS.md: 'get_machine_profile: NOT in this stand-in.' -- correctly identified and correctly branched on rather than guessed."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [
+      "critique.md flags the cutting-diameter-vs-D4-shank ambiguity as something it 'inferred by analogy' rather than found stated -- but the plan's own question then re-blurs cutting diameter with neck diameter, undermining the very distinction the critique claims to have drawn."
+    ],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "reason": "No assertion currently catches a plan that asks for the right general category of measurement (a diameter) but blurs which of two documented, physically distinct diameters (neck vs. thread-form/cutting OD) it means. Sonnet passed no assertion that would have caught this by name; consider adding an explicit assertion requiring the question to name 'thread-form (cutting) OD' distinctly from 'neck diameter' rather than accepting any diameter-shaped question."
+      }
+    ],
+    "overall": "Sonnet's plan is well-organized and correctly handles staging/turn discipline and the flutes-vs-rows independence, but repeatedly under-specifies or conflates cutter geometry terms, and never raises the reach-vs-depth risk that both other configs (opus explicitly, haiku by analogy) at least gestured at."
+  }
+}

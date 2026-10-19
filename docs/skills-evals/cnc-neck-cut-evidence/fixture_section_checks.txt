@@ -1,0 +1,7 @@
+Y 253.1: components 2, residual areas [37.433, 37.433] mm2
+Y 253.5: components 2, residual areas [36.673, 36.673] mm2
+Y 254.0: components 2, residual areas [36.341, 36.341] mm2
+Y 256.0: components 2, residual areas [36.341, 36.341] mm2
+Y 258.0: components 2, residual areas [36.341, 36.341] mm2
+Y 258.5: components 2, residual areas [36.673, 36.673] mm2
+Y 258.9: components 2, residual areas [37.433, 37.433] mm2

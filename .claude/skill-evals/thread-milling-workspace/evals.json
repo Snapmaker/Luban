@@ -1,0 +1,64 @@
+{
+  "skill_name": "cnc-skills (PR #191 thread milling)",
+  "snapshot": "tyeth/Luban PR #191 head 44cf04d8d (codex/thread-milling-support)",
+  "evals": [
+    {
+      "id": 0,
+      "name": "m25-supplied-program",
+      "prompt": "I want to cut an M2.5 internal thread in the aluminium plate on the bed. The hole is already drilled 2.05 mm, about 6 mm deep. I generated this with Machining Doctor (it's the file in the repo, src/server/services/mcp/tests/fixtures/thread-milling-m2_5-fanuc.nc). My cutter is sold as M2.5x0.45xD4x50L - 1.38mm neck 7.5mm long including triple row threads, triple flute. I don't have much more detail on it than that. Get it converted and ready to run.",
+      "expected_output": "A dry-run plan that notices the program was generated with CUTTER DIAM=1.38 (the NECK diameter, not the thread-form OD, which is unknown and must be measured or taken from a datasheet) and L=2.25 [MULTI TOOTH] (5 rows at 0.45 pitch, while the operator says triple row, ~1.35 mm), explains the consequence (wrong tool-centre radius, uncut bands between the 2.25 mm axial repositions), asks for the missing facts in ONE batch, and only then converts with convert_thread_milling_gcode (fanuc, tool_center_path, tool_length_applied only once work Z is referenced to THIS cutter, spindle_mode chosen from the head type), validates, submits with frame work and head_type cnc, and ends the staging turn on the confirm URL.",
+      "assertions": [
+        "Identifies that the program's CUTTER DIAM=1.38 equals the neck diameter the operator gave, and that the tool-centre path radius depends on the cutting (thread-form) OD, which is not known",
+        "Does not invent or assume a thread-form OD for the cutter; asks the operator to measure it (calipers/datasheet) or otherwise treats it as a blocking unknown",
+        "Identifies that the program's L=2.25 [MULTI TOOTH] does not match a 'triple row' cutter (about 3 x 0.45 = 1.35 mm) and that the 2.25 mm axial repositioning would leave uncut bands / an incomplete thread",
+        "Recommends regenerating the program in Machining Doctor with the measured OD and real cutting length rather than hand-editing the G-code",
+        "Uses convert_thread_milling_gcode with real argument names: gcode, source_controller fanuc (or default), tool_center_path true, tool_length_applied true, spindle_mode",
+        "Chooses spindle_mode from the actual head (reads get_machine_profile/get_stored_state or asks) rather than assuming; notes S17991 is only kept in cnc_200w_rpm mode (8000-18000) and that power_percent does NOT rescale feeds",
+        "Only declares tool_length_applied true once work Z has been referenced with the thread mill itself fitted (tool change flow / tool setter + apply_tool_length_offset, or the operator setting Z with this cutter)",
+        "Treats the work origin (X0 Y0 at the hole centre, Z0 at the stock top) as the operator's, never writing it except via apply_tool_length_offset; asks how/whether the hole centre is set",
+        "Notes that the program's first move (G00 X0 Y0 before G43 Z20) runs at whatever Z the head is at, so the head must be at or above the motion floor / park height before the job starts",
+        "Submits with submit_gcode_job using frame 'work' and head_type 'cnc', after reviewing changes/warnings/validation (or validate_gcode)",
+        "Staging turn ends with the confirm URL as the last line; start_gcode_job with wait_for_approval_ms comes after, in the background",
+        "Asks all open questions in ONE batch and stages nothing that depends on an answer before the answer arrives",
+        "Does not plan any Z motion (move_z / direct) the operator did not ask for; every quoted height carries frame (machine/work)"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "m4-single-form-cutter",
+      "prompt": "Next job is M4 threads. I've got two M4 thread mills, both M4x0.7xD4x50L - one is a single thread (one tooth row) and one is a triple thread, similar neck to my M2.5 one I think. For this one use the single thread cutter. The hole is a 3.3 mm drilled hole in the aluminium block, 8 mm thread depth wanted. I haven't made the G-code yet - tell me what to put into Machining Doctor and then how we get it onto the machine.",
+      "expected_output": "A dry-run plan that gives Machining Doctor inputs (internal, RH, metric M4 x 0.7 major 4.0, thread length 8, single tooth, flutes 3 without inferring rows from flutes, cutter diameter = MEASURED thread-form OD (not D4 = shank, not the neck), D=0 tool-centre compensation, controller Fanuc, metric output, RPM/feeds within the head's range), checks the neck reach vs 8 mm depth (M2.5's 7.5 mm neck would be too short if the M4 is similar), asks the unknowns once, then converts/validates/submits under the motion rules.",
+      "assertions": [
+        "Interprets D4 as the 4 mm shank diameter and 50L as overall length, and does NOT use 4 mm (or the neck diameter) as the cutter diameter",
+        "Requires the thread-form (cutting) OD of the single-tooth cutter to be measured or taken from a datasheet before generating",
+        "Flags that the neck/reach length is unknown for the M4 cutter and that 8 mm thread depth needs a reach of more than 8 mm (a 7.5 mm neck like the M2.5 would be too short)",
+        "Specifies Single tooth in the generator, and explains that the path is a continuous helix of about 8/0.7 = ~11-12 turns",
+        "States that flute count (3) does not tell you the number of axial tooth rows (single-tooth cutter with 3 flutes is fine) - or otherwise enters flutes and rows separately",
+        "Specifies zero cutter compensation / tool-centre path (D=0) so that tool_center_path can be declared, and a controller the converter accepts (e.g. Fanuc)",
+        "Chooses RPM/feed consistent with the actual spindle head (reads profile or asks); does not rely on power_percent to fix a feed chosen for a different RPM",
+        "Uses convert_thread_milling_gcode then submit_gcode_job with frame 'work' and head_type 'cnc'; confirm URL last line of the staging turn; start_gcode_job after",
+        "Plans referencing work Z with the thread mill fitted (tool change via tool-change skill or operator) before declaring tool_length_applied",
+        "Asks all open questions in ONE batch; does not stage before answers",
+        "Keeps all heights qualified by frame; plans no unrequested Z motion; XY moves happen at or above the motion floor"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "mixed-plate-tool-change",
+      "prompt": "Plate on the bed has four M2.5 holes and two M4 holes, all pre-drilled through (plate is 5 mm thick). Work origin is already set at the plate's front-left corner top with the touch probe in. Hole centres in work coords: M2.5 at (10,10) (60,10) (10,40) (60,40), M4 at (35,15) and (35,35). I want the M2.5 ones with my M2.5x0.45 triple-row cutter and the M4 with whichever of my two M4 cutters (single row or triple row, both M4x0.7xD4x50L) makes more sense. Plan the whole thing with the fewest interruptions for me.",
+      "expected_output": "A dry-run plan that sequences: tool change probe -> M2.5 cutter (tool-change skill flow A: measure old, park, swap, measure new, apply_tool_length_offset) so work Z stays referenced; one program covering the four M2.5 holes (generator nonzero XYZ datum per hole or four programs, concatenated/submitted with frame work) converted via convert_thread_milling_gcode; tool change to the M4 cutter; M4 program(s); reasons the single vs triple row choice (triple = multi-tooth shorter than thread -> repeated turns, faster; single = lower radial load / cleaner on a thin neck; tooth pitch must match 0.7); recognises the M2.5 cutting OD / cutting length and M4 OD/reach are unknown and asks for them in one batch; minimises approvals.",
+      "assertions": [
+        "Recognises the program generator centres the thread at the XY datum, so multiple holes need either per-hole programs generated with each hole's XYZ datum or several programs; does not propose moving the work origin per hole by hand",
+        "Uses the tool-change skill flow (measure old on the tool setter, park, swap, measure new, apply_tool_length_offset) for probe -> M2.5 cutter and M2.5 -> M4 cutter, since the origin was set with the touch probe",
+        "Does not declare tool_length_applied true for a cutter until the length offset for THAT cutter has been applied",
+        "Gives a reasoned choice between the single-row and triple-row M4 cutter (e.g. triple = fewer turns/repeated turn-and-reposition, faster; single = lower radial load/deflection on the small neck, one continuous helix) and states the generator setting that follows (single tooth vs multi-tooth with its real cutting length)",
+        "Flags the unknown cutting OD (and cutting length for multi-row) of the cutters and that the M2.5 cutter's 1.38 mm is the neck; asks for measurements rather than inventing them",
+        "Checks thread depth vs reach: 5 mm through-plate vs 7.5 mm M2.5 neck OK; M4 reach unknown",
+        "Considers that a through hole lets the cutter exit below the plate (bed/spoilboard clearance under the plate) or states the thread length choice accordingly",
+        "Submits each program with submit_gcode_job frame 'work' and head_type 'cnc' after convert_thread_milling_gcode; each staging turn ends on the confirm URL; starts in background",
+        "Asks all open questions in ONE batch up front; total approval count is near the minimum (tool changes + one job per cutter) and states it",
+        "No unrequested Z motion; all XY transport at/above the motion floor; heights qualified by frame"
+      ]
+    }
+  ]
+}

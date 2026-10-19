@@ -18,6 +18,7 @@ import { logErrorToGA } from '../lib/gaEvent';
 import { PREDEFINED_SHORTCUT_ACTIONS, ShortcutHandlerPriority, ShortcutManager } from '../lib/shortcut';
 import UniApi from '../lib/uni-api';
 import { SnapmakerRayMachine } from '../machines';
+import { McpHealthNotifications } from './components/McpHealth';
 import { ToastContainer } from './components/Toast';
 import AppLayout from './layouts/AppLayout';
 import HomePage from './pages/HomePage';
@@ -177,6 +178,7 @@ class App extends React.PureComponent<AppProps, AppState> {
                         <Route component={HomePage} />
                     </Switch>
                     <ToastContainer
+                        enableMultiContainer
                         position="top-center"
                         autoClose={5000}
                         hideProgressBar
@@ -187,6 +189,7 @@ class App extends React.PureComponent<AppProps, AppState> {
                         draggable
                         pauseOnHover
                     />
+                    <McpHealthNotifications />
                 </AppLayout>
             </HashRouter>
         );

@@ -1,5 +1,5 @@
 import os from 'os';
-import path from 'path';
+import { APP_DIR } from '../lib/paths';
 import urljoin from '../lib/urljoin';
 
 const publicPath = global.PUBLIC_PATH || ''; // see gulp/task/server.js
@@ -16,7 +16,7 @@ export default {
                 '/', // fallback
                 '/worker',
             ],
-            path: path.resolve(__dirname, '..', '..', 'app'),
+            path: APP_DIR,
             maxAge: maxAge
         }
     },

@@ -1,0 +1,51 @@
+Part__Feature | OuterStock | valid=True solids=1 volume=409248.110 | bbox=(-67.500,62.500) (-33.000,12.000) (-35.000,35.000) | placement=(0.000,0.000,0.000)
+Part__Feature001 | EnclosureOuter | valid=True solids=1 volume=273924.110 | bbox=(-59.500,59.500) (-30.000,6.000) (-32.000,32.000) | placement=(0.000,0.000,0.000)
+Part__Feature002 | Enclosure001 | valid=True solids=1 volume=83372.368 | bbox=(-59.500,59.500) (-30.000,6.000) (-32.000,32.000) | placement=(0.000,0.000,0.000)
+Part__Feature008 | Enclosure002 | valid=True solids=1 volume=83372.368 | bbox=(-59.500,59.500) (-30.000,6.000) (-32.000,32.000) | placement=(0.000,0.000,0.000)
+Part__Feature009 | InnerStock | valid=True solids=1 volume=293625.000 | bbox=(-82.500,62.500) (-33.000,12.000) (-22.500,22.500) | placement=(0.000,0.000,0.000)
+Back_plate_to_mess_with__6_: absent or null
+Back_plate_to_mess_with__6_001: absent or null
+Enclosure002_after_recess | Enclosure002_after_recess | valid=True solids=1 volume=80254.657 | bbox=(-59.500,59.500) (-30.000,6.000) (-32.000,32.000) | placement=(0.000,0.000,0.000)
+CAM_T8c_WorkModel | Extended plate recess - finished nominal model in work axes | valid=True solids=1 volume=80254.672 | bbox=(-32.000,32.000) (-0.000,119.000) (-36.000,0.000) | placement=(0.000,0.000,0.000)
+Stock_T8c_ExistingEnclosure | Stock - existing enclosure CAD reference | valid=True solids=1 volume=83372.368 | bbox=(-32.000,32.000) (-0.000,119.000) (-36.000,0.000) | placement=(0.000,59.500,-30.000)
+Stock001 | Stock_Machining_FromBase | valid=True solids=1 volume=303468.000 | bbox=(-83.500,37.500) (-38.000,28.000) (-36.000,2.000) | placement=(-82.500,-37.000,-35.000)
+section y=1: area=2304.00 bbox x=-32.00..32.00 z=-36.00..0.00 solids=1
+section y=4: area=2304.00 bbox x=-32.00..32.00 z=-36.00..0.00 solids=1
+section y=7: area=2304.00 bbox x=-32.00..32.00 z=-36.00..0.00 solids=1
+section y=10: area=2304.00 bbox x=-32.00..32.00 z=-36.00..0.00 solids=1
+section y=13: area=774.00 bbox x=-32.00..32.00 z=-36.00..0.00 solids=1
+section y=16: area=479.60 bbox x=-32.00..32.00 z=-36.00..0.00 solids=1
+section y=19: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=22: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=25: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=28: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=31: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=34: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=37: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=40: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=43: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=46: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=49: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=52: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=55: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=58: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=61: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=64: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=67: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=70: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=73: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=76: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=79: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=82: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=85: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=88: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=91: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=94: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=97: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=100: area=404.46 bbox x=-32.00..32.00 z=-36.00..0.00 solids=2
+section y=103: area=481.15 bbox x=-32.00..32.00 z=-36.00..0.00 solids=1
+section y=106: area=488.00 bbox x=-32.00..32.00 z=-36.00..0.00 solids=1
+section y=109: area=848.00 bbox x=-32.00..32.00 z=-36.00..0.00 solids=1
+section y=112: area=848.00 bbox x=-32.00..32.00 z=-36.00..0.00 solids=1
+section y=115: area=848.00 bbox x=-32.00..32.00 z=-36.00..0.00 solids=1
+section y=118: area=2304.00 bbox x=-32.00..32.00 z=-36.00..0.00 solids=1

@@ -16,6 +16,7 @@ import Anchor from '../../../components/Anchor';
 import Download from './Download';
 import General from './General';
 import MachineSettings from './MachineSettings';
+import McpServer from './McpServer';
 import OctoSetPort from './OctoSetPort';
 import styles from './styles.styl';
 
@@ -61,6 +62,12 @@ class Settings extends React.PureComponent {
             path: 'port',
             title: i18n._('key-App/Settings/MachineSettings-Port Settings'),
             component: (props) => <OctoSetPort {...props} />
+        },
+        {
+            id: 'mcp',
+            path: 'mcp',
+            title: i18n._('key-App/Settings/Settings-MCP Server'),
+            component: (props) => <McpServer {...props} />
         }
     ];
 

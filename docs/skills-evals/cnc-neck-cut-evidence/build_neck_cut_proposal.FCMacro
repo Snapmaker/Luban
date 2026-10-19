@@ -1,0 +1,146 @@
+"""Measured envelope and draft setup-local FreeCAD CAM paths. Never post directly."""
+import os
+import FreeCAD as App
+import Part
+import Path
+
+OUT = '/home/pi/dev/Luban/cnc/neck_cut_plan/neck_cut_proposal.FCStd'
+V = App.Vector
+doc = App.newDocument('NeckCutProposal')
+doc.Label = 'Neck cut | measured envelope and 6 mm side proposal'
+
+def prop(obj, key, value, kind='App::PropertyString'):
+    obj.addProperty(kind, key, 'Proposal')
+    setattr(obj, key, value)
+
+def group(name, label, parent=None):
+    o = doc.addObject('App::DocumentObjectGroup', name)
+    o.Label = label
+    if parent: parent.addObject(o)
+    return o
+
+def solid(name, label, shape, parent, meaning):
+    o = doc.addObject('Part::Feature', name)
+    o.Label = label
+    o.Shape = shape
+    prop(o, 'Interpretation', meaning)
+    parent.addObject(o)
+    return o
+
+root = group('ReadMe', 'READ FIRST | proposal only, no verified machine path')
+prop(root, 'Status', 'Concept CAM: setup-local coordinates. Do not post or send to CNC.')
+prop(root, 'Frame', 'Model and Path coordinates are abstract setup-local mm, NOT G53 or G54.')
+prop(root, 'Source', 'Touch-probe survey 2026-09-26; see README.md for contact points and limits.')
+prop(root, 'Missing', 'Measure fitted endmill length and clearances; verify workholding and rotary datum before generating machine-frame CAM.')
+prop(root, 'Strategy', 'Cut from B90/B270 to 24 mm each, then selectively deepen B0/B180 to leave two holding tabs nominally 4.8 x 8 mm in the cut plane. The continuous web is an intermediate stage, not the final saw target.')
+for k,v in [('EndmillDiameter',6),('SideWidthAtY245',36.4),('OpposedWidthAtY245',64.1),('ChannelYCenterMachine',256),('B0ChannelDepth',9.1),('B180ChannelDepth',6.1),('TargetDepthPerSide',24),('IntermediateRadialWeb',16.1),('IntermediateAxialWeb',21.2),('TabRadialWidth',4.8),('TabAxialHeight',8),('TabGap',6.5),('NominalTabSawArea',76.8)]:
+    prop(root,k,v,'App::PropertyLength')
+
+envelopes = group('MeasuredEnvelopes','Measured envelope | sampled at Y245 only',root)
+channels = group('ExistingChannels','Existing B0 and B180 channels | measured depths at Y256',root)
+proposal = group('RemovalTargets','Proposed 6 mm side removal | visual target volumes',root)
+for tag,x0 in [('B90',0.0),('B270',75.0)]:
+    o = solid(tag+'Envelope',tag+' measured-size envelope at Y245',Part.makeBox(36.4,22,64.1,V(x0,245,-64.1)),envelopes,'36.4 x 64.1 cross-section is an envelope from Y245, not confirmed stock at Y256.')
+    prop(o,'SideWidthAtY245',36.4,'App::PropertyLength')
+    b0_left = tag == 'B90'
+    b0_x = x0 if b0_left else x0+36.4-9.1
+    b180_x = x0+36.4-6.1 if b0_left else x0
+    core_x = x0+9.1 if b0_left else x0+6.1
+    core_width = 36.4-9.1-6.1
+    solid(tag+'B0Channel',tag+' existing B0 channel | 9.1 mm',Part.makeBox(9.1,4,64.1,V(b0_x,254,-64.1)),channels,'B0 depth 9.1-9.2 mm by direct -Z probe at X145/170/195, Y256; side-silhouette shift 9.0 mm. Y extent shown schematically.')
+    solid(tag+'B180Channel',tag+' existing B180 channel | 6.1 mm',Part.makeBox(6.1,4,64.1,V(b180_x,254,-64.1)),channels,'B180 depth 6.1 mm by direct -Z probe at X198, Y254..258; side-silhouette shift 6.0-6.1 mm. Y extent shown schematically.')
+    solid(tag+'Target',tag+' proposed side removal to depth 24',Part.makeBox(core_width,6,24,V(core_x,253,-24)),proposal,'Target only: cut the 21.2 mm residual axial section between existing channels. Centerline Y256 sweeps Y253..259. Rotary and tool offsets not resolved.')
+
+illustration = group('IntermediateWeb','Intermediate web after side cuts | 16.1 x 21.2',root)
+whole = Part.makeBox(36.4,22,64.1,V(150,245,-64.1))
+existing0 = Part.makeBox(9.1,4,64.1,V(150,254,-64.1))
+existing180 = Part.makeBox(6.1,4,64.1,V(150+36.4-6.1,254,-64.1))
+cut_a = Part.makeBox(21.2,6,24,V(150+9.1,253,-24))
+cut_b = Part.makeBox(21.2,6,24,V(150+9.1,253,-64.1))
+removed = existing0.fuse(existing180).fuse(cut_a).fuse(cut_b)
+remaining = whole.cut(removed)
+o = solid('RemainingEnvelope','Stage 1 | continuous 16.1 x 21.2 web',remaining,illustration,'Intermediate web after existing channels and both proposed 24 mm side cuts. Hollow enclosure and groove transitions are not reconstructed.')
+prop(o,'NominalRadialWeb',16.1,'App::PropertyLength')
+prop(o,'NominalAxialWeb',21.2,'App::PropertyLength')
+
+# Stage 2 is a full cross-sectional slot except for two holding tabs. Their
+# Y length is the nominal 6 mm kerf; only the 4.8 x 8 mm face is left to saw.
+# The tabs lie at diagonally opposite corners of the intermediate web,
+# leaving a 6.5 mm centre opening for a 6 mm cutter.
+tabs = group('HoldingTabs','Stage 2 target | two holding tabs for final saw',root)
+slot = Part.makeBox(36.4,6,64.1,V(150,253,-64.1))
+# Put the two tabs at opposite corners of the intermediate web so they
+# resist twisting better than adjacent central bridges.
+tab1_x = 150+9.1
+tab2_x = 150+9.1+21.2-8.0
+tab1 = Part.makeBox(8.0,6,4.8,V(tab1_x,253,-64.1+24))
+tab2 = Part.makeBox(8.0,6,4.8,V(tab2_x,253,-24-4.8))
+solid('HoldingTabA','Holding tab A | 4.8 x 8 mm',tab1,tabs,'Concept retention bridge across the 6 mm slot. Size and grain strength must be verified before machining.')
+solid('HoldingTabB','Holding tab B | 4.8 x 8 mm',tab2,tabs,'Second bridge at the diagonally opposite corner; 6.5 mm radial gap allows a nominal 6 mm cutter between them.')
+tabbed_removed = slot.cut(tab1.fuse(tab2))
+tabbed_remaining = whole.cut(tabbed_removed)
+finish_target = solid('TabbedFinishEnvelope','Stage 2 | two tabs, 76.8 square mm total saw area',tabbed_remaining,tabs,'Target only: remove the intervening continuous web but retain two 4.8 x 8 mm bridges. Not a verified CAM path or strength guarantee.')
+prop(finish_target,'TabCount',2,'App::PropertyInteger')
+prop(finish_target,'TabSawArea',76.8,'App::PropertyArea')
+solid('AdditionalMaterialToRemove','Stage 2 additional removal after side cuts',remaining.cut(tabbed_remaining),tabs,'Material that must be cleared from B0/B180 and the central gap to leave only two tabs. Tool entry and CAM sequence are not yet verified.')
+# Display the finished halves and tabs 80 mm to the right of stage 1. These
+# duplicate view solids make the saved FreeCAD cross-section easy to inspect;
+# their X shift has no machine-coordinate meaning.
+shift = V(80,0,0)
+blocks_display = tabbed_remaining.cut(tab1.fuse(tab2))
+blocks_display.translate(shift)
+solid('Stage2BlocksDisplay','VIEW stage 2 | separated enclosure and clamp halves',blocks_display,tabs,'Display-only X shift +80 mm. Blue halves stay connected only through the two separately shown tab solids.')
+for name,label,shape in [('TabADisplay','VIEW holding tab A',tab1),('TabBDisplay','VIEW holding tab B',tab2)]:
+    copy = shape.copy()
+    copy.translate(shift)
+    solid(name,label,copy,tabs,'Display-only X shift +80 mm; orange bridge for the final saw.')
+
+# Default GUI presentation: a thin axial slice at Y256 exposes the cut plane.
+# Without it the uncut front of the proxy block hides every slot and tab.
+sections = group('CrossSectionViews','OPEN HERE | cross sections at Y256',root)
+slab = Part.makeBox(36.4,1.0,64.1,V(150,255.5,-64.1))
+solid('Stage1SectionDisplay','VIEW left | continuous intermediate web',remaining.common(slab),sections,'Y256 cross section of stage 1: 16.1 x 21.2 mm web.')
+final_section = tabbed_remaining.common(slab)
+final_section.translate(shift)
+solid('Stage2SectionDisplay','VIEW right | two final holding tabs',final_section,sections,'Y256 cross section of stage 2: two diagonal 4.8 x 8 mm tabs.')
+for name,x0 in [('Stage1Outline',150),('Stage2Outline',230)]:
+    outline = Part.makePolygon([V(x0,255.3,-64.1),V(x0+36.4,255.3,-64.1),V(x0+36.4,255.3,0),V(x0,255.3,0),V(x0,255.3,-64.1)])
+    solid(name,'VIEW outline | measured-size envelope',outline,sections,'Display outline only: 36.4 x 64.1 mm nominal envelope, not a solid stock reconstruction.')
+
+
+
+cam = group('DraftCAM','Draft CAM Path features | setup-local, no Job/post',root)
+for tag,x0 in [('B90',0.0),('B270',75.0)]:
+    # Start within one existing channel and exit into the other.
+    left,right = (x0+6.1,x0+33.3) if tag=='B90' else (x0+3.1,x0+30.3)
+    lines=[]
+    for i in range(1,13):
+        depth=-2.0*i
+        start,end=(left,right) if i%2 else (right,left)
+        lines.extend(['G0 Z5.000','G0 X%.3f Y256.000'%start,'G1 Z%.3f F120'%depth,'G1 X%.3f Y256.000 F300'%end,'G0 Z5.000'])
+    op=doc.addObject('Path::Feature',tag+'DraftPath')
+    op.Label=tag+' draft side slot | 6 mm tool, 12 x 2 mm'
+    op.Path=Path.Path([Path.Command(line) for line in lines])
+    prop(op,'Status','NOT MACHINE READY. Setup-local X/Y/Z; illustrative feeds; no CAM Job or postprocessor.')
+    prop(op,'Prerequisites','Measure endmill/tool length and clamp clearance; set verified rotary datum; simulate regenerated machine path.')
+    prop(op,'Setup',tag+' rotary orientation. Displayed X translation separates exhibits only.')
+    prop(op,'EndmillDiameter',6,'App::PropertyLength')
+    prop(op,'StepDown',2.0,'App::PropertyLength')
+    prop(op,'TargetDepth',24,'App::PropertyLength')
+    cam.addObject(op)
+
+samples = group('ProbeEvidence','Probe evidence | MACHINE coordinates',root)
+prop(samples,'B0','Top toolhead Z201.3 at X145/170/195 Y240..252. Direct floor at Y256: Z192.2/192.1/192.2 at X145/170/195 = 9.1/9.2/9.1 mm deep (job b32add0404af). Y245 outer X faces 137.85..201.95 (64.1).')
+prop(samples,'B180','At X198 rim toolhead Z204.5 to Y253; groove floor Z198.4 at Y254..258 = 6.1 mm deep; shoulder Z204.7 at Y259. Probe length 70.95.')
+prop(samples,'B90','At toolhead Z213: Y245 tip-center X west151.5/east190.4; Y256 west160.5/east184.3. Inward shifts 9.0/6.1 mm (job 97ff89e230a5).')
+prop(samples,'B270','At toolhead Z213: Y245 tip-center X west148.3/east187.1; Y256 west154.3/east178.1. Inward shifts 6.0/9.0 mm (job 97ff89e230a5).')
+prop(samples,'Tool','User: 6 mm diameter, >25 mm cutting edge, 75 mm total, about 20..30 mm in collet; fitted length unmeasured.')
+
+doc.recompute()
+for name in ['B90DraftPath','B270DraftPath']:
+    p=doc.getObject(name)
+    assert p and len(p.Path.Commands)==60,(name,len(p.Path.Commands))
+assert abs(remaining.Volume-(whole.Volume-removed.Volume))<1e-5
+os.makedirs(os.path.dirname(OUT),exist_ok=True)
+doc.saveAs(OUT)
+print('CREATED',OUT,'objects',len(doc.Objects),'stage1_web',64.1-2*24,'tab_saw_area',2*4.8*8)

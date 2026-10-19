@@ -1,0 +1,619 @@
+{
+  "archive": "skill-evals-iteration1-thread-milling-no-skills-yet.zip",
+  "entry_count": 95,
+  "byte_distinct_versions": 78,
+  "line_ending_normalized_leaf_versions": 66,
+  "entries": [
+    {
+      "name": "skill-evals/thread-milling-workspace/evals.json",
+      "size": 9680,
+      "sha256": "923345a03301d9cf12c8945aad5d5661adf6ab8d161030220f420c62e0bae7d1",
+      "inspection": "Parsed all scenarios, prompts and assertions; reviewed coverage and contradictions"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-0-m25-supplied-program/grading-summary.md",
+      "size": 8834,
+      "sha256": "b7be110317cebcfd49f2fd8e56ba0665f59476d7e33d6dbae2ec9dc4bd020195",
+      "inspection": "Read as historical evaluation evidence; not executable authority"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-0-m25-supplied-program/haiku/run-1/grading.json",
+      "size": 9545,
+      "sha256": "462df0f76d08a1ea01bc0c0e5fa8e991126ae24ff999ff780da861fd03fd62da",
+      "inspection": "Parsed every assertion and field; checked scores, claims, evidence and grader limitations"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-0-m25-supplied-program/haiku/run-1/outputs/critique.md",
+      "size": 6781,
+      "sha256": "577e66eeb94ecb724a9c8522053706cc4dc29c9610a45fbb94787d22d895b75a",
+      "inspection": "Read complete critique; compared claims with plan, snapshot and current implementation"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-0-m25-supplied-program/haiku/run-1/outputs/plan.md",
+      "size": 10182,
+      "sha256": "ead043e352981bf19d6640d895a9c07e882833af36d56f75476894c929b6d9d9",
+      "inspection": "Read complete plan; inspected branches, tool calls, declarations, assumptions and counts"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-0-m25-supplied-program/haiku/run-1/timing.json",
+      "size": 59,
+      "sha256": "aa2336cc39d781ac0df243b65229596e096ebea41646843c8590d22b8aa0b61d",
+      "inspection": "Parsed token/time/tool-use metrics; dry-run metadata only"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-0-m25-supplied-program/opus/run-1/grading.json",
+      "size": 7958,
+      "sha256": "1552bdb5eece0ecb74d2dd9793196384ce853a8593153d36637ed5f6969d4695",
+      "inspection": "Parsed every assertion and field; checked scores, claims, evidence and grader limitations"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-0-m25-supplied-program/opus/run-1/outputs/critique.md",
+      "size": 4692,
+      "sha256": "f8737f07d4e61dea2a48087a849a0b9c06a3a4e941f26b036b200c432722f9a7",
+      "inspection": "Read complete critique; compared claims with plan, snapshot and current implementation"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-0-m25-supplied-program/opus/run-1/outputs/plan.md",
+      "size": 13198,
+      "sha256": "3bef95e58513d751ce704c15efaa75377de17face9a4f980f74bc39350fe8b8d",
+      "inspection": "Read complete plan; inspected branches, tool calls, declarations, assumptions and counts"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-0-m25-supplied-program/opus/run-1/timing.json",
+      "size": 60,
+      "sha256": "104b92b5ee99e16e2f1927e559b55669e6f208613ea40c093e7947308fa28cd6",
+      "inspection": "Parsed token/time/tool-use metrics; dry-run metadata only"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-0-m25-supplied-program/sonnet/run-1/grading.json",
+      "size": 8637,
+      "sha256": "1a05c2d9599fbba1d8bfa86801d7aa06b525891a3b5343282d27f2fa892bea71",
+      "inspection": "Parsed every assertion and field; checked scores, claims, evidence and grader limitations"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-0-m25-supplied-program/sonnet/run-1/outputs/critique.md",
+      "size": 5696,
+      "sha256": "037a0363511fbe2e46d392d1d843258a1269a8c8bab25b396effdf008c58a244",
+      "inspection": "Read complete critique; compared claims with plan, snapshot and current implementation"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-0-m25-supplied-program/sonnet/run-1/outputs/plan.md",
+      "size": 7911,
+      "sha256": "666b34ace4bee6557f9062243aadb4841b9bcf1655e56ef7a8ea7daa77e45566",
+      "inspection": "Read complete plan; inspected branches, tool calls, declarations, assumptions and counts"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-0-m25-supplied-program/sonnet/run-1/timing.json",
+      "size": 60,
+      "sha256": "e1b8bf0ff44ddf41482fa001aba14ce8fb2aad35f514eaea4ce218d859dc3c63",
+      "inspection": "Parsed token/time/tool-use metrics; dry-run metadata only"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-1-m4-single-form-cutter/grading-summary.md",
+      "size": 8979,
+      "sha256": "bbea77807efd66118adc8afce8452de31d549001d9feaff815af0871fef74a27",
+      "inspection": "Read as historical evaluation evidence; not executable authority"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-1-m4-single-form-cutter/haiku/run-1/grading.json",
+      "size": 7828,
+      "sha256": "ae5af69566cac5890ea1f09de7fb9779db86301ae524f91c76d68c430894c22e",
+      "inspection": "Parsed every assertion and field; checked scores, claims, evidence and grader limitations"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-1-m4-single-form-cutter/haiku/run-1/outputs/critique.md",
+      "size": 5976,
+      "sha256": "4cd6a6eeeafc8a335eeca83322bb92baaf29b0017568a86da7beb608c2db327d",
+      "inspection": "Read complete critique; compared claims with plan, snapshot and current implementation"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-1-m4-single-form-cutter/haiku/run-1/outputs/plan.md",
+      "size": 7032,
+      "sha256": "9cd4aa63a371e76295653e62188e37743f6b27d9744628a52c27c0ca610af719",
+      "inspection": "Read complete plan; inspected branches, tool calls, declarations, assumptions and counts"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-1-m4-single-form-cutter/haiku/run-1/timing.json",
+      "size": 59,
+      "sha256": "f2e1e53e5a7486c3a45669edd6187878125810a9c2477f941ef71aba13f0b648",
+      "inspection": "Parsed token/time/tool-use metrics; dry-run metadata only"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-1-m4-single-form-cutter/opus/run-1/grading.json",
+      "size": 7456,
+      "sha256": "f5310af11af9c8e1b12ca9c517073cf52c7a24126b7d4c0bd0c938999bb539ed",
+      "inspection": "Parsed every assertion and field; checked scores, claims, evidence and grader limitations"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-1-m4-single-form-cutter/opus/run-1/outputs/critique.md",
+      "size": 4908,
+      "sha256": "43a74d3e2cc228a893b6f2b2dd665fba4a46b4c57718889537146bcfbba273d2",
+      "inspection": "Read complete critique; compared claims with plan, snapshot and current implementation"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-1-m4-single-form-cutter/opus/run-1/outputs/plan.md",
+      "size": 15801,
+      "sha256": "a37b17774988da81ba1c5c81c77e572576d94f3d4ebcc739da46bfc2fee3d57d",
+      "inspection": "Read complete plan; inspected branches, tool calls, declarations, assumptions and counts"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-1-m4-single-form-cutter/opus/run-1/timing.json",
+      "size": 60,
+      "sha256": "882c60a13cfa6ccb019ec5e0aa972f93ea71019ff143f8795e01d3a5625f3c44",
+      "inspection": "Parsed token/time/tool-use metrics; dry-run metadata only"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-1-m4-single-form-cutter/sonnet/run-1/grading.json",
+      "size": 7271,
+      "sha256": "2f9c36e3245af8873f16105dd3839c716840e18ce0eaa9e17fbc2d9030ae6a4b",
+      "inspection": "Parsed every assertion and field; checked scores, claims, evidence and grader limitations"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-1-m4-single-form-cutter/sonnet/run-1/outputs/critique.md",
+      "size": 5085,
+      "sha256": "94edd0fc87eb030b45e61df7cef0c7693eed688eb05ec9b9ac79a80b4155a869",
+      "inspection": "Read complete critique; compared claims with plan, snapshot and current implementation"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-1-m4-single-form-cutter/sonnet/run-1/outputs/plan.md",
+      "size": 9172,
+      "sha256": "cdda95fc1d517a823def2c441f32993cb38e091a4bde7e02f16f7a26aaceb85d",
+      "inspection": "Read complete plan; inspected branches, tool calls, declarations, assumptions and counts"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-1-m4-single-form-cutter/sonnet/run-1/timing.json",
+      "size": 60,
+      "sha256": "96963b3ffc190cf1f0f015ae834c9e5f03f80a1140b0e03aca7781cc5eacd041",
+      "inspection": "Parsed token/time/tool-use metrics; dry-run metadata only"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-2-mixed-plate-tool-change/grading-summary.md",
+      "size": 9333,
+      "sha256": "a6ae56a9f8eea227806e9a8ed063db2e3f7ee9ef2999aeadff5ff80308e9a950",
+      "inspection": "Read as historical evaluation evidence; not executable authority"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-2-mixed-plate-tool-change/haiku/run-1/grading.json",
+      "size": 9514,
+      "sha256": "71c2aaae335dd9d9cf71fb32c485d7cdd0f188177f2653d22c529491833cfa22",
+      "inspection": "Parsed every assertion and field; checked scores, claims, evidence and grader limitations"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-2-mixed-plate-tool-change/haiku/run-1/outputs/critique.md",
+      "size": 9033,
+      "sha256": "02bf068a9b38c79e5c30fac0f1ff5ad969aee3b99a425cc3e3fde5031c37b017",
+      "inspection": "Read complete critique; compared claims with plan, snapshot and current implementation"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-2-mixed-plate-tool-change/haiku/run-1/outputs/plan.md",
+      "size": 12217,
+      "sha256": "9042b94620256083f6e0c38b90ee28e6f0d2f3a110d36e79cfbb01fc0c80de57",
+      "inspection": "Read complete plan; inspected branches, tool calls, declarations, assumptions and counts"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-2-mixed-plate-tool-change/haiku/run-1/timing.json",
+      "size": 59,
+      "sha256": "adbfc85584258572eb11040970f966403099cd218a96ee6341137ec3789d7001",
+      "inspection": "Parsed token/time/tool-use metrics; dry-run metadata only"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-2-mixed-plate-tool-change/opus/run-1/grading.json",
+      "size": 8510,
+      "sha256": "a7cd5582e63726dce6bfa5b99150c713ae4cda40613e504e328340f863f6d119",
+      "inspection": "Parsed every assertion and field; checked scores, claims, evidence and grader limitations"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-2-mixed-plate-tool-change/opus/run-1/outputs/critique.md",
+      "size": 5544,
+      "sha256": "6fdaa47bb8ee10da9e3e7aef33ec6adc0a9c494b735817e42d7ea8f25fcb0524",
+      "inspection": "Read complete critique; compared claims with plan, snapshot and current implementation"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-2-mixed-plate-tool-change/opus/run-1/outputs/plan.md",
+      "size": 16857,
+      "sha256": "e5e945b5fd49fbb3235a135fa908cf0704f0fbc46a9521fbf0915505901f4d2a",
+      "inspection": "Read complete plan; inspected branches, tool calls, declarations, assumptions and counts"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-2-mixed-plate-tool-change/opus/run-1/timing.json",
+      "size": 60,
+      "sha256": "8331d2d0a0d94c10b73e65cbcb320c9c7e95b83e18089089d10936058c1f4470",
+      "inspection": "Parsed token/time/tool-use metrics; dry-run metadata only"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-2-mixed-plate-tool-change/sonnet/run-1/grading.json",
+      "size": 10562,
+      "sha256": "a49a860fb3c98737a6cd6dc19379aba8f9d78b26a727b81a17e737a75b308d4e",
+      "inspection": "Parsed every assertion and field; checked scores, claims, evidence and grader limitations"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-2-mixed-plate-tool-change/sonnet/run-1/outputs/critique.md",
+      "size": 4879,
+      "sha256": "889fe4e71fccc0457949e71cf074487d9fe9344c2d7a81c400e03305dc371df3",
+      "inspection": "Read complete critique; compared claims with plan, snapshot and current implementation"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-2-mixed-plate-tool-change/sonnet/run-1/outputs/plan.md",
+      "size": 12143,
+      "sha256": "8fa5e79a71603eaa8891f5b5a80571cc58beea098ab028a6da245838a8be63ea",
+      "inspection": "Read complete plan; inspected branches, tool calls, declarations, assumptions and counts"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/eval-2-mixed-plate-tool-change/sonnet/run-1/timing.json",
+      "size": 60,
+      "sha256": "11bdee68af43dfb78cf1830bc625e52c58f762e8dccdb1435afff39c2a14ee80",
+      "inspection": "Parsed token/time/tool-use metrics; dry-run metadata only"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/GRADER_INSTRUCTIONS.md",
+      "size": 2186,
+      "sha256": "5b92729633f6289d5a48413d068e473d35894ad9f7cde289854bc9cbbd7ff28f",
+      "inspection": "Read as historical evaluation evidence; not executable authority"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/REVIEW.md",
+      "size": 3768,
+      "sha256": "74674b8d3d28bfb70a420776ed95a3b546feb83b4720c9020e284a151c466033",
+      "inspection": "Read as historical evaluation evidence; not executable authority"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/iteration-1/RUN_INSTRUCTIONS.md",
+      "size": 4027,
+      "sha256": "a1e246967fb1010611f189bc37b5175bb9d2c7ffb614aa756be6d269566becbe",
+      "inspection": "Read as historical evaluation evidence; not executable authority"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snap.tar",
+      "size": 256000,
+      "sha256": "2ccc51c0fa800b968b8b922d4ab86da851b24d320b79a00a363403e6fb0fcb99",
+      "inspection": "Enumerated all members; recursively inspected contents; no archive code executed"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snap.tar!/.claude/skills/README.md",
+      "size": 1958,
+      "sha256": "1a9ac46bc9c74abce9a8457a2e861ee82211e7c9931b18b480691d302c36c2cf",
+      "inspection": "Compared full text with PR checkout; surveyed document structure and reviewed relevant motion, coordinate, tool and thread sections"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snap.tar!/.claude/skills/cnc-motion-rules/SKILL.md",
+      "size": 32497,
+      "sha256": "5d05333265740959fc80fa55c44f163938e3acff6fd4ac568f3d665d34e3357c",
+      "inspection": "Compared full text with PR checkout; surveyed document structure and reviewed relevant motion, coordinate, tool and thread sections"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snap.tar!/.claude/skills/cnc-probing/SKILL.md",
+      "size": 21412,
+      "sha256": "8d07fef828601b81f16cf96920fdd12a629694fa5ff9c42bbe81a2e964fb27eb",
+      "inspection": "Compared full text with PR checkout; surveyed document structure and reviewed relevant motion, coordinate, tool and thread sections"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snap.tar!/.claude/skills/cnc-probing/references/cam-probing.md",
+      "size": 7232,
+      "sha256": "7516c16eb206e4ec1674c8ffe65a520d6bb668a40f5ed0fb0eff815f11629d61",
+      "inspection": "Compared full text with PR checkout; surveyed document structure and reviewed relevant motion, coordinate, tool and thread sections"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snap.tar!/.claude/skills/cnc-visual-alignment/SKILL.md",
+      "size": 20786,
+      "sha256": "a5ada182a7a5985485e16ed2a7a22f41987806de054fe95ed944f3bea5c784c7",
+      "inspection": "Compared full text with PR checkout; surveyed document structure and reviewed relevant motion, coordinate, tool and thread sections"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snap.tar!/.claude/skills/tool-change/SKILL.md",
+      "size": 6738,
+      "sha256": "a0615343b19e2e076608c17413cf0a01569fac13ea7aee8c9a4296670b1d1bbb",
+      "inspection": "Compared full text with PR checkout; surveyed document structure and reviewed relevant motion, coordinate, tool and thread sections"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snap.tar!/src/server/services/mcp/README.md",
+      "size": 117480,
+      "sha256": "d13dabe01890647842f2a5818d41ed736c50570ad8dda4825677e7e6ccfc62e0",
+      "inspection": "Compared full text with PR checkout; surveyed document structure and reviewed relevant motion, coordinate, tool and thread sections"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snap.tar!/src/server/services/mcp/docs/TOOLS.md",
+      "size": 16809,
+      "sha256": "ee18ef74e5c8ed445e11edd85b537669ab8040f67ef6db7ce8248f7641c1ca3a",
+      "inspection": "Compared full text with PR checkout; surveyed document structure and reviewed relevant motion, coordinate, tool and thread sections"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snap.tar!/src/server/services/mcp/docs/thread-milling.md",
+      "size": 11143,
+      "sha256": "71baf07c7381e3a7aa9032b5a599bd4ee7a1c320c2712c9702792e905ff45a42",
+      "inspection": "Compared full text with PR checkout; surveyed document structure and reviewed relevant motion, coordinate, tool and thread sections"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snap.tar!/src/server/services/mcp/tests/fixtures/thread-milling-m2_5-fanuc.nc",
+      "size": 1269,
+      "sha256": "00c9dcb32eae8e37c9253d6bb60570c95592f2ead962a3f938dba6327641daff",
+      "inspection": "Compared full text with PR checkout; surveyed document structure and reviewed relevant motion, coordinate, tool and thread sections"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snapshot-pr191/.claude/skills/cnc-motion-rules/evals/REVIEW-2026-09-14-iteration-2.md",
+      "size": 8839,
+      "sha256": "e5d5223937a19b8b8f3ace1af2842ec0004ccfd5fd0e9933c986e088e446169d",
+      "inspection": "Compared full text with PR checkout; surveyed document structure and reviewed relevant motion, coordinate, tool and thread sections"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snapshot-pr191/.claude/skills/cnc-motion-rules/evals/REVIEW-2026-09-14-iteration-3.md",
+      "size": 8339,
+      "sha256": "72aaef163dea9a921de8e67e5c8d16609ef636578e499f30429ed1d73b3f3329",
+      "inspection": "Compared full text with PR checkout; surveyed document structure and reviewed relevant motion, coordinate, tool and thread sections"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snapshot-pr191/.claude/skills/cnc-motion-rules/evals/REVIEW-2026-09-14.md",
+      "size": 8901,
+      "sha256": "cc925acad5b26f3a1abade5af65273f6960cf515999b388c4f9ddbd347a9fa4d",
+      "inspection": "Compared full text with PR checkout; surveyed document structure and reviewed relevant motion, coordinate, tool and thread sections"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snapshot-pr191/.claude/skills/cnc-motion-rules/SKILL.md",
+      "size": 32497,
+      "sha256": "5d05333265740959fc80fa55c44f163938e3acff6fd4ac568f3d665d34e3357c",
+      "inspection": "Compared full text with PR checkout; surveyed document structure and reviewed relevant motion, coordinate, tool and thread sections",
+      "byte_identical_to": "skill-evals/thread-milling-workspace/snap.tar!/.claude/skills/cnc-motion-rules/SKILL.md",
+      "same_text_after_line_endings_as": "skill-evals/thread-milling-workspace/snap.tar!/.claude/skills/cnc-motion-rules/SKILL.md"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snapshot-pr191/.claude/skills/cnc-probing/references/cam-probing.md",
+      "size": 7232,
+      "sha256": "7516c16eb206e4ec1674c8ffe65a520d6bb668a40f5ed0fb0eff815f11629d61",
+      "inspection": "Compared full text with PR checkout; surveyed document structure and reviewed relevant motion, coordinate, tool and thread sections",
+      "byte_identical_to": "skill-evals/thread-milling-workspace/snap.tar!/.claude/skills/cnc-probing/references/cam-probing.md",
+      "same_text_after_line_endings_as": "skill-evals/thread-milling-workspace/snap.tar!/.claude/skills/cnc-probing/references/cam-probing.md"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snapshot-pr191/.claude/skills/cnc-probing/SKILL.md",
+      "size": 21412,
+      "sha256": "8d07fef828601b81f16cf96920fdd12a629694fa5ff9c42bbe81a2e964fb27eb",
+      "inspection": "Compared full text with PR checkout; surveyed document structure and reviewed relevant motion, coordinate, tool and thread sections",
+      "byte_identical_to": "skill-evals/thread-milling-workspace/snap.tar!/.claude/skills/cnc-probing/SKILL.md",
+      "same_text_after_line_endings_as": "skill-evals/thread-milling-workspace/snap.tar!/.claude/skills/cnc-probing/SKILL.md"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snapshot-pr191/.claude/skills/cnc-visual-alignment/SKILL.md",
+      "size": 20786,
+      "sha256": "a5ada182a7a5985485e16ed2a7a22f41987806de054fe95ed944f3bea5c784c7",
+      "inspection": "Compared full text with PR checkout; surveyed document structure and reviewed relevant motion, coordinate, tool and thread sections",
+      "byte_identical_to": "skill-evals/thread-milling-workspace/snap.tar!/.claude/skills/cnc-visual-alignment/SKILL.md",
+      "same_text_after_line_endings_as": "skill-evals/thread-milling-workspace/snap.tar!/.claude/skills/cnc-visual-alignment/SKILL.md"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snapshot-pr191/.claude/skills/README.md",
+      "size": 1958,
+      "sha256": "1a9ac46bc9c74abce9a8457a2e861ee82211e7c9931b18b480691d302c36c2cf",
+      "inspection": "Compared full text with PR checkout; surveyed document structure and reviewed relevant motion, coordinate, tool and thread sections",
+      "byte_identical_to": "skill-evals/thread-milling-workspace/snap.tar!/.claude/skills/README.md",
+      "same_text_after_line_endings_as": "skill-evals/thread-milling-workspace/snap.tar!/.claude/skills/README.md"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snapshot-pr191/.claude/skills/tool-change/SKILL.md",
+      "size": 6738,
+      "sha256": "a0615343b19e2e076608c17413cf0a01569fac13ea7aee8c9a4296670b1d1bbb",
+      "inspection": "Compared full text with PR checkout; surveyed document structure and reviewed relevant motion, coordinate, tool and thread sections",
+      "byte_identical_to": "skill-evals/thread-milling-workspace/snap.tar!/.claude/skills/tool-change/SKILL.md",
+      "same_text_after_line_endings_as": "skill-evals/thread-milling-workspace/snap.tar!/.claude/skills/tool-change/SKILL.md"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snapshot-pr191/src/server/services/mcp/docs/thread-milling.md",
+      "size": 11143,
+      "sha256": "71baf07c7381e3a7aa9032b5a599bd4ee7a1c320c2712c9702792e905ff45a42",
+      "inspection": "Compared full text with PR checkout; surveyed document structure and reviewed relevant motion, coordinate, tool and thread sections",
+      "byte_identical_to": "skill-evals/thread-milling-workspace/snap.tar!/src/server/services/mcp/docs/thread-milling.md",
+      "same_text_after_line_endings_as": "skill-evals/thread-milling-workspace/snap.tar!/src/server/services/mcp/docs/thread-milling.md"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snapshot-pr191/src/server/services/mcp/docs/TOOLS.md",
+      "size": 16809,
+      "sha256": "ee18ef74e5c8ed445e11edd85b537669ab8040f67ef6db7ce8248f7641c1ca3a",
+      "inspection": "Compared full text with PR checkout; surveyed document structure and reviewed relevant motion, coordinate, tool and thread sections",
+      "byte_identical_to": "skill-evals/thread-milling-workspace/snap.tar!/src/server/services/mcp/docs/TOOLS.md",
+      "same_text_after_line_endings_as": "skill-evals/thread-milling-workspace/snap.tar!/src/server/services/mcp/docs/TOOLS.md"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snapshot-pr191/src/server/services/mcp/README.md",
+      "size": 117480,
+      "sha256": "d13dabe01890647842f2a5818d41ed736c50570ad8dda4825677e7e6ccfc62e0",
+      "inspection": "Compared full text with PR checkout; surveyed document structure and reviewed relevant motion, coordinate, tool and thread sections",
+      "byte_identical_to": "skill-evals/thread-milling-workspace/snap.tar!/src/server/services/mcp/README.md",
+      "same_text_after_line_endings_as": "skill-evals/thread-milling-workspace/snap.tar!/src/server/services/mcp/README.md"
+    },
+    {
+      "name": "skill-evals/thread-milling-workspace/snapshot-pr191/src/server/services/mcp/tests/fixtures/thread-milling-m2_5-fanuc.nc",
+      "size": 1269,
+      "sha256": "00c9dcb32eae8e37c9253d6bb60570c95592f2ead962a3f938dba6327641daff",
+      "inspection": "Compared full text with PR checkout; surveyed document structure and reviewed relevant motion, coordinate, tool and thread sections",
+      "byte_identical_to": "skill-evals/thread-milling-workspace/snap.tar!/src/server/services/mcp/tests/fixtures/thread-milling-m2_5-fanuc.nc",
+      "same_text_after_line_endings_as": "skill-evals/thread-milling-workspace/snap.tar!/src/server/services/mcp/tests/fixtures/thread-milling-m2_5-fanuc.nc"
+    },
+    {
+      "name": "skills/cnc-motion-rules/evals/evals.json",
+      "size": 26422,
+      "sha256": "b528fb2c19a8436574eaba994978eb399209a0793939fbd44f82354ff0c3e65d",
+      "inspection": "Parsed all scenarios, prompts and assertions; reviewed coverage and contradictions"
+    },
+    {
+      "name": "skills/cnc-motion-rules/evals/REVIEW-2026-09-14-iteration-2.md",
+      "size": 8839,
+      "sha256": "e5d5223937a19b8b8f3ace1af2842ec0004ccfd5fd0e9933c986e088e446169d",
+      "inspection": "Read historical review and compared line-ending-normalized copies; historical results not rerun",
+      "byte_identical_to": "skill-evals/thread-milling-workspace/snapshot-pr191/.claude/skills/cnc-motion-rules/evals/REVIEW-2026-09-14-iteration-2.md",
+      "same_text_after_line_endings_as": "skill-evals/thread-milling-workspace/snapshot-pr191/.claude/skills/cnc-motion-rules/evals/REVIEW-2026-09-14-iteration-2.md"
+    },
+    {
+      "name": "skills/cnc-motion-rules/evals/REVIEW-2026-09-14-iteration-3.md",
+      "size": 8339,
+      "sha256": "72aaef163dea9a921de8e67e5c8d16609ef636578e499f30429ed1d73b3f3329",
+      "inspection": "Read historical review and compared line-ending-normalized copies; historical results not rerun",
+      "byte_identical_to": "skill-evals/thread-milling-workspace/snapshot-pr191/.claude/skills/cnc-motion-rules/evals/REVIEW-2026-09-14-iteration-3.md",
+      "same_text_after_line_endings_as": "skill-evals/thread-milling-workspace/snapshot-pr191/.claude/skills/cnc-motion-rules/evals/REVIEW-2026-09-14-iteration-3.md"
+    },
+    {
+      "name": "skills/cnc-motion-rules/evals/REVIEW-2026-09-14.md",
+      "size": 8901,
+      "sha256": "cc925acad5b26f3a1abade5af65273f6960cf515999b388c4f9ddbd347a9fa4d",
+      "inspection": "Read historical review and compared line-ending-normalized copies; historical results not rerun",
+      "byte_identical_to": "skill-evals/thread-milling-workspace/snapshot-pr191/.claude/skills/cnc-motion-rules/evals/REVIEW-2026-09-14.md",
+      "same_text_after_line_endings_as": "skill-evals/thread-milling-workspace/snapshot-pr191/.claude/skills/cnc-motion-rules/evals/REVIEW-2026-09-14.md"
+    },
+    {
+      "name": "skills/cnc-motion-rules/SKILL.md",
+      "size": 28984,
+      "sha256": "400895b939e27602ae6c30898eab4659b4bc64e007631e3323e9ab1a182879cc",
+      "inspection": "Reviewed skill/index/reference and semantic differences from evaluated PR snapshot"
+    },
+    {
+      "name": "skills/cnc-motion-rules.zip",
+      "size": 30613,
+      "sha256": "a4a441cd99eaf96df6c6d9465691e070e27271e753c9bc25a02fb017530461fa",
+      "inspection": "Enumerated all members; recursively inspected contents; no archive code executed"
+    },
+    {
+      "name": "skills/cnc-motion-rules.zip!/cnc-motion-rules/SKILL.md",
+      "size": 28603,
+      "sha256": "2a1afc712e37db53c3941904fb91b88e988b09ded13b29389371ead7198849f9",
+      "inspection": "Reviewed skill/index/reference and semantic differences from evaluated PR snapshot",
+      "same_text_after_line_endings_as": "skills/cnc-motion-rules/SKILL.md"
+    },
+    {
+      "name": "skills/cnc-motion-rules.zip!/cnc-motion-rules/evals/REVIEW-2026-09-14-iteration-2.md",
+      "size": 8722,
+      "sha256": "92a1c777059ea8697f5e9a82f5285325f427e8aab05dd11b9ee1bb63aab905eb",
+      "inspection": "Read historical review and compared line-ending-normalized copies; historical results not rerun",
+      "same_text_after_line_endings_as": "skill-evals/thread-milling-workspace/snapshot-pr191/.claude/skills/cnc-motion-rules/evals/REVIEW-2026-09-14-iteration-2.md"
+    },
+    {
+      "name": "skills/cnc-motion-rules.zip!/cnc-motion-rules/evals/REVIEW-2026-09-14-iteration-3.md",
+      "size": 8232,
+      "sha256": "1da03e7e823c7660f6f96146e4232fd764505492858fd53149b38a2fcbc31163",
+      "inspection": "Read historical review and compared line-ending-normalized copies; historical results not rerun",
+      "same_text_after_line_endings_as": "skill-evals/thread-milling-workspace/snapshot-pr191/.claude/skills/cnc-motion-rules/evals/REVIEW-2026-09-14-iteration-3.md"
+    },
+    {
+      "name": "skills/cnc-motion-rules.zip!/cnc-motion-rules/evals/REVIEW-2026-09-14.md",
+      "size": 8786,
+      "sha256": "aed18e13f7478a38c6423595807d153e6bf566eb27e7a8aa9a626f5d63ad5434",
+      "inspection": "Read historical review and compared line-ending-normalized copies; historical results not rerun",
+      "same_text_after_line_endings_as": "skill-evals/thread-milling-workspace/snapshot-pr191/.claude/skills/cnc-motion-rules/evals/REVIEW-2026-09-14.md"
+    },
+    {
+      "name": "skills/cnc-motion-rules.zip!/cnc-motion-rules/evals/evals.json",
+      "size": 26422,
+      "sha256": "b528fb2c19a8436574eaba994978eb399209a0793939fbd44f82354ff0c3e65d",
+      "inspection": "Parsed all scenarios, prompts and assertions; reviewed coverage and contradictions",
+      "byte_identical_to": "skills/cnc-motion-rules/evals/evals.json",
+      "same_text_after_line_endings_as": "skills/cnc-motion-rules/evals/evals.json"
+    },
+    {
+      "name": "skills/cnc-probing/references/cam-probing.md",
+      "size": 4048,
+      "sha256": "cbfa0cef96ec60a3ec6cf8bb0cc137d0957a829fa16d5e9070c0905d7c96376d",
+      "inspection": "Reviewed skill/index/reference and semantic differences from evaluated PR snapshot"
+    },
+    {
+      "name": "skills/cnc-probing/SKILL.md",
+      "size": 14736,
+      "sha256": "ebf3dabeefba175d3449bf8c56238a5bb776bf3a5c275f0636624aaefc0f9144",
+      "inspection": "Reviewed skill/index/reference and semantic differences from evaluated PR snapshot"
+    },
+    {
+      "name": "skills/cnc-probing.zip",
+      "size": 8270,
+      "sha256": "fa9fe0c647771cb59f6b89c740fa41ba16d467fc8ede43c4ea862defcfe8cb1f",
+      "inspection": "Enumerated all members; recursively inspected contents; no archive code executed"
+    },
+    {
+      "name": "skills/cnc-probing.zip!/cnc-probing/SKILL.md",
+      "size": 13835,
+      "sha256": "dec5e7e1b4c745353c17657d360d0e76be3913b57c05e7798fab78211032bb72",
+      "inspection": "Reviewed skill/index/reference and semantic differences from evaluated PR snapshot"
+    },
+    {
+      "name": "skills/cnc-probing.zip!/cnc-probing/references/cam-probing.md",
+      "size": 2752,
+      "sha256": "4c28ecaf097784548da8dacda4a5e7dad96afc3373d690155f9d1946750d87a8",
+      "inspection": "Reviewed skill/index/reference and semantic differences from evaluated PR snapshot"
+    },
+    {
+      "name": "skills/cnc-visual-alignment/scripts/board_metrology.py",
+      "size": 15024,
+      "sha256": "d3a63fbec39297e2dc1702abf75a3af54a258aff870c9227395c9d8b65fc84d3",
+      "inspection": "Static source/AST and I/O review; compared copies; not executed"
+    },
+    {
+      "name": "skills/cnc-visual-alignment/scripts/camera_bootstrap.py",
+      "size": 16277,
+      "sha256": "f20205abbce0ec95d762df915a5a689a31785a13b56b6fea22e5e737351022cf",
+      "inspection": "Static source/AST and I/O review; compared copies; not executed"
+    },
+    {
+      "name": "skills/cnc-visual-alignment/SKILL.md",
+      "size": 20683,
+      "sha256": "b0bbb29fd1b6fbeb1326c80a406e17f4eccb57963bccb859329bc2ac71e9a601",
+      "inspection": "Reviewed skill/index/reference and semantic differences from evaluated PR snapshot"
+    },
+    {
+      "name": "skills/cnc-visual-alignment.zip",
+      "size": 21297,
+      "sha256": "e2005c3d3170127ef74bc0f319ead4773b8cf81ea13bea85077540a95e7c676f",
+      "inspection": "Enumerated all members; recursively inspected contents; no archive code executed"
+    },
+    {
+      "name": "skills/cnc-visual-alignment.zip!/cnc-visual-alignment/SKILL.md",
+      "size": 20401,
+      "sha256": "b4368541071957531522a60fa49c9e4596789717697f74d8700b894bada2cdff",
+      "inspection": "Reviewed skill/index/reference and semantic differences from evaluated PR snapshot",
+      "same_text_after_line_endings_as": "skills/cnc-visual-alignment/SKILL.md"
+    },
+    {
+      "name": "skills/cnc-visual-alignment.zip!/cnc-visual-alignment/scripts/board_metrology.py",
+      "size": 15024,
+      "sha256": "d3a63fbec39297e2dc1702abf75a3af54a258aff870c9227395c9d8b65fc84d3",
+      "inspection": "Static source/AST and I/O review; compared copies; not executed",
+      "byte_identical_to": "skills/cnc-visual-alignment/scripts/board_metrology.py",
+      "same_text_after_line_endings_as": "skills/cnc-visual-alignment/scripts/board_metrology.py"
+    },
+    {
+      "name": "skills/cnc-visual-alignment.zip!/cnc-visual-alignment/scripts/camera_bootstrap.py",
+      "size": 15912,
+      "sha256": "04b75a008547d7927549efa3fd3cde9df56d80878051fc6c3c3d3d803b23d18d",
+      "inspection": "Static source/AST and I/O review; compared copies; not executed",
+      "same_text_after_line_endings_as": "skills/cnc-visual-alignment/scripts/camera_bootstrap.py"
+    },
+    {
+      "name": "skills/README.md",
+      "size": 1958,
+      "sha256": "1a9ac46bc9c74abce9a8457a2e861ee82211e7c9931b18b480691d302c36c2cf",
+      "inspection": "Reviewed skill/index/reference and semantic differences from evaluated PR snapshot",
+      "byte_identical_to": "skill-evals/thread-milling-workspace/snap.tar!/.claude/skills/README.md",
+      "same_text_after_line_endings_as": "skill-evals/thread-milling-workspace/snap.tar!/.claude/skills/README.md"
+    },
+    {
+      "name": "skills/tool-change/SKILL.md",
+      "size": 6738,
+      "sha256": "a0615343b19e2e076608c17413cf0a01569fac13ea7aee8c9a4296670b1d1bbb",
+      "inspection": "Reviewed skill/index/reference and semantic differences from evaluated PR snapshot",
+      "byte_identical_to": "skill-evals/thread-milling-workspace/snap.tar!/.claude/skills/tool-change/SKILL.md",
+      "same_text_after_line_endings_as": "skill-evals/thread-milling-workspace/snap.tar!/.claude/skills/tool-change/SKILL.md"
+    },
+    {
+      "name": "skills/tool-change.zip",
+      "size": 3095,
+      "sha256": "64b4764792ea4f3e6233cb0aaa38960d191a14092635cf815f0976e0a37ec490",
+      "inspection": "Enumerated all members; recursively inspected contents; no archive code executed"
+    },
+    {
+      "name": "skills/tool-change.zip!/tool-change/SKILL.md",
+      "size": 6632,
+      "sha256": "b31383e17b92a52efe59f796397d7431e58fab0f8f50b6d1a3e9944a750dd911",
+      "inspection": "Reviewed skill/index/reference and semantic differences from evaluated PR snapshot",
+      "same_text_after_line_endings_as": "skill-evals/thread-milling-workspace/snap.tar!/.claude/skills/tool-change/SKILL.md"
+    },
+    {
+      "name": "settings.local.json",
+      "size": 334,
+      "sha256": "0b911067eb1e86e062b7318b9552cc894ab327b9ffe31c570e82b4a80bc2c785",
+      "inspection": "Inspected archived Claude permissions/configuration as evidence only; not imported or executed"
+    }
+  ]
+}

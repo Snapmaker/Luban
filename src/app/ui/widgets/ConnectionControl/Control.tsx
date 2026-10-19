@@ -18,7 +18,7 @@ import usePrevious from '../../../lib/hooks/previous';
 import { in2mm, mm2in } from '../../../lib/units';
 import ControlPanel from './ControlPanel';
 import DisplayPanel from './DisplayPanel';
-import { DEFAULT_AXES, DISTANCE_MAX, DISTANCE_MIN, DISTANCE_STEP } from './constants';
+import { ANGLE_OPTIONS, DEFAULT_AXES, DISTANCE_MAX, DISTANCE_MIN, DISTANCE_STEP, getDistanceOptions } from './constants';
 
 const DEFAULT_SPEED_OPTIONS = [
     {
@@ -131,7 +131,9 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace,
             selectedAxis: '', // Defaults to empty
             selectedDistance: selectedDistance,
             customDistance: toUnits(METRIC_UNITS, customDistance),
-            selectedAngle: selectedAngle,
+            // Older versions saved custom angles as presets. Use the visible custom
+            // field whenever the stored selection is not an available preset.
+            selectedAngle: includes(ANGLE_OPTIONS, String(selectedAngle)) ? String(selectedAngle) : '',
             customAngle: customAngle,
 
 
@@ -191,17 +193,16 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace,
         },
 
         getJogDistance: () => {
-            const { units } = state;
-            if (selectedDistance) {
-                return Number(selectedDistance) || 0;
+            if (includes(getDistanceOptions(workPosition.isFourAxis), String(state.selectedDistance))) {
+                return Number(state.selectedDistance);
             }
-            return toUnits(units, customDistance);
+            return Number(state.customDistance) || 0;
         },
         getJogAngle: () => {
-            if (selectedAngle) {
-                return Number(selectedAngle) || 0;
+            if (includes(ANGLE_OPTIONS, String(state.selectedAngle))) {
+                return Number(state.selectedAngle);
             }
-            return Number(customAngle);
+            return Number(state.customAngle) || 0;
         },
 
         // actions
@@ -225,6 +226,7 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace,
             setState({ ...state, selectedAngle: angle });
         },
         changeCustomAngle: (_customAngle) => {
+            _customAngle = normalizeToRange(_customAngle, DISTANCE_MIN, DISTANCE_MAX);
             setState({ ...state, customAngle: _customAngle });
         },
 
@@ -285,11 +287,11 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace,
             setState({ ...state, customDistance: distance });
         },
         increaseCustomAngle: () => {
-            const angle = state.customAngle + 1;
+            const angle = Math.min(Number(state.customAngle) + DISTANCE_STEP, DISTANCE_MAX);
             setState({ ...state, customAngle: angle });
         },
         decreaseCustomAngle: () => {
-            const angle = state.customAngle - 1;
+            const angle = Math.max(Number(state.customAngle) - DISTANCE_STEP, DISTANCE_MIN);
             setState({ ...state, customAngle: angle });
         },
 
@@ -416,7 +418,8 @@ const Control: React.FC<ConnectionControlProps> = ({ widgetId, isNotInWorkspace,
                 speed: jogSpeed,
                 keypad: keypadJogging,
                 selectedDistance: state.selectedDistance, // '1', '0.1', '0.01', '0.001', or ''
-                selectedAngle: state.selectedAngle ? String(state.selectedAngle) : String(state.customAngle)
+                selectedAngle: state.selectedAngle,
+                customAngle: Number(state.customAngle) || 0
             }
         }));
 
