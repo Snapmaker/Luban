@@ -543,6 +543,23 @@ export const TRACK_SEARCH_RADIUS_PX: Bounded = { default: 120, min: 20, max: 250
 export const LANDMARK_CONFIRM_TTL_HOURS: Bounded = { default: 24, min: 1, max: 168 };
 
 /**
+ * The Snapmaker Original's stepper inactivity timeout, seconds
+ * (set_machine_policy stepper_idle_timeout_s; logicalFrame.ts): after this
+ * long without motion Marlin releases the steppers and the MCP stops trusting
+ * the home. The default is NOT measured: it is upstream Marlin's
+ * DEFAULT_STEPPER_DEACTIVE_TIME (Marlin 1.1.x Configuration_adv.h, 120 s with
+ * DISABLE_INACTIVE_X/Y/Z true). The Original runs a Marlin 1.x derivative
+ * whose source Snapmaker has not published, so its own value is unknown;
+ * state the measured one here. The floor of 2 s is above the 1 s by which the
+ * MCP treats the home as lost early (STEPPER_IDLE_EPSILON_MS). The hour cap
+ * bounds a stored setting at 30 times the upstream default; a rig whose
+ * steppers must stay powered longer is told so by M84 S0 (never release),
+ * which the write path sees and honours. M18/M84 S<n> written on the
+ * connection override this for that connection.
+ */
+export const STEPPER_IDLE_TIMEOUT_S: Bounded = { default: 120, min: 2, max: 3600 };
+
+/**
  * Motion rules (Settings -> MCP Server -> Motion rules, R13): the head-room a
  * move at a COMPUTED safe height (below top Z) keeps above the highest known
  * obstacle or bed contact of the toolhead + tool. Operator-stated per machine,

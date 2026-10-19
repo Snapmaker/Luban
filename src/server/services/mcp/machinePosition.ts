@@ -406,6 +406,12 @@ export interface JudgeContext {
      * judged with a zero offset. Absent/false = refused as before.
      */
     logicalAsMachine?: boolean;
+    /**
+     * With logicalAsMachine: the offset logicalFrame.ts mapped the beat with
+     * (a Snapmaker 2.0 over USB: its fresh M1007 work offset, machine =
+     * logical - offset). Absent/null = zero (the Original).
+     */
+    logicalOffset?: Xyz | null;
     /** Why a logical-frame beat is refused (logicalFrame.ts), added to the reasons. */
     logicalFrameReason?: string | null;
 }
@@ -586,6 +592,15 @@ export function judgeBeatStateful(state: MachinePositionState, beat: RawBeat, ct
             declaredRun: null,
             machineFrameStreak: 0,
         });
+        if (ctx.logicalOffset) {
+            // Mapped through the fresh M1007 offset (logicalFrame.ts): that
+            // offset changes whenever the frame does, so the raw jump across
+            // a frame change is not a flip, and no earlier beat stands in.
+            Object.assign(input, {
+                offsetReported: { x: ctx.logicalOffset.x, y: ctx.logicalOffset.y, z: ctx.logicalOffset.z },
+                previousRaw: null,
+            });
+        }
     }
     const judgement = judgeBeat(input);
     if (logical) {

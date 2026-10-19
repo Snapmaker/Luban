@@ -936,7 +936,11 @@ export async function homeMachine(tool: string, waitUntilHomed: boolean = true, 
         // On text serial (the Original) isHomed is itself observed - an M114
         // answered after the G28 - so it needs no movement evidence.
         const changeOk = sawChange || !!now.logicalFrame || Date.now() - issuedAt > 25000;
-        if (reportTime > issuedAt && stable && changeOk && now.isHomed === true && now.machineStatus === 'idle') {
+        // A Snapmaker 2.0 over USB: homed is not enough - the position maps
+        // to machine coordinates only once a fresh M1007 offset and a resting
+        // report after the G54 agree with the stepper Count (logicalFrame.ts).
+        const mappedOk = !now.logicalFrame || now.logicalFrame.mapping !== 'work-offset' || now.logicalFrame.trusted;
+        if (reportTime > issuedAt && stable && changeOk && mappedOk && now.isHomed === true && now.machineStatus === 'idle') {
             return {
                 homed: true,
                 connected_machine: describeConnectedMachine(),
@@ -951,7 +955,8 @@ export async function homeMachine(tool: string, waitUntilHomed: boolean = true, 
     }
     const last = positionOrNull();
     throw new McpToolError(`Machine did not report homed within ${HOME_TIMEOUT_MS / 1000}s. `
-        + `Last state: ${JSON.stringify(last && { isHomed: last.isHomed, machineStatus: last.machineStatus })}`);
+        + `Last state: ${JSON.stringify(last && { isHomed: last.isHomed, machineStatus: last.machineStatus })}`
+        + `${last && last.logicalFrame && !last.logicalFrame.trusted ? ` Position not mapped: ${last.logicalFrame.reason}` : ''}`);
 }
 
 /**
@@ -1705,7 +1710,10 @@ export function registerCameraTools(registry: ToolRegistry): void {
             + 'On the Snapmaker Original (USB text serial, no workspaces) it sends G28 ALONE - never G53/G54 - and the Original\'s '
             + 'position counts as machine coordinates only once this home is observed complete and nothing has shifted it since '
             + '(a G92 from Luban\'s set-work-origin, Luban\'s own G53/G28/G54 Home button): get_position.logicalFrame says why not. '
-            + 'A Ray or J1 on plain-text USB, and an A350 over USB, are refused. Results carry gcode_form and connected_machine.dialect.',
+            + 'Its steppers may release after stepper_idle_timeout_s idle, which also voids the home. A Snapmaker 2.0 (A350) over '
+            + 'USB is homed with G53;G28;G54 like Luban, and waits until its position maps to machine coordinates (a fresh M1007 work '
+            + 'offset and the stepper Count agree - get_position.logicalFrame). A Ray or J1 on plain-text USB is refused. '
+            + 'Results carry gcode_form and connected_machine.dialect.',
         inputSchema: {
             type: 'object',
             properties: {
