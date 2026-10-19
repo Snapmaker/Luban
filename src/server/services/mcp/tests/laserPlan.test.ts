@@ -16,6 +16,8 @@ import {
     planLaserFrame,
 } from '../laserPlan';
 import { TravelLimits } from '../machineTravel';
+import { MachineCapability, deriveMachineCapability } from '../machineCapability';
+import { LASER_GATES, procedureRefusal } from '../procedureGates';
 import { LASER_FRAME_POWER_PERCENT } from '../procedureLimits';
 import { STEP_SEPARATOR } from '../traversePlan';
 import { resolveJobFrame, validateGcode } from '../validator';
@@ -69,7 +71,8 @@ function assertStagedAccepted(dialect: GcodeDialect, body: string, relative: boo
     const machine = MACHINE_OF[dialect.id];
     const report = validateGcode(body, { dialect, machineIdentifier: machine.identifier, hasZ: machine.hasZ, phase: 'staged', headType });
     assert.deepEqual(report.machine && report.machine.refusals, [], `${what}: dialect refusals`);
-    const resolved = resolveJobFrame(report, { frameArgument: null, originOffsetZ: null, offsetReliable: false, machineZMax: null, relativeTransport: relative });
+    const context = { frameArgument: null, originOffsetZ: null, offsetReliable: false, machineZMax: null, relativeTransport: relative };
+    const resolved = resolveJobFrame(report, context);
     assert.equal(resolved.refusal, null, `${what}: frame refusal ${resolved.refusal}`);
 }
 
@@ -171,7 +174,7 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         }
         assert.match(plan.reviewText, /runs at the current machine Z 150\.000 \(the focus height\)/);
         assert.throws(() => a350Frame({ current: { x: 0, y: 0, z: null } }), /Current machine Z unknown/);
-        const landmark = { name: 'rotary-axis', machine: { x0: 120, y0: 0, x1: 130, y1: 350 }, clearanceZ: 250 };
+        const landmark = { name: 'rotary-axis', machine: { x0: 120, y0: 0, x1: 130, y1: 350 }, clearanceZ: 250, mode: 'crossing' as const };
         assert.throws(() => a350Frame({ obstacles: [landmark] }), /crosses a landmark below its clearance/);
     }],
     ['the Original takes relative steps that end in the planner sync, M5 before it on a powered side', () => {
@@ -188,13 +191,19 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
         assert.deepEqual(executable(plan.steps[1].gcode), ['M3 P1 S2', 'G91', 'G1 X40.000 Y0.000 F1500', 'G90', 'M5', 'G4 P0']);
         assert.deepEqual(executable(plan.steps[0].gcode), ['M5', 'G91', 'G0 X20.000 Y20.000 F1500', 'G90', 'G4 P0']);
         const dark = planLaserFrame({
-            dialect: ORIGINAL, hasZ: true, current: { x: 0, y: 0, z: 50 }, box: boxFromCorners(20, 20, 60, 60), boxSource: 'a',
-            travel: { xMin: 0, xMax: 125, yMin: 0, yMax: 125 }, reason: 'r',
+            dialect: ORIGINAL,
+            hasZ: true,
+            current: { x: 0, y: 0, z: 50 },
+            box: boxFromCorners(20, 20, 60, 60),
+            boxSource: 'a',
+            travel: { xMin: 0, xMax: 125, yMin: 0, yMax: 125 },
+            reason: 'r',
         });
         assert.match(oneLine(dark.header), /no reference saying G0 alone keeps the Snapmaker Original .* laser dark: the M5 does/);
     }],
     ['a corner or the start outside the travel is refused, naming the point', () => {
-        assert.throws(() => rayFrame({ box: boxFromCorners(560, 100, 620, 150) }), /frame corner \(xMax, yMin\) \(machine 620\.000, 100\.000\) is outside the toolhead travel/);
+        assert.throws(() => rayFrame({ box: boxFromCorners(560, 100, 620, 150) }),
+            /frame corner \(xMax, yMin\) \(machine 620\.000, 100\.000\) is outside the toolhead travel/);
         assert.throws(() => rayFrame({ current: { x: -5, y: 10, z: null } }), /the current position .* is outside the toolhead travel/);
         assert.throws(() => planLaserFrame({
             dialect: J1, hasZ: true, current: { x: 0, y: 0, z: 0 }, box: boxFromCorners(1, 1, 2, 2), boxSource: 'a', travel: RAY_TRAVEL, reason: 'r',
@@ -237,8 +246,14 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
             [ARTISAN, a350Frame({ dialect: ARTISAN, powerPercent: 2 }), false],
         ];
         const original = planLaserFrame({
-            dialect: ORIGINAL, hasZ: true, current: { x: 0, y: 0, z: 50 }, box: boxFromCorners(20, 20, 60, 60), boxSource: 'a',
-            travel: { xMin: 0, xMax: 125, yMin: 0, yMax: 125 }, powerPercent: 2, reason: 'r',
+            dialect: ORIGINAL,
+            hasZ: true,
+            current: { x: 0, y: 0, z: 50 },
+            box: boxFromCorners(20, 20, 60, 60),
+            boxSource: 'a',
+            travel: { xMin: 0, xMax: 125, yMin: 0, yMax: 125 },
+            powerPercent: 2,
+            reason: 'r',
         });
         frames.push([ORIGINAL, original, true]);
         for (const [dialect, plan, relative] of frames) {
@@ -256,6 +271,29 @@ export const tests: Array<[string, () => void | Promise<void>]> = [
                 assertStagedAccepted(dialect, planCrosshair(dialect, LASER_20W, on, 'r').reviewText, dialect.transportForm === 'relative-steps',
                     null, `${dialect.id} crosshair ${on}`);
             }
+        }
+    }],
+    ['the laser tools are gated on the laser capability: the Ray, the 2.0, the Artisan and the Original pass; the J1 is refused', () => {
+        const machine = (identifier: string, size: [number, number, number], heads: string[]): MachineCapability => deriveMachineCapability({
+            identifier, machineType: 'x', metadata: { size: { x: size[0], y: size[1], z: size[2] }, toolHeads: heads.map((id) => ({ identifier: id })) },
+        });
+        const passing = [
+            machine('Ray', [600, 400, 0], ['20W Laser Module', '40W Laser Module', '2W Laser Module']),
+            machine('Snapmaker 2.0 A350', [320, 350, 325], ['20W Laser Module', 'standardCNCToolheadForSM2']),
+            machine('A400', [400, 400, 400], ['40W Laser Module', 'levelTwoCNCToolheadForSM2']),
+            machine('Original', [125, 125, 125], ['levelOneLaserToolheadForOriginal', 'standardCNCToolheadForOriginal']),
+        ];
+        const j1 = machine('Snapmaker J1', [324, 200, 200], ['Snapmaker J1 IDEX Tool Head']);
+        for (const tool of Object.keys(LASER_GATES)) {
+            for (const capability of passing) {
+                assert.equal(procedureRefusal(capability, tool), null, `${capability.identifier} ${tool}`);
+            }
+            const refusal = procedureRefusal(j1, tool) || '';
+            assert.ok(refusal.startsWith(tool), refusal);
+            assert.match(refusal, /needs laser control, .* Snapmaker J1/);
+            assert.match(refusal, /This refusal is deliberate: .* the laser tools write each machine's own laser words/);
+            assert.doesNotMatch(refusal, /refuses rather than translates/);
+            assert.match(procedureRefusal(deriveMachineCapability(null, null), tool) || '', /no machine is connected/);
         }
     }],
     ['laser_focus is refused: no Z on the Ray (focus is mechanical), deferred everywhere else', () => {

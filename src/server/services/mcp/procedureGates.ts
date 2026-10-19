@@ -27,6 +27,12 @@ export interface ProcedureGate {
      * connected; they are refused only when a CONNECTED machine lacks a need.
      */
     offline?: boolean;
+    /**
+     * Replaces the "refuses rather than translates its Snapmaker 2.0 G-code"
+     * explanation for a gate whose tool writes no Snapmaker 2.0 form (the
+     * laser tools, which write each machine's own dialect).
+     */
+    deliberate?: string;
 }
 
 const PROBING = (what: string): ProcedureGate => ({
@@ -101,6 +107,25 @@ export const PROCEDURE_GATES: { readonly [tool: string]: ProcedureGate } = {
     },
 };
 
+const LASER_DELIBERATE = 'the laser tools write each machine\'s own laser words (gcodeDialect.ts), and a machine with no laser words or '
+    + 'no laser toolhead has nothing to write them to';
+
+const LASER = (action: string): ProcedureGate => ({ needs: ['laser'], action, deliberate: LASER_DELIBERATE });
+
+/**
+ * The laser tools (#265 WP7, tools/laser.ts). Kept out of PROCEDURE_GATES on
+ * purpose: those are the Snapmaker-2.0-form procedures every non-2.0 machine
+ * is refused, and these run on the Ray first. Same capability gate, same
+ * registry hook (procedureRefusal looks in both). The tools then refuse what
+ * the row alone cannot (no air assist on the Original, a CNC head fitted).
+ */
+export const LASER_GATES: { readonly [tool: string]: ProcedureGate } = {
+    laser_frame: LASER('laser_frame (a bounding-box trace: M5 and G0 moves, or a capped M3 trace ending M5)'),
+    set_air_assist: LASER('set_air_assist (the dialect\'s air-assist on/off line, M8/M9)'),
+    set_crosshair: LASER('set_crosshair (the dialect\'s crosshair on/off line)'),
+    laser_focus: LASER('laser_focus (always refused: no Z on the Ray, deferred elsewhere)'),
+};
+
 /** The USB pendant: continuous jogging in G53 windows, proved by M114 Count reports (pendantRuntime.ts, checked at arm). */
 export const PENDANT_GATE: ProcedureGate = {
     needs: ['workspaces'],
@@ -146,12 +171,21 @@ export function gateRefusal(capability: MachineCapability, gate: ProcedureGate, 
     }
     const allowed = dialectsAllowing(needs);
     const where = allowed.length ? `only on the ${allowed.join(' and ')} rows of its dialect table` : 'on no machine in its dialect table';
+    if (gate.deliberate) {
+        return `${refusal} This refusal is deliberate: this MCP runs it ${where}, because ${gate.deliberate}. Nothing was sent to the machine.`;
+    }
     return `${refusal} This refusal is deliberate: this MCP runs it ${where} (verified on hardware: the Snapmaker 2.0 A350), and `
         + `refuses rather than translates its Snapmaker 2.0 G-code for the ${capability.dialect.label}. Nothing was sent to the machine.`;
 }
 
 /** The refusal for MCP tool `tool` on `capability`, or null (it passes, or the tool is not gated). */
 export function procedureRefusal(capability: MachineCapability, tool: string, args: { [key: string]: unknown } = {}): string | null {
-    const gate = Object.prototype.hasOwnProperty.call(PROCEDURE_GATES, tool) ? PROCEDURE_GATES[tool] : null;
+    const own = (table: { readonly [tool: string]: ProcedureGate }) => Object.prototype.hasOwnProperty.call(table, tool);
+    let gate: ProcedureGate | null = null;
+    if (own(PROCEDURE_GATES)) {
+        gate = PROCEDURE_GATES[tool];
+    } else if (own(LASER_GATES)) {
+        gate = LASER_GATES[tool];
+    }
     return gate ? gateRefusal(capability, gate, args) : null;
 }

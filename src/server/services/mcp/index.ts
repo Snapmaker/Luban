@@ -25,6 +25,7 @@ import { registerCamTools } from './tools/cam';
 import { registerEnclosureTools } from './tools/enclosure';
 import { registerGcodeTools, stopGcodeJob } from './tools/gcode';
 import { registerLandmarkTools } from './tools/landmarks';
+import { registerLaserTools } from './tools/laser';
 import { currentReviewMachineKey, operatorReviews } from './landmarkReviewState';
 import { registerMachineTools } from './tools/machine';
 import { registerProbeTools } from './tools/probe';
@@ -287,6 +288,7 @@ function startConfiguredMcpService(socketServer?: McpBroadcaster): void {
     registerWorkspaceTools(registry, baseUrl);
     registerProbingTools(registry, baseUrl);
     registerCamTools(registry, baseUrl);
+    registerLaserTools(registry, baseUrl);
     // Refuse rather than translate (#265 WP4b): a CNC procedure the connected
     // machine's dialect row does not allow is refused, naming the machine,
     // before its handler runs (procedureGates.ts).
