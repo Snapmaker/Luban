@@ -565,3 +565,32 @@ export const MOTION_RULE_CLEARANCE_MIN_MM: Bounded = { default: 20, min: 5, max:
  * Snapmaker module is 150 mm tall (the 200 W CNC body is 104.6 mm).
  */
 export const TOOLHEAD_BODY_BELOW_REFERENCE_MM: Range = { min: 0, max: 150 };
+
+// ---------------------------------------------------------------------------
+// Laser tools (tools/laser.ts, laserPlan.ts; #265 WP7, plan 2.5)
+// ---------------------------------------------------------------------------
+
+/**
+ * laser_frame power, in percent of the module's full power. Default 0 = the
+ * laser stays OFF (M5, G0 moves only). The cap is the plan's (2.5): a frame
+ * PREVIEWS where a job will run - 5 % is S50 on the Ray's S0-1000 scale, a
+ * visible trace - and no higher power ever comes from the MCP itself; a job
+ * file's power is the file's business, judged by the validator's s-range rule.
+ * A request above the cap is clipped and the clip REPORTED (result `clipped`
+ * and a CLIPPED line on the confirm page), never silently planned.
+ */
+export const LASER_FRAME_POWER_PERCENT: Bounded = { default: 0, min: 0, max: 5 };
+/**
+ * laser_frame feed, mm/min. Default and cap are traverse_xy's (TRAVERSE_FEED):
+ * a frame is an XY series the operator watches. The floor is higher than a
+ * traverse's because a powered trace at 100 mm/min already takes 30 s per
+ * 50 mm side; slower than that the "preview" dwells on the stock. G0 (the
+ * power-0 frame) moves at the firmware's rapid rate whatever F says on GRBL.
+ */
+export const LASER_FRAME_FEED: Bounded = { default: 1500, min: 100, max: 3000 };
+/**
+ * laser_frame repeat count. Each repeat adds four approved steps (one per
+ * side), so 4 repeats plus the approach is 17 steps - inside the 20-step
+ * series cap traverse_xy and move_z share (MAX_TRAVERSE_TARGETS, MAX_Z_TARGETS).
+ */
+export const LASER_FRAME_REPEAT: Bounded = { default: 1, min: 1, max: 4 };
